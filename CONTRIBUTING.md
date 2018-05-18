@@ -59,7 +59,7 @@ The following is an overview of the source code directory structure:
             management.
             
             Business operations are defined by interfaces.
-	    Each interface represents a logic grouping of
+            Each interface represents a logic grouping of
             operations.  The pattern is to call Engine::api
             for the interface you want to use.  Engine::api is
             a factory which instantiates a concrete
