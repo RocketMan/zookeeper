@@ -46,10 +46,8 @@ $config = [
      * URLs
      */
     'urls' => [
-        'home' => 'https://zookeeper.ibinx.com/release',
-        'listen' => 'https://zookeeper.ibinx.com/release',
-        'report_missing' => 'https://spreadsheets.google.com/a/kzsu.stanford.edu/viewform?hl=en&formkey=dGRuMW1GNFVQcXoxbmU3YWZHWlVna0E6MQ&$missingSelect&entry_2=%USERNAME%&entry_1=%ALBUMTAG%',
-        'old_charts' => 'http://kzsu.stanford.edu/charts/',
+        'home' => 'https://zookeeper.ibinx.com/master',
+        'listen' => 'https://zookeeper.ibinx.com/master',
     ],
 
     /**
