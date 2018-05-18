@@ -1,0 +1,32 @@
+body {
+    font-family: Helvetica, Verdana, Arial, sans-serif;
+    background-color: #ffffff;
+}
+div.headerLogo {
+    float: left;
+    width: 200px;
+}
+div.headerLogo img {
+    padding-top: 8px;
+    width: 200px;
+}
+div.headerNavbar {
+    font-size: 20px;
+    text-align: right;
+    color: #2d3bce;
+    height: 94px;
+    line-height: 94px;
+    width: auto;
+    position: relative;
+    border-bottom: 2px solid #2d3bce;
+}
+div.headerNavbar span {
+    vertical-align: bottom;
+    line-height: normal;
+    right: 0;
+    bottom: 0;
+    position: absolute;
+}
+div.leftNav{
+    clear:both;
+}

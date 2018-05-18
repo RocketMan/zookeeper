@@ -1,0 +1,11 @@
+# apache 2.4
+<ifModule mod_authz_core>
+Require all denied
+</ifModule>
+
+# apache 2.2
+<ifModule !mod_authz_core>
+deny from all
+</ifModule>
+
+IndexIgnore *

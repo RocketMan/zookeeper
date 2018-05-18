@@ -1,0 +1,1767 @@
+<?php
+/**
+ * Zookeeper Online
+ *
+ * @author Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @link https://zookeeper.ibinx.com/
+ * @license GPL-3.0
+ *
+ * This code is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * version 3, along with this program.  If not, see
+ * http://www.gnu.org/licenses/
+ *
+ */
+
+namespace ZK\UI;
+
+use ZK\Engine\Engine;
+use ZK\Engine\IDJ;
+use ZK\Engine\ILibrary;
+use ZK\Engine\IPlaylist;
+use ZK\Engine\IReview;
+
+use ZK\UI\UICommon as UI;
+
+class Playlists extends MenuItem {
+    private static $actions = [
+        [ "newList", "emitEditListNew" ],
+        [ "editList", "emitEditListSel" ],
+        [ "showLink", "emitShowLink" ],
+        [ "importExport", "emitImportExportList" ],
+        [ "viewDJ", "emitViewDJ" ],
+        [ "viewDJReviews", "viewDJReviews" ],
+        [ "viewDate", "emitViewDate" ],
+        [ "updateDJInfo", "updateDJInfo" ],
+        [ "listEditorNew", "emitEditor" ],
+        [ "listEditorEdit", "emitEditor" ],
+    ];
+
+    private $action;
+    private $subaction;
+
+    private $noTables = false;
+    
+    public function processLocal($action, $subaction) {
+        $this->action = $action;
+        $this->subaction = $subaction;
+        return $this->dispatchAction($action, self::$actions);
+    }
+    
+    private function smartURL($name, $detect=true) {
+        if($detect) {
+            //$name = UI::HTMLify($name, 20);
+            $name = htmlentities($name);
+    
+            $words = explode(" ", $name);
+            for($i=0; $i<sizeof($words); $i++) {
+                $word = $words[$i];
+                $len = strlen($word);
+                if($word{0} == "(" && $word{$len-1} == ")" ||
+                         $word{0} == "\"" && $word{$len-1} == "\"" ||
+                         $word{0} == "'" && $word{$len-1} == "'" ||
+                         $word{0} == "{" && $word{$len-1} == "}" ||
+                         $word{0} == "[" && $word{$len-1} == "]") {
+                    $len -= 2;
+                    $word = substr($word, 1, $len);
+                }
+                $at = strrpos($word, "@");
+                $prefix = (substr($word, 0, 7) == "http://")?7:0;
+                $stroke = strpos(substr($word, $prefix), "/");
+                if($stroke) {
+                    $len = $stroke + $prefix;
+                    $dot = strrpos(substr($word, 0, $len), ".");
+                } else
+                    $dot = strrpos($word, ".");
+                $ipos = strtr($word, "'(){}|\\^~[]`", "            ") != $word;
+                if($ipos || $dot && ($dot >= $len - 2 || $dot < $len - 5) ||
+                        strpos($word, "..") !== false || is_numeric($word) || is_numeric($word{$len-1}) || is_numeric($word{$dot+1}))
+                    $dot = false;
+    
+                if($at && $dot)
+                    // e-mail address
+                    $ret .= "<A HREF=\"mailto:$word\">" . $words[$i] . "</A> ";
+                else if($dot) {
+                    // web address
+                    $ret .= "<A TARGET=\"_blank\" HREF=\"";
+                    if(!$prefix)
+                        $ret .= "http://";
+                    $ret .= $word . "\">" . $words[$i] . "</A> ";
+                } else
+                    $ret .= $words[$i] . " ";
+            }
+    
+            return trim($ret);
+        } else
+            return htmlentities($name);
+    }
+    
+    private function extractTime($time, &$fromTime, &$toTime) {
+        if(strlen($time) == 9 && $time[4] == '-') {
+            $fromTime = substr($time, 0, 4);
+            $toTime = substr($time, 5, 4);
+            return true;
+        } else if(!strlen($time)) {
+            $fromTime = "0000";
+            $toTime = "0000";
+            return true;
+        } else
+            return false;
+    }
+    
+    private function composeTime($fromTime, $toTime) {
+        return $fromTime . "-" . $toTime;
+    }
+    
+    private function hourToAMPM($hour, $full=0) {
+        $h = (int)floor($hour/100);
+        $m = (int)$hour % 100;
+        $min = $m || $full?(":" . sprintf("%02d", $m)):"";
+    
+        switch($h) {
+        case 0:
+            return $m?($h . $min . "am"):"midnight";
+        case 12:
+            return $m?($h . $min . "pm"):"noon";
+        default:
+            if($h < 12)
+                return $h . $min . "am";
+            else
+                return ($h - 12) . $min . "pm";
+        }
+    }
+    
+    private function timeToAMPM($time) {
+        if(strlen($time) == 9 && $time[4] == '-') {
+            list($fromtime, $totime) = split("-", $time);
+            return $this->hourToAMPM($fromtime) . " - " . $this->hourToAMPM($totime);
+        } else
+            return strtolower(htmlentities($time));
+    }
+    
+    private function timeToZulu($time) {
+        if(strlen($time) == 9 && $time[4] == '-') {
+            $d = getdate(time());
+            $day = $d["mday"];
+            $month = $d["mon"];
+            $year = $d["year"];
+            list($fromtime, $totime) = split("-", $time);
+            $starttime = mktime(substr($fromtime, 0, 2), substr($fromtime, 2, 2), 0, $month, $day, $year);
+            $z = date("Z");
+            $zday = date("j", date("U", $starttime)-$z);
+    
+            $result = "<TH ALIGN=RIGHT VALIGN=BOTTOM CLASS=\"sub\">";
+            if($zday != $day)
+                $result .=  "(" . date("j M", date("U")-$z);
+            else
+                $openParen = "(";
+            $result .= "&nbsp;&nbsp;</TH>\n      <TH ALIGN=LEFT VALIGN=BOTTOM CLASS=\"sub\">$openParen";
+            $result .= date("Hi", $starttime-$z) . " - ";
+            $result .= date("Hi", mktime(substr($totime, 0, 2), substr($totime, 2, 2), 0, $month, $day, $year)-$z);
+            $result .= "&nbsp;UTC)</TH>";
+            return $result;
+        } else
+            return "";
+    }
+    
+    public function viewDJReviews() {
+        $this->newEntity(Search::class)->doSearch();
+    }
+    
+    private function emitEditList($editlist) {
+        $description = $_REQUEST["description"];
+        $date = $_REQUEST["date"];
+        $time = $_REQUEST["time"];
+        $airname = $_REQUEST["airname"];
+        $playlist = $_REQUEST["playlist"];
+        $button = $_REQUEST["button"];
+        $fromtime = $_REQUEST["fromtime"];
+        $totime = $_REQUEST["totime"];
+    
+        if($editlist)
+            $playlist = $editlist;
+        if($button == " Setup New Airname... ") {
+            $displayForm = 1;
+            $djname = trim($_REQUEST["djname"]);
+            if($_REQUEST["newairname"] == " Add Airname " && $djname) {
+                // Insert new airname
+                $success = Engine::api(IDJ::class)->insertAirname($djname, Engine::session()->getUser());
+                if($success > 0) {
+                    $airname = Engine::lastInsertId();
+                    $button = "";
+                    $displayForm = 0;
+                } else
+                    $errorMessage = "<B><FONT CLASS=\"error\">Airname '$djname' is invalid or already exists.</FONT></B>";
+            }
+            if ($displayForm) {
+    ?>
+    <P CLASS="header">Add New Airname</P>
+    <? echo $errorMessage; ?>
+    <FORM ACTION="?" METHOD=POST>
+    <TABLE CELLPADDING=2 CELLSPACING=0>
+      <TR>
+        <TD ALIGN=RIGHT>Airname:</TD>
+        <TD><INPUT TYPE=TEXT NAME=djname CLASS=input SIZE=30></TD>
+      </TR>
+      <TR>
+        <TD>&nbsp;</TD>
+        <TD><INPUT TYPE=SUBMIT NAME="newairname" VALUE=" Add Airname "></TD>
+      </TR>
+    </TABLE>
+    <INPUT TYPE=HIDDEN NAME=button VALUE=" Setup New Airname... ">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=action VALUE="<?echo $playlist?'editList':'newList';?>">
+    <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?echo $playlist;?>">
+    <INPUT TYPE=HIDDEN NAME=description VALUE="<?echo htmlentities(stripslashes($description));?>">
+    <INPUT TYPE=HIDDEN NAME=date VALUE="<?echo htmlentities(stripslashes($date));?>">
+    <INPUT TYPE=HIDDEN NAME=time VALUE="<?echo htmlentities(stripslashes($time));?>">
+    <INPUT TYPE=HIDDEN NAME=fromtime VALUE="<?echo htmlentities(stripslashes($fromtime));?>">
+    <INPUT TYPE=HIDDEN NAME=totime VALUE="<?echo htmlentities(stripslashes($totime));?>">
+    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
+    </FORM>
+    <?
+                UI::setFocus("djname");
+                return;
+            }
+        }
+        if($_REQUEST["validate"] == "edit") {
+            list($year, $month, $day) = explode("-", $date);
+            if(strlen($fromtime) && strlen($totime))
+                $time = $this->composeTime($fromtime, $totime);
+            if(checkdate($month, $day, $year) &&
+                    ($time != "") && ($description != "")) {
+                // Success - Run the query
+                if($playlist) {
+                    $success = Engine::api(IPlaylist::class)->updatePlaylist(
+                            $playlist, $date, $time, $description, $airname);
+                    $this->action = "listEditorEdit";
+                    $this->emitEditor();
+                } else {
+                    $success = Engine::api(IPlaylist::class)->insertPlaylist(
+                             Engine::session()->getUser(),
+                             $date, $time, $description, $airname);
+                    $_REQUEST["playlist"] = Engine::lastInsertId();
+                    $this->action = "listEditorNew";
+                    $this->emitEditor();
+                }
+                return;
+            } else
+                echo "<B><FONT CLASS=\"error\">Ensure fields are not blank and date is valid.</FONT></B>\n";
+        }
+        if($playlist) {
+            echo "<P CLASS=\"header\">Edit Show Information</P>\n";
+            $row = Engine::api(IPlaylist::class)->getPlaylist($playlist);
+            $description = $row[0];
+            $date = $row[1];
+            $time = $row[2];
+            if(!$airname)
+                $airname = $row[3];
+        } else {
+            echo "<P CLASS=\"header\">Enter Show Information</P>\n";
+            $date = date("Y-m-d");
+        }
+    ?>
+    <FORM ACTION="?" METHOD=POST>
+    <TABLE CELLPADDING=2 CELLSPACING=0>
+      <TR>
+        <TD ALIGN=RIGHT>Show Name:</TD>
+        <TD><INPUT TYPE=TEXT NAME=description VALUE="<?echo htmlentities(stripslashes($description));?>" CLASS=input SIZE=30></TD>
+      </TR><TR>
+        <TD ALIGN=RIGHT>Date:</TD>
+        <TD><INPUT TYPE=TEXT NAME=date VALUE="<?echo htmlentities(stripslashes($date));?>" CLASS=input SIZE=15></TD>
+      </TR><TR>
+        <TD ALIGN=RIGHT>Time Slot:</TD>
+    <?
+        if(strlen($fromtime) && strlen($totime)
+                       || $this->extractTime($time, $fromtime, $totime)) {
+            // Emit the time in canonical format
+            echo "    <TD><SELECT NAME=fromtime>\n";
+            for($i=0; $i<24; $i++) {
+                for($j=0; $j<60; $j+=30) {
+                    $ovalue = sprintf("%02d%02d", $i, $j);
+                    $selected = ($ovalue == $fromtime)?" SELECTED":"";
+                    echo "          <OPTION VALUE=\"$ovalue\"$selected>".$this->hourToAMPM($ovalue, 1)."\n";
+                }
+            }
+            echo "        </SELECT> - <SELECT NAME=totime>\n";
+            for($i=0; $i<24; $i++) {
+                for($j=0; $j<60; $j+=30) {
+                    $ovalue = sprintf("%02d%02d", $i, $j);
+                    $selected = ($ovalue == $totime)?" SELECTED":"";
+                    echo "          <OPTION VALUE=\"$ovalue\"$selected>".$this->hourToAMPM($ovalue, 1)."\n";
+                }
+            }
+            echo "        </SELECT></TD>\n";
+        } else
+            // Emit the time in legacy format
+            echo "    <TD><INPUT TYPE=TEXT NAME=time VALUE=\"". htmlentities(stripslashes($time)) . "\" CLASS=input SIZE=15></TD>\n";
+    ?>
+      </TR><TR>
+        <TD ALIGN=RIGHT>DJ Airname:</TD>
+        <TD><SELECT NAME=airname>
+    <?
+        $records = Engine::api(IDJ::class)->getAirnames(Engine::session()->getUser());
+        while ($records && ($row = $records->fetch())) {
+           $selected = ($row[0] == $airname)?" SELECTED":"";
+           echo "            <OPTION VALUE=\"" . $row[0] ."\"" . $selected .
+                ">$row[1]\n";
+        }
+        $selected = $airname?"":" SELECTED";
+        echo "            <OPTION VALUE=\"\"$selected>(unpublished playlist)\n";
+    ?>
+            </SELECT><INPUT TYPE=SUBMIT NAME=button VALUE=" Setup New Airname... "></TD>
+      </TR><TR>
+        <TD>&nbsp;</TD>
+    <?
+        if($playlist)
+            echo "    <TD><INPUT TYPE=SUBMIT onClick=\"return ConfirmTime();\" VALUE=\" Next &gt;&gt; \"></TD>\n";
+        else
+            echo "    <TD><INPUT TYPE=SUBMIT onClick=\"return ConfirmTime();\" VALUE=\" Create \"></TD>\n";
+    ?>
+      </TR>
+    </TABLE>
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=action VALUE="<?echo $playlist?'editList':'newList';?>">
+    <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?echo $playlist;?>">
+    <INPUT TYPE=HIDDEN NAME=validate VALUE="edit">
+    </FORM>
+    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    function ConfirmTime() {
+      return document.forms[0].fromtime.value != '0000' ||
+          document.forms[0].totime.value != '0000' ||
+          confirm("If your show is really on midnight - midnight, click 'OK'; otherwise, click 'Cancel' and set the correct time.");
+    }
+    // -->
+    </SCRIPT>
+    <?
+        UI::setFocus("description");
+    }
+    
+    private function deletePlaylist($playlist) {
+        Engine::api(IPlaylist::class)->deletePlaylist($playlist);
+    }
+    
+    private function emitConfirm($name, $message, $action, $rtaction="") {
+    ?>
+    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    function Confirm<? echo $name; ?>()
+    {
+    <? if($rtaction) { ?>
+      if(document.forms[0].<? echo $rtaction; ?>.selectedIndex >= 0) {
+        action = document.forms[0].<? echo $rtaction; ?>.options[document.forms[0].<? echo $rtaction; ?>.selectedIndex].value;
+      } else {
+        return;
+      }
+    <? } ?>
+      answer = confirm("<? echo $message; ?>");
+      if(answer != 0) {
+        location = "<?
+           echo "?$action";
+           if($rtaction)
+              echo "&$rtaction=\" + action";
+           else
+              echo "\""; ?>;
+      }
+    }
+    // -->
+    </SCRIPT>
+    <?
+    }
+    
+    private function restorePlaylist($playlist) {
+        Engine::api(IPlaylist::class)->restorePlaylist($playlist);
+    }
+    
+    private function getDeletedPlaylistCount() {
+        return Engine::api(IPlaylist::class)->getDeletedPlaylistCount(Engine::session()->getUser());
+    }
+
+    public function emitEditListNew() {
+        $this->emitEditList(0);
+    }
+    
+    public function emitEditListSel() {
+        $playlist = $_REQUEST["playlist"];
+        if(($_REQUEST["button"] == " Delete ") && $playlist)
+            $this->deletePlaylist($playlist);
+        else if($_REQUEST["validate"] && $playlist) {
+            if($this->subaction == "restore") {
+                $this->restorePlaylist($playlist);
+            } else {
+                $this->emitEditList($playlist);
+                return;
+            }
+        }
+
+        $menu[] = [ "u", "", "Playlists", "emitEditListSelNormal" ];
+        if($this->getDeletedPlaylistCount())
+            $menu[] = [ "u", "restore", "Deleted Playlists", "emitEditListSelDeleted" ];
+        else
+            $this->subaction = "";
+        $this->dispatchSubaction($this->action, $this->subaction, $menu);
+    }
+    
+    // CheckBrowserCaps
+    //
+    // Check browser's capabilities:
+    //     noTables property set true if browser does not support tables
+    //
+    private function checkBrowserCaps() {
+        // For now, we naively assume all browsers support tables except Lynx.
+        $this->noTables = (substr($_SERVER["HTTP_USER_AGENT"], 0, 5) == "Lynx/");
+    }
+
+    public function emitEditListSelNormal() {
+    ?>
+    <FORM ACTION="?" METHOD=POST>
+    <B>Select Playlist:</B><BR>
+    <TABLE CELLPADDING=0 BORDER=0><TR><TD>
+    <SELECT NAME=playlist SIZE=10>
+    <?
+        // Setup $noTables for handling of 'Delete' function
+        $this->checkBrowserCaps();
+    
+        $records = Engine::api(IPlaylist::class)->getListsSelNormal(Engine::session()->getUser());
+        while($records && ($row = $records->fetch()))
+            echo "  <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3]\n";
+    ?>
+    </SELECT></TD></TR>
+    <TR><TD>
+    <INPUT TYPE=SUBMIT NAME=button VALUE=" Edit ">&nbsp;&nbsp;&nbsp;
+    <? if($this->noTables) { ?>
+    <INPUT TYPE=SUBMIT NAME=button VALUE=" Delete ">
+    <? } else { ?>
+    <INPUT TYPE=BUTTON NAME=button onClick="ConfirmDelete()" VALUE=" Delete ">
+    <? } ?>
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=action VALUE="editList">
+    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
+    </TD></TR></TABLE>
+    </FORM>
+    <?
+        if(!$this->noTables)
+            $this->emitConfirm("Delete",
+                        "This will delete the selected playlist.  Are you sure you want to do this?",
+                        "button=+Delete+&session=".$this->session->getSessionID()."&action=editList&validate=y",
+                        "playlist");
+        UI::setFocus("playlist");
+    }
+    
+    public function emitEditListSelDeleted() {
+    ?>
+    <FORM ACTION="?" METHOD=POST>
+    <B>Select Playlist to Restore:</B><BR>
+    <TABLE CELLPADDING=0 BORDER=0><TR><TD>
+    <SELECT NAME=playlist SIZE=10>
+    <?
+        // Setup $this->noTables for handling of 'Delete' function
+        $this->checkBrowserCaps();
+    
+        $records = Engine::api(IPlaylist::class)->getListsSelDeleted(Engine::session()->getUser());
+        while($records && ($row = $records->fetch())) {
+            echo "  <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3] (expires $row[4])\n";
+        }
+    ?>
+    </SELECT></TD></TR>
+    <TR><TD>
+    <INPUT TYPE=SUBMIT NAME=button VALUE=" Restore ">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=action VALUE="editList">
+    <INPUT TYPE=HIDDEN NAME=subaction VALUE="restore">
+    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
+    </TD></TR></TABLE>
+    <P><B>Note: Deleted playlists automatically expire on the date indicated.</B></P></FORM>
+    <?
+        UI::setFocus("playlist");
+    }
+    
+    private function emitList($playlist, $id) {
+    ?>
+      <HR>
+      <TABLE CELLPADDING=2>
+    <?
+        $records = Engine::api(IPlaylist::class)->getTracks($playlist, 1);
+        while($records && ($row = $records->fetch())) {
+            if(!$header) {
+                echo "    <TR><TH COLSPAN=2>&nbsp;</TH><TH>Tag</TH><TH>Artist</TH><TH>Track</TH><TH>Album/Label</TH></TR>\n";
+                $header = 1;
+            }
+            $class = ($id==$row[5])?"sel":"nav";
+            echo "    <TR><TD CLASS=\"arrowCell\"><DIV STYLE=\"border:0; margin:0; padding:0; line-height:4px;\"><A HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=$row[5]&amp;action=$this->action&amp;seq=upTrack\"><IMG SRC=\"img/arrow_up_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALT=\"up\"></A><BR>\n";
+            echo "          <IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"><BR>\n";
+            echo "          <A HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=$row[5]&amp;action=$this->action&amp;seq=downTrack\"><IMG SRC=\"img/arrow_down_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALT=\"down\"></A></DIV></TD>\n";
+            echo "      <TD VALIGN=TOP><A CLASS=\"$class\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=$row[5]&amp;action=$this->action&amp;seq=editTrack\"><B>&gt;&gt;</B></A></TD>\n";
+            if(substr($row[1], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
+                echo "      <TD COLSPAN=4><HR SIZE=2 NOSHADE STYLE=\"color:#6b3333\"></TD></TR>\n";
+            else
+                echo "      <TD ALIGN=RIGHT VALIGN=TOP>$row[0]</TD><TD VALIGN=TOP>" .
+                     $this->smartURL($row[1]) . "</TD><TD VALIGN=TOP>" .
+                     $this->smartURL($row[2]) . "</TD><TD VALIGN=TOP>" . 
+                     $this->smartURL($row[3], !$row[0]) . "<BR><FONT CLASS=\"sub\">" .
+                     $this->smartURL($row[4]) . "</FONT></TD></TR>\n";
+        }
+        echo "  </TABLE>\n";
+    }
+    
+    private function emitTagForm($playlist, $message) {
+    ?>
+      <? $this->emitPlaylistTitle($playlist); ?>
+      <P CLASS="header">Add Track:</P>
+    <?
+        if($message != "")
+            echo "<FONT CLASS=\"error\"><B>$message</B></FONT><BR>\n";
+    ?>
+      <FORM ACTION="?" METHOD=POST>
+      <TABLE CELLPADDING=3>
+      <TR>
+        <TD ALIGN=RIGHT>Tag:</TD>
+        <TD><INPUT TYPE=TEXT NAME=tag CLASS=input SIZE=10></TD>
+        <TD><INPUT TYPE=SUBMIT VALUE="Next &gt;&gt;">
+            <INPUT TYPE=HIDDEN NAME=session VALUE="<? echo $this->session->getSessionID(); ?>">
+            <INPUT TYPE=HIDDEN NAME=playlist VALUE="<? echo $playlist; ?>">
+            <INPUT TYPE=HIDDEN NAME=seq VALUE="tagForm">
+            <INPUT TYPE=HIDDEN NAME=action VALUE="<? echo $this->action; ?>"></TD>
+      </TR>
+      <TR>
+        <TD ALIGN=RIGHT>or</TD>
+        <TD COLSPAN=2><INPUT TYPE=SUBMIT NAME="separator" VALUE="Insert Set Separator"></TD>
+      </TR>
+      </TABLE>
+      </FORM>
+      Leave tag blank and select <B>Next</B> for non-Zookeeper album.
+      <P>
+    <?
+        UI::setFocus("tag");
+    }
+    
+    private function emitTrackField($tag, $seltrack, $id) {
+        $matched = 0;
+        $track = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 100, $tag);
+        if(sizeof($track)>0) {
+            echo "      <SELECT NAME=ctrack>\n";
+            for($i = 0; $i < sizeof($track); $i++) {
+                if($track[$i]["track"] == $seltrack) {
+                    $matched = 1;
+                    $selected = " SELECTED";
+                } else
+                    $selected = "";
+                echo "        <OPTION VALUE=\"".$track[$i]["seq"]."\"$selected>".$track[$i]["seq"].". ".htmlentities($track[$i]["artist"])." - ".htmlentities($track[$i]["track"])."\n";
+            }
+        } else {
+            echo "      <SELECT NAME=track>\n";
+            $track = Engine::api(ILibrary::class)->search(ILibrary::TRACK_KEY, 0, 100, $tag);
+            for($i = 0; $i < sizeof($track); $i++) {
+                if($track[$i]["track"] == $seltrack) {
+                    $matched = 1;
+                    $selected = " SELECTED";
+                } else
+                    $selected = "";
+                echo "        <OPTION VALUE=\"".htmlentities($track[$i]["track"])."\"$selected>".$track[$i]["seq"].". ".htmlentities($track[$i]["track"])."\n";
+            }
+        }
+    
+        $selected = (($matched==0) && ($id!=0))?" SELECTED":"";
+        echo "        <OPTION VALUE=\"\"$selected> -- Enter Custom Track Title -- \n";
+        echo "      </SELECT>\n";
+    }
+    
+    private function emitEditForm($playlist, $id, $album, $track) {
+      // Setup $this->noTables for handling of 'Delete' function
+      $this->checkBrowserCaps();
+      $sep = $id && substr($album["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK;
+    ?>
+      <P CLASS="header"><? echo $id?"Editing highlighted":"Adding";?> <?echo $sep?"set separator":"track"?>:</P>
+      <FORM ACTION="?" METHOD=POST>
+    <? if($sep) { ?>
+      <INPUT TYPE=HIDDEN NAME=separator VALUE="true">
+      <TABLE>
+    <? } else if($album == "" || $album["tag"] == "") { ?>
+      <TABLE CELLPADDING=0 CELLSPACING=0>
+        <TR>
+          <TD ALIGN=RIGHT>Artist:</TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=artist MAXLENGTH=80 VALUE="<?echo htmlentities($album?$album["artist"]:"");?>" CLASS=input SIZE=40></TD>
+        </TR>
+        <TR>
+          <TD ALIGN=RIGHT>Track:</TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=track MAXLENGTH=80 VALUE="<?echo htmlentities($track);?>" CLASS=input SIZE=40></TD>
+        </TR>
+        <TR>
+          <TD ALIGN=RIGHT>Album:</TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=album MAXLENGTH=80 VALUE="<?echo htmlentities($album?$album["album"]:"");?>" CLASS=input SIZE=40></TD>
+        </TR>
+        <TR>
+          <TD ALIGN=RIGHT>Label:</TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=label MAXLENGTH=80 VALUE="<?echo htmlentities($album?$album["label"]:"");?>" CLASS=input SIZE=40></TD>
+        </TR>
+    <? } else { ?>
+      <INPUT TYPE=HIDDEN NAME=artist VALUE="<?echo htmlentities($album["artist"]);?>">
+      <INPUT TYPE=HIDDEN NAME=album VALUE="<?echo htmlentities($album["album"]);?>">
+      <INPUT TYPE=HIDDEN NAME=otrack VALUE="<?echo htmlentities(stripslashes($track));?>">
+      <INPUT TYPE=HIDDEN NAME=label VALUE="<?echo htmlentities($album["label"]);?>">
+      <TABLE>
+        <TR><TD ALIGN=RIGHT>Artist:</TD>
+            <TH ALIGN=LEFT><? echo htmlentities($album["artist"]); ?></TH></TR>
+        <TR><TD ALIGN=RIGHT>Album:</TD>
+            <TH ALIGN=LEFT><? echo htmlentities($album["album"]); ?></TH></TR>
+        <TR><TD ALIGN=RIGHT>Track:</TD>
+            <TD ALIGN=LEFT><? $this->emitTrackField($album["tag"], $track, $id); ?></TD>
+        </TR>
+    <? } ?>
+        <TR>
+          <TD>&nbsp;</TD>
+          <TD>
+    <? if($id) { ?>
+              <INPUT TYPE=SUBMIT NAME=button VALUE="  Save  ">&nbsp;&nbsp;&nbsp;
+    <?     if($this->noTables) { ?>
+              <INPUT TYPE=SUBMIT NAME=button VALUE=" Delete ">
+    <?     } else { ?>
+              <INPUT TYPE=BUTTON NAME=button onClick="ConfirmDelete()" VALUE=" Delete ">
+    <?     } ?>
+              <INPUT TYPE=HIDDEN NAME=id VALUE="<?echo $id;?>">
+    <? } else { ?>
+              <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
+    <? } ?>
+              <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+              <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?echo $playlist;?>">
+              <INPUT TYPE=HIDDEN NAME=action VALUE="<?echo $this->action;?>">
+              <INPUT TYPE=HIDDEN NAME=tag VALUE="<?echo $album["tag"];?>">
+              <INPUT TYPE=HIDDEN NAME=seq VALUE="editForm">
+          </TD>
+      </TR>
+      </TABLE>
+      </FORM>
+    <?
+        if($id && !$this->noTables)
+            $this->emitConfirm("Delete",
+                        "Delete this track?",
+                        "button=+Delete+&session=".$this->session->getSessionID()."&action=$this->action&playlist=$playlist&id=$id&seq=editForm");
+        if($sep)
+            UI::setFocus();
+        else
+            UI::setFocus(($album == "" || $album["tag"] == "")?"artist":"track");
+    }
+    
+    private function emitTrackForm($playlist, $id, $album, $track) {
+    ?>
+      <P CLASS="header"><? echo $id?"Editing highlighted":"Adding";?> track:</P>
+      <FORM ACTION="?" METHOD=POST>
+      <INPUT TYPE=HIDDEN NAME=artist VALUE="<?echo htmlentities($album["artist"]);?>">
+      <INPUT TYPE=HIDDEN NAME=album VALUE="<?echo htmlentities($album["album"]);?>">
+      <INPUT TYPE=HIDDEN NAME=label VALUE="<?echo htmlentities($album["label"]);?>">
+      <TABLE>
+        <TR><TD ALIGN=RIGHT>Artist:</TD>
+            <TH ALIGN=LEFT><? echo htmlentities($album["artist"]); ?></TH></TR>
+        <TR><TD ALIGN=RIGHT>Album:</TD>
+            <TH ALIGN=LEFT><? echo htmlentities($album["album"]); ?></TH></TR>
+        <TR><TD ALIGN=RIGHT>Track:</TD>
+            <TD><INPUT TYPE=TEXT NAME=track MAXLENGTH=80 CLASS=input VALUE="<?echo htmlentities($track);?>"></TD></TR>
+        <TR><TD></TD><TD>
+    <? if($id) { ?>
+          <INPUT TYPE=SUBMIT VALUE="  Save  ">
+          <INPUT TYPE=HIDDEN NAME=id VALUE="<?echo $id;?>">
+    <? } else { ?>
+          <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
+    <? } ?>
+          <INPUT TYPE=HIDDEN NAME=tag VALUE="<?echo $album["tag"];?>">
+          <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+          <INPUT TYPE=HIDDEN NAME=action VALUE="<?echo $this->action;?>">
+          <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?echo $playlist;?>">
+          <INPUT TYPE=HIDDEN NAME=seq VALUE="editForm">
+        </TD></TR>
+      </TABLE>
+      </FORM>
+    <?
+        UI::setFocus("track");
+    }
+    
+    private function insertTrack($playlist, $tag, $artist, $track, $album, $label) {
+        // Run the query
+        $success = Engine::api(IPlaylist::class)->insertTrack($playlist,
+                     $tag, $artist, $track, $album, $label);    
+    }
+    
+    private function updateTrack($id, $tag, $artist, $track, $album, $label) {
+        // Run the query
+        Engine::api(IPlaylist::class)->updateTrack($id, $tag, $artist, $track, $album, $label);
+    }
+    
+    private function deleteTrack($id) {
+        // Run the query
+        $success = Engine::api(IPlaylist::class)->deleteTrack($id);
+    }
+    
+    private function emitPlaylistTitle($playlist) {
+        // Print the header
+        $script = "?target=export";
+        $row = Engine::api(IPlaylist::class)->getPlaylist($playlist);
+        echo "<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%\">\n    <TR>\n      <TH ALIGN=LEFT>";
+        echo "Playlist for $row[0]</TH>\n      <TH ALIGN=RIGHT>$row[1]</TH>\n";
+        echo "      <TH ALIGN=RIGHT VALIGN=TOP><A CLASS=\"sub\" HREF=\"#top\" onClick='window.open(\"$script&amp;session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;format=html\")'>Printable playlist</A></TH>\n    </TR>\n  </TABLE>\n";
+    }
+    
+    private function insertSetSeparator($playlist) {
+        $specialTrack = IPlaylist::SPECIAL_TRACK;
+        $this->insertTrack($playlist, 0, $specialTrack, $specialTrack, $specialTrack, $specialTrack);
+    }
+    
+    public function emitEditor() {
+        $artist = $_REQUEST["artist"];
+        $track = $_REQUEST["track"];
+        $ctrack = $_REQUEST["ctrack"];
+        $album = $_REQUEST["album"];
+        $tag = $_REQUEST["tag"];
+        $playlist = $_REQUEST["playlist"];
+        $id = $_REQUEST["id"];
+        $seq = $_REQUEST["seq"];
+        $button = $_REQUEST["button"];
+        $otrack = $_REQUEST["otrack"];
+        $label = $_REQUEST["label"];
+        $separator = $_REQUEST["separator"];
+    ?>
+    <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+    <TR><TD HEIGHT=185 VALIGN=TOP>
+    <?
+        switch ($seq) {
+        case "tagForm":
+            if($separator) {
+                $this->insertSetSeparator($playlist);
+                $this->emitTagForm($playlist, "");
+            } else if($tag != "") {
+                // Lookup tag
+                $albumrec = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+                if(sizeof($albumrec) == 0) {
+                    // invalid tag
+                    $this->emitTagForm($playlist, "Invalid Tag");
+                } else {
+                    // Secondary search for label name
+                    $lab = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $albumrec[0]["pubkey"]);
+                    if(sizeof($lab)){
+                        $albumrec[0]["label"] = $lab[0]["name"];
+                    } else
+                        $albumrec[0]["label"] = "(Unknown)";
+                    $this->emitEditForm($playlist, $id, $albumrec[0], $track);
+                }
+            } else
+                $this->emitEditForm($playlist, $id, "", "");
+            break;
+        case "editForm":
+            if(($button == " Delete ") && $id) {
+                $this->deleteTrack($id);
+                $id = "";
+                $this->emitTagForm($playlist, "");
+            } else if($separator) {
+                $id = "";
+                $this->emitTagForm($playlist, "");
+            } else if(($artist == "") || ($album == "") ||
+                            (($label == "") && ($tag == ""))) {
+                $albuminfo = array("tag"=>$tag,
+                              "artist"=>stripslashes($artist),
+                              "album"=>stripslashes($album),
+                              "label"=>stripslashes($label));
+                $this->emitEditForm($playlist, $id, $albuminfo, stripslashes($track));
+            } else if(($track == "") && ($ctrack == "")) {
+                $albuminfo = array("tag"=>$tag,
+                              "artist"=>stripslashes($artist),
+                              "album"=>stripslashes($album),
+                              "label"=>stripslashes($label));
+                $this->emitTrackForm($playlist, $id, $albuminfo, stripslashes($otrack));
+            } else {
+                if($ctrack) {
+                    $track = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 100, $tag);
+                    for($i = 0; $i < sizeof($track); $i++) {
+                        if($track[$i]["seq"] == $ctrack) {
+                            $artist = addslashes($track[$i]["artist"]);
+                            $track = addslashes($track[$i]["track"]);
+                            break;
+                        }
+                    }
+                }
+                if($id) {
+                    $this->updateTrack($id, $tag, $artist, $track, $album, $label);
+                    $id = "";
+                } else
+                    $this->insertTrack($playlist, $tag, $artist, $track, $album, $label);
+                $this->emitTagForm($playlist, "");
+            }
+            break;
+        case "editTrack":
+            // Run the query
+            $albuminfo = Engine::api(IPlaylist::class)->getTrack($id);
+            if($albuminfo)
+                $track = $albuminfo['track'];
+            $this->emitEditForm($playlist, $id, $albuminfo, $track);
+            break;
+        case "upTrack":
+            Engine::api(IPlaylist::class)->moveTrackUpDown($playlist, $id, 1);
+            $this->emitTagForm($playlist, "");
+            break;
+        case "downTrack":
+            Engine::api(IPlaylist::class)->moveTrackUpDown($playlist, $id, 0);
+            $this->emitTagForm($playlist, "");
+            break;
+        default:
+            $this->emitTagForm($playlist, "");
+            break;
+        }
+    ?>
+    </TD></TR>
+    <TR><TD>
+    <? $this->emitList($playlist, $id); ?>
+    </TD></TR>
+    </TABLE>
+    <?
+    }
+    
+    public function emitImportExportList() {
+       $menu[] = [ "u", "", "Export Playlist", "emitExportList" ];
+       $menu[] = [ "u", "import", "Import Playlist", "emitImportList" ];
+       $this->dispatchSubaction($this->action, $this->subaction, $menu);
+    }
+    
+    public function emitExportList() {
+    ?>
+    <FORM ACTION="?" METHOD=POST>
+    <B>Select Playlist:</B><BR>
+    <TABLE CELLPADDING=0 BORDER=0><TR><TD>
+    <SELECT NAME=playlist SIZE=10>
+    <?
+        // Run the query
+        $records = Engine::api(IPlaylist::class)->getListsSelNormal(Engine::session()->getUser());
+        while($records && ($row = $records->fetch()))
+            echo "  <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3]\n";
+    ?>
+    </SELECT></TD></TR>
+    <TR><TD>
+       <B>Export As:</B>
+       <INPUT TYPE=RADIO NAME=format VALUE=csv CHECKED>CSV
+       <INPUT TYPE=RADIO NAME=format VALUE=xml>XML
+       <INPUT TYPE=RADIO NAME=format VALUE=html>HTML
+    </TD></TR>
+    <TR><TD>
+    <INPUT TYPE=SUBMIT VALUE=" Export Playlist ">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=target VALUE="export">
+    </TD></TR></TABLE>
+    </FORM>
+    <?
+        UI::setFocus("playlist");
+    }
+    
+    private static function zkfeof(&$fd, &$tempbuf) {
+        return feof($fd) && !strlen($tempbuf);
+    }
+    
+    private static function zkfgets(&$fd, $buflen, &$tempbuf) {
+        // Continue reading until we hit a CR or LF
+        for($posn = strpos($tempbuf, "\n"), $posr = strpos($tempbuf, "\r");
+                !is_int($posn) && !is_int($posr) && !feof($fd);
+                $posn = strpos($tempbuf, "\n"), $posr = strpos($tempbuf, "\r"))
+            $tempbuf .= fread($fd, $buflen);
+    
+        if(is_int($posn) && is_int($posr))
+            // We hit both a CR and LF; use the first one 
+            $pos = min($posn, $posr);
+        else
+            // We hit either CR or LF alone, or neither
+            $pos = $posn + $posr;
+    
+        if($pos) {
+            // We hit a CR or LF; return the line
+            $out = substr($tempbuf, 0, $pos);
+    
+            // Advance buf past CR, LF, or CRLF to next line
+            $tempbuf = substr($tempbuf,
+                          ($posr && substr($tempbuf, $pos+1, 1) == "\n")?($pos+2):($pos+1));
+            return $out;
+        } else {
+            // EOF; return buffer remains, if any
+            $out = $tempbuf;
+            $tempbuf = "";
+            return $out;
+        }
+    }
+    
+    public function emitImportList() {
+        $validate = $_REQUEST["validate"];
+        $description = $_REQUEST["description"];
+        $date = $_REQUEST["date"];
+        $time = $_REQUEST["time"];
+        $airname = $_REQUEST["airname"];
+        $playlist = $_REQUEST["playlist"];
+        $button = $_REQUEST["button"];
+        $djname = $_REQUEST["djname"];
+        $newairname = $_REQUEST["newairname"];
+        $userfile = $_FILES['userfile']['tmp_name'];
+        $fromtime = $_REQUEST["fromtime"];
+        $totime = $_REQUEST["totime"];
+    
+        if($button == " Setup New Airname... ") {
+            $displayForm = 1;
+            $djname = trim($djname);
+            if($newairname == " Add Airname " && $djname) {
+                // Insert new airname
+                $success = Engine::api(IDJ::class)->insertAirname($djname, Engine::session()->getUser());
+                if($success > 0) {
+                    $airname = Engine::lastInsertId();
+                    $button = "";
+                    $displayForm = 0;
+                } else
+                    $errorMessage = "<B><FONT CLASS=\"error\">Airname '$djname' is invalid or already exists.</FONT></B>";
+            }
+            if ($displayForm) {
+    ?>
+    <P CLASS="header">Add New Airname</P>
+    <? echo $errorMessage; ?>
+    <FORM ACTION="?" METHOD=POST>
+    <TABLE CELLPADDING=2 CELLSPACING=0>
+      <TR>
+        <TD ALIGN=RIGHT>Airname:</TD>
+        <TD><INPUT TYPE=TEXT NAME=djname SIZE=30></TD>
+      </TR>
+      <TR>
+        <TD>&nbsp;</TD>
+        <TD><INPUT TYPE=SUBMIT NAME="newairname" VALUE=" Add Airname "></TD>
+      </TR>
+    </TABLE>
+    <INPUT TYPE=HIDDEN NAME=button VALUE=" Setup New Airname... ">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
+    <INPUT TYPE=HIDDEN NAME=subaction VALUE="import">
+    <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?echo $playlist;?>">
+    <INPUT TYPE=HIDDEN NAME=description VALUE="<?echo htmlentities(stripslashes($description));?>">
+    <INPUT TYPE=HIDDEN NAME=date VALUE="<?echo htmlentities(stripslashes($date));?>">
+    <INPUT TYPE=HIDDEN NAME=time VALUE="<?echo htmlentities(stripslashes($time));?>">
+    <INPUT TYPE=HIDDEN NAME=fromtime VALUE="<?echo htmlentities(stripslashes($fromtime));?>">
+    <INPUT TYPE=HIDDEN NAME=totime VALUE="<?echo htmlentities(stripslashes($totime));?>">
+    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
+    </FORM>
+    <?
+                UI::setFocus("djname");
+                return;
+            }
+        }
+        if(!$date)
+            $date = date("Y-m-d");
+        list($year, $month, $day) = explode("-", $date);
+        if(strlen($fromtime) && strlen($totime))
+            $time = $this->composeTime($fromtime, $totime);
+        if(!$userfile || $userfile == "none" ||
+                $description == "" ||
+                $time == "" ||
+                !checkdate($month, $day, $year)) {
+            if($validate == "edit")
+                echo "<B><FONT CLASS=\"error\">Ensure fields are not blank and date is valid.</FONT></B><BR>\n";
+    ?>
+      <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
+        <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
+        <INPUT TYPE=HIDDEN NAME=subaction VALUE="import">
+        <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+        <INPUT TYPE=HIDDEN NAME=validate VALUE="edit">
+        <INPUT TYPE=HIDDEN NAME=MAX_FILE_SIZE VALUE=100000>
+        <TABLE CELLPADDING=2 CELLSPACING=0>
+          <TR>
+            <TD ALIGN=RIGHT>Show Name:</TD>
+            <TD><INPUT TYPE=TEXT NAME=description VALUE="<?echo stripslashes($description);?>" SIZE=30></TD>
+          </TR><TR>
+            <TD ALIGN=RIGHT>Date:</TD>
+            <TD><INPUT TYPE=TEXT NAME=date VALUE="<?echo stripslashes($date);?>" SIZE=15></TD>
+          </TR><TR>
+            <TD ALIGN=RIGHT>Time Slot:</TD>
+    <?
+        if(strlen($fromtime) && strlen($totime)
+                       || $this->extractTime($time, $fromtime, $totime)) {
+            // Emit the time in canonical format
+            echo "        <TD><SELECT NAME=fromtime>\n";
+            for($i=0; $i<24; $i++) {
+                for($j=0; $j<60; $j+=30) {
+                    $ovalue = sprintf("%02d%02d", $i, $j);
+                    $selected = ($ovalue == $fromtime)?" SELECTED":"";
+                    echo "              <OPTION VALUE=\"$ovalue\"$selected>$ovalue\n";
+                }
+            }
+            echo "            </SELECT> - <SELECT NAME=totime>\n";
+            for($i=0; $i<24; $i++) {
+                for($j=0; $j<60; $j+=30) {
+                    $ovalue = sprintf("%02d%02d", $i, $j);
+                    $selected = ($ovalue == $totime)?" SELECTED":"";
+                    echo "              <OPTION VALUE=\"$ovalue\"$selected>$ovalue\n";
+                }
+            }
+            echo "            </SELECT></TD>\n";
+        } else
+            // Emit the time in legacy format
+            echo "        <TD><INPUT TYPE=TEXT NAME=time VALUE=\"". htmlentities(stripslashes($time)) . "\" CLASS=input SIZE=15></TD>\n";
+    ?>
+          </TR><TR>
+            <TD ALIGN=RIGHT>DJ Airname:</TD>
+            <TD><SELECT NAME=airname>
+    <?
+            $records = Engine::api(IDJ::class)->getAirnames(Engine::session()->getUser());
+            while ($records && ($row = $records->fetch())) {
+                $selected = ($row[0] == $airname)?" SELECTED":"";
+                echo "              <OPTION VALUE=\"" . $row[0] ."\"" . $selected .
+                     ">$row[1]\n";
+            }
+            $selected = $airname?"":" SELECTED";
+            echo "              <OPTION VALUE=\"\"$selected>(unpublished playlist)\n";
+    ?>
+                </SELECT><INPUT TYPE=SUBMIT NAME=button VALUE=" Setup New Airname... "></TD>
+          </TR><TR>
+            <TD ALIGN=RIGHT>Import from file:</TD><TD><INPUT NAME=userfile TYPE=file></TD>
+          </TR><TR>
+            <TD>&nbsp;</TD>
+            <TD CLASS="sub">NOTE: File must be in tab delimited format, with one track per line.<BR>
+                Each line may contain either 4 or 5 columns:<BR>
+                <B>artist&nbsp; track&nbsp; album&nbsp; label</B> &nbsp;or&nbsp; <B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label</B>,<BR>
+                where each column is separated by a tab character.<BR>
+                Any file data not in this format will be ignored.</TD>
+          </TR><TR>
+            <TD>&nbsp;</TD>
+            <TD><INPUT TYPE=submit VALUE=" Import Playlist "></TD>
+          </TR>
+        </TABLE>
+      </FORM>
+    <?
+            UI::setFocus("description");
+        } else {
+            // Create the playlist
+            $success = Engine::api(IPlaylist::class)->insertPlaylist(Engine::session()->getUser(), $date, $time, $description, $airname);
+            $playlist = Engine::lastInsertId();
+    
+            // Insert the tracks
+            $count = 0;
+            $fd = fopen($userfile, "r");
+            while(!self::zkfeof($fd, $tempbuf)) {
+                $line = explode("\t", self::zkfgets($fd, 1024, $tempbuf));
+                if(count($line) == 4) {
+                    // artist track album label
+                    $this->insertTrack($playlist,
+                                     0,               // tag
+                                     trim($line[0]),  // artist
+                                     trim($line[1]),  // track
+                                     trim($line[2]),  // album
+                                     trim($line[3])); // label
+                    $count++;
+                } else if(count($line) == 5) {
+                    // artist track album tag label
+                    if($line[3]) {
+                        // Lookup tag
+                        $albumrec = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $line[3]);
+                        if(sizeof($albumrec) == 0) {
+                            // invalid tag
+                            $line[3] = "";
+                        } else {
+                            // update artist and album from tag
+                            $line[0] = $albumrec[0]["artist"];
+                            $line[2] = $albumrec[0]["album"];
+    
+                            // Secondary search for label name
+                            $lab = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $albumrec[0]["pubkey"]);
+                            if(sizeof($lab))
+                                $line[4] = $lab[0]["name"];
+                            else
+                                $line[4] = "(Unknown)";
+                        }
+                    }
+    
+                    $this->insertTrack($playlist,
+                                     trim($line[3]),  // tag
+                                     trim($line[0]),  // artist
+                                     trim($line[1]),  // track
+                                     trim($line[2]),  // album
+                                     trim($line[4])); // label
+                    $count++;
+                }
+            }
+            // echo "<B>Imported $count tracks.</B>\n";
+            fclose($fd);
+            unset($_REQUEST["validate"]);
+            $this->emitEditList($playlist);
+        }
+    }
+    
+    public function updateDJInfo() {
+        $validate = $_REQUEST["validate"];
+        $multi = $_REQUEST["multi"];
+        $url = $_REQUEST["url"];
+        $email = $_REQUEST["email"];
+        $airname = $_REQUEST["airname"];
+    
+        if($validate && $airname) {
+            // Update DJ info
+    
+            if(!strcmp($url, "http://"))
+                $url = "";
+    
+            $success = Engine::api(IDJ::class)->updateAirname($url,
+                     $email, $multi?0:$airname, Engine::session()->getUser());
+            if($success >= 0) {
+                echo "<B>Your profile has been updated.</B>\n";
+                return;
+            } else
+                echo "<B><FONT CLASS=\"error\">Update failed.  Try again later.</FONT></B>";
+            // fall through...
+        }
+        $results = Engine::api(IDJ::class)->getAirnames(
+                     Engine::session()->getUser(), $airname);
+        $airnames = array();
+        while($results && ($row = $results->fetch()))
+            $airnames[] = $row;
+    
+        switch(sizeof($airnames)) {
+        case 0:
+            // No airnames
+    ?>
+    <P><B><FONT CLASS="error">You have no published playlists or airnames.</FONT></B></P>
+    <P>You must setup a DJ Airname for at least one playlist
+       before you can update your profile.</P>
+    <?
+            UI::setFocus();
+            break;
+        case 1:
+            // Only one airname; emit form
+            $url = "http://";
+    ?>
+    <FORM ACTION="?" METHOD=POST>
+    <P><B>Update website and e-mail for airname '<?echo $airnames[0]['airname'];?>'</B></P>
+    <TABLE CELLPADDING=2 BORDER=0>
+      <TR><TD ALIGN=RIGHT>URL:</TD>
+        <TD><INPUT TYPE=TEXT NAME=url VALUE="<?echo $airnames[0]['url'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
+      <TR><TD ALIGN=RIGHT>e-mail:</TD>
+        <TD><INPUT TYPE=TEXT NAME=email VALUE="<?echo $airnames[0]['email'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
+    <?
+            // As we know that multiple DJs are using the 'music' account
+            // (tsk, tsk), let's supress the account update option for music.
+            if($multi && Engine::session()->getUser() != "music" && Engine::session()->getUser() != "kzsu")
+                echo "  <TR><TD>&nbsp</TD><TD><INPUT TYPE=CHECKBOX NAME=multi>&nbsp;Check here to apply this update to all of your DJ airnames</TD></TR>";
+    ?>
+      <TR><TD COLSPAN=2>&nbsp;</TD></TR>
+      <TR><TD>&nbsp;</TD><TD><INPUT TYPE=SUBMIT VALUE="  Update  ">
+              <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+              <INPUT TYPE=HIDDEN NAME=airname VALUE="<?echo $airnames[0]['id'];?>">
+              <INPUT TYPE=HIDDEN NAME=action VALUE="updateDJInfo">
+              <INPUT TYPE=HIDDEN NAME=validate VALUE="y"></TD></TR>
+    </TABLE>
+    </FORM>
+    <?
+            UI::setFocus("url");
+            break;
+        default:
+            // Multiple airnames; emit airname selection form
+    ?>
+    <FORM ACTION="?" METHOD=POST>
+    <B>Select Airname:</B><BR>
+    <TABLE CELLPADDING=0 BORDER=0><TR><TD>
+    <SELECT NAME=airname SIZE=10>
+    <?
+            foreach($airnames as $row) {
+                 echo "  <OPTION VALUE=\"$row[0]\">$row[1]\n";
+            }
+    ?>
+    </SELECT></TD></TR>
+    <TR><TD>
+    <INPUT TYPE=SUBMIT VALUE=" Next &gt;&gt; ">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=action VALUE="updateDJInfo">
+    <INPUT TYPE=HIDDEN NAME=multi VALUE="y">
+    </TD></TR></TABLE>
+    </FORM>
+    <?
+            UI::setFocus("airname");
+            break;
+        }
+    }
+    
+    public function emitShowLink() {
+        $validate = $_REQUEST["validate"];
+        $playlist = $_REQUEST["playlist"];
+        $airname = $_REQUEST["airname"];
+    
+        if($validate && ($playlist == "all" || $airname)) {
+            $results = Engine::api(IDJ::class)->getAirnames(Engine::session()->getUser(), $airname);
+            $airnames = array();
+            while($results && ($row = $results->fetch()))
+                $airnames[] = $row;
+            if(sizeof($airnames) == 1) {
+                // User has only one airname; show the link now
+                $row = $airnames[0];
+    ?>
+    <B>Here is the URL to access all of <?echo $row[1];?>'s playlists:</B>
+    <P CLASS="sub"><B>
+    <?echo UI::getBaseUrl();?>?action=viewDJ&amp;seq=selUser&amp;viewuser=<?echo $row[0];?>
+    </B></P>
+    <P>Cut-and-paste the above URL to provide direct access to your playlists.</P>
+    <?
+           } else {
+                // User has multiple airnames; let them pick one
+    ?>
+    <FORM ACTION="?" METHOD=POST>
+    <B>Select Airname:</B><BR>
+    <TABLE CELLPADDING=0 BORDER=0><TR><TD>
+    <SELECT NAME=airname SIZE=10>
+    <?
+                foreach($airnames as $row) {
+                    echo "  <OPTION VALUE=\"$row[0]\">$row[1]\n";
+                }
+    ?>
+    </SELECT></TD></TR>
+    <TR><TD>
+    <INPUT TYPE=SUBMIT VALUE=" Show URL ">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=action VALUE="showLink">
+    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
+    </TD></TR></TABLE>
+    </FORM>
+    <?
+           }
+           UI::setFocus("airname");
+           return;
+        } else if($validate && $playlist) {
+    ?>
+    <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+    <TR><TD VALIGN=TOP>
+    <B>Here is the URL for this playlist:</B>
+    <P CLASS="sub"><B>
+    <?echo UI::getBaseUrl();?>?action=viewDJ&amp;seq=selList&amp;playlist=<?echo $playlist;?>
+    </B></P>
+    <P>Cut-and-paste the above URL to provide direct access to this playlist.</P>
+    </TD></TR>
+    <TR><TD>&nbsp;</TD></TR>
+    <TR><TD>
+    <HR>
+    <?      $this->viewList($playlist, "showLink"); ?>
+    </TD></TR>
+    </TABLE>
+    <?
+            UI::setFocus();
+            return;
+        }
+    ?>
+    <FORM ACTION="?" METHOD=POST>
+    <B>Select Playlist:</B><BR>
+    <TABLE CELLPADDING=0 BORDER=0><TR><TD>
+    <SELECT NAME=playlist SIZE=10>
+      <OPTION VALUE="all"> -- URL for all of my playlists --
+    <?
+        // Run the query
+        $records = Engine::api(IPlaylist::class)->getPlaylists(1, 0, 0, 0, Engine::session()->getUser());
+        while($records && ($row = $records->fetch()))
+            echo "  <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3]\n";
+    ?>
+    </SELECT></TD></TR>
+    <TR><TD>
+    <INPUT TYPE=SUBMIT VALUE=" Show URL ">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=action VALUE="showLink">
+    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
+    </TD></TR></TABLE>
+    </FORM>
+    <?
+        UI::setFocus("playlist");
+    }
+    
+    private function viewListGetAlbums(&$records, &$albums) {
+        while($row = $records->fetch()) {
+            $row["tag"] = $row[0];
+            $row["artist"] = $row[1];
+            $row["track"] = $row[2];
+            $row["album"] = $row[3];
+            $row["LABELNAME"] = $row[4];
+            $albums[] = $row;
+        }
+    }
+    
+    private function viewList($playlist) {
+        $row = Engine::api(IPlaylist::class)->getPlaylist($playlist, 1);
+        if($row) {
+            list($y,$m,$d) = split("-", $row[1]);
+    
+            $script = "?target=export";
+    
+            echo "<TABLE WIDTH=\"100%\">\n  <TR><TD ALIGN=RIGHT VALIGN=TOP><A HREF=\"#top\" CLASS=\"nav\" onClick='window.open(\"$script&amp;session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;format=html\")'>Printable playlist</A></TD></TR>\n</TABLE>\n";
+            echo "<TABLE WIDTH=\"100%\" CELLPADDING=2 CELLSPACING=0>\n";
+            echo "<TR><TH CLASS=\"secSel\" ALIGN=LEFT>Playlist for $row[0]</TH>\n";
+            echo "<TH ALIGN=CENTER  CLASS=\"secSelSub\">" .
+                 date("l, j F Y", mktime(0,0,0,$m,$d,$y)) . "&nbsp;&nbsp;" .
+                 $this->timeToAMPM($row[2]) . "</TH>\n";
+            echo "<TH ALIGN=RIGHT CLASS=\"secSel\">DJ: ";
+            echo "<A HREF=\"?action=viewDJ&amp;seq=selUser&amp;session=".$this->session->getSessionID()."&amp;viewuser=$row[3]\" CLASS=\"nav2\">$row[4]</A>";
+            echo "</TH></TR>\n";
+            echo "</TABLE>\n";
+    
+            // Print the tracks
+            echo "<TABLE CELLPADDING=2>\n";
+            echo "  <TR><TH ALIGN=LEFT>Artist</TH><TH ALIGN=LEFT>Track</TH><TH></TH><TH ALIGN=LEFT>Album/Label</TH></TR>\n";
+            $records = Engine::api(IPlaylist::class)->getTracks($playlist);
+            $this->viewListGetAlbums($records, $albums);
+            Engine::api(ILibrary::class)->markAlbumsReviewed($albums);
+            if(sizeof($albums) > 0)
+              while(list($index, $row) = each($albums)) {
+                if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK) {
+                  echo "  <TR><TD ALIGN=LEFT COLSPAN=4><HR SIZE=2 NOSHADE STYLE=\"color:#6b3333\"></TD></TR>\n";
+                  continue;
+                }
+                echo "  <TR><TD ALIGN=LEFT VALIGN=TOP>" . $this->smartURL($row["artist"]) . "</TD><TD ALIGN=LEFT VALIGN=TOP>" .
+                            $this->smartURL($row["track"]) . "</TD><TD VALIGN=TOP ALIGN=LEFT>";
+                if($row["REVIEWED"])
+                    echo "<A HREF=\"".
+                         "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
+                         "&amp;q=".
+                         "&amp;action=search&amp;session=".$this->session->getSessionID().
+                         "\"><IMG SRC=\"img/rinfo_beta.gif\" " .
+                         "ALT=\"Album Review\" " .
+                         "WIDTH=12 HEIGHT=11 BORDER=0></A></TD><TD>";
+                else
+                   echo "</TD><TD VALIGN=TOP ALIGN=LEFT>";
+                if($row["tag"]) echo "<A HREF=\"" .
+                      "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
+                      "&amp;q=".
+                      "&amp;action=search&amp;session=".$this->session->getSessionID().
+                      "\" CLASS=\"nav\">";
+    
+                echo $this->smartURL($row["album"], !$row["tag"]);
+                if($row["tag"]) echo "</A>"; 
+                echo "<BR><FONT CLASS=\"sub\">" .
+                            $this->smartURL($row["LABELNAME"]) . "</FONT></TD></TR>\n";
+            }
+            echo "</TABLE>\n";
+        } else
+            echo "<B>Sorry, the playlist you have requested does not exist.</B>";
+    }
+    
+    private function emitViewDJSortFn($a, $b) {
+        return strcasecmp($a["sort"], $b["sort"]);
+    }
+    
+    private function emitViewDJAlbum(&$result, $class="", $count=0) {
+        for($i=0; $i < sizeof($result); $i++) {
+            echo "  <TR><TD VALIGN=TOP ALIGN=\"right\"$class>";
+            if($count)
+                echo (string)($i + 1).".&nbsp;";
+            else
+                echo "&nbsp;&#8226&nbsp;";
+            echo "</TD><TD$class>";
+    
+            // Setup artist and label
+            $artist = preg_match("/^COLL$/i", $result[$i]["artist"])?"Various Artists":$result[$i]["artist"];
+            $label = str_replace(" Records", "", $result[$i]["label"]);
+            $label = str_replace(" Recordings", "", $label);
+    
+            echo $this->smartURL($artist) . "&nbsp;&#8226; <I>";
+    
+            // Album
+            if($result[$i]["tag"])
+                 echo "<A CLASS=\"nav\" HREF=\"".
+                      "?s=byAlbumKey&amp;n=". UI::URLify($result[$i]["tag"]).
+                      "&amp;q=". $maxresults.
+                      "&amp;action=search&amp;session=".$this->session->getSessionID().
+                      "\">";
+    
+            echo $this->smartURL($result[$i]["album"], !$result[$i]["tag"]);
+            if($result[$i]["tag"])
+                echo "</A>";
+            echo "</I>";
+            if($label)
+                echo "&nbsp;&#8226; (".$this->smartURL($label) . ")";
+            echo "</TD></TR>\n";
+        }
+    }
+    
+    public function emitViewDJ() {
+        $seq = $_REQUEST["seq"];
+        $viewuser = $_REQUEST["viewuser"];
+        $playlist = $_REQUEST["playlist"];
+    
+        settype($playlist, "integer");
+        settype($viewuser, "integer");
+    
+        if(((($seq == "selUser") && $viewuser)) ||
+                (($seq == "selList") && !$playlist)) {
+            $results = Engine::api(IDJ::class)->getAirnames(0, $viewuser);
+            if($results)
+                $row = $results->fetch();
+    ?>
+    <FORM ACTION="?" METHOD=POST>
+    <TABLE WIDTH="100%"><TR><TD ALIGN=RIGHT VALIGN=TOP>
+    <?
+            // Emit optional URL and/or e-mail for DJ
+            if($row['url']) {
+                echo "      <A HREF=\"".$row['url']."\" CLASS=\"nav\"><B>Go to ".$row['airname']."'s website</B></A>\n";
+                if($row['email'])
+                    echo "      &nbsp; | &nbsp;\n";
+            }
+            if($row['email']) {
+                echo "      <A HREF=\"mailto:".$row['email']."\" CLASS=\"nav\"><B>e-mail ".$row['airname']."</B></A>\n";
+            }
+    ?>
+    </TD></TR></TABLE>
+    <TABLE WIDTH="100%" CELLSPACING=0>
+      <?
+            $weeks = 10;
+            $limit = 10;
+            $formatEndDate = date("l, j F Y");
+    
+            Engine::api(IPlaylist::class)->getTopPlays($topPlays, $viewuser, $weeks * 7, $limit);
+            if(sizeof($topPlays)) {
+                echo "<TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;".$row['airname']."'s top $limit<BR>&nbsp;<FONT CLASS=\"subhead2\">for the $weeks week period ending $formatEndDate</FONT></TH></TR>\n";
+                $this->emitViewDJAlbum($topPlays, "", 1);
+            }
+    ?>
+    </TABLE>
+    <? if (sizeof($topPlays)) echo "<BR>\n"; ?>
+    <TABLE WIDTH="100%" CELLPADDING=0 CELLSPACING=0 BORDER=0>
+      <TR><TD CLASS="recentPlays" VALIGN=TOP>
+    <?
+            $count = 10;
+            Engine::api(IPlaylist::class)->getRecentPlays($recentPlays, $viewuser, $count);
+            Engine::api(IReview::class)->getRecentReviewsByAirname($recentReviews, $viewuser, $count-1);
+    
+            $block = sizeof($recentReviews)?" BGCOLOR=\"#6289b0\"":"";
+            $blname = sizeof($topPlays)?"":$row['airname'] . "'s ";
+            echo "    <TABLE WIDTH=\"100%\" CELLSPACING=0 BORDER=0$block>\n";
+            if(sizeof($recentPlays)) {
+                echo "<TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;${blname}Recent airplay</TH></TR>";
+                $this->emitViewDJAlbum($recentPlays, $block?" CLASS=\"sub\"":"");
+            }
+    ?>
+        </TABLE>
+      </TD><?
+        if(sizeof($recentReviews)) {
+            echo "<TD>&nbsp;&nbsp;&nbsp;</TD><TD CLASS=\"recentReviews\"VALIGN=TOP>\n";
+            $block = sizeof($recentPlays)?" BGCOLOR=\"#6289b0\"":"";
+            $blname = (sizeof($topPlays) || sizeof($recentPlays))?"":$row['airname'] . "'s ";
+            echo "    <TABLE WIDTH=\"100%\" BORDER=0 CELLSPACING=0$block>\n";
+    
+            echo "      <TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;${blname}Recent reviews</TH></TR>\n";
+            $this->emitViewDJAlbum($recentReviews, $block?" CLASS=\"sub\"":"");
+            if(sizeof($recentReviews) == $count - 1)
+                echo "  <TR><TD></TD><TD ALIGN=LEFT CLASS=\"sub\"><A HREF=\"?s=byReviewer&amp;n=$viewuser&amp;p=0&amp;q=15&amp;action=viewDJReviews&amp;session=".$this->session->getSessionID()."\" CLASS=\"nav\">More reviews...</A></TD></TR>\n";
+            echo "    </TABLE></TD>\n";
+        }
+    
+    ?>
+      </TR></TABLE>
+    <? if (sizeof($topPlays) || sizeof($recentPlays) || sizeof($recentReviews)) echo "<BR>\n"; ?>
+    <TABLE WIDTH="100%">
+      <TR><TH ALIGN=LEFT><?echo $row['airname'];?>'s playlists:</TH></TR>
+      <TR><TD>
+         <SELECT NAME=playlist SIZE=6>
+    <?
+            // Run the query
+            $records = Engine::api(IPlaylist::class)->getPlaylists(0, 0, 0, $viewuser);
+            while($row = $records->fetch())
+                echo "        <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3]\n";
+    ?>
+        </SELECT></TD></TR>
+      <TR><TD>
+        <INPUT TYPE=SUBMIT VALUE=" View Playlist ">
+        <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+        <INPUT TYPE=HIDDEN NAME=viewuser VALUE="<?echo $viewuser;?>">
+        <INPUT TYPE=HIDDEN NAME=action VALUE="viewDJ">
+        <INPUT TYPE=HIDDEN NAME=seq VALUE="selList">
+      </TD></TR>
+    </TABLE>
+    </FORM>
+    <?
+            UI::setFocus("playlist");
+            return;
+        } else if(($seq == "selList") && $playlist) {
+            $this->viewList($playlist);
+            UI::setFocus();
+            return;
+        }
+    
+        $menu[] = [ "a", "", "DJs active past 12 weeks", "emitViewDJMain" ];
+        $menu[] = [ "a", "viewAll", "All DJs", "emitViewDJMain" ];
+        $this->dispatchSubaction($this->action, $this->subaction, $menu);
+    }
+    
+    public function emitViewDJMain() {
+    ?>
+    <TABLE CELLPADDING=2 CELLSPACING=2 BORDER=0>
+      <!--TR><TH COLSPAN=2 ALIGN=LEFT>Select a DJ:</TH></TR-->
+      <TR><TH COLSPAN=2 ALIGN=LEFT><?
+        $last = "";
+        $dot = 0;
+        for($i=0; $i<26; $i++)
+            echo "<A HREF=\"#" . chr($i+65) . "\">" . chr($i+65) . "</A>&nbsp;&nbsp;";
+        echo "</TH></TR>\n  <TR><TD COLSPAN=2>";
+    
+        // Run the query
+        $records = Engine::api(IDJ::class)->getActiveAirnames($this->subaction == "viewAll");
+        $i = 0;
+        while($row = $records->fetch()) {
+            $row["sort"] = preg_match("/^the /i", $row[1])?substr($row[1], 4):$row[1];
+            $dj[$i++] = $row;
+        }
+    
+        if(isset($dj))
+        usort($dj, array($this, "emitViewDJSortFn"));
+    
+        for($j = 0; $j < $i; $j++) {
+            $row = $dj[$j];
+            $cur = strtoupper(substr($row["sort"], 0, 1));
+            if($cur < "A") $cur = "#";
+            if($cur != $last) {
+                $last = $cur;
+                echo "</TD></TR>\n  <TR><TD COLSPAN=2>&nbsp;</TD></TR>\n  <TR><TH VALIGN=TOP><A NAME=\"$last\">$last</A>&nbsp;&nbsp;</TH>\n      <TD VALIGN=TOP>";
+                $dot = 0;
+            }
+    
+            if($dot)
+                echo "&nbsp;&nbsp;&#8226;&nbsp; ";
+            else
+                $dot = 1;
+            
+            echo "<A CLASS=\"nav\" HREF=\"".
+                 "?action=viewDJ&amp;seq=selUser&amp;viewuser=$row[0]&amp;session=".$this->session->getSessionID().
+                 "\">";
+    
+            $displayName = str_replace(" ", "&nbsp;", htmlentities($row[1]));
+            echo "$displayName</A>";
+        }
+        echo "</TD></TR>\n</TABLE>\n";
+    
+        UI::setFocus();
+    }
+    
+    public function emitViewDate() {
+        $seq = $_REQUEST["seq"];
+        $viewdate = $_REQUEST["viewdate"];
+        $playlist = $_REQUEST["playlist"];
+        $month = $_REQUEST["month"];
+        $year = $_REQUEST["year"];
+    
+        settype($playlist, "integer");
+    
+        if(($seq == "selList") && $playlist) {
+            $this->viewList($playlist);
+            UI::setFocus();
+            return;
+        }
+    
+        echo "<P><B>Select Date:</B></P>\n";
+    
+        if(!$month || !$year) {
+            // Set default calendar display to current month
+            $d = getdate(time());
+            $month = $d["mon"];
+            $year = $d["year"];
+        }
+    
+        // Run the query
+        $records = Engine::api(IPlaylist::class)->getShowdates($year, $month);
+        unset($dates);
+        while($row = $records->fetch())
+            $dates .= $row['showdate'] . "|";
+    
+        // Display the calendar
+        $cal = new ZKCalendar;
+        $cal->setSession($this->session);
+        $cal->setDates($dates);
+        echo $cal->getMonthView($month, $year);
+    
+        if(((($seq == "selDate") && $viewdate)) ||
+            (($seq == "selList") && !$playlist)) {
+            list($y,$m,$d) = split("-", $viewdate);
+            $displayDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
+    ?>
+    <BR>
+    <TABLE WIDTH="100%">
+    <TR><TH COLSPAN=3 ALIGN=LEFT CLASS="subhead">Playlists for <?echo $displayDate;?>:</TH></TR>
+    </TABLE>
+    <TABLE CELLPADDING=2 CELLSPACING=2>
+    <?
+            // Run the query
+            $records = Engine::api(IPlaylist::class)->getPlaylists(1, 1, $viewdate, 0, 0, 0);
+            $i=0;
+            while($records && ($row = $records->fetch())) {
+                    echo "<TR><TD ALIGN=\"RIGHT\" CLASS=\"sub\">" . $this->timeToAMPM($row[2]) . "&nbsp;</TD>\n";
+                    echo "    <TD><A HREF=\"".
+                         "?action=viewDate&amp;seq=selList&amp;playlist=".$row[0].
+                         "&amp;session=".$this->session->getSessionID()."\" CLASS=\"nav\">" .
+                          htmlentities($row[3]) . "</A>&nbsp;&nbsp;";
+                    echo "(" . htmlentities($row[5]) . ")</TD></TR>\n";
+                    $i += 1;
+            }
+    ?>
+    </TABLE>
+    <?
+        }
+        UI::setFocus();
+    }
+    
+    public function emitWhatsOnNow() {
+        $record = Engine::api(IPlaylist::class)->getWhatsOnNow();
+        echo "<TABLE WIDTH=\"100%\" BORDER=0 CELLPADDING=2 CELLSPACING=0 STYLE=\"border-style: solid; border-width: 1px 0px 1px 0px; border-color: #cccccc\">\n  <TR><TH ALIGN=LEFT COLSPAN=3 CLASS=\"subhead\">";
+        echo "On KZSU now:</TH></TR>\n  ";
+        ////echo "</TABLE><TABLE WIDTH=\"100%\" BORDER=0 CELLPADDING=0 CELLSPACING=2>\n  ";
+        if($record && ($row = $record->fetch())) {
+            echo "<TR><TH ALIGN=LEFT COLSPAN=3><A HREF=\"".
+                 "?action=viewDJ&amp;seq=selUser&amp;viewuser=".$row["airid"]."&amp;session=".$this->session->getSessionID().
+                 "\" CLASS=\"calNav\">" . htmlentities($row["airname"]) . "</A>&nbsp;&nbsp;&nbsp;";
+            echo "<A HREF=\"".
+                 "?action=viewDate&amp;seq=selList&amp;playlist=".$row[0].
+                 "&amp;session=".$this->session->getSessionID()."\" CLASS=\"nav\">" . htmlentities($row["description"]);
+            echo "</A></TH></TR>\n  ";
+            echo "<TR><TH ALIGN=RIGHT VALIGN=BOTTOM CLASS=\"sub\">" . date("l, j M") . "&nbsp;&nbsp;</TH>\n      <TH ALIGN=LEFT VALIGN=BOTTOM CLASS=\"sub\">" . $this->timeToAMPM($row["showtime"]) . " " . date("T") . "</TH>\n";
+            echo "      <TD ALIGN=RIGHT VALIGN=BOTTOM ROWSPAN=2>Request Line:&nbsp;&nbsp;+1 650 723 9010&nbsp;&nbsp;&nbsp;90.1FM</TD></TR>\n";
+            echo "  <TR>" . $this->timeToZulu($row["showtime"]). "</TR>\n";
+        } else {
+            echo "<TR><TH ALIGN=LEFT COLSPAN=3>[No playlist available]</TH></TR>\n  ";
+            echo "<TR><TH COLSPAN=2>&nbsp;</TH>\n";
+            echo "    <TD ALIGN=RIGHT VALIGN=BOTTOM>Request Line:&nbsp;&nbsp;+1 650 723 9010&nbsp;&nbsp;&nbsp;90.1FM</TD></TR>\n";
+        }
+        ////echo "    <TD ALIGN=RIGHT VALIGN=BOTTOM>Request Line:&nbsp;&nbsp;+1 650 723 9010&nbsp;&nbsp;&nbsp;90.1FM&nbsp;&nbsp;&nbsp;<A CLASS=\"nav\" HREF=\"http://kzsulive.stanford.edu/\">Listen Live</A></TD></TR>\n";
+        echo "</TABLE><BR>\n";
+    }
+    
+    public function emitTopPlays($numweeks=1, $limit=10) {
+       // Determine last chart date
+       $weeks = Engine::api(IChart::class)->getChartDates(1);
+       if($weeks && ($lastWeek = $weeks->fetch()))
+          list($y,$m,$d) = split("-", $lastWeek["week"]);
+    
+       if(!$y)
+          return;    // No charts!  bail.
+    
+       if(!$numWeeks || $numWeeks == 1)
+          Engine::api(IChart::class)->getChart($topPlays, "", $lastWeek["week"], $limit);
+       else {
+          // Determine start chart date that will yield $numweeks worth of charts
+          $startDate = date("Y-m-d", mktime(0,0,0,
+                                          $m,
+                                          $d-(($numweeks-1)*7),
+                                          $y));
+    
+          Engine::api(IChart::class)->getChart($topPlays, $startDate, "", $limit);
+       }
+    
+       Engine::api(ILibrary::class)->markAlbumsReviewed($topPlays);
+       if(sizeof($topPlays)) {
+          $nn4 = (substr($_SERVER["HTTP_USER_AGENT"], 0, 10) == "Mozilla/4.");
+          if($nn4)
+              echo "<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=0 WIDTH=\"100%\" BGCOLOR=\"#5279a0\">\n";
+          else
+              echo "<TABLE WIDTH=\"100%\" BGCOLOR=\"#5279a0\">\n";
+          echo "  <TR><TH ALIGN=LEFT CLASS=\"subhead\">";
+          $formatEndDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
+          echo "KZSU's Top $limit Albums\n" .
+               "    <BR><FONT CLASS=\"subhead2\">for the ";
+          echo ($numweeks == 1)?"week":"$numweeks week period";
+          echo " ending $formatEndDate</FONT></TH><TD ALIGN=RIGHT STYLE=\"vertical-align: bottom;\">Music Director: <A HREF=\"mailto:music@kzsu.stanford.edu\">Sarah Thomas</A></TD></TR>\n";
+          echo "</TABLE>\n<TABLE>\n";
+          echo "  <TR><TH></TH><TH ALIGN=LEFT>Artist</TH><TH></TH><TH ALIGN=LEFT>Album</TH><TH ALIGN=LEFT>Label</TH></TR>\n";
+          for($i=0; $i < sizeof($topPlays); $i++) {
+             echo "  <TR><TD ALIGN=RIGHT>".(string)($i + 1).".</TD><TD>";
+    
+             // Setup artist correctly for collections
+             $artist = preg_match("/^COLL$/i", $topPlays[$i]["artist"])?"Various Artists":$topPlays[$i]["artist"];
+    
+             echo UI::HTMLify($artist, 20) . "</TD><TD>";
+             if($topPlays[$i]["REVIEWED"])
+                 echo "<A HREF=\"".
+                      "?s=byAlbumKey&amp;n=". UI::URLify($topPlays[$i]["tag"]).
+                      "&amp;q=". $maxresults.
+                      "&amp;action=search&amp;session=".$this->session->getSessionID().
+                      "\"><IMG SRC=\"img/rinfo_beta.gif\" " .
+                      "ALT=\"Album Review\" " .
+                      "WIDTH=12 HEIGHT=11 BORDER=0></A></TD><TD>";
+             else
+                echo "</TD><TD>";
+             // Album
+             echo "<A CLASS=\"nav\" HREF=\"".
+                             "?s=byAlbumKey&amp;n=". UI::URLify($topPlays[$i]["tag"]).
+                             "&amp;q=". $maxresults.
+                             "&amp;action=search&amp;session=".$this->session->getSessionID().
+                             "\">";
+             echo UI::HTMLify($topPlays[$i]["album"], 20) . "</A></TD><TD>" .
+                  UI::HTMLify($topPlays[$i]["LABEL"], 20) . "</TD></TR>\n";
+          }
+          echo "</TABLE>\n";
+       }
+    }
+    
+    public function viewLastPlays($tag, $count=0) {
+        $results = Engine::api(IPlaylist::class)->getLastPlays($tag, $count);
+        if($results) {
+            echo "<TABLE WIDTH=\"100%\">\n";
+            echo "  <TR><TH ALIGN=LEFT CLASS=\"secdiv\">Recent Airplay</TH>";
+            echo "</TR>\n</TABLE>\n";
+    
+            echo "<TABLE CELLPADDING=4 CELLSPACING=0 BORDER=0>\n";
+    
+            while($row = $results->fetch())
+                $plays[] = $row;
+    
+            // Setup date format differently if plays extend into another year
+            $now = getdate(time());
+            list($y,$m,$d) = split("-", $plays[sizeof($plays)-1]["showdate"]);
+            $dateSpec = ($y == $now["year"])?"D, d M":"D, d M y";
+    
+            // Ensure we have an even number of plays
+            if(sizeof($plays)%2)
+                $plays[] = array("airname"=>"");
+     
+            $mid = sizeof($plays)/2;
+            for($i=0; $i<sizeof($plays); $i++) {
+                if($i%2 == 0) {
+                    echo "  <TR>";
+                    $idx = ($i+2)/2 - 1;
+                } else {
+                    echo "      ";
+                    $idx = $mid + ($i+1)/2 - 1;
+                }
+    
+                if($plays[$idx]["airname"]) {
+                    list($y,$m,$d) = split("-", $plays[$idx]["showdate"]);
+                    $formatDate = preg_replace("/ /", "&nbsp;", date($dateSpec, mktime(0,0,0,$m,$d,$y)));
+                      
+                    echo "<TD ALIGN=RIGHT VALIGN=TOP CLASS=\"sub\">".($idx+1).".</TD>";
+                    echo "<TD ALIGN=RIGHT VALIGN=TOP CLASS=\"sub\">$formatDate:</TD>";
+                    echo "<TD ALIGN=LEFT VALIGN=TOP CLASS=\"sub\">".$plays[$idx]["airname"]."<BR>";
+                    echo "<A HREF=\"".
+                         "?action=viewDJ&amp;playlist=".$plays[$idx]["id"].
+                         "&amp;seq=selList&amp;session=".$this->session->getSessionID()."\">".$plays[$idx]["description"]."</A></TD>";
+                } else
+                    echo "<TD COLSPAN=3></TD>";
+                if($i%2)
+                    echo "</TR>\n";
+                else
+                    echo "<TD WIDTH=20></TD>\n";
+            }
+            echo "</TABLE><BR>\n";
+        }
+    }
+}
+
+class ZKCalendar extends \Calendar {
+    function setSession($session) {
+        $this->session = $session;
+    }
+    function setDates($dates) {
+        $this->dates = $dates;
+    }
+    function getCalendarLink($month, $year) {
+        return "?session=".$this->session->getSessionID()."&amp;action=viewDate&amp;month=$month&amp;year=$year";
+    }
+    function getDateLink($day, $month, $year) {
+        $link = "";
+        $testDate = date("Y-m-d", mktime(0,0,0,$month,$day,$year));
+
+        if(strstr($this->dates, $testDate))
+            $link = "?session=".$this->session->getSessionID()."&amp;action=viewDate&amp;seq=selDate&amp;viewdate=$testDate&amp;month=$month&amp;year=$year";
+
+        return $link;
+    }
+}
+

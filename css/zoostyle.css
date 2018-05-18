@@ -1,0 +1,308 @@
+/* ZK styles */
+
+/* restore defaults */
+BODY {
+    margin: 0;
+    padding: 10px 0px 30px 0px;
+    font-size: 10pt;
+    background-image: url(/img/kzsu_heart.png);
+    background-repeat: no-repeat;
+    background-position: 30px 455px;
+}
+H2 {
+    margin-top: 0px;
+    padding-top: 0px;
+    font-size: 16pt;
+}
+H3, .subhead {
+    color: #d83d04;
+    font-size: 14pt;
+    font-weight: bold;
+    padding-top: 10px;
+    margin-bottom: 5px;
+    text-align: left;
+}
+LI {
+    display: list-item;
+}
+OL {
+    list-style-type: decimal;
+}
+OL, UL {
+    display: block;
+    margin: 1.12em 0;
+    margin-left: 30px;
+}
+OL UL, UL OL, UL UL, OL OL {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* afile activity page */
+TABLE.afileactivity {
+    font-size: 10pt;
+}
+.hborder, .hborder TD {
+    border-style: solid;
+    border-width: 1px 0px 0px 0px;
+    border-color: #cccccc;
+}
+.noPlaylist, .noPlaylist TD {
+    background-color: #000000;
+    color: #ffffff;
+    border-style: solid;
+    border-width: 1px 0px 0px 0px;
+    border-color: #cccccc;
+}
+.noQuota, .noQuota TD {
+    background-color: #ffff00;
+    border-style: solid;
+    border-width: 1px 0px 0px 0px;
+    border-color: #cccccc;
+}
+
+/* charts */
+.top30 {
+    font-size: 10pt;
+    vertical-align: top;
+}
+
+/* Find It! */
+TD.ind {
+    width: 15px;
+}
+
+/* playlist editor */
+.arrowCell {
+    vertical-align: top;
+    padding-top: 6px;
+}
+
+/* album details */
+.currentsTop {
+    border-style: solid;
+    border-width: 1px 1px 0px 1px;
+    border-color: #cccccc;
+    font-family: verdana, arial, helvetica, sans-serif;
+    font-size: 80%;
+    background-color: #eeeeee;
+    color: #000000;
+}
+.currentsBottom {
+    border-style: solid;
+    border-width: 0px 1px 1px 1px;
+    border-color: #cccccc;
+    font-family: verdana, arial, helvetica, sans-serif;
+    font-size: 80%;
+    color: #000000;
+}
+
+/* DJ Zone! */
+.recentPlays, .recentReviews {
+    vertical-align: top;
+}
+
+/* layout */
+DIV.box {
+    width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+DIV.leftNav {
+    float: left;
+    margin-top: 0px;
+    margin-left: 2px;
+    text-align: left;
+    width: 195px;
+}
+DIV.leftNav A {
+    color: #000000;
+    text-decoration: none;
+    font-size: 12pt;
+}
+DIV.leftNav TD A:hover {
+    color: #91a3ce;
+    text-decoration: underline;
+}
+DIV.headerListen P A {
+    text-align: right;
+    font-size: 14px;
+    line-height: 14px;
+}
+DIV.content {
+    float: right;
+    width: 650px;
+    padding-top: 10px;
+    padding-right: 10px;
+    min-height: 450px;
+}
+DIV.footer {
+    width: auto;
+    clear: both;
+    text-align: right;
+}
+DIV.footer A:hover {
+    text-decoration: underline;
+}
+P.zktitle A {
+    color: #000000;
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0;
+    margin-left: 4px;
+    margin-bottom: 10px;
+    text-decoration: none;
+}
+
+/* primary navigation */
+.nav:link { color: #990010; }
+.nav:visited { color: #990010; }
+.nav:active { color: #990010; }
+.nav2:link { color: #000000; }
+.nav2:visited { color: #000000; }
+.nav2:active { color: #ff0000; }
+.nav2sel:link { color: #91a3ce; }
+.nav2sel:visited { color: #91a3ce; }
+.nav2sel:active { color: #ff0000; }
+.nav3:link { color: #d83d04; }
+.nav3:visited { color: #d83d04; }
+.nav3:active { color: #d83d04; }
+.nav3s { color: #d83d04; font-size: 80%; }
+
+/* secondary navigation */
+.linkhead:active {
+    font-family: verdana, arial, helvetica, sans-serif;
+    font-size: 100%;
+    font-weight: bold;
+    color: #cc0000;
+    text-decoration: none;
+}
+.linkhead:link {
+    font-family: verdana, arial, helvetica, sans-serif;
+    font-size: 100%;
+    font-weight: bold;
+    color: #ffffff;
+    text-decoration: none;
+}
+.linkhead:visited {
+    font-family: verdana, arial, helvetica, sans-serif;
+    font-size: 100%;
+    font-weight: bold;
+    color: #ffffff;
+    text-decoration: none;
+}
+.linkrow {
+    line-height: 5px;
+    background-color: #6b3333;
+}
+.secNorm {
+    background-color: #9b6666;
+}
+.secSel {
+    background-color: #6b3333;
+    color: #ffffff;
+}
+.secSelSub {
+    background-color: #6b3333;
+    color: #ffffff;
+    font-family: verdana, arial, helvetica, sans-serif;
+    font-size: 80%;
+}
+.secCell {
+    vertical-align: bottom;
+    padding: 0px;
+    border-spacing: 0px;
+}
+
+/* general */
+TH {
+    font-family: verdana, arial, helvetica, sans-serif;
+    font-size: 11pt;
+    font-weight: bold;
+    color: #000000;
+}
+TH.sec {
+    color: white;
+    background-color: #6b3333;
+    text-align: left;
+}
+.secdiv, .secdiv TH, TH.sec {
+    color: white;
+    background-color: #6b3333;
+}
+.error {
+    color: #cc0000;
+}
+.input { }
+.sel:link { color: #ff0000; }
+.sel:visited { color: #ff0000; }
+.sel:active { color: #ff0000; }
+.select {
+    width: 220px;
+    border-width: 1px;
+    overflow: hidden;
+}
+.sub {
+    font-family: verdana, arial, helvetica, sans-serif;
+    font-size: 80%;
+    color: #000000;
+}
+.sub2 {
+    font-family: verdana, arial, helvetica, sans-serif;
+    font-size: 80%;
+    color: #ffffff;
+}
+.subhead2 {
+    color: #d83d04;
+    font-size: 10pt;
+    font-weight: bold;
+    padding-top: 10px;
+    margin-bottom: 5px;
+}
+.submit {
+    color: #ffffff;
+    background-color: #6b3333;
+    border-width: 1px;
+    border-color: #3b0000;
+}
+.success {
+    color: #ffcc33;
+}
+.text {
+    padding: 2px;
+    border: 1px solid #3b0000;
+}
+.textsp {
+    padding: 1px;
+    border: 1px solid #3b0000;
+    width: 120px;
+}
+
+/* calendar */
+A.calNav {
+    color: #990010;
+    text-decoration: none;
+}
+A.calNav:hover {
+    text-decoration: underline;
+}
+A.calLink {
+    color: #cc0000;
+    text-decoration: none;
+}
+.calBody {
+    color: #000000;
+    background-color: #ffffff;
+    border-color: #cccccc;
+    border-width: 1px;
+    border-style: solid;
+}
+.calendar, .calHead {
+    color: #000000;
+    background-color: #ffffff;
+    border-color: transparent;
+}
+.calGrid, .calToday {
+    color: #000000;
+    background-color: #cccccc;
+}

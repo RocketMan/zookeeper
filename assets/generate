@@ -1,0 +1,13 @@
+#!/bin/bash
+
+JS_ASSETS="zooscript zootext"
+TARGET_DIR=../js
+
+command -v jsmin >/dev/null 2>&1 || { echo >&2 "jsmin is required but does not appear to be installed.  Aborting."; exit 1; }
+
+for asset in ${JS_ASSETS}; do
+    jsmin "Jim Mason <jmason@ibinx.com>" "Copyright (C) 1997-2018 Jim Mason.  All Rights Reserved." < ${asset}.src.js > ${TARGET_DIR}/${asset}.js
+    echo >> ${TARGET_DIR}/${asset}.js
+done
+
+echo JavaScript assets minified and deployed
