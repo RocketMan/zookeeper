@@ -221,7 +221,7 @@ class Main implements IController {
             echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Your session has expired.  You must login again.</FONT></B></TD></TR>\n";
             break;
         case "ssoInvalidDomain":
-            echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Google login is supported only for KZSU accounts.</FONT></B></TD></TR>\n";
+            echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Google login is supported only for ".Engine::param('station')." accounts.</FONT></B></TD></TR>\n";
             break;
         case "ssoInvalidAssertion":
             echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Google authentication was not successful.</FONT></B></TD></TR>\n";
@@ -258,15 +258,15 @@ class Main implements IController {
     ?>
     <DIV CLASS="subhead">login help</DIV>
     <P>Google single sign-on provides integrated access to your existing
-    Zookeeper Online account.  Select the 'login' link in the
-    left-hand navigation and enter your KZSU Google account credentials
+    <? echo Engine::param('application'); ?> account.  Select the 'login' link in the
+    left-hand navigation and enter your <? echo Engine::param('station'); ?> Google account credentials
     if challenged.</P>
-    <P>If you do not yet have a KZSU Google account, contact the
+    <P>If you do not yet have a <? echo Engine::param('station'); ?> Google account, contact the
     <A HREF="mailto:<? echo Engine::param('email')['pd']; ?>">Program Director</A>.</P>
     <DIV CLASS="subhead">classic login</DIV>
-    <P>If you need immediate access but do not yet have a KZSU Google account,
+    <P>If you need immediate access but do not yet have a <? echo Engine::param('station'); ?> Google account,
     go to the <A HREF="?action=login">classic login</A> page and enter your
-    existing Zookeeper Online user name and password.
+    existing <? echo Engine::param('application'); ?> user name and password.
     <B>Classic login may be deprecated or restricted in future.</B></P>
     <?
     }

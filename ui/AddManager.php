@@ -1066,7 +1066,9 @@ class AddManager extends MenuItem {
                 else {
                     // Emit the postamble
                     $body .= "\n--\nPost your music reviews online!\r\n";
-                    $body .= "KZSU Zookeeper Online:  ".getBaseUrl()."\r\n";
+                    $body .= Engine::param('station')." ".
+                             Engine::param('application').":  ".
+                             getBaseUrl()."\r\n";
                 }
     
                 // send the mail

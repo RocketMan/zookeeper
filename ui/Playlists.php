@@ -1425,9 +1425,9 @@ class Playlists extends MenuItem {
             Engine::api(IPlaylist::class)->getRecentPlays($recentPlays, $viewuser, $count);
             Engine::api(IReview::class)->getRecentReviewsByAirname($recentReviews, $viewuser, $count-1);
     
-            $block = sizeof($recentReviews)?" BGCOLOR=\"#6289b0\"":"";
+            $block = sizeof($recentReviews);
             $blname = sizeof($topPlays)?"":$row['airname'] . "'s ";
-            echo "    <TABLE WIDTH=\"100%\" CELLSPACING=0 BORDER=0$block>\n";
+            echo "    <TABLE WIDTH=\"100%\" CELLSPACING=0 BORDER=0>\n";
             if(sizeof($recentPlays)) {
                 echo "<TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;${blname}Recent airplay</TH></TR>";
                 $this->emitViewDJAlbum($recentPlays, $block?" CLASS=\"sub\"":"");
@@ -1437,9 +1437,9 @@ class Playlists extends MenuItem {
       </TD><?
         if(sizeof($recentReviews)) {
             echo "<TD>&nbsp;&nbsp;&nbsp;</TD><TD CLASS=\"recentReviews\"VALIGN=TOP>\n";
-            $block = sizeof($recentPlays)?" BGCOLOR=\"#6289b0\"":"";
+            $block = sizeof($recentPlays);
             $blname = (sizeof($topPlays) || sizeof($recentPlays))?"":$row['airname'] . "'s ";
-            echo "    <TABLE WIDTH=\"100%\" BORDER=0 CELLSPACING=0$block>\n";
+            echo "    <TABLE WIDTH=\"100%\" BORDER=0 CELLSPACING=0>\n";
     
             echo "      <TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;${blname}Recent reviews</TH></TR>\n";
             $this->emitViewDJAlbum($recentReviews, $block?" CLASS=\"sub\"":"");
@@ -1603,8 +1603,7 @@ class Playlists extends MenuItem {
     public function emitWhatsOnNow() {
         $record = Engine::api(IPlaylist::class)->getWhatsOnNow();
         echo "<TABLE WIDTH=\"100%\" BORDER=0 CELLPADDING=2 CELLSPACING=0 STYLE=\"border-style: solid; border-width: 1px 0px 1px 0px; border-color: #cccccc\">\n  <TR><TH ALIGN=LEFT COLSPAN=3 CLASS=\"subhead\">";
-        echo "On KZSU now:</TH></TR>\n  ";
-        ////echo "</TABLE><TABLE WIDTH=\"100%\" BORDER=0 CELLPADDING=0 CELLSPACING=2>\n  ";
+        echo "On ".Engine::param('station')." now:</TH></TR>\n  ";
         if($record && ($row = $record->fetch())) {
             echo "<TR><TH ALIGN=LEFT COLSPAN=3><A HREF=\"".
                  "?action=viewDJ&amp;seq=selUser&amp;viewuser=".$row["airid"]."&amp;session=".$this->session->getSessionID().
@@ -1614,14 +1613,13 @@ class Playlists extends MenuItem {
                  "&amp;session=".$this->session->getSessionID()."\" CLASS=\"nav\">" . htmlentities($row["description"]);
             echo "</A></TH></TR>\n  ";
             echo "<TR><TH ALIGN=RIGHT VALIGN=BOTTOM CLASS=\"sub\">" . date("l, j M") . "&nbsp;&nbsp;</TH>\n      <TH ALIGN=LEFT VALIGN=BOTTOM CLASS=\"sub\">" . $this->timeToAMPM($row["showtime"]) . " " . date("T") . "</TH>\n";
-            echo "      <TD ALIGN=RIGHT VALIGN=BOTTOM ROWSPAN=2>Request Line:&nbsp;&nbsp;+1 650 723 9010&nbsp;&nbsp;&nbsp;90.1FM</TD></TR>\n";
+            echo "      <TD ALIGN=RIGHT VALIGN=BOTTOM ROWSPAN=2>Request Line:&nbsp;&nbsp;+1 949 555 0897&nbsp;&nbsp;&nbsp;89.7FM</TD></TR>\n";
             echo "  <TR>" . $this->timeToZulu($row["showtime"]). "</TR>\n";
         } else {
             echo "<TR><TH ALIGN=LEFT COLSPAN=3>[No playlist available]</TH></TR>\n  ";
             echo "<TR><TH COLSPAN=2>&nbsp;</TH>\n";
-            echo "    <TD ALIGN=RIGHT VALIGN=BOTTOM>Request Line:&nbsp;&nbsp;+1 650 723 9010&nbsp;&nbsp;&nbsp;90.1FM</TD></TR>\n";
+            echo "    <TD ALIGN=RIGHT VALIGN=BOTTOM>Request Line:&nbsp;&nbsp;+1 949 555 0897&nbsp;&nbsp;&nbsp;89.7FM</TD></TR>\n";
         }
-        ////echo "    <TD ALIGN=RIGHT VALIGN=BOTTOM>Request Line:&nbsp;&nbsp;+1 650 723 9010&nbsp;&nbsp;&nbsp;90.1FM&nbsp;&nbsp;&nbsp;<A CLASS=\"nav\" HREF=\"http://kzsulive.stanford.edu/\">Listen Live</A></TD></TR>\n";
         echo "</TABLE><BR>\n";
     }
     
@@ -1655,10 +1653,10 @@ class Playlists extends MenuItem {
               echo "<TABLE WIDTH=\"100%\" BGCOLOR=\"#5279a0\">\n";
           echo "  <TR><TH ALIGN=LEFT CLASS=\"subhead\">";
           $formatEndDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
-          echo "KZSU's Top $limit Albums\n" .
+          echo Engine::param('station')."'s Top $limit Albums\n" .
                "    <BR><FONT CLASS=\"subhead2\">for the ";
           echo ($numweeks == 1)?"week":"$numweeks week period";
-          echo " ending $formatEndDate</FONT></TH><TD ALIGN=RIGHT STYLE=\"vertical-align: bottom;\">Music Director: <A HREF=\"mailto:music@kzsu.stanford.edu\">Sarah Thomas</A></TD></TR>\n";
+          echo " ending $formatEndDate</FONT></TH><TD ALIGN=RIGHT STYLE=\"vertical-align: bottom;\">Music Director: <A HREF=\"mailto:".Engine::param('email')['md']."\">".Engine::param('md_name')."</A></TD></TR>\n";
           echo "</TABLE>\n<TABLE>\n";
           echo "  <TR><TH></TH><TH ALIGN=LEFT>Artist</TH><TH></TH><TH ALIGN=LEFT>Album</TH><TH ALIGN=LEFT>Label</TH></TR>\n";
           for($i=0; $i < sizeof($topPlays); $i++) {

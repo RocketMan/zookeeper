@@ -83,7 +83,7 @@ class Reviews extends MenuItem {
     
     public function viewRecentReviews() {
         echo "<TABLE CELLSPACING=0 WIDTH=\"100%\">\n";
-        echo "  <TR><TH ALIGN=LEFT CLASS=\"subhead\">Albums Reviewed by KZSU DJs <SPAN CLASS=\"subhead2\">during the last 2 weeks</SPAN></TH><TH ALIGN=RIGHT CLASS=\"sub\"><B>Review Feed:</B> <A TYPE=\"application/rss+xml\" HREF=\"zkrss.php?feed=reviews\"><IMG SRC=\"img/rss.gif\" ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT=\"rss\"></A></TH></TR>\n";
+        echo "  <TR><TH ALIGN=LEFT CLASS=\"subhead\">Albums Reviewed by ".Engine::param('station')." DJs <SPAN CLASS=\"subhead2\">during the last 2 weeks</SPAN></TH><TH ALIGN=RIGHT CLASS=\"sub\"><B>Review Feed:</B> <A TYPE=\"application/rss+xml\" HREF=\"zkrss.php?feed=reviews\"><IMG SRC=\"img/rss.gif\" ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT=\"rss\"></A></TH></TR>\n";
         echo "</TABLE>\n<TABLE WIDTH=\"100%\">\n";
         echo "  <TR><TH ALIGN=LEFT>Album</TH><TH ALIGN=LEFT>Artist</TH><TH ALIGN=LEFT>Collection</TH><TH ALIGN=LEFT>Reviewed by</TH></TR>\n";
         $results = Engine::api(IReview::class)->getRecentReviews("", 2);
@@ -159,10 +159,8 @@ class Reviews extends MenuItem {
     }
     
     private function eMailReview($tag, $airname, $review) {
-        global $instance_nobody, $instance_reviewlist;
-        //$address = "music-staff@kzsu.stanford.edu";
-        //$address = "jmason@kzsu.stanford.edu";
-        $address = $instance_reviewlist;
+        $instance_nobody = Engine::param('email')['nobody'];
+	$instance_reviewlist = Engine::param('email')['reviewlist'];
     
         $djAPI = Engine::api(IDJ::class);
         $libAPI = Engine::api(ILibrary::class);
@@ -226,7 +224,7 @@ class Reviews extends MenuItem {
     
             // Emit the postamble
             $body .= "\r\n\r\n--\r\nPost your music reviews online!\r\n";
-            $body .= "KZSU Zookeeper Online:  ".getBaseUrl()."\r\n";
+            $body .= Engine::param('station')." Zookeeper Online:  ".getBaseUrl()."\r\n";
     
             // send the mail
             $stat = mail($address, $subject, $body, $headers);

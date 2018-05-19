@@ -5,9 +5,6 @@ BODY {
     margin: 0;
     padding: 10px 0px 30px 0px;
     font-size: 10pt;
-    background-image: url(/img/kzsu_heart.png);
-    background-repeat: no-repeat;
-    background-position: 30px 455px;
 }
 H2 {
     margin-top: 0px;
@@ -193,17 +190,17 @@ P.zktitle A {
 }
 .linkrow {
     line-height: 5px;
-    background-color: #6b3333;
+    background-color: #2530a7;
 }
 .secNorm {
-    background-color: #9b6666;
+    background-color: #5863da;
 }
 .secSel {
-    background-color: #6b3333;
+    background-color: #2530a7;
     color: #ffffff;
 }
 .secSelSub {
-    background-color: #6b3333;
+    background-color: #2530a7;
     color: #ffffff;
     font-family: verdana, arial, helvetica, sans-serif;
     font-size: 80%;
@@ -223,12 +220,12 @@ TH {
 }
 TH.sec {
     color: white;
-    background-color: #6b3333;
+    background-color: #2530a7;
     text-align: left;
 }
 .secdiv, .secdiv TH, TH.sec {
     color: white;
-    background-color: #6b3333;
+    background-color: #2530a7;
 }
 .error {
     color: #cc0000;
@@ -261,7 +258,7 @@ TH.sec {
 }
 .submit {
     color: #ffffff;
-    background-color: #6b3333;
+    background-color: #5863da;
     border-width: 1px;
     border-color: #3b0000;
 }
