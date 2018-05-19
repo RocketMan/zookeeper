@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `airnames` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `airname_2` (`airname`),
   KEY `airname` (`airname`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1299 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 -- --------------------------------------------------------
 
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS `albumvol` (
   KEY `pubkey` (`pubkey`),
   KEY `aat` (`artist`,`album`,`tag`),
   FULLTEXT KEY `artist_2` (`artist`,`album`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=212193 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 -- --------------------------------------------------------
 

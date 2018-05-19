@@ -2,6 +2,9 @@ body {
     font-family: Helvetica, Verdana, Arial, sans-serif;
     background-color: #ffffff;
 }
+html {
+    overflow-y: scroll;
+}
 div.headerLogo {
     float: left;
     width: 200px;
