@@ -62,6 +62,10 @@ class AddManager extends MenuItem {
 
     private $focus;
     private $emitted;
+    private $albumAdded;
+    private $editingAlbum;
+    private $errorMessage;
+    private $nextMessage;
 
     public function processLocal($action, $subaction) {
         $extra = "<SPAN CLASS=\"sub\"><B>Adds Feed:</B></SPAN> <A TYPE=\"application/rss+xml\" HREF=\"zkrss.php?feed=adds\"><IMG SRC=\"img/rss.gif\" ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT=\"rss\"></A><BR><IMG SRC=\"img/blank.gif\" WIDTH=1 HEIGHT=2 BORDER=0 ALT=\"\">";
@@ -468,8 +472,6 @@ class AddManager extends MenuItem {
     }
     
     public function panelAddPull($validate) {
-        global $errorMessage;
-    
         $adddate = $_REQUEST["adddate"];
         $pulldate = $_REQUEST["pulldate"];
     
@@ -479,11 +481,11 @@ class AddManager extends MenuItem {
             if(checkdate($am, $ad, $ay) && checkdate($pm, $pd, $py))
                 return true;
             else {
-                $errorMessage = "Ensure dates are valid";
+                $this->errorMessage = "Ensure dates are valid";
                 return;
             }
         }
-        if(!$errorMessage) {
+        if(!$this->errorMessage) {
             // Setup defaults
             if(!$adddate)
                 $adddate = date("Y-m-d");
@@ -506,8 +508,6 @@ class AddManager extends MenuItem {
     }
     
     public function panelAID($validate) {
-        global $errorMessage;
-    
         // Check to ensure AID is numeric
         $aid = $_REQUEST["aid"];
         $temp = (float)$aid;
@@ -517,7 +517,7 @@ class AddManager extends MenuItem {
             if($temp == $aid && $aid >= 100 && $aid <= 999)
                 return true;
             else {
-                $errorMessage = "Invalid Number";
+                $this->errorMessage = "Invalid Number";
                 return;
         }
     
@@ -536,8 +536,6 @@ class AddManager extends MenuItem {
     }
     
     public function panelTag($validate) {
-        global $errorMessage;
-    
         // Check to ensure tag is numeric
         $tag = $_REQUEST["tag"];
         $temp = (float)$tag;
@@ -551,7 +549,7 @@ class AddManager extends MenuItem {
                     return true;
                 }
             }
-            $errorMessage = "Invalid tag";
+            $this->errorMessage = "Invalid tag";
             return;
         }
     ?>
@@ -614,9 +612,6 @@ class AddManager extends MenuItem {
     }
     
     public function panelSummary($validate) {
-        global $albumAdded;
-        global $nextMessage, $errorMessage;
-    
         $adddate = $_REQUEST["adddate"];
         $pulldate = $_REQUEST["pulldate"];
         $aid = $_REQUEST["aid"];
@@ -641,10 +636,10 @@ class AddManager extends MenuItem {
                     $this->skipVar("cat".$i);
                 $this->emitHidden("catlist", $catstr);
                 $_REQUEST["aid"] = "";
-                $albumAdded = true;
+                $this->albumAdded = true;
                 return true;
             } else {
-                $errorMessage = "Add failed";
+                $this->errorMessage = "Add failed";
                 return;
             }
         }
@@ -672,7 +667,7 @@ class AddManager extends MenuItem {
     ?></TD></TR>
           </TABLE>
     <?
-        $nextMessage = "Add Album";
+        $this->nextMessage = "Add Album";
     }
     
     private function skipVar($name) {
@@ -701,16 +696,15 @@ class AddManager extends MenuItem {
     }
     
     private function addManagerGetTitle($seq) {
-        global $errorMessage, $albumAdded, $editingAlbum;
-        if($errorMessage)
-            $title = "<FONT CLASS=\"error\">$errorMessage</FONT>";
+        if($this->errorMessage)
+            $title = "<FONT CLASS=\"error\">$this->errorMessage</FONT>";
         else
             switch($seq) {
             case "aid":
                 $title = "Enter A-File Number";
-                if($albumAdded)
+                if($this->albumAdded)
                     $title = "Album Added!  $title for next album.";
-                if($editingAlbum)
+                if($this->editingAlbum)
                     $title = "Editing Add.  Press Next to review details.";
                 break;
             case "addpull":
@@ -740,8 +734,6 @@ class AddManager extends MenuItem {
     }
     
     public function addManagerAdd() {
-        global $nextMessage;
-    
         $seq = $_REQUEST["seq"];
     
         // We're always going to make two passes:
@@ -772,7 +764,7 @@ class AddManager extends MenuItem {
           </TD></TR>
         </TABLE>
     <?
-        echo "    <INPUT TYPE=SUBMIT VALUE=\"" . ($nextMessage?$nextMessage:"  Next &gt;&gt;  ") . "\">\n";
+        echo "    <INPUT TYPE=SUBMIT VALUE=\"" . ($this->nextMessage?$this->nextMessage:"  Next &gt;&gt;  ") . "\">\n";
         $this->emitHidden("seq", $seq);
         $this->emitVars();
         echo "  </FORM>\n";
@@ -780,8 +772,6 @@ class AddManager extends MenuItem {
     }
     
     public function panelSummaryEdit($validate) {
-        global $nextMessage, $errorMessage;
-    
         $adddate = $_REQUEST["adddate"];
         $pulldate = $_REQUEST["pulldate"];
         $id = $_REQUEST["id"];
@@ -802,7 +792,7 @@ class AddManager extends MenuItem {
             if(Engine::api(IChart::class)->updateAlbum($id, $aid, $tag, $adddate, $pulldate, $catstr))
                 return true;
             else {
-                $errorMessage = "Update failed";
+                $this->errorMessage = "Update failed";
                 return;
             }
         }
@@ -830,13 +820,10 @@ class AddManager extends MenuItem {
     ?></TD></TR>
           </TABLE>
     <?
-        $nextMessage = "Update Album";
+        $this->nextMessage = "Update Album";
     }
     
     public function addManagerEdit() {
-        global $seq, $nextMessage, $errorMessage;
-        global $editingAlbum;
-    
         $id = $_REQUEST["id"];
         $seq = $_REQUEST["seq"];
     
@@ -881,7 +868,7 @@ class AddManager extends MenuItem {
                     $this->emitHidden("adddate", $row[3]);
                     $this->emitHidden("pulldate", $row[4]);
                     $this->emitHidden("catlist", $row[5]);
-                    $editingAlbum = true;
+                    $this->editingAlbum = true;
                 }
             }
     
@@ -902,7 +889,7 @@ class AddManager extends MenuItem {
           </TD></TR>
         </TABLE>
     <?
-        echo "    <INPUT TYPE=SUBMIT VALUE=\"" . ($nextMessage?$nextMessage:"  Next &gt;&gt;  ") . "\">\n";
+        echo "    <INPUT TYPE=SUBMIT VALUE=\"" . ($this->nextMessage?$this->nextMessage:"  Next &gt;&gt;  ") . "\">\n";
         $this->emitHidden("seq", $seq);
         $this->emitVars();
         echo "  </FORM>\n";
@@ -970,7 +957,7 @@ class AddManager extends MenuItem {
     }
     
     public function addManagerEMail() {
-        global $instance_chartman;
+        $instance_chartman = Engine::param('email')['chartman'];
         $date = $_REQUEST["date"];
         $address = $_REQUEST["address"];
         $format = $_REQUEST["format"];
@@ -1001,7 +988,7 @@ class AddManager extends MenuItem {
                 $records = Engine::api(IChart::class)->getAdd2($date);
                 $this->addManagerGetAlbums($records, $albums);
     
-                $from = "Zookeeper Online <$instance_chartman>";
+                $from = Engine::param('application')." <$instance_chartman>";
                 $subject = Engine::param('station') + ": Adds for $date";
                 $body = "";
     

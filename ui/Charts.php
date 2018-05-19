@@ -548,7 +548,6 @@ class Charts extends MenuItem {
     }
     
     public function emitChartCMJ($startDate, $endDate, $limit="", $category="") {
-        global $charttype;
         $chartAPI = Engine::api(IChart::class);
         $chartAPI->getChart($chart, $startDate, $endDate, $limit, $category);
         if(sizeof($chart)) {
@@ -559,7 +558,7 @@ class Charts extends MenuItem {
                 while($categories && ($cat = $categories->fetch()))
                     $cats[$i++] = $cat["name"];
     
-                echo "<Playlist charttype_id:" . $charttype[$category] . ">\n";
+                echo "<Playlist charttype_id:" . self::$charttype[$category] . ">\n";
                 echo "## " . $cats[$category] . " playlist\n\n";
             } else {
                 echo "<Playlist charttype_id:1>\n";
