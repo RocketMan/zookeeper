@@ -1068,7 +1068,7 @@ class AddManager extends MenuItem {
                     $body .= "\n--\nPost your music reviews online!\r\n";
                     $body .= Engine::param('station')." ".
                              Engine::param('application').":  ".
-                             getBaseUrl()."\r\n";
+                             UI::getBaseUrl()."\r\n";
                 }
     
                 // send the mail
