@@ -372,7 +372,7 @@ class API extends CommandTarget implements IController {
 class SingletonResultWrapper {
     private $row;
 
-    function __construct($row) {
+    public function __construct($row) {
         $this->row = $row;
     }
 

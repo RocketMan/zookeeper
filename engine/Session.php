@@ -32,15 +32,15 @@ class Session {
     private $sessionID = null;
     private $pdo;
 
-    function __construct($pdo) {
+    public function __construct($pdo) {
         $this->pdo = $pdo;
         if(!empty($_REQUEST['session']))
             $this->validate($_REQUEST['session']);
     }
 
-    function getDN() { return $this->displayName; }
-    function getSessionID() { return $this->sessionID; }
-    function getUser() { return $this->user; }
+    public function getDN() { return $this->displayName; }
+    public function getSessionID() { return $this->sessionID; }
+    public function getUser() { return $this->user; }
 
     private function setSessionCookie($session) {
         setcookie("session", $session, 0, "/", $_SERVER['SERVER_NAME']);
@@ -104,7 +104,7 @@ class Session {
         return $stmt->execute();
     }
 
-    function create($sessionID, $user, $auth) {
+    public function create($sessionID, $user, $auth) {
         $row = Engine::api(IUser::class)->getUser($user);
         if($row)
             $this->displayName = $row['realname'];
@@ -116,7 +116,7 @@ class Session {
         $this->setSessionCookie($sessionID);
     }
 
-    function validate($sessionID) {
+    public function validate($sessionID) {
         // invalidate session with invalid characters (injection control)
         if(strlen($sessionID) != strspn($sessionID, "0123456789abcdef"))
             $sessionID = "";
@@ -137,7 +137,7 @@ class Session {
         }
     }
 
-    function invalidate() {
+    public function invalidate() {
         if($this->sessionID) {
             $this->dbDelete($this->sessionID);
             $this->clearSessionCookie();
@@ -146,7 +146,7 @@ class Session {
         }
     }
 
-    static function checkAccess($mode, $access) {
+    public static function checkAccess($mode, $access) {
         switch($mode) {
         case "a":    // all
             $allow = true;
@@ -164,7 +164,7 @@ class Session {
         return $allow;
     }
 
-    function isAuth($mode) {
+    public function isAuth($mode) {
         switch($mode) {
         case "a":    // all
             $allow = true;
@@ -187,7 +187,7 @@ class Session {
         return $allow;
     }
 
-    function isLocal() {
+    public function isLocal() {
         $local_subnet = Engine::param('local_subnet');
         return !$local_subnet ||
                     substr($_SERVER['REMOTE_ADDR'], 0, strlen($local_subnet))

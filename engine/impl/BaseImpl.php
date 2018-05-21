@@ -28,7 +28,7 @@ class ResultWrapper {
     private $stmt;
     private $style;
 
-    function __construct($stmt, $style) {
+    public function __construct($stmt, $style) {
         $this->stmt = $stmt;
         $this->style = $style;
     }

@@ -29,7 +29,7 @@ namespace ZK\Engine;
  * Music review operations
  */
 class ReviewImpl extends BaseImpl implements IReview {
-    function getNumReviews($tag, $loggedIn = 0) {
+    public function getNumReviews($tag, $loggedIn = 0) {
         settype($tag, "integer");
         $query = "SELECT count(*) FROM reviews WHERE tag=?";
         if(!$loggedIn)
@@ -40,7 +40,7 @@ class ReviewImpl extends BaseImpl implements IReview {
         return $row[0];
     }
     
-    function getRecentReviews($user = "", $weeks = 0, $limit = 0, $loggedIn = 0) {
+    public function getRecentReviews($user = "", $weeks = 0, $limit = 0, $loggedIn = 0) {
         $query = "SELECT r.tag, a.airname, r.user, r.created FROM reviews r ";
         $query .= "LEFT JOIN airnames a ON r.airname = a.id ";
     
@@ -76,7 +76,7 @@ class ReviewImpl extends BaseImpl implements IReview {
         return $this->execute($stmt);
     }
     
-    function getReviews($tag, $byName=1, $user = "", $loggedIn = 0) {
+    public function getReviews($tag, $byName=1, $user = "", $loggedIn = 0) {
         settype($tag, "integer");
         if($byName)
             $query = "SELECT r.id, r.created, r.review, " .
@@ -99,7 +99,7 @@ class ReviewImpl extends BaseImpl implements IReview {
         return $this->executeAndFetchAll($stmt, \PDO::FETCH_BOTH);
     }
     
-    function insertReview($tag, $private, $airname, $review, $user) {
+    public function insertReview($tag, $private, $airname, $review, $user) {
         $query = "INSERT INTO reviews " .
                  "(tag, user, created, private, review, airname) VALUES (" .
                  "?, ?, " .
@@ -116,7 +116,7 @@ class ReviewImpl extends BaseImpl implements IReview {
         return $stmt->execute()?$stmt->rowCount():0;
     }
     
-    function updateReview($tag, $private, $airname, $review, $user) {
+    public function updateReview($tag, $private, $airname, $review, $user) {
         $query = "UPDATE reviews SET private=?, " .
                  ($airname?"airname=?, ":
                            "airname=NULL, ") .
@@ -133,7 +133,7 @@ class ReviewImpl extends BaseImpl implements IReview {
         return $stmt->execute()?$stmt->rowCount():0;
     }
     
-    function deleteReview($tag, $user) {
+    public function deleteReview($tag, $user) {
         $query = "DELETE FROM reviews " .
                  "WHERE tag=? and user=?";
         $stmt = $this->prepare($query);
@@ -142,7 +142,7 @@ class ReviewImpl extends BaseImpl implements IReview {
         return $stmt->execute()?$stmt->rowCount():0;
     }
     
-    function getRecentReviewsByAirname(&$result, $airname, $count, $loggedIn = 0) {
+    public function getRecentReviewsByAirname(&$result, $airname, $count, $loggedIn = 0) {
         $query = "SELECT r.tag, a.airname, r.user, r.created FROM reviews r, airnames a ";
         $query .= "WHERE r.airname=a.id AND a.id=? ";
         if(!$loggedIn)

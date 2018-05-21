@@ -33,7 +33,7 @@ class Engine {
     /**
      * start of day initialization
      */
-    static function init() {
+    public static function init() {
         spl_autoload_register(function($class) {
             // extract leaf class name
             $p = strrchr($class, '\\');
@@ -75,7 +75,7 @@ class Engine {
      * get the configuration file
      * @return configuration file
      */
-    static function config() { return self::$config; }
+    public static function config() { return self::$config; }
 
     /**
      * get a configuration value from the configuration file
@@ -86,14 +86,14 @@ class Engine {
      * @param default value if param is not set (optional)
      * @return value or null if not set and no default specified
      */
-    static function param($key, $default = null) {
+    public static function param($key, $default = null) {
         return self::$config->getParam($key, $default);
     }
 
     /**
      * return the session singleton
      */
-    static function session() {
+    public static function session() {
         return self::$session;
     }
 
@@ -102,7 +102,7 @@ class Engine {
      * @param databaseName name of database (optional)
      * @return PDO
      */
-    static function newPDO($databaseName = 'database') {
+    public static function newPDO($databaseName = 'database') {
         $db = self::config()->getParam('db');
         $dns = $db['driver'] .
                 ':host=' . $db['host'] .
@@ -117,7 +117,7 @@ class Engine {
      * @return implementation
      * @throws Exception if no implementation for specified interface
      */
-    static function api($intf) {
+    public static function api($intf) {
         $impl = self::$apis->getParam($intf);
         if($impl) {
             $api = new $impl();
@@ -130,7 +130,7 @@ class Engine {
     /**
      * return the ID of the last inserted row
      */
-    static function lastInsertId() {
+    public static function lastInsertId() {
         return self::$pdo->lastInsertId();
     }
 }

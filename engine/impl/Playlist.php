@@ -31,7 +31,7 @@ use ZK\Engine\ILibrary;
  * Playlist operations
  */
 class PlaylistImpl extends BaseImpl implements IPlaylist {
-    function getShowdates($year, $month) {
+    public function getShowdates($year, $month) {
         $yearMonth = sprintf("%04d-%02d", $year, $month) . "-%";
     
         $query = "SELECT showdate FROM lists " .
@@ -43,7 +43,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt);
     }
     
-    function getPlaylist($playlist, $withAirname=0) {
+    public function getPlaylist($playlist, $withAirname=0) {
         if($withAirname)
             $query = "SELECT l.description, l.showdate, l.showtime, " .
                      "       a.id, a.airname, l.dj " .
@@ -58,7 +58,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->executeAndFetch($stmt, \PDO::FETCH_BOTH);
     }
     
-    function getPlaylists($onlyPublished=0, $withAirname=0,
+    public function getPlaylists($onlyPublished=0, $withAirname=0,
                                $showDate="", $airname="", $user="", $desc=1) {
         if($withAirname)
             $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
@@ -89,19 +89,19 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
-    function getPlaylistsByAirname($airname) {
+    public function getPlaylistsByAirname($airname) {
         return $this->getPlaylists(0, 0, "", $airname);
     }
     
-    function getPlaylistsByUser($user, $onlyPublished=0, $withAirname=0) {
+    public function getPlaylistsByUser($user, $onlyPublished=0, $withAirname=0) {
         return $this->getPlaylists($onlyPublished, $withAirname, "", "", $user);
     }
     
-    function getPlaylistsByDate($date) {
+    public function getPlaylistsByDate($date) {
         return $this->getPlaylists(1, 1, $date);
     }
     
-    function getWhatsOnNow() {
+    public function getWhatsOnNow() {
         $hour = date("Hi");
         $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
                  "a.id airid, a.airname FROM lists l LEFT JOIN airnames a " .
@@ -125,7 +125,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt);
     }
     
-    function insertPlaylist($user, $date, $time, $description, $airname) {
+    public function insertPlaylist($user, $date, $time, $description, $airname) {
         list($year, $month, $day) = explode("-", $date);
         $query = "INSERT INTO lists " .
                  "(dj, showdate, showtime, description, airname) VALUES " .
@@ -141,7 +141,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $stmt->execute();
     }
     
-    function updatePlaylist($playlist, $date, $time, $description, $airname) {
+    public function updatePlaylist($playlist, $date, $time, $description, $airname) {
         list($year, $month, $day) = explode("-", $date);
         $query = "UPDATE lists SET showdate=?, " .
                  "showtime=?, " .
@@ -161,7 +161,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $stmt->execute();
     }
 
-    function getTrack($id) {
+    public function getTrack($id) {
         $query = "SELECT tag, artist, track, album, label, id FROM tracks " .
                  "WHERE id = ?";
         $stmt = $this->prepare($query);
@@ -169,7 +169,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->executeAndFetch($stmt);
     }
     
-    function getTracks($playlist, $desc = 0) {
+    public function getTracks($playlist, $desc = 0) {
         $query = "SELECT tag, artist, track, album, label, id FROM tracks " .
                  "WHERE list = ? ORDER BY id";
         if($desc)
@@ -179,7 +179,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt);
     }
     
-    function insertTrack($playlist, $tag, $artist, $track, $album, $label) {
+    public function insertTrack($playlist, $tag, $artist, $track, $album, $label) {
         // Insert tag?
         $noTag = ($tag == 0) || ($tag == "");
     
@@ -198,7 +198,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $stmt->execute();
     }
     
-    function updateTrack($id, $tag, $artist, $track, $album, $label) {
+    public function updateTrack($id, $tag, $artist, $track, $album, $label) {
         $query = "UPDATE tracks SET ";
         $query .= "artist=?, " .
                   "track=?, " .
@@ -219,14 +219,14 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $stmt->execute();
     }
     
-    function deleteTrack($id) {
+    public function deleteTrack($id) {
         $query = "DELETE FROM tracks WHERE id = ?";
           $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
         return $stmt->execute();
     }
     
-    function getTopPlays(&$result, $airname=0, $days=41, $count=10) {
+    public function getTopPlays(&$result, $airname=0, $days=41, $count=10) {
         $over = $airname?"distinct t.list":"*";
         $query = "SELECT t.tag, count($over), l.showdate, t.artist, t.album, t.label, count(*)" .
                  " FROM tracks t, lists l" .
@@ -264,7 +264,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         }
     }
     
-    function getLastPlays($tag, $count=0) {
+    public function getLastPlays($tag, $count=0) {
         settype($tag, "integer");
         $query = "SELECT l.id, l.showdate, l.description, a.airname," .
                  "        count(*) plays" .
@@ -283,7 +283,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt);
     }
     
-    function getRecentPlays(&$result, $airname, $count) {
+    public function getRecentPlays(&$result, $airname, $count) {
         $query = "SELECT t.tag, t.artist, t.album, t.label, t.track FROM tracks t, lists l ";
         $query .= "WHERE t.list = l.id AND ";
         $query .= "l.airname = ? AND t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' ";
@@ -309,7 +309,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         }
     }
 
-    function deletePlaylist($playlist) {
+    public function deletePlaylist($playlist) {
         // fetch the airname from the playlists table
         $row = $this->getPlaylist($playlist);
         $airname = $row?$row['airname']:null;
@@ -330,7 +330,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $stmt->execute();
     }
     
-    function restorePlaylist($playlist) {
+    public function restorePlaylist($playlist) {
         // fetch the airname from the deleted playlists table
         $query = "SELECT airname FROM lists_del " .
                  "WHERE listid = ?";
@@ -353,7 +353,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $stmt->execute();
     }
 
-    function purgeDeletedPlaylists() {
+    public function purgeDeletedPlaylists() {
         $query = "DELETE FROM tracks, lists, lists_del USING lists_del " .
                  "INNER JOIN lists " .
                  "LEFT OUTER JOIN tracks ON lists_del.listid = tracks.list " .
@@ -363,7 +363,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $stmt->execute();
     }
 
-    function getDeletedPlaylistCount($user) {
+    public function getDeletedPlaylistCount($user) {
         $query = "SELECT COUNT(*) FROM lists ".
                  "LEFT JOIN lists_del ON lists.id = lists_del.listid ".
                  "WHERE dj=? AND deleted IS NOT NULL";
@@ -375,7 +375,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $count;
     }
 
-    function getListsSelNormal($user) {
+    public function getListsSelNormal($user) {
         $query = "SELECT id, showdate, showtime, description FROM lists " .
                  "LEFT JOIN lists_del ON lists.id = lists_del.listid ".
                  "WHERE dj=? AND deleted IS NULL ".
@@ -385,7 +385,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
 
-    function getListsSelDeleted($user) {
+    public function getListsSelDeleted($user) {
         $query = "SELECT id, showdate, showtime, description, ADDDATE(deleted, 30) FROM lists " .
                  "LEFT JOIN lists_del ON lists.id = lists_del.listid ".
                  "WHERE dj=? AND deleted IS NOT NULL ".
@@ -395,7 +395,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
 
-    function moveTrackUpDown($playlist, &$id, $up) {
+    public function moveTrackUpDown($playlist, &$id, $up) {
         $query = "SELECT id, tag, artist, track, album, label FROM tracks " .
                  "WHERE list = ? ORDER BY id";
         $stmt = $this->prepare($query);

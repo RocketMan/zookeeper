@@ -28,7 +28,7 @@ namespace ZK\Engine;
  * DJ operations
  */
 class DJImpl extends BaseImpl implements IDJ {
-    function getAirnames($user=0, $id=0) {
+    public function getAirnames($user=0, $id=0) {
         $query = "SELECT a.id, airname, url, email, name, realname FROM airnames a LEFT JOIN users u ON a.dj = u.name ";
         if($id)
             $query .= "WHERE a.id = ?";
@@ -42,7 +42,7 @@ class DJImpl extends BaseImpl implements IDJ {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
-    function getActiveAirnames($viewAll=0) {
+    public function getActiveAirnames($viewAll=0) {
         $query = "SELECT a.id, a.airname FROM lists l, airnames a " .
                  "WHERE a.id = l.airname AND l.airname IS NOT NULL ";
          if(!$viewAll)
@@ -52,7 +52,7 @@ class DJImpl extends BaseImpl implements IDJ {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
-    function updateAirname($url, $email, $id=0, $user="") {
+    public function updateAirname($url, $email, $id=0, $user="") {
         $query = "UPDATE airnames " .
                  "SET url=?, email=?";
         if($id)
@@ -66,7 +66,7 @@ class DJImpl extends BaseImpl implements IDJ {
         return $stmt->execute()?$stmt->rowCount():0;
     }
     
-    function insertAirname($djname, $user) {
+    public function insertAirname($djname, $user) {
         $query = "INSERT INTO airnames " .
                  "(dj, airname) VALUES (?, ?)";
         $stmt = $this->prepare($query);
@@ -75,7 +75,7 @@ class DJImpl extends BaseImpl implements IDJ {
         return $stmt->execute()?$stmt->rowCount():0;
     }
 
-    function reassignAirname($id, $user) {
+    public function reassignAirname($id, $user) {
         $query = "UPDATE airnames SET dj=? WHERE id=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);

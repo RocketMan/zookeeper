@@ -31,13 +31,13 @@ namespace ZK\Engine;
 class ChartImpl extends BaseImpl implements IChart {
     private static $labelCache;
 
-    function getCategories() {
+    public function getCategories() {
         $query = "SELECT id, name, code, director FROM categories ORDER BY id";
         $stmt = $this->prepare($query);
         return $this->execute($stmt);
     }
     
-    function updateCategory($i, $name, $code, $dir) {
+    public function updateCategory($i, $name, $code, $dir) {
         $query = "UPDATE categories SET " .
                  "name=?, code=?, director=? " .
                  "WHERE id=?";
@@ -57,7 +57,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $success;
     }
     
-    function getNextAID() {
+    public function getNextAID() {
         $query = "SELECT afile_number, adddate FROM currents " .
                  "ORDER BY adddate DESC, afile_number DESC LIMIT 1";
         $stmt = $this->prepare($query);
@@ -81,7 +81,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $aid;
     }
     
-    function getAddDates($limit="") {
+    public function getAddDates($limit="") {
         $query = "SELECT adddate FROM currents " .
                  "GROUP BY adddate ORDER BY adddate DESC";
         if($limit)
@@ -92,14 +92,14 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt);
     }
     
-    function getAdd($date) {
+    public function getAdd($date) {
         $query = "SELECT * FROM currents WHERE adddate = ? ORDER BY id";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $date);
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
-    function getAdd2($date) {
+    public function getAdd2($date) {
         $query = "SELECT c.*, a.artist, a.album, a.medium, a.size, ".
                  "a.created, a.updated, a.category, p.name label ".
                  "FROM currents c, albumvol a, publist p ".
@@ -110,7 +110,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt);
     }
     
-    function getCurrents($date) {
+    public function getCurrents($date) {
         $query = "SELECT * FROM currents WHERE adddate <= ? AND ".
                         "pulldate > ?";
         $stmt = $this->prepare($query);
@@ -119,7 +119,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
-    function getCurrents2($date) {
+    public function getCurrents2($date) {
         $query = "SELECT c.*, a.artist, a.album, a.medium, a.size, ".
                  "a.created, a.updated, a.category, p.name label ".
                  "FROM currents c, albumvol a, publist p ".
@@ -132,7 +132,7 @@ class ChartImpl extends BaseImpl implements IChart {
             return $this->execute($stmt);
     }
     
-    function getCurrentsWithPlays($date) {
+    public function getCurrentsWithPlays($date) {
         // First, select out the currents with plays and add those up
         $query = "CREATE TEMPORARY TABLE tmp_current_plays ".
                  "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
@@ -195,7 +195,7 @@ class ChartImpl extends BaseImpl implements IChart {
         */
     }
     
-    function getCurrentsWithPlays2($date=0) {
+    public function getCurrentsWithPlays2($date=0) {
         if(!$date)
             $date = date("Y-m-d");
     
@@ -253,8 +253,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $result;
     }
     
-    function addAlbum($aid, $tag, $adddate, $pulldate, $cats)
-    {
+    public function addAlbum($aid, $tag, $adddate, $pulldate, $cats) {
         $query = "INSERT INTO currents " .
                  "(afile_number, tag, adddate, pulldate, category) " .
                  "VALUES (?, ?, ?, ?, ?)";
@@ -267,7 +266,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $stmt->execute() && $stmt->rowCount() >= 0;
     }
     
-    function updateAlbum($id, $aid, $tag, $adddate, $pulldate, $cats) {
+    public function updateAlbum($id, $aid, $tag, $adddate, $pulldate, $cats) {
         $query = "UPDATE currents SET " .
                  "afile_number=?, tag=?, adddate=?, " .
                  "pulldate=?, category=? " .
@@ -287,14 +286,14 @@ class ChartImpl extends BaseImpl implements IChart {
         return $stmt->execute() && $stmt->rowCount() >= 0;
     }
     
-    function deleteAlbum($id) {
+    public function deleteAlbum($id) {
         $query = "DELETE FROM currents WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $id);
         return $stmt->execute() && $stmt->rowCount() >= 0;
     }
     
-    function getAlbum($id) {
+    public function getAlbum($id) {
         settype($id, "integer");
         $query = "SELECT * FROM currents WHERE id = ?";
         $stmt = $this->prepare($query);
@@ -302,7 +301,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->executeAndFetch($stmt, \PDO::FETCH_BOTH);
     }
     
-    function getAlbumByTag($tag) {
+    public function getAlbumByTag($tag) {
         settype($tag, "integer");
         $query = "SELECT * FROM currents WHERE tag = ? ORDER BY adddate DESC";
         $stmt = $this->prepare($query);
@@ -310,7 +309,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->executeAndFetch($stmt, \PDO::FETCH_BOTH);
     }
     
-    function getAlbumPlays($tag, $startDate="", $endDate="", $limit="") {
+    public function getAlbumPlays($tag, $startDate="", $endDate="", $limit="") {
         settype($tag, "integer");
         $query = "SELECT * FROM plays WHERE tag = ?";
         if($startDate && $endDate) {
@@ -340,7 +339,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
-    function getChartDates($limit=0) {
+    public function getChartDates($limit=0) {
         $query = "SELECT week FROM plays " .
                  "GROUP BY week ORDER BY week DESC";
         if($limit)
@@ -351,7 +350,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
-    function getChartDatesByYear($year, $limit=0) {
+    public function getChartDatesByYear($year, $limit=0) {
         $query = "SELECT week FROM plays " .
                  "WHERE week >= ? AND week <= ? " .
                  "GROUP BY week ORDER BY week DESC";
@@ -365,7 +364,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt);
     }
     
-    function getChartYears($limit=0) {
+    public function getChartYears($limit=0) {
         $query = "SELECT YEAR(week) FROM plays " .
                  "GROUP BY YEAR(week) ORDER BY YEAR(week) DESC";
         if($limit)
@@ -376,7 +375,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
-    function getChartMonths($limit=0) {
+    public function getChartMonths($limit=0) {
         $query = "SELECT week FROM plays " .
                  "GROUP BY YEAR(week), MONTH(week) " .
                  "ORDER BY week DESC";
@@ -388,7 +387,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt);
     }
     
-    function getChartSortFn($a, $b) {
+    public function getChartSortFn($a, $b) {
         // First, sort by descending number of plays
         $retval = $b["PLAYS"] - $a["PLAYS"];
     
@@ -437,7 +436,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $result[$i]["LABEL"] = self::$labelCache[$labelKey];
     }
     
-    function getChart(&$result, $startDate, $endDate, $limit="", $category="") {
+    public function getChart(&$result, $startDate, $endDate, $limit="", $category="") {
         $query = "SELECT plays.tag, sum(plays) p";
     
         if(!$startDate)
@@ -585,7 +584,7 @@ class ChartImpl extends BaseImpl implements IChart {
         }
     }
     
-    function getChart2(&$result, $startDate, $endDate, $limit="", $category="") {
+    public function getChart2(&$result, $startDate, $endDate, $limit="", $category="") {
         $query = "SELECT plays.tag, sum(plays) p";
     
         if(!$startDate)
@@ -764,7 +763,7 @@ class ChartImpl extends BaseImpl implements IChart {
         }
     }
     
-    function getBottom(&$result, $startDate, $endDate, $limit="", $category="") {
+    public function getBottom(&$result, $startDate, $endDate, $limit="", $category="") {
         $query = "SELECT currents.tag, sum(plays) p FROM currents";
         $query .= " LEFT JOIN plays ON plays.tag = currents.tag";
     
@@ -818,13 +817,13 @@ class ChartImpl extends BaseImpl implements IChart {
         }
     }
     
-    function getChartEMail() {
+    public function getChartEMail() {
         $query = "SELECT id, chart, address FROM chartemail ORDER BY id";
         $stmt = $this->prepare($query);
         return $this->execute($stmt);
     }
     
-    function updateChartEMail($i, $address) {
+    public function updateChartEMail($i, $address) {
         $query = "UPDATE chartemail SET " .
                  "address=? " .
                  "WHERE id=?";
@@ -842,7 +841,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $success;
     }
     
-    function getWeeklyActivity($date) {
+    public function getWeeklyActivity($date) {
         list($y, $m, $d) = explode("-", $date);
         $endDate = date("Y-m-d", mktime(0,0,0,$m,$d-1,$y));
         $startDate = date("Y-m-d", mktime(0,0,0,$m,$d-7,$y));

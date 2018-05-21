@@ -29,20 +29,20 @@ namespace ZK\Engine;
  * User operations
  */
 class UserImpl extends BaseImpl implements IUser {
-    function getUser($user) {
+    public function getUser($user) {
         $query = "SELECT * FROM users WHERE name = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
         return $this->executeAndFetch($stmt);
     }
 
-    function getUsers() {
+    public function getUsers() {
         $query = "SELECT name, realname FROM users u ORDER BY name";
         $stmt = $this->prepare($query);
         return $this->execute($stmt);
     }
     
-    function getUserByAccount($account) {
+    public function getUserByAccount($account) {
         $query = "SELECT * FROM users WHERE ssoaccount = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $account);
@@ -50,7 +50,7 @@ class UserImpl extends BaseImpl implements IUser {
         return $this->executeAndFetch($stmt);
     }
     
-    function getUserByFullname($fullname) {
+    public function getUserByFullname($fullname) {
         $query = "SELECT * FROM users WHERE realname = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $fullname);
@@ -58,7 +58,7 @@ class UserImpl extends BaseImpl implements IUser {
         return $this->executeAndFetch($stmt);
     }
     
-    function assignAccount($user, $account) {
+    public function assignAccount($user, $account) {
         $query = "UPDATE users SET ssoaccount=? WHERE name=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $account);
@@ -66,14 +66,14 @@ class UserImpl extends BaseImpl implements IUser {
         $stmt->execute();
     }
     
-    function updateLastLogin($id) {
+    public function updateLastLogin($id) {
         $query = "UPDATE users SET lastlogin=now() WHERE id=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $id);
         $stmt->execute();
     }
     
-    function setupSsoOptions($account, $fullname, $url) {
+    public function setupSsoOptions($account, $fullname, $url) {
         $session = md5(uniqid(rand()));
         $query = "INSERT INTO ssosetup " .
                      "(sessionkey, fullname, account, created, url) " .
@@ -89,21 +89,21 @@ class UserImpl extends BaseImpl implements IUser {
         return $session;
     }
     
-    function getSsoOptions($ssoSession) {
+    public function getSsoOptions($ssoSession) {
         $query = "SELECT * FROM ssosetup WHERE sessionkey=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $ssoSession);
         return $this->executeAndFetch($stmt);
     }
     
-    function teardownSsoOptions($ssoSession) {
+    public function teardownSsoOptions($ssoSession) {
         $query = "DELETE FROM ssosetup WHERE sessionkey=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $ssoSession);
         $stmt->execute();
     }
     
-    function setupSsoRedirect($url) {
+    public function setupSsoRedirect($url) {
         $session = md5(uniqid(rand()));
         $query = "INSERT INTO ssoredirect " .
                      "(sessionkey, url, created) " .
@@ -115,7 +115,7 @@ class UserImpl extends BaseImpl implements IUser {
         return $session;
     }
     
-    function getSsoRedirect($ssoSession) {
+    public function getSsoRedirect($ssoSession) {
         // invalidate SSO session with invalid characters (injection control)
         if(strlen($ssoSession) != strspn($ssoSession, "0123456789abcdef"))
             $ssoSession = "";
@@ -136,7 +136,7 @@ class UserImpl extends BaseImpl implements IUser {
         return $url;
     }
     
-    function createNewAccount($fullname, $account) {
+    public function createNewAccount($fullname, $account) {
         $user = $account;
         if(strlen($user) > 8)
             $user = substr($user, 0, 8);
@@ -159,7 +159,7 @@ class UserImpl extends BaseImpl implements IUser {
         return $user;
     }
     
-    function validatePassword($user, $password, $updateTimestamp, &$groups=0) {
+    public function validatePassword($user, $password, $updateTimestamp, &$groups=0) {
         $success = 0;
     
         $userl = strtolower($user.$password);
@@ -207,7 +207,7 @@ class UserImpl extends BaseImpl implements IUser {
         return $success;
     }
     
-    function updateUser($user, $password, $realname="XXZZ", $groups="XXZZ", $expiration="XXZZ") {
+    public function updateUser($user, $password, $realname="XXZZ", $groups="XXZZ", $expiration="XXZZ") {
         $comma = "";
         $query = "UPDATE users SET";
         if($password) {
@@ -243,7 +243,7 @@ class UserImpl extends BaseImpl implements IUser {
         return ($stmt->rowCount() >= 0);
     }
     
-    function insertUser($user, $password, $realname, $groups, $expiration) {
+    public function insertUser($user, $password, $realname, $groups, $expiration) {
         $salt = substr(md5(uniqid(rand())), 0, 2);
         $query = "INSERT INTO users (name, password, realname, groups, expires) VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->prepare($query);
@@ -256,7 +256,7 @@ class UserImpl extends BaseImpl implements IUser {
         return ($stmt->rowCount() > 0);
     }
 
-    function querySession($session) {
+    public function querySession($session) {
         // invalidate session with invalid characters (injection control)
         if(strlen($session) != strspn($session, "0123456789abcdef"))
             $session = "";
@@ -267,7 +267,7 @@ class UserImpl extends BaseImpl implements IUser {
         return $this->executeAndFetch($stmt);
     }
     
-    function createSession($session, $user, $access) {
+    public function createSession($session, $user, $access) {
         $row = $this->getUser($user);
         if($row)
             $displayname = $row['realname'];
@@ -283,7 +283,7 @@ class UserImpl extends BaseImpl implements IUser {
         return $stmt->execute();
     }
     
-    function setPortID($session, $portid) {
+    public function setPortID($session, $portid) {
         $query = "UPDATE sessions SET portid = ? WHERE sessionkey = ?";
          $stmt = $this->prepare($query);
         $stmt->bindValue(1, $portid);
@@ -291,7 +291,7 @@ class UserImpl extends BaseImpl implements IUser {
         return $stmt->execute();
     }
     
-    function deleteSession($session) {
+    public function deleteSession($session) {
         $query = "DELETE FROM sessions WHERE sessionkey= ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $session);

@@ -49,7 +49,7 @@ class EditorImpl extends BaseImpl implements IEditor {
         return $next;
     }
     
-    function insertUpdateAlbum(&$album, $tracks, $label) {
+    public function insertUpdateAlbum(&$album, $tracks, $label) {
         if($album["location"] != "G")
            $album["bin"] = "";
     
@@ -209,7 +209,7 @@ class EditorImpl extends BaseImpl implements IEditor {
         return true;
     }
     
-    function insertUpdateLabel(&$label) {
+    public function insertUpdateLabel(&$label) {
         $newLabel = $label && !$label["pubkey"];
     
         // Label
@@ -269,7 +269,7 @@ class EditorImpl extends BaseImpl implements IEditor {
         return true;
     }
 
-    function enqueueTag($tag, $user) {
+    public function enqueueTag($tag, $user) {
         $query = "INSERT INTO tagqueue (user, tag, keyed) values (?, ?, now())";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
@@ -277,7 +277,7 @@ class EditorImpl extends BaseImpl implements IEditor {
         return $stmt->execute();
     }
     
-    function dequeueTag($tag, $user) {
+    public function dequeueTag($tag, $user) {
         $query = "DELETE FROM tagqueue WHERE user=? and tag=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
@@ -285,7 +285,7 @@ class EditorImpl extends BaseImpl implements IEditor {
         return $stmt->execute();
     }
     
-    function getQueuedTags($user) {
+    public function getQueuedTags($user) {
         $query = "SELECT * FROM tagqueue t " .
                  "LEFT JOIN albumvol a ON t.tag = a.tag " .
                  "WHERE user=? ORDER BY keyed";
@@ -294,14 +294,14 @@ class EditorImpl extends BaseImpl implements IEditor {
         return $this->execute($stmt);
     }
 
-    function getAlbum($tag) {
+    public function getAlbum($tag) {
         $query = "SELECT * FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey WHERE tag = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
         return $this->executeAndFetch($stmt);
     }
 
-    function getTracks($tag, $isColl) {
+    public function getTracks($tag, $isColl) {
             $table = $isColl?"colltracknames":"tracknames";
         $query = "SELECT * FROM $table WHERE tag = ? ORDER BY seq";
         $stmt = $this->prepare($query);
@@ -309,14 +309,14 @@ class EditorImpl extends BaseImpl implements IEditor {
         return $this->execute($stmt);
     }
 
-    function getLabel($key) {
+    public function getLabel($key) {
         $query = "SELECT * FROM publist WHERE pubkey = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $key);
         return $this->executeAndFetch($stmt);
     }
 
-    function setLocation($tag, $location, $bin=null) {
+    public function setLocation($tag, $location, $bin=null) {
         $query = "UPDATE albumvol SET location = ?, " .
                  "updated = now(), bin = ? WHERE tag = ?";
         $stmt = $this->prepare($query);
