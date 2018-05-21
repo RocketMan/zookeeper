@@ -28,6 +28,7 @@ use ZK\Controllers\IController;
 use ZK\Controllers\SSOCommon;
 use ZK\Engine\Engine;
 use ZK\Engine\IUser;
+use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
@@ -298,9 +299,13 @@ class Main implements IController {
 
     private function doLogin($user, $password) {
         if(Engine::api(IUser::class)->validatePassword($user, $password, 1, $access)) {
+            if(Session::checkLocal())
+                $access .= 'G';
+
             // Restrict guest accounts to local subnet only
-            if($this->session->isAuth("d") ||
-                   $this->session->isAuth("g") && !$this->session->isLocal()) {
+            if(Session::checkAccess('d', $access) ||
+                   Session::checkAccess('g', $access) &&
+                        !Session::checkAccess('G', $access)) {
                 return;
             }
     
@@ -322,8 +327,8 @@ class Main implements IController {
         switch($_REQUEST["account"]) {
         case "old":
             if(Engine::api(IUser::class)->validatePassword($_REQUEST["user"], $_REQUEST["password"], 0, $access) &&
-                    !Engine::session()->checkAccess('d', $access) &&
-                    !Engine::session()->checkAccess('g', $access)) {
+                    !Session::checkAccess('d', $access) &&
+                    !Session::checkAccess('g', $access)) {
                 $row = Engine::api(IUser::class)->getSsoOptions($_REQUEST["ssoOptions"]);
                 if($row) {
                     $account = $row['account'];

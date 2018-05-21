@@ -146,24 +146,6 @@ class Session {
         }
     }
 
-    public static function checkAccess($mode, $access) {
-        switch($mode) {
-        case "a":    // all
-            $allow = true;
-            break;
-        case "u":    // authenticated user (invalid for checkAccess)
-        case "U":    // local (not SSO) user (invalid for checkAccess)
-        case "":     // empty mode is invalid
-            $allow = false;
-            break;
-        default:     // specific user mode
-            $allow = $access &&
-                               preg_match("/".$mode."/i", $access);
-            break;
-        }
-        return $allow;
-    }
-
     public function isAuth($mode) {
         switch($mode) {
         case "a":    // all
@@ -188,6 +170,28 @@ class Session {
     }
 
     public function isLocal() {
+        return $this->isAuth('G');
+    }
+
+    public static function checkAccess($mode, $access) {
+        switch($mode) {
+        case "a":    // all
+            $allow = true;
+            break;
+        case "u":    // authenticated user (invalid for checkAccess)
+        case "U":    // local (not SSO) user (invalid for checkAccess)
+        case "":     // empty mode is invalid
+            $allow = false;
+            break;
+        default:     // specific user mode
+            $allow = $access &&
+                               preg_match("/".$mode."/i", $access);
+            break;
+        }
+        return $allow;
+    }
+
+    public static function checkLocal() {
         $local_subnet = Engine::param('local_subnet');
         return !$local_subnet ||
                     substr($_SERVER['REMOTE_ADDR'], 0, strlen($local_subnet))

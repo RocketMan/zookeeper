@@ -26,6 +26,7 @@ namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
 use ZK\Engine\IUser;
+use ZK\Engine\Session;
 
 class SSOCommon {
     const UA = "Zookeeper-SSO/2.0; (+https://zookeeper.ibinx.com/)";
@@ -148,10 +149,14 @@ class SSOCommon {
             $user = $row["name"];
             $access = $row["groups"] . "s";
             $session = md5(uniqid(rand()));
+
+            if(Session::checkLocal())
+                $access .= 'G';
     
             // Restrict guest accounts to local subnet only
-            if(Engine::session()->checkAccess('d', $access) ||
-                   Engine::session()->checkAccess('g', $access) && !Engine::session()->isLocal()) {
+            if(Session::checkAccess('d', $access) ||
+                   Session::checkAccess('g', $access) &&
+                       !Session::checkAccess('G', $access)) {
                 $session = "";
             } else {
                 // Create a session
