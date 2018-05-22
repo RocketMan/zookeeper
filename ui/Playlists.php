@@ -122,7 +122,7 @@ class Playlists extends MenuItem {
         return $fromTime . "-" . $toTime;
     }
     
-    private function hourToAMPM($hour, $full=0) {
+    public static function hourToAMPM($hour, $full=0) {
         $h = (int)floor($hour/100);
         $m = (int)$hour % 100;
         $min = $m || $full?(":" . sprintf("%02d", $m)):"";
@@ -140,15 +140,15 @@ class Playlists extends MenuItem {
         }
     }
     
-    private function timeToAMPM($time) {
+    public static function timeToAMPM($time) {
         if(strlen($time) == 9 && $time[4] == '-') {
             list($fromtime, $totime) = split("-", $time);
-            return $this->hourToAMPM($fromtime) . " - " . $this->hourToAMPM($totime);
+            return self::hourToAMPM($fromtime) . " - " . self::hourToAMPM($totime);
         } else
             return strtolower(htmlentities($time));
     }
     
-    private function timeToZulu($time) {
+    public static function timeToZulu($time) {
         if(strlen($time) == 9 && $time[4] == '-') {
             $d = getdate(time());
             $day = $d["mday"];
@@ -289,7 +289,7 @@ class Playlists extends MenuItem {
                 for($j=0; $j<60; $j+=30) {
                     $ovalue = sprintf("%02d%02d", $i, $j);
                     $selected = ($ovalue == $fromtime)?" SELECTED":"";
-                    echo "          <OPTION VALUE=\"$ovalue\"$selected>".$this->hourToAMPM($ovalue, 1)."\n";
+                    echo "          <OPTION VALUE=\"$ovalue\"$selected>".self::hourToAMPM($ovalue, 1)."\n";
                 }
             }
             echo "        </SELECT> - <SELECT NAME=totime>\n";
@@ -297,7 +297,7 @@ class Playlists extends MenuItem {
                 for($j=0; $j<60; $j+=30) {
                     $ovalue = sprintf("%02d%02d", $i, $j);
                     $selected = ($ovalue == $totime)?" SELECTED":"";
-                    echo "          <OPTION VALUE=\"$ovalue\"$selected>".$this->hourToAMPM($ovalue, 1)."\n";
+                    echo "          <OPTION VALUE=\"$ovalue\"$selected>".self::hourToAMPM($ovalue, 1)."\n";
                 }
             }
             echo "        </SELECT></TD>\n";
@@ -1292,7 +1292,7 @@ class Playlists extends MenuItem {
             echo "<TR><TH CLASS=\"secSel\" ALIGN=LEFT>Playlist for $row[0]</TH>\n";
             echo "<TH ALIGN=CENTER  CLASS=\"secSelSub\">" .
                  date("l, j F Y", mktime(0,0,0,$m,$d,$y)) . "&nbsp;&nbsp;" .
-                 $this->timeToAMPM($row[2]) . "</TH>\n";
+                 self::timeToAMPM($row[2]) . "</TH>\n";
             echo "<TH ALIGN=RIGHT CLASS=\"secSel\">DJ: ";
             echo "<A HREF=\"?action=viewDJ&amp;seq=selUser&amp;session=".$this->session->getSessionID()."&amp;viewuser=$row[3]\" CLASS=\"nav2\">$row[4]</A>";
             echo "</TH></TR>\n";
@@ -1585,7 +1585,7 @@ class Playlists extends MenuItem {
             $records = Engine::api(IPlaylist::class)->getPlaylists(1, 1, $viewdate, 0, 0, 0);
             $i=0;
             while($records && ($row = $records->fetch())) {
-                    echo "<TR><TD ALIGN=\"RIGHT\" CLASS=\"sub\">" . $this->timeToAMPM($row[2]) . "&nbsp;</TD>\n";
+                    echo "<TR><TD ALIGN=\"RIGHT\" CLASS=\"sub\">" . self::timeToAMPM($row[2]) . "&nbsp;</TD>\n";
                     echo "    <TD><A HREF=\"".
                          "?action=viewDate&amp;seq=selList&amp;playlist=".$row[0].
                          "&amp;session=".$this->session->getSessionID()."\" CLASS=\"nav\">" .
@@ -1598,95 +1598,6 @@ class Playlists extends MenuItem {
     <?
         }
         UI::setFocus();
-    }
-    
-    public function emitWhatsOnNow() {
-        $record = Engine::api(IPlaylist::class)->getWhatsOnNow();
-        echo "<TABLE WIDTH=\"100%\" BORDER=0 CELLPADDING=2 CELLSPACING=0 STYLE=\"border-style: solid; border-width: 1px 0px 1px 0px; border-color: #cccccc\">\n  <TR><TH ALIGN=LEFT COLSPAN=3 CLASS=\"subhead\">";
-        echo "On ".Engine::param('station')." now:</TH></TR>\n  ";
-        if($record && ($row = $record->fetch())) {
-            echo "<TR><TH ALIGN=LEFT COLSPAN=3><A HREF=\"".
-                 "?action=viewDJ&amp;seq=selUser&amp;viewuser=".$row["airid"]."&amp;session=".$this->session->getSessionID().
-                 "\" CLASS=\"calNav\">" . htmlentities($row["airname"]) . "</A>&nbsp;&nbsp;&nbsp;";
-            echo "<A HREF=\"".
-                 "?action=viewDate&amp;seq=selList&amp;playlist=".$row[0].
-                 "&amp;session=".$this->session->getSessionID()."\" CLASS=\"nav\">" . htmlentities($row["description"]);
-            echo "</A></TH></TR>\n  ";
-            echo "<TR><TH ALIGN=RIGHT VALIGN=BOTTOM CLASS=\"sub\">" . date("l, j M") . "&nbsp;&nbsp;</TH>\n      <TH ALIGN=LEFT VALIGN=BOTTOM CLASS=\"sub\">" . $this->timeToAMPM($row["showtime"]) . " " . date("T") . "</TH>\n";
-            echo "      <TD ALIGN=RIGHT VALIGN=BOTTOM ROWSPAN=2>Request Line:&nbsp;&nbsp;+1 949 555 0897&nbsp;&nbsp;&nbsp;89.7FM</TD></TR>\n";
-            echo "  <TR>" . $this->timeToZulu($row["showtime"]). "</TR>\n";
-        } else {
-            echo "<TR><TH ALIGN=LEFT COLSPAN=3>[No playlist available]</TH></TR>\n  ";
-            echo "<TR><TH COLSPAN=2>&nbsp;</TH>\n";
-            echo "    <TD ALIGN=RIGHT VALIGN=BOTTOM>Request Line:&nbsp;&nbsp;+1 949 555 0897&nbsp;&nbsp;&nbsp;89.7FM</TD></TR>\n";
-        }
-        echo "</TABLE><BR>\n";
-    }
-    
-    public function emitTopPlays($numweeks=1, $limit=10) {
-       // Determine last chart date
-       $weeks = Engine::api(IChart::class)->getChartDates(1);
-       if($weeks && ($lastWeek = $weeks->fetch()))
-          list($y,$m,$d) = split("-", $lastWeek["week"]);
-    
-       if(!$y)
-          return;    // No charts!  bail.
-    
-       if(!$numWeeks || $numWeeks == 1)
-          Engine::api(IChart::class)->getChart($topPlays, "", $lastWeek["week"], $limit);
-       else {
-          // Determine start chart date that will yield $numweeks worth of charts
-          $startDate = date("Y-m-d", mktime(0,0,0,
-                                          $m,
-                                          $d-(($numweeks-1)*7),
-                                          $y));
-    
-          Engine::api(IChart::class)->getChart($topPlays, $startDate, "", $limit);
-       }
-    
-       Engine::api(ILibrary::class)->markAlbumsReviewed($topPlays);
-       if(sizeof($topPlays)) {
-          $nn4 = (substr($_SERVER["HTTP_USER_AGENT"], 0, 10) == "Mozilla/4.");
-          if($nn4)
-              echo "<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=0 WIDTH=\"100%\" BGCOLOR=\"#5279a0\">\n";
-          else
-              echo "<TABLE WIDTH=\"100%\" BGCOLOR=\"#5279a0\">\n";
-          echo "  <TR><TH ALIGN=LEFT CLASS=\"subhead\">";
-          $formatEndDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
-          echo Engine::param('station')."'s Top $limit Albums\n" .
-               "    <BR><FONT CLASS=\"subhead2\">for the ";
-          echo ($numweeks == 1)?"week":"$numweeks week period";
-          echo " ending $formatEndDate</FONT></TH><TD ALIGN=RIGHT STYLE=\"vertical-align: bottom;\">Music Director: <A HREF=\"mailto:".Engine::param('email')['md']."\">".Engine::param('md_name')."</A></TD></TR>\n";
-          echo "</TABLE>\n<TABLE>\n";
-          echo "  <TR><TH></TH><TH ALIGN=LEFT>Artist</TH><TH></TH><TH ALIGN=LEFT>Album</TH><TH ALIGN=LEFT>Label</TH></TR>\n";
-          for($i=0; $i < sizeof($topPlays); $i++) {
-             echo "  <TR><TD ALIGN=RIGHT>".(string)($i + 1).".</TD><TD>";
-    
-             // Setup artist correctly for collections
-             $artist = preg_match("/^COLL$/i", $topPlays[$i]["artist"])?"Various Artists":$topPlays[$i]["artist"];
-    
-             echo UI::HTMLify($artist, 20) . "</TD><TD>";
-             if($topPlays[$i]["REVIEWED"])
-                 echo "<A HREF=\"".
-                      "?s=byAlbumKey&amp;n=". UI::URLify($topPlays[$i]["tag"]).
-                      "&amp;q=". $maxresults.
-                      "&amp;action=search&amp;session=".$this->session->getSessionID().
-                      "\"><IMG SRC=\"img/rinfo_beta.gif\" " .
-                      "ALT=\"Album Review\" " .
-                      "WIDTH=12 HEIGHT=11 BORDER=0></A></TD><TD>";
-             else
-                echo "</TD><TD>";
-             // Album
-             echo "<A CLASS=\"nav\" HREF=\"".
-                             "?s=byAlbumKey&amp;n=". UI::URLify($topPlays[$i]["tag"]).
-                             "&amp;q=". $maxresults.
-                             "&amp;action=search&amp;session=".$this->session->getSessionID().
-                             "\">";
-             echo UI::HTMLify($topPlays[$i]["album"], 20) . "</A></TD><TD>" .
-                  UI::HTMLify($topPlays[$i]["LABEL"], 20) . "</TD></TR>\n";
-          }
-          echo "</TABLE>\n";
-       }
     }
     
     public function viewLastPlays($tag, $count=0) {

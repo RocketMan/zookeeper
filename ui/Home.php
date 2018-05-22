@@ -36,15 +36,15 @@ class Home extends MenuItem {
         echo "    <H2>". Engine::param('station'). " Music :: " . Engine::param('application') . "</H2>\n";
         if($this->session->isAuth("u"))
             echo "    <P>Remember to <B>logout</B> when you have finished.</P>\n";
-        $this->emitWhatsOnNow($session);
-        $this->emitTopPlays($session);
+        $this->emitWhatsOnNow();
+        $this->emitTopPlays();
         echo "    <TABLE WIDTH=\"100%\">\n";
         echo "      <TR><TH ALIGN=LEFT CLASS=\"subhead\">For complete album charting, see our\n";
         echo "          <A CLASS=\"subhead\" HREF=\"?session=$session&amp;action=viewChart\"><B>Airplay Charts</B></A>.\n      </TH></TR>\n    </TABLE>\n";
         UI::setFocus();
     }
 
-    private function emitTopPlays($session, $numweeks=1, $limit=10) {
+    private function emitTopPlays($numweeks=1, $limit=10) {
        // Determine last chart date
        $weeks = Engine::api(IChart::class)->getChartDates(1);
        if($weeks && ($lastWeek = $weeks->fetch()))
@@ -91,7 +91,7 @@ class Home extends MenuItem {
                  echo "<A HREF=\"".
                       "?s=byAlbumKey&amp;n=". UI::URLify($topPlays[$i]["tag"]).
                       "&amp;q=". $maxresults.
-                      "&amp;action=search&amp;session=$session".
+                      "&amp;action=search&amp;session=".$this->session->getSessionID().
                       "\"><IMG SRC=\"img/rinfo_beta.gif\" " .
                       "ALT=\"Album Review\" " .
                       "WIDTH=12 HEIGHT=11 BORDER=0></A></TD><TD>";
@@ -101,7 +101,7 @@ class Home extends MenuItem {
              echo "<A CLASS=\"nav\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($topPlays[$i]["tag"]).
                              "&amp;q=". $maxresults.
-                             "&amp;action=search&amp;session=$session".
+                             "&amp;action=search&amp;session=".$this->session->getSessionID().
                              "\">";
              echo UI::HTMLify($topPlays[$i]["album"], 20) . "</A></TD><TD>" .
                   UI::HTMLify($topPlays[$i]["LABEL"], 20) . "</TD></TR>\n";
@@ -109,22 +109,22 @@ class Home extends MenuItem {
           echo "</TABLE>\n";
        }
     }
-
-    private function emitWhatsOnNow($session) {
+    
+    private function emitWhatsOnNow() {
         $record = Engine::api(IPlaylist::class)->getWhatsOnNow();
         echo "<TABLE WIDTH=\"100%\" BORDER=0 CELLPADDING=2 CELLSPACING=0 STYLE=\"border-style: solid; border-width: 1px 0px 1px 0px; border-color: #cccccc\">\n  <TR><TH ALIGN=LEFT COLSPAN=3 CLASS=\"subhead\">";
         echo "On ". Engine::param('station') . " now:</TH></TR>\n  ";
         if($record && ($row = $record->fetch())) {
             echo "<TR><TH ALIGN=LEFT COLSPAN=3><A HREF=\"".
-                 "?action=viewDJ&amp;seq=selUser&amp;viewuser=".$row["airid"]."&amp;session=$session".
+                 "?action=viewDJ&amp;seq=selUser&amp;viewuser=".$row["airid"]."&amp;session=".$this->session->getSessionID().
                  "\" CLASS=\"calNav\">" . htmlentities($row["airname"]) . "</A>&nbsp;&nbsp;&nbsp;";
             echo "<A HREF=\"".
                  "?action=viewDate&amp;seq=selList&amp;playlist=".$row[0].
-                 "&amp;session=$session\" CLASS=\"nav\">" . htmlentities($row["description"]);
+                 "&amp;session=".$this->session->getSessionID()."\" CLASS=\"nav\">" . htmlentities($row["description"]);
             echo "</A></TH></TR>\n  ";
-            echo "<TR><TH ALIGN=RIGHT VALIGN=BOTTOM CLASS=\"sub\">" . date("l, j M") . "&nbsp;&nbsp;</TH>\n      <TH ALIGN=LEFT VALIGN=BOTTOM CLASS=\"sub\">" . TimeToAMPM($row["showtime"]) . " " . date("T") . "</TH>\n";
+            echo "<TR><TH ALIGN=RIGHT VALIGN=BOTTOM CLASS=\"sub\">" . date("l, j M") . "&nbsp;&nbsp;</TH>\n      <TH ALIGN=LEFT VALIGN=BOTTOM CLASS=\"sub\">" . Playlists::timeToAMPM($row["showtime"]) . " " . date("T") . "</TH>\n";
             echo "      <TD ALIGN=RIGHT VALIGN=BOTTOM ROWSPAN=2>Request Line:&nbsp;&nbsp;+1 949 555 0897&nbsp;&nbsp;&nbsp;89.7FM</TD></TR>\n";
-            echo "  <TR>" . TimeToZulu($row["showtime"]). "</TR>\n";
+            echo "  <TR>" . Playlists::timeToZulu($row["showtime"]). "</TR>\n";
         } else {
             echo "<TR><TH ALIGN=LEFT COLSPAN=3>[No playlist available]</TH></TR>\n  ";
             echo "<TR><TH COLSPAN=2>&nbsp;</TH>\n";
