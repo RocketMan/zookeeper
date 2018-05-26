@@ -170,7 +170,7 @@ class Session {
     }
 
     public function isLocal() {
-        return $this->isAuth('G');
+        return $this->isAuth('l');
     }
 
     public static function checkAccess($mode, $access) {

@@ -300,12 +300,12 @@ class Main implements IController {
     private function doLogin($user, $password) {
         if(Engine::api(IUser::class)->validatePassword($user, $password, 1, $access)) {
             if(Session::checkLocal())
-                $access .= 'G';
+                $access .= 'l';
 
             // Restrict guest accounts to local subnet only
             if(Session::checkAccess('d', $access) ||
                    Session::checkAccess('g', $access) &&
-                        !Session::checkAccess('G', $access)) {
+                        !Session::checkAccess('l', $access)) {
                 return;
             }
     

@@ -151,12 +151,12 @@ class SSOCommon {
             $session = md5(uniqid(rand()));
 
             if(Session::checkLocal())
-                $access .= 'G';
+                $access .= 'l';
     
             // Restrict guest accounts to local subnet only
             if(Session::checkAccess('d', $access) ||
                    Session::checkAccess('g', $access) &&
-                       !Session::checkAccess('G', $access)) {
+                       !Session::checkAccess('l', $access)) {
                 $session = "";
             } else {
                 // Create a session
