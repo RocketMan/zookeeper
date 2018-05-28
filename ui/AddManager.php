@@ -333,7 +333,7 @@ class AddManager extends MenuItem {
                 $results = Engine::api(IChart::class)->getCurrentsWithPlays2(date("Y-m-d"));
             else
                 $results = Engine::api(IChart::class)->getCurrents2(date("Y-m-d"));
-            $this->addManagerEmitAlbums($results, "", false, true);
+            $this->addManagerEmitAlbums($results, "", $this->session->isAuth("n"), true);
             UI::setFocus();
         }
     }
