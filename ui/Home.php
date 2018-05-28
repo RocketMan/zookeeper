@@ -40,7 +40,7 @@ class Home extends MenuItem {
         $this->emitTopPlays();
         echo "    <TABLE WIDTH=\"100%\">\n";
         echo "      <TR><TH ALIGN=LEFT CLASS=\"subhead\">For complete album charting, see our\n";
-        echo "          <A CLASS=\"subhead\" HREF=\"?session=$session&amp;action=viewChart\"><B>Airplay Charts</B></A>.\n      </TH></TR>\n    </TABLE>\n";
+        echo "          <A CLASS=\"subhead\" HREF=\"?session=".$this->session->getSessionID()."&amp;action=viewChart\"><B>Airplay Charts</B></A>.\n      </TH></TR>\n    </TABLE>\n";
         UI::setFocus();
     }
 

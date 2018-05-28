@@ -107,7 +107,7 @@ function onSearch(sync,e) {
 }
 
 function onSearchNow() {
-   loadXMLDoc("zkapi.php?method=searchRq&size=5&key=" + urlEncode(document.forms[0].search.value) + "&session=<?echo $session;?>");
+   loadXMLDoc("zkapi.php?method=searchRq&size=5&key=" + urlEncode(document.forms[0].search.value) + "&session=<?echo $this->session->getSessionID();?>");
 }
 
 function processReqChange(req) {
@@ -152,7 +152,7 @@ function setFocus() {
         echo "<FORM ACTION=\"?\" METHOD=\"POST\">\n";
         echo "<P><B>Find It:</B>&nbsp;&nbsp;<INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search VALUE=\"".$_REQUEST['search']."\" autocomplete=off onkeyup=\"onSearch(document.forms[0],event);\" onkeypress=\"return event.keyCode != 13;\">&nbsp;&nbsp;<SPAN ID=\"total\"></SPAN></P>\n";
         echo "<INPUT TYPE=HIDDEN NAME=action VALUE=\"find\">\n";
-        echo "<INPUT TYPE=HIDDEN NAME=session VALUE=\"$session\">\n";
+        echo "<INPUT TYPE=HIDDEN NAME=session VALUE=\"".$this->session->getSessionID()."\">\n";
         echo "</FORM>\n";
         echo "<SPAN ID=\"results\">Search the database for music, reviews, and playlists.";
         echo "</SPAN>\n";
@@ -177,7 +177,7 @@ function setFocus() {
         echo "<A HREF=\"".
                      "?s=byAlbum&amp;n=". UI::URLify($albums[0]["album"]).
                      "&amp;q=". $this->maxresults.
-                     "&amp;action=search&amp;session=$session".
+                     "&amp;action=search&amp;session=".$this->session->getSessionID().
                      "\" CLASS=\"nav\">";
         echo htmlentities($albums[0]["album"]) . "</A></B></TD>";
     
@@ -229,7 +229,7 @@ function setFocus() {
             echo "<A HREF=\"".
                          "?s=byArtist&amp;n=". UI::URLify($artist).
                          "&amp;q=". $this->maxresults.
-                         "&amp;action=search&amp;session=$session".
+                         "&amp;action=search&amp;session=".$this->session->getSessionID().
                          "\" CLASS=\"nav\">";
             echo htmlentities($artist) . "</A></B></TD>";
         } else
@@ -246,7 +246,7 @@ function setFocus() {
                 echo "<A HREF=\"".
                                "?s=byLabelKey&amp;n=". UI::URLify($albums[0]["pubkey"]).
                                "&amp;q=". $this->maxresults.
-                               "&amp;action=search&amp;session=$session".
+                               "&amp;action=search&amp;session=".$this->session->getSessionID().
                                "\" CLASS=\"nav\">";
                 echo htmlentities($label[0]["name"]) . "</A>";
             } else
@@ -291,7 +291,7 @@ function setFocus() {
             echo "<A HREF=\"".
                                "?s=byArtist&amp;n=". UI::URLify($albums[$i]["artist"]).
                                "&amp;q=". $this->maxresults.
-                               "&amp;action=search&amp;session=$session".
+                               "&amp;action=search&amp;session=".$this->session->getSessionID().
                                "\">";
             echo UI::HTMLify($albums[$i]["artist"], 20), "</A>";
             if(!$this->noTables)
@@ -301,7 +301,7 @@ function setFocus() {
             echo "<A HREF=\"".
                                "?s=byTrack&amp;n=". UI::URLify($albums[$i]["track"]).
                                "&amp;q=". $this->maxresults.
-                               "&amp;action=search&amp;session=$session".
+                               "&amp;action=search&amp;session=".$this->session->getSessionID().
                                "\">";
             echo UI::HTMLify($albums[$i]["track"], 32). "</A>";
             if(!$this->noTables)
@@ -341,7 +341,7 @@ function setFocus() {
                     echo "<A HREF=\"".
                                  "?s=byTrack&amp;n=". UI::URLify($tracks[$i]["track"]).
                                  "&amp;q=". $this->maxresults.
-                                 "&amp;action=search&amp;session=$session".
+                                 "&amp;action=search&amp;session=".$this->session->getSessionID().
                                  "\">";
                     echo UI::HTMLify($tracks[$i]["track"], 32), "</A>";
                     if(!$this->noTables)
@@ -356,7 +356,7 @@ function setFocus() {
                 echo "<A HREF=\"".
                                     "?s=byTrack&amp;n=". UI::URLify($tracks[$mid + $i]["track"]).
                                     "&amp;q=". $this->maxresults.
-                                    "&amp;action=search&amp;session=$session".
+                                    "&amp;action=search&amp;session=".$this->session->getSessionID().
                                     "\">";
                 echo UI::HTMLify($tracks[$mid + $i]["track"], 32), "</A>";
     

@@ -93,23 +93,23 @@ class Main implements IController {
 </HEAD><?
     }
     
-    private function emitNavbar($dispatcher, $action, $session) {
-        echo "    <P CLASS=\"zktitle\"><A HREF=\"?session=".$session->getSessionID()."\">".Engine::param('application')."</A></P>\n";
+    private function emitNavbar($dispatcher, $action) {
+        echo "    <P CLASS=\"zktitle\"><A HREF=\"?session=".$this->session->getSessionID()."\">".Engine::param('application')."</A></P>\n";
         echo "    <TABLE WIDTH=196 CELLPADDING=0>\n";
-        $menu = $dispatcher->composeMenu($action, $session);
+        $menu = $dispatcher->composeMenu($action, $this->session);
         foreach($menu as $item) {
             echo  "      <TR><TD></TD>" .
                   "<TD><A CLASS=\"" . ($item['selected']?"nav2sel":"nav2") .
                   "\" HREF=\"" .
-                  "?session=".$session->getSessionID()."&amp;" .
+                  "?session=".$this->session->getSessionID()."&amp;" .
                   "action=".$item['action']."\"><B>".$item['label'] .
                   "</B></A></TD></TR>\n";
         }
         echo "      <TR><TD COLSPAN=2>&nbsp;</TD></TR>\n";
-        if($session->isAuth("u")) {
-            echo "      <TR><TD></TD><TH CLASS=\"nav3s\">" . $session->getDN() . " is logged in</TH></TR>\n";
+        if($this->session->isAuth("u")) {
+            echo "      <TR><TD></TD><TH CLASS=\"nav3s\">" . $this->session->getDN() . " is logged in</TH></TR>\n";
             echo "      <TR><TD></TD><TD><A CLASS=\"nav3\" HREF=\"" .
-                 "?session=".$session->getSessionID()."&amp;action=logout\"><B>logout</B></A></TD></TR>\n";
+                 "?session=".$this->session->getSessionID()."&amp;action=logout\"><B>logout</B></A></TD></TR>\n";
         } else if(!empty(Engine::param('sso')['client_id'])) {
             echo "      <TR><TD></TD><TD><A CLASS=\"nav3\" HREF=\"" .
                  "ssoLogin.php\"><B>login</B></A>&nbsp;&nbsp;" .
@@ -174,7 +174,7 @@ class Main implements IController {
       </DIV>
     <?
     echo "  <DIV CLASS=\"leftNav\">\n";
-    $this->emitNavBar($dispatcher, $_REQUEST["action"], $this->session);
+    $this->emitNavBar($dispatcher, $_REQUEST["action"]);
     echo "  </DIV>\n";
     echo "  <DIV CLASS=\"content\">\n";
     
