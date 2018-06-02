@@ -197,7 +197,7 @@ class API extends CommandTarget implements IController {
 
         switch($_REQUEST["operation"]) {
         case "byID":
-             $result = new SingletonResultWrapper(Engine::api(IPlaylist::class)->getPlaylist($key, 1));
+             $result = new SingleRowIterator(Engine::api(IPlaylist::class)->getPlaylist($key, 1));
              $id = $key;
              break;
         case "byDate":
@@ -369,7 +369,7 @@ class API extends CommandTarget implements IController {
     }
 }
 
-class SingletonResultWrapper {
+class SingleRowIterator {
     private $row;
 
     public function __construct($row) {
