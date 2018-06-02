@@ -276,7 +276,7 @@ class API extends CommandTarget implements IController {
     }
     
     private function emitHeader() {
-        header("Content-type: text/xml; charset=ISO-8859-1");
+        header("Content-type: text/xml; charset=UTF-8");
     
         $origin = $_SERVER['HTTP_ORIGIN'];
         if($origin) {
