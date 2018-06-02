@@ -89,7 +89,7 @@ class Main implements IController {
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<? echo $station; ?> Radio Music Reviews" HREF="zkrss.php?feed=reviews">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<? echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<? echo $station; ?> Radio A-File Adds" HREF="zkrss.php?feed=adds">
-  <LINK REL="search" TYPE="application/opensearchdescription+xml" HREF="opensearch.php" title="<?echo $banner;?>">
+  <LINK REL="search" TYPE="application/opensearchdescription+xml" HREF="?target=opensearch" title="<?echo $banner;?>">
 </HEAD><?
     }
     
