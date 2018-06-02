@@ -36,7 +36,8 @@ class OpenSearch implements IController {
         header("Content-type: text/xml; charset=ISO-8859-1");
 
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        echo "<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\">\n";
+        echo "<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\"\n";
+        echo "                       xmlns:moz=\"http://www.mozilla.org/2006/browser/search/\">\n";
         echo "  <ShortName>$banner</ShortName>\n";
         echo "  <Description>Search the $banner music database</Description>\n";
         echo "  <Tags>$banner</Tags>\n";
@@ -45,6 +46,7 @@ class OpenSearch implements IController {
         echo "  <Url type=\"text/html\"\n";
         echo "       template=\"$baseURL?session=&amp;action=find&amp;search={searchTerms}&amp;src=opensearch\"/>\n";
         echo "  <Query role=\"example\" searchTerms=\"outer space\"/>\n";
+        echo "  <moz:SearchForm>$baseURL</moz:SearchForm>\n";
         echo "</OpenSearchDescription>\n";
     }
 }
