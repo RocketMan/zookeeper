@@ -30,11 +30,11 @@ use ZK\UI\UICommon as UI;
 
 class OpenSearch implements IController {
     public function processRequest($dispatcher) {
-	$baseURL = UI::getBaseURL();
+        $baseURL = UI::getBaseURL();
         $banner = Engine::param("station")." ".Engine::param("application");
         
         header("Content-type: text/xml; charset=ISO-8859-1");
-	
+
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         echo "<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\">\n";
         echo "  <ShortName>$banner</ShortName>\n";
