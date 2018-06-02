@@ -45,7 +45,9 @@ class RSS extends CommandTarget implements IController {
     }
     
     private static function htmlnumericentities($str) {
-       return preg_replace('/[^!-%\x27-;=?-~ ]/e', '"&#".ord("$0").chr(59)', $str);
+       return preg_replace_callback('/[^!-%\x27-;=?-~ ]/',
+          function($m) { return "&#".ord($m[0]).";"; },
+          $str);
     }
 
     public function processRequest($dispatcher) {
