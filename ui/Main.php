@@ -80,17 +80,17 @@ class Main implements IController {
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
 <HEAD>
-  <TITLE><?echo $banner;?></TITLE>
+  <TITLE><?php echo $banner;?></TITLE>
   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-  <LINK REL="stylesheet" HREF="<? echo Engine::param('stylesheet'); ?>">
-  <LINK REL="stylesheet" HREF="<?
+  <LINK REL="stylesheet" HREF="<?php echo Engine::param('stylesheet'); ?>">
+  <LINK REL="stylesheet" HREF="<?php 
        echo $nn4hack?"css/netscape.css":"css/zoostyle.css"; ?>">
   <LINK REL="stylesheet" HREF="css/about.css">
-  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<? echo $station; ?> Radio Music Reviews" HREF="zkrss.php?feed=reviews">
-  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<? echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
-  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<? echo $station; ?> Radio A-File Adds" HREF="zkrss.php?feed=adds">
-  <LINK REL="search" TYPE="application/opensearchdescription+xml" HREF="opensearch.php" title="<?echo $banner;?>">
-</HEAD><?
+  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Music Reviews" HREF="zkrss.php?feed=reviews">
+  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
+  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio A-File Adds" HREF="zkrss.php?feed=adds">
+  <LINK REL="search" TYPE="application/opensearchdescription+xml" HREF="opensearch.php" title="<?php echo $banner;?>">
+</HEAD><?php 
     }
     
     private function emitNavbar($dispatcher, $action, $session) {
@@ -164,15 +164,15 @@ class Main implements IController {
     <DIV CLASS="box">
       <DIV CLASS="header">
         <DIV CLASS="headerLogo">
-          <A HREF="<? echo $urls['home']; ?>">
-            <IMG SRC="<? echo Engine::param('logo'); ?>" ALT="<? echo $station_full; ?>" TITLE="<? echo $station_full; ?>">
+          <A HREF="<?php echo $urls['home']; ?>">
+            <IMG SRC="<?php echo Engine::param('logo'); ?>" ALT="<?php echo $station_full; ?>" TITLE="<?php echo $station_full; ?>">
           </A>
         </DIV>
         <DIV CLASS="headerNavbar">
 	<SPAN>Music with a difference...</SPAN>
 	</DIV>
       </DIV>
-    <?
+    <?php 
     echo "  <DIV CLASS=\"leftNav\">\n";
     $this->emitNavBar($dispatcher, $_REQUEST["action"], $this->session);
     echo "  </DIV>\n";
@@ -182,7 +182,7 @@ class Main implements IController {
     ?>
       </DIV>
       <DIV CLASS="footer">
-        <? echo Engine::param('copyright'); ?><BR>
+        <?php echo Engine::param('copyright'); ?><BR>
         <A HREF="#about">Zookeeper Online &copy; 1997-2018 Jim Mason. All rights reserved.</A>
       </DIV>
     </DIV>
@@ -201,14 +201,14 @@ class Main implements IController {
     </DIV>
     </BODY>
     </HTML>
-<?
+<?php 
     }
 
     private function emitLogin($invalid="") {
     ?>
     <FORM ACTION="?" METHOD=POST>
     <TABLE CELLPADDING=2>
-    <?
+    <?php 
         switch ($invalid) {
         case "badCredentials":
             if($this->session->isAuth("g"))
@@ -243,40 +243,42 @@ class Main implements IController {
           <TD><INPUT TYPE=PASSWORD NAME=password CLASS=input></TD></TR>
       <TR><TD>&nbsp;</TD>
           <TD><INPUT TYPE=SUBMIT VALUE="  OK  "></TD></TR>
-<? if(!empty(Engine::param('sso')['client_id'])) { ?>
+<?php if(!empty(Engine::param('sso')['client_id'])) { ?>
       <TR><TD>&nbsp;</TD>
           <TD><DIV STYLE="margin-left:50px;margin-top:10px;">&mdash; or &mdash;</DIV></TD></TR>
       <TR><TD>&nbsp;</TD>
           <TD><A HREF="ssoLogin.php"><IMG SRC="img/google-signin.png" ALT="Sign in with Google" WIDTH=154 HEIGHT=24 BORDER=0></A></TD></TR>
-<? } ?>
+<?php } ?>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=action VALUE="loginValidate">
     </FORM>
-    <? UI::setFocus("user");
+    <?php
+        UI::setFocus("user");
     }
     
     private function emitLoginHelp() {
     ?>
     <DIV CLASS="subhead">login help</DIV>
     <P>Google single sign-on provides integrated access to your existing
-    <? echo Engine::param('application'); ?> account.  Select the 'login' link in the
-    left-hand navigation and enter your <? echo Engine::param('station'); ?> Google account credentials
+    <?php echo Engine::param('application'); ?> account.  Select the 'login' link in the
+    left-hand navigation and enter your <?php echo Engine::param('station'); ?> Google account credentials
     if challenged.</P>
-    <P>If you do not yet have a <? echo Engine::param('station'); ?> Google account, contact the
-    <A HREF="mailto:<? echo Engine::param('email')['pd']; ?>">Program Director</A>.</P>
+    <P>If you do not yet have a <?php echo Engine::param('station'); ?> Google account, contact the
+    <A HREF="mailto:<?php echo Engine::param('email')['pd']; ?>">Program Director</A>.</P>
     <DIV CLASS="subhead">classic login</DIV>
-    <P>If you need immediate access but do not yet have a <? echo Engine::param('station'); ?> Google account,
+    <P>If you need immediate access but do not yet have a <?php echo Engine::param('station'); ?> Google account,
     go to the <A HREF="?action=login">classic login</A> page and enter your
-    existing <? echo Engine::param('application'); ?> user name and password.
+    existing <?php echo Engine::param('application'); ?> user name and password.
     <B>Classic login may be deprecated or restricted in future.</B></P>
-    <?
+    <?php 
     }
 
     private function emitLoginValidate() {
         if($this->session->isAuth("u")) {
     ?>
        <H3>login successful</H3>
-    <?      if($this->session->isAuth("g"))
+    <?php
+        if($this->session->isAuth("g"))
                 echo "   <P><B>IMPORTANT:  This login can be used ONLY at the station.</B></P>\n";
             Editor::emitQueueHook($this->session);
             UI::setFocus();
@@ -385,9 +387,9 @@ class Main implements IController {
     <FORM ACTION="?" METHOD=POST>
       <P><INPUT TYPE="radio" NAME="account" VALUE="old" ID="oldRadio" onClick="showOld();">I already have a Zookeeper account and wish to use it</P>
       <DIV ID="oldSect" style="display:none;margin-left:50px;">
-    <? if($_REQUEST["user"]) { ?>
+    <?php if($_REQUEST["user"]) { ?>
           <P><FONT CLASS="error">Invalid user or password</FONT></P>
-    <? } ?>
+    <?php } ?>
           <P>Enter your existing Zookeeper login</P>
           <TABLE>
               <TR><TD ALIGN=RIGHT>User:</TD>
@@ -403,7 +405,7 @@ class Main implements IController {
          <INPUT TYPE=SUBMIT VALUE="  Continue  ">
       </DIV>
       <INPUT TYPE="hidden" NAME="action" VALUE="ssoOptions">
-      <INPUT TYPE="hidden" NAME="ssoOptions" VALUE="<?echo $_REQUEST["ssoOptions"]; ?>">
+      <INPUT TYPE="hidden" NAME="ssoOptions" VALUE="<?php echo $_REQUEST["ssoOptions"]; ?>">
     </FORM>
     </DIV>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
@@ -414,13 +416,13 @@ class Main implements IController {
         document.getElementById("oldSect").style.display = "none";
         document.getElementById("newSect").style.display = "block"; }
     function setFocus() {
-    <? if($_REQUEST["user"]) { ?>
+    <?php if($_REQUEST["user"]) { ?>
         document.getElementById("oldRadio").checked = true;
         showOld();
-    <? } ?>
+    <?php } ?>
     }
     // -->
     </SCRIPT>
-    <?
+    <?php 
     }
 }

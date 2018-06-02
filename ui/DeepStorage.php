@@ -37,7 +37,7 @@ class DeepStorage extends MenuItem {
     ?>
       <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
         <INPUT TYPE=hidden name=action value="deepStorage">
-        <INPUT TYPE=hidden name=session value="<?echo $this->session->getSessionID();?>">
+        <INPUT TYPE=hidden name=session value="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=hidden name=MAX_FILE_SIZE value=100000>
         <TABLE BORDER=0>
           <TR><TD ALIGN=RIGHT>Send this tab-delimited file:</TD><TD><INPUT NAME=userfile TYPE=file></TD></TR>
@@ -49,7 +49,7 @@ class DeepStorage extends MenuItem {
           <TR><TD COLSPAN=2><INPUT TYPE=submit VALUE="Send File"></TD></TR>
         </TABLE>
       </FORM>
-    <?
+    <?php 
             UI::setFocus("userfile");
         } else {
             if($_REQUEST['test'])

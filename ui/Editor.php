@@ -153,7 +153,7 @@ class Editor extends MenuItem {
     ?>
             </TD></TR>
          </TABLE>
-    <?
+    <?php 
         $this->emitHidden("seq", $_REQUEST["seq"]);
         $this->emitVars();
         echo "  </FORM>\n";
@@ -188,8 +188,8 @@ class Editor extends MenuItem {
          }
     ?>
          </TABLE>
-         <P><?if($this->session->isLocal()){?><INPUT TYPE=submit CLASS=submit NAME=print VALUE=" Print ">&nbsp;&nbsp;&nbsp;<?}?><INPUT TYPE=submit CLASS=submit NAME=delete VALUE=" Delete "></P>
-         <INPUT TYPE=hidden NAME=session VALUE="<? echo $this->session->getSessionID(); ?>">
+         <P><?php if($this->session->isLocal()){?><INPUT TYPE=submit CLASS=submit NAME=print VALUE=" Print ">&nbsp;&nbsp;&nbsp;<?php }?><INPUT TYPE=submit CLASS=submit NAME=delete VALUE=" Delete "></P>
+         <INPUT TYPE=hidden NAME=session VALUE="<?php echo $this->session->getSessionID(); ?>">
          <INPUT TYPE=hidden NAME=action VALUE="editor">
          <INPUT TYPE=hidden NAME=subaction VALUE="tagq">
          <INPUT TYPE=hidden NAME=validate VALUE="y">
@@ -204,8 +204,8 @@ class Editor extends MenuItem {
     }
     // -->
     </SCRIPT>
-    <?
-         UI::setFocus();
+    <?php 
+        UI::setFocus();
     }
     
     public function panelNull($validate) {
@@ -492,21 +492,21 @@ class Editor extends MenuItem {
     private function emitZkAlpha($moveThe = 0) {
     ?>
 <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"><!--
-alnum="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'<?
+alnum="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'<?php 
   // the Latin-1, non-ASCII alphabetics:
   echo "\\xdf\\xe0\\xe1\\xe2\\xe3\\xe4\\xe5\\xe6\\xe7\\xe8\\xe9\\xea\\xeb\\xec\\xed\\xee\\xef\\xf0\\xf1\\xf2\\xf3\\xf4\\xf5\\xf6\\xf8\\xf9\\xfa\\xfb\\xfc\\xfd\\xff";
   echo "\\xde\\xc0\\xc1\\xc2\\xc3\\xc4\\xc5\\xc6\\xc7\\xc8\\xc9\\xca\\xcb\\xcc\\xcd\\xce\\xcf\\xd0\\xd1\\xd2\\xd3\\xd4\\xd5\\xd6\\xd8\\xd9\\xda\\xdb\\xdc\\xdd\\xfe";?>";
-function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
+function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
   val=control.value;
   newVal='';
   for(i=0; i<val.length; i++)
   newVal += (i==0 || alnum.indexOf(val.charAt(i-1),0) == -1)?val.charAt(i).toUpperCase():val.charAt(i).toLowerCase();
-  if(<?echo !$moveThe?"!track && ":"";?>newVal.substr(0, 4) == 'The ') newVal=newVal.substr(4)+', The';
+  if(<?php echo !$moveThe?"!track && ":"";?>newVal.substr(0, 4) == 'The ') newVal=newVal.substr(4)+', The';
   control.value=newVal;
 }
 // -->
 </SCRIPT>
-    <?
+    <?php 
     }
     
     private function emitCache($fields) {
@@ -520,7 +520,7 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
     ?>
     function changeList() {
         i = document.forms[0].list.selectedIndex;
-        document.forms[0].sel<?echo $fields[0];?>.value = data[i][0];
+        document.forms[0].sel<?php echo $fields[0];?>.value = data[i][0];
         if (document.getElementById && !window.opera) {
             for(j=0; j<fields.length; j++) {
                 if(document.getElementById(fields[j]))
@@ -608,7 +608,7 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
     }
     // -->
 </SCRIPT>
-<?
+<?php 
     }
     
     private function emitAlbumSel() {
@@ -654,7 +654,8 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
     </TABLE>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     function setFocus() {
-    <? if($_REQUEST["seltag"]) {
+    <?php
+        if($_REQUEST["seltag"]) {
               echo "   loadXMLDoc(\"zkapi.php?method=getAlbumsRq&operation=searchByTag&size=$this->limit&key=".$_REQUEST["seltag"]."\",0);\n";
               echo "   document.forms[0].list.focus();\n";
         } else {
@@ -669,17 +670,17 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
     function onSearchNow() {
       var search = document.forms[0].search.value;
       if(search.lastIndexOf('.') == search.length-1 && search.length > 3)
-         loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=searchByTag&size=<? echo $this->limit; ?>&key=" + urlEncode(search),0);
+         loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=searchByTag&size=<?php echo $this->limit; ?>&key=" + urlEncode(search),0);
       else
-         loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=searchByName&size=<? echo $this->limit; ?>&key=" + (document.forms[0].coll.checked?"[coll]: ":"") + urlEncode(search),0);
+         loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=searchByName&size=<?php echo $this->limit; ?>&key=" + (document.forms[0].coll.checked?"[coll]: ":"") + urlEncode(search),0);
     }
     
     function scrollUp() {
-      return loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=prevPage&size=<? echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),-1);
+      return loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=prevPage&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),-1);
     }
     
     function scrollDown(selected) {
-      return loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=nextPage&size=<? echo $this->limit; ?>&key=" + urlEncode(document.forms[0].down.value),selected);
+      return loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=nextPage&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].down.value),selected);
     }
     
     function upDown(e) {
@@ -692,10 +693,10 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
          scrollDown(1);
       } else if(e.keyCode == 38 && select.selectedIndex == 0) {
          // line up
-         loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=prevLine&size=<? echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),-1);
+         loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=prevLine&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),-1);
       } else if(e.keyCode == 40 && select.selectedIndex == select.length-1) {
          // line down
-         loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=nextLine&size=<? echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),1);
+         loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=nextLine&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),1);
       }
       return true;
     }
@@ -738,13 +739,13 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
     
     // -->
     </SCRIPT>
-    <?
+    <?php 
     }
     
     private function albumForm() {
     ?>
     <TABLE>
-    <?
+    <?php 
         $coll = $_REQUEST["coll"];
         if($_REQUEST["new"]) {
             echo "  <TR><TD></TD><TD>&nbsp;</TD></TR>\n";
@@ -790,11 +791,11 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
             echo "  <TR><TD ALIGN=RIGHT>Album&nbsp;Tag:</TD><TH ALIGN=LEFT ID=\"tag\">".$_REQUEST["seltag"]."</TH></TR>\n";
         }
     ?>
-      <TR><TD ALIGN=RIGHT>Compilation:</TD><TD CLASS="header"><INPUT TYPE=CHECKBOX onClick="return setComp();" NAME=coll<?echo $coll?" CHECKED":"";?>></TD></TR>
-      <TR><TD ID="lartist" ALIGN=RIGHT STYLE="visibility:<?echo $coll?"hidden":"visible";?>">Artist:</TD><TD CLASS="header"><INPUT NAME=artist TYPE=TEXT CLASS=text SIZE=60 VALUE="<?echo htmlentities(stripslashes($artist));?>" STYLE="visibility:<?echo $coll?"hidden":"visible";?>" onChange="zkAlpha(this)"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Album:</TD><TD CLASS="header"><INPUT NAME=album TYPE=TEXT CLASS=text SIZE=60 VALUE="<?echo htmlentities(stripslashes($album));?>" onChange="zkAlpha(this)"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Compilation:</TD><TD CLASS="header"><INPUT TYPE=CHECKBOX onClick="return setComp();" NAME=coll<?php echo $coll?" CHECKED":"";?>></TD></TR>
+      <TR><TD ID="lartist" ALIGN=RIGHT STYLE="visibility:<?php echo $coll?"hidden":"visible";?>">Artist:</TD><TD CLASS="header"><INPUT NAME=artist TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($artist));?>" STYLE="visibility:<?php echo $coll?"hidden":"visible";?>" onChange="zkAlpha(this)"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Album:</TD><TD CLASS="header"><INPUT NAME=album TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($album));?>" onChange="zkAlpha(this)"></TD></TR>
       <TR><TD ALIGN=RIGHT>Category:</TD><TD><SELECT NAME=category CLASS=textsp>
-    <?
+    <?php 
         foreach(Search::GENRES as $code => $genre) {
             $selected = ($agenre == $code)?" SELECTED":"";
             echo "             <OPTION VALUE=\"$code\"$selected>$genre\n";
@@ -802,7 +803,7 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
     ?>
                     </SELECT></TD></TR>
       <TR><TD ALIGN=RIGHT>Media:</TD><TD><SELECT NAME=medium CLASS=textsp>
-    <?
+    <?php 
         foreach(Search::MEDIA as $code => $medium) {
             $selected = ($amedium == $code)?" SELECTED":"";
             echo "             <OPTION VALUE=\"$code\"$selected>$medium\n";
@@ -810,38 +811,38 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
     ?>
                     </SELECT></TD></TR>
       <TR><TD ALIGN=RIGHT>Format:</TD><TD><SELECT NAME=format CLASS=textsp>
-    <?
+    <?php 
         foreach(Search::LENGTHS as $code => $format) {
             $selected = ($aformat == $code)?" SELECTED":"";
             echo "             <OPTION VALUE=\"$code\"$selected>$format\n";
         }
     ?>
                     </SELECT></TD></TR>
-    <?
+    <?php 
         echo "  <TR><TD ALIGN=RIGHT>Location:</TD><TD><SELECT NAME=location CLASS=textsp onChange=\"return setLocation();\">\n";
         foreach(Search::LOCATIONS as $code => $location) {
             $selected = ($alocation == $code)?" SELECTED":"";
             echo "             <OPTION VALUE=\"$code\"$selected>$location\n";
         }
     ?>
-                    </SELECT>&nbsp;&nbsp;<SPAN ID=lbin STYLE="visibility:<?echo ($alocation == 'G')?"visible":"hidden";?>">Bin:&nbsp;</SPAN><INPUT NAME=bin TYPE=text CLASS=text SIZE=10 VALUE="<?echo $bin;?>" STYLE="visibility:<?echo ($alocation == 'G')?"visible":"hidden";?>"></TD></TR>
-    <?
+                    </SELECT>&nbsp;&nbsp;<SPAN ID=lbin STYLE="visibility:<?php echo ($alocation == 'G')?"visible":"hidden";?>">Bin:&nbsp;</SPAN><INPUT NAME=bin TYPE=text CLASS=text SIZE=10 VALUE="<?php echo $bin;?>" STYLE="visibility:<?php echo ($alocation == 'G')?"visible":"hidden";?>"></TD></TR>
+    <?php 
         if(!$_REQUEST["new"]) {
     ?>
       <TR><TD COLSPAN=2></TD></TR>
-      <TR><TD ALIGN=RIGHT>Label:</TD><TD CLASS="header"><?echo $name;?></TD></TR>
-      <TR><TD></TD><TD><?echo $address;?></TD></TR>
-      <TR><TD></TD><TD><?echo "$city $state $zip";?></TD></TR>
+      <TR><TD ALIGN=RIGHT>Label:</TD><TD CLASS="header"><?php echo $name;?></TD></TR>
+      <TR><TD></TD><TD><?php echo $address;?></TD></TR>
+      <TR><TD></TD><TD><?php echo "$city $state $zip";?></TD></TR>
       <!--TR><TD ALIGN=RIGHT>Date In:</TD><TD></TD></TR>
       <TR><TD ALIGN=RIGHT>Date Mod:</TD><TD></TD></TR>
       <TR><TD ALIGN=RIGHT>Label:</TD><TD CLASS="header"></TD></TR-->
-    <?
+    <?php 
         }
     ?>
       <!--TR><TD ALIGN=RIGHT></TD><TD></TD></TR>
       <TR><TD ALIGN=RIGHT></TD><TD></TD></TR-->
       <TR><TD ALIGN=RIGHT></TD><TD>&nbsp;</TD></TR>
-      <TR><TD></TD><TD><?if(!$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Change Label...  ">&nbsp;&nbsp;<?}?><INPUT TYPE=SUBMIT NAME=<?echo $_REQUEST["new"]?"edit":"next";?> CLASS=submit VALUE="  <?echo $_REQUEST["new"]?"Next &gt;&gt;":"Tracks...";?>  ">&nbsp;&nbsp;<?if(!$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=done CLASS=submit VALUE="  Done!  "><?}?></TD></TR>
+      <TR><TD></TD><TD><?php if(!$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Change Label...  ">&nbsp;&nbsp;<?php }?><INPUT TYPE=SUBMIT NAME=<?php echo $_REQUEST["new"]?"edit":"next";?> CLASS=submit VALUE="  <?php echo $_REQUEST["new"]?"Next &gt;&gt;":"Tracks...";?>  ">&nbsp;&nbsp;<?php if(!$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=done CLASS=submit VALUE="  Done!  "><?php }?></TD></TR>
     </TABLE>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     function setComp() {
@@ -858,7 +859,7 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
     }
     // -->
     </SCRIPT>
-    <?
+    <?php 
         $this->emitZkAlpha(1);
         echo "  <INPUT TYPE=HIDDEN NAME=new VALUE=\"".$_REQUEST["new"]."\">\n";
         UI::setFocus($coll?"album":"artist");
@@ -899,17 +900,18 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
     <!--P ALIGN=CENTER-->
       <INPUT TYPE=SUBMIT NAME=lnew CLASS=submit VALUE="  New  ">&nbsp;
       <INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Edit  ">&nbsp;
-    <? if($_REQUEST["seltag"]) { ?>
+    <?php  if($_REQUEST["seltag"]) { ?>
       <INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE="   OK   ">&nbsp;
-    <? } else if($this->subaction != "labels") { ?>
+    <?php  } else if($this->subaction != "labels") { ?>
       <INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE=" Tracks &gt;&gt; ">&nbsp;
-    <? } ?>
+    <?php  } ?>
     <!--/P-->
     </TD><TD></TD></TR>
     </TABLE>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     function setFocus() {
-    <? if($_REQUEST["seltag"]) {
+    <?php
+         if($_REQUEST["seltag"]) {
               echo "   loadXMLDoc(\"zkapi.php?method=getLabelsRq&operation=searchByTag&size=$this->limit&key=".$_REQUEST["seltag"]."\");\n";
               echo "   document.forms[0].list.focus();\n";
          } else if($_REQUEST["name"]) {
@@ -925,15 +927,15 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
     </SCRIPT>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     function onSearchNow() {
-      loadXMLDoc("zkapi.php?method=getLabelsRq&operation=searchByName&size=<? echo $this->limit; ?>&key=" + urlEncode(document.forms[0].search.value),0);
+      loadXMLDoc("zkapi.php?method=getLabelsRq&operation=searchByName&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].search.value),0);
     }
     
     function scrollUp() {
-      return loadXMLDoc("zkapi.php?method=getLabelsRq&operation=prevPage&size=<? echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),-1);
+      return loadXMLDoc("zkapi.php?method=getLabelsRq&operation=prevPage&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),-1);
     }
     
     function scrollDown(selected) {
-      return loadXMLDoc("zkapi.php?method=getLabelsRq&operation=nextPage&size=<? echo $this->limit; ?>&key=" + urlEncode(document.forms[0].down.value),selected);
+      return loadXMLDoc("zkapi.php?method=getLabelsRq&operation=nextPage&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].down.value),selected);
     }
     
     function upDown(e) { 
@@ -946,10 +948,10 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
          scrollDown(1);
       } else if(e.keyCode == 38 && select.selectedIndex == 0) {
          // line up
-         loadXMLDoc("zkapi.php?method=getLabelsRq&operation=prevLine&size=<? echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),-1);
+         loadXMLDoc("zkapi.php?method=getLabelsRq&operation=prevLine&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),-1);
       } else if(e.keyCode == 40 && select.selectedIndex == select.length-1) {
          // line down
-         loadXMLDoc("zkapi.php?method=getLabelsRq&operation=nextLine&size=<? echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),1);
+         loadXMLDoc("zkapi.php?method=getLabelsRq&operation=nextLine&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),1);
       }
       return true;
     }
@@ -991,7 +993,7 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
     }
     // -->
     </SCRIPT>
-    <?
+    <?php 
     }
     
     private function labelForm() {
@@ -1007,28 +1009,28 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
             echo "  <TR><TD ALIGN=RIGHT>Label&nbsp;ID:</TD><TH ALIGN=LEFT ID=\"pubkey\">".$row["pubkey"]."</TH></TR>\n";
         }
     ?>
-      <TR><TD ALIGN=RIGHT>Name:</TD><TD CLASS="header"><INPUT NAME=name TYPE=TEXT CLASS=text SIZE=60 VALUE="<?echo htmlentities(stripslashes($row["name"]));?>" onChange="zkAlpha(this,true)"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Attn:</TD><TD><INPUT NAME=attention TYPE=TEXT CLASS=text SIZE=60 VALUE="<?echo htmlentities(stripslashes($row["attention"]));?>" onChange="zkAlpha(this,true)"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Address:</TD><TD><INPUT NAME=address TYPE=TEXT CLASS=text SIZE=60 VALUE="<?echo htmlentities(stripslashes($row["address"]));?>" onChange="zkAlpha(this,true)"></TD></TR>
-      <TR><TD ALIGN=RIGHT>City:</TD><TD><INPUT NAME=city TYPE=TEXT CLASS=text SIZE=60 VALUE="<?echo htmlentities(stripslashes($row["city"]));?>" onChange="zkAlpha(this,true)"></TD></TR>
-      <TR><TD ALIGN=RIGHT ID=lstate STYLE="visibility:<?echo $foreign?"hidden":"visible";?>">State:</TD><TD><INPUT NAME=state TYPE=TEXT CLASS=text SIZE=20 VALUE="<?echo htmlentities(stripslashes($row["state"]));?>" onChange="this.value=this.value.toUpperCase();"></TD></TR>
-      <TR><TD ALIGN=RIGHT ID=lzip><?echo $foreign?"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country":"Postal Code";?>:</TD><TD><INPUT NAME=zip TYPE=TEXT CLASS=text SIZE=20 VALUE="<?echo htmlentities(stripslashes($row["zip"]));?>" onChange="this.value=this.value.toUpperCase();"><INPUT NAME=foreign TYPE=CHECKBOX onClick="return setForeign();"<?echo $foreign?" CHECKED":"";?>><SPAN CLASS="sub">Foreign?</SPAN></TD></TR>
-      <TR><TD ALIGN=RIGHT>Phone:</TD><TD><INPUT NAME=phone TYPE=TEXT CLASS=text SIZE=20 VALUE="<?echo htmlentities(stripslashes($row["phone"]));?>"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Fax:</TD><TD><INPUT NAME=fax TYPE=TEXT CLASS=text SIZE=20 VALUE="<?echo htmlentities(stripslashes($row["fax"]));?>"></TD></TR>
-      <TR><TD ALIGN=RIGHT>E-Mail:</TD><TD><INPUT NAME=email TYPE=TEXT CLASS=text SIZE=60 VALUE="<?echo htmlentities(stripslashes($row["email"]));?>"></TD></TR>
-      <TR><TD ALIGN=RIGHT>URL:</TD><TD><INPUT NAME=url TYPE=TEXT CLASS=text SIZE=60 VALUE="<?echo htmlentities(stripslashes($row["url"]));?>"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Mail List:</TD><TD><INPUT NAME=maillist TYPE=TEXT CLASS=text SIZE=5 VALUE="<?echo $row["maillist"];?>" onChange="zkAlpha(this,true)"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Mail Count:</TD><TD><INPUT NAME=mailcount TYPE=TEXT CLASS=text SIZE=5 VALUE="<?echo $row["mailcount"];?>"></TD></TR>
-    <?
+      <TR><TD ALIGN=RIGHT>Name:</TD><TD CLASS="header"><INPUT NAME=name TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["name"]));?>" onChange="zkAlpha(this,true)"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Attn:</TD><TD><INPUT NAME=attention TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["attention"]));?>" onChange="zkAlpha(this,true)"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Address:</TD><TD><INPUT NAME=address TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["address"]));?>" onChange="zkAlpha(this,true)"></TD></TR>
+      <TR><TD ALIGN=RIGHT>City:</TD><TD><INPUT NAME=city TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["city"]));?>" onChange="zkAlpha(this,true)"></TD></TR>
+      <TR><TD ALIGN=RIGHT ID=lstate STYLE="visibility:<?php echo $foreign?"hidden":"visible";?>">State:</TD><TD><INPUT NAME=state TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["state"]));?>" onChange="this.value=this.value.toUpperCase();"></TD></TR>
+      <TR><TD ALIGN=RIGHT ID=lzip><?php echo $foreign?"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country":"Postal Code";?>:</TD><TD><INPUT NAME=zip TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["zip"]));?>" onChange="this.value=this.value.toUpperCase();"><INPUT NAME=foreign TYPE=CHECKBOX onClick="return setForeign();"<?php echo $foreign?" CHECKED":"";?>><SPAN CLASS="sub">Foreign?</SPAN></TD></TR>
+      <TR><TD ALIGN=RIGHT>Phone:</TD><TD><INPUT NAME=phone TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["phone"]));?>"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Fax:</TD><TD><INPUT NAME=fax TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["fax"]));?>"></TD></TR>
+      <TR><TD ALIGN=RIGHT>E-Mail:</TD><TD><INPUT NAME=email TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["email"]));?>"></TD></TR>
+      <TR><TD ALIGN=RIGHT>URL:</TD><TD><INPUT NAME=url TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["url"]));?>"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Mail List:</TD><TD><INPUT NAME=maillist TYPE=TEXT CLASS=text SIZE=5 VALUE="<?php echo $row["maillist"];?>" onChange="zkAlpha(this,true)"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Mail Count:</TD><TD><INPUT NAME=mailcount TYPE=TEXT CLASS=text SIZE=5 VALUE="<?php echo $row["mailcount"];?>"></TD></TR>
+    <?php 
         if(!$_REQUEST["lnew"]) {
     ?>
-      <TR><TD ALIGN=RIGHT>Date In:</TD><TD><?echo $row["pcreated"];?></TD></TR>
-      <TR><TD ALIGN=RIGHT>Date Mod:</TD><TD><?echo $row["modified"];?></TD></TR>
-    <?
+      <TR><TD ALIGN=RIGHT>Date In:</TD><TD><?php echo $row["pcreated"];?></TD></TR>
+      <TR><TD ALIGN=RIGHT>Date Mod:</TD><TD><?php echo $row["modified"];?></TD></TR>
+    <?php 
         }
     ?>
       <TR><TD ALIGN=RIGHT></TD><TD>&nbsp;</TD></TR>
-      <TR><TD></TD><TD><INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  <? echo ($this->subaction=="labels")?"Done!":($_REQUEST["seltag"]?"  OK  ":"Next &gt;&gt;");?>  ">&nbsp;</TD></TR>
+      <TR><TD></TD><TD><INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  <?php echo ($this->subaction=="labels")?"Done!":($_REQUEST["seltag"]?"  OK  ":"Next &gt;&gt;");?>  ">&nbsp;</TD></TR>
     </TABLE>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     function setForeign() {
@@ -1038,7 +1040,7 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
     }
     // -->
     </SCRIPT>
-    <?
+    <?php 
         $this->emitZkAlpha();
         UI::setFocus("name");
     }
@@ -1099,7 +1101,7 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
         echo "  <TR><TD></TD><TD".($_REQUEST["coll"]?" COLSPAN=3":"")."><INPUT TYPE=SUBMIT NAME=more CLASS=submit VALUE='  More Tracks...  '>&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE='  Done!  '></TD></TR>\n";
     ?>
     </TABLE>
-    <INPUT TYPE=HIDDEN NAME=nextTrack VALUE=<?echo (int)($_REQUEST["nextTrack"]+$this->tracksPerPage);?>>
+    <INPUT TYPE=HIDDEN NAME=nextTrack VALUE=<?php echo (int)($_REQUEST["nextTrack"]+$this->tracksPerPage);?>>
     <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript" SRC="js/zooscript.js"></SCRIPT>
     <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"><!--
     var focus;
@@ -1115,21 +1117,21 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
         var track = createNamedElement('INPUT', 'track'+next);
         track.type = 'hidden';
         form.appendChild(track);
-    <?if($_REQUEST["coll"]){?>
+    <?php if($_REQUEST["coll"]){?>
         var artist = createNamedElement('INPUT', 'artist'+next);
         artist.type = 'hidden';
         form.appendChild(artist);
-    <?}?>
+    <?php }?>
         for(var j=next; j>focus; j--) {
             eval('form.track' + j + '.value=form.track' + (j-1) + '.value;');
-    <?if($_REQUEST["coll"]){?>
+    <?php if($_REQUEST["coll"]){?>
             eval('form.artist' + j + '.value=form.artist' + (j-1) + '.value;');
-    <?}?>
+    <?php }?>
         }
         eval('form.track' + focus + '.value="";');
-    <?if($_REQUEST["coll"]){?>
+    <?php if($_REQUEST["coll"]){?>
         eval('form.artist' + focus + '.value="";');
-    <?}?>
+    <?php }?>
         eval('form.track' + focus + '.focus();');
     }
     function deleteTrack() {
@@ -1138,20 +1140,20 @@ function zkAlpha(control<?echo !$moveThe?", track":"";?>) {
             var last = nextTrack()-1;
             for(var j=focus; j<last; j++) {
                 eval('form.track' + j + '.value=form.track' + (j+1) + '.value;');
-    <?if($_REQUEST["coll"]){?>
+    <?php if($_REQUEST["coll"]){?>
                 eval('form.artist' + j + '.value=form.artist' + (j+1) + '.value;');
-    <?}?>
+    <?php }?>
             }
             eval('form.track' + last + '.value="";');
-    <?if($_REQUEST["coll"]){?>
+    <?php if($_REQUEST["coll"]){?>
             eval('form.artist' + last + '.value="";');
-    <?}?>
+    <?php }?>
             eval('form.track' + focus + '.focus();');
         }
     }
     // -->
     </SCRIPT>
-    <?
+    <?php 
         $this->emitZkAlpha();
         UI::setFocus("track" . ($focusTrack?$focusTrack:$_REQUEST["nextTrack"]));
     }

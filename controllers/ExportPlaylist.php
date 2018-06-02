@@ -129,13 +129,13 @@ class ExportPlaylist extends CommandTarget implements IController {
     }
     
     public function emitHTML() {
-        list($y,$m,$d) = split("-", $this->date);
+        list($y,$m,$d) = explode("-", $this->date);
         $displayDate = date("D, j M Y", mktime(0,0,0,$m,$d,$y));
     ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
 <HEAD>
-<TITLE><?echo "Zookeeper playlist for $this->show, $displayDate";?></TITLE>
+<TITLE><?php echo "Zookeeper playlist for $this->show, $displayDate";?></TITLE>
 <STYLE><!--
   TD { font-family: verdana, arial, helvetica, sans-serif;
        font-size: 11px; }
@@ -148,7 +148,7 @@ class ExportPlaylist extends CommandTarget implements IController {
 </STYLE>
 </HEAD>
 <BODY BGCOLOR="#ffffff">
-<?
+<?php 
         if(!$this->records) {
             echo "<B>Sorry, the playlist you have requested does not exist.</B>\n";
             echo "</BODY>\n</HTML>\n";
@@ -158,7 +158,7 @@ class ExportPlaylist extends CommandTarget implements IController {
     <TABLE WIDTH="100%" BORDER=0 CELLPADDING=2 CELLSPACING=2>
     <TR><TD ALIGN=CENTER>
       <TABLE WIDTH="90%" CELLPADDING=2 CELLSPACING=2>
-    <?
+    <?php 
         echo "    <TR><TD VALIGN=BOTTOM ALIGN=LEFT><H3>$this->show</H3></TD>\n";
         echo "        <TD VALIGN=BOTTOM ALIGN=RIGHT><H3>DJ: ".$this->dj."</H3></TD>\n";
         echo "        <TD VALIGN=BOTTOM ALIGN=RIGHT><H3>$displayDate / $this->time</H3></TD></TR>\n";
@@ -168,7 +168,7 @@ class ExportPlaylist extends CommandTarget implements IController {
     <TR><TD ALIGN=CENTER>
       <TABLE CELLPADDING=2 WIDTH="90%">
         <TR><TH>Artist</TH><TH>Track</TH><TH COLSPAN=2>Album/Label</TH></TR>
-    <?
+    <?php 
         // Print the tracks
         while($row = $this->records->fetch()) {
             if(substr($row['artist'], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
@@ -189,6 +189,6 @@ class ExportPlaylist extends CommandTarget implements IController {
     </TABLE>
 </BODY>
 </HTML>
-    <?
+    <?php
     }
 }

@@ -142,7 +142,7 @@ class Playlists extends MenuItem {
     
     public static function timeToAMPM($time) {
         if(strlen($time) == 9 && $time[4] == '-') {
-            list($fromtime, $totime) = split("-", $time);
+            list($fromtime, $totime) = explode("-", $time);
             return self::hourToAMPM($fromtime) . " - " . self::hourToAMPM($totime);
         } else
             return strtolower(htmlentities($time));
@@ -154,7 +154,7 @@ class Playlists extends MenuItem {
             $day = $d["mday"];
             $month = $d["mon"];
             $year = $d["year"];
-            list($fromtime, $totime) = split("-", $time);
+            list($fromtime, $totime) = explode("-", $time);
             $starttime = mktime(substr($fromtime, 0, 2), substr($fromtime, 2, 2), 0, $month, $day, $year);
             $z = date("Z");
             $zday = date("j", date("U", $starttime)-$z);
@@ -205,7 +205,7 @@ class Playlists extends MenuItem {
             if ($displayForm) {
     ?>
     <P CLASS="header">Add New Airname</P>
-    <? echo $errorMessage; ?>
+    <?php echo $errorMessage; ?>
     <FORM ACTION="?" METHOD=POST>
     <TABLE CELLPADDING=2 CELLSPACING=0>
       <TR>
@@ -218,17 +218,17 @@ class Playlists extends MenuItem {
       </TR>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=button VALUE=" Setup New Airname... ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
-    <INPUT TYPE=HIDDEN NAME=action VALUE="<?echo $playlist?'editList':'newList';?>">
-    <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?echo $playlist;?>">
-    <INPUT TYPE=HIDDEN NAME=description VALUE="<?echo htmlentities(stripslashes($description));?>">
-    <INPUT TYPE=HIDDEN NAME=date VALUE="<?echo htmlentities(stripslashes($date));?>">
-    <INPUT TYPE=HIDDEN NAME=time VALUE="<?echo htmlentities(stripslashes($time));?>">
-    <INPUT TYPE=HIDDEN NAME=fromtime VALUE="<?echo htmlentities(stripslashes($fromtime));?>">
-    <INPUT TYPE=HIDDEN NAME=totime VALUE="<?echo htmlentities(stripslashes($totime));?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $playlist?'editList':'newList';?>">
+    <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
+    <INPUT TYPE=HIDDEN NAME=description VALUE="<?php echo htmlentities(stripslashes($description));?>">
+    <INPUT TYPE=HIDDEN NAME=date VALUE="<?php echo htmlentities(stripslashes($date));?>">
+    <INPUT TYPE=HIDDEN NAME=time VALUE="<?php echo htmlentities(stripslashes($time));?>">
+    <INPUT TYPE=HIDDEN NAME=fromtime VALUE="<?php echo htmlentities(stripslashes($fromtime));?>">
+    <INPUT TYPE=HIDDEN NAME=totime VALUE="<?php echo htmlentities(stripslashes($totime));?>">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </FORM>
-    <?
+    <?php 
                 UI::setFocus("djname");
                 return;
             }
@@ -274,13 +274,13 @@ class Playlists extends MenuItem {
     <TABLE CELLPADDING=2 CELLSPACING=0>
       <TR>
         <TD ALIGN=RIGHT>Show Name:</TD>
-        <TD><INPUT TYPE=TEXT NAME=description VALUE="<?echo htmlentities(stripslashes($description));?>" CLASS=input SIZE=30></TD>
+        <TD><INPUT TYPE=TEXT NAME=description VALUE="<?php echo htmlentities(stripslashes($description));?>" CLASS=input SIZE=30></TD>
       </TR><TR>
         <TD ALIGN=RIGHT>Date:</TD>
-        <TD><INPUT TYPE=TEXT NAME=date VALUE="<?echo htmlentities(stripslashes($date));?>" CLASS=input SIZE=15></TD>
+        <TD><INPUT TYPE=TEXT NAME=date VALUE="<?php echo htmlentities(stripslashes($date));?>" CLASS=input SIZE=15></TD>
       </TR><TR>
         <TD ALIGN=RIGHT>Time Slot:</TD>
-    <?
+    <?php 
         if(strlen($fromtime) && strlen($totime)
                        || $this->extractTime($time, $fromtime, $totime)) {
             // Emit the time in canonical format
@@ -308,7 +308,7 @@ class Playlists extends MenuItem {
       </TR><TR>
         <TD ALIGN=RIGHT>DJ Airname:</TD>
         <TD><SELECT NAME=airname>
-    <?
+    <?php 
         $records = Engine::api(IDJ::class)->getAirnames(Engine::session()->getUser());
         while ($records && ($row = $records->fetch())) {
            $selected = ($row[0] == $airname)?" SELECTED":"";
@@ -321,7 +321,7 @@ class Playlists extends MenuItem {
             </SELECT><INPUT TYPE=SUBMIT NAME=button VALUE=" Setup New Airname... "></TD>
       </TR><TR>
         <TD>&nbsp;</TD>
-    <?
+    <?php 
         if($playlist)
             echo "    <TD><INPUT TYPE=SUBMIT onClick=\"return ConfirmTime();\" VALUE=\" Next &gt;&gt; \"></TD>\n";
         else
@@ -329,9 +329,9 @@ class Playlists extends MenuItem {
     ?>
       </TR>
     </TABLE>
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
-    <INPUT TYPE=HIDDEN NAME=action VALUE="<?echo $playlist?'editList':'newList';?>">
-    <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?echo $playlist;?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $playlist?'editList':'newList';?>">
+    <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="edit">
     </FORM>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
@@ -342,7 +342,7 @@ class Playlists extends MenuItem {
     }
     // -->
     </SCRIPT>
-    <?
+    <?php 
         UI::setFocus("description");
     }
     
@@ -353,18 +353,18 @@ class Playlists extends MenuItem {
     private function emitConfirm($name, $message, $action, $rtaction="") {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    function Confirm<? echo $name; ?>()
+    function Confirm<?php echo $name; ?>()
     {
-    <? if($rtaction) { ?>
-      if(document.forms[0].<? echo $rtaction; ?>.selectedIndex >= 0) {
-        action = document.forms[0].<? echo $rtaction; ?>.options[document.forms[0].<? echo $rtaction; ?>.selectedIndex].value;
+    <?php if($rtaction) { ?>
+      if(document.forms[0].<?php echo $rtaction; ?>.selectedIndex >= 0) {
+        action = document.forms[0].<?php echo $rtaction; ?>.options[document.forms[0].<?php echo $rtaction; ?>.selectedIndex].value;
       } else {
         return;
       }
-    <? } ?>
-      answer = confirm("<? echo $message; ?>");
+    <?php } ?>
+      answer = confirm("<?php echo $message; ?>");
       if(answer != 0) {
-        location = "<?
+        location = "<?php 
            echo "?$action";
            if($rtaction)
               echo "&$rtaction=\" + action";
@@ -374,7 +374,7 @@ class Playlists extends MenuItem {
     }
     // -->
     </SCRIPT>
-    <?
+    <?php 
     }
     
     private function restorePlaylist($playlist) {
@@ -426,7 +426,7 @@ class Playlists extends MenuItem {
     <B>Select Playlist:</B><BR>
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
     <SELECT NAME=playlist SIZE=10>
-    <?
+    <?php 
         // Setup $noTables for handling of 'Delete' function
         $this->checkBrowserCaps();
     
@@ -437,17 +437,17 @@ class Playlists extends MenuItem {
     </SELECT></TD></TR>
     <TR><TD>
     <INPUT TYPE=SUBMIT NAME=button VALUE=" Edit ">&nbsp;&nbsp;&nbsp;
-    <? if($this->noTables) { ?>
+    <?php if($this->noTables) { ?>
     <INPUT TYPE=SUBMIT NAME=button VALUE=" Delete ">
-    <? } else { ?>
+    <?php } else { ?>
     <INPUT TYPE=BUTTON NAME=button onClick="ConfirmDelete()" VALUE=" Delete ">
-    <? } ?>
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <?php } ?>
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="editList">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </TD></TR></TABLE>
     </FORM>
-    <?
+    <?php 
         if(!$this->noTables)
             $this->emitConfirm("Delete",
                         "This will delete the selected playlist.  Are you sure you want to do this?",
@@ -462,7 +462,7 @@ class Playlists extends MenuItem {
     <B>Select Playlist to Restore:</B><BR>
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
     <SELECT NAME=playlist SIZE=10>
-    <?
+    <?php 
         // Setup $this->noTables for handling of 'Delete' function
         $this->checkBrowserCaps();
     
@@ -474,13 +474,13 @@ class Playlists extends MenuItem {
     </SELECT></TD></TR>
     <TR><TD>
     <INPUT TYPE=SUBMIT NAME=button VALUE=" Restore ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="editList">
     <INPUT TYPE=HIDDEN NAME=subaction VALUE="restore">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </TD></TR></TABLE>
     <P><B>Note: Deleted playlists automatically expire on the date indicated.</B></P></FORM>
-    <?
+    <?php 
         UI::setFocus("playlist");
     }
     
@@ -488,7 +488,7 @@ class Playlists extends MenuItem {
     ?>
       <HR>
       <TABLE CELLPADDING=2>
-    <?
+    <?php 
         $records = Engine::api(IPlaylist::class)->getTracks($playlist, 1);
         while($records && ($row = $records->fetch())) {
             if(!$header) {
@@ -514,9 +514,9 @@ class Playlists extends MenuItem {
     
     private function emitTagForm($playlist, $message) {
     ?>
-      <? $this->emitPlaylistTitle($playlist); ?>
+      <?php $this->emitPlaylistTitle($playlist); ?>
       <P CLASS="header">Add Track:</P>
-    <?
+    <?php 
         if($message != "")
             echo "<FONT CLASS=\"error\"><B>$message</B></FONT><BR>\n";
     ?>
@@ -526,10 +526,10 @@ class Playlists extends MenuItem {
         <TD ALIGN=RIGHT>Tag:</TD>
         <TD><INPUT TYPE=TEXT NAME=tag CLASS=input SIZE=10></TD>
         <TD><INPUT TYPE=SUBMIT VALUE="Next &gt;&gt;">
-            <INPUT TYPE=HIDDEN NAME=session VALUE="<? echo $this->session->getSessionID(); ?>">
-            <INPUT TYPE=HIDDEN NAME=playlist VALUE="<? echo $playlist; ?>">
+            <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID(); ?>">
+            <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist; ?>">
             <INPUT TYPE=HIDDEN NAME=seq VALUE="tagForm">
-            <INPUT TYPE=HIDDEN NAME=action VALUE="<? echo $this->action; ?>"></TD>
+            <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action; ?>"></TD>
       </TR>
       <TR>
         <TD ALIGN=RIGHT>or</TD>
@@ -539,7 +539,7 @@ class Playlists extends MenuItem {
       </FORM>
       Leave tag blank and select <B>Next</B> for non-Zookeeper album.
       <P>
-    <?
+    <?php 
         UI::setFocus("tag");
     }
     
@@ -579,67 +579,67 @@ class Playlists extends MenuItem {
       $this->checkBrowserCaps();
       $sep = $id && substr($album["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK;
     ?>
-      <P CLASS="header"><? echo $id?"Editing highlighted":"Adding";?> <?echo $sep?"set separator":"track"?>:</P>
+      <P CLASS="header"><?php echo $id?"Editing highlighted":"Adding";?> <?php echo $sep?"set separator":"track"?>:</P>
       <FORM ACTION="?" METHOD=POST>
-    <? if($sep) { ?>
+    <?php if($sep) { ?>
       <INPUT TYPE=HIDDEN NAME=separator VALUE="true">
       <TABLE>
-    <? } else if($album == "" || $album["tag"] == "") { ?>
+    <?php } else if($album == "" || $album["tag"] == "") { ?>
       <TABLE CELLPADDING=0 CELLSPACING=0>
         <TR>
           <TD ALIGN=RIGHT>Artist:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=artist MAXLENGTH=80 VALUE="<?echo htmlentities($album?$album["artist"]:"");?>" CLASS=input SIZE=40></TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=artist MAXLENGTH=80 VALUE="<?php echo htmlentities($album?$album["artist"]:"");?>" CLASS=input SIZE=40></TD>
         </TR>
         <TR>
           <TD ALIGN=RIGHT>Track:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=track MAXLENGTH=80 VALUE="<?echo htmlentities($track);?>" CLASS=input SIZE=40></TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=track MAXLENGTH=80 VALUE="<?php echo htmlentities($track);?>" CLASS=input SIZE=40></TD>
         </TR>
         <TR>
           <TD ALIGN=RIGHT>Album:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=album MAXLENGTH=80 VALUE="<?echo htmlentities($album?$album["album"]:"");?>" CLASS=input SIZE=40></TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=album MAXLENGTH=80 VALUE="<?php echo htmlentities($album?$album["album"]:"");?>" CLASS=input SIZE=40></TD>
         </TR>
         <TR>
           <TD ALIGN=RIGHT>Label:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=label MAXLENGTH=80 VALUE="<?echo htmlentities($album?$album["label"]:"");?>" CLASS=input SIZE=40></TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=label MAXLENGTH=80 VALUE="<?php echo htmlentities($album?$album["label"]:"");?>" CLASS=input SIZE=40></TD>
         </TR>
-    <? } else { ?>
-      <INPUT TYPE=HIDDEN NAME=artist VALUE="<?echo htmlentities($album["artist"]);?>">
-      <INPUT TYPE=HIDDEN NAME=album VALUE="<?echo htmlentities($album["album"]);?>">
-      <INPUT TYPE=HIDDEN NAME=otrack VALUE="<?echo htmlentities(stripslashes($track));?>">
-      <INPUT TYPE=HIDDEN NAME=label VALUE="<?echo htmlentities($album["label"]);?>">
+    <?php } else { ?>
+      <INPUT TYPE=HIDDEN NAME=artist VALUE="<?php echo htmlentities($album["artist"]);?>">
+      <INPUT TYPE=HIDDEN NAME=album VALUE="<?php echo htmlentities($album["album"]);?>">
+      <INPUT TYPE=HIDDEN NAME=otrack VALUE="<?php echo htmlentities(stripslashes($track));?>">
+      <INPUT TYPE=HIDDEN NAME=label VALUE="<?php echo htmlentities($album["label"]);?>">
       <TABLE>
         <TR><TD ALIGN=RIGHT>Artist:</TD>
-            <TH ALIGN=LEFT><? echo htmlentities($album["artist"]); ?></TH></TR>
+            <TH ALIGN=LEFT><?php echo htmlentities($album["artist"]); ?></TH></TR>
         <TR><TD ALIGN=RIGHT>Album:</TD>
-            <TH ALIGN=LEFT><? echo htmlentities($album["album"]); ?></TH></TR>
+            <TH ALIGN=LEFT><?php echo htmlentities($album["album"]); ?></TH></TR>
         <TR><TD ALIGN=RIGHT>Track:</TD>
-            <TD ALIGN=LEFT><? $this->emitTrackField($album["tag"], $track, $id); ?></TD>
+            <TD ALIGN=LEFT><?php $this->emitTrackField($album["tag"], $track, $id); ?></TD>
         </TR>
-    <? } ?>
+    <?php } ?>
         <TR>
           <TD>&nbsp;</TD>
           <TD>
-    <? if($id) { ?>
+    <?php if($id) { ?>
               <INPUT TYPE=SUBMIT NAME=button VALUE="  Save  ">&nbsp;&nbsp;&nbsp;
-    <?     if($this->noTables) { ?>
+    <?php     if($this->noTables) { ?>
               <INPUT TYPE=SUBMIT NAME=button VALUE=" Delete ">
-    <?     } else { ?>
+    <?php     } else { ?>
               <INPUT TYPE=BUTTON NAME=button onClick="ConfirmDelete()" VALUE=" Delete ">
-    <?     } ?>
-              <INPUT TYPE=HIDDEN NAME=id VALUE="<?echo $id;?>">
-    <? } else { ?>
+    <?php     } ?>
+              <INPUT TYPE=HIDDEN NAME=id VALUE="<?php echo $id;?>">
+    <?php } else { ?>
               <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
-    <? } ?>
-              <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
-              <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?echo $playlist;?>">
-              <INPUT TYPE=HIDDEN NAME=action VALUE="<?echo $this->action;?>">
-              <INPUT TYPE=HIDDEN NAME=tag VALUE="<?echo $album["tag"];?>">
+    <?php } ?>
+              <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
+              <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
+              <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action;?>">
+              <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $album["tag"];?>">
               <INPUT TYPE=HIDDEN NAME=seq VALUE="editForm">
           </TD>
       </TR>
       </TABLE>
       </FORM>
-    <?
+    <?php 
         if($id && !$this->noTables)
             $this->emitConfirm("Delete",
                         "Delete this track?",
@@ -652,34 +652,34 @@ class Playlists extends MenuItem {
     
     private function emitTrackForm($playlist, $id, $album, $track) {
     ?>
-      <P CLASS="header"><? echo $id?"Editing highlighted":"Adding";?> track:</P>
+      <P CLASS="header"><?php echo $id?"Editing highlighted":"Adding";?> track:</P>
       <FORM ACTION="?" METHOD=POST>
-      <INPUT TYPE=HIDDEN NAME=artist VALUE="<?echo htmlentities($album["artist"]);?>">
-      <INPUT TYPE=HIDDEN NAME=album VALUE="<?echo htmlentities($album["album"]);?>">
-      <INPUT TYPE=HIDDEN NAME=label VALUE="<?echo htmlentities($album["label"]);?>">
+      <INPUT TYPE=HIDDEN NAME=artist VALUE="<?php echo htmlentities($album["artist"]);?>">
+      <INPUT TYPE=HIDDEN NAME=album VALUE="<?php echo htmlentities($album["album"]);?>">
+      <INPUT TYPE=HIDDEN NAME=label VALUE="<?php echo htmlentities($album["label"]);?>">
       <TABLE>
         <TR><TD ALIGN=RIGHT>Artist:</TD>
-            <TH ALIGN=LEFT><? echo htmlentities($album["artist"]); ?></TH></TR>
+            <TH ALIGN=LEFT><?php echo htmlentities($album["artist"]); ?></TH></TR>
         <TR><TD ALIGN=RIGHT>Album:</TD>
-            <TH ALIGN=LEFT><? echo htmlentities($album["album"]); ?></TH></TR>
+            <TH ALIGN=LEFT><?php echo htmlentities($album["album"]); ?></TH></TR>
         <TR><TD ALIGN=RIGHT>Track:</TD>
-            <TD><INPUT TYPE=TEXT NAME=track MAXLENGTH=80 CLASS=input VALUE="<?echo htmlentities($track);?>"></TD></TR>
+            <TD><INPUT TYPE=TEXT NAME=track MAXLENGTH=80 CLASS=input VALUE="<?php echo htmlentities($track);?>"></TD></TR>
         <TR><TD></TD><TD>
-    <? if($id) { ?>
+    <?php if($id) { ?>
           <INPUT TYPE=SUBMIT VALUE="  Save  ">
-          <INPUT TYPE=HIDDEN NAME=id VALUE="<?echo $id;?>">
-    <? } else { ?>
+          <INPUT TYPE=HIDDEN NAME=id VALUE="<?php echo $id;?>">
+    <?php } else { ?>
           <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
-    <? } ?>
-          <INPUT TYPE=HIDDEN NAME=tag VALUE="<?echo $album["tag"];?>">
-          <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
-          <INPUT TYPE=HIDDEN NAME=action VALUE="<?echo $this->action;?>">
-          <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?echo $playlist;?>">
+    <?php } ?>
+          <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $album["tag"];?>">
+          <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
+          <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action;?>">
+          <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
           <INPUT TYPE=HIDDEN NAME=seq VALUE="editForm">
         </TD></TR>
       </TABLE>
       </FORM>
-    <?
+    <?php 
         UI::setFocus("track");
     }
     
@@ -729,7 +729,7 @@ class Playlists extends MenuItem {
     ?>
     <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
     <TR><TD HEIGHT=185 VALIGN=TOP>
-    <?
+    <?php 
         switch ($seq) {
         case "tagForm":
             if($separator) {
@@ -815,10 +815,10 @@ class Playlists extends MenuItem {
     ?>
     </TD></TR>
     <TR><TD>
-    <? $this->emitList($playlist, $id); ?>
+    <?php $this->emitList($playlist, $id); ?>
     </TD></TR>
     </TABLE>
-    <?
+    <?php 
     }
     
     public function emitImportExportList() {
@@ -833,7 +833,7 @@ class Playlists extends MenuItem {
     <B>Select Playlist:</B><BR>
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
     <SELECT NAME=playlist SIZE=10>
-    <?
+    <?php 
         // Run the query
         $records = Engine::api(IPlaylist::class)->getListsSelNormal(Engine::session()->getUser());
         while($records && ($row = $records->fetch()))
@@ -848,11 +848,11 @@ class Playlists extends MenuItem {
     </TD></TR>
     <TR><TD>
     <INPUT TYPE=SUBMIT VALUE=" Export Playlist ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=target VALUE="export">
     </TD></TR></TABLE>
     </FORM>
-    <?
+    <?php 
         UI::setFocus("playlist");
     }
     
@@ -920,7 +920,7 @@ class Playlists extends MenuItem {
             if ($displayForm) {
     ?>
     <P CLASS="header">Add New Airname</P>
-    <? echo $errorMessage; ?>
+    <?php echo $errorMessage; ?>
     <FORM ACTION="?" METHOD=POST>
     <TABLE CELLPADDING=2 CELLSPACING=0>
       <TR>
@@ -933,18 +933,18 @@ class Playlists extends MenuItem {
       </TR>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=button VALUE=" Setup New Airname... ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
     <INPUT TYPE=HIDDEN NAME=subaction VALUE="import">
-    <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?echo $playlist;?>">
-    <INPUT TYPE=HIDDEN NAME=description VALUE="<?echo htmlentities(stripslashes($description));?>">
-    <INPUT TYPE=HIDDEN NAME=date VALUE="<?echo htmlentities(stripslashes($date));?>">
-    <INPUT TYPE=HIDDEN NAME=time VALUE="<?echo htmlentities(stripslashes($time));?>">
-    <INPUT TYPE=HIDDEN NAME=fromtime VALUE="<?echo htmlentities(stripslashes($fromtime));?>">
-    <INPUT TYPE=HIDDEN NAME=totime VALUE="<?echo htmlentities(stripslashes($totime));?>">
+    <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
+    <INPUT TYPE=HIDDEN NAME=description VALUE="<?php echo htmlentities(stripslashes($description));?>">
+    <INPUT TYPE=HIDDEN NAME=date VALUE="<?php echo htmlentities(stripslashes($date));?>">
+    <INPUT TYPE=HIDDEN NAME=time VALUE="<?php echo htmlentities(stripslashes($time));?>">
+    <INPUT TYPE=HIDDEN NAME=fromtime VALUE="<?php echo htmlentities(stripslashes($fromtime));?>">
+    <INPUT TYPE=HIDDEN NAME=totime VALUE="<?php echo htmlentities(stripslashes($totime));?>">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </FORM>
-    <?
+    <?php 
                 UI::setFocus("djname");
                 return;
             }
@@ -964,19 +964,19 @@ class Playlists extends MenuItem {
       <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
         <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
         <INPUT TYPE=HIDDEN NAME=subaction VALUE="import">
-        <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+        <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=HIDDEN NAME=validate VALUE="edit">
         <INPUT TYPE=HIDDEN NAME=MAX_FILE_SIZE VALUE=100000>
         <TABLE CELLPADDING=2 CELLSPACING=0>
           <TR>
             <TD ALIGN=RIGHT>Show Name:</TD>
-            <TD><INPUT TYPE=TEXT NAME=description VALUE="<?echo stripslashes($description);?>" SIZE=30></TD>
+            <TD><INPUT TYPE=TEXT NAME=description VALUE="<?php echo stripslashes($description);?>" SIZE=30></TD>
           </TR><TR>
             <TD ALIGN=RIGHT>Date:</TD>
-            <TD><INPUT TYPE=TEXT NAME=date VALUE="<?echo stripslashes($date);?>" SIZE=15></TD>
+            <TD><INPUT TYPE=TEXT NAME=date VALUE="<?php echo stripslashes($date);?>" SIZE=15></TD>
           </TR><TR>
             <TD ALIGN=RIGHT>Time Slot:</TD>
-    <?
+    <?php 
         if(strlen($fromtime) && strlen($totime)
                        || $this->extractTime($time, $fromtime, $totime)) {
             // Emit the time in canonical format
@@ -1004,7 +1004,7 @@ class Playlists extends MenuItem {
           </TR><TR>
             <TD ALIGN=RIGHT>DJ Airname:</TD>
             <TD><SELECT NAME=airname>
-    <?
+    <?php 
             $records = Engine::api(IDJ::class)->getAirnames(Engine::session()->getUser());
             while ($records && ($row = $records->fetch())) {
                 $selected = ($row[0] == $airname)?" SELECTED":"";
@@ -1030,7 +1030,7 @@ class Playlists extends MenuItem {
           </TR>
         </TABLE>
       </FORM>
-    <?
+    <?php 
             UI::setFocus("description");
         } else {
             // Create the playlist
@@ -1124,7 +1124,7 @@ class Playlists extends MenuItem {
     <P><B><FONT CLASS="error">You have no published playlists or airnames.</FONT></B></P>
     <P>You must setup a DJ Airname for at least one playlist
        before you can update your profile.</P>
-    <?
+    <?php 
             UI::setFocus();
             break;
         case 1:
@@ -1132,13 +1132,13 @@ class Playlists extends MenuItem {
             $url = "http://";
     ?>
     <FORM ACTION="?" METHOD=POST>
-    <P><B>Update website and e-mail for airname '<?echo $airnames[0]['airname'];?>'</B></P>
+    <P><B>Update website and e-mail for airname '<?php echo $airnames[0]['airname'];?>'</B></P>
     <TABLE CELLPADDING=2 BORDER=0>
       <TR><TD ALIGN=RIGHT>URL:</TD>
-        <TD><INPUT TYPE=TEXT NAME=url VALUE="<?echo $airnames[0]['url'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
+        <TD><INPUT TYPE=TEXT NAME=url VALUE="<?php echo $airnames[0]['url'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
       <TR><TD ALIGN=RIGHT>e-mail:</TD>
-        <TD><INPUT TYPE=TEXT NAME=email VALUE="<?echo $airnames[0]['email'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
-    <?
+        <TD><INPUT TYPE=TEXT NAME=email VALUE="<?php echo $airnames[0]['email'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
+    <?php 
             // As we know that multiple DJs are using the 'music' account
             // (tsk, tsk), let's supress the account update option for music.
             if($multi && Engine::session()->getUser() != "music" && Engine::session()->getUser() != "kzsu")
@@ -1146,13 +1146,13 @@ class Playlists extends MenuItem {
     ?>
       <TR><TD COLSPAN=2>&nbsp;</TD></TR>
       <TR><TD>&nbsp;</TD><TD><INPUT TYPE=SUBMIT VALUE="  Update  ">
-              <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
-              <INPUT TYPE=HIDDEN NAME=airname VALUE="<?echo $airnames[0]['id'];?>">
+              <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
+              <INPUT TYPE=HIDDEN NAME=airname VALUE="<?php echo $airnames[0]['id'];?>">
               <INPUT TYPE=HIDDEN NAME=action VALUE="updateDJInfo">
               <INPUT TYPE=HIDDEN NAME=validate VALUE="y"></TD></TR>
     </TABLE>
     </FORM>
-    <?
+    <?php 
             UI::setFocus("url");
             break;
         default:
@@ -1162,7 +1162,7 @@ class Playlists extends MenuItem {
     <B>Select Airname:</B><BR>
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
     <SELECT NAME=airname SIZE=10>
-    <?
+    <?php 
             foreach($airnames as $row) {
                  echo "  <OPTION VALUE=\"$row[0]\">$row[1]\n";
             }
@@ -1170,12 +1170,12 @@ class Playlists extends MenuItem {
     </SELECT></TD></TR>
     <TR><TD>
     <INPUT TYPE=SUBMIT VALUE=" Next &gt;&gt; ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="updateDJInfo">
     <INPUT TYPE=HIDDEN NAME=multi VALUE="y">
     </TD></TR></TABLE>
     </FORM>
-    <?
+    <?php 
             UI::setFocus("airname");
             break;
         }
@@ -1195,12 +1195,12 @@ class Playlists extends MenuItem {
                 // User has only one airname; show the link now
                 $row = $airnames[0];
     ?>
-    <B>Here is the URL to access all of <?echo $row[1];?>'s playlists:</B>
+    <B>Here is the URL to access all of <?php echo $row[1];?>'s playlists:</B>
     <P CLASS="sub"><B>
-    <?echo UI::getBaseUrl();?>?action=viewDJ&amp;seq=selUser&amp;viewuser=<?echo $row[0];?>
+    <?php echo UI::getBaseUrl();?>?action=viewDJ&amp;seq=selUser&amp;viewuser=<?php echo $row[0];?>
     </B></P>
     <P>Cut-and-paste the above URL to provide direct access to your playlists.</P>
-    <?
+    <?php 
            } else {
                 // User has multiple airnames; let them pick one
     ?>
@@ -1208,7 +1208,7 @@ class Playlists extends MenuItem {
     <B>Select Airname:</B><BR>
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
     <SELECT NAME=airname SIZE=10>
-    <?
+    <?php 
                 foreach($airnames as $row) {
                     echo "  <OPTION VALUE=\"$row[0]\">$row[1]\n";
                 }
@@ -1216,12 +1216,12 @@ class Playlists extends MenuItem {
     </SELECT></TD></TR>
     <TR><TD>
     <INPUT TYPE=SUBMIT VALUE=" Show URL ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="showLink">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </TD></TR></TABLE>
     </FORM>
-    <?
+    <?php 
            }
            UI::setFocus("airname");
            return;
@@ -1231,17 +1231,17 @@ class Playlists extends MenuItem {
     <TR><TD VALIGN=TOP>
     <B>Here is the URL for this playlist:</B>
     <P CLASS="sub"><B>
-    <?echo UI::getBaseUrl();?>?action=viewDJ&amp;seq=selList&amp;playlist=<?echo $playlist;?>
+    <?php echo UI::getBaseUrl();?>?action=viewDJ&amp;seq=selList&amp;playlist=<?php echo $playlist;?>
     </B></P>
     <P>Cut-and-paste the above URL to provide direct access to this playlist.</P>
     </TD></TR>
     <TR><TD>&nbsp;</TD></TR>
     <TR><TD>
     <HR>
-    <?      $this->viewList($playlist, "showLink"); ?>
+    <?php      $this->viewList($playlist, "showLink"); ?>
     </TD></TR>
     </TABLE>
-    <?
+    <?php 
             UI::setFocus();
             return;
         }
@@ -1251,7 +1251,7 @@ class Playlists extends MenuItem {
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
     <SELECT NAME=playlist SIZE=10>
       <OPTION VALUE="all"> -- URL for all of my playlists --
-    <?
+    <?php 
         // Run the query
         $records = Engine::api(IPlaylist::class)->getPlaylists(1, 0, 0, 0, Engine::session()->getUser());
         while($records && ($row = $records->fetch()))
@@ -1260,12 +1260,12 @@ class Playlists extends MenuItem {
     </SELECT></TD></TR>
     <TR><TD>
     <INPUT TYPE=SUBMIT VALUE=" Show URL ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="showLink">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </TD></TR></TABLE>
     </FORM>
-    <?
+    <?php 
         UI::setFocus("playlist");
     }
     
@@ -1283,7 +1283,7 @@ class Playlists extends MenuItem {
     private function viewList($playlist) {
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlist, 1);
         if($row) {
-            list($y,$m,$d) = split("-", $row[1]);
+            list($y,$m,$d) = explode("-", $row[1]);
     
             $script = "?target=export";
     
@@ -1392,7 +1392,7 @@ class Playlists extends MenuItem {
     ?>
     <FORM ACTION="?" METHOD=POST>
     <TABLE WIDTH="100%"><TR><TD ALIGN=RIGHT VALIGN=TOP>
-    <?
+    <?php 
             // Emit optional URL and/or e-mail for DJ
             if($row['url']) {
                 echo "      <A HREF=\"".$row['url']."\" CLASS=\"nav\"><B>Go to ".$row['airname']."'s website</B></A>\n";
@@ -1405,7 +1405,7 @@ class Playlists extends MenuItem {
     ?>
     </TD></TR></TABLE>
     <TABLE WIDTH="100%" CELLSPACING=0>
-      <?
+      <?php 
             $weeks = 10;
             $limit = 10;
             $formatEndDate = date("l, j F Y");
@@ -1417,10 +1417,10 @@ class Playlists extends MenuItem {
             }
     ?>
     </TABLE>
-    <? if (sizeof($topPlays)) echo "<BR>\n"; ?>
+    <?php if (sizeof($topPlays)) echo "<BR>\n"; ?>
     <TABLE WIDTH="100%" CELLPADDING=0 CELLSPACING=0 BORDER=0>
       <TR><TD CLASS="recentPlays" VALIGN=TOP>
-    <?
+    <?php 
             $count = 10;
             Engine::api(IPlaylist::class)->getRecentPlays($recentPlays, $viewuser, $count);
             Engine::api(IReview::class)->getRecentReviewsByAirname($recentReviews, $viewuser, $count-1);
@@ -1434,7 +1434,7 @@ class Playlists extends MenuItem {
             }
     ?>
         </TABLE>
-      </TD><?
+      </TD><?php 
         if(sizeof($recentReviews)) {
             echo "<TD>&nbsp;&nbsp;&nbsp;</TD><TD CLASS=\"recentReviews\"VALIGN=TOP>\n";
             $block = sizeof($recentPlays);
@@ -1450,12 +1450,12 @@ class Playlists extends MenuItem {
     
     ?>
       </TR></TABLE>
-    <? if (sizeof($topPlays) || sizeof($recentPlays) || sizeof($recentReviews)) echo "<BR>\n"; ?>
+    <?php if (sizeof($topPlays) || sizeof($recentPlays) || sizeof($recentReviews)) echo "<BR>\n"; ?>
     <TABLE WIDTH="100%">
-      <TR><TH ALIGN=LEFT><?echo $row['airname'];?>'s playlists:</TH></TR>
+      <TR><TH ALIGN=LEFT><?php echo $row['airname'];?>'s playlists:</TH></TR>
       <TR><TD>
          <SELECT NAME=playlist SIZE=6>
-    <?
+    <?php 
             // Run the query
             $records = Engine::api(IPlaylist::class)->getPlaylists(0, 0, 0, $viewuser);
             while($row = $records->fetch())
@@ -1464,14 +1464,14 @@ class Playlists extends MenuItem {
         </SELECT></TD></TR>
       <TR><TD>
         <INPUT TYPE=SUBMIT VALUE=" View Playlist ">
-        <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
-        <INPUT TYPE=HIDDEN NAME=viewuser VALUE="<?echo $viewuser;?>">
+        <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
+        <INPUT TYPE=HIDDEN NAME=viewuser VALUE="<?php echo $viewuser;?>">
         <INPUT TYPE=HIDDEN NAME=action VALUE="viewDJ">
         <INPUT TYPE=HIDDEN NAME=seq VALUE="selList">
       </TD></TR>
     </TABLE>
     </FORM>
-    <?
+    <?php 
             UI::setFocus("playlist");
             return;
         } else if(($seq == "selList") && $playlist) {
@@ -1489,7 +1489,7 @@ class Playlists extends MenuItem {
     ?>
     <TABLE CELLPADDING=2 CELLSPACING=2 BORDER=0>
       <!--TR><TH COLSPAN=2 ALIGN=LEFT>Select a DJ:</TH></TR-->
-      <TR><TH COLSPAN=2 ALIGN=LEFT><?
+      <TR><TH COLSPAN=2 ALIGN=LEFT><?php 
         $last = "";
         $dot = 0;
         for($i=0; $i<26; $i++)
@@ -1572,15 +1572,15 @@ class Playlists extends MenuItem {
     
         if(((($seq == "selDate") && $viewdate)) ||
             (($seq == "selList") && !$playlist)) {
-            list($y,$m,$d) = split("-", $viewdate);
+            list($y,$m,$d) = explode("-", $viewdate);
             $displayDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
     ?>
     <BR>
     <TABLE WIDTH="100%">
-    <TR><TH COLSPAN=3 ALIGN=LEFT CLASS="subhead">Playlists for <?echo $displayDate;?>:</TH></TR>
+    <TR><TH COLSPAN=3 ALIGN=LEFT CLASS="subhead">Playlists for <?php echo $displayDate;?>:</TH></TR>
     </TABLE>
     <TABLE CELLPADDING=2 CELLSPACING=2>
-    <?
+    <?php 
             // Run the query
             $records = Engine::api(IPlaylist::class)->getPlaylists(1, 1, $viewdate, 0, 0, 0);
             $i=0;
@@ -1595,7 +1595,7 @@ class Playlists extends MenuItem {
             }
     ?>
     </TABLE>
-    <?
+    <?php 
         }
         UI::setFocus();
     }
@@ -1614,7 +1614,7 @@ class Playlists extends MenuItem {
     
             // Setup date format differently if plays extend into another year
             $now = getdate(time());
-            list($y,$m,$d) = split("-", $plays[sizeof($plays)-1]["showdate"]);
+            list($y,$m,$d) = explode("-", $plays[sizeof($plays)-1]["showdate"]);
             $dateSpec = ($y == $now["year"])?"D, d M":"D, d M y";
     
             // Ensure we have an even number of plays
@@ -1632,7 +1632,7 @@ class Playlists extends MenuItem {
                 }
     
                 if($plays[$idx]["airname"]) {
-                    list($y,$m,$d) = split("-", $plays[$idx]["showdate"]);
+                    list($y,$m,$d) = explode("-", $plays[$idx]["showdate"]);
                     $formatDate = preg_replace("/ /", "&nbsp;", date($dateSpec, mktime(0,0,0,$m,$d,$y)));
                       
                     echo "<TD ALIGN=RIGHT VALIGN=TOP CLASS=\"sub\">".($idx+1).".</TD>";

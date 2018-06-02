@@ -159,12 +159,12 @@ class UserAdmin extends MenuItem {
            x = administrator</TD>
       </TR>
     </TABLE>
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="addUser">
-    <INPUT TYPE=HIDDEN NAME=sortBy VALUE="<?echo $this->sortBy;?>">
+    <INPUT TYPE=HIDDEN NAME=sortBy VALUE="<?php echo $this->sortBy;?>">
     </FORM>
-    <?      UI::setFocus("uid");
+    <?php      UI::setFocus("uid");
             return;
         } else if($seq == "selUser") {
             $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $uid);
@@ -175,22 +175,22 @@ class UserAdmin extends MenuItem {
     <TABLE CELLPADDING=2 CELLSPACING=2>
       <TR>
         <TD>&nbsp;</TD>
-        <TD WIDTH="100%"><B><FONT SIZE="+1"><?echo $uid;?></FONT></B></TD>
+        <TD WIDTH="100%"><B><FONT SIZE="+1"><?php echo $uid;?></FONT></B></TD>
       </TR><TR>
         <TD>&nbsp;</TD>
         <TD>&nbsp;</TD>
       </TR><TR>
         <TD ALIGN=RIGHT>Name:</TD>
-        <TD><INPUT TYPE=TEXT NAME=auName VALUE="<?echo $user[0]["realname"];?>" SIZE=32></TD>
+        <TD><INPUT TYPE=TEXT NAME=auName VALUE="<?php echo $user[0]["realname"];?>" SIZE=32></TD>
       </TR><TR>
         <TD ALIGN=RIGHT>Password:</TD>
         <TD><INPUT TYPE=PASSWORD NAME=auPass SIZE=15></TD>
       </TR><TR>
         <TD ALIGN=RIGHT>Groups:</TD>
-        <TD><INPUT TYPE=TEXT NAME=auGroups VALUE="<?echo $user[0]["groups"];?>" SIZE=15></TD>
+        <TD><INPUT TYPE=TEXT NAME=auGroups VALUE="<?php echo $user[0]["groups"];?>" SIZE=15></TD>
       </TR><TR>
         <TD ALIGN=RIGHT>Expiration:</TD>
-        <TD><INPUT TYPE=TEXT NAME=auExpire VALUE="<?echo $user[0]["expires"];?>" SIZE=15></TD>
+        <TD><INPUT TYPE=TEXT NAME=auExpire VALUE="<?php echo $user[0]["expires"];?>" SIZE=15></TD>
       </TR><TR>
         <TD>&nbsp;</TD>
         <TD><INPUT TYPE=SUBMIT CLASS=submit VALUE=" Update User "></TD>
@@ -208,13 +208,13 @@ class UserAdmin extends MenuItem {
            x = administrator</TD>
       </TR>
     </TABLE>
-    <INPUT TYPE=HIDDEN NAME=uid VALUE="<?echo $uid;?>">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=uid VALUE="<?php echo $uid;?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="editUser">
-    <INPUT TYPE=HIDDEN NAME=sortBy VALUE="<?echo $this->sortBy;?>">
+    <INPUT TYPE=HIDDEN NAME=sortBy VALUE="<?php echo $this->sortBy;?>">
     </FORM>
-    <?          UI::setFocus("auName");
+    <?php          UI::setFocus("auName");
                 return;
             }
         }
@@ -222,13 +222,13 @@ class UserAdmin extends MenuItem {
     <P>
     <FORM ACTION="?" METHOD=POST>
     <INPUT TYPE=SUBMIT CLASS=submit VALUE="  New User  ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="newUser">
-    <INPUT TYPE=HIDDEN NAME=sortBy VALUE="<?echo $this->sortBy;?>">
+    <INPUT TYPE=HIDDEN NAME=sortBy VALUE="<?php echo $this->sortBy;?>">
     </FORM>
     </P>
-    <?
+    <?php 
         // Emit the column headers
         echo "<P><TABLE>\n  <TR>\n";
         $this->emitColumnHeader("User");
@@ -298,18 +298,18 @@ class UserAdmin extends MenuItem {
     <TABLE CELLPADDING=2 CELLSPACING=2 WIDTH="100%">
       <TR>
         <TD>&nbsp;</TD>
-        <TD WIDTH="100%"><B><FONT SIZE="+1"><?echo $row["airname"];?></FONT></B></TD>
+        <TD WIDTH="100%"><B><FONT SIZE="+1"><?php echo $row["airname"];?></FONT></B></TD>
       </TR><TR>
         <TD>&nbsp;</TD>
         <TD>&nbsp;</TD>
       </TR><TR>
         <TD ALIGN=RIGHT>User:</TD>
-        <TD><?echo $row["name"]." (".$row["realname"].")";?></TD>
+        <TD><?php echo $row["name"]." (".$row["realname"].")";?></TD>
       </TR><TR>
         <TD ALIGN=RIGHT VALIGN=TOP>Move&nbsp;To:</TD>
         <TD>
           <SELECT NAME=uid SIZE=10>
-    <?
+    <?php 
             $result = Engine::api(IUser::class)->getUsers();
             while($row = $result->fetch()) {
                 echo "        <OPTION VALUE=\"".$row["name"]."\">".$row["name"].
@@ -323,14 +323,15 @@ class UserAdmin extends MenuItem {
         <TD><INPUT TYPE=SUBMIT CLASS=submit VALUE=" Move Airname "></TD>
       </TR>
     </TABLE>
-    <INPUT TYPE=HIDDEN NAME=aid VALUE="<?echo $aid;?>">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=aid VALUE="<?php echo $aid;?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=subaction VALUE="airnames">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="editAirname">
-    <INPUT TYPE=HIDDEN NAME=sortBy VALUE="<?echo $this->sortBy;?>">
+    <INPUT TYPE=HIDDEN NAME=sortBy VALUE="<?php echo $this->sortBy;?>">
     </FORM>
-    <?      UI::setFocus("auName");
+    <?php
+            UI::setFocus("auName");
             return;
         }
     

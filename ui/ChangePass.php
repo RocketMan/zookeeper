@@ -57,7 +57,7 @@ class ChangePass extends MenuItem {
     <TABLE CELLPADDING=0 CELLSPACING=0>
       <TR>
         <TD ALIGN=RIGHT>Old Password:</TD>
-        <TD><INPUT TYPE=PASSWORD NAME=oldPass VALUE="<?echo $_REQUEST["oldPass"];?>" CLASS=input SIZE=15></TD>
+        <TD><INPUT TYPE=PASSWORD NAME=oldPass VALUE="<?php echo $_REQUEST["oldPass"];?>" CLASS=input SIZE=15></TD>
       </TR><TR>
         <TD ALIGN=RIGHT>New Password:</TD>
         <TD><INPUT TYPE=PASSWORD NAME=newPass CLASS=input SIZE=15></TD>
@@ -69,11 +69,11 @@ class ChangePass extends MenuItem {
         <TD><INPUT TYPE=SUBMIT VALUE=" Change Password "></TD>
       </TR>
     </TABLE>
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="changePass">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </FORM>
-    <?
+    <?php 
         UI::setFocus("oldPass");
     }
 }

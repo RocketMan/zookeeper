@@ -355,7 +355,7 @@ class AddManager extends MenuItem {
             <FORM ACTION="" METHOD=POST>
               Adds for:
               <SELECT NAME=date onChange='this.form.submit()'>
-    <?
+    <?php 
         $records = Engine::api(IChart::class)->getAddDates(52);
         $datevalid = false;
         while($records && ($row = $records->fetch())) {
@@ -365,13 +365,13 @@ class AddManager extends MenuItem {
             echo "            <OPTION VALUE=\"$row[0]\"$selected>$row[0]\n";
         }
     ?>          </SELECT>
-              <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+              <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
               <INPUT TYPE=HIDDEN NAME=action VALUE="addmgr">
               <INPUT TYPE=HIDDEN NAME=subaction VALUE="adds">
               <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
             </FORM>
           </TH>
-    <? if($this->session->isAuth("n")) { ?>
+    <?php if($this->session->isAuth("n")) { ?>
           <TD ALIGN=RIGHT>
             <FORM ACTION="?" METHOD=POST>
               <SELECT NAME=os>
@@ -381,15 +381,15 @@ class AddManager extends MenuItem {
                   <OPTION VALUE="email">E-Mail
               </SELECT>
               <INPUT TYPE=BUTTON NAME=button onClick="onExport();" VALUE=" Export ">
-              <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+              <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
               <INPUT TYPE=HIDDEN NAME=date VALUE="">
               <INPUT TYPE=HIDDEN NAME=target VALUE="addexp">
             </FORM>
           </TD>
-    <? } ?>
+    <?php  } ?>
         </TR>
       </TABLE>
-    <?
+    <?php 
         if(!$datevalid && $first) $date = $first;
         if($date) {
             $records = Engine::api(IChart::class)->getAdd2($date);
@@ -410,25 +410,25 @@ class AddManager extends MenuItem {
     }
     // -->
     </SCRIPT>
-    <?
+    <?php 
         }
     }
     
     private function emitConfirmID($name, $message, $action, $id="", $rtaction="") {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    function Confirm<? echo $name; ?>(<? if($id) echo "id"; ?>)
+    function Confirm<?php echo $name; ?>(<?php if($id) echo "id"; ?>)
     {
-    <? if($rtaction) { ?>
-      if(document.forms[0].<? echo $rtaction; ?>.selectedIndex >= 0) {
-        action = document.forms[0].<? echo $rtaction; ?>.options[document.forms[0].<? echo $rtaction; ?>.selectedIndex].value;
+    <?php if($rtaction) { ?>
+      if(document.forms[0].<?php echo $rtaction; ?>.selectedIndex >= 0) {
+        action = document.forms[0].<?php echo $rtaction; ?>.options[document.forms[0].<?php echo $rtaction; ?>.selectedIndex].value;
       } else {
         return;
       }
-    <? } ?>
-      answer = confirm("<? echo $message; ?>");
+    <?php } ?>
+      answer = confirm("<?php echo $message; ?>");
       if(answer != 0) {
-        location = "<?
+        location = "<?php 
            echo "?$action";
            if($rtaction)
               echo "&$rtaction=\" + action";
@@ -440,7 +440,7 @@ class AddManager extends MenuItem {
     }
     // -->
     </SCRIPT>
-    <?
+    <?php 
     }
     
     public function panelInfo($validate) {
@@ -495,13 +495,13 @@ class AddManager extends MenuItem {
     ?>
           <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
             <TR><TD>&nbsp;</TD>
-                <TD><FONT CLASS="error"><B><?echo $message;?></B></FONT></TD></TR>
+                <TD><FONT CLASS="error"><B><?php echo $message;?></B></FONT></TD></TR>
             <TR><TD ALIGN=RIGHT>Add Date:</TD>
-                <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=adddate VALUE="<?echo $adddate;?>" CLASS=input SIZE=15 MAXLENGTH=15></TD></TR>
+                <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=adddate VALUE="<?php echo $adddate;?>" CLASS=input SIZE=15 MAXLENGTH=15></TD></TR>
                 <TD ALIGN=RIGHT>Pull Date:</TD>
-                <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=pulldate VALUE="<?echo $pulldate;?>" CLASS=input SIZE=15 MAXLENGTH=15></TD></TR>
+                <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=pulldate VALUE="<?php echo $pulldate;?>" CLASS=input SIZE=15 MAXLENGTH=15></TD></TR>
           </TABLE>
-    <?
+    <?php 
         $this->skipVar("adddate");
         $this->skipVar("pulldate");
         $this->panelSetFocus("adddate");
@@ -528,9 +528,9 @@ class AddManager extends MenuItem {
           <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
             <TR><TD COLSPAN=2>&nbsp;</TD></TR>
             <TR><TD ALIGN=RIGHT>A-File ID:</TD>
-                <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=aid VALUE="<?echo $aid;?>" CLASS=input SIZE=15 MAXLENGTH=15></TD></TR>
+                <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=aid VALUE="<?php echo $aid;?>" CLASS=input SIZE=15 MAXLENGTH=15></TD></TR>
           </TABLE>
-    <?
+    <?php 
         $this->skipVar("aid");
         $this->panelSetFocus("aid");
     }
@@ -556,9 +556,9 @@ class AddManager extends MenuItem {
           <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
             <TR><TD COLSPAN=2>&nbsp;</TD></TR>
             <TR><TD ALIGN=RIGHT>Album Tag:</TD>
-                <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=tag VALUE="<?echo $tag;?>" CLASS=input SIZE=15 MAXLENGTH=15></TD></TR>
+                <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=tag VALUE="<?php echo $tag;?>" CLASS=input SIZE=15 MAXLENGTH=15></TD></TR>
           </TABLE>
-    <?
+    <?php 
         $this->skipVar("tag");
         $this->skipVar("artist");
         $this->skipVar("album");
@@ -572,7 +572,7 @@ class AddManager extends MenuItem {
             return true;
     ?>
           <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
-    <?
+    <?php 
         // Stuff the categories into an array
         $records = Engine::api(IChart::class)->getCategories();
         $i=0;
@@ -608,7 +608,7 @@ class AddManager extends MenuItem {
         }
     ?>
           </TABLE>
-    <?
+    <?php 
     }
     
     public function panelSummary($validate) {
@@ -645,12 +645,12 @@ class AddManager extends MenuItem {
         }
     ?>
           <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
-            <TR><TD ALIGN=RIGHT>Number:</TD><TH ALIGN=LEFT><?echo $aid;?></TH></TR>
-            <TR><TD ALIGN=RIGHT>Artist:</TD><TH ALIGN=LEFT><?echo htmlentities(stripslashes($artist));?></TH></TR>
-            <TR><TD ALIGN=RIGHT>Album:</TD><TH ALIGN=LEFT><?echo htmlentities(stripslashes($album));?></TH></TR>
-            <TR><TD ALIGN=RIGHT>Add Date:</TD><TD ALIGN=LEFT><?echo $adddate;?></TD></TR>
-            <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT><?echo $pulldate;?></TD></TR>
-            <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?
+            <TR><TD ALIGN=RIGHT>Number:</TD><TH ALIGN=LEFT><?php echo $aid;?></TH></TR>
+            <TR><TD ALIGN=RIGHT>Artist:</TD><TH ALIGN=LEFT><?php echo htmlentities(stripslashes($artist));?></TH></TR>
+            <TR><TD ALIGN=RIGHT>Album:</TD><TH ALIGN=LEFT><?php echo htmlentities(stripslashes($album));?></TH></TR>
+            <TR><TD ALIGN=RIGHT>Add Date:</TD><TD ALIGN=LEFT><?php echo $adddate;?></TD></TR>
+            <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT><?php echo $pulldate;?></TD></TR>
+            <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
         // Stuff the categories into an array
         $records = Engine::api(IChart::class)->getCategories();
         $i=0;
@@ -666,7 +666,7 @@ class AddManager extends MenuItem {
             }
     ?></TD></TR>
           </TABLE>
-    <?
+    <?php 
         $this->nextMessage = "Add Album";
     }
     
@@ -763,7 +763,7 @@ class AddManager extends MenuItem {
     ?>
           </TD></TR>
         </TABLE>
-    <?
+    <?php 
         echo "    <INPUT TYPE=SUBMIT VALUE=\"" . ($this->nextMessage?$this->nextMessage:"  Next &gt;&gt;  ") . "\">\n";
         $this->emitHidden("seq", $seq);
         $this->emitVars();
@@ -798,12 +798,12 @@ class AddManager extends MenuItem {
         }
     ?>
           <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
-            <TR><TD ALIGN=RIGHT>Number:</TD><TH ALIGN=LEFT><?echo $aid;?></TH></TR>
-            <TR><TD ALIGN=RIGHT>Artist:</TD><TH ALIGN=LEFT><?echo htmlentities(stripslashes($artist));?></TH></TR>
-            <TR><TD ALIGN=RIGHT>Album:</TD><TH ALIGN=LEFT><?echo htmlentities(stripslashes($album));?></TH></TR>
-            <TR><TD ALIGN=RIGHT>Add Date:</TD><TD ALIGN=LEFT><?echo $adddate;?></TD></TR>
-            <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT><?echo $pulldate;?></TD></TR>
-            <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?
+            <TR><TD ALIGN=RIGHT>Number:</TD><TH ALIGN=LEFT><?php echo $aid;?></TH></TR>
+            <TR><TD ALIGN=RIGHT>Artist:</TD><TH ALIGN=LEFT><?php echo htmlentities(stripslashes($artist));?></TH></TR>
+            <TR><TD ALIGN=RIGHT>Album:</TD><TH ALIGN=LEFT><?php echo htmlentities(stripslashes($album));?></TH></TR>
+            <TR><TD ALIGN=RIGHT>Add Date:</TD><TD ALIGN=LEFT><?php echo $adddate;?></TD></TR>
+            <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT><?php echo $pulldate;?></TD></TR>
+            <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
         // Stuff the categories into an array
         $records = Engine::api(IChart::class)->getCategories();
         $i=0;
@@ -819,7 +819,7 @@ class AddManager extends MenuItem {
             }
     ?></TD></TR>
           </TABLE>
-    <?
+    <?php 
         $this->nextMessage = "Update Album";
     }
     
@@ -888,7 +888,7 @@ class AddManager extends MenuItem {
     ?>
           </TD></TR>
         </TABLE>
-    <?
+    <?php 
         echo "    <INPUT TYPE=SUBMIT VALUE=\"" . ($this->nextMessage?$this->nextMessage:"  Next &gt;&gt;  ") . "\">\n";
         $this->emitHidden("seq", $seq);
         $this->emitVars();
@@ -926,7 +926,7 @@ class AddManager extends MenuItem {
       <FORM ACTION="" METHOD=POST>
         <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
           <TR><TH>&nbsp;</TH><TH>Category</TH><TH>Code&nbsp;</TH><TH>Director</TH></TR>
-    <?
+    <?php 
         $cats = Engine::api(IChart::class)->getCategories();
         while($cats && ($row = $cats->fetch())) {
             $i = $row[0];
@@ -938,7 +938,7 @@ class AddManager extends MenuItem {
     ?>
           <TR><TD>&nbsp;</TD>
               <TD COLSPAN=3 ALIGN=LEFT><INPUT TYPE=SUBMIT VALUE=" Update Categories "></TD></TR>
-    <?
+    <?php 
         if($seq == "update") {
             if($success)
                 echo "      <TR><TD>&nbsp;</TD><TD CLASS=\"header\" ALIGN=LEFT COLSPAN=2>Categories updated.</TD></TR>\n";
@@ -947,12 +947,12 @@ class AddManager extends MenuItem {
         }
     ?>
         </TABLE>
-        <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+        <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=HIDDEN NAME=action VALUE="addmgr">
         <INPUT TYPE=HIDDEN NAME=subaction VALUE="categories">
         <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
       </FORM>
-    <?
+    <?php 
         UI::setFocus("name1");
     }
     
@@ -963,7 +963,7 @@ class AddManager extends MenuItem {
         $format = $_REQUEST["format"];
     
     
-        list($y,$m,$d) = split("-", $date);
+        list($y,$m,$d) = explode("-", $date);
     
         if($address) {
             // Allow only alphanumeric and {@,-,.} in address
@@ -1081,17 +1081,17 @@ class AddManager extends MenuItem {
     ?>
       <FORM ACTION="" METHOD=POST>
         <TABLE CELLPADDING=2 BORDER=0>
-          <TR><TD ALIGN=RIGHT>Add For:</TD><TD ALIGN=LEFT><?echo date("j F Y", mktime(0,0,0,$m,$d,$y));?></TD></TR>
-          <TR><TD ALIGN=RIGHT>E-Mail To:</TD><TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=address VALUE="<?echo htmlentities($address);?>" CLASS=INPUT SIZE=30></TD></TR>
+          <TR><TD ALIGN=RIGHT>Add For:</TD><TD ALIGN=LEFT><?php echo date("j F Y", mktime(0,0,0,$m,$d,$y));?></TD></TR>
+          <TR><TD ALIGN=RIGHT>E-Mail To:</TD><TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=address VALUE="<?php echo htmlentities($address);?>" CLASS=INPUT SIZE=30></TD></TR>
           <TR><TD ALIGN=RIGHT>Format:</TD><TD ALIGN=LEFT><INPUT TYPE=RADIO NAME=format VALUE="normal" CHECKED>Normal&nbsp;(for&nbsp;Noise)&nbsp;&nbsp;&nbsp;<INPUT TYPE=RADIO NAME=format VALUE="tab">Tab&nbsp;Delimited</TD></TR>
           <TR><TD></TD><TD><INPUT TYPE=SUBMIT VALUE=" E-Mail Add "></TD></TR>
         </TABLE>
-        <INPUT TYPE=HIDDEN NAME=date VALUE="<?echo $date;?>">
-        <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+        <INPUT TYPE=HIDDEN NAME=date VALUE="<?php echo $date;?>">
+        <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=HIDDEN NAME=action VALUE="addmgr">
         <INPUT TYPE=HIDDEN NAME=subaction VALUE="addsemail">
       </FORM>
-    <?
+    <?php 
         UI::setFocus("address");
     }
     
@@ -1147,7 +1147,7 @@ class AddManager extends MenuItem {
                 echo "<TABLE CELLPADDING=4 CELLSPACING=0 BORDER=0>\n";
                 echo "  <TR><TD ALIGN=RIGHT CLASS=\"sub\">Week Ending:</TD>";
                 for($j=0; $j<$i; $j++) {
-                    list($y,$m,$d) = split("-", $week[$j][0]);
+                    list($y,$m,$d) = explode("-", $week[$j][0]);
                     $displayDate = date("j M", mktime(0,0,0,$m,$d,$y));
                     echo "<TD ALIGN=CENTER CLASS=\"currentsTop\">$displayDate</TD>";
                 }
@@ -1347,7 +1347,7 @@ class AddManager extends MenuItem {
             <FORM ACTION="" METHOD=POST>
               Activity for week ending:
               <SELECT NAME=date onChange='this.form.submit()'>
-    <?
+    <?php 
         $records = Engine::api(IChart::class)->getChartDates(52);
         $datevalid = false;
         while($row = $records->fetch()) {
@@ -1357,7 +1357,7 @@ class AddManager extends MenuItem {
             echo "            <OPTION VALUE=\"$row[0]\"$selected>$row[0]\n";
         }
     ?>          </SELECT>
-              <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+              <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
               <INPUT TYPE=HIDDEN NAME=action VALUE="addmgr">
               <INPUT TYPE=HIDDEN NAME=subaction VALUE="activity">
               <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
@@ -1365,7 +1365,7 @@ class AddManager extends MenuItem {
           </TH>
         </TR>
       </TABLE>
-    <?
+    <?php 
         if(!$datevalid && $first) $date = $first;
         if($date) {
             $records = Engine::api(IChart::class)->getWeeklyActivity($date);

@@ -264,7 +264,7 @@ class Reviews extends MenuItem {
                 if ($displayForm) {
     ?>
     <P CLASS="header">Add New Airname</P>
-    <? echo $errorMessage; ?>
+    <?php echo $errorMessage; ?>
     <FORM ACTION="?" METHOD=POST>
     <TABLE CELLPADDING=0 CELLSPACING=0>
       <TR>
@@ -277,13 +277,13 @@ class Reviews extends MenuItem {
       </TR>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=button VALUE=" Setup New Airname... ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
-    <INPUT TYPE=HIDDEN NAME=created VALUE="<?echo $_REQUEST["created"];?>">
-    <INPUT TYPE=HIDDEN NAME=tag VALUE="<?echo $_REQUEST["tag"];?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=created VALUE="<?php echo $_REQUEST["created"];?>">
+    <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $_REQUEST["tag"];?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="searchReviewEdit">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </FORM>
-    <?
+    <?php 
                     UI::setFocus("djname");
                     return;
                 }
@@ -339,12 +339,12 @@ class Reviews extends MenuItem {
         
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["tag"]);
     ?>
-    <P CLASS="header">Review Album:&nbsp;&nbsp;<?echo $albums[0]["artist"] ." / ". $albums[0]["album"];?></P>
+    <P CLASS="header">Review Album:&nbsp;&nbsp;<?php echo $albums[0]["artist"] ." / ". $albums[0]["album"];?></P>
     <FORM ACTION="?" METHOD=POST>
     <TABLE>
       <TR><TD ALIGN=RIGHT>Reviewer:</TD>
           <TD><SELECT NAME=airname>
-    <?
+    <?php 
         $records = Engine::api(IDJ::class)->getAirnames(Engine::session()->getUser());
         while ($row = $records->fetch()) {
            $selected = ($row[0] == $airname)?" SELECTED":"";
@@ -359,34 +359,34 @@ class Reviews extends MenuItem {
     </TABLE>
     <TABLE>
       <TR><TD>Review:</TD>
-          <TD ALIGN=RIGHT><INPUT TYPE=RADIO NAME=private VALUE=0<?if(!$_REQUEST["private"])echo " CHECKED";?>>Public&nbsp;&nbsp;
-                          <INPUT TYPE=RADIO NAME=private VALUE=1<?if($_REQUEST["private"])echo " CHECKED";?>>Private</TD></TR>
+          <TD ALIGN=RIGHT><INPUT TYPE=RADIO NAME=private VALUE=0<?php if(!$_REQUEST["private"])echo " CHECKED";?>>Public&nbsp;&nbsp;
+                          <INPUT TYPE=RADIO NAME=private VALUE=1<?php if($_REQUEST["private"])echo " CHECKED";?>>Private</TD></TR>
       <TR><TD COLSPAN=2>
         <SPAN CLASS=input><TEXTAREA WRAP=VIRTUAL NAME=review COLS=50 ROWS=20>
-<?echo htmlentities($review);?></TEXTAREA></SPAN><BR>
+<?php echo htmlentities($review);?></TEXTAREA></SPAN><BR>
       </TD></TR>
       <TR><TD ALIGN=LEFT COLSPAN=2>
-    <?
+    <?php 
         if($id) {
     ?>
           <INPUT TYPE=SUBMIT NAME=button VALUE=" Update Review ">&nbsp;&nbsp;&nbsp;
               <INPUT TYPE=SUBMIT NAME=button VALUE= " Delete Review ">
-    <?  } else { ?>
+    <?php  } else { ?>
           <INPUT TYPE=SUBMIT NAME=button VALUE=" Post Review! ">
-    <?    $email = " CHECKED";
-        } ?>
+    <?php    $email = " CHECKED";
+           } ?>
       </TD></TR>
       <TR><TD ALIGN=LEFT COLSPAN=2>
-        <INPUT TYPE=CHECKBOX NAME=noise<?echo $email;?>>E-mail review to Noise
+        <INPUT TYPE=CHECKBOX NAME=noise<?php echo $email;?>>E-mail review to Noise
       </TD></TR>
     </TABLE>
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
-    <INPUT TYPE=HIDDEN NAME=created VALUE="<?echo $_REQUEST["created"];?>">
-    <INPUT TYPE=HIDDEN NAME=tag VALUE="<?echo $_REQUEST["tag"];?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=created VALUE="<?php echo $_REQUEST["created"];?>">
+    <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $_REQUEST["tag"];?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="searchReviewEdit">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </FORM>
-    <?
+    <?php 
         UI::setFocus("review");
     }
 }
