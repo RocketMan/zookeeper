@@ -16,13 +16,13 @@ class WordWrap {
      * where credit due.
      */
     public function word_wrap($string, $cols = 72, $prefix = "") {
-        $t_lines = split(is_int(strpos($string, "\r"))?"\r\n":"\n", $string);
+        $t_lines = explode(is_int(strpos($string, "\r"))?"\r\n":"\n", $string);
         $outlines = "";
     
         while(list(, $thisline) = each($t_lines)) {
             if(strlen($thisline) > $cols) {
                 $newline = "";
-                $t_l_lines = split(" ", $thisline);
+                $t_l_lines = explode(" ", $thisline);
     
                 while(list(, $thisword) = each($t_l_lines)) {
                     while((strlen($thisword) + strlen($prefix)) > $cols) {

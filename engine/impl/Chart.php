@@ -316,7 +316,7 @@ class ChartImpl extends BaseImpl implements IChart {
             $dow = date("w", strtotime($endDate));
             if($dow) {
                 // adjust endDate forward to the chart date
-                list($y,$m,$d) = split("-", $endDate);
+                list($y,$m,$d) = explode("-", $endDate);
                 $endDate = date("Y-m-d", mktime(0,0,0,
                                    $m,
                                    $d+7-$dow,
