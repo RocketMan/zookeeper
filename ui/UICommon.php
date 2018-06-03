@@ -66,7 +66,7 @@ class UICommon {
             $arg = sprintf($format, substr($arg, 0, $size));
         }
     
-        $arg = htmlentities($arg, ENT_QUOTES, 'ISO-8859-1');
+        $arg = htmlentities($arg, ENT_QUOTES, 'UTF-8');
         $arg = str_replace("\241", "&iexcl;", $arg);
         $arg = str_replace("\223", "&#8220;", $arg);   // ldquot
         $arg = str_replace("\224", "&#8221;", $arg);   // rdquot
