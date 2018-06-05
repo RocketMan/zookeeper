@@ -24,7 +24,7 @@
 
 namespace ZK\Engine;
 
-class ResultWrapper {
+class RowIterator {
     private $stmt;
     private $style;
 
@@ -35,7 +35,7 @@ class ResultWrapper {
 
     public function fetch() {
         if($this->stmt) {
-            $result = $this->stmt->fetch($style);
+            $result = $this->stmt->fetch($this->style);
             if(!$result)
                 $this->stmt = null;
             return $result;
@@ -75,7 +75,7 @@ class BaseImpl {
      * @return result set or false on failure
      */
     protected function execute($stmt, $style=\PDO::FETCH_ASSOC) {
-        return $stmt->execute()?new ResultWrapper($stmt, $style):false;
+        return $stmt->execute()?new RowIterator($stmt, $style):false;
     }
 
     /**
