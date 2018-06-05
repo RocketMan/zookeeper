@@ -159,6 +159,7 @@ class Main implements IController {
     
     private function emitBody($dispatcher) {
         $urls = Engine::param('urls');
+        $station_full = Engine::param('station_full');
 ?>
     <BODY onLoad="setFocus()">
     <DIV CLASS="box">

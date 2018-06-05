@@ -225,7 +225,7 @@ class AddManager extends MenuItem {
         if($albums) {
             usort($albums, array($this, "addManagerSortFn"));
     
-        while(list($index, $row) = each($albums)) {
+        foreach($albums as $index => $row) {
             echo "    <TR CLASS=\"hborder\"><TD VALIGN=TOP>";
     
             // Edit link
@@ -241,7 +241,7 @@ class AddManager extends MenuItem {
     
             // Categories
             $cats = explode(",", $row[5]);
-            while(list($index, $cat) = each($cats))
+            foreach($cats as $index => $cat)
                 echo $catcode[$cat];
     
             // A-File Numbers
@@ -581,7 +581,7 @@ class AddManager extends MenuItem {
     
         // Setup selected categories
         $cl = explode(",", $catlist);
-        while(list($index, $cat) = each($cl))
+        foreach($cl as $index => $cat)
              $selcats[(int)$cat - 1] = "X";
     
         $this->skipVar("catlist");
@@ -1012,10 +1012,10 @@ class AddManager extends MenuItem {
                 $headers = "From: $from\r\n$mime";
     
                 // Emit the add
-                while(list($index, $row) = each($albums)) {
+                foreach($albums as $index => $row) {
                     $ac = "";
                     $cats = explode(",", $row[5]);
-                    while(list($index, $cat) = each($cats))
+                    foreach($cats as $index => $cat)
                         $ac .= $catcode[$cat];
                     if($format == "tab") {
                         $line = $row[3] . "\t" . $row[4] . "\t" . $ac . "\t" .
@@ -1129,7 +1129,7 @@ class AddManager extends MenuItem {
                 echo "<TD ALIGN=RIGHT>Charts:</TD><TD>";
                 $emitted = false;
                 $albumcats = explode(",", $row["category"]);
-                while(list($index, $cat) = each($albumcats)) {
+                foreach($albumcats as $index => $cat) {
                     if(!$cats[$cat] || substr($cats[$cat], 0, 1) == "(") continue;
                     if($emitted) echo ", ";
                     echo htmlentities(stripslashes($cats[$cat]));
@@ -1271,7 +1271,7 @@ class AddManager extends MenuItem {
         // Sort it
         usort($albums, array($this, "aFileActivitySortFn"));
     
-        while(list($index, $row) = each($albums)) {
+        foreach($albums as $index => $row) {
             if($_REQUEST["sortBy"] == "Date" && $last > 5 && $last != $row["start"]) {
                 list($y, $m, $d) = explode("-", $lastDate);
                 $showDate = str_replace(" ", "&nbsp;", date("d D", mktime(0,0,0,$m,$d,$y)));
