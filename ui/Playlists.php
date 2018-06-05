@@ -1305,7 +1305,7 @@ class Playlists extends MenuItem {
             $this->viewListGetAlbums($records, $albums);
             Engine::api(ILibrary::class)->markAlbumsReviewed($albums);
             if(sizeof($albums) > 0)
-              while(list($index, $row) = each($albums)) {
+              foreach($albums as $index => $row) {
                 if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK) {
                   echo "  <TR><TD ALIGN=LEFT COLSPAN=4><HR SIZE=2 NOSHADE STYLE=\"color:#6b3333\"></TD></TR>\n";
                   continue;

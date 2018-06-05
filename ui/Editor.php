@@ -624,8 +624,8 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
               echo "  <OPTION VALUE=\"\">\n";
          echo "</SELECT><BR><INPUT NAME=\"bdown\" VALUE=\"1\" TYPE=\"image\" SRC=\"img/zk_list_dn_beta.gif\" onclick=\"return scrollDown(-1);\"></TD>\n";
          echo "</TR></TABLE>\n";
-         echo "  <INPUT TYPE=HIDDEN NAME=up VALUE=\"$o\">\n";
-         echo "  <INPUT TYPE=HIDDEN NAME=down VALUE=\"$a\">\n";
+         echo "  <INPUT TYPE=HIDDEN NAME=up VALUE=\"\">\n";
+         echo "  <INPUT TYPE=HIDDEN NAME=down VALUE=\"\">\n";
     ?>
     </TD><TD>
     <TABLE>
@@ -877,8 +877,8 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
             echo "  <OPTION VALUE=\"\">\n";
         echo "</SELECT><BR><INPUT NAME=\"bdown\" VALUE=\"1\" TYPE=\"image\" SRC=\"img/zk_list_dn_beta.gif\" onclick=\"return scrollDown(-1);\"></TD>\n";
         echo "</TR></TABLE>\n";
-        echo "  <INPUT TYPE=HIDDEN NAME=up VALUE=\"$o\">\n";
-        echo "  <INPUT TYPE=HIDDEN NAME=down VALUE=\"$a\">\n";
+        echo "  <INPUT TYPE=HIDDEN NAME=up VALUE=\"\">\n";
+        echo "  <INPUT TYPE=HIDDEN NAME=down VALUE=\"\">\n";
     ?>
     </TD><TD>
     <TABLE>
