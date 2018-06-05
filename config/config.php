@@ -50,6 +50,13 @@ $config = [
         'listen' => 'https://zookeeper.ibinx.com/master',
     ],
 
+    'contact' => [
+        'addr' => 'Morgan Park 1',
+        'city' => 'Westfield, ZQ',
+        'phone' => '+1 949 555 0897',
+        'fax' => '+1 949 555 0898',
+    ],
+
     /**
      * domains allowed in the Origin header
      */
