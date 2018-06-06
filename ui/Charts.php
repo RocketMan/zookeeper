@@ -55,25 +55,6 @@ class Charts extends MenuItem {
                                             self::$subactions, $extra);
     }
 
-    private static function monthlyChartStart($month, $year) {
-        // Determine day of week for the first of the month
-        $dow = date("w", mktime(0,0,0,$month,1,$year));
-    
-        // Calculate delta to first chart for month
-        $delta = (($dow < 4)?8:15) - $dow;
-    
-        return date("Y-m-d", mktime(0,0,0,$month,$delta,$year));
-    }
-    
-    private static function monthlyChartEnd($month, $year) {
-        // Get start chart for following month
-        $next = self::monthlyChartStart($month+1, $year);
-        list($y,$m,$d) = explode("-", $next);
-    
-        // Offset back 7 days to get last chart of specified month
-        return date("Y-m-d", mktime(0,0,0,$m,$d-7,$y));
-    }
-    
     public function chartTop30() {
         $maintop = 30;
         $top = 10;
@@ -177,8 +158,8 @@ class Charts extends MenuItem {
         }
     
         if($monthly) {
-            $startDate = self::monthlyChartStart($month, $year);
-            $endDate = self::monthlyChartEnd($month, $year);
+            $startDate = $chartAPI->getMonthlyChartStart($month, $year);
+            $endDate = $chartAPI->getMonthlyChartEnd($month, $year);
             $displayDate = date("F Y", mktime(0,0,0,$month,1,$year));
             echo "<P CLASS=\"header\">$station chart for month of $displayDate</P>\n";
         } else {
@@ -266,7 +247,7 @@ class Charts extends MenuItem {
                 $weeks = $chartAPI->getChartDates(1);
                 if($weeks && ($curWeek = $weeks->fetch())) {
                     list($y, $m, $d) = explode("-", $curWeek["week"]);
-                    $chartEnd = self::monthlyChartEnd($m, $y);
+                    $chartEnd = $chartAPI->getMonthlyChartEnd($m, $y);
                     $skipCurMonth = strcmp($curWeek["week"], $chartEnd) != 0;
                 }
     
@@ -310,13 +291,13 @@ class Charts extends MenuItem {
         }
     
         if($cyear) {
-            $startDate = self::monthlyChartStart(1, $cyear);
-            $endDate = self::monthlyChartEnd(12, $cyear);
+            $startDate = $chartAPI->getMonthlyChartStart(1, $cyear);
+            $endDate = $chartAPI->getMonthlyChartEnd(12, $cyear);
             echo "<P CLASS=\"header\">$station Top 100 for the year $cyear</P>\n";
             $monthly = 0;
         } else if($monthly) {
-            $startDate = self::monthlyChartStart($month, $year);
-            $endDate = self::monthlyChartEnd($month, $year);
+            $startDate = $chartAPI->getMonthlyChartStart($month, $year);
+            $endDate = $chartAPI->getMonthlyChartEnd($month, $year);
             $displayDate = date("F Y", mktime(0,0,0,$month,1,$year));
             echo "<P CLASS=\"header\">$station chart for month of $displayDate</P>\n";
         } else {

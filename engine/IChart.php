@@ -56,4 +56,6 @@ interface IChart {
     function updateChartEMail($i, $address);
     function getWeeklyActivity($date);
     function doChart($chartDate);
+    function getMonthlyChartStart($month, $year);
+    function getMonthlyChartEnd($month, $year);
 }

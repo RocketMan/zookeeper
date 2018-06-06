@@ -916,4 +916,23 @@ class ChartImpl extends BaseImpl implements IChart {
             return false;
         }
     }
+
+    public function getMonthlyChartStart($month, $year) {
+        // Determine day of week for the first of the month
+        $dow = date("w", mktime(0,0,0,$month,1,$year));
+    
+        // Calculate delta to first chart for month
+        $delta = (($dow < 4)?8:15) - $dow;
+    
+        return date("Y-m-d", mktime(0,0,0,$month,$delta,$year));
+    }
+    
+    public function getMonthlyChartEnd($month, $year) {
+        // Get start chart for following month
+        $next = self::monthlyChartStart($month+1, $year);
+        list($y,$m,$d) = explode("-", $next);
+    
+        // Offset back 7 days to get last chart of specified month
+        return date("Y-m-d", mktime(0,0,0,$m,$d-7,$y));
+    }
 }
