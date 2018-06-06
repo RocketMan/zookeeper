@@ -47,4 +47,5 @@ interface IUser {
     function createSession($session, $user, $access);
     function setPortID($session, $portid);
     function deleteSession($session);
+    function purgeOldSessions();
 }

@@ -10,6 +10,8 @@ $config = [
      */
     'station' => '9MMM',
 
+    'station_medium' => '9MMM 89.7FM',
+
     'station_full' => '9MMM Fictitious Radio 89.7 FM',
 
     'copyright' => '&copy; 2002-2018 Fictitious Radio, LTD.  All rights reserved.',
@@ -88,5 +90,44 @@ $config = [
         'database' => '',
         'user' => '',
         'pass' => '',
+    ],
+
+    /**
+     * chart configuration
+     */
+    'chart' => [
+        /**
+          * max_spins:
+          *
+          * number of spins per show (or DJ) to count for the charts
+          */
+        'max_spins' => 1,
+        /**
+          * apply_limit_per_dj:
+          *
+          * 0 to limit spin count per show; 1 to limit spin count per DJ
+          */
+        'apply_limit_per_dj' => 0,
+        'weekly_footer' => "\n\n--\n
+If you ever want to remove yourself from this mailing list,
+visit https://zookeeper.ibinx.com/mailman/listinfo/weekly-charts.\n
+Here's the general information for the list you've subscribed to,
+in case you don't already have it:\n
+The weekly-charts mailing list is for the distribution of 9MMM's
+music charts. The charts are emailed out approximately once a week. 9MMM's
+charts are compiled by tallying each play of every recording in current
+rotation (400-450 CDs/LPs/7\"s). Any questions about 9MMM's charts
+(philosophic or content-wise) can be directed to music@9mmm.fm.\n",
+
+        'monthly_footer' => "\n\n--\n
+If you ever want to remove yourself from this mailing list,
+visit https://zookeeper.ibinx.com/mailman/listinfo/monthly-charts.\n
+Here's the general information for the list you've subscribed to,
+in case you don't already have it:\n
+The monthly-charts mailing list is for the distribution of 9MMM's
+music charts. The charts are emailed out approximately once a month. 9MMM's
+charts are compiled by tallying each play of every recording in current
+rotation (400-450 CDs/LPs/7\"s). Any questions about 9MMM's charts
+(philosophic or content-wise) can be directed to music@9mmm.fm.\n",
     ],
 ];
