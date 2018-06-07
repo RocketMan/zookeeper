@@ -59,7 +59,7 @@ function getNodeValue(node) {
 }
 
 function urlEncode(url) {
-   return escape(url).replace(/\+/g, '%2B');
+   return encodeURI(url).replace(/\+/g, '%2B');
 }
 
 function createNamedElement(tag, name) {

@@ -7,7 +7,7 @@ if(typeof(req.setRequestHeader)=="function")
 req.setRequestHeader('If-Modified-Since','Sat, 1 Jan 2000 00:00:00 GMT');req.send(null);return false;}
 return true;}
 function getNodeValue(node){return(node&&node[0]&&node[0].firstChild)?node[0].firstChild.nodeValue:'';}
-function urlEncode(url){return escape(url).replace(/\+/g,'%2B');}
+function urlEncode(url){return encodeURI(url).replace(/\+/g,'%2B');}
 function createNamedElement(tag,name){var element=null;try{element=document.createElement('<'+tag+' name="'+name+'">');}catch(e){}
 if(!element||element.tagName!=tag){element=document.createElement(tag);element.name=name;}
 return element;}
