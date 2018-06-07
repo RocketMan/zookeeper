@@ -93,7 +93,7 @@ class Reviews extends MenuItem {
             $this->emitReviewRow($row, $albums);
         }
         if($this->session->isAuth("u")) {
-            $results = Engine::api(IReview::class)->getRecentReviews($this->session->getUser(), 0, 15);
+            $results = Engine::api(IReview::class)->getRecentReviews($this->session->getUser(), 0, 15, 1);
             echo "  <TR><TD COLSPAN=5>&nbsp;</TD></TR>\n";
             echo "<TR><TH COLSPAN=5 CLASS=\"subhead\" ALIGN=LEFT>Your Most Recent Reviews</TH></TR>\n";
             echo "  <TR><TH ALIGN=LEFT>Album</TH><TH ALIGN=LEFT>Artist</TH><TH ALIGN=LEFT>Collection</TH><TH ALIGN=LEFT>Reviewed by</TH><TH>&nbsp;</TH></TR>\n";

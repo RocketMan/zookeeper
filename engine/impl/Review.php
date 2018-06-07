@@ -73,7 +73,7 @@ class ReviewImpl extends BaseImpl implements IReview {
             $stmt->bindValue($p++, $start);
         if($limit)
             $stmt->bindValue($p++, (int)$limit, \PDO::PARAM_INT);
-        return $this->execute($stmt);
+        return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
     public function getReviews($tag, $byName=1, $user = "", $loggedIn = 0) {
