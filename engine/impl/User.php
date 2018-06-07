@@ -285,7 +285,7 @@ class UserImpl extends BaseImpl implements IUser {
     
     public function setPortID($session, $portid) {
         $query = "UPDATE sessions SET portid = ? WHERE sessionkey = ?";
-         $stmt = $this->prepare($query);
+        $stmt = $this->prepare($query);
         $stmt->bindValue(1, $portid);
         $stmt->bindValue(2, $session);
         return $stmt->execute();
@@ -295,6 +295,13 @@ class UserImpl extends BaseImpl implements IUser {
         $query = "DELETE FROM sessions WHERE sessionkey= ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $session);
+        return $stmt->execute();
+    }
+
+    public function purgeOldSessions() {
+        $query = "DELETE FROM sessions WHERE ".
+                 "DATE_ADD(logon, INTERVAL 2 DAY) < NOW()";
+        $stmt = $this->prepare($query);
         return $stmt->execute();
     }
 }

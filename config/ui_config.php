@@ -64,6 +64,7 @@ $controllers = [
     'export' =>       ZK\Controllers\ExportPlaylist::class,
     'afile' =>        ZK\Controllers\ExportAfile::class,
     'opensearch' =>   ZK\Controllers\OpenSearch::class,
+    'daily' =>        ZK\Controllers\RunDaily::class,
     'rss' =>          ZK\Controllers\RSS::class,
     'api' =>          ZK\Controllers\API::class,
     'sso' =>          ZK\Controllers\SSOLogin::class,
