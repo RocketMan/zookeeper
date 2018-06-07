@@ -89,7 +89,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $stmt = $this->prepare($query);
         if($limit)
             $stmt->bindValue(1, (int)$limit, \PDO::PARAM_INT);
-        return $this->execute($stmt);
+        return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
     public function getAdd($date) {
