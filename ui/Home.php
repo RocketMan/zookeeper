@@ -48,7 +48,7 @@ class Home extends MenuItem {
        // Determine last chart date
        $weeks = Engine::api(IChart::class)->getChartDates(1);
        if($weeks && ($lastWeek = $weeks->fetch()))
-          list($y,$m,$d) = split("-", $lastWeek["week"]);
+          list($y,$m,$d) = explode("-", $lastWeek["week"]);
     
        if(!$y)
           return;    // No charts!  bail.

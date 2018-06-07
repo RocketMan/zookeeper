@@ -34,7 +34,7 @@ class ChartImpl extends BaseImpl implements IChart {
     public function getCategories() {
         $query = "SELECT id, name, code, director FROM categories ORDER BY id";
         $stmt = $this->prepare($query);
-        return $this->execute($stmt);
+        return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
     public function updateCategory($i, $name, $code, $dir) {
@@ -316,7 +316,7 @@ class ChartImpl extends BaseImpl implements IChart {
             $dow = date("w", strtotime($endDate));
             if($dow) {
                 // adjust endDate forward to the chart date
-                list($y,$m,$d) = split("-", $endDate);
+                list($y,$m,$d) = explode("-", $endDate);
                 $endDate = date("Y-m-d", mktime(0,0,0,
                                    $m,
                                    $d+7-$dow,
@@ -863,7 +863,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt);
     }
 
-    public function doChart($chartDate) {
+    public function doChart($chartDate, $maxSpins, $limitPerDJ=0) {
         // ending date is 1 day before the chart date
         $endDate = \DateTime::createFromFormat('Y-m-d',
                                                 $chartDate)->modify('-1 day');
@@ -871,7 +871,7 @@ class ChartImpl extends BaseImpl implements IChart {
 
         // chart period is 7 days inclusive before the ending date
         $startDate = clone $endDate;
-        $startDate->modify('-7 day');
+        $startDate->modify('-6 day'); // this is 6 as days are inclusive
         $startDateS = $startDate->format('Y-m-d');
 
         // use a fresh connection so we don't adversely affect
@@ -886,16 +886,17 @@ class ChartImpl extends BaseImpl implements IChart {
         try {
             $query = "CREATE TEMPORARY TABLE tmp_maxplays ".
                 "SELECT t.list, t.tag, ".
-                   "least(count(*),$maxplays) plays, c.category ".
-                "FROM tracks t, lists l ".
+                   "LEAST(COUNT(*), $maxSpins) plays, c.category ".
+                "FROM lists l ".
+                "JOIN tracks t ON t.list = l.id ".
                 "LEFT JOIN currents c ".
                    "ON c.tag = t.tag ".
                       "AND l.showdate BETWEEN c.adddate AND c.pulldate ".
-                "WHERE t.list = l.id ".
-                   "AND l.airname IS NOT NULL ".
+                "WHERE l.airname IS NOT NULL ".
                    "AND l.showdate BETWEEN '$startDateS' AND '$endDateS' ".
-                   "AND c.afile_number IS NOT NULL ".
-                "GROUP BY t.tag, l.dj";
+                   "AND c.afile_number IS NOT NULL ";
+            $query .= $limitPerDJ?
+                   "GROUP BY t.tag, l.dj":"GROUP BY t.tag, t.list";
             $pdo->exec($query);
 
             $query = "INSERT INTO plays (week, tag, category, plays) ".
@@ -915,5 +916,24 @@ class ChartImpl extends BaseImpl implements IChart {
             $pdo->rollBack();
             return false;
         }
+    }
+
+    public function getMonthlyChartStart($month, $year) {
+        // Determine day of week for the first of the month
+        $dow = date("w", mktime(0,0,0,$month,1,$year));
+    
+        // Calculate delta to first chart for month
+        $delta = (($dow < 4)?8:15) - $dow;
+    
+        return date("Y-m-d", mktime(0,0,0,$month,$delta,$year));
+    }
+    
+    public function getMonthlyChartEnd($month, $year) {
+        // Get start chart for following month
+        $next = self::getMonthlyChartStart($month+1, $year);
+        list($y,$m,$d) = explode("-", $next);
+    
+        // Offset back 7 days to get last chart of specified month
+        return date("Y-m-d", mktime(0,0,0,$m,$d-7,$y));
     }
 }

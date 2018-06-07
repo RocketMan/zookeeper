@@ -55,25 +55,6 @@ class Charts extends MenuItem {
                                             self::$subactions, $extra);
     }
 
-    private static function monthlyChartStart($month, $year) {
-        // Determine day of week for the first of the month
-        $dow = date("w", mktime(0,0,0,$month,1,$year));
-    
-        // Calculate delta to first chart for month
-        $delta = (($dow < 4)?8:15) - $dow;
-    
-        return date("Y-m-d", mktime(0,0,0,$month,$delta,$year));
-    }
-    
-    private static function monthlyChartEnd($month, $year) {
-        // Get start chart for following month
-        $next = self::monthlyChartStart($month+1, $year);
-        list($y,$m,$d) = split("-", $next);
-    
-        // Offset back 7 days to get last chart of specified month
-        return date("Y-m-d", mktime(0,0,0,$m,$d-7,$y));
-    }
-    
     public function chartTop30() {
         $maintop = 30;
         $top = 10;
@@ -153,14 +134,13 @@ class Charts extends MenuItem {
       <P>Note that the 'Main' section of our weekly charts now lists all of
          our current new releases which received airplay during the charting
          week.</P-->
-    <?
-    
+    <?php 
             $this->emitChartYearNav($year, 1);
             echo "  <TABLE WIDTH=\"100%\">\n";
             echo "    <TR><TD>\n      <UL>\n";
             $weeks = $chartAPI->getChartDatesByYear($year);
             while($weeks && ($week = $weeks->fetch())) {
-                list($y, $m, $d) = split("-", $week["week"]);
+                list($y, $m, $d) = explode("-", $week["week"]);
                 if($y != $year)
                     continue;
                 if($month != $m) {
@@ -178,8 +158,8 @@ class Charts extends MenuItem {
         }
     
         if($monthly) {
-            $startDate = self::monthlyChartStart($month, $year);
-            $endDate = self::monthlyChartEnd($month, $year);
+            $startDate = $chartAPI->getMonthlyChartStart($month, $year);
+            $endDate = $chartAPI->getMonthlyChartEnd($month, $year);
             $displayDate = date("F Y", mktime(0,0,0,$month,1,$year));
             echo "<P CLASS=\"header\">$station chart for month of $displayDate</P>\n";
         } else {
@@ -190,21 +170,21 @@ class Charts extends MenuItem {
     ?>
     <TABLE WIDTH="100%">
       <TR>
-        <TH ALIGN=LEFT><? echo $station; ?> chart for the week ending <? echo $displayDate; ?></TH>
+        <TH ALIGN=LEFT><?php echo $station; ?> chart for the week ending <?php echo $displayDate; ?></TH>
         <TH ALIGN=RIGHT>
           <FORM ACTION="" METHOD=POST>
             <INPUT TYPE=SUBMIT VALUE=" CMJ Export ">
             <INPUT TYPE=HIDDEN NAME=action VALUE=viewChart>
             <INPUT TYPE=HIDDEN NAME=subaction VALUE=weeklyCMJ>
-            <INPUT TYPE=HIDDEN NAME=year VALUE=<? echo $year; ?>>
-            <INPUT TYPE=HIDDEN NAME=month VALUE=<? echo $month; ?>>
-            <INPUT TYPE=HIDDEN NAME=day VALUE=<? echo $day; ?>>
-            <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+            <INPUT TYPE=HIDDEN NAME=year VALUE=<?php echo $year; ?>>
+            <INPUT TYPE=HIDDEN NAME=month VALUE=<?php echo $month; ?>>
+            <INPUT TYPE=HIDDEN NAME=day VALUE=<?php echo $day; ?>>
+            <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
           </FORM>
         </TD>
       </TR>
     </TABLE><BR>
-    <?
+    <?php 
             } else
                 echo "<P CLASS=\"header\">$station chart for the week ending $displayDate</P>\n";
         }
@@ -260,15 +240,14 @@ class Charts extends MenuItem {
          unusual.) <A HREF="http://www.cmjmusic.com/" TARGET="_blank">College
          Media Journal</A> and <A HREF="http://www.gavin.com/"
          TARGET="_blank">Gavin</A> include our weekly numbers in their reports.</P-->
-    <?
-    
+    <?php 
                 echo "  <TABLE WIDTH=\"100%\">\n";
     
                 // Determine if we need to include the current month
                 $weeks = $chartAPI->getChartDates(1);
                 if($weeks && ($curWeek = $weeks->fetch())) {
                     list($y, $m, $d) = explode("-", $curWeek["week"]);
-                    $chartEnd = self::monthlyChartEnd($m, $y);
+                    $chartEnd = $chartAPI->getMonthlyChartEnd($m, $y);
                     $skipCurMonth = strcmp($curWeek["week"], $chartEnd) != 0;
                 }
     
@@ -312,13 +291,13 @@ class Charts extends MenuItem {
         }
     
         if($cyear) {
-            $startDate = self::monthlyChartStart(1, $cyear);
-            $endDate = self::monthlyChartEnd(12, $cyear);
+            $startDate = $chartAPI->getMonthlyChartStart(1, $cyear);
+            $endDate = $chartAPI->getMonthlyChartEnd(12, $cyear);
             echo "<P CLASS=\"header\">$station Top 100 for the year $cyear</P>\n";
             $monthly = 0;
         } else if($monthly) {
-            $startDate = self::monthlyChartStart($month, $year);
-            $endDate = self::monthlyChartEnd($month, $year);
+            $startDate = $chartAPI->getMonthlyChartStart($month, $year);
+            $endDate = $chartAPI->getMonthlyChartEnd($month, $year);
             $displayDate = date("F Y", mktime(0,0,0,$month,1,$year));
             echo "<P CLASS=\"header\">$station chart for month of $displayDate</P>\n";
         } else {
@@ -633,7 +612,7 @@ class Charts extends MenuItem {
       <FORM ACTION="" METHOD=POST>
         <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
           <TR><TH ALIGN=RIGHT>&nbsp;</TH><TH ALIGN=LEFT>E-Mail Addresses</TH></TR>
-    <?
+    <?php 
         $addresses = $chartAPI->getChartEMail();
         while($addresses && ($row = $addresses->fetch())) {
             $i = $row["id"];
@@ -643,7 +622,7 @@ class Charts extends MenuItem {
     ?>
           <TR><TD>&nbsp;</TD>
               <TD COLSPAN=3 ALIGN=LEFT><INPUT TYPE=SUBMIT VALUE=" Update Addresses "></TD></TR>
-    <?
+    <?php 
         if($_REQUEST["seq"] == "update") {
             if($success)
                 echo "      <TR><TD>&nbsp;</TD><TD CLASS=\"header\" ALIGN=LEFT COLSPAN=2>E-Mail addresses updated.</TD></TR>\n";
@@ -652,12 +631,12 @@ class Charts extends MenuItem {
         }
     ?>
         </TABLE>
-        <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+        <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=HIDDEN NAME=action VALUE="viewChart">
         <INPUT TYPE=HIDDEN NAME=subaction VALUE="chartemail">
         <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
       </FORM>
-    <?
+    <?php 
         UI::setFocus("email1");
     }
     
@@ -681,8 +660,7 @@ class Charts extends MenuItem {
     ?>
     <FORM NAME="textform">
       <TEXTAREA NAME="textfield" cols="72" rows="10">
-    <?
-    
+    <?php 
         $mainLimit = "30";
         $catLimit = "10";
     
@@ -720,8 +698,7 @@ class Charts extends MenuItem {
     // -->
     </SCRIPT>
     </FORM>
-    <?
-    
+    <?php 
         UI::setFocus("textfield");
     }
     
@@ -729,7 +706,7 @@ class Charts extends MenuItem {
         $station = Engine::param('station');
     ?>
     <P>
-    The <? echo $station; ?> Music Department maintains two e-mail lists:</P>
+    The <?php echo $station; ?> Music Department maintains two e-mail lists:</P>
     <UL>
     
     <LI><B>Weekly Charts e-mail list</B> - Each week, the number of plays of
@@ -746,7 +723,7 @@ class Charts extends MenuItem {
     </UL>
     
     <P>These mailing lists are one-way lists, which means you'll receive
-    e-mail only from <? echo $station; ?>.  Any reply by a subscriber will return to <? echo $station; ?>
+    e-mail only from <?php echo $station; ?>.  Any reply by a subscriber will return to <?php echo $station; ?>
     but will not be sent to everyone else on the list.  Also, each
     subscriber's e-mail address is suppressed from the header so other
     subscribers can't collect the addresses to create a spamming list.</P>
@@ -754,7 +731,7 @@ class Charts extends MenuItem {
     <P>Any attempts to use these lists or their contents for unsolicited
     e-mail will earn our everlasting contempt.  Subscriptions from
     fraudulent addresses and spam companies will be summarily deleted.</P>
-    <?
+    <?php 
         $email = Engine::param('email')['md'];
         if($email)
             echo "    <P>Any questions can be sent to <A HREF=\"mailto:$email\">$email</A>.</P>\n";

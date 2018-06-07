@@ -45,7 +45,7 @@ class Contacts extends MenuItem {
     vinyl from 7&quot;s to 12&quot;s, all it takes to be considered for
     airplay is to send us a copy.</P>
     
-    <P><A HREF="?session=<?echo $this->session->getSessionID();?>&amp;action=contactGuidelines"><B>PLEASE READ THESE GUIDELINES BEFORE SUBMITTING MUSIC</B></A></P>
+    <P><A HREF="?session=<?php echo $this->session->getSessionID();?>&amp;action=contactGuidelines"><B>PLEASE READ THESE GUIDELINES BEFORE SUBMITTING MUSIC</B></A></P>
     
     <TABLE BORDER=0 CELLSPACING=0 WIDTH="100%">
       <TR><TH ALIGN=LEFT CLASS="subhead">Music Mailing Addresses</TH></TR>
@@ -114,7 +114,7 @@ class Contacts extends MenuItem {
       <TR><TH ALIGN=LEFT CLASS="subhead">Contact KZSU Radio</TH></TR>
     </TABLE>
     <P><A CLASS="nav" HREF="http://kzsu.stanford.edu/contact/"><B>Additional contact information</B></A> for KZSU radio is available here.</P>
-    <?
+    <?php 
         UI::setFocus();
     }
     
@@ -129,9 +129,9 @@ class Contacts extends MenuItem {
     <P CLASS="subhead2">What Do We Play?</P>
     <P>All submissions will be listened to and assessed for their
     appropriateness on KZSU.  If you are unfamiliar with what we play
-    please consult our <A HREF="?session=<?echo
+    please consult our <A HREF="?session=<?php echo
     $this->session->getSessionID();?>&amp;action=viewChart">weekly charts</A> posted online or
-    check our <A HREF="<?echo Engine::param('urls')['home'];?>schedule/">air schedule</A> and
+    check our <A HREF="<?php echo Engine::param('urls')['home'];?>schedule/">air schedule</A> and
     the show descriptions of our current DJs.  KZSU has very limited
     library space and it is important that we only keep what we feel will
     be of most interest to our DJs and listeners.  If what comprises our
@@ -172,7 +172,7 @@ class Contacts extends MenuItem {
     
     <P>Please allow 4-6 weeks for processing of submissions.  If you are
     wondering whether your music has been accepted into our rotation and
-    library, please consult our <A HREF="?session=<?echo
+    library, please consult our <A HREF="?session=<?php echo
     $this->session->getSessionID();?>">Zookeeper database</A> after that time.  All music that
     is accepted is entered into this easily searchable database.</P>
     
@@ -180,7 +180,7 @@ class Contacts extends MenuItem {
     <P>With few exceptions, we do not do tracking.  With the volume of
     submissions and the fact that our staff is all-volunteer, busy with
     classes, day jobs, families, we prefer to let the publicly searchable
-    <A HREF="?session=<?echo $this->session->getSessionID();?>">Zookeeper</A> database, our CD
+    <A HREF="?session=<?php echo $this->session->getSessionID();?>">Zookeeper</A> database, our CD
     reviews, our A-file and charts be a measure of how much we love your
     music.  Please consult Zookeeper in lieu of tracking calls,
     emails.</P>
@@ -211,9 +211,9 @@ class Contacts extends MenuItem {
     station.</P>
      
     <P>Thanks in advance for your submissions.<BR>
-    <A HREF="?session=<?echo $this->session->getSessionID();?>&amp;action=contact"><I>The Music
+    <A HREF="?session=<?php echo $this->session->getSessionID();?>&amp;action=contact"><I>The Music
     Department Staff of KZSU Stanford</I></A></P>
-    <?
+    <?php 
         UI::setFocus();
     }
 }

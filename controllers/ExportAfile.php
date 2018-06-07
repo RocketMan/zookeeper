@@ -55,7 +55,7 @@ class ExportAfile implements IController {
   </STYLE>
 </HEAD>
 <BODY>
-<?
+<?php 
         $displayDate = date("l, j F Y");
         $station = Engine::param("station");
         echo "  <H2 CLASS=\"header\">$station A-FILE AS OF " . strtoupper($displayDate) . "</H2>\n";

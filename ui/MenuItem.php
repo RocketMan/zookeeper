@@ -49,7 +49,7 @@ abstract class MenuItem extends CommandTarget {
         $processed = 0;
         foreach($subactions as $item) {
             if(($subaction == $item[1]) && $this->session->isAuth($item[0])) {
-                $this->$item[3]();
+                $this->{$item[3]}();
                 $processed = 1;
                 break;
             }
@@ -57,7 +57,7 @@ abstract class MenuItem extends CommandTarget {
     
         // If no subaction was dispatched, default to the first one
         if(!$processed) {
-            $this->$subactions[0][3]();
+            $this->{$subactions[0][3]}();
         }
     }
 

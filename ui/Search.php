@@ -96,7 +96,7 @@ class Search extends MenuItem {
 <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"><!--
 // Jim Mason <jmason@ibinx.com>
 // Copyright (C) 2005-2018 Jim Mason.  All Rights Reserved.
-lists = [ <? if($this->session->isAuth("u")) echo "\"Tags\", "; ?>"Albums", "Compilations", "Labels", "Playlists", "Reviews", "Tracks" ];
+lists = [ <?php if($this->session->isAuth("u")) echo "\"Tags\", "; ?>"Albums", "Compilations", "Labels", "Playlists", "Reviews", "Tracks" ];
 
 function onSearch(sync,e) {
    if(sync.Timer) {
@@ -107,7 +107,7 @@ function onSearch(sync,e) {
 }
 
 function onSearchNow() {
-   loadXMLDoc("zkapi.php?method=searchRq&size=5&key=" + urlEncode(document.forms[0].search.value) + "&session=<?echo $this->session->getSessionID();?>");
+   loadXMLDoc("zkapi.php?method=searchRq&size=5&key=" + urlEncode(document.forms[0].search.value) + "&session=<?php echo $this->session->getSessionID();?>");
 }
 
 function processReqChange(req) {
@@ -148,7 +148,7 @@ function setFocus() {
 }
 // -->
 </SCRIPT>
-<?
+<?php 
         echo "<FORM ACTION=\"?\" METHOD=\"POST\">\n";
         echo "<P><B>Find It:</B>&nbsp;&nbsp;<INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search VALUE=\"".$_REQUEST['search']."\" autocomplete=off onkeyup=\"onSearch(document.forms[0],event);\" onkeypress=\"return event.keyCode != 13;\">&nbsp;&nbsp;<SPAN ID=\"total\"></SPAN></P>\n";
         echo "<INPUT TYPE=HIDDEN NAME=action VALUE=\"find\">\n";
@@ -494,32 +494,32 @@ function setFocus() {
         <TABLE CELLPADDING=2>
           <TR>
             <TD ALIGN=RIGHT><B>Search the Library by:</B></TD>
-            <TD><INPUT TYPE=RADIO NAME=s VALUE="byArtist"<?echo $chkArtist;?>>Artist</TD>
-            <TD><INPUT TYPE=RADIO NAME=s VALUE="byAlbum"<?echo $chkAlbum;?>>Album</TD>
-            <TD><INPUT TYPE=RADIO NAME=s VALUE="byTrack"<?echo $chkTrack;?>>Track</TD>
-            <TD><INPUT TYPE=RADIO NAME=s VALUE="byLabel"<?echo $chkLabel;?>>Label</TD>
+            <TD><INPUT TYPE=RADIO NAME=s VALUE="byArtist"<?php echo $chkArtist;?>>Artist</TD>
+            <TD><INPUT TYPE=RADIO NAME=s VALUE="byAlbum"<?php echo $chkAlbum;?>>Album</TD>
+            <TD><INPUT TYPE=RADIO NAME=s VALUE="byTrack"<?php echo $chkTrack;?>>Track</TD>
+            <TD><INPUT TYPE=RADIO NAME=s VALUE="byLabel"<?php echo $chkLabel;?>>Label</TD>
           </TR>
           <TR>
             <TD ALIGN=RIGHT>For:</TD>
-            <TD COLSPAN=4><INPUT TYPE=TEXT NAME=n<?echo $searchFor;?> SIZE=40 CLASS=input autocomplete=off></TD>
+            <TD COLSPAN=4><INPUT TYPE=TEXT NAME=n<?php echo $searchFor;?> SIZE=40 CLASS=input autocomplete=off></TD>
           </TR>
           <TR>
             <TD ALIGN=RIGHT>Results per page:</TD>
             <TD><SELECT NAME=q>
-              <OPTION<?echo $o_ten;?>>10
-              <OPTION<?echo $o_fifteen;?>>15
-              <OPTION<?echo $o_twenty;?>>20
-              <OPTION<?echo $o_fifty;?>>50</SELECT></TD>
-            <TD COLSPAN=2><INPUT TYPE=CHECKBOX NAME=m VALUE=1<?echo $chkExact;?>>Exact match only</TD>
+              <OPTION<?php echo $o_ten;?>>10
+              <OPTION<?php echo $o_fifteen;?>>15
+              <OPTION<?php echo $o_twenty;?>>20
+              <OPTION<?php echo $o_fifty;?>>50</SELECT></TD>
+            <TD COLSPAN=2><INPUT TYPE=CHECKBOX NAME=m VALUE=1<?php echo $chkExact;?>>Exact match only</TD>
             <TD ALIGN=RIGHT><INPUT TYPE=SUBMIT VALUE="Search"></TD>
           </TR>
         </TABLE>
       </TD></TR>
     </TABLE>
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?echo $this->session->getSessionID();?>">
+    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="search">
     </FORM>
-    <?
+    <?php 
         if($title)
             echo "<BR>\n<TABLE WIDTH=\"100%\"><TR><TH ALIGN=LEFT CLASS=\"subhead\">$title</TH></TR></TABLE>\n";
     

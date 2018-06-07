@@ -123,7 +123,7 @@ class Session {
     
         $row = $this->dbQuery($sessionID);
         if($row &&
-               $this->validatePort($session, $row['portid'])) {
+               $this->validatePort($sessionID, $row['portid'])) {
             // Session found
             $this->user = $row['user'];
             $this->access = $row['access'];

@@ -38,13 +38,13 @@ abstract class CommandTarget {
         $processed = 0;
         foreach($actions as $item) {
             if($item[0] == $action) {
-                $this->$item[1]();
+                $this->{$item[1]}();
                 $processed = 1;
             }
         }
 
         if(!$processed)
-            $this->$actions[0][1]();
+            $this->{$actions[0][1]}();
     }
 
     public function newEntity($entityClass) {
