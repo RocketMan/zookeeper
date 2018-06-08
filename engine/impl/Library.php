@@ -224,7 +224,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
                 $stmt->bindValue(4, (int)$count, \PDO::PARAM_INT);
                 break;
             }
-            $x = $stmt->execute();
+            $stmt->execute();
 
             // copy the requested rows
             $askCount = $count;

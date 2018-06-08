@@ -100,7 +100,9 @@ class ChartImpl extends BaseImpl implements IChart {
     }
     
     public function getAdd2($date) {
-        $query = "SELECT c.*, a.artist, a.album, a.medium, a.size, ".
+        $query = "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
+                 "c.category as afile_category, ".
+                 "a.artist, a.album, a.medium, a.size, ".
                  "a.created, a.updated, a.category, p.name label ".
                  "FROM currents c, albumvol a, publist p ".
                  "WHERE c.tag = a.tag AND a.pubkey = p.pubkey ".
@@ -111,7 +113,8 @@ class ChartImpl extends BaseImpl implements IChart {
     }
     
     public function getCurrents($date) {
-        $query = "SELECT * FROM currents WHERE adddate <= ? AND ".
+        $query = "SELECT id, afile_number, tag, adddate, pulldate, ".
+        "category as afile_category FROM currents WHERE adddate <= ? AND ".
                         "pulldate > ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $date);
@@ -120,7 +123,9 @@ class ChartImpl extends BaseImpl implements IChart {
     }
     
     public function getCurrents2($date) {
-        $query = "SELECT c.*, a.artist, a.album, a.medium, a.size, ".
+        $query = "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
+                 "c.category as afile_category, ".
+                 "a.artist, a.album, a.medium, a.size, ".
                  "a.created, a.updated, a.category, p.name label ".
                  "FROM currents c, albumvol a, publist p ".
                  "WHERE c.tag = a.tag AND a.pubkey = p.pubkey ".
@@ -129,7 +134,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $date);
         $stmt->bindValue(2, $date);
-            return $this->execute($stmt);
+        return $this->execute($stmt);
     }
     
     public function getCurrentsWithPlays($date) {

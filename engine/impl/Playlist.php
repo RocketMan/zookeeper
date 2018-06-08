@@ -122,7 +122,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $stmt->bindValue(1, date("Y-m-d"));
         $stmt->bindValue(2, $hour);
         $stmt->bindValue(3, $hour);
-        return $this->execute($stmt);
+        return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
     public function insertPlaylist($user, $date, $time, $description, $airname) {

@@ -1,3 +1,6 @@
+# set php error reporting to E_ALL & ~E_NOTICE (=32759)
+php_value error_reporting 32759
+
 <IfModule mod_rewrite.c>
 RewriteEngine on
 RewriteRule ^zkrss\.php$ index.php?target=rss [QSA,L]

@@ -35,13 +35,13 @@ class RunDaily implements IController {
     public function processRequest($dispatcher) {
         header("Content-type: text/plain");
 
-        echo "Starting ".date()."\n";
+        echo "Starting ".date("Y-m-d H:i:s")."\n";
         
         $this->runCharts();
         $this->purgeDeletedPlaylists();
         $this->purgeOldSessions();
 
-        echo "Done\n";
+        echo "Done ".date("Y-m-d H:i:s")."\n";
     }
     
     private function runCharts() {

@@ -216,10 +216,10 @@ class API extends CommandTarget implements IController {
                    "date=\"".$row["showdate"]."\" ".
                    "time=\"".$row["showtime"]."\" ".
                    "airname=\"".self::spec2hex(stripslashes($row["airname"]))."\" ".
-                   "id=\"".($id?$id:$row[0])."\"";
+                   "id=\"".($id?$id:$row["id"])."\"";
              if($includeTracks && $includeTracks != "false") {
                  echo ">\n";
-                 $tracks = Engine::api(IPlaylist::class)->getTracks($id?$id:$row[0]);
+                 $tracks = Engine::api(IPlaylist::class)->getTracks($id?$id:$row["id"]);
                  while($track = $tracks->fetch()) {
                      if(substr($track["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
                          if(strpos($track["artist"], IPlaylist::COMMENT_FLAG) > 0)

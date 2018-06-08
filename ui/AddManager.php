@@ -232,20 +232,20 @@ class AddManager extends MenuItem {
             if($showEdit) {
                 echo "<A CLASS=\"nav\" HREF=\"" .
                      "?session=".$this->session->getSessionID()."&amp;action=addmgr&amp;subaction=adds&amp;date=$date\" " .
-                     "onClick=\"ConfirmDelete($row[0]); return false;\">[x]</A>&nbsp;</TD><TD VALIGN=TOP>";
-                $class = ($id && $id == $row[0])?"sel":"nav";
+                     "onClick=\"ConfirmDelete(".$row["id"]."); return false;\">[x]</A>&nbsp;</TD><TD VALIGN=TOP>";
+                $class = ($id && $id == $row["id"])?"sel":"nav";
                 echo "<A CLASS=\"$class\" HREF=\"" .
-                     "?session=".$this->session->getSessionID()."&amp;action=addmgr&amp;subaction=addsedit&amp;id=$row[0]\">&gt;&gt;</A>&nbsp;&nbsp;";
+                     "?session=".$this->session->getSessionID()."&amp;action=addmgr&amp;subaction=addsedit&amp;id=".$row["id"]."\">&gt;&gt;</A>&nbsp;&nbsp;";
             } else
                 echo "</TD><TD VALIGN=TOP>";
     
             // Categories
-            $cats = explode(",", $row[5]);
+            $cats = explode(",", $row["afile_category"]);
             foreach($cats as $index => $cat)
                 echo $catcode[$cat];
     
             // A-File Numbers
-            echo "</TD><TD VALIGN=TOP>$row[1]</TD>";
+            echo "</TD><TD VALIGN=TOP>".$row["afile_number"]."</TD>";
     
             $artistName = htmlentities($row["artist"]) ;
             if($static && strlen($artistName) > 50)
@@ -860,15 +860,15 @@ class AddManager extends MenuItem {
                 // Pull in the values for this album
                 $row = Engine::api(IChart::class)->getAlbum($id);
                 if($row) {
-                        $_REQUEST["aid"] = $row[1];
-                        $_REQUEST["tag"] = $row[2];
-                        $_REQUEST["adddate"] = $row[3];
-                        $_REQUEST["pulldate"] = $row[4];
-                        $_REQUEST["catlist"] = $row[5];
-                    $this->emitHidden("tag", $row[2]);
-                    $this->emitHidden("adddate", $row[3]);
-                    $this->emitHidden("pulldate", $row[4]);
-                    $this->emitHidden("catlist", $row[5]);
+                        $_REQUEST["aid"] = $row["afile_number"];
+                        $_REQUEST["tag"] = $row["tag"];
+                        $_REQUEST["adddate"] = $row["adddate"];
+                        $_REQUEST["pulldate"] = $row["pulldate"];
+                        $_REQUEST["catlist"] = $row["category"];
+                    $this->emitHidden("tag", $row["tag"]);
+                    $this->emitHidden("adddate", $row["adddate"]);
+                    $this->emitHidden("pulldate", $row["pulldate"]);
+                    $this->emitHidden("catlist", $row["category"]);
                     $this->editingAlbum = true;
                 }
             }
@@ -899,12 +899,11 @@ class AddManager extends MenuItem {
     
     public function addManagerDel() {
         $id = $_REQUEST["id"];
-        $date = $_REQUEST["date"];
     
         // Setup the date for AddManagerShowAdd() redisplay
         $row = Engine::api(IChart::class)->getAlbum($id);
         if($row) {
-            $date = $row[3];
+            $_REQUEST["date"] = $row["adddate"];
         }
     
         Engine::api(IChart::class)->deleteAlbum($id);
@@ -1010,16 +1009,15 @@ class AddManager extends MenuItem {
     
                 // Setup the headers
                 $headers = "From: $from\r\n$mime";
-    
                 // Emit the add
                 foreach($albums as $index => $row) {
                     $ac = "";
-                    $cats = explode(",", $row[5]);
+                    $cats = explode(",", $row["afile_category"]);
                     foreach($cats as $index => $cat)
                         $ac .= $catcode[$cat];
                     if($format == "tab") {
-                        $line = $row[3] . "\t" . $row[4] . "\t" . $ac . "\t" .
-                              $row[1] . "\t";
+                        $line = $row["adddate"] . "\t" . $row["pulldate"] . "\t" . $ac . "\t" .
+                              $row["afile_number"] . "\t";
                         $artist = preg_match("/^\[coll\]/i", $row["artist"])?"COLL":$row["artist"];
                         $label =  str_replace(" Records", "", $row["label"]);
                         $label = str_replace(" Recordings", "", $label);
@@ -1044,7 +1042,7 @@ class AddManager extends MenuItem {
                                  $row["tag"] . "\r\n";
                     } else
                         $line = sprintf("%-2s %3d %-28s %-30s %-12s\r\n",
-                              $ac, $row[1], substr(UI::deLatin1ify($row["artist"]), 0, 28),
+                              $ac, $row["afile_number"], substr(UI::deLatin1ify($row["artist"]), 0, 28),
                               substr(UI::deLatin1ify($row["album"]), 0, 30),
                               substr(UI::deLatin1ify($row["LABELNAME"]), 0, 12));
                     $body .= $line;

@@ -68,17 +68,17 @@ class ExportAdd implements IController {
         // Emit the albums
         while(list($index, $row) = each($albums)) {
             // Add & pull dates
-            echo $row[3] . "\t" .
-                 $row[4] . "\t";
+            echo $row["adddate"] . "\t" .
+                 $row["pulldate"] . "\t";
         
             // Categories
-            $cats = explode(",", $row[5]);
+            $cats = explode(",", $row["afile_category"]);
             while(list($index, $cat) = each($cats))
                 echo $catcode[$cat];
             echo "\t";
         
             // A-File Number
-            echo $row[1] . "\t";
+            echo $row["afile_number"] . "\t";
         
             // Fixup the artist and label names
             $artist = preg_match("/^\[coll\]/i", $row["artist"])?"COLL":$row["artist"];

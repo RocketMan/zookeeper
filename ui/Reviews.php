@@ -253,7 +253,7 @@ class Reviews extends MenuItem {
                 $djname = trim($_REQUEST["djname"]);
                 if($_REQUEST["newairname"] == " Add Airname " && $djname) {
                     // Insert new airname
-                    $success = Engine::api(IDJ::class)->insertAirname($djname, Engine::session()->getUser());
+                    $success = Engine::api(IDJ::class)->insertAirname($djname, $this->session->getUser());
                     if($success > 0) {
                         $airname = Engine::lastInsertId();
                         $_REQUEST["button"] = "";
@@ -289,9 +289,9 @@ class Reviews extends MenuItem {
                 }
                 break;
             case " Post Review! ":
-                Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], Engine::session()->getUser());
+                Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
                 $review = substr($_REQUEST["review"], 0, 64000);
-                $success = Engine::api(IReview::class)->insertReview($_REQUEST["tag"], $_REQUEST["private"], $airname, $review, Engine::session()->getUser());
+                $success = Engine::api(IReview::class)->insertReview($_REQUEST["tag"], $_REQUEST["private"], $airname, $review, $this->session->getUser());
                 if($success >= 1) {
                     if($_REQUEST["noise"])
                         $this->eMailReview($_REQUEST["tag"], $airname, $review);
@@ -304,7 +304,7 @@ class Reviews extends MenuItem {
                 break;
             case " Update Review ":
                 $review = substr($_REQUEST["review"], 0, 64000);
-                $success = Engine::api(IReview::class)->updateReview($_REQUEST["tag"], $_REQUEST["private"], $airname, $review, Engine::session()->getUser());
+                $success = Engine::api(IReview::class)->updateReview($_REQUEST["tag"], $_REQUEST["private"], $airname, $review, $this->session->getUser());
                 if($success >= 0) {
                     if($_REQUEST["noise"])
                         $this->eMailReview($_REQUEST["tag"], $airname, $review);
@@ -316,7 +316,7 @@ class Reviews extends MenuItem {
                 echo "<B><FONT COLOR=\"#cc0000\">Review not updated.  Try again later.</FONT></B>\n";
                 break;
             case " Delete Review ":
-                $success = Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], Engine::session()->getUser());
+                $success = Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
                 if($success >= 1) {
                     echo "<B><FONT COLOR=\"#ffcc33\">Your review has been deleted.</FONT></B>\n";
                     $_REQUEST["n"] = $_REQUEST["tag"];
@@ -328,7 +328,7 @@ class Reviews extends MenuItem {
             }
         }
         $_REQUEST["private"] = 0;
-        $results = Engine::api(IReview::class)->getReviews($_REQUEST["tag"], 0, Engine::session()->getUser(), 1);
+        $results = Engine::api(IReview::class)->getReviews($_REQUEST["tag"], 0, $this->session->getUser(), 1);
         if(sizeof($results)) {
             $saveAirname = $airname;
             extract($results[0]);
@@ -345,14 +345,14 @@ class Reviews extends MenuItem {
       <TR><TD ALIGN=RIGHT>Reviewer:</TD>
           <TD><SELECT NAME=airname>
     <?php 
-        $records = Engine::api(IDJ::class)->getAirnames(Engine::session()->getUser());
+        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
         while ($row = $records->fetch()) {
            $selected = ($row[0] == $airname)?" SELECTED":"";
            echo "            <OPTION VALUE=\"" . $row[0] ."\"" . $selected .
                 ">$row[1]\n";
         }
         $selected = $airname?"":" SELECTED";
-        $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, Engine::session()->getUser());
+        $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
         echo "            <OPTION VALUE=\"\"$selected>(" . $user[0]["realname"] . ")\n";
     ?>
               </SELECT><INPUT TYPE=SUBMIT NAME=button VALUE=" Setup New Airname... "></TD></TR>

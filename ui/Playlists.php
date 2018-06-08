@@ -194,7 +194,7 @@ class Playlists extends MenuItem {
             $djname = trim($_REQUEST["djname"]);
             if($_REQUEST["newairname"] == " Add Airname " && $djname) {
                 // Insert new airname
-                $success = Engine::api(IDJ::class)->insertAirname($djname, Engine::session()->getUser());
+                $success = Engine::api(IDJ::class)->insertAirname($djname, $this->session->getUser());
                 if($success > 0) {
                     $airname = Engine::lastInsertId();
                     $button = "";
@@ -247,7 +247,7 @@ class Playlists extends MenuItem {
                     $this->emitEditor();
                 } else {
                     $success = Engine::api(IPlaylist::class)->insertPlaylist(
-                             Engine::session()->getUser(),
+                             $this->session->getUser(),
                              $date, $time, $description, $airname);
                     $_REQUEST["playlist"] = Engine::lastInsertId();
                     $this->action = "listEditorNew";
@@ -309,7 +309,7 @@ class Playlists extends MenuItem {
         <TD ALIGN=RIGHT>DJ Airname:</TD>
         <TD><SELECT NAME=airname>
     <?php 
-        $records = Engine::api(IDJ::class)->getAirnames(Engine::session()->getUser());
+        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
         while ($records && ($row = $records->fetch())) {
            $selected = ($row[0] == $airname)?" SELECTED":"";
            echo "            <OPTION VALUE=\"" . $row[0] ."\"" . $selected .
@@ -382,7 +382,7 @@ class Playlists extends MenuItem {
     }
     
     private function getDeletedPlaylistCount() {
-        return Engine::api(IPlaylist::class)->getDeletedPlaylistCount(Engine::session()->getUser());
+        return Engine::api(IPlaylist::class)->getDeletedPlaylistCount($this->session->getUser());
     }
 
     public function emitEditListNew() {
@@ -430,7 +430,7 @@ class Playlists extends MenuItem {
         // Setup $noTables for handling of 'Delete' function
         $this->checkBrowserCaps();
     
-        $records = Engine::api(IPlaylist::class)->getListsSelNormal(Engine::session()->getUser());
+        $records = Engine::api(IPlaylist::class)->getListsSelNormal($this->session->getUser());
         while($records && ($row = $records->fetch()))
             echo "  <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3]\n";
     ?>
@@ -466,7 +466,7 @@ class Playlists extends MenuItem {
         // Setup $this->noTables for handling of 'Delete' function
         $this->checkBrowserCaps();
     
-        $records = Engine::api(IPlaylist::class)->getListsSelDeleted(Engine::session()->getUser());
+        $records = Engine::api(IPlaylist::class)->getListsSelDeleted($this->session->getUser());
         while($records && ($row = $records->fetch())) {
             echo "  <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3] (expires $row[4])\n";
         }
@@ -495,19 +495,19 @@ class Playlists extends MenuItem {
                 echo "    <TR><TH COLSPAN=2>&nbsp;</TH><TH>Tag</TH><TH>Artist</TH><TH>Track</TH><TH>Album/Label</TH></TR>\n";
                 $header = 1;
             }
-            $class = ($id==$row[5])?"sel":"nav";
-            echo "    <TR><TD CLASS=\"arrowCell\"><DIV STYLE=\"border:0; margin:0; padding:0; line-height:4px;\"><A HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=$row[5]&amp;action=$this->action&amp;seq=upTrack\"><IMG SRC=\"img/arrow_up_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALT=\"up\"></A><BR>\n";
+            $class = ($id==$row["id"])?"sel":"nav";
+            echo "    <TR><TD CLASS=\"arrowCell\"><DIV STYLE=\"border:0; margin:0; padding:0; line-height:4px;\"><A HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=upTrack\"><IMG SRC=\"img/arrow_up_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALT=\"up\"></A><BR>\n";
             echo "          <IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"><BR>\n";
-            echo "          <A HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=$row[5]&amp;action=$this->action&amp;seq=downTrack\"><IMG SRC=\"img/arrow_down_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALT=\"down\"></A></DIV></TD>\n";
-            echo "      <TD VALIGN=TOP><A CLASS=\"$class\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=$row[5]&amp;action=$this->action&amp;seq=editTrack\"><B>&gt;&gt;</B></A></TD>\n";
-            if(substr($row[1], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
+            echo "          <A HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=downTrack\"><IMG SRC=\"img/arrow_down_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALT=\"down\"></A></DIV></TD>\n";
+            echo "      <TD VALIGN=TOP><A CLASS=\"$class\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=editTrack\"><B>&gt;&gt;</B></A></TD>\n";
+            if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
                 echo "      <TD COLSPAN=4><HR SIZE=2 NOSHADE STYLE=\"color:#6b3333\"></TD></TR>\n";
             else
-                echo "      <TD ALIGN=RIGHT VALIGN=TOP>$row[0]</TD><TD VALIGN=TOP>" .
-                     $this->smartURL($row[1]) . "</TD><TD VALIGN=TOP>" .
-                     $this->smartURL($row[2]) . "</TD><TD VALIGN=TOP>" . 
-                     $this->smartURL($row[3], !$row[0]) . "<BR><FONT CLASS=\"sub\">" .
-                     $this->smartURL($row[4]) . "</FONT></TD></TR>\n";
+                echo "      <TD ALIGN=RIGHT VALIGN=TOP>".$row["tag"]."</TD><TD VALIGN=TOP>" .
+                     $this->smartURL($row["artist"]) . "</TD><TD VALIGN=TOP>" .
+                     $this->smartURL($row["track"]) . "</TD><TD VALIGN=TOP>" . 
+                     $this->smartURL($row["album"], !$row["tag"]) . "<BR><FONT CLASS=\"sub\">" .
+                     $this->smartURL($row["label"]) . "</FONT></TD></TR>\n";
         }
         echo "  </TABLE>\n";
     }
@@ -835,7 +835,7 @@ class Playlists extends MenuItem {
     <SELECT NAME=playlist SIZE=10>
     <?php 
         // Run the query
-        $records = Engine::api(IPlaylist::class)->getListsSelNormal(Engine::session()->getUser());
+        $records = Engine::api(IPlaylist::class)->getListsSelNormal($this->session->getUser());
         while($records && ($row = $records->fetch()))
             echo "  <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3]\n";
     ?>
@@ -909,7 +909,7 @@ class Playlists extends MenuItem {
             $djname = trim($djname);
             if($newairname == " Add Airname " && $djname) {
                 // Insert new airname
-                $success = Engine::api(IDJ::class)->insertAirname($djname, Engine::session()->getUser());
+                $success = Engine::api(IDJ::class)->insertAirname($djname, $this->session->getUser());
                 if($success > 0) {
                     $airname = Engine::lastInsertId();
                     $button = "";
@@ -1005,7 +1005,7 @@ class Playlists extends MenuItem {
             <TD ALIGN=RIGHT>DJ Airname:</TD>
             <TD><SELECT NAME=airname>
     <?php 
-            $records = Engine::api(IDJ::class)->getAirnames(Engine::session()->getUser());
+            $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
             while ($records && ($row = $records->fetch())) {
                 $selected = ($row[0] == $airname)?" SELECTED":"";
                 echo "              <OPTION VALUE=\"" . $row[0] ."\"" . $selected .
@@ -1034,7 +1034,7 @@ class Playlists extends MenuItem {
             UI::setFocus("description");
         } else {
             // Create the playlist
-            $success = Engine::api(IPlaylist::class)->insertPlaylist(Engine::session()->getUser(), $date, $time, $description, $airname);
+            $success = Engine::api(IPlaylist::class)->insertPlaylist($this->session->getUser(), $date, $time, $description, $airname);
             $playlist = Engine::lastInsertId();
     
             // Insert the tracks
@@ -1103,7 +1103,7 @@ class Playlists extends MenuItem {
                 $url = "";
     
             $success = Engine::api(IDJ::class)->updateAirname($url,
-                     $email, $multi?0:$airname, Engine::session()->getUser());
+                     $email, $multi?0:$airname, $this->session->getUser());
             if($success >= 0) {
                 echo "<B>Your profile has been updated.</B>\n";
                 return;
@@ -1112,7 +1112,7 @@ class Playlists extends MenuItem {
             // fall through...
         }
         $results = Engine::api(IDJ::class)->getAirnames(
-                     Engine::session()->getUser(), $airname);
+                     $this->session->getUser(), $airname);
         $airnames = array();
         while($results && ($row = $results->fetch()))
             $airnames[] = $row;
@@ -1141,7 +1141,7 @@ class Playlists extends MenuItem {
     <?php 
             // As we know that multiple DJs are using the 'music' account
             // (tsk, tsk), let's supress the account update option for music.
-            if($multi && Engine::session()->getUser() != "music" && Engine::session()->getUser() != "kzsu")
+            if($multi && $this->session->getUser() != "music" && $this->session->getUser() != "kzsu")
                 echo "  <TR><TD>&nbsp</TD><TD><INPUT TYPE=CHECKBOX NAME=multi>&nbsp;Check here to apply this update to all of your DJ airnames</TD></TR>";
     ?>
       <TR><TD COLSPAN=2>&nbsp;</TD></TR>
@@ -1187,7 +1187,7 @@ class Playlists extends MenuItem {
         $airname = $_REQUEST["airname"];
     
         if($validate && ($playlist == "all" || $airname)) {
-            $results = Engine::api(IDJ::class)->getAirnames(Engine::session()->getUser(), $airname);
+            $results = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), $airname);
             $airnames = array();
             while($results && ($row = $results->fetch()))
                 $airnames[] = $row;
@@ -1253,7 +1253,7 @@ class Playlists extends MenuItem {
       <OPTION VALUE="all"> -- URL for all of my playlists --
     <?php 
         // Run the query
-        $records = Engine::api(IPlaylist::class)->getPlaylists(1, 0, 0, 0, Engine::session()->getUser());
+        $records = Engine::api(IPlaylist::class)->getPlaylists(1, 0, 0, 0, $this->session->getUser());
         while($records && ($row = $records->fetch()))
             echo "  <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3]\n";
     ?>
@@ -1271,11 +1271,7 @@ class Playlists extends MenuItem {
     
     private function viewListGetAlbums(&$records, &$albums) {
         while($row = $records->fetch()) {
-            $row["tag"] = $row[0];
-            $row["artist"] = $row[1];
-            $row["track"] = $row[2];
-            $row["album"] = $row[3];
-            $row["LABELNAME"] = $row[4];
+            $row["LABELNAME"] = $row["label"];
             $albums[] = $row;
         }
     }

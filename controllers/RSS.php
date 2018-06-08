@@ -228,7 +228,7 @@ class RSS extends CommandTarget implements IController {
           //echo "<item>\n<description>&lt;p&gt;&lt;a href=\"$link\"&gt;$name&lt;/a&gt; review by ".self::xmlentities($djname)."&lt;/p&gt;$review</description>\n";
           echo "<item>\n<description>&lt;p&gt;Review by ".self::xmlentities($djname)."&lt;/p&gt;&lt;p&gt;$review&lt;/p&gt;</description>\n";
           echo "<title>$name</title>\n";
-          echo "<guid isPermaLink=\"false\">review-$row[0]-".substr($row[3],0,10)."</guid>\n";
+          echo "<guid isPermaLink=\"false\">review-".$row[0]."-".substr($row[3],0,10)."</guid>\n";
           echo "<category>".self::xmlentities(Search::GENRES[$album[0]["category"]])."</category>\n";
           echo "<link>$link</link>\n";
           //echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=reviews\">".self::xmlentities($djname)."</source>\n";
