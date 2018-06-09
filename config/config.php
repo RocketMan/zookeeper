@@ -96,6 +96,28 @@ $config = [
     ],
 
     /**
+     * label printer
+     */
+    'label_printer' => [
+        /**
+         * lpr print queue name
+         */
+        'print_queue' => 'label',
+        /**
+         * charset is one of UTF-8, LATIN-1, or ASCII
+         */
+        'charset' => 'ASCII',
+        /**
+         * escape seq to switch to character mode, if any (empty for UTF-8)
+         */
+        'text_mode' => "",
+        /**
+         * escape seq to switch to box drawing mode, if any (empty for UTF-8)
+         */
+        'box_mode' => "\x1bt1\x1b6", // ESC+t+1 graphics mode, ESC+6 for GCS 2
+    ],
+
+    /**
      * chart configuration
      */
     'chart' => [

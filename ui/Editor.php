@@ -83,6 +83,29 @@ class Editor extends MenuItem {
           [ 0xbb, 0xb9, 0xbc ]
         ]
     ];
+
+    private static $boxToUTF8 = [
+        "\xb7" => "\u{2556}",
+        "\xb9" => "\u{2563}",
+        "\xba" => "\u{2551}",
+        "\xbb" => "\u{2557}",
+        "\xbc" => "\u{255d}",
+        "\xc8" => "\u{255a}",
+        "\xc9" => "\u{2554}",
+        "\xcc" => "\u{2560}",
+        "\xcd" => "\u{2550}",
+        "\xce" => "\u{256c}",
+        "\xd0" => "\u{2568}",
+        "\xd4" => "\u{2558}",
+        "\xd5" => "\u{2552}",
+        "\xd6" => "\u{2553}",
+    ];
+
+    private static $charset = [
+        "UTF-8" => UI::CHARSET_UTF8,
+        "LATIN-1" => UI::CHARSET_LATIN1,
+        "ASCII" => UI::CHARSET_ASCII,
+    ];
     
     private $editorPanels = [
          "search"=>    ["panelSearch", "details"],
@@ -95,7 +118,6 @@ class Editor extends MenuItem {
     
     private $limit = 14;
     private $tracksPerPage = 15;
-    private $labelPrintQueue = "label";
 
     private $subaction;
     private $emitted;
@@ -1165,6 +1187,9 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
             $this->tagPrinted = 1;
             return;
         }
+
+        $config = Engine::param('label_printer');
+        $charset = self::$charset[$config['charset']];
     
         $al = Engine::api(IEditor::class)->getAlbum($tag);
       
@@ -1172,13 +1197,13 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
            $digits[] = $tag % 10;
            $tag = floor($tag / 10);
         }
-    
-        $output = "\r";
+
+        $output = $config['box_mode']."\r";
         for($row=0; $row < 3; $row++) {
             for($darken=0; $darken < 3; $darken++) {
                 for($i=sizeof($digits)-1; $i >=0; $i--) {
-                    for($col=0; $col < sizeof($self::tagFont[$digits[$i]]); $col++)
-                        $output .= chr($self::tagFont[$digits[$i]][$col][$row]);
+                    for($col=0; $col < sizeof(self::$tagFont[$digits[$i]]); $col++)
+                        $output .= chr(self::$tagFont[$digits[$i]][$col][$row]);
                     $output .= " ";
                     if($i && !($i%3))
                         $output .= "  ";
@@ -1187,8 +1212,13 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
             }
             $output .= "\n";
         }
+
+        if($charset == UI::CHARSET_UTF8)
+            $output = strtr($output, self::$boxToUTF8);
+
+        $output .= $config['text_mode'];
     
-        $artist = UI::deLatin1ify($al["artist"]);
+        $artist = UI::deLatin1ify($al["artist"], $charset);
         ////if(strlen($artist) > 25)
         ////  $artist = substr($artist, 0, 25) . "...";
         if(strlen($artist) > 30)
@@ -1198,7 +1228,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
             $output .= $artist . "\r";
         $output .= "\n";
     
-        $album = UI::deLatin1ify($al["album"]);
+        $album = UI::deLatin1ify($al["album"], $charset);
         $cat = " (" . Search::GENRES[$al["category"]] . ")";
         $maxAlbumLen = 23 - strlen($cat);
         if(strlen($album) > $maxAlbumLen + 3)
@@ -1209,7 +1239,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
             $output .= $alcat;
         $output .= "\n\n";
     
-        $printer = popen("lpr -P".$this->labelPrintQueue, "w");
+        $printer = popen("lpr -P".$config['print_queue'], "w");
         fwrite($printer, $output);
         pclose($printer);
     

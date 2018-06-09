@@ -1048,7 +1048,7 @@ class AddManager extends MenuItem {
                 $stat = mail($address, $subject, $body, $headers);
     
                 // Check for errors
-                     if(!$stat) {
+                if(!$stat) {
                     echo "  <P CLASS=\"header\">Possible Problem Sending E-Mail</P>\n";
                     echo "  <P>There may have been a problem sending your e-mail.  ";
                     echo "</P>\n";
