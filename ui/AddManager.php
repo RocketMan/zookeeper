@@ -191,11 +191,8 @@ class AddManager extends MenuItem {
         if(!strlen($sortBy))
             $_REQUEST["sortBy"] = "Artist";
     
-        // Stuff the categories into an array
+        // Get the chart categories
         $cats = Engine::api(IChart::class)->getCategories();
-        $i=1;
-        while($cats && ($row = $cats->fetch()))
-            $catcode[$i++] = $row[2];
             
         echo "  <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0";
         ////if($static) echo " WIDTH=\"100%\"";
@@ -240,9 +237,10 @@ class AddManager extends MenuItem {
                 echo "</TD><TD VALIGN=TOP>";
     
             // Categories
-            $cats = explode(",", $row["afile_category"]);
-            foreach($cats as $index => $cat)
-                echo $catcode[$cat];
+            $acats = explode(",", $row["afile_category"]);
+            foreach($acats as $index => $cat)
+                if($cat)
+                    echo $cats[$cat-1]["code"];
     
             // A-File Numbers
             echo "</TD><TD VALIGN=TOP>".$row["afile_number"]."</TD>";
@@ -573,11 +571,8 @@ class AddManager extends MenuItem {
     ?>
           <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
     <?php 
-        // Stuff the categories into an array
-        $records = Engine::api(IChart::class)->getCategories();
-        $i=0;
-        while($records && ($row = $records->fetch()))
-            $cats[$i++] = $row[1];
+        // Get the chart categories
+        $cats = Engine::api(IChart::class)->getCategories();
     
         // Setup selected categories
         $cl = explode(",", $catlist);
@@ -591,19 +586,19 @@ class AddManager extends MenuItem {
             echo "        <TR><TD>";
             $selected = $selcats[$i]?" CHECKED":"";
             if($cats[$i])
-                echo "<INPUT TYPE=CHECKBOX NAME=cat$i$selected>".htmlentities(stripslashes($cats[$i]));
+                echo "<INPUT TYPE=CHECKBOX NAME=cat$i$selected>".htmlentities(stripslashes($cats[$i]["name"]));
             echo "</TD><TD>";
             $selected = $selcats[$i+4]?" CHECKED":"";
             if($cats[$i+4])
-                echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+4)."$selected>".htmlentities(stripslashes($cats[$i+4]));
+                echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+4)."$selected>".htmlentities(stripslashes($cats[$i+4]["name"]));
             echo "</TD><TD>";
             $selected = $selcats[$i+8]?" CHECKED":"";
             if($cats[$i+8])
-                echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+8)."$selected>".htmlentities(stripslashes($cats[$i+8]));
+                echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+8)."$selected>".htmlentities(stripslashes($cats[$i+8]["name"]));
             echo "</TD><TD>";
             $selected = $selcats[$i+12]?" CHECKED":"";
             if($cats[$i+12])
-                echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+12)."$selected>".htmlentities(stripslashes($cats[$i+12]));
+                echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+12)."$selected>".htmlentities(stripslashes($cats[$i+12]["name"]));
             echo "</TD></TR>\n";
         }
     ?>
@@ -652,17 +647,14 @@ class AddManager extends MenuItem {
             <TR><TD ALIGN=RIGHT>Add Date:</TD><TD ALIGN=LEFT><?php echo $adddate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT><?php echo $pulldate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
-        // Stuff the categories into an array
-        $records = Engine::api(IChart::class)->getCategories();
-        $i=0;
-        while($records && ($row = $records->fetch()))
-            $cats[$i++] = $row[1];
+        // Get the chart categories
+        $cats = Engine::api(IChart::class)->getCategories();
     
         $emitted = false;
         for($i=0; $i<16; $i++)
             if($_POST["cat".$i]) {
                 if($emitted) echo ", ";
-                echo htmlentities(stripslashes($cats[$i]));
+                echo htmlentities(stripslashes($cats[$i]["name"]));
                 $emitted = true;
             }
     ?></TD></TR>
@@ -805,17 +797,14 @@ class AddManager extends MenuItem {
             <TR><TD ALIGN=RIGHT>Add Date:</TD><TD ALIGN=LEFT><?php echo $adddate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT><?php echo $pulldate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
-        // Stuff the categories into an array
-        $records = Engine::api(IChart::class)->getCategories();
-        $i=0;
-        while($records && ($row = $records->fetch()))
-            $cats[$i++] = $row[1];
+        // Get the chart categories
+        $cats = Engine::api(IChart::class)->getCategories();
     
         $emitted = false;
         for($i=0; $i<16; $i++)
             if($_POST["cat".$i]) {
                 if($emitted) echo ", ";
-                echo htmlentities(stripslashes($cats[$i]));
+                echo htmlentities(stripslashes($cats[$i]["name"]));
                 $emitted = true;
             }
     ?></TD></TR>
@@ -928,12 +917,12 @@ class AddManager extends MenuItem {
           <TR><TH>&nbsp;</TH><TH>Category</TH><TH>Code&nbsp;</TH><TH>Director</TH></TR>
     <?php 
         $cats = Engine::api(IChart::class)->getCategories();
-        while($cats && ($row = $cats->fetch())) {
-            $i = $row[0];
+        foreach($cats as $index => $cat) {
+            $i = $cat["id"];
             echo "      <TR><TD ALIGN=RIGHT>$i.</TD>\n";
-            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=name$i VALUE=\"".htmlentities(stripslashes($row[1]))."\" CLASS=input SIZE=20 MAXLENGTH=80></TD>\n";
-            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=code$i VALUE=\"".htmlentities(stripslashes($row[2]))."\" CLASS=input SIZE=4 MAXLENGTH=1></TD>\n";
-            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=dir$i VALUE=\"".htmlentities(stripslashes($row[3]))."\" CLASS=input SIZE=30 MAXLENGTH=80></TD></TR>\n";
+            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=name$i VALUE=\"".htmlentities(stripslashes($cat["name"]))."\" CLASS=input SIZE=20 MAXLENGTH=80></TD>\n";
+            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=code$i VALUE=\"".htmlentities(stripslashes($cat["code"]))."\" CLASS=input SIZE=4 MAXLENGTH=1></TD>\n";
+            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=dir$i VALUE=\"".htmlentities(stripslashes($cat["director"]))."\" CLASS=input SIZE=30 MAXLENGTH=80></TD></TR>\n";
         }
     ?>
           <TR><TD>&nbsp;</TD>
@@ -978,18 +967,15 @@ class AddManager extends MenuItem {
             if($i != strlen($address)) {
                 echo "  <P CLASS=\"header\">E-Mail address is invalid.</P>\n";
             } else {
-                // Stuff the categories into an array
+                // Get the chart categories
                 $cats = Engine::api(IChart::class)->getCategories();
-                $i=1;
-                while($cats && ($row = $cats->fetch()))
-                    $catcode[$i++] = $row[2];
     
                 // Fetch the add        
                 $records = Engine::api(IChart::class)->getAdd2($date);
                 $this->addManagerGetAlbums($records, $albums);
     
                 $from = Engine::param('application')." <$instance_chartman>";
-                $subject = Engine::param('station') + ": Adds for $date";
+                $subject = Engine::param('station').": Adds for $date";
                 $body = "";
     
                 if($format == "tab") {
@@ -1014,7 +1000,8 @@ class AddManager extends MenuItem {
                     $ac = "";
                     $cats = explode(",", $row["afile_category"]);
                     foreach($cats as $index => $cat)
-                        $ac .= $catcode[$cat];
+                        if($cat)
+                            $ac .= $cats[$cat-1]["code"];
                     if($format == "tab") {
                         $line = $row["adddate"] . "\t" . $row["pulldate"] . "\t" . $ac . "\t" .
                               $row["afile_number"] . "\t";
@@ -1097,11 +1084,8 @@ class AddManager extends MenuItem {
     public function viewCurrents($tag) {
         $row = Engine::api(IChart::class)->getAlbumByTag($tag);
         if($row) {
-            // Stuff the categories into an array
-            $i=1;
-            $categories = Engine::api(IChart::class)->getCategories();
-            while($categories && ($cat = $categories->fetch()))
-                $cats[$i++] = $cat["name"];
+            // Get the chart categories
+            $cats = Engine::api(IChart::class)->getCategories();
     
             $header = 0;
      
@@ -1128,9 +1112,9 @@ class AddManager extends MenuItem {
                 $emitted = false;
                 $albumcats = explode(",", $row["category"]);
                 foreach($albumcats as $index => $cat) {
-                    if(!$cats[$cat] || substr($cats[$cat], 0, 1) == "(") continue;
+                    if(!$cat || !$cats[$cat-1]["name"] || substr($cats[$cat-1]["name"], 0, 1) == "(") continue;
                     if($emitted) echo ", ";
-                    echo htmlentities(stripslashes($cats[$cat]));
+                    echo htmlentities(stripslashes($cats[$cat-1]["name"]));
                     $emitted = true;
                 }
                 echo "</TD>";

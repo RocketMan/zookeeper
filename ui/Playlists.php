@@ -501,7 +501,7 @@ class Playlists extends MenuItem {
             echo "          <A HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=downTrack\"><IMG SRC=\"img/arrow_down_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALT=\"down\"></A></DIV></TD>\n";
             echo "      <TD VALIGN=TOP><A CLASS=\"$class\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=editTrack\"><B>&gt;&gt;</B></A></TD>\n";
             if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
-                echo "      <TD COLSPAN=4><HR SIZE=2 NOSHADE STYLE=\"color:#6b3333\"></TD></TR>\n";
+                echo "      <TD COLSPAN=4><HR SIZE=2 NOSHADE></TD></TR>\n";
             else
                 echo "      <TD ALIGN=RIGHT VALIGN=TOP>".$row["tag"]."</TD><TD VALIGN=TOP>" .
                      $this->smartURL($row["artist"]) . "</TD><TD VALIGN=TOP>" .
@@ -763,16 +763,16 @@ class Playlists extends MenuItem {
                 $this->emitTagForm($playlist, "");
             } else if(($artist == "") || ($album == "") ||
                             (($label == "") && ($tag == ""))) {
-                $albuminfo = array("tag"=>$tag,
+                $albuminfo = ["tag"=>$tag,
                               "artist"=>stripslashes($artist),
                               "album"=>stripslashes($album),
-                              "label"=>stripslashes($label));
+                              "label"=>stripslashes($label)];
                 $this->emitEditForm($playlist, $id, $albuminfo, stripslashes($track));
             } else if(($track == "") && ($ctrack == "")) {
-                $albuminfo = array("tag"=>$tag,
+                $albuminfo = ["tag"=>$tag,
                               "artist"=>stripslashes($artist),
                               "album"=>stripslashes($album),
-                              "label"=>stripslashes($label));
+                              "label"=>stripslashes($label)];
                 $this->emitTrackForm($playlist, $id, $albuminfo, stripslashes($otrack));
             } else {
                 if($ctrack) {
@@ -1303,7 +1303,7 @@ class Playlists extends MenuItem {
             if(sizeof($albums) > 0)
               foreach($albums as $index => $row) {
                 if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK) {
-                  echo "  <TR><TD ALIGN=LEFT COLSPAN=4><HR SIZE=2 NOSHADE STYLE=\"color:#6b3333\"></TD></TR>\n";
+                  echo "  <TR><TD ALIGN=LEFT COLSPAN=4><HR SIZE=2 NOSHADE></TD></TR>\n";
                   continue;
                 }
                 echo "  <TR><TD ALIGN=LEFT VALIGN=TOP>" . $this->smartURL($row["artist"]) . "</TD><TD ALIGN=LEFT VALIGN=TOP>" .
@@ -1483,7 +1483,7 @@ class Playlists extends MenuItem {
     
     public function emitViewDJMain() {
     ?>
-    <TABLE CELLPADDING=2 CELLSPACING=2 BORDER=0>
+    <TABLE CELLPADDING=2 CELLSPACING=2 BORDER=0 CLASS="djzone">
       <!--TR><TH COLSPAN=2 ALIGN=LEFT>Select a DJ:</TH></TR-->
       <TR><TH COLSPAN=2 ALIGN=LEFT><?php 
         $last = "";

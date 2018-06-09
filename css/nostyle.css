@@ -30,6 +30,9 @@ div.headerNavbar span {
     bottom: 0;
     position: absolute;
 }
-div.leftNav{
+div.leftNav {
     clear:both;
+}
+hr {
+    color: #2d3bce;
 }

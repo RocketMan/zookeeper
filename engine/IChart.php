@@ -28,6 +28,9 @@ namespace ZK\Engine;
  * Chart operations
  */
 interface IChart {
+    const CAT_NAME = 0;
+    const CAT_CODE = 1;
+    const CAT_FULL = 2;
     function getCategories();
     function updateCategory($i, $name, $code, $dir);
     function getNextAID();

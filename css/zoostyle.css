@@ -43,6 +43,7 @@ TABLE.afileactivity {
     border-style: solid;
     border-width: 1px 0px 0px 0px;
     border-color: #cccccc;
+    vertical-align: baseline;
 }
 .noPlaylist, .noPlaylist TD {
     background-color: #000000;
@@ -97,6 +98,9 @@ TD.ind {
 /* DJ Zone! */
 .recentPlays, .recentReviews {
     vertical-align: top;
+}
+TABLE.djzone TD:last-child {
+    width: 100%;
 }
 
 /* layout */

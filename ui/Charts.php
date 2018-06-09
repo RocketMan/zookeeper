@@ -351,13 +351,10 @@ class Charts extends MenuItem {
             echo "  <TR><TH CLASS=\"subhead\" ALIGN=LEFT";
             if($category) {
                 echo " COLSPAN=2>";
-                // Stuff the categories into an array
-                $i=1;
-                $categories = $chartAPI->getCategories();
-                while($categories && ($cat = $categories->fetch()))
-                    $cats[$i++] = $cat["name"];
+                // Get the chart categories
+                $cats = $chartAPI->getCategories();
     
-                echo strtoupper($cats[$category]);
+                echo strtoupper($cats[$category-1]["name"]);
             } else {
                 echo ">";
                 echo "MAIN";
@@ -413,14 +410,11 @@ class Charts extends MenuItem {
             echo "  <TR><TH ALIGN=LEFT";
             if($category) {
                 echo " COLSPAN=2>";
-                // Stuff the categories into an array
-                $i=1;
-                $categories = $chartAPI->getCategories();
-                while($categories && ($cat = $categories->fetch()))
-                    $cats[$i++] = $cat["name"];
+                // Get the chart categories
+                $cats = $chartAPI->getCategories();
     
                 echo "LEAST PLAYED&nbsp;";
-                echo strtoupper($cats[$category]);
+                echo strtoupper($cats[$category-1]["name"]);
             } else {
                 echo ">";
                 echo "LEAST PLAYED";
@@ -474,13 +468,10 @@ class Charts extends MenuItem {
             echo "          <TR CLASS=\"secdiv\"><TH ALIGN=LEFT CLASS=\"sub\"";
             if($category) {
                 echo " COLSPAN=2>";
-                // Stuff the categories into an array
-                $i=1;
-                $categories = $chartAPI->getCategories();
-                while($categories && ($cat = $categories->fetch()))
-                    $cats[$i++] = $cat["name"];
+                // Get the chart categories
+                $cats = $chartAPI->getCategories();
     
-                echo strtoupper($cats[$category]);
+                echo strtoupper($cats[$category-1]["name"]);
             } else {
                 echo ">";
                 if($limit) echo "TOP $limit";
@@ -531,14 +522,11 @@ class Charts extends MenuItem {
         $chartAPI->getChart($chart, $startDate, $endDate, $limit, $category);
         if(sizeof($chart)) {
             if($category) {
-                // Stuff the categories into an array
-                $i=1;
-                $categories = $chartAPI->getCategories();
-                while($categories && ($cat = $categories->fetch()))
-                    $cats[$i++] = $cat["name"];
+                // Get the chart categories
+                $cats = $chartAPI->getCategories();
     
                 echo "<Playlist charttype_id:" . self::$charttype[$category] . ">\n";
-                echo "## " . $cats[$category] . " playlist\n\n";
+                echo "## " . $cats[$category-1]["name"] . " playlist\n\n";
             } else {
                 echo "<Playlist charttype_id:1>\n";
                 echo "## Top 200 playlist\n\n";

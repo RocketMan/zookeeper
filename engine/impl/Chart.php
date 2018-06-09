@@ -34,7 +34,7 @@ class ChartImpl extends BaseImpl implements IChart {
     public function getCategories() {
         $query = "SELECT id, name, code, director FROM categories ORDER BY id";
         $stmt = $this->prepare($query);
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
+        return $this->executeAndFetchAll($stmt);
     }
     
     public function updateCategory($i, $name, $code, $dir) {

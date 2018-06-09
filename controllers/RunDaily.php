@@ -32,6 +32,8 @@ use ZK\Engine\IUser;
 use ZK\UI\UICommon as UI;
 
 class RunDaily implements IController {
+    private $catCodes;
+    
     public function processRequest($dispatcher) {
         header("Content-type: text/plain");
 
@@ -161,22 +163,14 @@ class RunDaily implements IController {
         $chartApi->getChart($chart, $start, $end, $limit, $category);
         if(sizeof($chart)) {
             if($category) {
-                // stuff the categories into an array
-                $i=1;
-                $categories = $chartApi->getCategories();
-                while($categories && ($cat = $categories->fetch())) {
-                    $directors[$i] = $cat["director"];
-                    $cats[$i++] = $cat["name"];
-                }
-                
                 if($crd)
                     $result .= sprintf("\n\n%s\n%s\n",
-                                strtoupper($cats[$category]),
-                                $directors[$category]);
+                                strtoupper($this->catCodes[$category-1]["name"]),
+                                $this->catCodes[$category-1]["director"]);
                 else
                     $result .= sprintf("\n\n%-22s %56s\n",
-                                strtoupper($cats[$category]),
-                                $directors[$category]);
+                                strtoupper($this->catCodes[$category-1]["name"]),
+                                $this->catCodes[$category-1]["director"]);
             }
 
             if($cmj)
@@ -256,14 +250,6 @@ class RunDaily implements IController {
             "1"=>"blues"     // blues
         ];
     
-        // Stuff the categories into an array
-        $categories = Engine::api(IChart::class)->getCategories();
-        $i=1;
-        while($categories && ($cat = $categories->fetch())) {
-            $directors[$i] = $cat["director"];
-            $cats[$i++] = $cat["name"];
-        }
-
         // genre director default e-mail domain same as md's
         $domain = Engine::param('email')['md'];
         $i = strpos($base, '@');
@@ -276,8 +262,10 @@ class RunDaily implements IController {
                 $address .= $domain;
 
             // skip genre e-mail if no valid address
-            if(!strpos($address, '@'))
+            if(!strpos($address, '@')) {
+                echo "Skipping ".$this->catCodes[$genre-1]["name"]." monthly e-mail due to invalid address: $address\n";
                 continue;
+            }
     
             // Build the chart
             $chart = $this->buildChart($start, $date, 0, $genre, 1);
@@ -288,7 +276,7 @@ class RunDaily implements IController {
     
             // Setup the headers
             $subject = Engine::param('station').": ".
-                         $cats[$genre] . " monthly totals, " .
+                         $this->catCodes[$genre-1]["name"] . " monthly totals, " .
                          date("m/Y", mktime(0,0,0,$month,$d,$y));
                            
             $headers = "From: ".Engine::param('station')." ".
@@ -297,7 +285,7 @@ class RunDaily implements IController {
 
             // send the mail
             $stat = mail($address, $subject, $chart, $headers);
-            echo "Sending ".$cats[$genre]." monthly e-mail: ".
+            echo "Sending ".$this->catCodes[$genre-1]["name"]." monthly e-mail: ".
                  ($stat?"OK":"FAILED!")."\n";
         }
     }
@@ -317,13 +305,10 @@ class RunDaily implements IController {
             }
     
             if($i != strlen($address)) {
-                echo "  <P CLASS=\"header\">E-Mail address is invalid.</P>\n";
+                echo "Skipping ".($cmj?"cmj":"weekly")." e-mail due to invalid address: $address\n";
             } else {
-                // Stuff the categories into an array
-                $cats = Engine::api(IChart::class)->getCategories();
-                $i=1;
-                while($cats && ($row = $cats->fetch()))
-                    $catcode[$i++] = $row[2];
+                // get the chart categories
+                $this->catCodes = Engine::api(IChart::class)->getCategories();
     
                 // Build the charts
                 $charts = $this->buildChart("", $date, 100, "", $cmj);
@@ -369,7 +354,8 @@ class RunDaily implements IController {
                 echo "Sending ".($cmj?"cmj":"weekly").
                      " e-mail: ".($stat?"OK":"FAILED!")."\n";
             }
-        }
+        } else
+            echo "Skipping ".($cmj?"cmj":"weekly")." e-mail: no address configured\n";
     }
 
     private function chartMonthly($date, $address, $crd=0) {
@@ -398,13 +384,10 @@ class RunDaily implements IController {
             }
     
             if($i != strlen($address)) {
-                echo "  <P CLASS=\"header\">E-Mail address is invalid.</P>\n";
+                echo "Skipping ".($crd?"crossroads":"monthly")." e-mail due to invalid address: $address\n";
             } else {
-                // Stuff the categories into an array
-                $cats = Engine::api(IChart::class)->getCategories();
-                $i=1;
-                while($cats && ($row = $cats->fetch()))
-                    $catcode[$i++] = $row[2];
+                // get the chart categories
+                $this->catCodes = Engine::api(IChart::class)->getCategories();
     
                 // Build the charts
                 $charts = "";
@@ -461,7 +444,9 @@ class RunDaily implements IController {
                 echo "Sending ".($crd?"crossroads":"monthly").
                      " e-mail: ".($stat?"OK":"FAILED!")."\n";
             }
-        }
+        } else
+            echo "Skipping ".($crd?"crossroads":"monthly")." e-mail: no address configured\n";
+
         if(!$crd)
             $this->sendChartGenreEMail($start, $date, $month);
     }

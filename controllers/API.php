@@ -181,11 +181,11 @@ class API extends CommandTarget implements IController {
         echo "</getChartRs>\n";
     
         // genre charts
-        $genres = array(5, 7, 6, 1, 2, 4, 3, 8);
+        $genres = [5, 7, 6, 1, 2, 4, 3, 8];
         for($i=0; $i<sizeof($genres); $i++) {
              unset($records);
              Engine::api(IChart::class)->getChart2($records, 0, $date, 10, $genres[$i]);
-             echo "<getChartRs chart=\"".$this->catCodes[$genres[$i]-1]."\" week-ending=\"$date\"".$this->emitSuccess().">\n";
+             echo "<getChartRs chart=\"".$this->catCodes[$genres[$i]-1]["name"]."\" week-ending=\"$date\"".$this->emitSuccess().">\n";
              $this->emitDataSetArray("albumrec", $chartfields, $records, 0);
              echo "</getChartRs>\n";
         }
@@ -333,11 +333,7 @@ class API extends CommandTarget implements IController {
     }
 
     private function getAFileCats() {
-        $catCodes = array();
-        $result = Engine::api(IChart::class)->getCategories();
-        while($row = $result->fetch())
-             $catCodes[] = $row["name"];
-        return $catCodes;
+        return Engine::api(IChart::class)->getCategories();
     }
 
     private function emitAFileCat($cats) {
@@ -348,8 +344,8 @@ class API extends CommandTarget implements IController {
         if($cats) {
              $cats = explode(",", $cats);
              for($i=0; $i<sizeof($cats); $i++)
-                 if(substr($this->catCodes[$cats[$i]-1], 0, 1) != "(")
-                    echo "<chart>".$this->catCodes[$cats[$i]-1]."</chart>\n";
+                 if(substr($this->catCodes[$cats[$i]-1]["name"], 0, 1) != "(")
+                    echo "<chart>".$this->catCodes[$cats[$i]-1]["name"]."</chart>\n";
         }
         echo "</charts>\n";
     }

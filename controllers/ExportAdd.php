@@ -53,11 +53,8 @@ class ExportAdd implements IController {
         header("Content-type: application/csv");
         header("Content-disposition: attachment; filename=add.csv");
         
-        // Stuff the categories into an array
+        // Get the chart categories
         $cats = Engine::api(IChart::class)->getCategories();
-        $i=1;
-        while($cats && ($row = $cats->fetch()))
-            $catcode[$i++] = $row[2];
         
         // Get the add records
         $records = Engine::api(IChart::class)->getAdd2($date);
@@ -72,9 +69,10 @@ class ExportAdd implements IController {
                  $row["pulldate"] . "\t";
         
             // Categories
-            $cats = explode(",", $row["afile_category"]);
-            while(list($index, $cat) = each($cats))
-                echo $catcode[$cat];
+            $acats = explode(",", $row["afile_category"]);
+            foreach($acats as $index => $cat)
+                if($cat)
+                    echo $cats[$cat-1]["code"];
             echo "\t";
         
             // A-File Number

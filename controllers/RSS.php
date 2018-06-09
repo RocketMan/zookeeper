@@ -41,7 +41,8 @@ class RSS extends CommandTarget implements IController {
     ];
 
     private static function xmlentities($str) {
-       return str_replace(array('&', '"', "'", '<', '>', '`'), array('&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'), $str);
+       return str_replace(['&', '"', "'", '<', '>', '`'],
+           ['&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'], $str);
     }
     
     private static function htmlnumericentities($str) {
@@ -76,13 +77,8 @@ class RSS extends CommandTarget implements IController {
         if(sizeof($chart)) {
             $title = Engine::param('station'). " ";
             if($category) {
-                // Stuff the categories into an array
-                $i=1;
-                $categories = Engine::api(IChart::class)->getCategories();
-                while($categories && ($cat = $categories->fetch()))
-                    $cats[$i++] = $cat["name"];
-    
-                $title .= strtoupper($cats[$category]) . " CHART ";
+                $cats = Engine::api(IChart::class)->getCategories();
+                $title .= strtoupper($cats[$category-1]["name"]) . " CHART ";
             } else {
                 if($limit) $title .= " TOP $limit ";
             }
@@ -252,11 +248,8 @@ class RSS extends CommandTarget implements IController {
             $output = "&lt;p&gt;Num (Charts) ARTIST &lt;I&gt;Album&lt;/I&gt; (Label)&lt;/p&gt;\n";
             $output .= "&lt;p&gt;";
     
-            // Stuff the categories into an array
+            // Get the chart categories
             $cats = Engine::api(IChart::class)->getCategories();
-            $i=1;
-            while($cats && ($cat = $cats->fetch()))
-                $catcode[$i++] = $cat["code"];
     
             while($row = $results->fetch()) {
                 // Fixup the artist, album, and label names
@@ -284,9 +277,10 @@ class RSS extends CommandTarget implements IController {
     
                 // Categories
                 $codes = "";
-                $cats = explode(",", $row[5]);
-                while(list($index, $cat) = each($cats))
-                    $codes .= $catcode[$cat];
+                $acats = explode(",", $row["afile_category"]);
+                foreach($acats as $index => $cat)
+                    if($cat)
+                        $codes .= $cats[$cat-1]["code"];
     
                 if($codes == "")
                     $codes = "G";
