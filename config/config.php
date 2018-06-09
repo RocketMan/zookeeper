@@ -14,6 +14,8 @@ $config = [
 
     'station_full' => '9MMM Fictitious Radio 89.7 FM',
 
+    'station_freq' => '89.7FM',
+
     'copyright' => '&copy; 2002-2018 Fictitious Radio, LTD.  All rights reserved.',
 
     'logo' => 'img/9mmm_banner.png',
@@ -55,8 +57,9 @@ $config = [
     'contact' => [
         'addr' => 'Morgan Park 1',
         'city' => 'Westfield, ZQ',
-        'phone' => '+1 949 555 0897',
+        'phone' => '+1 949 555 0899',
         'fax' => '+1 949 555 0898',
+        'request' => '+1 949 555 0897',
     ],
 
     /**

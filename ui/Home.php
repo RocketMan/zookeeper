@@ -123,12 +123,20 @@ class Home extends MenuItem {
                  "&amp;session=".$this->session->getSessionID()."\" CLASS=\"nav\">" . htmlentities($row["description"]);
             echo "</A></TH></TR>\n  ";
             echo "<TR><TH ALIGN=RIGHT VALIGN=BOTTOM CLASS=\"sub\">" . date("l, j M") . "&nbsp;&nbsp;</TH>\n      <TH ALIGN=LEFT VALIGN=BOTTOM CLASS=\"sub\">" . Playlists::timeToAMPM($row["showtime"]) . " " . date("T") . "</TH>\n";
-            echo "      <TD ALIGN=RIGHT VALIGN=BOTTOM ROWSPAN=2>Request Line:&nbsp;&nbsp;+1 949 555 0897&nbsp;&nbsp;&nbsp;89.7FM</TD></TR>\n";
+            $requestLine = Engine::param('contact')['request'];
+            if($requestLine)
+                echo "      <TD ALIGN=RIGHT VALIGN=BOTTOM ROWSPAN=2>Request Line:&nbsp;&nbsp;$requestLine&nbsp;&nbsp;&nbsp;".Engine::param('station_freq')."</TD></TR>\n";
+            else
+                echo "      <TD></TD></TR>\n";
             echo "  <TR>" . Playlists::timeToZulu($row["showtime"]). "</TR>\n";
         } else {
             echo "<TR><TH ALIGN=LEFT COLSPAN=3>[No playlist available]</TH></TR>\n  ";
             echo "<TR><TH COLSPAN=2>&nbsp;</TH>\n";
-            echo "    <TD ALIGN=RIGHT VALIGN=BOTTOM>Request Line:&nbsp;&nbsp;+1 949 555 0897&nbsp;&nbsp;&nbsp;89.7FM</TD></TR>\n";
+            $requestLine = Engine::param('contact')['request'];
+            if($requestLine)
+                echo "    <TD ALIGN=RIGHT VALIGN=BOTTOM>Request Line:&nbsp;&nbsp;$requestLine&nbsp;&nbsp;&nbsp;".Engine::param('station_freq')."</TD></TR>\n";
+            else
+                echo "    <TD></TD></TR>\n";
         }
         echo "</TABLE><BR>\n";
     }
