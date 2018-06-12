@@ -33,6 +33,11 @@ use ZK\Engine\ILibrary;
 use ZK\UI\UICommon as UI;
 
 class Editor extends MenuItem {
+    const LABEL_FORM_NAME = "Avery 5161";
+    const LABEL_FORM_CODE = "5161";
+    const LABEL_FORM_ROWS = 10;
+    const LABEL_FORM_COLS = 2;
+    
     private static $subactions = [
         [ "m", "", "Albums", "musicEditor" ],
         [ "m", "labels", "Labels", "musicEditor" ],
@@ -85,20 +90,20 @@ class Editor extends MenuItem {
     ];
 
     private static $boxToUTF8 = [
-        "\xb7" => "\u{2556}",
-        "\xb9" => "\u{2563}",
-        "\xba" => "\u{2551}",
-        "\xbb" => "\u{2557}",
-        "\xbc" => "\u{255d}",
-        "\xc8" => "\u{255a}",
-        "\xc9" => "\u{2554}",
-        "\xcc" => "\u{2560}",
-        "\xcd" => "\u{2550}",
-        "\xce" => "\u{256c}",
-        "\xd0" => "\u{2568}",
-        "\xd4" => "\u{2558}",
-        "\xd5" => "\u{2552}",
-        "\xd6" => "\u{2553}",
+        "\xb7" => "\xe2\x95\x96", // "\u{2556}",
+        "\xb9" => "\xe2\x95\xa3", // "\u{2563}",
+        "\xba" => "\xe2\x95\x91", // "\u{2551}",
+        "\xbb" => "\xe2\x95\x97", // "\u{2557}",
+        "\xbc" => "\xe2\x95\x9d", // "\u{255d}",
+        "\xc8" => "\xe2\x95\x9a", // "\u{255a}",
+        "\xc9" => "\xe2\x95\x94", // "\u{2554}",
+        "\xcc" => "\xe2\x95\xa0", // "\u{2560}",
+        "\xcd" => "\xe2\x95\x90", // "\u{2550}",
+        "\xce" => "\xe2\x95\xac", // "\u{256c}",
+        "\xd0" => "\xe2\x95\xa8", // "\u{2568}",
+        "\xd4" => "\xe2\x95\x98", // "\u{2558}",
+        "\xd5" => "\xe2\x95\x92", // "\u{2552}",
+        "\xd6" => "\xe2\x95\x93", // "\u{2553}",
     ];
 
     private static $charset = [
@@ -114,6 +119,13 @@ class Editor extends MenuItem {
          "ldetails"=>  ["panelLDetails", "tracks"],
          "tracks"=>    ["panelTracks", "search"],
          ""=>          ["panelNull", "search"]
+    ];
+
+    private $tagQPanels = [
+         "select"=>    ["queueList", "print"],
+         "print"=>     ["queuePlace", "confirm"],
+         "confirm"=>   ["queueConfirm", "select"],
+         ""=>          ["panelNull", "select"]
     ];
     
     private $limit = 14;
@@ -173,48 +185,96 @@ class Editor extends MenuItem {
                 $_REQUEST["seq"] = $this->editorPanels[$_REQUEST["seq"]][1];
         }
     ?>
-            </TD></TR>
-         </TABLE>
-    <?php 
+       </TD></TR>
+    </TABLE>
+<?php 
+        $this->emitHidden("seq", $_REQUEST["seq"]);
+        $this->emitVars();
+        echo "  </FORM>\n";
+    }
+
+    public function tagQueue() {
+        // We're always going to make two passes:
+        //    Pass 1:  Call step $seq to validate
+        //    Pass 2a: If $seq validates, call $next to display
+        //    Pass 2b: If $seq doesn't validate, call $seq to redisplay
+    
+        for($i=0; $i<2; $i++) {
+            if($i == 1) {
+                // Emit header
+                $title = $this->getTitle($_REQUEST["seq"]);
+                echo "  <FORM ACTION=\"?\" METHOD=POST>\n";
+                echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n      <TR><TH ALIGN=LEFT>$title</TH></TR>\n      <TR><TD HEIGHT=130 VALIGN=MIDDLE>\n";
+    
+            }
+    
+            // Handle default case
+            if(!$this->tagQPanels[$_REQUEST["seq"]])
+                $_REQUEST["seq"] = "";
+    
+            // Dispatch to panel
+            $next = $this->tagQPanels[$_REQUEST["seq"]][0];
+            $status = $this->$next($i==0);
+            if($status)
+                $_REQUEST["seq"] = $this->tagQPanels[$_REQUEST["seq"]][1];
+        }
+    ?>
+      </TD></TR>
+    </TABLE>
+<?php 
         $this->emitHidden("seq", $_REQUEST["seq"]);
         $this->emitVars();
         echo "  </FORM>\n";
     }
     
-    public function tagQueue() {
-         if($_REQUEST["validate"]) {
+    public function queueList($validate) {
+         if($validate) {
+              if($_REQUEST["printToPDF"]) {
+                  $selTags = array();
+                  foreach($_POST as $key => $value) {
+                      if(substr($key, 0, 3) == "tag" && $value == "on") {
+                          $selTags[] = substr($key, 3);
+                          $this->skipVar($key);
+                      }
+                  }
+                  $this->emitHidden("seltags", implode(",", $selTags));
+                  return true;
+              }
+                  
+              $this->tagQPanels["select"][1] = "select";
               foreach($_POST as $key => $value) {
                  if(substr($key, 0, 3) == "tag" && $value == "on") {
                      $tag = substr($key, 3);
                      if($_REQUEST["print"])
                          $this->printTag($tag);
                      Engine::api(IEditor::class)->dequeueTag($tag, $this->session->getUser());
+                     $this->skipVar("tag".$tag);
                  }
               }
+              return true;
          }
          if(!Engine::api(ILibrary::class)->getNumQueuedTags($this->session->getUser())) {
               echo "  <P>There are no queued tags.</P>\n";
               return;
          }
          echo "<P><B>Tags queued for printing:</B>\n";
-         if(!$this->session->isLocal())
-              echo "(Note: Tags can be printed only at the station)";
          echo "</P>\n";
          echo "  <FORM ACTION=\"?\" METHOD=POST>\n";
          echo "    <TABLE BORDER=0>\n      <TR><TH><INPUT NAME=all TYPE=checkbox onClick='checkAll()'></TH><TH ALIGN=RIGHT>Tag&nbsp;&nbsp;</TH><TH>Artist</TH><TH>&nbsp;</TH><TH>Album</TH></TR>\n";
          if($result = Engine::api(IEditor::class)->getQueuedTags($this->session->getUser())) {
               while($row = $result->fetch()) {
-                   echo "      <TR><TD><INPUT NAME=tag".$row["tag"]." TYPE=checkbox></TD>";
+                   echo "      <TR><TD><INPUT NAME=tag".$row["tag"]." TYPE=checkbox".($_POST["tag".$row["tag"]] == "on"?" checked":"")."></TD>";
                    echo "<TD ALIGN=RIGHT>".$row["tag"]."&nbsp;&nbsp;</TD><TD>".htmlentities($row["artist"])."</TD><TD></TD><TD>".htmlentities($row["album"])."</TD></TR>\n";
+                   $this->skipVar("tag".$row["tag"]);
               }
          }
+         $this->skipVar("all");
+         $this->skipVar("delete");
+         $this->skipVar("print");
+         $this->skipVar("printToPDF");
     ?>
          </TABLE>
-         <P><?php if($this->session->isLocal()){?><INPUT TYPE=submit CLASS=submit NAME=print VALUE=" Print ">&nbsp;&nbsp;&nbsp;<?php }?><INPUT TYPE=submit CLASS=submit NAME=delete VALUE=" Delete "></P>
-         <INPUT TYPE=hidden NAME=session VALUE="<?php echo $this->session->getSessionID(); ?>">
-         <INPUT TYPE=hidden NAME=action VALUE="editor">
-         <INPUT TYPE=hidden NAME=subaction VALUE="tagq">
-         <INPUT TYPE=hidden NAME=validate VALUE="y">
+         <P><INPUT TYPE=submit CLASS=submit NAME=delete VALUE=" Delete ">&nbsp;&nbsp;&nbsp;<INPUT TYPE=submit CLASS=submit NAME=print onclick="return isLocal();" VALUE=" Print ">&nbsp;&nbsp;&nbsp;<INPUT TYPE=submit CLASS=submit NAME=printToPDF onclick="return validate();" VALUE=" Print To PDF &gt; "></P>
       </FORM>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     function checkAll() {
@@ -224,10 +284,158 @@ class Editor extends MenuItem {
          if(form[i].type == 'checkbox')
              form[i].checked = all;
     }
+    function isLocal() {
+<?php
+    if($this->session->isLocal())
+        echo "      return true;\n";
+    else
+        echo "      alert('tags can be printed to the label printer only at the station');\n      return false;\n";
+?>
+    }
+    function validate() {
+      form = document.forms[0];
+      selected = 0;
+      for(var i=0; i<form.length; i++)
+         if(form[i].type == 'checkbox')
+             selected |= form[i].checked;
+      if(selected)
+        return true;
+      else {
+        alert("Select at least one tag to proceed");
+        return false;
+      }
+    }
     // -->
     </SCRIPT>
     <?php 
         UI::setFocus();
+    }
+    
+    public function queuePlace($validate) {
+        if($validate) {
+            if($_REQUEST["back"]) {
+                $this->tagQPanels["print"][1] = "select";
+                foreach(explode(",", $_REQUEST["seltags"]) as $tag)
+                    $this->emitHidden("tag".$tag, "on");
+                $this->skipVar("seltags");
+                $this->skipVar("back");
+            }
+            return $validate;
+        }
+
+        $count = 0;
+        foreach($_POST as $key => $value) {
+           if(substr($key, 0, 3) == "tag" && $value == "on") {
+               $count++;
+           }
+        }
+        $numRow = self::LABEL_FORM_ROWS;
+        $numCol = self::LABEL_FORM_COLS;
+        $numLabels = $numRow * $numCol;
+        if($count > $numLabels) $count = $numLabels;
+        echo "    <P>Select up to <B><SPAN id=\"count\">$count</SPAN></B> labels:</P>\n";
+        echo "    <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>\n";
+        echo "    <TR><TD CLASS=\"label-form\">\n";
+        echo "    <SPAN Style=\"display: inline-block; clear: both; float: right; font: bold 10px sans-serif; color: #cc0000;\">".strtoupper(self::LABEL_FORM_NAME)." LABELS</SPAN><BR>\n";
+        for($i=0; $i<$numRow; $i++) {
+            echo "    ";
+            for($j=0; $j<$numCol; $j++) {
+                $index = $i*$numCol + $j;
+                echo "<A HREF=\"#\" onClick=\"c($index);\" id=\"label$index\">".($i + $j*$numRow + 1)."</A>&nbsp;";
+            }
+            echo "<BR>\n";
+        }
+        echo "    </TD></TR>\n    <TR><TD>&nbsp;</TD></TR>\n";
+        echo "    <TR><TD STYLE=\"text-align: right;\"><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next onclick=\"return validate();\" VALUE=\" Confirm &gt; \">\n";
+        echo "    <INPUT TYPE=HIDDEN NAME=sel ID=sel VALUE=\"\"></TD></TR></TABLE>\n";
+?>
+    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    var sel = [...Array(<?php echo $numLabels; ?>)].map(x=>0);
+    var count = 0, max=<?php echo $count; ?>;
+    function c(idx) {
+      if(sel[idx]) {
+        elt = document.getElementById('label'+idx);
+        elt.style.background="white";
+        elt.style.border="solid #696969 2px";
+        sel[idx] = 0;
+        if(count == max) {
+          for(i=0; i<<?php echo $numLabels; ?>; i++) {
+            if(!sel[i]) {
+              elt = document.getElementById('label'+i);
+              elt.style.background = "white";
+            }
+          }
+        }
+        count--;
+      } else {
+        if(count == max) return;
+        elt = document.getElementById('label'+idx);
+        elt.style.background="beige";
+        elt.style.border="solid green 2px";
+        sel[idx] = 1;
+        count++;
+        if(count == max) {
+          for(i=0; i<<?php echo $numLabels; ?>; i++) {
+            if(!sel[i]) {
+              elt = document.getElementById('label'+i);
+              elt.style.background = "#c3c3c3";
+            }
+          }
+        }
+      }
+    }
+    function validate() {
+      if(count == 0) {
+        alert("Select at least one label to print");
+        return false;
+      } else
+        document.getElementById('sel').value = sel.join();
+
+      return true;
+    }
+    // -->
+    </SCRIPT>
+    <?php
+        $this->skipVar("sel");
+        $this->skipVar("back");
+        $this->skipVar("next");
+        $this->skipVar("printToPDF");
+        UI::setFocus();
+    }
+
+    public function queueConfirm($validate) {
+        if($validate) {
+            if($_REQUEST["back"]) {
+                foreach(explode(",", $_REQUEST["seltags"]) as $tag)
+                    $this->emitHidden("tag".$tag, "on");
+            } else {
+                foreach(explode(",", $_REQUEST["seltags"]) as $tag)
+                    Engine::api(IEditor::class)->dequeueTag($tag, $this->session->getUser());
+            }
+            $this->skipVar("sel");
+            $this->skipVar("seltags");
+            $this->skipVar("back");
+            $this->skipVar("done");
+            return $validate;
+        }
+            
+        echo "<P>A new window has been opened with a PDF for printing.</P>\n";
+        echo "<P>If the window did not open, disable pop-up blockers and try again.</P>\n";
+        echo "<P>Please load <B>".self::LABEL_FORM_NAME." labels</B> in your printer and print the PDF.</P>\n";
+        echo "<P>Choose <B>Done</B> when you have printed the labels successfully.</P>\n";
+        echo "<P>&nbsp;</P>\n";
+        echo "<INPUT TYPE=SUBMIT CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=done VALUE=\" Done \">\n";
+        
+        $selLabels = explode(",", $_REQUEST["sel"]);
+        $selTags = explode(",", $_REQUEST["seltags"]);
+        for($i=0, $j=0; $i<sizeof($selLabels); $i++)
+            if($selLabels[$i])
+                $selLabels[$i] = $selTags[$j++];
+        $merged = implode(",", $selLabels);
+        echo "<SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\"><!--\n";
+        echo "    window.open('?target=print&session=".$this->session->getSessionID()."&form=".self::LABEL_FORM_CODE."&tags=$merged', '_blank', 'toolbar=no,location=no,width=800,height=800');\n";
+        echo "// -->\n";
+        echo "</SCRIPT>\n";
     }
     
     public function panelNull($validate) {
@@ -503,6 +711,15 @@ class Editor extends MenuItem {
             break;
         case "tracks":
             $title = "Tracks for $albumLabel";
+            break;
+        case "select":
+            $title = "Select tags to print";
+            break;
+        case "print":
+            $title = "Place album tags on the label form";
+            break;
+        case "confirm":
+            $title = "Tags are ready for printing";
             break;
         default:
             $title = "Album Editor";
@@ -1179,18 +1396,9 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
         $this->emitZkAlpha();
         UI::setFocus("track" . ($focusTrack?$focusTrack:$_REQUEST["nextTrack"]));
     }
-    
-    private function printTag($tag) {
-        if(!$this->session->isLocal()) {
-            // Enqueue tag for later printing
-            Engine::api(IEditor::class)->enqueueTag($tag, $this->session->getUser());
-            $this->tagPrinted = 1;
-            return;
-        }
 
-        $config = Engine::param('label_printer');
-        $charset = self::$charset[$config['charset']];
-    
+    public static function makeLabel($tag, $charset, $dark=1,
+                                        $boxEscape="", $textEscape="") {
         $al = Engine::api(IEditor::class)->getAlbum($tag);
       
         while($tag) {
@@ -1198,9 +1406,9 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
            $tag = floor($tag / 10);
         }
 
-        $output = $config['box_mode']."\r";
+        $output = $boxEscape."\r";
         for($row=0; $row < 3; $row++) {
-            for($darken=0; $darken < 3; $darken++) {
+            for($darken=0; $darken < $dark; $darken++) {
                 for($i=sizeof($digits)-1; $i >=0; $i--) {
                     for($col=0; $col < sizeof(self::$tagFont[$digits[$i]]); $col++)
                         $output .= chr(self::$tagFont[$digits[$i]][$col][$row]);
@@ -1216,7 +1424,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
         if($charset == UI::CHARSET_UTF8)
             $output = strtr($output, self::$boxToUTF8);
 
-        $output .= $config['text_mode'];
+        $output .= $textEsc;
     
         $artist = UI::deLatin1ify($al["artist"], $charset);
         ////if(strlen($artist) > 25)
@@ -1224,7 +1432,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
         if(strlen($artist) > 30)
             $artist = substr($artist, 0, 30);
       
-        for($darken=0; $darken < 3; $darken++)
+        for($darken=0; $darken < $dark; $darken++)
             $output .= $artist . "\r";
         $output .= "\n";
     
@@ -1235,9 +1443,26 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
             $album = substr($album, 0, $maxAlbumLen) . "...";
     
         $alcat = sprintf("  %s%".(26-strlen($album))."s\r", $album, $cat);
-        for($darken=0; $darken < 3; $darken++)
+        for($darken=0; $darken < $dark; $darken++)
             $output .= $alcat;
         $output .= "\n\n";
+
+        return $output;
+    }
+    
+    private function printTag($tag) {
+        if(!$this->session->isLocal()) {
+            // Enqueue tag for later printing
+            Engine::api(IEditor::class)->enqueueTag($tag, $this->session->getUser());
+            $this->tagPrinted = 1;
+            return;
+        }
+
+        $config = Engine::param('label_printer');
+        $charset = self::$charset[$config['charset']];
+
+        $output = self::makeLabel($tag, $charset, $config['darkness'],
+                                  $config['box_mode'], $config['text_mode']);
     
         $printer = popen("lpr -P".$config['print_queue'], "w");
         fwrite($printer, $output);

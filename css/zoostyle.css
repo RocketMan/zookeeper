@@ -103,6 +103,34 @@ TABLE.djzone TD:last-child {
     width: 100%;
 }
 
+/* editor */
+TD.label-form A {
+    transition: all 0.2s ease-in-out;
+    text-decoration: none;
+    color: #000;
+    background: #fff;
+    border: solid #696969 2px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    width: 120px;
+    font: 15px sans-serif;
+    text-align: center;
+    z-index: 100;
+}
+TD.label-form A:FOCUS {
+    outline:0;
+}
+TD.label-form {
+    border-style: solid;
+    border-width: 1px;
+    padding: 8px 10px;
+    border-color: #000;
+    display: inline-block;
+    margin: 0;
+    box-shadow:5px 5px 8px #888888;
+}
+
 /* layout */
 DIV.box {
     width: 900px;

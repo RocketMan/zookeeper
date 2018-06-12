@@ -108,6 +108,10 @@ $config = [
          */
         'charset' => 'ASCII',
         /**
+         * number of times to strike (1..n)
+         */
+        'darkness' => 3,
+        /**
          * escape seq to switch to character mode, if any (empty for UTF-8)
          */
         'text_mode' => "",
