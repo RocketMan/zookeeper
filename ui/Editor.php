@@ -221,7 +221,7 @@ class Editor extends MenuItem {
     ?>
       </TD></TR>
     </TABLE>
-<?php 
+<?php
         $this->emitHidden("seq", $_REQUEST["seq"]);
         $this->emitVars();
         echo "  </FORM>\n";
@@ -259,7 +259,6 @@ class Editor extends MenuItem {
          }
          echo "<P><B>Tags queued for printing:</B>\n";
          echo "</P>\n";
-         echo "  <FORM ACTION=\"?\" METHOD=POST>\n";
          echo "    <TABLE BORDER=0>\n      <TR><TH><INPUT NAME=all TYPE=checkbox onClick='checkAll()'></TH><TH ALIGN=RIGHT>Tag&nbsp;&nbsp;</TH><TH>Artist</TH><TH>&nbsp;</TH><TH>Album</TH></TR>\n";
          if($result = Engine::api(IEditor::class)->getQueuedTags($this->session->getUser())) {
               while($row = $result->fetch()) {
@@ -273,9 +272,10 @@ class Editor extends MenuItem {
          $this->skipVar("print");
          $this->skipVar("printToPDF");
     ?>
-         </TABLE>
-         <P><INPUT TYPE=submit CLASS=submit NAME=delete VALUE=" Delete ">&nbsp;&nbsp;&nbsp;<INPUT TYPE=submit CLASS=submit NAME=print onclick="return isLocal();" VALUE=" Print ">&nbsp;&nbsp;&nbsp;<INPUT TYPE=submit CLASS=submit NAME=printToPDF onclick="return validate();" VALUE=" Print To PDF &gt; "></P>
-      </FORM>
+    </TABLE>
+    <P><INPUT TYPE=submit CLASS=submit NAME=delete VALUE=" Delete ">&nbsp;&nbsp;&nbsp;
+       <INPUT TYPE=submit CLASS=submit NAME=print onclick="return isLocal();" VALUE=" Print ">&nbsp;&nbsp;&nbsp;
+       <INPUT TYPE=submit CLASS=submit NAME=printToPDF onclick="return validate();" VALUE=" Print To PDF &gt; "></P>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     function checkAll() {
       form = document.forms[0];
@@ -346,7 +346,7 @@ class Editor extends MenuItem {
             echo "<BR>\n";
         }
         echo "    </TD></TR>\n    <TR><TD>&nbsp;</TD></TR>\n";
-        echo "    <TR><TD STYLE=\"text-align: right;\"><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next onclick=\"return validate();\" VALUE=\" Confirm &gt; \">\n";
+        echo "    <TR><TD STYLE=\"text-align: right;\"><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next onclick=\"return validate();\" VALUE=\" Next &gt; \">\n";
         echo "    <INPUT TYPE=HIDDEN NAME=sel ID=sel VALUE=\"\"></TD></TR></TABLE>\n";
 ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
@@ -419,12 +419,12 @@ class Editor extends MenuItem {
             return $validate;
         }
             
-        echo "<P>A new window has been opened with a PDF for printing.</P>\n";
-        echo "<P>If the window did not open, disable pop-up blockers and try again.</P>\n";
-        echo "<P>Please load <B>".self::LABEL_FORM_NAME." labels</B> in your printer and print the PDF.</P>\n";
-        echo "<P>Choose <B>Done</B> when you have printed the labels successfully.</P>\n";
-        echo "<P>&nbsp;</P>\n";
-        echo "<INPUT TYPE=SUBMIT CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=done VALUE=\" Done \">\n";
+        echo "        <P>A new window has been opened with a PDF for printing.</P>\n";
+        echo "        <P>If the window did not open, disable pop-up blockers and try again.</P>\n";
+        echo "        <P>Please load <B>".self::LABEL_FORM_NAME." labels</B> in your printer and print the PDF.</P>\n";
+        echo "        <P>Choose <B>Done</B> when you have printed the labels successfully.</P>\n";
+        echo "        <P>&nbsp;</P>\n";
+        echo "        <INPUT TYPE=SUBMIT CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n        <INPUT TYPE=SUBMIT CLASS=submit NAME=done VALUE=\" Done \">\n";
         
         $selLabels = explode(",", $_REQUEST["sel"]);
         $selTags = explode(",", $_REQUEST["seltags"]);
@@ -432,10 +432,10 @@ class Editor extends MenuItem {
             if($selLabels[$i])
                 $selLabels[$i] = $selTags[$j++];
         $merged = implode(",", $selLabels);
-        echo "<SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\"><!--\n";
-        echo "    window.open('?target=print&session=".$this->session->getSessionID()."&form=".self::LABEL_FORM_CODE."&tags=$merged', '_blank', 'toolbar=no,location=no,width=800,height=800');\n";
-        echo "// -->\n";
-        echo "</SCRIPT>\n";
+        echo "        <SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\"><!--\n";
+        echo "        window.open('?target=print&session=".$this->session->getSessionID()."&form=".self::LABEL_FORM_CODE."&tags=$merged', '_blank', 'toolbar=no,location=no,width=800,height=800');\n";
+        echo "        // -->\n";
+        echo "        </SCRIPT>\n";
     }
     
     public function panelNull($validate) {
@@ -727,19 +727,16 @@ class Editor extends MenuItem {
         }
         return $title;
     }
-    
+
     private function emitZkAlpha($moveThe = 0) {
     ?>
 <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"><!--
-alnum="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'<?php 
-  // the Latin-1, non-ASCII alphabetics:
-  echo "\\xdf\\xe0\\xe1\\xe2\\xe3\\xe4\\xe5\\xe6\\xe7\\xe8\\xe9\\xea\\xeb\\xec\\xed\\xee\\xef\\xf0\\xf1\\xf2\\xf3\\xf4\\xf5\\xf6\\xf8\\xf9\\xfa\\xfb\\xfc\\xfd\\xff";
-  echo "\\xde\\xc0\\xc1\\xc2\\xc3\\xc4\\xc5\\xc6\\xc7\\xc8\\xc9\\xca\\xcb\\xcc\\xcd\\xce\\xcf\\xd0\\xd1\\xd2\\xd3\\xd4\\xd5\\xd6\\xd8\\xd9\\xda\\xdb\\xdc\\xdd\\xfe";?>";
+nonalnum='.,!?&~ -+={[(|';
 function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
   val=control.value;
   newVal='';
   for(i=0; i<val.length; i++)
-  newVal += (i==0 || alnum.indexOf(val.charAt(i-1),0) == -1)?val.charAt(i).toUpperCase():val.charAt(i).toLowerCase();
+  newVal += (i==0 || nonalnum.indexOf(val.charAt(i-1),0) >= 0)?val.charAt(i).toUpperCase():val.charAt(i).toLowerCase();
   if(<?php echo !$moveThe?"!track && ":"";?>newVal.substr(0, 4) == 'The ') newVal=newVal.substr(4)+', The';
   control.value=newVal;
 }
@@ -1427,10 +1424,10 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
         $output .= $textEsc;
     
         $artist = UI::deLatin1ify($al["artist"], $charset);
-        ////if(strlen($artist) > 25)
-        ////  $artist = substr($artist, 0, 25) . "...";
-        if(strlen($artist) > 30)
-            $artist = substr($artist, 0, 30);
+        ////if(mb_strlen($artist) > 25)
+        ////  $artist = mb_substr($artist, 0, 25) . "...";
+        if(mb_strlen($artist) > 30)
+            $artist = mb_substr($artist, 0, 30);
       
         for($darken=0; $darken < $dark; $darken++)
             $output .= $artist . "\r";
@@ -1438,11 +1435,11 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     
         $album = UI::deLatin1ify($al["album"], $charset);
         $cat = " (" . Search::GENRES[$al["category"]] . ")";
-        $maxAlbumLen = 23 - strlen($cat);
-        if(strlen($album) > $maxAlbumLen + 3)
-            $album = substr($album, 0, $maxAlbumLen) . "...";
+        $maxAlbumLen = 23 - mb_strlen($cat);
+        if(mb_strlen($album) > $maxAlbumLen + 3)
+            $album = mb_substr($album, 0, $maxAlbumLen) . "...";
     
-        $alcat = sprintf("  %s%".(26-strlen($album))."s\r", $album, $cat);
+        $alcat = sprintf("  %s%".(26-mb_strlen($album))."s\r", $album, $cat);
         for($darken=0; $darken < $dark; $darken++)
             $output .= $alcat;
         $output .= "\n\n";
