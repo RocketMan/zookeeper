@@ -245,7 +245,7 @@ class Editor extends MenuItem {
               foreach($_POST as $key => $value) {
                  if(substr($key, 0, 3) == "tag" && $value == "on") {
                      $tag = substr($key, 3);
-                     if($_REQUEST["print"])
+                     if($_REQUEST["print"] && $this->session->isLocal())
                          $this->printTag($tag);
                      Engine::api(IEditor::class)->dequeueTag($tag, $this->session->getUser());
                      $this->skipVar("tag".$tag);
@@ -445,7 +445,7 @@ class Editor extends MenuItem {
     public function panelSearch($validate) {
         if($validate) {
             if($_REQUEST["print"] && $_REQUEST["seltag"]) {
-               $this->printTag($_REQUEST["seltag"]);
+               $this->enqueueTag($_REQUEST["seltag"]);
             }
             return ($_REQUEST["seltag"] || $_REQUEST["new"]) &&
                        !$_REQUEST["bup_x"] && !$_REQUEST["bdown_x"] &&
@@ -629,7 +629,7 @@ class Editor extends MenuItem {
         if($result) {
             if($_REQUEST["new"]) {
                 $_REQUEST["seltag"] = $album["tag"];
-                $this->printTag($_REQUEST["seltag"]);
+                $this->enqueueTag($_REQUEST["seltag"]);
             }
 
             $this->albumAdded = $_REQUEST["new"];
@@ -689,8 +689,7 @@ class Editor extends MenuItem {
             else if($this->albumUpdated)
                 $title = "Album Updated!";
             if($this->tagPrinted) {
-                $printed = $this->session->isLocal()?"Printed":"Queued";
-                $title .= "&nbsp;&nbsp;<FONT CLASS=\"success\">Tag $printed</FONT>";
+                $title .= "&nbsp;&nbsp;<FONT CLASS=\"success\">Tag Queued</FONT>";
             }
             break;
         case "details":
@@ -714,6 +713,8 @@ class Editor extends MenuItem {
             break;
         case "select":
             $title = "Select tags to print";
+            if($this->tagPrinted)
+                $title = "<FONT CLASS=\"success\">Tag(s) Printed</FONT>";
             break;
         case "print":
             $title = "Place album tags on the label form";
@@ -1446,15 +1447,14 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
 
         return $output;
     }
+
+    private function enqueueTag($tag) {
+        // Enqueue tag for later printing
+        Engine::api(IEditor::class)->enqueueTag($tag, $this->session->getUser());
+        $this->tagPrinted = 1;
+    }
     
     private function printTag($tag) {
-        if(!$this->session->isLocal()) {
-            // Enqueue tag for later printing
-            Engine::api(IEditor::class)->enqueueTag($tag, $this->session->getUser());
-            $this->tagPrinted = 1;
-            return;
-        }
-
         $config = Engine::param('label_printer');
         $charset = self::$charset[$config['charset']];
 
