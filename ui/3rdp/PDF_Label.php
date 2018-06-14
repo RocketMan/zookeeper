@@ -34,6 +34,9 @@
 // 1.4: + Page scaling is disabled in printing options
 // 1.5: + Added 3422 format
 // 1.6: + FPDF 1.8 compatibility
+// 1.6.1: Zookeeper-specific changes:
+//      1. use tFPDF (for unicode and ttf)
+//      2. left-justify the label cells
 //////////////////////////////////////////////////////////////////////////////
 
 /**

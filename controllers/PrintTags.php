@@ -45,6 +45,7 @@ class PrintTags implements IController {
         $pdf->SetFont(self::FONT_FACE, '', self::FONT_SIZE);
         $pdf->Set_Font_Size(self::LINE_SIZE);
         $pdf->SetFontSize(self::FONT_SIZE);
+        $pdf->SetCreator("Zookeeper Online");
         $pdf->AddPage();
 
         $tags = explode(",", $_REQUEST["tags"]);

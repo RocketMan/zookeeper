@@ -88,7 +88,7 @@ class Reviews extends MenuItem {
         echo "  <TR><TH ALIGN=LEFT>Album</TH><TH ALIGN=LEFT>Artist</TH><TH ALIGN=LEFT>Collection</TH><TH ALIGN=LEFT>Reviewed by</TH></TR>\n";
         $results = Engine::api(IReview::class)->getRecentReviews("", 2);
         $libAPI = Engine::api(ILibrary::class);
-        while($row = $results->fetch()) {
+        while($results && ($row = $results->fetch())) {
             $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
             $this->emitReviewRow($row, $albums);
         }
@@ -97,7 +97,7 @@ class Reviews extends MenuItem {
             echo "  <TR><TD COLSPAN=5>&nbsp;</TD></TR>\n";
             echo "<TR><TH COLSPAN=5 CLASS=\"subhead\" ALIGN=LEFT>Your Most Recent Reviews</TH></TR>\n";
             echo "  <TR><TH ALIGN=LEFT>Album</TH><TH ALIGN=LEFT>Artist</TH><TH ALIGN=LEFT>Collection</TH><TH ALIGN=LEFT>Reviewed by</TH><TH>&nbsp;</TH></TR>\n";
-            while($row = $results->fetch()) {
+            while($results && ($row = $results->fetch())) {
                 $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
                 $this->emitReviewRow($row, $albums);
             }

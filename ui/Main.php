@@ -90,7 +90,8 @@ class Main implements IController {
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio A-File Adds" HREF="zkrss.php?feed=adds">
   <LINK REL="search" TYPE="application/opensearchdescription+xml" HREF="?target=opensearch" title="<?php echo $banner;?>">
-</HEAD><?php 
+</HEAD>
+<?php 
     }
     
     private function emitNavbar($dispatcher, $action) {
@@ -161,55 +162,55 @@ class Main implements IController {
         $urls = Engine::param('urls');
         $station_full = Engine::param('station_full');
 ?>
-    <BODY onLoad="setFocus()">
-    <DIV CLASS="box">
-      <DIV CLASS="header">
-        <DIV CLASS="headerLogo">
-          <A HREF="<?php echo $urls['home']; ?>">
-            <IMG SRC="<?php echo Engine::param('logo'); ?>" ALT="<?php echo $station_full; ?>" TITLE="<?php echo $station_full; ?>">
-          </A>
-        </DIV>
-        <DIV CLASS="headerNavbar">
-	<SPAN>Music with a difference...</SPAN>
-	</DIV>
-      </DIV>
-    <?php 
+<BODY onLoad="setFocus()">
+<DIV CLASS="box">
+  <DIV CLASS="header">
+    <DIV CLASS="headerLogo">
+      <A HREF="<?php echo $urls['home']; ?>">
+        <IMG SRC="<?php echo Engine::param('logo'); ?>" ALT="<?php echo $station_full; ?>" TITLE="<?php echo $station_full; ?>">
+      </A>
+    </DIV>
+    <DIV CLASS="headerNavbar">
+      <SPAN>Music with a difference...</SPAN>
+    </DIV>
+  </DIV>
+<?php 
     echo "  <DIV CLASS=\"leftNav\">\n";
     $this->emitNavBar($dispatcher, $_REQUEST["action"]);
     echo "  </DIV>\n";
     echo "  <DIV CLASS=\"content\">\n";
     
     $this->emitMain($dispatcher, $_REQUEST["action"], $_REQUEST["subaction"]);
-    ?>
-      </DIV>
-      <DIV CLASS="footer">
-        <?php echo Engine::param('copyright'); ?><BR>
-        <A HREF="#about">Zookeeper Online &copy; 1997-2018 Jim Mason. All rights reserved.</A>
-      </DIV>
+?>
+  </DIV>
+  <DIV CLASS="footer">
+    <?php echo Engine::param('copyright'); ?><BR>
+    <A HREF="#about">Zookeeper Online &copy; 1997-2018 Jim Mason. All rights reserved.</A>
+  </DIV>
+</DIV>
+<DIV CLASS="lightbox" ID="about">
+  <DIV CLASS="lightbox-modal">
+    <DIV CLASS="close"><A HREF="#">[x]</A></DIV>
+    <DIV CLASS="body">
+      <P class="title">Zookeeper Online version 2.0.0</P>
+      <P>Zookeeper Online &copy; 1997-2018 Jim Mason &ltjmason@ibinx.com&gt;</P>
+      <P>This program is free software; you are welcome to redistribute it
+      under certain conditions.  See the <A HREF="LICENSE.md" TARGET="_blank">LICENSE</A>
+      for details.</P>
+      <P><A HREF="https://zookeeper.ibinx.com/" TARGET="_blank">Zookeeper Online project homepage</A></P>
     </DIV>
-    <DIV CLASS="lightbox" ID="about">
-      <DIV CLASS="lightbox-modal">
-        <DIV CLASS="close"><A HREF="#">[x]</A></DIV>
-        <DIV CLASS="body">
-          <P class="title">Zookeeper Online version 2.0.0</P>
-          <P>Zookeeper Online &copy; 1997-2018 Jim Mason &ltjmason@ibinx.com&gt;</P>
-          <P>This program is free software; you are welcome to redistribute it
-          under certain conditions.  See the <A HREF="LICENSE.md" TARGET="_blank">LICENSE</A>
-          for details.</P>
-          <P><A HREF="https://zookeeper.ibinx.com/" TARGET="_blank">Zookeeper Online project homepage</A></P>
-        </DIV>
-      </DIV>
-    </DIV>
-    </BODY>
-    </HTML>
+  </DIV>
+</DIV>
+</BODY>
+</HTML>
 <?php 
     }
 
     private function emitLogin($invalid="") {
-    ?>
+?>
     <FORM ACTION="?" METHOD=POST>
     <TABLE CELLPADDING=2>
-    <?php 
+<?php 
         switch ($invalid) {
         case "badCredentials":
             if($this->session->isAuth("g"))
@@ -235,7 +236,7 @@ class Main implements IController {
             echo "  <TR><TD></TD><TD CLASS=\"sub\">AUTHORIZED USE ONLY!<BR>\n";
             break;
         }
-    ?>
+?>
       <TR><TD COLSPAN=2>&nbsp;</TD></TR>
       <TR><TD>&nbsp;</TD><TD>Enter your user name and password to login</TD></TR>
       <TR><TD ALIGN=RIGHT>User:</TD>
@@ -253,7 +254,7 @@ class Main implements IController {
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=action VALUE="loginValidate">
     </FORM>
-    <?php
+<?php
         UI::setFocus("user");
     }
     
@@ -271,15 +272,13 @@ class Main implements IController {
     go to the <A HREF="?action=login">classic login</A> page and enter your
     existing <?php echo Engine::param('application'); ?> user name and password.
     <B>Classic login may be deprecated or restricted in future.</B></P>
-    <?php 
+<?php 
     }
 
     private function emitLoginValidate() {
         if($this->session->isAuth("u")) {
-    ?>
-       <H3>login successful</H3>
-    <?php
-        if($this->session->isAuth("g"))
+            echo "       <H3>login successful</H3>\n";
+            if($this->session->isAuth("g"))
                 echo "   <P><B>IMPORTANT:  This login can be used ONLY at the station.</B></P>\n";
             Editor::emitQueueHook($this->session);
             UI::setFocus();
@@ -388,9 +387,9 @@ class Main implements IController {
     <FORM ACTION="?" METHOD=POST>
       <P><INPUT TYPE="radio" NAME="account" VALUE="old" ID="oldRadio" onClick="showOld();">I already have a Zookeeper account and wish to use it</P>
       <DIV ID="oldSect" style="display:none;margin-left:50px;">
-    <?php if($_REQUEST["user"]) { ?>
+<?php if($_REQUEST["user"]) { ?>
           <P><FONT CLASS="error">Invalid user or password</FONT></P>
-    <?php } ?>
+<?php } ?>
           <P>Enter your existing Zookeeper login</P>
           <TABLE>
               <TR><TD ALIGN=RIGHT>User:</TD>
@@ -417,13 +416,13 @@ class Main implements IController {
         document.getElementById("oldSect").style.display = "none";
         document.getElementById("newSect").style.display = "block"; }
     function setFocus() {
-    <?php if($_REQUEST["user"]) { ?>
+<?php if($_REQUEST["user"]) { ?>
         document.getElementById("oldRadio").checked = true;
         showOld();
-    <?php } ?>
+<?php } ?>
     }
     // -->
     </SCRIPT>
-    <?php 
+<?php 
     }
 }
