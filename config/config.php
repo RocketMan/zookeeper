@@ -100,6 +100,10 @@ $config = [
      */
     'label_printer' => [
         /**
+         * supported print methods (0 or more of 'lpr', 'pdf')
+         */
+        'print_methods' => ['lpr', 'pdf'],
+        /**
          * lpr print queue name
          */
         'print_queue' => 'label',

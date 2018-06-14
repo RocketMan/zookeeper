@@ -136,6 +136,7 @@ class Editor extends MenuItem {
     private $albumAdded;
     private $albumUpdated;
     private $tagPrinted;
+    private $printConfig;
 
     public static function emitQueueHook($session) {
         if($session->isLocal() && Engine::api(ILibrary::class)->getNumQueuedTags($session->getUser()))
@@ -151,6 +152,7 @@ class Editor extends MenuItem {
         if(Engine::api(ILibrary::class)->getNumQueuedTags($this->session->getUser()))
             $subactions = array_merge($subactions, self::$subactions_tagq);
         $this->subaction = $subaction;
+        $this->printConfig = Engine::param('label_printer');
         return $this->dispatchSubaction($action, $subaction, $subactions);
     }
 
@@ -271,11 +273,13 @@ class Editor extends MenuItem {
          $this->skipVar("delete");
          $this->skipVar("print");
          $this->skipVar("printToPDF");
-    ?>
-    </TABLE>
-    <P><INPUT TYPE=submit CLASS=submit NAME=delete VALUE=" Delete ">&nbsp;&nbsp;&nbsp;
-       <INPUT TYPE=submit CLASS=submit NAME=print onclick="return isLocal();" VALUE=" Print ">&nbsp;&nbsp;&nbsp;
-       <INPUT TYPE=submit CLASS=submit NAME=printToPDF onclick="return validate();" VALUE=" Print To PDF &gt; "></P>
+         echo "    </TABLE>\n";
+         echo "    <P><INPUT TYPE=submit CLASS=submit NAME=delete VALUE=\" Remove from Queue \">&nbsp;&nbsp;&nbsp;\n";
+         if(in_array('lpr', $this->printConfig['print_methods']))
+             echo "       <INPUT TYPE=submit CLASS=submit NAME=print onclick=\"return isLocal();\" VALUE=\" Print \">&nbsp;&nbsp;&nbsp;\n";
+         if(in_array('pdf', $this->printConfig['print_methods']))
+             echo "       <INPUT TYPE=submit CLASS=submit NAME=printToPDF onclick=\"return validate();\" VALUE=\" Print To PDF &gt; \">\n";
+         echo "    </P>\n"; ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     function checkAll() {
       form = document.forms[0];
@@ -348,9 +352,17 @@ class Editor extends MenuItem {
         echo "    </TD></TR>\n    <TR><TD>&nbsp;</TD></TR>\n";
         echo "    <TR><TD STYLE=\"text-align: right;\"><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next onclick=\"return validate();\" VALUE=\" Next &gt; \">\n";
         echo "    <INPUT TYPE=HIDDEN NAME=sel ID=sel VALUE=\"\"></TD></TR></TABLE>\n";
+        echo "<SCRIPT LANGUAGE=\"JavaScript\" TYPE=\"text/javascript\"><!--\n";
+        // 2018-06-14 this does not work in some browsers;
+        // for now, we'll manually create an empty array
+        //echo "    var sel = [...Array($numLabels)].map(x=>0);\n";
+        // BEGIN WORKAROUND
+        echo "    var sel = [ ";
+        for($i=0; $i<$numLabels; $i++)
+            echo "0, ";
+        echo "];\n";
+        // END WORKAROUND
 ?>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    var sel = [...Array(<?php echo $numLabels; ?>)].map(x=>0);
     var count = 0, max=<?php echo $count; ?>;
     function c(idx) {
       if(sel[idx]) {
@@ -714,7 +726,7 @@ class Editor extends MenuItem {
         case "select":
             $title = "Select tags to print";
             if($this->tagPrinted)
-                $title = "<FONT CLASS=\"success\">Tag(s) Printed</FONT>";
+                $title .= "&nbsp;&nbsp;<FONT CLASS=\"success\">Tag(s) Printed</FONT>";
             break;
         case "print":
             $title = "Place album tags on the label form";
@@ -753,7 +765,19 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
          for($i=0; $i<sizeof($fields); $i++)
               echo " '" . $fields[$i] . "',";
          echo " ];\n";
-         echo "   data = [...Array($this->limit)].map(e => Array(".sizeof($fields).").fill(''));\n\n";
+         // 2018-06-14 this does not work in some browsers;
+         // for now, we'll manually create an empty array
+         //echo "   data = [...Array($this->limit)].map(e => Array(".sizeof($fields).").fill(''));\n\n";
+         // BEGIN WORKAROUND
+         echo "   data = [\n";
+         for($i=0; $i<$this->limit; $i++) {
+             echo "      [ ";
+             for($j=0; $j<sizeof($fields); $j++)
+                 echo "'', ";
+             echo "],\n";
+         }
+         echo "];\n\n";
+         // END WORKAROUND
     ?>
     function changeList() {
         i = document.forms[0].list.selectedIndex;
@@ -884,8 +908,10 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     <TR><TD ALIGN=CENTER>
     <!--P ALIGN=CENTER-->
       <INPUT TYPE=SUBMIT NAME=new CLASS=submit VALUE="  New  ">&nbsp;
-      <INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Edit  ">&nbsp;
-      <INPUT TYPE=SUBMIT NAME=print CLASS=submit VALUE="  Print  ">&nbsp;
+      <INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Edit  ">&nbsp; <?php
+               if(!empty($this->printConfig['print_methods']))
+
+             echo "      <INPUT TYPE=SUBMIT NAME=print CLASS=submit VALUE=\"  Print  \">&nbsp;\n"; ?>
     <!--/P-->
     </TD><TD></TD></TR>
     </TABLE>
@@ -1449,19 +1475,22 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     }
 
     private function enqueueTag($tag) {
-        // Enqueue tag for later printing
-        Engine::api(IEditor::class)->enqueueTag($tag, $this->session->getUser());
-        $this->tagPrinted = 1;
+        if(!empty($this->printConfig['print_methods'])) {
+            // Enqueue tag for later printing
+            Engine::api(IEditor::class)->enqueueTag($tag, $this->session->getUser());
+            $this->tagPrinted = 1;
+        }
     }
     
     private function printTag($tag) {
-        $config = Engine::param('label_printer');
-        $charset = self::$charset[$config['charset']];
+        $charset = self::$charset[$this->printConfig['charset']];
 
-        $output = self::makeLabel($tag, $charset, $config['darkness'],
-                                  $config['box_mode'], $config['text_mode']);
+        $output = self::makeLabel($tag, $charset,
+                                  $this->printConfig['darkness'],
+                                  $this->printConfig['box_mode'],
+                                  $this->printConfig['text_mode']);
     
-        $printer = popen("lpr -P".$config['print_queue'], "w");
+        $printer = popen("lpr -P".$this->printConfig['print_queue'], "w");
         fwrite($printer, $output);
         pclose($printer);
     
