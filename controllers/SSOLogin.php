@@ -57,7 +57,6 @@ class SSOLogin implements IController {
         
             if($location) {
                 // external redirection requested
-                $rq["access"] = $access;
                 $target = $location;
             } else
                 $target = UI::getBaseUrl();

@@ -421,11 +421,16 @@ class Editor extends MenuItem {
                 foreach(explode(",", $_REQUEST["seltags"]) as $tag)
                     $this->emitHidden("tag".$tag, "on");
             } else {
+                $selCount = $_REQUEST["selcount"];
                 foreach(explode(",", $_REQUEST["seltags"]) as $tag)
-                    Engine::api(IEditor::class)->dequeueTag($tag, $this->session->getUser());
+                    if($selCount-- > 0)
+                        Engine::api(IEditor::class)->dequeueTag($tag, $this->session->getUser());
+                    else
+                        $this->emitHidden("tag".$tag, "on");
             }
             $this->skipVar("sel");
             $this->skipVar("seltags");
+            $this->skipVar("selcount");
             $this->skipVar("back");
             $this->skipVar("done");
             return $validate;
@@ -440,9 +445,14 @@ class Editor extends MenuItem {
         
         $selLabels = explode(",", $_REQUEST["sel"]);
         $selTags = explode(",", $_REQUEST["seltags"]);
-        for($i=0, $j=0; $i<sizeof($selLabels); $i++)
-            if($selLabels[$i])
+        $selCount = 0;
+        for($i=0, $j=0; $i<sizeof($selLabels); $i++) {
+            if($selLabels[$i]) {
                 $selLabels[$i] = $selTags[$j++];
+                $selCount++;
+            }
+        }
+        $this->emitHidden("selcount", $selCount);
         $merged = implode(",", $selLabels);
         echo "        <SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\"><!--\n";
         echo "        window.open('?target=print&session=".$this->session->getSessionID()."&form=".self::LABEL_FORM_CODE."&tags=$merged', '_blank', 'toolbar=no,location=no,width=800,height=800');\n";
@@ -909,7 +919,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     <!--P ALIGN=CENTER-->
       <INPUT TYPE=SUBMIT NAME=new CLASS=submit VALUE="  New  ">&nbsp;
       <INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Edit  ">&nbsp; <?php
-               if(!empty($this->printConfig['print_methods']))
+         if(!empty($this->printConfig['print_methods']))
 
              echo "      <INPUT TYPE=SUBMIT NAME=print CLASS=submit VALUE=\"  Print  \">&nbsp;\n"; ?>
     <!--/P-->
