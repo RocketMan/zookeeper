@@ -122,7 +122,7 @@ $config = [
         /**
          * escape seq to switch to box drawing mode, if any (empty for UTF-8)
          */
-        'box_mode' => "\x1bt1\x1b6", // ESC+t+1 graphics mode, ESC+6 for GCS 2
+        'box_mode' => "",
     ],
 
     /**
