@@ -185,7 +185,7 @@ class Main implements IController {
   </DIV>
   <DIV CLASS="footer">
     <?php echo Engine::param('copyright'); ?><BR>
-    <A HREF="#about">Zookeeper Online &copy; 1997-2018 Jim Mason. All rights reserved.</A>
+    <A HREF="#about">Zookeeper Online &copy; 1997-2018 J Mason. All rights reserved.</A>
   </DIV>
 </DIV>
 <DIV CLASS="lightbox" ID="about">
@@ -193,7 +193,7 @@ class Main implements IController {
     <DIV CLASS="close"><A HREF="#">[x]</A></DIV>
     <DIV CLASS="body">
       <P class="title">Zookeeper Online version 2.0.0</P>
-      <P>Zookeeper Online &copy; 1997-2018 Jim Mason &ltjmason@ibinx.com&gt;</P>
+      <P>Zookeeper Online &copy; 1997-2018 J Mason &lt;jmason@ibinx.com&gt;</P>
       <P>This program is free software; you are welcome to redistribute it
       under certain conditions.  See the <A HREF="LICENSE.md" TARGET="_blank">LICENSE</A>
       for details.</P>
