@@ -340,7 +340,7 @@ class Editor extends MenuItem {
         echo "    <P>Select up to <B><SPAN id=\"count\">$count</SPAN></B> labels:</P>\n";
         echo "    <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>\n";
         echo "    <TR><TD CLASS=\"label-form\">\n";
-        echo "    <SPAN Style=\"display: inline-block; clear: both; float: right; font: bold 10px sans-serif; color: #cc0000;\">".strtoupper(self::LABEL_FORM_NAME)." LABELS</SPAN><BR>\n";
+        echo "    <SPAN CLASS=\"form-name\">".strtoupper(self::LABEL_FORM_NAME)." LABELS</SPAN><BR>\n";
         for($i=0; $i<$numRow; $i++) {
             echo "    ";
             for($j=0; $j<$numCol; $j++) {
@@ -439,7 +439,7 @@ class Editor extends MenuItem {
         echo "        <P>A new window has been opened with a PDF for printing.</P>\n";
         echo "        <P>If the window did not open, disable pop-up blockers and try again.</P>\n";
         echo "        <P>Please load <B>".self::LABEL_FORM_NAME." labels</B> in your printer and print the PDF.</P>\n";
-        echo "        <P>Choose <B>Done</B> when you have printed the labels successfully.</P>\n";
+        echo "        <P>Choose <B>Done</B> after you have printed the labels successfully.</P>\n";
         echo "        <P>&nbsp;</P>\n";
         echo "        <INPUT TYPE=SUBMIT CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n        <INPUT TYPE=SUBMIT CLASS=submit NAME=done VALUE=\" Done \">\n";
         
