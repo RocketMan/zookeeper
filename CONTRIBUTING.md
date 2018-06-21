@@ -24,6 +24,10 @@
 
 ### Tour
 
+Zookeeper follows the MVC (Model-View-Controller) pattern.  There are
+clear architectural boundaries between the busienss logic (in `engine`)
+and the presentation, which is contained in `ui` and `controllers`.
+
 The following is an overview of the source code directory structure:
 
     project-root/
@@ -91,6 +95,9 @@ The following is an overview of the source code directory structure:
         ui/
             UI rendering.  Menu items and their mappings are specified
             in metadata, via config/ui_config.php.
+
+        ui/3rdp
+            Third-party dependencies.
             
         index.php
             main endpoint for the application
@@ -99,3 +106,15 @@ The following is an overview of the source code directory structure:
             maps virtual endpoints onto index.php
 
 
+### Guidelines
+
+As you contribute code, please observe the following guidelines:
+
+* Code in `engine` may never reference other parts of the application;
+* All access to the engine is mediated via the Engine::api pattern (see
+  above for a discussion);
+* Code outside the engine must delegate all database access to the engine.
+
+Questions, comments, queries, or suggestions are welcome.
+
+Thank you for contributing to Zookeeper Online!
