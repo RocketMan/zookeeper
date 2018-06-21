@@ -103,7 +103,7 @@ TABLE.djzone TD:last-child {
     width: 100%;
 }
 
-/* editor */
+/* library editor */
 TD.label-form A {
     transition: all 0.2s ease-in-out;
     text-decoration: none;
@@ -120,6 +120,13 @@ TD.label-form A {
 }
 TD.label-form A:FOCUS {
     outline:0;
+}
+TD.label-form SPAN.form-name {
+    display: inline-block;
+    clear: both;
+    float: right;
+    font: bold 10px sans-serif;
+    color: #cc0000;
 }
 TD.label-form {
     border-style: solid;

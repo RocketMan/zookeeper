@@ -81,7 +81,7 @@ class Main implements IController {
 <HTML>
 <HEAD>
   <TITLE><?php echo $banner;?></TITLE>
-  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
   <LINK REL="stylesheet" HREF="<?php echo Engine::param('stylesheet'); ?>">
   <LINK REL="stylesheet" HREF="<?php 
        echo $nn4hack?"css/netscape.css":"css/zoostyle.css"; ?>">
