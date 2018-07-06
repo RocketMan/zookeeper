@@ -192,7 +192,7 @@ class Main implements IController {
   <DIV CLASS="lightbox-modal">
     <DIV CLASS="close"><A HREF="#">[x]</A></DIV>
     <DIV CLASS="body">
-      <P class="title">Zookeeper Online version 2.0.0</P>
+      <P class="title">Zookeeper Online version <?php echo Engine::VERSION; ?></P>
       <P>Zookeeper Online &copy; 1997-2018 J Mason &lt;jmason@ibinx.com&gt;</P>
       <P>This program is free software; you are welcome to redistribute it
       under certain conditions.  See the <A HREF="LICENSE.md" TARGET="_blank">LICENSE</A>
