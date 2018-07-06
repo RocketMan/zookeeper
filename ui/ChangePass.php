@@ -33,12 +33,12 @@ class ChangePass extends MenuItem {
     public function processLocal($action, $subaction) {
         if(isset($_REQUEST["validate"])) {
             $userAPI = Engine::api(IUser::class);
-            if($userAPI->validatePassword($_REQUEST["user"], $_REQUEST["oldPass"])) {
+            if($userAPI->validatePassword($this->session->getUser(), $_REQUEST["oldPass"], 0)) {
                 $newPass = $_REQUEST["newPass"];
                 if($newPass != "") {
                     if($newPass == $_REQUEST["newPass2"]) {
                         // Update password
-                        if($userAPI->updateUser($_REQUEST["user"], $newPass)) {
+                        if($userAPI->updateUser($this->session->getUser(), $newPass)) {
                             echo "<B>Your password has been changed.</B>\n";
                             UI::setFocus();
                             return;
