@@ -95,7 +95,7 @@ class RunDaily implements IController {
     }
 
     private function purgeOldSessions() {
-        $ok = Engine::api(IUser::class)->purgeOldSessions();
+        $ok = Engine::session()->purgeOldSessions();
         echo "Purging old sessions: ".($ok?"OK":"FAILED!")."\n";
     }
 

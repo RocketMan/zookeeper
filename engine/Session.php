@@ -104,6 +104,13 @@ class Session {
         return $stmt->execute();
     }
 
+    public function purgeOldSessions() {
+        $query = "DELETE FROM sessions WHERE ".
+                 "DATE_ADD(logon, INTERVAL 2 DAY) < NOW()";
+        $stmt = $this->pdo->prepare($query);
+        return $stmt->execute();
+    }
+
     public function create($sessionID, $user, $auth) {
         $row = Engine::api(IUser::class)->getUser($user);
         if($row)

@@ -43,9 +43,4 @@ interface IUser {
     function validatePassword($user, $password, $updateTimestamp, &$groups=0);
     function updateUser($user, $password, $realname="XXZZ", $groups="XXZZ", $expiration="XXZZ");
     function insertUser($user, $password, $realname, $groups, $expiration);
-    function querySession($session);
-    function createSession($session, $user, $access);
-    function setPortID($session, $portid);
-    function deleteSession($session);
-    function purgeOldSessions();
 }
