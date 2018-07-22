@@ -158,6 +158,10 @@ function setFocus() {
         echo "</SPAN>\n";
     }
 
+    private function HTMLify($arg, $size) {
+        return UI::HTMLify($arg, $size, $this->noTables);
+    }
+
     public function searchByAlbumKey() {
         $n = $_REQUEST["n"];
     
@@ -166,8 +170,8 @@ function setFocus() {
         $artist = strcmp(substr($albums[0]["artist"], 0, 8), "[coll]: ")?
                       $albums[0]["artist"]:"Various Artists";
         echo "<TABLE WIDTH=\"100%\">\n  <TR><TH ALIGN=LEFT COLSPAN=5 CLASS=\"secdiv\">" .
-                  UI::HTMLify($artist, 20) . " / " .
-                  UI::HTMLify($albums[0]["album"], 20);
+                  $this->HTMLify($artist, 20) . " / " .
+                  $this->HTMLify($albums[0]["album"], 20);
         if($this->session->isAuth("u"))
             echo "&nbsp;&nbsp;(Tag #".$albums[0]["tag"].")";
         echo "</TH></TR>\n</TABLE>";
@@ -284,7 +288,7 @@ function setFocus() {
     
             // Number
             if($this->noTables)
-                echo UI::HTMLifyNum($albums[$i]["seq"], 3);
+                echo UI::HTMLifyNum($albums[$i]["seq"], 3, 1);
             echo "  <TR><TD ALIGN=RIGHT>".$albums[$i]["seq"].".</TD><TD>";
     
             // Artist Name
@@ -293,7 +297,7 @@ function setFocus() {
                                "&amp;q=". $this->maxresults.
                                "&amp;action=search&amp;session=".$this->session->getSessionID().
                                "\">";
-            echo UI::HTMLify($albums[$i]["artist"], 20), "</A>";
+            echo $this->HTMLify($albums[$i]["artist"], 20), "</A>";
             if(!$this->noTables)
                 echo "</TD><TD>\n";
     
@@ -303,7 +307,7 @@ function setFocus() {
                                "&amp;q=". $this->maxresults.
                                "&amp;action=search&amp;session=".$this->session->getSessionID().
                                "\">";
-            echo UI::HTMLify($albums[$i]["track"], 32). "</A>";
+            echo $this->HTMLify($albums[$i]["track"], 32). "</A>";
             if(!$this->noTables)
                 echo "</TD></TR>";
             echo "\n";
@@ -329,12 +333,12 @@ function setFocus() {
     
                 if($mid - $i < 1)
                     if($this->noTables)
-                        echo UI::HTMLify(" ", 36);
+                        echo UI::HTMLify(" ", 36, 1);
                     else
                         echo "  <TR><TD COLSPAN=3>&nbsp;</TD>";
                 else {
                     if($this->noTables)
-                        echo UI::HTMLifyNum($tracks[$i]["seq"], 3);
+                        echo UI::HTMLifyNum($tracks[$i]["seq"], 3, 1);
                     else
                         echo "  <TR><TD ALIGN=RIGHT>".$tracks[$i]["seq"].".</TD><TD>";
                     // Name
@@ -343,13 +347,13 @@ function setFocus() {
                                  "&amp;q=". $this->maxresults.
                                  "&amp;action=search&amp;session=".$this->session->getSessionID().
                                  "\">";
-                    echo UI::HTMLify($tracks[$i]["track"], 32), "</A>";
+                    echo $this->HTMLify($tracks[$i]["track"], 32), "</A>";
                     if(!$this->noTables)
                         echo "</TD><TD>&nbsp;</TD>";
                 }
     
                 if($this->noTables)
-                    echo UI::HTMLifyNum($tracks[$mid + $i]["seq"], 3);
+                    echo UI::HTMLifyNum($tracks[$mid + $i]["seq"], 3, 1);
                 else
                     echo "<TD ALIGN=RIGHT>".$tracks[$mid + $i]["seq"].".</TD><TD>";
                 // Name
@@ -358,7 +362,7 @@ function setFocus() {
                                     "&amp;q=". $this->maxresults.
                                     "&amp;action=search&amp;session=".$this->session->getSessionID().
                                     "\">";
-                echo UI::HTMLify($tracks[$mid + $i]["track"], 32), "</A>";
+                echo $this->HTMLify($tracks[$mid + $i]["track"], 32), "</A>";
     
                 if(!$this->noTables)
                     echo "</TD></TR>";
@@ -562,7 +566,7 @@ function setFocus() {
                                 "&amp;action=search&amp;session=".$this->session->getSessionID().
                                 "\">";
             }
-            echo UI::HTMLify($albums[$i]["artist"], 20) . "</A>";
+            echo $this->HTMLify($albums[$i]["artist"], 20) . "</A>";
             // Album
             if(!$this->noTables) {
                 echo "</TD><TD>";
@@ -582,7 +586,7 @@ function setFocus() {
                                "&amp;q=". $this->maxresults.
                                "&amp;action=search&amp;session=".$this->session->getSessionID().
                                "\">";
-            echo UI::HTMLify($albums[$i]["album"], 20) . "</A>";
+            echo $this->HTMLify($albums[$i]["album"], 20) . "</A>";
             if(!$this->noTables)
                 echo "</TD><TD>";
             // Genre
@@ -603,16 +607,16 @@ function setFocus() {
                 echo "<I>Deaccessioned</I>";
                 break;
             default:
-                echo UI::HTMLify(Search::GENRES[$albums[$i]["category"]], 7);
+                echo $this->HTMLify(Search::GENRES[$albums[$i]["category"]], 7);
                 break;
             }
             if(!$this->noTables)
                 echo "</TD><TD>";
             // Medium & Length
-            echo UI::HTMLify(Search::MEDIA[$albums[$i]["medium"]], 3);
+            echo $this->HTMLify(Search::MEDIA[$albums[$i]["medium"]], 3);
             if(!$this->noTables)
                 echo "</TD><TD>";
-            echo UI::HTMLify(Search::LENGTHS[$albums[$i]["size"]], 3);
+            echo $this->HTMLify(Search::LENGTHS[$albums[$i]["size"]], 3);
             if(!$this->noTables)
                 echo "</TD><TD ALIGN=CENTER>";
             // Add Date
@@ -637,13 +641,13 @@ function setFocus() {
                         $labelCache[$labelKey] = "(Unknown)";
                 }
     
-                echo UI::HTMLify($labelCache[$labelKey], 20). "</A>";
+                echo $this->HTMLify($labelCache[$labelKey], 20). "</A>";
                 if($this->noTables)
                     echo "\n";
                 else
                     echo "</TD></TR>\n";
             } else {
-                echo UI::HTMLify("Unknown", 20);
+                echo $this->HTMLify("Unknown", 20);
                 if(!$this->noTables)
                     echo "</TD></TR>";
                 echo "\n";
@@ -753,7 +757,7 @@ function setFocus() {
                                 "&amp;action=search&amp;session=".$this->session->getSessionID().
                                 "\">";
             }
-            echo UI::HTMLify($albums[$i]["artist"], 20) . "</A>";
+            echo $this->HTMLify($albums[$i]["artist"], 20) . "</A>";
     
             // Album
             if(!$this->noTables)
@@ -763,7 +767,7 @@ function setFocus() {
                                "&amp;q=". $this->maxresults.
                                "&amp;action=search&amp;session=".$this->session->getSessionID().
                                "\">";
-            echo UI::HTMLify($albums[$i]["album"], 20) . "</A>";
+            echo $this->HTMLify($albums[$i]["album"], 20) . "</A>";
             if($this->session->isAuth("u"))
                 echo " <FONT CLASS=\"sub\">(Tag&nbsp;#". $albums[$i]["tag"] .")</FONT>";
             if(!$this->noTables)
@@ -777,9 +781,9 @@ function setFocus() {
                                    "&amp;action=search&amp;session=".$this->session->getSessionID().
                                    "\">";
     
-                echo UI::HTMLify($albums[$i]["name"], 20). "</A>";
+                echo $this->HTMLify($albums[$i]["name"], 20). "</A>";
             } else {
-                echo UI::HTMLify("Unknown", 20);
+                echo $this->HTMLify("Unknown", 20);
             }
     
             if(!$this->noTables)
@@ -937,7 +941,7 @@ function setFocus() {
                                 "&amp;action=search&amp;session=".$this->session->getSessionID().
                                 "&amp;q=". $this->maxresults.
                                 "\">";
-                echo UI::HTMLify($artistName, 20), "</A>";
+                echo $this->HTMLify($artistName, 20), "</A>";
                 // Album
                 if(!$this->noTables) {
                     echo "</TD><TD>";
@@ -957,11 +961,11 @@ function setFocus() {
                                "&amp;q=". $this->maxresults.
                                "&amp;action=search&amp;session=".$this->session->getSessionID().
                                "\">";
-                echo UI::HTMLify($albumName, 20). "</A>";
+                echo $this->HTMLify($albumName, 20). "</A>";
                 if(!$this->noTables)
                     echo "</TD><TD>";
                 // Track Name
-                echo UI::HTMLify($trackName, 20);
+                echo $this->HTMLify($trackName, 20);
                 if(!$this->noTables)
                     echo "</TD><TD>";
                 // Genre
@@ -982,16 +986,16 @@ function setFocus() {
                     echo "<I>Deaccessioned</I>";
                     break;
                 default:
-                    echo UI::HTMLify(Search::GENRES[$album[0]["category"]], 7);
+                    echo $this->HTMLify(Search::GENRES[$album[0]["category"]], 7);
                     break;
                 }
                 if(!$this->noTables)
                     echo "</TD><TD>";
                 // Medium & Length
-                echo UI::HTMLify(Search::MEDIA[$album[0]["medium"]], 3);
+                echo $this->HTMLify(Search::MEDIA[$album[0]["medium"]], 3);
                 if(!$this->noTables)
                     echo "</TD><TD>";
-                echo UI::HTMLify(Search::LENGTHS[$album[0]["size"]], 3);
+                echo $this->HTMLify(Search::LENGTHS[$album[0]["size"]], 3);
                 if(!$this->noTables)
                     echo "</TD><TD>";
                 // Label
@@ -1010,7 +1014,7 @@ function setFocus() {
                         else
                             $labelCache[$labelKey] = "(Unknown)";
                     }
-                    echo UI::HTMLify($labelCache[$labelKey], 20). "</A></TD></TR>\n";
+                    echo $this->HTMLify($labelCache[$labelKey], 20). "</A></TD></TR>\n";
                 } else {
                     if(!$this->noTables)
                         echo "Unknown</TD></TR>";
@@ -1061,13 +1065,13 @@ function setFocus() {
                             "&amp;q=". $this->maxresults.
                             "&amp;action=search&amp;session=".$this->session->getSessionID().
                             "\">";
-            echo UI::HTMLify($labels[$i]["name"], 20). "</A>";
+            echo $this->HTMLify($labels[$i]["name"], 20). "</A>";
             if(!$this->noTables)
                 echo "</TD><TD>";
             // City
             if(!(strlen($labels[$i]["city"]) || $this->noTables))
                 echo "&nbsp;";
-            echo UI::HTMLify($labels[$i]["city"], 15);
+            echo $this->HTMLify($labels[$i]["city"], 15);
             if(!$this->noTables)
                 echo "</TD><TD>";
             if (preg_match("/t/i", $labels[$i]["international"])) {
@@ -1076,7 +1080,7 @@ function setFocus() {
                 // Country
                 if(!(strlen($labels[$i]["zip"]) || $this->noTables))
                     echo "&nbsp;";
-                echo UI::HTMLify($labels[$i]["zip"], 4);
+                echo $this->HTMLify($labels[$i]["zip"], 4);
                 if(!$this->noTables);
                     echo "</TD><TD>";
             } else {
@@ -1085,14 +1089,14 @@ function setFocus() {
                 // State
                 if(!(strlen($labels[$i]["state"]) || $this->noTables))
                     echo "&nbsp;";
-                echo UI::HTMLify($labels[$i]["state"], 4);
+                echo $this->HTMLify($labels[$i]["state"], 4);
                 if(!$this->noTables)
                     echo "</TD><TD>";
             }
             // Last Update
                if(!(strlen($labels[$i]["modified"]) || $this->noTables))
                 echo "&nbsp;";
-            echo UI::HTMLify($labels[$i]["modified"], 12);
+            echo $this->HTMLify($labels[$i]["modified"], 12);
             if(!$this->noTables)
                 echo "</TD></TR>";
             echo "\n";

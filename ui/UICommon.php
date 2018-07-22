@@ -130,12 +130,11 @@ class UICommon {
     /**
      * convert arg to HTML
      */
-    public static function HTMLify($arg, $size) {
-        global $noTables;
+    public static function HTMLify($arg, $size, $noTables=0) {
         if ($noTables) {
             # truncate/pad output for non-table browsers
             $format = "%-" . $size . "s ";
-            $arg = sprintf($format, substr($arg, 0, $size));
+            $arg = sprintf($format, substr(self::deLatin1ify($arg), 0, $size));
         }
     
         $arg = htmlentities($arg, ENT_QUOTES, 'UTF-8');
@@ -154,8 +153,7 @@ class UICommon {
      * 
      * (This method just returns arg for table browsers.)
      */
-    public static function HTMLifyNum($arg, $size) {
-        global $noTables;
+    public static function HTMLifyNum($arg, $size, $noTables=0) {
         if ($noTables) {
             # right justify output for non-table browsers
             $format = "%" . $size . "d ";
