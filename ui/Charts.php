@@ -118,9 +118,11 @@ class Charts extends MenuItem {
                 // current year
                 $today = getdate(time());
                 $years = $chartAPI->getChartYears();
-                $yearrec = $years->fetch();
-                $year = $yearrec[0];
-                ////$year = $today["year"];
+                if($years) {
+                    $yearrec = $years->fetch();
+                    $year = $yearrec[0];
+                } else
+                    $year = $today["year"];
                 $month = $today["mon"];
             }
     

@@ -1495,7 +1495,7 @@ class Playlists extends MenuItem {
         // Run the query
         $records = Engine::api(IDJ::class)->getActiveAirnames($this->subaction == "viewAll");
         $i = 0;
-        while($row = $records->fetch()) {
+        while($records && ($row = $records->fetch())) {
             $row["sort"] = preg_match("/^the /i", $row[1])?substr($row[1], 4):$row[1];
             $dj[$i++] = $row;
         }
@@ -1557,7 +1557,7 @@ class Playlists extends MenuItem {
         // Run the query
         $records = Engine::api(IPlaylist::class)->getShowdates($year, $month);
         unset($dates);
-        while($row = $records->fetch())
+        while($records && ($row = $records->fetch()))
             $dates .= $row['showdate'] . "|";
     
         // Display the calendar
