@@ -137,15 +137,7 @@ class UICommon {
             $arg = sprintf($format, substr(self::deLatin1ify($arg), 0, $size));
         }
     
-        $arg = htmlentities($arg, ENT_QUOTES, 'UTF-8');
-        $arg = str_replace("\241", "&iexcl;", $arg);
-        $arg = str_replace("\223", "&#8220;", $arg);   // ldquot
-        $arg = str_replace("\224", "&#8221;", $arg);   // rdquot
-        $arg = str_replace("\205", "...", $arg);
-        $arg = str_replace("\226", "&#8211;", $arg);   // en dash
-        $arg = str_replace("\227", "&#8212;", $arg);   // em dash
-        $arg = str_replace("\221", "&#8216;", $arg);   // lsquot
-        return str_replace("\222", "&#8217;", $arg);   // rsquot
+        return htmlentities($arg, ENT_QUOTES, 'UTF-8');
     }
     
     /**
