@@ -238,45 +238,25 @@ class RunDaily implements IController {
     private function sendChartGenreEMail($start, $date, $month) {
         list($y,$m,$d) = explode("-", $date);
     
-        $genreAddr = [
-            "9"=>"reggae",   // reggae
-            "8"=>"classical", // classical/experimental
-            "7"=>"world",    // reggae/world
-            "6"=>"jazz",     // jazz
-            "5"=>"hiphop",   // hip-hop
-            "4"=>"metal",    // heavy shit
-            "3"=>"rpm",      // dance
-            "2"=>"country",  // country
-            "1"=>"blues"     // blues
-        ];
-    
-        // genre director default e-mail domain same as md's
-        $domain = Engine::param('email')['md'];
-        $i = strpos($base, '@');
-        if($i !== false)
-            $domain = substr($base, $i);
-            
-        foreach($genreAddr as $genre => $address) {
-            $i = strpos($address, '@');
-            if($i === false)
-                $address .= $domain;
+        foreach($this->catCodes as $index => $genre) {
+            // skip undefined categories
+            if(!$genre["name"] || !$genre["code"])
+                continue;
+
+            $address = $genre["email"];
 
             // skip genre e-mail if no valid address
             if(!strpos($address, '@')) {
-                echo "Skipping ".$this->catCodes[$genre-1]["name"]." monthly e-mail due to invalid address: $address\n";
+                echo "Skipping ".$genre["name"]." monthly e-mail due to invalid or missing address: $address\n";
                 continue;
             }
     
             // Build the chart
-            $chart = $this->buildChart($start, $date, 0, $genre, 1);
-    
-            // Apply the template
-            $body = str_replace($template, '%date%', date("F Y", mktime(0,0,0,$month,$d,$y)));
-            $body = str_replace($body, '%chart%', $charts);
+            $chart = $this->buildChart($start, $date, 0, $genre["id"], 1);
     
             // Setup the headers
             $subject = Engine::param('station').": ".
-                         $this->catCodes[$genre-1]["name"] . " monthly totals, " .
+                         $genre["name"] . " monthly totals, " .
                          date("m/Y", mktime(0,0,0,$month,$d,$y));
                            
             $headers = "From: ".Engine::param('station')." ".
@@ -285,7 +265,7 @@ class RunDaily implements IController {
 
             // send the mail
             $stat = mail($address, $subject, $chart, $headers);
-            echo "Sending ".$this->catCodes[$genre-1]["name"]." monthly e-mail: ".
+            echo "Sending ".$genre["name"]." monthly e-mail: ".
                  ($stat?"OK":"FAILED!")."\n";
         }
     }

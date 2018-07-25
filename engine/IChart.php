@@ -32,7 +32,7 @@ interface IChart {
     const CAT_CODE = 1;
     const CAT_FULL = 2;
     function getCategories();
-    function updateCategory($i, $name, $code, $dir);
+    function updateCategory($i, $name, $code, $dir, $email);
     function getNextAID();
     function getAddDates($limit="");
     function getAdd($date);

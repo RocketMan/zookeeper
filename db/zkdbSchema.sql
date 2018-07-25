@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS `categories` (
   `name` varchar(80) NOT NULL DEFAULT '',
   `code` char(1) DEFAULT NULL,
   `director` varchar(80) DEFAULT NULL,
+  `email` varchar(80) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `name` (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 PACK_KEYS=1;

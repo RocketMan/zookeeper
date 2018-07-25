@@ -32,21 +32,23 @@ class ChartImpl extends BaseImpl implements IChart {
     private static $labelCache;
 
     public function getCategories() {
-        $query = "SELECT id, name, code, director FROM categories ORDER BY id";
+        $query = "SELECT id, name, code, director, email " .
+                 "FROM categories ORDER BY id";
         $stmt = $this->prepare($query);
         return $this->executeAndFetchAll($stmt);
     }
     
-    public function updateCategory($i, $name, $code, $dir) {
+    public function updateCategory($i, $name, $code, $dir, $email) {
         $query = "UPDATE categories SET " .
-                 "name=?, code=?, director=? " .
+                 "name=?, code=?, director=?, email=? " .
                  "WHERE id=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $name);
         $stmt->bindValue(2, strtoupper($code));
         $stmt->bindValue(3, $dir);
-        $stmt->bindValue(4, $i);
-        $success = $stmt->execute($stmt);
+        $stmt->bindValue(4, $email);
+        $stmt->bindValue(5, $i);
+        $success = $stmt->execute();
     
         // mysql_affected_rows will return 0 if the SET values in the
         // query are exactly the same as the existing columns; hence,

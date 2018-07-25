@@ -908,13 +908,14 @@ class AddManager extends MenuItem {
                 $name = $_POST["name".$i];
                 $code = $_POST["code".$i];
                 $dir = $_POST["dir".$i];
-                $success &= Engine::api(IChart::class)->updateCategory($i, $name, $code, $dir);
+                $email = $_POST["email".$i];
+                $success &= Engine::api(IChart::class)->updateCategory($i, $name, $code, $dir, $email);
             }
         }
     ?>
       <FORM ACTION="" METHOD=POST>
         <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
-          <TR><TH>&nbsp;</TH><TH>Category</TH><TH>Code&nbsp;</TH><TH>Director</TH></TR>
+          <TR><TH>&nbsp;</TH><TH>Category</TH><TH>Code&nbsp;</TH><TH>Director</TH><TH>E-Mail Address</TH></TR>
     <?php 
         $cats = Engine::api(IChart::class)->getCategories();
         foreach($cats as $index => $cat) {
@@ -922,17 +923,18 @@ class AddManager extends MenuItem {
             echo "      <TR><TD ALIGN=RIGHT>$i.</TD>\n";
             echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=name$i VALUE=\"".htmlentities(stripslashes($cat["name"]))."\" CLASS=input SIZE=20 MAXLENGTH=80></TD>\n";
             echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=code$i VALUE=\"".htmlentities(stripslashes($cat["code"]))."\" CLASS=input SIZE=4 MAXLENGTH=1></TD>\n";
-            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=dir$i VALUE=\"".htmlentities(stripslashes($cat["director"]))."\" CLASS=input SIZE=30 MAXLENGTH=80></TD></TR>\n";
+            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=dir$i VALUE=\"".htmlentities(stripslashes($cat["director"]))."\" CLASS=input SIZE=20 MAXLENGTH=80></TD>\n";
+            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=email$i VALUE=\"".htmlentities(stripslashes($cat["email"]))."\" CLASS=input SIZE=20 MAXLENGTH=80></TD></TR>\n";
         }
     ?>
           <TR><TD>&nbsp;</TD>
-              <TD COLSPAN=3 ALIGN=LEFT><INPUT TYPE=SUBMIT VALUE=" Update Categories "></TD></TR>
+              <TD COLSPAN=4 ALIGN=LEFT><INPUT TYPE=SUBMIT VALUE=" Update Categories "></TD></TR>
     <?php 
         if($seq == "update") {
             if($success)
-                echo "      <TR><TD>&nbsp;</TD><TD CLASS=\"header\" ALIGN=LEFT COLSPAN=2>Categories updated.</TD></TR>\n";
+                echo "      <TR><TD>&nbsp;</TD><TD CLASS=\"success\" ALIGN=LEFT COLSPAN=3>Categories updated.</TD></TR>\n";
             else
-                echo "      <TR><TD>&nbsp;</TD><TD CLASS=\"header\" ALIGN=LEFT COLSPAN=2 CLASS=\"error\">Updated failed.</TD></TR>\n";
+                echo "      <TR><TD>&nbsp;</TD><TD CLASS=\"error\" ALIGN=LEFT COLSPAN=3>Updated failed.</TD></TR>\n";
         }
     ?>
         </TABLE>
