@@ -112,7 +112,7 @@ class AddManager extends MenuItem {
         switch($_REQUEST["sortBy"]) {
         case "Num":
         case "Num-":
-            $retval = strcmp($a[1], $b[1]);
+            $retval = strcmp($a["afile_number"], $b["afile_number"]);
             break;
         case "Label":
         case "Label-":
@@ -145,7 +145,7 @@ class AddManager extends MenuItem {
     
             // Secondary sort on the A-File number
             if($retval == 0)
-                $retval = strcmp($a[1], $b[1]);
+                $retval = strcmp($a["afile_number"], $b["afile_number"]);
             break;
         default:
             $retval = strcmp($a["artist"], $b["artist"]);
