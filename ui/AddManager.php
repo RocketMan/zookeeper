@@ -585,19 +585,19 @@ class AddManager extends MenuItem {
         for($i=0; $i<4; $i++) {
             echo "        <TR><TD>";
             $selected = $selcats[$i]?" CHECKED":"";
-            if($cats[$i])
+            if($cats[$i]["name"])
                 echo "<INPUT TYPE=CHECKBOX NAME=cat$i$selected>".htmlentities(stripslashes($cats[$i]["name"]));
             echo "</TD><TD>";
             $selected = $selcats[$i+4]?" CHECKED":"";
-            if($cats[$i+4])
+            if($cats[$i+4]["name"])
                 echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+4)."$selected>".htmlentities(stripslashes($cats[$i+4]["name"]));
             echo "</TD><TD>";
             $selected = $selcats[$i+8]?" CHECKED":"";
-            if($cats[$i+8])
+            if($cats[$i+8]["name"])
                 echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+8)."$selected>".htmlentities(stripslashes($cats[$i+8]["name"]));
             echo "</TD><TD>";
             $selected = $selcats[$i+12]?" CHECKED":"";
-            if($cats[$i+12])
+            if($cats[$i+12]["name"])
                 echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+12)."$selected>".htmlentities(stripslashes($cats[$i+12]["name"]));
             echo "</TD></TR>\n";
         }
