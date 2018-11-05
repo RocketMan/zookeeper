@@ -313,6 +313,46 @@ TH.sec {
     border: 1px solid #3b0000;
     width: 120px;
 }
+INPUT[type="radio"], 
+INPUT[type="checkbox"] {
+    height: 15px;
+    width: 15px;
+    vertical-align: middle;
+    margin: 2px 5px 5px 2px;
+    border: 1px solid #A5A5A5;
+    background: -webkit-linear-gradient(#FCFCFC, #DADADA);
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    -webkit-appearance: none;
+    -webkit-transition: box-shadow 200ms;
+}
+INPUT[type="checkbox"] {
+    -webkit-border-radius:2px;
+    border-radius:2px;
+}
+INPUT[type="radio"]:not(:disabled), 
+INPUT[type="checkbox"]:not(:disabled) {
+    box-shadow:inset 1px 1px 0 #fff, 0 1px 1px rgba(0,0,0,0.1);
+}
+INPUT[type="radio"]:not(:disabled):hover,
+INPUT[type="checkbox"]:not(:disabled):hover {
+    border-color:rgba(0,0,0,0.4);
+    box-shadow:inset 1px 1px 0 #fff, 0 0 4px rgba(0,0,0,0.2);
+}
+INPUT[type="radio"]:active:not(:disabled),
+INPUT[type="checkbox"]:active:not(:disabled) {
+    background-image: -webkit-linear-gradient(#C2C2C2, #EFEFEF);
+    box-shadow:inset 1px 1px 0 rgba(0,0,0,0.2), inset -1px -1px 0 rgba(255,255,255,0.6);
+    border-color:#707070;
+}
+INPUT[type="radio"]:checked,
+INPUT[type="radio"]:checked:active {
+    background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAMAAADXT/YiAAAAVFBMVEX///9eXl5RUVEzMzMbGxszMzNRUVEiIiJRUVFFRUUzMzMiIiJFRUUzMzNRUVFRUVE6OjorKysiIiJRUVFFRUU6OjozMzMrKytRUVFFRUUzMzMrKyvGHNe0AAAAHHRSTlMAERERESJmZnd3d3eIiJmqqqqqzMzMzMzd3d3dIlELBQAAAEFJREFUCNdjYEACLOxC3CwgBrOgtLi4ICuQxSUlBgS8QJaAKAgIAFmckiIiIpI8QBYTn4SwBD8TSAsjGz8HI7JhAH1fArjBaKLrAAAAAElFTkSuQmCC") center no-repeat, -webkit-linear-gradient(#FCFCFC, #DFDFDF);
+}
+INPUT[type="checkbox"]:checked,
+INPUT[type="checkbox"]:checked:active {
+    background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAMAAADXT/YiAAAAOVBMVEX///8zMzMqKipCQkI8PDwzMzNISEhISEhISEhCQkIqKio8PDwzMzMqKipISEhCQkI8PDwzMzMqKipFad0NAAAAE3RSTlMAIiIzMzNEZnd3qru7u8zMzMzMuKlnZwAAADhJREFUCNdjYIACJhjNJQRl8ApBWIw8goKsDDw8UAaDgAA3t4AAC1CGkx8ImMGKOPj42KAmsEMYAEUyAa2GdxXhAAAAAElFTkSuQmCC") center no-repeat, -webkit-linear-gradient(#FCFCFC, #DFDFDF);
+}
 
 /* calendar */
 A.calNav {
