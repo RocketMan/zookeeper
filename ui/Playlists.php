@@ -1597,16 +1597,13 @@ class Playlists extends MenuItem {
     }
     
     public function viewLastPlays($tag, $count=0) {
-        $results = Engine::api(IPlaylist::class)->getLastPlays($tag, $count);
-        if($results) {
+        $plays = Engine::api(IPlaylist::class)->getLastPlays($tag, $count);
+        if($plays) {
             echo "<TABLE WIDTH=\"100%\">\n";
             echo "  <TR><TH ALIGN=LEFT CLASS=\"secdiv\">Recent Airplay</TH>";
             echo "</TR>\n</TABLE>\n";
     
             echo "<TABLE CELLPADDING=4 CELLSPACING=0 BORDER=0>\n";
-    
-            while($row = $results->fetch())
-                $plays[] = $row;
     
             // Setup date format differently if plays extend into another year
             $now = getdate(time());

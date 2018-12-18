@@ -280,7 +280,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         if($count)
             $stmt->bindValue(2, (int)$count, \PDO::PARAM_INT);
     
-        return $this->execute($stmt);
+        return $this->executeAndFetchAll($stmt);
     }
     
     public function getRecentPlays(&$result, $airname, $count) {
