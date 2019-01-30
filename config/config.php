@@ -81,7 +81,7 @@ $config = [
         'oauth_auth_uri' => 'https://accounts.google.com/o/oauth2/auth',
         'oauth_token_uri' => 'https://accounts.google.com/o/oauth2/token',
         'oauth_tokeninfo_uri' => 'https://www.googleapis.com/oauth2/v1/tokeninfo',
-        'oauth_openidconnect_uri' => 'https://www.googleapis.com/plus/v1/people/{user_id}/openIdConnect',
+        'oauth_userinfo_uri' => 'https://www.googleapis.com/oauth2/v3/userinfo',
     ],
 
     /**

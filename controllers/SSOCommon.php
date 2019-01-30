@@ -99,7 +99,7 @@ class SSOCommon {
         $configParams = Engine::param('sso');
         $OAuth_token_uri = $configParams['oauth_token_uri'];
         $OAuth_tokeninfo_uri = $configParams['oauth_tokeninfo_uri'];
-        $OAuth_openIdConnect_uri = $configParams['oauth_openidconnect_uri'];
+        $OAuth_userinfo_uri = $configParams['oauth_userinfo_uri'];
 
         $SSO_client_id = $configParams['client_id'];
         $SSO_client_secret = $configParams['client_secret'];
@@ -128,8 +128,7 @@ class SSOCommon {
                 $userId = $tokeninfo["user_id"];
                 if($userId) {
                     // get the profile
-                    $url = str_replace("{user_id}", urlencode($userId), $OAuth_openIdConnect_uri);
-                    $profile = self::zkHttpGet($url, 0, $token["access_token"]);
+                    $profile = self::zkHttpGet($OAuth_userinfo_uri, 0, $token["access_token"]);
                     return json_decode($profile, true);
                 }
             }
