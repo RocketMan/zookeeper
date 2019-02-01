@@ -104,11 +104,28 @@ $config = [
          */
         'print_methods' => [ 'pdf' ],
         /**
+         * supported PDF label templates
+         */
+        'labels' => [
+            'DK-1201' => [
+                'name' => 'Brother Label Printer',
+                'code' => 'DK-1201',
+                'rows' => 1,
+                'cols' => 1
+            ],
+            '5161' => [
+                'name' => 'Avery 5161',
+                'code' => '5161',
+                'rows' => 10,
+                'cols' => 2
+            ],
+        ],
+        /**
          * lpr print queue name
          */
         'print_queue' => 'label',
         /**
-         * charset is one of UTF-8, LATIN-1, or ASCII
+         * lpr charset is one of UTF-8, LATIN-1, or ASCII
          */
         'charset' => 'ASCII',
         /**
