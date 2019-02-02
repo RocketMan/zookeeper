@@ -135,7 +135,7 @@ class Editor extends MenuItem {
     private $printConfig;
 
     public static function emitQueueHook($session) {
-        if($session->isLocal() && Engine::api(ILibrary::class)->getNumQueuedTags($session->getUser()))
+        if(Engine::api(ILibrary::class)->getNumQueuedTags($session->getUser()))
             echo "<P>You have <A HREF=\"?session=".$session->getSessionID()."&amp;action=editor&amp;subaction=tagq\" CLASS=\"nav\">tags queued for printing</A>.</P>";
     }
 
