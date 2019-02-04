@@ -119,7 +119,10 @@ class PDF_Label extends tFPDF {
             $Tformat = $this->_Avery_Labels[$format];
         }
 
-        parent::__construct('P', $unit, $Tformat['paper-size']);
+        $orientation = isset($Tformat['orientation'])?
+            $Tformat['orientation']:'P';
+
+        parent::__construct($orientation, $unit, $Tformat['paper-size']);
         $this->_Metric_Doc = $unit;
         $this->_Set_Format($Tformat);
         $this->SetFont('Arial');
