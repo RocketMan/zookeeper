@@ -34,11 +34,24 @@ class PrintTags implements IController {
     const LINE_SIZE=9;
 
     const LABEL_FORM="5161";
+
+    const ADDITIONAL_FORMS = [
+        'DK-1201' => [
+            'orientation'=>'L',
+            'paper-size'=>[29, 90], 'metric'=>'mm',
+            'marginLeft'=>3, 'marginTop'=>1.5,
+            'NX'=>1, 'NY'=>1,
+            'SpaceX'=>0, 'SpaceY'=>0,
+            'width'=>90, 'height'=>29, 'font-size'=>8
+        ],
+    ];
     
     public function processRequest($dispatcher) {
         header("Content-type: application/pdf");
 
         $form = empty($_REQUEST["form"])?self::LABEL_FORM:$_REQUEST["form"];
+        if(array_key_exists($form, self::ADDITIONAL_FORMS))
+            $form = self::ADDITIONAL_FORMS[$form];
         
         $pdf = new \PDF_Label($form);
         $pdf->AddFont(self::FONT_FACE, '', self::FONT_FILE, true);

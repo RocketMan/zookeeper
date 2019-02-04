@@ -33,11 +33,6 @@ use ZK\Engine\ILibrary;
 use ZK\UI\UICommon as UI;
 
 class Editor extends MenuItem {
-    const LABEL_FORM_NAME = "Avery 5161";
-    const LABEL_FORM_CODE = "5161";
-    const LABEL_FORM_ROWS = 10;
-    const LABEL_FORM_COLS = 2;
-    
     private static $subactions = [
         [ "m", "", "Albums", "musicEditor" ],
         [ "m", "labels", "Labels", "musicEditor" ],
@@ -122,7 +117,8 @@ class Editor extends MenuItem {
     ];
 
     private $tagQPanels = [
-         "select"=>    ["queueList", "print"],
+         "select"=>    ["queueList", "form"],
+         "form"=>      ["queueForm", "print"],
          "print"=>     ["queuePlace", "confirm"],
          "confirm"=>   ["queueConfirm", "select"],
          ""=>          ["panelNull", "select"]
@@ -139,7 +135,7 @@ class Editor extends MenuItem {
     private $printConfig;
 
     public static function emitQueueHook($session) {
-        if($session->isLocal() && Engine::api(ILibrary::class)->getNumQueuedTags($session->getUser()))
+        if(Engine::api(ILibrary::class)->getNumQueuedTags($session->getUser()))
             echo "<P>You have <A HREF=\"?session=".$session->getSessionID()."&amp;action=editor&amp;subaction=tagq\" CLASS=\"nav\">tags queued for printing</A>.</P>";
     }
 
@@ -196,6 +192,14 @@ class Editor extends MenuItem {
     }
 
     public function tagQueue() {
+        // Remove label selection panel if there is only one template
+        $labels = $this->printConfig['labels'];
+        if(count($labels) == 1) {
+            $key = array_keys($labels)[0];
+            $nosel = $labels[$key]["rows"] * $labels[$key]["cols"] == 1;
+            $this->tagQPanels["select"][1] = $nosel?"confirm":"print";
+        }
+    
         // We're always going to make two passes:
         //    Pass 1:  Call step $seq to validate
         //    Pass 2a: If $seq validates, call $next to display
@@ -239,7 +243,16 @@ class Editor extends MenuItem {
                           $this->skipVar($key);
                       }
                   }
+                  
                   $this->emitHidden("seltags", implode(",", $selTags));
+
+                  $labels = $this->printConfig['labels'];
+                  if(count($labels) == 1) {
+                      $form = $labels[array_keys($labels)[0]];
+                      if($form["rows"] * $form["cols"] == 1)
+                          $this->emitHidden("sel", $_POST["seltags"]);
+                  }
+
                   return true;
               }
                   
@@ -315,32 +328,82 @@ class Editor extends MenuItem {
         UI::setFocus();
     }
     
-    public function queuePlace($validate) {
+    public function queueForm($validate) {
         if($validate) {
             if($_REQUEST["back"]) {
-                $this->tagQPanels["print"][1] = "select";
+                $this->tagQPanels["form"][1] = "select";
                 foreach(explode(",", $_REQUEST["seltags"]) as $tag)
                     $this->emitHidden("tag".$tag, "on");
                 $this->skipVar("seltags");
+                $this->skipVar("back");
+                return true;
+            }
+            $labels = $this->printConfig['labels'];
+            $formname = count($labels) == 1?
+                array_keys($labels)[0]:$_REQUEST["form"];
+            $form = $labels[$formname];
+            if($form["rows"] * $form["cols"] == 1) {
+                $this->emitHidden("sel", $_REQUEST["seltags"]);
+                $this->tagQPanels["form"][1] = "confirm";
+            }
+            return $validate;
+        }
+        echo "<P><B>Choose a label printer:</B></P>\n";
+        echo "<TABLE BORDER=0>\n";
+        foreach($this->printConfig['labels'] as $label)
+            echo "  <TR><TD><INPUT NAME=form TYPE=radio VALUE=\"".$label["code"]."\"".($_POST["form"] == $label["code"]?" checked":"").">".$label["name"]."</TD></TR>\n";
+        echo "</TABLE>\n";
+        echo "<P><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next onclick=\"return validate();\" VALUE=\" Next &gt; \"></P>\n";
+?>
+    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    function validate() {
+        var selected = false;
+        var forms = document.getElementsByName('form');
+        for(var i=0; i<forms.length; i++)
+            if(forms[i].checked)
+                return true;
+        alert("Select a label format");
+        return false;
+    }
+    // -->
+    </SCRIPT>
+    <?php
+        $this->skipVar("form");
+        $this->skipVar("back");
+        $this->skipVar("next");
+        UI::setFocus();
+    }
+    
+    public function queuePlace($validate) {
+        $labels = $this->printConfig['labels'];
+        $oneform = count($labels) == 1;
+        if($validate) {
+            if($_REQUEST["back"]) {
+                if($oneform) {
+                    foreach(explode(",", $_REQUEST["seltags"]) as $tag)
+                        $this->emitHidden("tag".$tag, "on");
+                    $this->skipVar("seltags");
+                }
+            
+                $this->tagQPanels["print"][1] = $oneform?"select":"form";
                 $this->skipVar("back");
             }
             return $validate;
         }
 
         $count = 0;
-        foreach($_POST as $key => $value) {
-           if(substr($key, 0, 3) == "tag" && $value == "on") {
-               $count++;
-           }
-        }
-        $numRow = self::LABEL_FORM_ROWS;
-        $numCol = self::LABEL_FORM_COLS;
+        foreach(explode(",", $_POST["seltags"]) as $tag)
+           $count++;
+        $formname = $oneform?array_keys($labels)[0]:$_REQUEST["form"];
+        $form = $labels[$formname];
+        $numRow = $form["rows"];
+        $numCol = $form["cols"];
         $numLabels = $numRow * $numCol;
         if($count > $numLabels) $count = $numLabels;
         echo "    <P>Select up to <B><SPAN id=\"count\">$count</SPAN></B> labels:</P>\n";
         echo "    <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>\n";
         echo "    <TR><TD CLASS=\"label-form\">\n";
-        echo "    <SPAN CLASS=\"form-name\">".strtoupper(self::LABEL_FORM_NAME)." LABELS</SPAN><BR>\n";
+        echo "    <SPAN CLASS=\"form-name\">".strtoupper($form["name"])." LABELS</SPAN><BR>\n";
         for($i=0; $i<$numRow; $i++) {
             echo "    ";
             for($j=0; $j<$numCol; $j++) {
@@ -435,16 +498,21 @@ class Editor extends MenuItem {
             $this->skipVar("done");
             return $validate;
         }
-            
+
+        $labels = $this->printConfig['labels'];
+        $formname = count($labels) == 1?
+            array_keys($labels)[0]:$_REQUEST["form"];
+        $form = $labels[$formname];
+
         echo "        <P>A new window has been opened with a PDF for printing.</P>\n";
         echo "        <P>If the window did not open, disable pop-up blockers and try again.</P>\n";
-        echo "        <P>Please load <B>".self::LABEL_FORM_NAME." labels</B> in your printer and print the PDF.</P>\n";
+        echo "        <P>Please load <B>".$form["name"]." labels</B> in your printer and print the PDF.</P>\n";
         echo "        <P>Choose <B>Done</B> after you have printed the labels successfully.</P>\n";
         echo "        <P>&nbsp;</P>\n";
         echo "        <INPUT TYPE=SUBMIT CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n        <INPUT TYPE=SUBMIT CLASS=submit NAME=done VALUE=\" Done \">\n";
         
-        $selLabels = explode(",", $_REQUEST["sel"]);
-        $selTags = explode(",", $_REQUEST["seltags"]);
+        $selLabels = explode(",", $_POST["sel"]);
+        $selTags = explode(",", $_POST["seltags"]);
         $selCount = 0;
         for($i=0, $j=0; $i<sizeof($selLabels); $i++) {
             if($selLabels[$i]) {
@@ -455,7 +523,7 @@ class Editor extends MenuItem {
         $this->emitHidden("selcount", $selCount);
         $merged = implode(",", $selLabels);
         echo "        <SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\"><!--\n";
-        echo "        window.open('?target=print&session=".$this->session->getSessionID()."&form=".self::LABEL_FORM_CODE."&tags=$merged', '_blank', 'toolbar=no,location=no,width=800,height=800');\n";
+        echo "        window.open('?target=print&session=".$this->session->getSessionID()."&form=".$form["code"]."&tags=$merged', '_blank', 'toolbar=no,location=no,width=800,height=800');\n";
         echo "        // -->\n";
         echo "        </SCRIPT>\n";
     }
@@ -737,6 +805,9 @@ class Editor extends MenuItem {
             $title = "Select tags to print";
             if($this->tagPrinted)
                 $title .= "&nbsp;&nbsp;<FONT CLASS=\"success\">Tag(s) Printed</FONT>";
+            break;
+        case "form":
+            $title = "Select the label format";
             break;
         case "print":
             $title = "Place album tags on the label form";
