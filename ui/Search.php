@@ -25,6 +25,7 @@
 namespace ZK\UI;
 
 use ZK\Engine\Engine;
+use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 
 use ZK\UI\UICommon as UI;
@@ -720,7 +721,7 @@ function setFocus() {
         echo "</TH>\n";
     }
     
-    private function reviewerAlbums($searchType, $searchString, $albums) {
+    private function reviewerAlbums($searchType, $searchString, $albums, $p) {
         for($i = 0; $i < sizeof($albums); $i++){
             if (! $opened ) {
                 if($this->noTables)
@@ -728,10 +729,10 @@ function setFocus() {
                 else {
                     echo "<TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>\n";
                     $static = 0;
-                    reviewerColHeader("Artist", $static);
-                    reviewerColHeader("Album", $static);
-                    reviewerColHeader("Label", $static);
-                    reviewerColHeader("Date Reviewed", $static);
+                    $this->reviewerColHeader("Artist", $static);
+                    $this->reviewerColHeader("Album", $static);
+                    $this->reviewerColHeader("Label", $static);
+                    $this->reviewerColHeader("Date Reviewed", $static);
                 }
                 $opened = 1;
             }
@@ -795,7 +796,7 @@ function setFocus() {
             else
                 echo "</TD></TR>\n";
         }
-        $p = $_REQUEST["p"];
+
         if($opened && $p>0) {
             echo $this->closeList();
             $m = $_REQUEST["m"];
@@ -806,7 +807,7 @@ function setFocus() {
                                   "?s=$searchType&amp;n=". UI::URLify($_REQUEST["n"]).
                                   "&amp;p=". UI::URLify($p). $m.
                                   "&amp;q=". $this->maxresults.
-                                  "&amp;action=$action&amp;session=".$this->session->getSessionID().
+                                  "&amp;action=viewDJReviews&amp;session=".$this->session->getSessionID().
                                   "&amp;sortBy=$this->sortBy".
                                   "\">[Next $this->maxresults albums &gt;&gt;]</A>\n";
             $closed = 1;
@@ -821,6 +822,7 @@ function setFocus() {
     }
     
     private function searchByReviewer() {
+        $this->sortBy = $_REQUEST["sortBy"];
         if(!$this->sortBy)$this->sortBy="Artist";
     
         if($_REQUEST["n"]) {
@@ -834,7 +836,7 @@ function setFocus() {
             $p = $_REQUEST["p"];
             if($p == "") $p = 0;
             $albums = Engine::api(ILibrary::class)->searchPos(ILibrary::ALBUM_AIRNAME, $p, $this->maxresults, $_REQUEST["n"], $this->sortBy);
-            reviewerAlbums("byReviewer", $search, $albums);
+            $this->reviewerAlbums("byReviewer", $search, $albums, $p);
         }
     }
     
