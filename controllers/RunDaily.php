@@ -305,7 +305,7 @@ class RunDaily implements IController {
     
                 // Compose the message body
                 $contact = Engine::param('contact');
-                $fancyDate = date("j F Y", mktime(0,0,0,$m,$d,$y);
+                $fancyDate = date("j F Y", mktime(0,0,0,$m,$d,$y));
                 $body = self::rule("Chart for the Week ending $fancyDate",
                                    0,
                                    Engine::param('station_medium'));
@@ -396,7 +396,7 @@ class RunDaily implements IController {
                     $body .= "F: ".$contact['fax']."\n";
                     $body .= "E: ".Engine::param('email')['md']."\n\n";
                 }
-                $fancyDate = date("F Y", mktime(0,0,0,$month,$d,$y);
+                $fancyDate = date("F Y", mktime(0,0,0,$month,$d,$y));
                 $body = self::rule("Chart for the Month of $fancyDate",
                                    0,
                                    Engine::param('station_medium'))."\n";
