@@ -83,7 +83,7 @@ class AddManager extends MenuItem {
     private function addManagerGetAlbums(&$records, &$albums) {
         $libraryAPI = Engine::api(ILibrary::class);
         while($records && ($row = $records->fetch())) {
-            $albumrec = $libraryAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row[2]);
+            $albumrec = $libraryAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row["tag"]);
             if(sizeof($albumrec) > 0) {
                 //list($y, $m, $d) = explode("-", $row["adddate"]);
                 //$diff = ($now - mktime(0,0,0,$m,$d,$y))/86400;  // 86400sec = 1day
