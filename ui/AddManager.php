@@ -83,7 +83,6 @@ class AddManager extends MenuItem {
     private function addManagerGetAlbums(&$records, &$albums) {
         $libraryAPI = Engine::api(ILibrary::class);
         while($records && ($row = $records->fetch())) {
-            $row["tag"] = $row[2];
             $albumrec = $libraryAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row[2]);
             if(sizeof($albumrec) > 0) {
                 //list($y, $m, $d) = explode("-", $row["adddate"]);
@@ -1000,8 +999,8 @@ class AddManager extends MenuItem {
                 // Emit the add
                 foreach($albums as $index => $row) {
                     $ac = "";
-                    $cats = explode(",", $row["afile_category"]);
-                    foreach($cats as $index => $cat)
+                    $catsx = explode(",", $row["afile_category"]);
+                    foreach($catsx as $index => $cat)
                         if($cat)
                             $ac .= $cats[$cat-1]["code"];
                     if($format == "tab") {
