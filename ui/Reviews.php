@@ -160,7 +160,12 @@ class Reviews extends MenuItem {
     
     private function eMailReview($tag, $airname, $review) {
         $instance_nobody = Engine::param('email')['nobody'];
-        $instance_reviewlist = Engine::param('email')['reviewlist'];
+        $address = Engine::param('email')['reviewlist'];
+
+        if(!isset($address)) {
+            echo "  <B><FONT COLOR=\"#cc0000\">Noise e-mail not configured.</FONT></B>\n";
+            return;
+        }
     
         $djAPI = Engine::api(IDJ::class);
         $libAPI = Engine::api(ILibrary::class);
@@ -231,7 +236,7 @@ class Reviews extends MenuItem {
     
             // Check for errors
             if(!$stat) {
-                echo "  <B><FONT COLOR=\"#cc0000\">Possible Problem Sending E-Mail<BR>\n";
+                echo "  <B><FONT COLOR=\"#cc0000\">Possible Problem Sending E-Mail</FONT></B><BR>\n";
                 echo "There may have been a problem sending your e-mail.  ";
                 echo "</P>\n";
                 //echo "The mailer reports the following error:<BR>\n  <PRE>\n";
