@@ -229,7 +229,7 @@ class Reviews extends MenuItem {
     
             // Emit the postamble
             $body .= "\r\n\r\n--\r\nPost your music reviews online!\r\n";
-            $body .= Engine::param('station')." Zookeeper Online:  ".getBaseUrl()."\r\n";
+            $body .= Engine::param('station')." Zookeeper Online:  ".UI::getBaseUrl()."\r\n";
     
             // send the mail
             $stat = mail($address, $subject, $body, $headers);
