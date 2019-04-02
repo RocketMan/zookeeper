@@ -1529,7 +1529,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
         if($charset == UI::CHARSET_UTF8)
             $output = strtr($output, self::$boxToUTF8);
 
-        $output .= $textEsc;
+        $output .= $textEscape;
     
         $artist = UI::deLatin1ify($al["artist"], $charset);
         ////if(mb_strlen($artist) > 25)
