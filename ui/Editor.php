@@ -506,7 +506,10 @@ class Editor extends MenuItem {
 
         echo "        <P>A new window has been opened with a PDF for printing.</P>\n";
         echo "        <P>If the window did not open, disable pop-up blockers and try again.</P>\n";
-        echo "        <P>Please load <B>".$form["name"]." labels</B> in your printer and print the PDF.</P>\n";
+        if(array_key_exists("message", $form))
+            echo "<P>".$form["message"]."</P>\n";
+        else
+            echo "        <P>Please load <B>".$form["name"]." labels</B> in your printer and print the PDF.</P>\n";
         echo "        <P>Choose <B>Done</B> after you have printed the labels successfully.</P>\n";
         echo "        <P>&nbsp;</P>\n";
         echo "        <INPUT TYPE=SUBMIT CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n        <INPUT TYPE=SUBMIT CLASS=submit NAME=done VALUE=\" Done \">\n";
