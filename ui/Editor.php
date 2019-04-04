@@ -507,7 +507,7 @@ class Editor extends MenuItem {
         echo "        <P>A new window has been opened with a PDF for printing.</P>\n";
         echo "        <P>If the window did not open, disable pop-up blockers and try again.</P>\n";
         if(array_key_exists("message", $form))
-            echo "<P>".$form["message"]."</P>\n";
+            echo "        <P>".$form["message"]."</P>\n";
         else
             echo "        <P>Please load <B>".$form["name"]." labels</B> in your printer and print the PDF.</P>\n";
         echo "        <P>Choose <B>Done</B> after you have printed the labels successfully.</P>\n";
