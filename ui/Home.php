@@ -90,7 +90,6 @@ class Home extends MenuItem {
              if($topPlays[$i]["REVIEWED"])
                  echo "<A HREF=\"".
                       "?s=byAlbumKey&amp;n=". UI::URLify($topPlays[$i]["tag"]).
-                      "&amp;q=". $maxresults.
                       "&amp;action=search&amp;session=".$this->session->getSessionID().
                       "\"><IMG SRC=\"img/rinfo_beta.gif\" " .
                       "ALT=\"Album Review\" " .
@@ -100,7 +99,6 @@ class Home extends MenuItem {
              // Album
              echo "<A CLASS=\"nav\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($topPlays[$i]["tag"]).
-                             "&amp;q=". $maxresults.
                              "&amp;action=search&amp;session=".$this->session->getSessionID().
                              "\">";
              echo UI::HTMLify($topPlays[$i]["album"], 20) . "</A></TD><TD>" .
