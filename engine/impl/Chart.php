@@ -29,8 +29,6 @@ namespace ZK\Engine;
  * Chart operations
  */
 class ChartImpl extends BaseImpl implements IChart {
-    private static $labelCache;
-
     public function getCategories() {
         $query = "SELECT id, name, code, director, email " .
                  "FROM categories ORDER BY id";
@@ -142,6 +140,7 @@ class ChartImpl extends BaseImpl implements IChart {
     public function getCurrentsWithPlays($date) {
         // First, select out the currents with plays and add those up
         $query = "CREATE TEMPORARY TABLE tmp_current_plays ".
+                 "ENGINE=MEMORY ".
                  "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
                  "category, count(t.tag) plays FROM tracks t ".
                  "JOIN lists l ON t.list = l.id ".
@@ -156,6 +155,7 @@ class ChartImpl extends BaseImpl implements IChart {
     
         // Now, get the currents with no plays
         $query = "CREATE TEMPORARY TABLE tmp_current_no_plays ".
+                 "ENGINE=MEMORY ".
                  "SELECT id, afile_number, tag, adddate, pulldate, ".
                  "category, 0 FROM currents ".
                  "WHERE adddate <= ? AND pulldate > ? ".
@@ -208,6 +208,7 @@ class ChartImpl extends BaseImpl implements IChart {
     
         // First, select out the currents with plays and add those up
         $query = "CREATE TEMPORARY TABLE tmp_current_plays ".
+                 "ENGINE=MEMORY ".
                  "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
                  "c.category afile_category, ".
                  "IF(DATEDIFF(?, adddate) > 7, ".
@@ -231,6 +232,7 @@ class ChartImpl extends BaseImpl implements IChart {
     
         // Now, get the currents with no plays
         $query = "CREATE TEMPORARY TABLE tmp_current_no_plays ".
+                 "ENGINE=MEMORY ".
                  "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
                  "c.category afile_category, IF(DATEDIFF(?, adddate) > 7, 0, null) sizzle, ".
                  "a.artist, a.album, a.medium, a.size, ".
@@ -416,31 +418,30 @@ class ChartImpl extends BaseImpl implements IChart {
     
         return $retval;
     }
-    
-    private function getChartFillInAlbumInfo(&$result, $i, $tag) {
-        $libAPI = Engine::api(ILibrary::class);
 
-        // Setup artist correctly for collections
-        $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
-        if (preg_match("/^\[coll\]/i", $albums[0]["artist"]))
-            $result[$i]["artist"] = "COLL";
-        else
-            $result[$i]["artist"] = $albums[0]["artist"];
-    
-        // Get album name
-        $result[$i]["album"] = $albums[0]["album"];
-    
-        // Get the medium
-        $result[$i]["medium"] = $albums[0]["medium"];
-    
-        // Get the label name
-        $labelKey = $albums[0]["pubkey"];
-        if(!self::$labelCache[$labelKey]) {
-            $label = $libAPI->search(ILibrary::LABEL_PUBKEY, 0, 1, $labelKey);
-            self::$labelCache[$labelKey] = sizeof($label) ?
-                                       $label[0]["name"] : "(Unknown)";
+    private function getChartAlbumInfo(&$albums) {
+        $queryset = "";
+        $tags = [];
+        foreach($albums as &$album) {
+            $tag = $album["tag"];
+            $queryset .= ", $tag";
+            $tags[$tag] = &$album;
         }
-        $result[$i]["LABEL"] = self::$labelCache[$labelKey];
+        $query = "SELECT tag, artist, album, medium, name " .
+                 "FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey " .
+                 "WHERE tag IN (0" . $queryset . ")";
+        $stmt = $this->prepare($query);
+        $stmt->execute();
+        while($row = $stmt->fetch()) {
+            $album = &$tags[$row["tag"]];
+            if (preg_match("/^\[coll\]/i", $row["artist"]))
+                $album["artist"] = "COLL";
+            else
+                $album["artist"] = $row["artist"];
+            $album["album"] = $row["album"];
+            $album["medium"] = $row["medium"];
+            $album["LABEL"] = $row["name"];
+        }
     }
     
     public function getChart(&$result, $startDate, $endDate, $limit="", $category="") {
@@ -458,7 +459,8 @@ class ChartImpl extends BaseImpl implements IChart {
             $lastWeek = date("Y-m-d", mktime(0,0,0,$m,$d-7,$y));
     
             $queryLast = "CREATE TEMPORARY TABLE tmp_lastweek " .
-                         "(lw int primary key auto_increment) ";
+                         "(lw int primary key auto_increment, unique(tag)) " .
+                         "ENGINE=MEMORY ";
     
             $queryLast .= "SELECT tag, sum(plays) prev FROM plays";
             $queryLast .= " WHERE week=?";
@@ -496,7 +498,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $stmt = $this->prepare($query);
         $p = 1;
         if($startDate && $endDate) {
-             $stmt->bindValue($p++, $startDate);
+            $stmt->bindValue($p++, $startDate);
             $stmt->bindValue($p++, $endDate);
         } else if($startDate)
             $stmt->bindValue($p++, $startDate);
@@ -506,7 +508,7 @@ class ChartImpl extends BaseImpl implements IChart {
             $stmt->bindValue($p++, $category);
         if($limit)
             $stmt->bindValue($p++, (int)$limit, \PDO::PARAM_INT);
-            $stmt->execute();
+        $stmt->execute();
     
         //echo "DEBUG LAST: $queryLast<BR>";
         //echo "DEBUG: $query<BR>";
@@ -516,12 +518,14 @@ class ChartImpl extends BaseImpl implements IChart {
         while($row = $stmt->fetch()) {
             $result[$i]["tag"] = $row[0];
             $result[$i]["PLAYS"] = $row[1];
-            $result[$i]["PREVWEEK"] = $row[2];
-            $result[$i]["PREVRANK"] = $row[3];
+            if(!$startDate) {
+                $result[$i]["PREVWEEK"] = $row[2];
+                $result[$i]["PREVRANK"] = $row[3];
+            }
     
             $tagCache[$row[0]] = 1;
     
-            $this->getChartFillInAlbumInfo($result, $i++, $row[0]);
+            $i++;
         }
     
         // Cleanup
@@ -548,7 +552,7 @@ class ChartImpl extends BaseImpl implements IChart {
     
                     $tagCache[$row[0]] = 1;
     
-                    $this->getChartFillInAlbumInfo($result, $i++, $row[0]);
+                    $i++;
                 }
     
                 // Unbounded charts may need padding, too
@@ -571,9 +575,9 @@ class ChartImpl extends BaseImpl implements IChart {
                     $stmt->bindValue(1, $lastWeek);
                     if($category)
                         $stmt->bindValue(2, $category);
-                        $stmt->execute();
+                    $stmt->execute();
                     while($i < $limit && ($row = $stmt->fetch())) {
-                        if(!$tagCache[$row[0]]) {
+                        if(!array_key_exists($row[0], $tagCache)) {
                             $result[$i]["tag"] = $row[0];
                             $result[$i]["PLAYS"] = 0;
                             $result[$i]["PREVWEEK"] = $row[1];
@@ -581,7 +585,7 @@ class ChartImpl extends BaseImpl implements IChart {
     
                             $tagCache[$row[0]] = 1;
     
-                            $this->getChartFillInAlbumInfo($result, $i++, $row[0]);
+                            $i++;
                         }
                     }
                 }
@@ -589,6 +593,8 @@ class ChartImpl extends BaseImpl implements IChart {
             $stmt = $this->prepare("DROP TABLE tmp_lastweek");
             $stmt->execute();
         }
+        
+        $this->getChartAlbumInfo($result);
     }
     
     public function getChart2(&$result, $startDate, $endDate, $limit="", $category="") {
@@ -611,7 +617,8 @@ class ChartImpl extends BaseImpl implements IChart {
             $lastWeek = date("Y-m-d", mktime(0,0,0,$m,$d-7,$y));
     
             $queryLast = "CREATE TEMPORARY TABLE tmp_lastweek " .
-                         "(lw int primary key auto_increment) ";
+                         "(lw int primary key auto_increment, unique(tag)) " .
+                         "ENGINE=MEMORY ";
     
             $queryLast .= "SELECT p.tag, sum(plays) prev,";
             $queryLast .= " a.artist, a.album, a.medium, a.size,";
@@ -678,8 +685,10 @@ class ChartImpl extends BaseImpl implements IChart {
             $result[$i]["LABEL"] = $row["label"];
             $result[$i]["tag"] = $row[0];
             $result[$i]["PLAYS"] = $row[1];
-            $result[$i]["PREVWEEK"] = $row[2];
-            $result[$i]["PREVRANK"] = $row[3];
+            if(!$startDate) {
+                $result[$i]["PREVWEEK"] = $row[2];
+                $result[$i]["PREVRANK"] = $row[3];
+            }
     
             $tagCache[$row[0]] = 1;
     
@@ -749,7 +758,7 @@ class ChartImpl extends BaseImpl implements IChart {
                     $stmt->execute();
     
                     while($i < $limit && ($row = $stmt->fetch())) {
-                        if(!$tagCache[$row[0]]) {
+                        if(!array_key_exists($row[0], $tagCache)) {
                             $result[$i] = array_merge($row);
                             $result[$i]["rank"] = $i+1;
                             $result[$i]["LABEL"] = $row["label"];
@@ -820,8 +829,10 @@ class ChartImpl extends BaseImpl implements IChart {
             $result[$i]["tag"] = $row[0];
             $result[$i]["PLAYS"] = $row[1];
     
-            $this->getChartFillInAlbumInfo($result, $i++, $row[0]);
+            $i++;
         }
+
+        $this->getChartAlbumInfo($result);
     }
     
     public function getChartEMail() {
@@ -892,6 +903,7 @@ class ChartImpl extends BaseImpl implements IChart {
 
         try {
             $query = "CREATE TEMPORARY TABLE tmp_maxplays ".
+                "ENGINE=MEMORY ".
                 "SELECT t.list, t.tag, ".
                    "LEAST(COUNT(*), $maxSpins) plays, c.category ".
                 "FROM lists l ".
