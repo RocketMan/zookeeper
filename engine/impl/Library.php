@@ -243,13 +243,17 @@ class LibraryImpl extends BaseImpl implements ILibrary {
     // album which has at least one music review. 
     //
     public function markAlbumsReviewed(&$albums, $loggedIn = 0) {
+        $chain = [];
+        $tags = [];
+        $queryset = "";
         for($i = 0; $i < sizeof($albums); $i++) {
-            if($albums[$i]["tag"]) {
-                if(is_int($tags[$albums[$i]["tag"]]))
-                    $chain[$i] = $tags[$albums[$i]["tag"]];
+            $tag = array_key_exists("tag", $albums[$i])?$albums[$i]["tag"]:0;
+            if($tag) {
+                if(array_key_exists($tag, $tags))
+                    $chain[$i] = $tags[$tag];
                 else
-                    $queryset .= ", " . $albums[$i]["tag"];
-                $tags[$albums[$i]["tag"]] = $i;
+                    $queryset .= ", $tag";
+                $tags[$tag] = $i;
             }
         }
         $query = "SELECT tag FROM reviews WHERE " .
@@ -260,7 +264,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         $stmt = $this->prepare($query);
         $stmt->execute();
         while($row = $stmt->fetch()) {
-            for($next = $tags[$row[0]]; is_int($next); $next = $chain[$next])
+            for($next = $tags[$row[0]]; $next >= 0; $next = array_key_exists($next, $chain)?$chain[$next]:-1)
                 $albums[$next]["REVIEWED"] = 1;
         }
     }
