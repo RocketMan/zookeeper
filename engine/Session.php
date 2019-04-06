@@ -162,7 +162,7 @@ class Session {
             $allow = $this->sessionID;
             break;
         case "U":    // local (not SSO) user
-            $allow = $this->sessionID && $this->access &&
+            $allow = $this->sessionID &&
                              !preg_match("/s/i", $this->access);
             break;
         case "":     // empty mode is invalid
