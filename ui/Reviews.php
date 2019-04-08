@@ -142,15 +142,7 @@ class Reviews extends MenuItem {
                 if($this->session->getUser() == $row[4])
                     echo "  <TR COLSPAN=3><TD><FONT SIZE=-1><A HREF=\"?session=".$this->session->getSessionID()."&amp;action=searchReviewEdit&amp;tag=$tag\">[This is my review and I want to edit it]</A></FONT></TD></TR>\n";
                 echo "  <TR><TD COLSPAN=3 CLASS=\"review\">\n";
-                $review = nl2br(htmlentities($row[2]));
-                $review = str_replace("\241", "&iexcl;", $review);
-                $review = str_replace("\223", "&#8220;", $review);  // ldquot
-                $review = str_replace("\224", "&#8221;", $review);  // rdquot
-                $review = str_replace("\205", "...", $review);
-                $review = str_replace("\226", "&#8211;", $review);   // en dash
-                $review = str_replace("\227", "&#8212;", $review);   // em dash
-                $review = str_replace("\221", "&#8216;", $review);   // lsquot
-                echo str_replace("\222", "&#8217;", $review);        // rsquot
+                echo nl2br(htmlentities($row[2]));
                 echo "\n  </TD></TR>\n";
             }
     
