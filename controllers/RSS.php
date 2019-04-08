@@ -54,6 +54,12 @@ class RSS extends CommandTarget implements IController {
        //   $str);
     }
 
+    private static function reviewhtmlnumericentities($str) {
+       return preg_replace_callback('/[^!-%\x27-;=?-~ ]/',
+          function($m) { return "&#".ord($m[0]).";"; },
+          $str);
+    }
+
     public function processRequest($dispatcher) {
         $this->session = Engine::session();
 
@@ -216,6 +222,7 @@ class RSS extends CommandTarget implements IController {
                 $review = str_replace("\221", "&#8216;", $review);   // lsquot
                 $review = str_replace("\222", "&#8217;", $review);   // rsquot
                 $review = self::xmlentities($review);
+                $review = self::reviewhtmlnumericentities(html_entity_decode($review));
                 break;
              }
           }
