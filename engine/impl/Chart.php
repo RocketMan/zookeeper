@@ -445,6 +445,7 @@ class ChartImpl extends BaseImpl implements IChart {
     }
     
     public function getChart(&$result, $startDate, $endDate, $limit="", $category="") {
+        $tagCache = [];
         $query = "SELECT plays.tag, sum(plays) p";
     
         if(!$startDate)
@@ -598,6 +599,7 @@ class ChartImpl extends BaseImpl implements IChart {
     }
     
     public function getChart2(&$result, $startDate, $endDate, $limit="", $category="") {
+        $tagCache = [];
         $query = "SELECT plays.tag, sum(plays) p";
     
         if(!$startDate)
