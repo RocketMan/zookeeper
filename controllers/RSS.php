@@ -216,7 +216,6 @@ class RSS extends CommandTarget implements IController {
                 $review = str_replace("\221", "&#8216;", $review);   // lsquot
                 $review = str_replace("\222", "&#8217;", $review);   // rsquot
                 $review = self::xmlentities($review);
-                $review = self::htmlnumericentities(html_entity_decode($review));
                 break;
              }
           }

@@ -86,7 +86,7 @@ class Reviews extends MenuItem {
         echo "  <TR><TH ALIGN=LEFT CLASS=\"subhead\">Albums Reviewed by ".Engine::param('station')." DJs <SPAN CLASS=\"subhead2\">during the last 2 weeks</SPAN></TH><TH ALIGN=RIGHT CLASS=\"sub\"><B>Review Feed:</B> <A TYPE=\"application/rss+xml\" HREF=\"zkrss.php?feed=reviews\"><IMG SRC=\"img/rss.gif\" ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT=\"rss\"></A></TH></TR>\n";
         echo "</TABLE>\n<TABLE WIDTH=\"100%\">\n";
         echo "  <TR><TH ALIGN=LEFT>Album</TH><TH ALIGN=LEFT>Artist</TH><TH ALIGN=LEFT>Collection</TH><TH ALIGN=LEFT>Reviewed by</TH></TR>\n";
-        $results = Engine::api(IReview::class)->getRecentReviews("", 2);
+        $results = Engine::api(IReview::class)->getRecentReviews("", 2, 0, $this->session->isAuth("u"));
         $libAPI = Engine::api(ILibrary::class);
         while($results && ($row = $results->fetch())) {
             $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
