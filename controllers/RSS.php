@@ -54,12 +54,6 @@ class RSS extends CommandTarget implements IController {
        //   $str);
     }
 
-    private static function reviewhtmlnumericentities($str) {
-       return preg_replace_callback('/[^!-%\x27-;=?-~ ]/',
-          function($m) { return "&#".ord($m[0]).";"; },
-          $str);
-    }
-
     public function processRequest($dispatcher) {
         $this->session = Engine::session();
 
@@ -213,16 +207,7 @@ class RSS extends CommandTarget implements IController {
                 //if(strlen($review) > 500)
                 //   $review = substr($review, 0, 497) . "...";
                 $review = nl2br(self::xmlentities($review, ENT_QUOTES));
-                $review = str_replace("\241", "&iexcl;", $review);
-                $review = str_replace("\223", "&#8220;", $review);  // ldquot
-                $review = str_replace("\224", "&#8221;", $review);  // rdquot
-                $review = str_replace("\205", "...", $review);
-                $review = str_replace("\226", "&#8211;", $review);   // en dash
-                $review = str_replace("\227", "&#8212;", $review);   // em dash
-                $review = str_replace("\221", "&#8216;", $review);   // lsquot
-                $review = str_replace("\222", "&#8217;", $review);   // rsquot
                 $review = self::xmlentities($review);
-                $review = self::reviewhtmlnumericentities(html_entity_decode($review));
                 break;
              }
           }
