@@ -1376,6 +1376,9 @@ class Playlists extends MenuItem {
         $seq = $_REQUEST["seq"];
         $viewuser = $_REQUEST["viewuser"];
         $playlist = $_REQUEST["playlist"];
+        $recentReviews = [];
+        $recentPlays = [];
+        $topPlays = [];
     
         settype($playlist, "integer");
         settype($viewuser, "integer");
