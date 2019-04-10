@@ -208,14 +208,6 @@ class Reviews extends MenuItem {
             $body .= "\n$name\nReviewed " . substr($row[1], 0, 10) . "\r\n\r\n";
     
             $review = $row[2];
-            $review = str_replace("\241", "!", $review);
-            $review = str_replace("\223", "\"", $review);  // ldquot
-            $review = str_replace("\224", "\"", $review);  // rdquot
-            $review = str_replace("\205", "...", $review);
-            $review = str_replace("\226", "-", $review);   // en dash
-            $review = str_replace("\227", "--", $review);   // em dash
-            $review = str_replace("\221", "'", $review);   // lsquot
-            $review = str_replace("\222", "'", $review);        // rsquot
     
             $body .= \WordWrap::word_wrap($review);
     
