@@ -320,6 +320,7 @@ function setFocus() {
             $tracks = Engine::api(ILibrary::class)->search(ILibrary::TRACK_KEY, 0, 200, $n);
     
             $mid = sizeof($tracks) / 2;
+            $opened = 0;
             for($i = 0; $i < $mid; $i++){
                 if(!$opened) {
                     if($this->noTables)
@@ -536,7 +537,8 @@ function setFocus() {
         $n = $_REQUEST["n"];
     
         Engine::api(ILibrary::class)->markAlbumsReviewed($albums, $this->session->isAuth("u"));
-    
+
+        $opened = 0;
         for($i = 0; $i < sizeof($albums); $i++){
             if (! $opened ) {
                 if($this->noTables)
@@ -722,6 +724,7 @@ function setFocus() {
     }
     
     private function reviewerAlbums($searchType, $searchString, $albums, $p) {
+        $opened = 0;
         for($i = 0; $i < sizeof($albums); $i++){
             if (! $opened ) {
                 if($this->noTables)
@@ -915,7 +918,8 @@ function setFocus() {
         $tracks = $libraryAPI->searchPos(ILibrary::TRACK_NAME, $p, $this->maxresults, $search);
     
         $libraryAPI->markAlbumsReviewed($tracks, $this->session->isAuth("u"));
-    
+
+        $opened = 0;
         for($i=0; $i < sizeof($tracks); $i++) {
             if (! $opened) {
                 if($this->noTables)
@@ -1047,6 +1051,7 @@ function setFocus() {
         if($p == "") $p = 0;
         $search = $this->searchString($_REQUEST["n"],$_REQUEST["m"]);
         $labels = Engine::api(ILibrary::class)->searchPos(ILibrary::LABEL_NAME, $p, $this->maxresults, $search);
+        $opened = 0;
         for($i=0; $i < sizeof($labels); $i++) {
             if (! $opened ) {
                 if($this->noTables)

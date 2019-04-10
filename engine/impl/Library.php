@@ -84,7 +84,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
     }
     
     public function searchPos($tableIndex, &$pos, $count, $search, $sortBy = 0) {
-        $retval = array();
+        $retVal = array();
       
         // 2007-08-04 thwart injection attacks by aborting if we encounter
         // a semicolon or 'union select'
