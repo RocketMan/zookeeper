@@ -174,7 +174,7 @@ class ReviewImpl extends BaseImpl implements IReview {
                 $labelCache[$labelKey] = sizeof($label) ?
                                            $label[0]["name"] : "(Unknown)";
             }
-            $result[$i++][label] = $labelCache[$labelKey];
+            $result[$i++]["label"] = $labelCache[$labelKey];
         } 
     }
 }
