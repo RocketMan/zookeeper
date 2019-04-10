@@ -78,14 +78,14 @@ class UserAdmin extends MenuItem {
         return (substr($this->sortBy, -1, 1) == "-")?-$retval:$retval;
     }
     
-    private function emitColumnHeader($header) {
+    private function emitColumnHeader($header, $subaction="") {
         $command = $header;
         if(!strcmp($header, $this->sortBy)) {
             $command .= "-";
             $selected = 1;
         } else if(!strcmp($header . "-", $this->sortBy))
             $selected = 2;
-        echo "    <TH ALIGN=LEFT><A CLASS=\"nav\" HREF=\"?session=".$this->session->getSessionID()."&amp;action=adminUsers&amp;sortBy=$command\">$header</A>";
+        echo "    <TH ALIGN=LEFT><A CLASS=\"nav\" HREF=\"?session=".$this->session->getSessionID()."&amp;action=adminUsers&amp;subaction=$subaction&amp;sortBy=$command\">$header</A>";
         if($selected)
             echo "&nbsp;<IMG SRC=\"img/arrow_" . (($selected==1)?"down":"up") . "_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALIGN=MIDDLE ALT=\"sort\">";
         echo "</TH>\n";
@@ -337,9 +337,9 @@ class UserAdmin extends MenuItem {
     
         // Emit the column headers
         echo "<P><TABLE>\n  <TR>\n";
-        $this->emitColumnHeader("Airname");
-        $this->emitColumnHeader("User");
-        $this->emitColumnHeader("Name");
+        $this->emitColumnHeader("Airname", "airnames");
+        $this->emitColumnHeader("User", "airnames");
+        $this->emitColumnHeader("Name", "airnames");
         echo "  </TR>\n";
     
         // Get and sort the airname list
