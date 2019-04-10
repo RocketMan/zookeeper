@@ -107,10 +107,14 @@ class UICommon {
         $qpos = strpos($uri, "?");
         if($qpos !== false)
             $uri = substr($uri, 0, $qpos);
+
+        $port = ":" . $_SERVER['SERVER_PORT'];
+        if($port == ":443" || $port == ":80")
+            $port = "";
     
         // compose the URL
         return $_SERVER['REQUEST_SCHEME'] . "://" .
-               $_SERVER['SERVER_NAME'] .
+               $_SERVER['SERVER_NAME'] . $port .
                preg_replace("{/[^/]+$}", "/", $uri);
     }
     
