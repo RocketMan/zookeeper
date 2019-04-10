@@ -165,6 +165,7 @@ function setFocus() {
 
     public function searchByAlbumKey() {
         $n = $_REQUEST["n"];
+        $opened = 0;
     
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $n);
     
@@ -320,7 +321,6 @@ function setFocus() {
             $tracks = Engine::api(ILibrary::class)->search(ILibrary::TRACK_KEY, 0, 200, $n);
     
             $mid = sizeof($tracks) / 2;
-            $opened = 0;
             for($i = 0; $i < $mid; $i++){
                 if(!$opened) {
                     if($this->noTables)
