@@ -187,7 +187,7 @@ class EditorImpl extends BaseImpl implements IEditor {
             
             //echo "DEBUG: query=$query<BR>";
             for($i=1; $tracks && array_key_exists($i, $tracks); $i++) {
-                if($isColl) {
+                if($iscoll) {
                     $query = "INSERT INTO colltracknames (tag, seq, track, " .
                             "artist) VALUES (?, ?, ?, ?)";
                     $stmt = $this->prepare($query);
