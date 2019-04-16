@@ -36,14 +36,14 @@ class Playlists extends MenuItem {
     private static $actions = [
         [ "newList", "emitEditListNew" ],
         [ "editList", "emitEditListSel" ],
+        [ "newListEditor", "emitEditor" ],
+        [ "editListEditor", "emitEditor" ],
         [ "showLink", "emitShowLink" ],
         [ "importExport", "emitImportExportList" ],
         [ "viewDJ", "emitViewDJ" ],
         [ "viewDJReviews", "viewDJReviews" ],
         [ "viewDate", "emitViewDate" ],
         [ "updateDJInfo", "updateDJInfo" ],
-        [ "listEditorNew", "emitEditor" ],
-        [ "listEditorEdit", "emitEditor" ],
     ];
 
     private $action;
@@ -243,14 +243,14 @@ class Playlists extends MenuItem {
                 if($playlist) {
                     $success = Engine::api(IPlaylist::class)->updatePlaylist(
                             $playlist, $date, $time, $description, $airname);
-                    $this->action = "listEditorEdit";
+                    $this->action = "editListEditor";
                     $this->emitEditor();
                 } else {
                     $success = Engine::api(IPlaylist::class)->insertPlaylist(
                              $this->session->getUser(),
                              $date, $time, $description, $airname);
                     $_REQUEST["playlist"] = Engine::lastInsertId();
-                    $this->action = "listEditorNew";
+                    $this->action = "newListEditor";
                     $this->emitEditor();
                 }
                 return;
@@ -1085,7 +1085,10 @@ class Playlists extends MenuItem {
             // echo "<B>Imported $count tracks.</B>\n";
             fclose($fd);
             unset($_REQUEST["validate"]);
-            $this->emitEditList($playlist);
+
+            $_REQUEST["playlist"] = $playlist;
+            $this->action = "newListEditor";
+            $this->emitEditor();
         }
     }
     
