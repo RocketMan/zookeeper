@@ -1569,7 +1569,12 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     private function printTag($tag) {
         $charset = self::$charset[$this->printConfig['charset']];
 
-        $output = self::makeLabel($tag, $charset,
+        $template = $this->printConfig['use_template'];
+        if($template)
+            $output = stream_get_contents(popen(__DIR__."/../".
+                                  "zk print form=$template tags=$tag", "r"));
+        else
+            $output = self::makeLabel($tag, $charset,
                                   $this->printConfig['darkness'],
                                   $this->printConfig['box_mode'],
                                   $this->printConfig['text_mode']);
