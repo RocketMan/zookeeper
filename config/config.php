@@ -140,6 +140,11 @@ $config = [
          * escape seq to switch to box drawing mode, if any (empty for UTF-8)
          */
         'box_mode' => "",
+        /**
+         * output to lpr with the specified pdf label template
+         * (empty for text/box drawing mode)
+         */
+        'use_template' => "",
     ],
 
     /**
