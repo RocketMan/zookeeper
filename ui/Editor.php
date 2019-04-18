@@ -260,7 +260,7 @@ class Editor extends MenuItem {
               foreach($_POST as $key => $value) {
                  if(substr($key, 0, 3) == "tag" && $value == "on") {
                      $tag = substr($key, 3);
-                     if($_REQUEST["print"] && $this->session->isLocal())
+                     if($_REQUEST["print"])
                          $this->printTag($tag);
                      Engine::api(IEditor::class)->dequeueTag($tag, $this->session->getUser());
                      $this->skipVar("tag".$tag);
@@ -538,7 +538,7 @@ class Editor extends MenuItem {
     public function panelSearch($validate) {
         if($validate) {
             if($_REQUEST["print"] && $_REQUEST["seltag"]) {
-               $this->enqueueTag($_REQUEST["seltag"]);
+               $this->printTag($_REQUEST["seltag"]);
             }
             return ($_REQUEST["seltag"] || $_REQUEST["new"]) &&
                        !$_REQUEST["bup_x"] && !$_REQUEST["bdown_x"] &&
@@ -722,7 +722,7 @@ class Editor extends MenuItem {
         if($result) {
             if($_REQUEST["new"]) {
                 $_REQUEST["seltag"] = $album["tag"];
-                $this->enqueueTag($_REQUEST["seltag"]);
+                $this->printTag($_REQUEST["seltag"]);
             }
 
             $this->albumAdded = $_REQUEST["new"];
@@ -782,7 +782,8 @@ class Editor extends MenuItem {
             else if($this->albumUpdated)
                 $title = "Album Updated!";
             if($this->tagPrinted) {
-                $title .= "&nbsp;&nbsp;<FONT CLASS=\"success\">Tag Queued</FONT>";
+                $printed = $this->canPrintLocal()?"Printed":"Queued";
+                $title .= "&nbsp;&nbsp;<FONT CLASS=\"success\">Tag $printed</FONT>";
             }
             break;
         case "details":
@@ -1565,8 +1566,19 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
             $this->tagPrinted = 1;
         }
     }
+
+    private function canPrintLocal() {
+        return $this->session->isLocal() &&
+                    in_array('lpr', $this->printConfig['print_methods']);
+    }
     
     private function printTag($tag) {
+        if(!$this->canPrintLocal()) {
+            // Enqueue tag for later printing
+            $this->enqueueTag($tag);
+            return;
+        }
+
         $charset = self::$charset[$this->printConfig['charset']];
 
         $template = $this->printConfig['use_template'];
