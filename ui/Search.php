@@ -857,8 +857,8 @@ function setFocus() {
             if(substr($search, -1) != "*")
                 $m = "&amp;m=1";
             echo "<P><A HREF=\"".
-                                  "?s=byCollArtist&amp;n=". URLify($n).
-                                  "&amp;p=". URLify($p). $m.
+                                  "?s=byCollArtist&amp;n=". UI::URLify($n).
+                                  "&amp;p=". UI::URLify($p). $m.
                                   "&amp;q=". $maxresults.
                                   "&amp;action=search&amp;session=".$this->session->getSessionID().
                                   "\">[Next $this->maxresults albums &gt;&gt;]</A>\n";
