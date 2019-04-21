@@ -80,7 +80,7 @@ class EditorImpl extends BaseImpl implements IEditor {
                 $stmt->bindValue(10, $label["fax"]);
                 $stmt->bindValue(11, $label["email"]);
                 $stmt->bindValue(12, $label["url"]);
-                $stmt->bindValue(13, $label["mailcount"]);
+                $stmt->bindValue(13, (int)$label["mailcount"]);
                 $stmt->bindValue(14, $label["maillist"]);
             } else if($label && array_key_exists("name", $label)) {
                 $query = "UPDATE publist SET name=?, attention=?, " .
@@ -99,7 +99,7 @@ class EditorImpl extends BaseImpl implements IEditor {
                 $stmt->bindValue(9, $label["fax"]);
                 $stmt->bindValue(10, $label["email"]);
                 $stmt->bindValue(11, $label["url"]);
-                $stmt->bindValue(12, $label["mailcount"]);
+                $stmt->bindValue(12, (int)$label["mailcount"]);
                 $stmt->bindValue(13, $label["maillist"]);
                 $stmt->bindValue(14, $label["pubkey"]);
             } else if(!$album["tag"]) {
@@ -236,7 +236,7 @@ class EditorImpl extends BaseImpl implements IEditor {
                 $stmt->bindValue(10, $label["fax"]);
                 $stmt->bindValue(11, $label["email"]);
                 $stmt->bindValue(12, $label["url"]);
-                $stmt->bindValue(13, $label["mailcount"]);
+                $stmt->bindValue(13, (int)$label["mailcount"]);
                 $stmt->bindValue(14, $label["maillist"]);
             } else if($label) {
                 $query = "UPDATE publist SET name=?, attention=?, " .
@@ -255,7 +255,7 @@ class EditorImpl extends BaseImpl implements IEditor {
                 $stmt->bindValue(9, $label["fax"]);
                 $stmt->bindValue(10, $label["email"]);
                 $stmt->bindValue(11, $label["url"]);
-                $stmt->bindValue(12, $label["mailcount"]);
+                $stmt->bindValue(12, (int)$label["mailcount"]);
                 $stmt->bindValue(13, $label["maillist"]);
                 $stmt->bindValue(14, $label["pubkey"]);
             }
