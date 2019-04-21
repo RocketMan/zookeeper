@@ -282,6 +282,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
     }
 
     public function listAlbums($op, $key, $limit) {
+        $cache = [];
         $reverse = 0;
         $parts = explode('|', $key);
         switch($op) {
