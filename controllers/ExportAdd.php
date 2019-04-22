@@ -63,7 +63,7 @@ class ExportAdd implements IController {
         (new AddManager())->addManagerGetAlbums2($records, $albums);
         
         // Emit the albums
-        while(list($index, $row) = each($albums)) {
+        foreach($albums as $index => $row) {
             // Add & pull dates
             echo $row["adddate"] . "\t" .
                  $row["pulldate"] . "\t";

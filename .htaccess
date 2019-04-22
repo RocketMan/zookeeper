@@ -1,8 +1,14 @@
-# set php error reporting to E_ALL & ~E_NOTICE (=32759)
-php_value error_reporting 32759
-
 AddDefaultCharset UTF-8
-php_value default_charset UTF-8
+
+# set php error reporting to E_ALL & ~E_NOTICE (=32759)
+<IfModule mod_php5.c>
+    php_value error_reporting 32759
+    php_value default_charset UTF-8
+</IfModule>
+<IfModule mod_php7.c>
+    php_value error_reporting 32759
+    php_value default_charset UTF-8
+</IfModule>
 
 <IfModule mod_rewrite.c>
 RewriteEngine on

@@ -19,12 +19,12 @@ class WordWrap {
         $t_lines = explode(is_int(strpos($string, "\r"))?"\r\n":"\n", $string);
         $outlines = "";
     
-        while(list(, $thisline) = each($t_lines)) {
+        foreach($t_lines as $thisline) {
             if(strlen($thisline) > $cols) {
                 $newline = "";
                 $t_l_lines = explode(" ", $thisline);
     
-                while(list(, $thisword) = each($t_l_lines)) {
+                foreach($t_l_lines as $thisword) {
                     while((strlen($thisword) + strlen($prefix)) > $cols) {
                         $cur_pos = 0;
                         $outlines .= $prefix;
