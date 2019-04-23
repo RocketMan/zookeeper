@@ -37,6 +37,7 @@
 // 1.6.1: Zookeeper-specific changes:
 //      1. use tFPDF (for unicode and ttf)
 //      2. left-justify the label cells
+//      3. added optional orientation property to format descriptor
 //////////////////////////////////////////////////////////////////////////////
 
 /**
