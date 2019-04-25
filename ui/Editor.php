@@ -106,6 +106,23 @@ class Editor extends MenuItem {
         "LATIN-1" => UI::CHARSET_LATIN1,
         "ASCII" => UI::CHARSET_ASCII,
     ];
+
+    private static $printStatus = [
+        "none" => "",
+        "connecting-to-device" => "",
+        "offline" => "The printer is not responding",
+        "marker-supply-low" => "Low ink",
+        "marker-supply-empty" => "Out of ink",
+        "toner-low" => "Low toner",
+        "toner-empty" => "Out of toner",
+        "media-low" => "Geting low on labels!",
+        "media-empty" => "Out of labels!",
+        "media-needed" => "More labels needed!",
+        "media-jam" => "Paper jam!",
+        "timed-out" => "The printer is not responding",
+    ];
+
+    private static $printStatusSuffixes = [ "-warn", "-error", "-report" ];
     
     private $editorPanels = [
          "search"=>    ["panelSearch", "details"],
@@ -168,7 +185,13 @@ class Editor extends MenuItem {
                 // Emit header
                 $title = $this->getTitle($_REQUEST["seq"]);
                 echo "  <FORM ACTION=\"?\" METHOD=POST>\n";
-                echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n      <TR><TH ALIGN=LEFT>$title</TH></TR>\n      <TR><TD HEIGHT=130 VALIGN=MIDDLE>\n";
+                echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n      <TR><TH ALIGN=LEFT>$title</TH><TH ALIGN=RIGHT CLASS=\"error\">";
+                if(!$this->subaction) {
+                    $printStatus = $this->getPrintStatus();
+                    if($printStatus)
+                        echo "Label printer alert:&nbsp;&nbsp;$printStatus";
+                }
+                echo "</TH></TR>\n      <TR><TD COLSPAN=2 HEIGHT=130 VALIGN=MIDDLE>\n";
     
             }
     
@@ -1599,5 +1622,46 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
         pclose($printer);
     
         $this->tagPrinted = 1;
+    }
+
+    private function getPrintStatus() {
+        $status = "";
+        if($this->canPrintLocal()) {
+            $printer = popen("lpoptions -d ".$this->printConfig['print_queue'], "r");
+            $output = stream_get_contents($printer);
+            pclose($printer);
+            $options = explode(' ', $output);
+            foreach($options as $option) {
+                // we are interested only in "printer-state-reasons"
+                $tuple = explode('=', $option);
+                if($tuple[0] == "printer-state-reasons") {
+                    // there can be 1 or more comma-separated reasons
+                    $reasons = explode(',', $tuple[1]);
+                    foreach($reasons as $reason) {
+                        // remove suffix, if any, from the reason code
+                        foreach(self::$printStatusSuffixes as $suffix) {
+                            $suffixLen = strlen($suffix);
+                            if(substr($reason, -$suffixLen) == $suffix) {
+                                $reason = substr($reason, 0,
+                                                 strlen($reason)-$suffixLen);
+                                break;
+                            }
+                        }
+
+                        // map reason code to user-friendly message
+                        if(array_key_exists($reason, self::$printStatus))
+                            $reason = self::$printStatus[$reason];
+
+                        if($reason) {
+                            if($status)
+                                $status .= ", ";
+                            $status .= $reason;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        return $status;
     }
 }
