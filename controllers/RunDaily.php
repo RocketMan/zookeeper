@@ -159,6 +159,7 @@ class RunDaily implements IController {
 
     private function buildChart($start, $end, $limit="", $category="", $cmj=0, $crd=0) {
         $result = "";
+        $chart = [];
         $chartApi = Engine::api(IChart::class);
         $chartApi->getChart($chart, $start, $end, $limit, $category);
         if(sizeof($chart)) {
@@ -179,7 +180,12 @@ class RunDaily implements IController {
             else if(!$crd)
                 $line = sprintf("%4s %-23s %-26s %23s\n",
                                         "Rank", "Artist", "Album", "Label");
-            $result .= $line;
+            else
+                $line = "";
+
+            if($line)
+                $result .= $line;
+                
             for($i=0; $i < sizeof($chart); $i++) {
                 // Fixup the artist, album, and label names
                 $artist = $chart[$i]["artist"];
