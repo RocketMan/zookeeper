@@ -1019,9 +1019,9 @@ class Playlists extends MenuItem {
             <TD ALIGN=RIGHT>Import from file:</TD><TD><INPUT NAME=userfile TYPE=file></TD>
           </TR><TR>
             <TD>&nbsp;</TD>
-            <TD CLASS="sub">NOTE: File must be in tab delimited format, with one track per line.<BR>
-                Each line may contain either 4 or 5 columns:<BR>
-                <B>artist&nbsp; track&nbsp; album&nbsp; label</B> &nbsp;or&nbsp; <B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label</B>,<BR>
+            <TD CLASS="sub">NOTE: File must be UTF-8 encoded and tab delimited,<BR>
+                with one track per line.  Each line may contain either 4 or 5 columns:<BR><BR>
+                &nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; label</B> &nbsp;or<BR><BR>&nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label</B>,<BR><BR>
                 where each column is separated by a tab character.<BR>
                 Any file data not in this format will be ignored.</TD>
           </TR><TR>
