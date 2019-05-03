@@ -139,7 +139,7 @@ function processReqChange(req) {
         var search = document.forms[0].search.value;
         if(search.length < 4 ||
           search.match(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^_`{|}~]/g) != null) {
-          results.innerHTML = 'TIP: For short names or names with punctuation, try the <A HREF="?action=search&s=byArtist&n=' + urlEncode(search) + '">Classic Search</A>.';
+          results.innerHTML = 'TIP: For short names or names with punctuation, try the <A HREF="?action=search&s=byArtist&n=' + urlEncode(search) + '&session=<?php echo $this->session->getSessionID();?>">Classic Search</A>.';
         }
       }
     } else {
