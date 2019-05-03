@@ -135,6 +135,13 @@ function processReqChange(req) {
         if(items && items[0])
           eval('emit' + lists[i] + '(emitTable(results, lists[i]), items[0])');
       }
+      if(rs.getAttribute("total") == '0') {
+        var search = document.forms[0].search.value;
+        if(search.length < 4 ||
+          search.match(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^_`{|}~]/g) != null) {
+          results.innerHTML = 'TIP: For short names or names with punctuation, try the <A HREF="?action=search&s=byArtist&n=' + urlEncode(search) + '">Classic Search</A>.';
+        }
+      }
     } else {
       alert("There was a problem retrieving the XML data:\n" + req.statusText);
     }
