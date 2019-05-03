@@ -4,10 +4,12 @@ AddDefaultCharset UTF-8
 <IfModule mod_php5.c>
     php_value error_reporting 32759
     php_value default_charset UTF-8
+    php_value request_order GPC
 </IfModule>
 <IfModule mod_php7.c>
     php_value error_reporting 32759
     php_value default_charset UTF-8
+    php_value request_order GPC
 </IfModule>
 
 <IfModule mod_rewrite.c>
