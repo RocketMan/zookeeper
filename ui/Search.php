@@ -677,18 +677,13 @@ function setFocus() {
             $closed = 1;
         }
 
-        if(!$closed && ($searchType == "byArtist")) {
-            $p = 0;
-            $this->searchByCollArtist($opened, $maxresults - $count);
+        if ($opened) {
+            if(!$closed)
+                echo $this->closeList();
         } else {
-            if ($opened) {
-                if(!$closed)
-                    echo $this->closeList();
-            } else {
-                echo "<H3>No albums found</H3>\n";
-                if($m)
-                    echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
-            }
+            echo "<H3>No albums found</H3>\n";
+            if($m)
+                echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
         }
     }
     
@@ -850,38 +845,6 @@ function setFocus() {
         }
     }
     
-    private function searchByCollArtist($opened, $remaining) {
-        if($opened == -1) {
-            $this->searchForm("Artist Search Results");
-            $opened++;
-        }
-    
-        $p = $_REQUEST["p"];
-        if($p == "") $p = 0;
-
-        if($opened && $p>0) {
-            echo $this->closeList();
-            if(substr($search, -1) != "*")
-                $m = "&amp;m=1";
-            echo "<P><A HREF=\"".
-                                  "?s=byCollArtist&amp;n=". UI::URLify($n).
-                                  "&amp;p=". UI::URLify($p). $m.
-                                  "&amp;q=". $maxresults.
-                                  "&amp;action=search&amp;session=".$this->session->getSessionID().
-                                  "\">[Next $this->maxresults albums &gt;&gt;]</A>\n";
-            $closed = 1;
-        }
-    
-        if ($opened) {
-            if(!$closed)
-                echo $this->closeList();
-        } else {
-            echo "<H3>No albums found</H3>\n";
-            if($m)
-                echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
-        }
-    }
-
     private function searchByCollTrack($opened, $remaining) {
         $libraryAPI = Engine::api(ILibrary::class);
     
@@ -1047,7 +1010,7 @@ function setFocus() {
         }
     
         if(!$closed) {
-            $p = 0;
+            $_REQUEST["p"] = 0;
             $this->searchByCollTrack($opened, $this->maxresults - $count);
         }
     }
