@@ -420,7 +420,7 @@ function setFocus() {
             // deprecated
             break;
         case "byCollTrack":
-            $this->searchByCollTrack(-1, $this->maxresults);
+            // deprecated
             break;
         case "byReviewer":
             $this->searchByReviewer();
@@ -845,38 +845,6 @@ function setFocus() {
         }
     }
     
-    private function searchByCollTrack($opened, $remaining) {
-        $libraryAPI = Engine::api(ILibrary::class);
-    
-        if($opened == -1) {
-            $this->searchForm("Track Search Results");
-            $opened++;
-        }
-    
-        $p = $_REQUEST["p"];
-        if($p == "") $p = 0;
-
-        if($opened && $p>0) {
-            echo $this->closeList();
-            echo "<P><A HREF=\"".
-                                  "?s=byCollTrack&amp;n=". UI::URLify($_REQUEST["n"]), 
-                                  "&amp;p=". UI::URLify($p),
-                                  "&amp;q=". $this->maxresults.
-                                  "&amp;action=search&amp;session=".$this->session->getSessionID().
-                                  "\">[Next $this->maxresults albums &gt;&gt;]</A>\n";
-            $closed = 1;
-        }
-    
-        if ($opened) {
-            if(!$closed)
-                echo $this->closeList();
-        } else {
-            echo "<H3>No tracks found</H3>\n";
-            if($m)
-                echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
-        }
-    }
-    
     private function searchByTrack() {
         $libraryAPI = Engine::api(ILibrary::class);
     
@@ -1009,9 +977,13 @@ function setFocus() {
             $closed = 1;
         }
     
-        if(!$closed) {
-            $_REQUEST["p"] = 0;
-            $this->searchByCollTrack($opened, $this->maxresults - $count);
+        if($opened) {
+            if(!$closed)
+                echo $this->closeList();
+        } else {
+            echo "<H3>No tracks found</H3>\n";
+            if($_REQUEST["m"])
+                echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
         }
     }
     
