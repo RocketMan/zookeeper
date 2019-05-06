@@ -29,6 +29,8 @@
 -- Server version: 10.0.29-MariaDB-cll-lve
 -- PHP Version: 5.6.36
 
+use zkdb;
+
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
@@ -353,6 +355,8 @@ CREATE TABLE IF NOT EXISTS `tracknames` (
 
 --
 -- Table structure for table `tracks`
+-- Upgrade for existing DB:  
+-- alter table tracks add created timestamp null default NULL;
 --
 
 CREATE TABLE IF NOT EXISTS `tracks` (
@@ -363,6 +367,7 @@ CREATE TABLE IF NOT EXISTS `tracks` (
   `track` varchar(80) DEFAULT NULL,
   `album` varchar(80) DEFAULT NULL,
   `label` varchar(80) DEFAULT NULL,
+  `created` timestamp DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `list` (`list`),
   KEY `tag` (`tag`),

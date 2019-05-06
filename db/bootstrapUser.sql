@@ -47,5 +47,14 @@ SET time_zone = "+00:00";
 -- Dumping data for table `users`
 --
 
+-- CREATE USER 'zookeeper'@'localhost' IDENTIFIED BY 'zookeeper';
+
+drop database if exists zkdb;
+-- create database zkdb;
+GRANT ALL PRIVILEGES ON zkdb.* TO 'zookeeper'@'localhost';
+use zkdb;
+
+create table users;
+
 INSERT INTO `users` (`id`, `name`, `password`, `groups`, `realname`, `expires`, `legacypass`, `lastlogin`, `ssoaccount`) VALUES
 (1, 'root', 'a68bbd37621a42a19259a18f227dc9dbc3', 'mxncp', 'Zookeeper Superuser', NULL, NULL, NULL, NULL);
