@@ -9,16 +9,54 @@ https://zookeeper.ibinx.com/master/
 
 ### Requirements
 
-* PHP 5.6 or later with MySQL PDO driver
-* MySQL/MariaDB
-
+* Apache 2.4
+* MySQL/MariaDB 5.6+
+* PHP 7.2 & PHP 7.2-mysql (thread safe version required)
 
 ### Getting Started
 
-1. Clone the repository;
-2. Create a database and populate it using the scripts in the 'db' directory;
-3. Edit the config/config.php file to point to your newly created database.
 
+The PHP setup can be installed either by manually installing its constituent
+components or by installing and integrated 'XAMPP' framework. The procedure
+using the latter is as follows:
+
+  - cd <SRC_DIR>
+  - git clone https://github.com/RocketMan/zookeeper.git
+  - git checkout -b kzsu
+  - Install XAMPP, eg www.apachefriends.org and run XAMPP Control Panel
+  - set port in httpd.conf to <SOME_PORT>
+  - edit htdocs in httpd.conf to point to <SRC_DIR>
+  - start Apache & hit localhost:<SOME_PORT> - should get PHP error page
+
+
+2. Create a database and populate it using the scripts in the 'db' directory;
+  run 'mysql -u root' and enter the following:
+      CREATE USER 'zookeeper'@'localhost' IDENTIFIED BY 'zookeeper';
+      GRANT ALL PRIVILEGES ON zkdb.* TO 'zookeeper'@'localhost';
+      CREATE DATABASE zkdb;
+
+   if your DB name is not kzdb update the .sql files and set your DB name
+   mysql -u zookeeper -pzookeeper < zkdbSchema.sql
+   mysql -u zookeeper -pzookeeper < categories.sql
+   mysql -u zookeeper -pzookeeper < chartemail.sql
+
+   Note that the above procedure will result in a bare DB with a single
+   'root' user. If a more realistic test DB is desired you can obtain
+   a backup DB from an established instance and restore it with:
+
+   mysql -u root <DB_NAME> < dbbackup.sql
+
+
+3. Edit the config/config.php file and set datbase, user and pass fields
+   to match the values used in step #2, eg zkdb, zookeeper, zookeeper.
+
+4. Hit localhost:<SOME_PORT> - should get home page, eg 9MMM
+
+### Debugging & Logging
+Because there is no simple way to use an IDE with PHP, debugging is done
+via printing (using print, echo or var_dump) and logging to 'php://stderr'. 
+The former outputs directly to the web page, while the latter will write to
+'apache/logs/error.log'. See 'ui/Playlist::logIt()' for a logging example.
 
 ### Contributing
 

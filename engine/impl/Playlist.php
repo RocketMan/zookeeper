@@ -24,6 +24,8 @@
 
 namespace ZK\Engine;
 
+use \Datetime;
+use \DateTimeZone;
 use ZK\Engine\ILibrary;
 
 
@@ -162,7 +164,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
 
     public function getTrack($id) {
-        $query = "SELECT tag, artist, track, album, label, id FROM tracks " .
+        $query = "SELECT created, tag, artist, track, album, label, id FROM tracks " .
                  "WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
@@ -170,7 +172,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
     
     public function getTracks($playlist, $desc = 0) {
-        $query = "SELECT tag, artist, track, album, label, id FROM tracks " .
+        $query = "SELECT created, tag, artist, track, album, label, id FROM tracks " .
                  "WHERE list = ? ORDER BY id";
         if($desc)
             $query .= " DESC";
@@ -178,23 +180,70 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
         return $this->execute($stmt);
     }
-    
-    public function insertTrack($playlist, $tag, $artist, $track, $album, $label) {
+
+    private static function logIt($msg) {
+        $out = fopen('php://stderr', 'w'); //output handler
+        fputs($out, $msg."\n"); //writing output operation
+        fclose($out);
+    }
+
+    // return true if "now" is within the show start/end time & date.
+    // NOTE: this routine must be tolerant of improperly formatted dates.
+    public function isWithinShow($listRow) {
+        // TODO: set local TZ on startup.
+        //$TZ_LOCAL  = new DateTimeZone(date_default_timezone_get());
+
+        $TZ_LOCAL  = new DateTimeZone("America/Los_Angeles");
+        $TIME_FORMAT = "Y-m-d Gi"; // eg, 2019-01-01 1234
+        $retVal = false;
+
+        try {
+            $timeAr = explode("-", $listRow[2]);
+            if (count($timeAr) == 2) {
+                $timeStr1 = $listRow[1] . " " . $timeAr[0];
+                $start = DateTime::createFromFormat($TIME_FORMAT, $timeStr1, $TZ_LOCAL);
+                $endStr = $timeAr[1] == "0000" ? "2359" : $timeAr[1];
+                $timeStr2 = $listRow[1] . " " . $endStr;
+                $end = DateTime::createFromFormat($TIME_FORMAT, $timeStr2, $TZ_LOCAL);
+
+                if (isset($start) && isset($end)) {
+                    $now = new DateTime("now", $TZ_LOCAL);
+                    $retVal = (($now > $start) && ($now < $end));
+                }
+            }
+        } catch (Throwable $t) {
+            ;
+        }
+        return $retVal;
+    }
+
+    public function insertTrack($playlistId, $tag, $artist, $track, $album, $label) {
+        $row = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
+
+        // log time iff 'now' is within playlist start/end time.
+        $doTimestamp = self::isWithinShow($row);
+        $timeName    = $doTimestamp ? "created, " : "";
+        $timeValue   = $doTimestamp ? "NOW(), "   : "";
+
         // Insert tag?
-        $noTag = ($tag == 0) || ($tag == "");
+        $haveTag  = ($tag != 0) && ($tag != "");
+        $tagName  = $haveTag ? ", tag" : "";
+        $tagValue = $haveTag ? ", ?"   : "";
     
-        $query = "INSERT INTO tracks " .
-                 "(list, artist, track, album, label" . ($noTag?")":", tag)") .
-                 " VALUES (?, ?, ?, ?, ?" .
-                 ($noTag?")":", ?)");
+        $names = "(" . $timeName . "list, artist, track, album, label " . $tagName . ")";
+        $values = " VALUES (" . $timeValue . "?, ?, ?, ?, ?" . $tagValue . ");";
+
+        $query = "INSERT INTO tracks " . ($names) . ($values);
+        self::logIt($query);
         $stmt = $this->prepare($query);
-        $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
+        $stmt->bindValue(1, (int)$playlistId, \PDO::PARAM_INT); 
         $stmt->bindValue(2, $artist);
         $stmt->bindValue(3, $track);
         $stmt->bindValue(4, $album);
         $stmt->bindValue(5, $label);
-        if(!$noTag)
+        if($haveTag)
             $stmt->bindValue(6, $tag);
+
         return $stmt->execute();
     }
     
