@@ -949,9 +949,12 @@ function setFocus() {
         }
         if($opened && $this->pos>0) {
             echo $this->closeList();
+
+            $m = $this->exactMatch?"&amp;m=1":"";
+    
             echo "<P><A HREF=\"".
                                   "?s=byTrack&amp;n=". UI::URLify($this->searchText).
-                                  "&amp;p=". $this->pos.
+                                  "&amp;p=". $this->pos. $m.
                                   "&amp;q=". $this->maxresults.
                                   "&amp;action=search&amp;session=".$this->session->getSessionID().
                                   "\">[Next $this->maxresults albums &gt;&gt;]</A>\n";
