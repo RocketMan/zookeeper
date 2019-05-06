@@ -80,9 +80,28 @@ class Search extends MenuItem {
         [ "search", "doSearch" ],
     ];
 
+    private static $legacySearchActions = [
+        [ "", "legacySearchLandingPage" ],
+        [ "byAlbum", "searchByAlbum" ],
+        [ "byAlbumKey", "searchByAlbumKey" ],
+        [ "byArtist", "searchByArtist" ],
+        [ "byTrack", "searchByTrack" ],
+        [ "byLabel", "searchByLabel" ],
+        [ "byLabelKey", "searchByLabelKey" ],
+        [ "byReviewer", "searchByReviewer" ],
+    ];
+
+    private $pos = 0;
+
     private $maxresults = 10;
 
     private $noTables = false;
+
+    private $exactMatch = false;
+
+    private $searchText;
+
+    private $searchType;
 
     private $sortBy;
     
@@ -156,9 +175,10 @@ function setFocus() {
 }
 // -->
 </SCRIPT>
-<?php 
+<?php
+        $search = array_key_exists("search", $_REQUEST)?$_REQUEST["search"]:"";
         echo "<FORM ACTION=\"?\" METHOD=\"POST\">\n";
-        echo "<P><B>Find It:</B>&nbsp;&nbsp;<INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search VALUE=\"".$_REQUEST['search']."\" autocomplete=off onkeyup=\"onSearch(document.forms[0],event);\" onkeypress=\"return event.keyCode != 13;\">&nbsp;&nbsp;<SPAN ID=\"total\"></SPAN></P>\n";
+        echo "<P><B>Find It:</B>&nbsp;&nbsp;<INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search VALUE=\"$search\" autocomplete=off onkeyup=\"onSearch(document.forms[0],event);\" onkeypress=\"return event.keyCode != 13;\">&nbsp;&nbsp;<SPAN ID=\"total\"></SPAN></P>\n";
         echo "<INPUT TYPE=HIDDEN NAME=action VALUE=\"find\">\n";
         echo "<INPUT TYPE=HIDDEN NAME=session VALUE=\"".$this->session->getSessionID()."\">\n";
         echo "</FORM>\n";
@@ -171,10 +191,9 @@ function setFocus() {
     }
 
     public function searchByAlbumKey() {
-        $n = $_REQUEST["n"];
         $opened = 0;
     
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $n);
+        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $this->searchText);
     
         $artist = strcmp(substr($albums[0]["artist"], 0, 8), "[coll]: ")?
                       $albums[0]["artist"]:"Various Artists";
@@ -273,10 +292,10 @@ function setFocus() {
         echo "</TABLE>\n<BR>\n";
     
         // Emit Currents data
-        $this->newEntity(AddManager::class)->viewCurrents($n);
+        $this->newEntity(AddManager::class)->viewCurrents($this->searchText);
     
         // Emit last plays
-        $this->newEntity(Playlists::class)->viewLastPlays($n, 6);
+        $this->newEntity(Playlists::class)->viewLastPlays($this->searchText, 6);
     
         // Emit Review
         $this->newEntity(Reviews::class)->viewReview2();
@@ -285,7 +304,7 @@ function setFocus() {
         echo "<TABLE WIDTH=\"100%\">\n  <TR><TH COLSPAN=5 ALIGN=LEFT CLASS=\"secdiv\">Track Listing</TH></TR></TABLE>\n";
     
         // Handle collection tracks
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 200, $n);
+        $albums = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 200, $this->searchText);
         for($i = 0; $i < sizeof($albums); $i++) {
             if($i == 0) {
                 if($this->noTables)
@@ -325,7 +344,7 @@ function setFocus() {
             echo $this->closeList();
         else {
             // Handle non-collection tracks
-            $tracks = Engine::api(ILibrary::class)->search(ILibrary::TRACK_KEY, 0, 200, $n);
+            $tracks = Engine::api(ILibrary::class)->search(ILibrary::TRACK_KEY, 0, 200, $this->searchText);
     
             $mid = sizeof($tracks) / 2;
             for($i = 0; $i < $mid; $i++){
@@ -387,51 +406,25 @@ function setFocus() {
     public function doSearch() {
         $this->checkBrowserCaps();
     
-        $n = stripslashes($_REQUEST["n"]);
+        if(array_key_exists('m', $_REQUEST))
+            $this->exactMatch = $_REQUEST['m'];
+        if(array_key_exists('n', $_REQUEST))
+            $this->searchText = stripslashes($_REQUEST['n']);
+        if(array_key_exists('p', $_REQUEST))
+            $this->pos = (integer)$_REQUEST['p'];
+        if(array_key_exists('q', $_REQUEST) && $_REQUEST['q'])
+            $this->maxresults = (integer)$_REQUEST['q'];
+
+        $this->searchType = $this->searchText &&
+                array_key_exists('s', $_REQUEST)?$_REQUEST['s']:"";
+        $this->dispatchAction($this->searchType, self::$legacySearchActions);
+    }
     
-        $p = $_REQUEST["p"];
-        settype($p, "integer");
-        $q = $_REQUEST["q"];
-        if($q)
-            $this->maxresults = (integer)$q;
-        if(strlen($n))
-            $searchType = $_REQUEST["s"];
-    
-        switch($searchType) {
-        case "byAlbum":
-            $this->searchByAlbum();
-            break;
-        case "byAlbumKey":
-            $this->searchByAlbumKey();
-            break;
-        case "byArtist":
-            $this->searchByArtist();
-            break;
-        case "byTrack":
-            $this->searchByTrack();
-            break;
-        case "byLabel":
-            $this->searchByLabel();
-            break;
-        case "byLabelKey":
-            $this->searchByLabelKey();
-            break;
-        case "byCollArtist":
-            // deprecated
-            break;
-        case "byCollTrack":
-            // deprecated
-            break;
-        case "byReviewer":
-            $this->searchByReviewer();
-            break;
-        default:
-            $this->searchForm("");
-            echo "<P><B>Tip:  For a more extensive search, try ".
-                 "<A HREF=\"".
-                 "?session=".$this->session->getSessionID()."&amp;action=find\" CLASS=\"nav\">Find It!</A>\n";
-            break;
-        }
+    public function legacySearchLandingPage() {
+        $this->searchForm("");
+        echo "<P><B>Tip:  For a more extensive search, try ".
+             "<A HREF=\"".
+             "?session=".$this->session->getSessionID()."&amp;action=find\" CLASS=\"nav\">Find It!</A>\n";
     }
     
     // returns closing tag for output
@@ -443,10 +436,11 @@ function setFocus() {
         return $close;
     }
     
-    private function searchString($arg, $exactMatchOnly) {
-        if(!$exactMatchOnly)
-            $arg .= "*";
-        return $arg;
+    private function searchString() {
+        $searchString = $this->searchText;
+        if(!$this->exactMatch)
+            $searchString .= "*";
+        return $searchString;
     }
     
     // CheckBrowserCaps
@@ -460,7 +454,7 @@ function setFocus() {
     }
     
     private function searchForm($title, $tag=0) {
-        switch($_REQUEST["s"]){
+        switch($this->searchType){
         case "byArtist":
         case "byCollArtist":
             $chkArtist = " checked";
@@ -477,10 +471,10 @@ function setFocus() {
             break;
         }
         if ($chkArtist || $chkAlbum || $chkTrack || $chkLabel ) {
-            if($_REQUEST["m"])
+            if($this->exactMatch)
                 $chkExact =" checked";
-            if($_REQUEST["n"])
-                $searchFor =" VALUE=\"".htmlspecialchars($_REQUEST["n"])."\"";
+            if($this->searchText)
+                $searchFor =" VALUE=\"".htmlspecialchars($this->searchText)."\"";
         } else {
             // Default to search by artist
             $chkArtist = " checked";
@@ -539,10 +533,7 @@ function setFocus() {
         UI::setFocus("n");
     }
     
-    private function outputAlbums($searchType, $searchString, $albums, $p) {
-        $m = $_REQUEST["m"];
-        $n = $_REQUEST["n"];
-    
+    private function outputAlbums($albums) {
         Engine::api(ILibrary::class)->markAlbumsReviewed($albums, $this->session->isAuth("u"));
 
         $opened = 0;
@@ -663,14 +654,14 @@ function setFocus() {
                 echo "\n";
             }
         }
-        if($opened && $p>0) {
+        if($opened && $this->pos>0) {
             echo $this->closeList();
-            if(substr($searchString, -1) != "*")
-                $m = "&amp;m=1";
+
+            $m = $this->exactMatch?"&amp;m=1":"";
     
             echo "<P><A HREF=\"".
-                                  "?s=$searchType&amp;n=". UI::URLify($n).
-                                  "&amp;p=". UI::URLify($p). $m.
+                                  "?s=$this->searchType&amp;n=". UI::URLify($this->searchText).
+                                  "&amp;p=". $this->pos. $m.
                                   "&amp;q=". $this->maxresults.
                                   "&amp;action=search&amp;session=".$this->session->getSessionID().
                                   "\">[Next $this->maxresults albums &gt;&gt;]</A>\n";
@@ -687,23 +678,18 @@ function setFocus() {
         }
     }
     
-    private function searchByAlbum() {
+    public function searchByAlbum() {
         $this->searchForm("Album Search Results");
-        $p = $_REQUEST["p"];
-        if($p == "") $p = 0;
-    
-        $search = $this->searchString($_REQUEST["n"], $_REQUEST["m"]);
-        $albums = Engine::api(ILibrary::class)->searchPos(ILibrary::ALBUM_NAME, $p, $this->maxresults, $search);
-        $this->outputAlbums("byAlbum", $search, $albums, $p);
+        $search = $this->searchString();
+        $albums = Engine::api(ILibrary::class)->searchPos(ILibrary::ALBUM_NAME, $this->pos, $this->maxresults, $search);
+        $this->outputAlbums($albums);
     }        
     
-    private function searchByArtist() {
+    public function searchByArtist() {
         $this->searchForm("Artist Search Results");
-        $p = $_REQUEST["p"];
-        if($p == "") $p = 0;
-        $search = $this->searchString($_REQUEST["n"],$_REQUEST["m"]);
-        $albums = Engine::api(ILibrary::class)->searchPos(ILibrary::ALBUM_ARTIST, $p, $this->maxresults, $search);
-        $this->outputAlbums("byArtist", $search, $albums, $p);
+        $search = $this->searchString();
+        $albums = Engine::api(ILibrary::class)->searchPos(ILibrary::ALBUM_ARTIST, $this->pos, $this->maxresults, $search);
+        $this->outputAlbums($albums);
     }
     
     private function reviewerColHeader($header, $static) {
@@ -717,7 +703,7 @@ function setFocus() {
         if($static)
             echo "  <TH ALIGN=LEFT$width><U>$header</U>";
         else
-            echo "  <TH ALIGN=LEFT$width><A CLASS=\"nav\" HREF=\"?s=byReviewer&amp;n=".$_REQUEST["n"]."&amp;p=0&amp;q=15&amp;action=viewDJReviews&amp;session=".$this->session->getSessionID()."&amp;sortBy=$command\">$header</A>";
+            echo "  <TH ALIGN=LEFT$width><A CLASS=\"nav\" HREF=\"?s=byReviewer&amp;n=".UI::URLify($this->searchText)."&amp;p=0&amp;q=15&amp;action=viewDJReviews&amp;session=".$this->session->getSessionID()."&amp;sortBy=$command\">$header</A>";
     
         if($selected && !$static)
             echo "&nbsp;<IMG SRC=\"img/arrow_" . (($selected==1)?"down":"up") . "_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALIGN=MIDDLE ALT=\"sort\">";
@@ -725,7 +711,7 @@ function setFocus() {
         echo "</TH>\n";
     }
     
-    private function reviewerAlbums($searchType, $searchString, $albums, $p) {
+    private function reviewerAlbums($albums) {
         $opened = 0;
         for($i = 0; $i < sizeof($albums); $i++){
             if (! $opened ) {
@@ -802,15 +788,14 @@ function setFocus() {
                 echo "</TD></TR>\n";
         }
 
-        if($opened && $p>0) {
+        if($opened && $this->pos>0) {
             echo $this->closeList();
-            $m = $_REQUEST["m"];
-            if(substr($searchString, -1) != "*")
-                $m = "&amp;m=1";
+
+            $m = $this->exactMatch?"&amp;m=1":"";
     
             echo "<P><A HREF=\"".
-                                  "?s=$searchType&amp;n=". UI::URLify($_REQUEST["n"]).
-                                  "&amp;p=". UI::URLify($p). $m.
+                                  "?s=$this->searchType&amp;n=". UI::URLify($this->searchText).
+                                  "&amp;p=". $this->pos. $m.
                                   "&amp;q=". $this->maxresults.
                                   "&amp;action=viewDJReviews&amp;session=".$this->session->getSessionID().
                                   "&amp;sortBy=$this->sortBy".
@@ -826,34 +811,30 @@ function setFocus() {
         }
     }
     
-    private function searchByReviewer() {
-        $this->sortBy = $_REQUEST["sortBy"];
+    public function searchByReviewer() {
+        $this->sortBy = array_key_exists("sortBy", $_REQUEST)?$_REQUEST["sortBy"]:"";
         if(!$this->sortBy)$this->sortBy="Artist";
     
-        if($_REQUEST["n"]) {
-            $airnames = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), $_REQUEST["n"]);
+        if($this->searchText) {
+            $airnames = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), $this->searchText);
             if ($arow = $airnames->fetch())
                 $name = $arow["airname"];
         }
     
         if($name) {
             echo "<TABLE WIDTH=\"100%\"><TR><TH ALIGN=LEFT CLASS=\"subhead\">$name's Album Reviews</TH></TR></TABLE>\n";
-            $p = $_REQUEST["p"];
-            if($p == "") $p = 0;
-            $albums = Engine::api(ILibrary::class)->searchPos(ILibrary::ALBUM_AIRNAME, $p, $this->maxresults, $_REQUEST["n"], $this->sortBy);
-            $this->reviewerAlbums("byReviewer", $search, $albums, $p);
+            $albums = Engine::api(ILibrary::class)->searchPos(ILibrary::ALBUM_AIRNAME, $this->pos, $this->maxresults, $this->searchText, $this->sortBy);
+            $this->reviewerAlbums($albums);
         }
     }
     
-    private function searchByTrack() {
+    public function searchByTrack() {
         $libraryAPI = Engine::api(ILibrary::class);
     
         $this->searchForm("Track Search Results");
     
-        $p = $_REQUEST["p"];
-        if($p == "") $p = 0;
-        $search = $this->searchString($_REQUEST["n"], $_REQUEST["m"]);
-        $tracks = $libraryAPI->searchPos(ILibrary::TRACK_NAME, $p, $this->maxresults, $search);
+        $search = $this->searchString();
+        $tracks = $libraryAPI->searchPos(ILibrary::TRACK_NAME, $this->pos, $this->maxresults, $search);
     
         $libraryAPI->markAlbumsReviewed($tracks, $this->session->isAuth("u"));
 
@@ -966,33 +947,34 @@ function setFocus() {
                 }
             }
         }
-        if($opened && $p>0) {
+        if($opened && $this->pos>0) {
             echo $this->closeList();
+
+            $m = $this->exactMatch?"&amp;m=1":"";
+    
             echo "<P><A HREF=\"".
-                                  "?s=byTrack&amp;n=". UI::URLify($_REQUEST["n"]).
-                                  "&amp;p=". UI::URLify($p),
+                                  "?s=byTrack&amp;n=". UI::URLify($this->searchText).
+                                  "&amp;p=". $this->pos. $m.
                                   "&amp;q=". $this->maxresults.
                                   "&amp;action=search&amp;session=".$this->session->getSessionID().
                                   "\">[Next $this->maxresults albums &gt;&gt;]</A>\n";
             $closed = 1;
         }
     
-        if($opened) {
+        if ($opened) {
             if(!$closed)
                 echo $this->closeList();
         } else {
             echo "<H3>No tracks found</H3>\n";
-            if($_REQUEST["m"])
+            if($this->exactMatch)
                 echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
         }
     }
     
-    private function searchByLabel() {
+    public function searchByLabel() {
         $this->searchForm("Label Search Results");
-        $p = $_REQUEST["p"];
-        if($p == "") $p = 0;
-        $search = $this->searchString($_REQUEST["n"],$_REQUEST["m"]);
-        $labels = Engine::api(ILibrary::class)->searchPos(ILibrary::LABEL_NAME, $p, $this->maxresults, $search);
+        $search = $this->searchString();
+        $labels = Engine::api(ILibrary::class)->searchPos(ILibrary::LABEL_NAME, $this->pos, $this->maxresults, $search);
         $opened = 0;
         for($i=0; $i < sizeof($labels); $i++) {
             if (! $opened ) {
@@ -1050,14 +1032,14 @@ function setFocus() {
                 echo "</TD></TR>";
             echo "\n";
         }
-        if($opened && $p>0) {
+        if($opened && $this->pos>0) {
             echo $this->closeList();
-            $m = $_REQUEST["m"];
+            $m = "";
             if($m)
                 $m = "&m=1";
             echo "<P><A HREF=\"".
-                              "?s=byLabel&amp;n=". UI::URLify($_REQUEST["n"]).
-                              "&amp;p=". UI::URLify($p). $m.
+                              "?s=byLabel&amp;n=". UI::URLify($this->searchText).
+                              "&amp;p=". $this->pos. $m.
                               "&amp;q=". $this->maxresults.
                               "&amp;action=search&amp;session=".$this->session->getSessionID().
                               "\">[Next $this->maxresults labels &gt;&gt;]</A>\n";
@@ -1069,17 +1051,14 @@ function setFocus() {
                 echo $this->closeList();
         } else {
             echo "<H3>No labels found</H3>\n";
-            if($_REQUEST["m"])
+            if($this->exactMatch)
                 echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
         }
     }
     
-    private function searchByLabelKey() {
-        $p = $_REQUEST["p"];
-        if($p == "") $p = 0;
+    public function searchByLabelKey() {
         $this->searchForm("Label Search Results");
-        $search = $this->searchString($_REQUEST["n"], 1);
-        $albums = Engine::api(ILibrary::class)->searchPos(ILibrary::ALBUM_PUBKEY, $p, $this->maxresults, $search);
-        $this->outputAlbums("byLabelKey", $search, $albums, $p);
+        $albums = Engine::api(ILibrary::class)->searchPos(ILibrary::ALBUM_PUBKEY, $this->pos, $this->maxresults, $this->searchText);
+        $this->outputAlbums($albums);
     }
 }
