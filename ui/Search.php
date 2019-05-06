@@ -673,7 +673,7 @@ function setFocus() {
                 echo $this->closeList();
         } else {
             echo "<H3>No albums found</H3>\n";
-            if($m)
+            if($this->exactMatch)
                 echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
         }
     }
@@ -1034,9 +1034,9 @@ function setFocus() {
         }
         if($opened && $this->pos>0) {
             echo $this->closeList();
-            $m = "";
-            if($m)
-                $m = "&m=1";
+
+            $m = $this->exactMatch?"&amp;m=1":"";
+
             echo "<P><A HREF=\"".
                               "?s=byLabel&amp;n=". UI::URLify($this->searchText).
                               "&amp;p=". $this->pos. $m.
