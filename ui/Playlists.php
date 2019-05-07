@@ -734,9 +734,10 @@ class Playlists extends MenuItem {
         // Print the header
         $script = "?target=export";
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlist);
+        $showDateTime = self::makeShowDateAndTime($row);
         echo "<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%\">\n    <TR>\n      <TH ALIGN=LEFT>";
-        echo "Playlist for $row[0]</TH>\n      <TH ALIGN=RIGHT>$row[1]</TH>\n";
-        echo "      <TH ALIGN=RIGHT VALIGN=TOP><A CLASS=\"sub\" HREF=\"#top\" onClick='window.open(\"$script&amp;session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;format=html\")'>Printable playlist</A></TH>\n    </TR>\n  </TABLE>\n";
+        echo "$row[0]</TH>\n      <TH ALIGN=RIGHT>$showDateTime</TH>\n";
+        echo "      <TH ALIGN=RIGHT VALIGN=TOP><A CLASS=\"sub\" HREF=\"#top\" onClick='window.open(\"$script&amp;session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;format=html\")'>Print</A></TH>\n    </TR>\n  </TABLE>\n";
     }
     
     private function insertSetSeparator($playlist) {
@@ -1385,6 +1386,14 @@ class Playlists extends MenuItem {
         echo "</TABLE>\n";
     }
 
+    private function makeShowDateAndTime($row) {
+        $showStart = self::showStartTime($row[2]);
+        $showEnd = self::showEndTime($row[2]);
+        $showDate = self::timestampToDate($row[1]);
+        $showDateTime = $showDate . " " . $showStart . "-" . $showEnd;
+        return $showDateTime;
+    }
+
     private function viewList($playlist) {
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlist, 1);
         if( !$row) {
@@ -1395,10 +1404,7 @@ class Playlists extends MenuItem {
         $showName = $row[0];
         $djId = $row[3];
         $djName = $row[4];
-        $showStart = self::showStartTime($row[2]);
-        $showEnd = self::showEndTime($row[2]);
-        $showDate = self::timestampToDate($row[1]);
-        $showDateTime = $showDate . " " . $showStart . "-" . $showEnd;
+        $showDateTime = self::makeShowDateAndTime($row);
 
 		// make print view header
         echo "<TABLE WIDTH='100%'>" .  

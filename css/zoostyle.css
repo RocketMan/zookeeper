@@ -76,50 +76,6 @@ TD.ind {
     padding-top: 6px;
 }
 
-/* up/down & edit links for playlist edits */
-.songManager {
-    top: 8px;
-    height: 20px;
-    width: 24px;
-    position: relative;
-    font-size:12px;
-}
-
-.songManager a {
-    position: absolute;
-    line-height: 1.4;
-    background-repeat: no-repeat;
-    width: 10px;
-    height: 4px;
-}
-.songUp {
-    top: 0px;
-    background-image: URL('/img/arrow_up_beta.gif');
-}
-
-.songDown {
-    background-image: URL('/img/arrow_down_beta.gif');
-    top: 8px;
-}
-.songEdit {
-    top: -2px;
-    left: 12px;
-    font-size:14px;
-}
-
-.songLabel {
-    font-size:10px;
-}
-.songReview {
-    background-image: URL('/img/rinfo_beta.gif');
-    width:11px;
-    height:11px;
-}
-.songDivider hr {
-    height: 0px;
-    background-color: gray;
-}
-
 /* album details */
 .currentsTop {
     border-style: solid;
@@ -273,8 +229,9 @@ P.zktitle A {
 }
 .linkrow {
     line-height: 5px;
-    background-color: #2530a7;
+    background-color:  #2530a7;
 }
+
 .secNorm {
     background-color: #5863da;
 }
@@ -300,12 +257,12 @@ P.zktitle A {
     font-size: 11pt;
     font-weight: bold;
     color: white;
-    background-color: #6b3333;
+    background-color: #2530A7;
     line-height: 24px;
 }
 .playlistHdr > div {
     font-size: 11pt;
-        float: right;
+    float: right;
     font-size: 10px;
 }
 
@@ -323,6 +280,7 @@ TH.sec {
 .secdiv, .secdiv TH, TH.sec {
     color: white;
     background-color: #2530a7;
+    text-align: left;
 }
 .error {
     color: #cc0000;
@@ -440,3 +398,48 @@ A.calLink {
     color: #000000;
     background-color: #cccccc;
 }
+
+/* up/down & edit links for playlist edits */
+.songManager {
+    top: 8px;
+    height: 20px;
+    width: 24px;
+    position: relative;
+    font-size:12px;
+}
+
+.songManager a {
+    position: absolute;
+    line-height: 1.4;
+    background-repeat: no-repeat;
+    width: 10px;
+    height: 4px;
+}
+.songUp {
+    top: 0px;
+    background-image: URL('/img/arrow_up_beta.gif');
+}
+
+.songDown {
+    background-image: URL('/img/arrow_down_beta.gif');
+    top: 8px;
+}
+.songEdit {
+    top: -2px;
+    left: 12px;
+    font-size:14px;
+}
+
+.songLabel {
+    font-size:10px;
+}
+.songReview {
+    background-image: URL('/img/rinfo_beta.gif');
+    width:11px;
+    height:11px;
+}
+.songDivider hr {
+    height: 0px;
+    background-color: gray;
+}
+
