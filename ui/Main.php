@@ -170,8 +170,26 @@ class Main implements IController {
         <IMG SRC="<?php echo Engine::param('logo'); ?>" ALT="<?php echo $station_full; ?>" TITLE="<?php echo $station_full; ?>">
       </A>
     </DIV>
-    <DIV CLASS="headerNavbar">
+    <DIV CLASS="kzsuVisible headerListen">
+      <A HREF="<?php echo $urls['listen'];?>"><SPAN CLASS="clickTo">click to</SPAN><BR>listen<BR><SPAN CLASS="listenLive">LIVE</SPAN></A>
+    </DIV>
+    <DIV CLASS="genericVisible headerNavbar">
       <SPAN>Music with a difference...</SPAN>
+    </DIV>
+
+    <DIV CLASS="kzsuVisible headerNavbar">
+      <A HREF="<?php echo $urls['home'];?>schedule/">schedule</A> +
+      <A HREF="<?php echo "?session=".$this->session->getSessionID();?>">music</A> +
+      <A HREF="<?php echo $urls['home'];?>sports/">sports</a> +
+      <A HREF="<?php echo $urls['home'];?>concerts/">concerts</a> +
+      <!--A HREF="<?php echo $urls['home'];?>news/" target="_blank">news</A> + -->
+      <A HREF="<?php echo $urls['home'];?>join/">join</A>
+      <BR>
+      <A HREF="<?php echo $urls['home'];?>contact/">contact</A> +
+      <A HREF="<?php echo $urls['home'];?>about/">about</A> +
+      <A HREF="<?php echo $urls['home'];?>zine/">zine</A> +
+      <A HREF="<?php echo $urls['home'];?>donate/">donate</A> +
+      <A HREF="<?php echo $urls['home'];?>merch/">merch</A>
     </DIV>
   </DIV>
 <?php 
