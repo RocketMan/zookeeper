@@ -41,6 +41,7 @@ you installed MySQL/MariaDB:
 3. Setup a user and password for zookeeper:
 
     mysql> `GRANT USAGE ON *.* TO 'zkuser'@'localhost' IDENTIFIED BY 'zkpass';`
+    mysql> `GRANT ALL PRIVILEGES ON zkdb.* TO 'zkuser'@'localhost';`
 
     where *zkuser* is your chosen database username and *zkpass* is your
     chosen password.  (*zkpass* is just an example; please use a strong
@@ -59,8 +60,9 @@ or install a clean database instance.
 
         mysql -u zkuser -p zkdb < backup.sql
 
-    where *zkuser* is the user you setup above, and *backup.sql* is your
-    existing backup.  You will be promtped for the password you setup above.
+    where *zkuser* and *zkdb* are the user and database you setup
+    above, and *backup.sql* is your existing backup.  You will be
+    promtped for the password you configured above.
 
     If you restore from a backup, skip step (b) below.
         
