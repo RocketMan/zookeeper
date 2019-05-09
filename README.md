@@ -17,17 +17,23 @@ https://zookeeper.ibinx.com/master/
 
 
 The PHP setup can be installed either by manually installing its constituent
-components or by installing and integrated 'XAMPP' framework. The procedure
-using the latter is as follows:
+components or by installing an integrated XAMPP or LAMPP framework. The 
+procedure is as follows:
 
   - cd <SRC_DIR>
   - git clone https://github.com/RocketMan/zookeeper.git
-  - git checkout -b kzsu
-  - Install XAMPP, eg www.apachefriends.org and run XAMPP Control Panel
+  - Install Apache, PHP and MySql
   - set port in httpd.conf to <SOME_PORT>
   - edit htdocs in httpd.conf to point to <SRC_DIR>
+  - check that date.timezone in php.ini is correct
   - start Apache & hit localhost:<SOME_PORT> - should get PHP error page
 
+Note that there are two active branches for Zookeeper, eg master and 
+kzsu. In order to minimize the differences between the two branches
+two CSS helper classes are provided: genericVisible and kzsuVisible that
+can be used to enable implementation specific markup. Also note that PHP's
+default timezone must be configured in your php.ini since PHP no longer 
+obtains it from the OS.
 
 2. Create a database and populate it using the scripts in the 'db' directory;
   run 'mysql -u root' and enter the following:
@@ -56,7 +62,15 @@ using the latter is as follows:
 Because there is no simple way to use an IDE with PHP, debugging is done
 via printing (using print, echo or var_dump) and logging to 'php://stderr'. 
 The former outputs directly to the web page, while the latter will write to
-'apache/logs/error.log'. See 'ui/Playlist::logIt()' for a logging example.
+'apache/logs/error.log'. The following code segment can be used to write
+messages to 'error.log:
+
+  private static function logIt($msg) {
+      $out = fopen('php://stderr', 'w');
+      fputs($out, $msg."\n");
+      fclose($out);
+  }
+
 
 ### Contributing
 

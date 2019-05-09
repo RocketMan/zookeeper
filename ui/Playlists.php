@@ -24,6 +24,7 @@
 
 namespace ZK\UI;
 
+
 use ZK\Engine\Engine;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
@@ -1317,7 +1318,7 @@ class Playlists extends MenuItem {
         if($row["tag"]) {
             $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($row["tag"]) .
                           "&amp;q=&amp;action=search&amp;session=" . $this->session->getSessionID() .
-                          " CLASS='nav'>".$albumName ."</A>";
+                          "' CLASS='nav'>".$albumName ."</A>";
 
             if ($includeLabel) {
                 $albumTitle = $albumTitle . $labelSpan;
@@ -1341,13 +1342,6 @@ class Playlists extends MenuItem {
            $retVal = $names2[0] . " " . $names1[0] . " " . join(" ",  $extras);
        }
        return $retVal;
-    }
-
-	// write to error.log
-    private static function logIt($msg) {
-        $out = fopen('php://stderr', 'w');
-        fputs($out, $msg."\n");
-        fclose($out);
     }
 
     private function emitPlaylistBody($playlist, $editMode) {
@@ -1406,7 +1400,7 @@ class Playlists extends MenuItem {
         $djName = $row[4];
         $showDateTime = self::makeShowDateAndTime($row);
 
-		// make print view header
+        // make print view header
         echo "<TABLE WIDTH='100%'>" .  
              "<TR><TD ALIGN=RIGHT><A HREF='#top' " .
              "CLASS='nav' onClick='window.open('?target=export&amp;session=" . 
