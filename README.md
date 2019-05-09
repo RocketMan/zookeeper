@@ -38,12 +38,10 @@ you installed MySQL/MariaDB:
 
     where *zkdb* can be any name you choose for the database.
 
-3. Setup a user and password for zookeeper:
+3. Setup credentials for the database you created above:
 
     mysql> `GRANT USAGE ON *.* TO 'zkuser'@'localhost' IDENTIFIED BY 'zkpass';`
     
-    mysql> `GRANT ALL PRIVILEGES ON zkdb.* TO 'zkuser'@'localhost';`
-
     where *zkdb* is your database name.  *zkuser* and *zkpass* are your
     choosen username and password, respectively. (*zkpass* is just an
     example; please use a strong password.)
