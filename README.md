@@ -42,17 +42,15 @@ you installed MySQL/MariaDB:
 
     mysql> `GRANT USAGE ON *.* TO 'zkuser'@'localhost' IDENTIFIED BY 'zkpass';`
     
+    mysql> `GRANT ALL PRIVILEGES ON zkdb.* TO 'zkuser'@'localhost';`
+
     where *zkdb* is your database name.  *zkuser* and *zkpass* are your
     choosen username and password, respectively. (*zkpass* is just an
     example; please use a strong password.)
 
     Pay close attention to the single tick marks ('); they are required.
 
-4. Grant all privileges on the zookeeper database to the user created above:
-
-    mysql> `GRANT ALL PRIVILEGES ON zkdb.* TO 'zkuser'@'localhost';`
-
-5. Populate the new database.  You may populate the database from a backup,
+4. Populate the new database.  You may populate the database from a backup,
 or install a clean database instance.
 
     a. Populate the database from a backup:
@@ -103,6 +101,12 @@ Update the db stanza of config/config.php as follows:
 
 where *zkdb*, *zkuser*, and *zkpass* are the values from [Setting up
 the Database](#user-content-setting-up-the-database), above.
+
+The file config/config.php also contains other parameters that you may
+wish to adjust for your zookeeper installation.  These include
+branding (station name, style sheets and logo), contact information,
+optional SSO login setup, and charting configuration.  Please see the
+config.php file for more information.
 
 
 ### Contributing
