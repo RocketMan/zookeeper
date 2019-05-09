@@ -44,15 +44,15 @@ you installed MySQL/MariaDB:
     
     mysql> `GRANT ALL PRIVILEGES ON zkdb.* TO 'zkuser'@'localhost';`
 
-    where *zkuser* is your chosen database username and *zkpass* is your
-    chosen password.  (*zkpass* is just an example; please use a strong
-    password.)
+    where *zkdb* is your database name.  *zkuser* and *zkpass* are your
+    choosen username and password, respectively. (*zkpass* is just an
+    example; please use a strong password.)
 
     Pay close attention to the single tick marks ('); they are required.
 
 4. Grant all privileges on the zookeeper database to the user created above:
 
-   mysql> `GRANT ALL PRIVILEGES ON zkdb.* TO 'zkuser'@'localhost';`
+    mysql> `GRANT ALL PRIVILEGES ON zkdb.* TO 'zkuser'@'localhost';`
 
 5. Populate the new database.  You may populate the database from a backup,
 or install a clean database instance.
@@ -74,7 +74,7 @@ or install a clean database instance.
         mysql -u zkuser -p zkdb < db/chartemail.sql
         mysql -u zkuser -p zkdb < db/bootstrapUser.sql
 
-    MySQL will prompt you for the *password* you setup above.
+    MySQL will prompt you for the password you setup above.
 
     The zkdbSchema.sql script sets up the schema, while the other
     scripts bootstrap selected tables.  The bootstrapUser.sql script
