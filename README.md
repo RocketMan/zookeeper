@@ -52,14 +52,17 @@ you installed MySQL/MariaDB:
 
    mysql> `GRANT ALL PRIVILEGES ON zkdb.* TO 'zkuser'@'localhost';`
 
-5. Populate the new database
+5. Populate the new database.  You may populate the database from a backup,
+or install a clean database instance.
 
     a. Populate the database from a backup:
 
-        `mysql -u zkuser -p zkdb < backup.sql`
+        mysql -u zkuser -p zkdb < backup.sql
 
     where *zkuser* is the user you setup above, and *backup.sql* is your
     existing backup.  You will be promtped for the password you setup above.
+
+    If you restore from a backup, skip step (b) below.
         
     b. Create a clean zookeeper database instance:
 
