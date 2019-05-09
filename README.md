@@ -41,6 +41,7 @@ you installed MySQL/MariaDB:
 3. Setup a user and password for zookeeper:
 
     mysql> `GRANT USAGE ON *.* TO 'zkuser'@'localhost' IDENTIFIED BY 'zkpass';`
+    
     mysql> `GRANT ALL PRIVILEGES ON zkdb.* TO 'zkuser'@'localhost';`
 
     where *zkuser* is your chosen database username and *zkpass* is your
