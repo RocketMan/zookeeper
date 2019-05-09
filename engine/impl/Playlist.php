@@ -172,7 +172,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
     
     public function getTracks($playlist, $desc = 0) {
-        $query = "SELECT created, tag, artist, track, album, label, id FROM tracks " .
+        $query = "SELECT tag, artist, track, album, label, id, created FROM tracks " .
                  "WHERE list = ? ORDER BY id";
         if($desc)
             $query .= " DESC";
@@ -181,19 +181,9 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt);
     }
 
-    private static function logIt($msg) {
-        $out = fopen('php://stderr', 'w'); //output handler
-        fputs($out, $msg."\n"); //writing output operation
-        fclose($out);
-    }
-
     // return true if "now" is within the show start/end time & date.
     // NOTE: this routine must be tolerant of improperly formatted dates.
     public function isWithinShow($listRow) {
-        // TODO: set local TZ on startup.
-        //$TZ_LOCAL  = new DateTimeZone(date_default_timezone_get());
-
-        $TZ_LOCAL  = new DateTimeZone("America/Los_Angeles");
         $TIME_FORMAT = "Y-m-d Gi"; // eg, 2019-01-01 1234
         $retVal = false;
 
@@ -201,13 +191,13 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $timeAr = explode("-", $listRow[2]);
             if (count($timeAr) == 2) {
                 $timeStr1 = $listRow[1] . " " . $timeAr[0];
-                $start = DateTime::createFromFormat($TIME_FORMAT, $timeStr1, $TZ_LOCAL);
+                $start = DateTime::createFromFormat($TIME_FORMAT, $timeStr1);
                 $endStr = $timeAr[1] == "0000" ? "2359" : $timeAr[1];
                 $timeStr2 = $listRow[1] . " " . $endStr;
-                $end = DateTime::createFromFormat($TIME_FORMAT, $timeStr2, $TZ_LOCAL);
+                $end = DateTime::createFromFormat($TIME_FORMAT, $timeStr2);
 
                 if (isset($start) && isset($end)) {
-                    $now = new DateTime("now", $TZ_LOCAL);
+                    $now = new DateTime("now");
                     $retVal = (($now > $start) && ($now < $end));
                 }
             }
@@ -234,7 +224,6 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $values = " VALUES (" . $timeValue . "?, ?, ?, ?, ?" . $tagValue . ");";
 
         $query = "INSERT INTO tracks " . ($names) . ($values);
-        self::logIt($query);
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$playlistId, \PDO::PARAM_INT); 
         $stmt->bindValue(2, $artist);

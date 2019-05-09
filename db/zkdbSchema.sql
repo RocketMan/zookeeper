@@ -29,8 +29,6 @@
 -- Server version: 10.0.29-MariaDB-cll-lve
 -- PHP Version: 5.6.36
 
-use zkdb;
-
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
