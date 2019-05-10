@@ -190,11 +190,14 @@ function setFocus() {
         return UI::HTMLify($arg, $size, $this->noTables);
     }
 
-    public function searchByAlbumKey() {
+    public function searchByAlbumKey($key=0) {
         $opened = 0;
+
+        if($key)
+            $this->searchText = $key;
     
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $this->searchText);
-    
+
         $artist = strcmp(substr($albums[0]["artist"], 0, 8), "[coll]: ")?
                       $albums[0]["artist"]:"Various Artists";
         echo "<TABLE WIDTH=\"100%\">\n  <TR><TH ALIGN=LEFT COLSPAN=5 CLASS=\"secdiv\">" .
@@ -286,7 +289,7 @@ function setFocus() {
         } else
             echo "(Unknown)";
         echo "</B></TD><TD COLSPAN=2>&nbsp;</TD><TD>";
-        $this->newEntity(Reviews::class)->emitReviewHook();
+        $this->newEntity(Reviews::class)->emitReviewHook($this->searchText);
         echo "</TD></TR>\n";
     
         echo "</TABLE>\n<BR>\n";
@@ -298,7 +301,7 @@ function setFocus() {
         $this->newEntity(Playlists::class)->viewLastPlays($this->searchText, 6);
     
         // Emit Review
-        $this->newEntity(Reviews::class)->viewReview2();
+        $this->newEntity(Reviews::class)->viewReview2($this->searchText);
     
         // Emit Tracks
         echo "<TABLE WIDTH=\"100%\">\n  <TR><TH COLSPAN=5 ALIGN=LEFT CLASS=\"secdiv\">Track Listing</TH></TR></TABLE>\n";
