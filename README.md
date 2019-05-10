@@ -26,6 +26,7 @@ procedure is as follows:
   - set port in httpd.conf to <SOME_PORT>
   - edit htdocs in httpd.conf to point to <SRC_DIR>
   - check that date.timezone in php.ini is correct
+  - check that error_log in php.ini points to a writable file
   - start Apache & hit localhost:<SOME_PORT> - should get PHP error page
 
 Note that there are two active branches for Zookeeper, eg master and 
@@ -35,16 +36,16 @@ can be used to enable implementation specific markup. Also note that PHP's
 default timezone must be configured in your php.ini since PHP no longer 
 obtains it from the OS.
 
-2. Create a database and populate it using the scripts in the 'db' directory;
+2. Create a database and populate it using the scripts in the 'db' directory to create a zkdb database;
   run 'mysql -u root' and enter the following:
       CREATE USER 'zookeeper'@'localhost' IDENTIFIED BY 'zookeeper';
       GRANT ALL PRIVILEGES ON zkdb.* TO 'zookeeper'@'localhost';
       CREATE DATABASE zkdb;
 
-   if your DB name is not kzdb update the .sql files and set your DB name
-   mysql -u zookeeper -pzookeeper < zkdbSchema.sql
-   mysql -u zookeeper -pzookeeper < categories.sql
-   mysql -u zookeeper -pzookeeper < chartemail.sql
+   Populate the DB by running the following: 
+      mysql -u zookeeper -pzookeeper -Dzkdb < zkdbSchema.sql
+      mysql -u zookeeper -pzookeeper -Dzkdb < categories.sql
+      mysql -u zookeeper -pzookeeper -Dzkdb < chartemail.sql
 
    Note that the above procedure will result in a bare DB with a single
    'root' user. If a more realistic test DB is desired you can obtain
@@ -60,16 +61,9 @@ obtains it from the OS.
 
 ### Debugging & Logging
 Because there is no simple way to use an IDE with PHP, debugging is done
-via printing (using print, echo or var_dump) and logging to 'php://stderr'. 
-The former outputs directly to the web page, while the latter will write to
-'apache/logs/error.log'. The following code segment can be used to write
-messages to 'error.log:
-
-  private static function logIt($msg) {
-      $out = fopen('php://stderr', 'w');
-      fputs($out, $msg."\n");
-      fclose($out);
-  }
+via outputting to html using print(), echo() or var_dump() or logging 
+to PHP's error log using php_error(). The latter will write to the log file 
+defined by the error_log entry in your php.ini configuration file.
 
 
 ### Contributing
