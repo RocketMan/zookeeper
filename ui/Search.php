@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -575,13 +575,11 @@ function setFocus() {
             if(!$this->noTables) {
                 echo "</TD><TD>";
                 if($albums[$i]["REVIEWED"])
-                        echo "<A HREF=\"".
+                        echo "<A CLASS=\"albumReview\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($albums[$i]["tag"]).
                              "&amp;q=". $this->maxresults.
                              "&amp;action=search&amp;session=".$this->session->getSessionID().
-                             "\"><IMG SRC=\"img/rinfo_beta.gif\" " .
-                             "ALT=\"Album Review\" " .
-                             "WIDTH=12 HEIGHT=11 BORDER=0></A></TD><TD>";
+                             "\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A></TD><TD>";
                 else
                     echo "</TD><TD>";
             }
@@ -709,7 +707,7 @@ function setFocus() {
             echo "  <TH ALIGN=LEFT$width><A CLASS=\"nav\" HREF=\"?s=byReviewer&amp;n=".UI::URLify($this->searchText)."&amp;p=0&amp;q=15&amp;action=viewDJReviews&amp;session=".$this->session->getSessionID()."&amp;sortBy=$command\">$header</A>";
     
         if($selected && !$static)
-            echo "&nbsp;<IMG SRC=\"img/arrow_" . (($selected==1)?"down":"up") . "_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALIGN=MIDDLE ALT=\"sort\">";
+            echo "&nbsp;<SPAN CLASS=\"arrow" . (($selected==1)?"Down":"Up") . "\"><IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></SPAN>";
     
         echo "</TH>\n";
     }
@@ -874,13 +872,11 @@ function setFocus() {
                 if(!$this->noTables) {
                     echo "</TD><TD>";
                     if($tracks[$i]["REVIEWED"])
-                        echo "<A HREF=\"".
+                        echo "<A CLASS=\"albumReview\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($tracks[$i]["tag"]).
                              "&amp;q=". $this->maxresults.
                              "&amp;action=search&amp;session=".$this->session->getSessionID().
-                             "\"><IMG SRC=\"img/rinfo_beta.gif\" " .
-                             "ALT=\"Album Review\" " .
-                             "WIDTH=12 HEIGHT=11 BORDER=0></A></TD><TD>";
+                             "\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A></TD><TD>";
                     else
                         echo "</TD><TD>";
                 }

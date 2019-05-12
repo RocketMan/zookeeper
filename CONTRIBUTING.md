@@ -9,7 +9,7 @@
 1. Fork Zookeeper Online
 2. Clone Zookeeper from your fork
 3. Create and check out a new branch for your feature or enhancement
-4. Edit config/config.php as appropriate
+4. Copy config/config.example.php to config/config.php and edit as appropriate
 5. Apply and test your changes.  Please keep the source code style
    as consistent as possible with the existing codebase.  Zookeeper
    Online uses the [PSR-2 coding style](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md)
@@ -57,6 +57,11 @@ The following is an overview of the source code directory structure:
             
         css/
             CSS files
+
+        custom/
+            Instance-specific customizations that you wish to keep
+            separate from the standard installation.  For example,
+            if you have custom controllers, you can put them here.
             
         engine/
             Business operations, configuration, and session
@@ -103,7 +108,11 @@ The following is an overview of the source code directory structure:
             main endpoint for the application
             
        .htaccess
-            maps virtual endpoints onto index.php
+            maps virtual endpoints onto index.php.  This file also
+            contains PHP settings when run via a webserver module.
+
+       .user.ini
+            PHP settings when run via fastCGI
 
 
 ### Guidelines

@@ -1,4 +1,12 @@
 <?php
+/*
+ * This is a sample configuration file for Zookeeper Online that you
+ * can copy to config.php and customize for your own use.
+ *
+ * This sample file configures a radio station 'Example Radio' at 99.9FM.
+ * The various settings in this file are specific to the example and may
+ * be changed as appropriate.
+ */
 $config = [
     /**
      * name of the application
@@ -8,19 +16,21 @@ $config = [
     /**
      * station name
      */
-    'station' => '9MMM',
+    'station' => 'Example Radio',
 
-    'station_medium' => '9MMM 89.7FM',
+    'station_medium' => 'Example Radio 99.9FM',
 
-    'station_full' => '9MMM Fictitious Radio 89.7 FM',
+    'station_full' => 'Example Fictitious Radio 99.9 FM',
 
-    'station_freq' => '89.7FM',
+    'station_freq' => '99.9FM',
 
-    'copyright' => '&copy; 2002-2018 Fictitious Radio, LTD.  All rights reserved.',
+    'station_slogan' => 'Music with a difference...',
 
-    'logo' => 'img/9mmm_banner.png',
+    'copyright' => '&copy; 2002-2019 Fictitious Radio, LTD.  All rights reserved.',
 
-    'stylesheet' => 'css/nostyle.css',
+    'logo' => 'img/example_banner.png',
+
+    'stylesheet' => 'css/example_style.css',
 
     /**
      * e-mail settings
@@ -50,23 +60,23 @@ $config = [
      * URLs
      */
     'urls' => [
-        'home' => 'https://zookeeper.ibinx.com/master',
-        'listen' => 'https://zookeeper.ibinx.com/master',
+        'home' => 'https://www.example.com/',
+        'listen' => 'https://www.example.com/listen',
     ],
 
     'contact' => [
-        'addr' => 'Morgan Park 1',
-        'city' => 'Westfield, ZQ',
-        'phone' => '+1 949 555 0899',
-        'fax' => '+1 949 555 0898',
-        'request' => '+1 949 555 0897',
+        'addr' => 'Example Park 1',
+        'city' => 'Example, ZQ',
+        'phone' => '+1 949 555 0997',
+        'fax' => '+1 949 555 0998',
+        'request' => '+1 949 555 0999',
     ],
 
     /**
      * domains allowed in the Origin header
      */
     'allowed_domains' => [
-        "ibinx.com", "9mmm.fm", "9mmm.org",
+        "www.example.fm", "www.example.org",
     ],
 
     /**
@@ -93,6 +103,24 @@ $config = [
         'database' => '',
         'user' => '',
         'pass' => '',
+    ],
+
+    /**
+     * custom menu items
+     *
+     * menu items here are appended to the defaults
+     */
+    'custom_menu' => [
+//      [ 'a', 'contact%', 'Contact Example Music', ZK\UI\Example_Contacts::class ],
+    ],
+
+    /**
+     * custom controllers
+     *
+     * controllers here override/replace the defaults
+     */
+    'custom_controllers' => [
+//        'main' => ZK\UI\Example_UI_Controller::class,
     ],
 
     /**
@@ -165,24 +193,24 @@ $config = [
         'apply_limit_per_dj' => 0,
         'weekly_footer' => "\n\n--\n
 If you ever want to remove yourself from this mailing list,
-visit https://zookeeper.ibinx.com/mailman/listinfo/weekly-charts.\n
+visit https://www.example.com/mailman/listinfo/weekly-charts.\n
 Here's the general information for the list you've subscribed to,
 in case you don't already have it:\n
-The weekly-charts mailing list is for the distribution of 9MMM's
-music charts. The charts are emailed out approximately once a week. 9MMM's
-charts are compiled by tallying each play of every recording in current
-rotation (400-450 CDs/LPs/7\"s). Any questions about 9MMM's charts
-(philosophic or content-wise) can be directed to music@9mmm.fm.\n",
+The weekly-charts mailing list is for the distribution of Example Radio's
+music charts. The charts are emailed out approximately once a week. Example
+Radio's charts are compiled by tallying each play of every recording in
+current rotation (400-450 CDs/LPs/7\"s). Any questions about Example Radio's
+charts (philosophic or content-wise) can be directed to music@example.com.\n",
 
         'monthly_footer' => "\n\n--\n
 If you ever want to remove yourself from this mailing list,
-visit https://zookeeper.ibinx.com/mailman/listinfo/monthly-charts.\n
+visit https://www.example.com/mailman/listinfo/monthly-charts.\n
 Here's the general information for the list you've subscribed to,
 in case you don't already have it:\n
-The monthly-charts mailing list is for the distribution of 9MMM's
-music charts. The charts are emailed out approximately once a month. 9MMM's
-charts are compiled by tallying each play of every recording in current
-rotation (400-450 CDs/LPs/7\"s). Any questions about 9MMM's charts
-(philosophic or content-wise) can be directed to music@9mmm.fm.\n",
+The monthly-charts mailing list is for the distribution of Example Radio's
+music charts. The charts are emailed out approximately once a month. Example
+Radio's charts are compiled by tallying each play of every recording in
+current rotation (400-450 CDs/LPs/7\"s). Any questions about Example Radio's
+charts (philosophic or content-wise) can be directed to music@example.com.\n",
     ],
 ];

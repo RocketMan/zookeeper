@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -24,6 +24,10 @@
 
 namespace ZK\Controllers;
 
+include __DIR__."/../engine/Engine.php";
+
+use ZK\Engine\Engine;
+
 class Dispatcher {
     private $menu;
     private $controllers;
@@ -33,22 +37,35 @@ class Dispatcher {
             // extract leaf class name
             $p = strrchr($class, '\\');
             $p = $p?substr($p, 1):$class;
-            if(is_file(__DIR__."/${p}.php"))
+            if(is_file(__DIR__."/../custom/${p}.php"))
+                include __DIR__."/../custom/${p}.php";
+
+            else if(is_file(__DIR__."/${p}.php"))
                 include __DIR__."/${p}.php";
 
-            if(is_file(__DIR__."/../ui/${p}.php"))
+            else if(is_file(__DIR__."/../ui/${p}.php"))
                 include __DIR__."/../ui/${p}.php";
 
-            if(is_file(__DIR__."/../ui/3rdp/${p}.php"))
+            else if(is_file(__DIR__."/../ui/3rdp/${p}.php"))
                 include __DIR__."/../ui/3rdp/${p}.php";
         });
 
         // UI configuration file
         include __DIR__.'/../config/ui_config.php';
-        if(isset($menu) && is_array($menu))
+        if(isset($menu) && is_array($menu)) {
             $this->menu = $menu;
-        if(isset($controllers))
+            $customMenu = Engine::param('custom_menu');
+            if($customMenu)
+                $this->menu = array_merge($this->menu, $customMenu);
+        }
+
+        // Controllers
+        if(isset($controllers)) {
             $this->controllers = $controllers;
+            $customControllers = Engine::param('custom_controllers');
+            if($customControllers)
+                $this->controllers = array_merge($this->controllers, $customControllers);
+        }
     }
 
     /**

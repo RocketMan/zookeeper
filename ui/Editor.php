@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -989,10 +989,10 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
          echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH=\"100%\">";
          echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search VALUE=\"$osearch\" autocomplete=off onkeyup=\"onSearch(document.forms[0],event);\" onkeypress=\"return event.keyCode != 13;\"><BR>\n";
          echo "<SPAN CLASS=\"sub\">compilation?</SPAN><INPUT TYPE=CHECKBOX NAME=coll" . ($osearch&&$_REQUEST["coll"]?" CHECKED":"") . " onclick=\"onSearch(document.forms[0],event);\"></TD><TD></TD></TR>\n";
-         echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" VALUE=\"1\" TYPE=\"image\" SRC=\"img/zk_list_up_beta.gif\" onclick=\"return scrollUp();\"><BR><SELECT style=\"width:220px;\" class=\"select\" NAME=list SIZE=$this->limit onChange='changeList()' onKeyDown='return upDown(event);'>\n";
+         echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorUp\" onclick=\"return scrollUp();\"><BR><SELECT style=\"width:220px;\" class=\"select\" NAME=list SIZE=$this->limit onChange='changeList()' onKeyDown='return upDown(event);'>\n";
          for($i=0; $i<$this->limit; $i++)
               echo "  <OPTION VALUE=\"\">\n";
-         echo "</SELECT><BR><INPUT NAME=\"bdown\" VALUE=\"1\" TYPE=\"image\" SRC=\"img/zk_list_dn_beta.gif\" onclick=\"return scrollDown(-1);\"></TD>\n";
+         echo "</SELECT><BR><INPUT NAME=\"bdown\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorDown\" onclick=\"return scrollDown(-1);\"></TD>\n";
          echo "</TR></TABLE>\n";
          echo "  <INPUT TYPE=HIDDEN NAME=up VALUE=\"\">\n";
          echo "  <INPUT TYPE=HIDDEN NAME=down VALUE=\"\">\n";
@@ -1244,10 +1244,10 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
         echo "  <INPUT TYPE=HIDDEN NAME=selpubkey VALUE=\"\">\n";
         echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH=\"100%\">";
         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search VALUE=\"$osearch\" autocomplete=off onkeyup=\"onSearch(document.forms[0],event);\" onkeypress=\"return event.keyCode != 13;\"></TD></TR>\n";
-        echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" VALUE=\"1\" TYPE=\"image\" SRC=\"img/zk_list_up_beta.gif\" onclick=\"return scrollUp();\"><BR><SELECT style=\"width:220px;\" class=\"select\" NAME=list SIZE=$this->limit onChange='changeList()' onKeyDown='return upDown(event);'>\n";
+        echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorUp\" onclick=\"return scrollUp();\"><BR><SELECT style=\"width:220px;\" class=\"select\" NAME=list SIZE=$this->limit onChange='changeList()' onKeyDown='return upDown(event);'>\n";
         for($i=0; $i<$this->limit; $i++)
             echo "  <OPTION VALUE=\"\">\n";
-        echo "</SELECT><BR><INPUT NAME=\"bdown\" VALUE=\"1\" TYPE=\"image\" SRC=\"img/zk_list_dn_beta.gif\" onclick=\"return scrollDown(-1);\"></TD>\n";
+        echo "</SELECT><BR><INPUT NAME=\"bdown\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorDown\" onclick=\"return scrollDown(-1);\"></TD>\n";
         echo "</TR></TABLE>\n";
         echo "  <INPUT TYPE=HIDDEN NAME=up VALUE=\"\">\n";
         echo "  <INPUT TYPE=HIDDEN NAME=down VALUE=\"\">\n";

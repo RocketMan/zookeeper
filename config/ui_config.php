@@ -49,7 +49,6 @@ $menu = [
     [ 'p', 'deepStorage',  'Deep Storage',          ZK\UI\DeepStorage::class ],
     [ 'x', 'adminUsers',   'Administer Users',      ZK\UI\UserAdmin::class ],
     [ 'a', 'viewChart',    'Airplay Charts',        ZK\UI\Charts::class ],
-//  [ 'a', 'contact%',     'Contact 9MMM Music',    ZK\UI\Contacts::class ],
 ];
 
 /**

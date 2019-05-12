@@ -19,8 +19,9 @@ https://zookeeper.ibinx.com/master/
 2. Create a database and populate it using the scripts in the 'db'
 directory (see [Setting up the
 Database](#user-content-setting-up-the-database), below);
-3. Edit config/config.php file to point to your newly created
-database (see [Configuration](#user-content-configuration), below).
+3. Copy config/config.example.php to config/config.php, and edit its
+db stanza to point to your newly created database (see
+[Configuration](#user-content-configuration), below).
 
 
 ### Setting up the Database
@@ -86,7 +87,12 @@ The file config/config.php contains site-specific configuration data,
 such as the database name and credentials.  Generally, it is the only
 file which must be changed as part of the deployment process.
 
-Update the db stanza of config/config.php as follows:
+By default config/config.php does not exist; you must create it.  An
+example file config/config.example.php is provided which you can use
+as a template.  Simply copy it to config/config.php and change the
+settings as desired.
+
+At minimum, you will update the db stanza of config/config.php as follows:
 
     ...
     'db' => [

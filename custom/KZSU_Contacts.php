@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -28,7 +28,7 @@ use ZK\Engine\Engine;
 
 use ZK\UI\UICommon as UI;
 
-class Contacts extends MenuItem {
+class KZSU_Contacts extends MenuItem {
     private static $actions = [
         [ "contact", "emitContacts" ],
         [ "contactGuidelines", "emitGuidelines" ],
