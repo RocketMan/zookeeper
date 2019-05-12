@@ -354,8 +354,6 @@ CREATE TABLE IF NOT EXISTS `tracknames` (
 --
 -- Table structure for table `tracks`
 -- Upgrade for existing DB:  
--- alter table tracks add created timestamp null default NULL;
---
 
 CREATE TABLE IF NOT EXISTS `tracks` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
