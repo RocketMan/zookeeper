@@ -43,8 +43,9 @@ class Reviews extends MenuItem {
         return $this->dispatchAction($action, self::$actions);
     }
 
-    public function emitReviewHook() {
-        $tag = $_REQUEST["n"];
+    public function emitReviewHook($tag=0) {
+        if(!$tag)
+            $tag = $_REQUEST["n"];
         if($this->session->isAuth("u"))
             echo "<A HREF=\"?session=".$this->session->getSessionID()."&amp;action=searchReviewEdit&amp;tag=$tag\" CLASS=\"nav\"><B>Write a review of this album</B></A>";
     }
@@ -107,12 +108,12 @@ class Reviews extends MenuItem {
     }
     
     public function viewReview() {
-        $_REQUEST["n"] = $_REQUEST["tag"];
-        $this->newEntity(Search::class)->searchByAlbumKey();
+        $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
     }
     
-    public function viewReview2() {
-        $tag = $_REQUEST["n"];
+    public function viewReview2($tag=0) {
+        if(!$tag)
+            $tag = $_REQUEST["n"];
         $records = Engine::api(IReview::class)->getReviews($tag, 1, "", $this->session->isAuth("u"));
     
         if($count = sizeof($records)) {
@@ -285,8 +286,7 @@ class Reviews extends MenuItem {
                     if($_REQUEST["noise"])
                         $this->eMailReview($_REQUEST["tag"], $airname, $review);
                     echo "<B><FONT COLOR=\"#ffcc33\">Your review has been posted!</FONT></B>\n";
-                    $_REQUEST["n"] = $_REQUEST["tag"];
-                    $this->newEntity(Search::class)->searchByAlbumKey();
+                    $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
                 echo "<B><FONT COLOR=\"#cc0000\">Review not posted.  Try again later.</FONT></B>\n";
@@ -298,8 +298,7 @@ class Reviews extends MenuItem {
                     if($_REQUEST["noise"])
                         $this->eMailReview($_REQUEST["tag"], $airname, $review);
                     echo "<B><FONT COLOR=\"#ffcc33\">Your review has been updated.</FONT></B>\n";
-                    $_REQUEST["n"] = $_REQUEST["tag"];
-                    $this->newEntity(Search::class)->searchByAlbumKey();
+                    $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
                 echo "<B><FONT COLOR=\"#cc0000\">Review not updated.  Try again later.</FONT></B>\n";
@@ -308,8 +307,7 @@ class Reviews extends MenuItem {
                 $success = Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
                 if($success >= 1) {
                     echo "<B><FONT COLOR=\"#ffcc33\">Your review has been deleted.</FONT></B>\n";
-                    $_REQUEST["n"] = $_REQUEST["tag"];
-                    $this->newEntity(Search::class)->searchByAlbumKey();
+                    $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
                 echo "<B><FONT COLOR=\"#cc0000\">Delete failed.  Try again later.</FONT></B>\n";
