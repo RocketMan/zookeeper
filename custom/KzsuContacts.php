@@ -28,7 +28,7 @@ use ZK\Engine\Engine;
 
 use ZK\UI\UICommon as UI;
 
-class KZSU_Contacts extends MenuItem {
+class KzsuContacts extends MenuItem {
     private static $actions = [
         [ "contact", "emitContacts" ],
         [ "contactGuidelines", "emitGuidelines" ],

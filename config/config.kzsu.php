@@ -108,7 +108,7 @@ $config = [
      * menu items here are appended to the defaults
      */
     'custom_menu' => [
-      [ 'a', 'contact%', 'Contact KZSU Music', ZK\UI\KZSU_Contacts::class ],
+      [ 'a', 'contact%', 'Contact KZSU Music', ZK\UI\KzsuContacts::class ],
     ],
 
     /**
@@ -117,7 +117,7 @@ $config = [
      * controllers here override/replace the defaults
      */
     'custom_controllers' => [
-        'main' => ZK\UI\KZSU_UI_Controller::class,
+        'main' => ZK\UI\KzsuUIController::class,
     ],
 
     /**

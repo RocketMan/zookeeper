@@ -27,7 +27,7 @@ namespace ZK\UI;
 use ZK\Engine\Engine;
 
 /**
- * KZSU_UI_Controller is the UI controller for KZSU Radio.
+ * KzsuUIController is the UI controller for KZSU Radio.
  *
  * It inherits all of the functionality of the default ZK\UI\Main
  * controller, with the exception of specific methods which are
@@ -36,7 +36,7 @@ use ZK\Engine\Engine;
  * The file is provided as an example of a custom UI controller;
  * it is not part of the basic functionality of Zookeeper Online.
  */
-class KZSU_UI_Controller extends Main {
+class KzsuUIController extends Main {
     protected function emitBodyHeader($dispatcher) {
         $urls = Engine::param('urls');
         $station_full = Engine::param('station_full');
