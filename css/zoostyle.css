@@ -458,10 +458,14 @@ A.calLink {
     color: #000000;
     background-color: #cccccc;
 }
-.arrowUp {
+.songUp, .sortUp {
+    background-position: center;
+    background-repeat: no-repeat;
     background-image: URL('../img/arrow_up.gif');
 }
-.arrowDown {
+.songDown, .sortDown {
+    background-position: center;
+    background-repeat: no-repeat;
     background-image: URL('../img/arrow_down.gif');
 }
 .albumReview {

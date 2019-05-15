@@ -221,14 +221,14 @@ P.zktitle A {
 .submit {
 	background-color: #6b3333;
 }
-.songUp {
+.songUp, .sortUp {
 	background-image: URL('../img/kzsu/kzsu_arrow_up.gif');
 }
-.songDown {
+.songDown, .sortDown {
 	background-image: URL('../img/kzsu/kzsu_arrow_down.gif');
 }
 .albumReview {
-    background-image: URL('../img/kzsu/kzsu_rinfo.gif');
+	background-image: URL('../img/kzsu/kzsu_rinfo.gif');
 }
 .editorUp {
 	background-image: URL('../img/kzsu/kzsu_list_up.gif');

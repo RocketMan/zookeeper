@@ -496,10 +496,10 @@ class Playlists extends MenuItem {
                 $header = 1;
             }
             $class = ($id==$row["id"])?"sel":"nav";
-            echo "    <TR><TD CLASS=\"arrowCell\"><A CLASS=\"arrowUp\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=upTrack\">\n";
+            echo "    <TR><TD CLASS=\"arrowCell\"><A CLASS=\"songUp\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=upTrack\">\n";
             echo "          <IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></A><BR>\n";
             echo "          <IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"><BR>\n";
-            echo "          <A CLASS=\"arrowDown\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=downTrack\">\n";
+            echo "          <A CLASS=\"songDown\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=downTrack\">\n";
             echo "          <IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></A></TD>\n";
             echo "      <TD VALIGN=TOP><A CLASS=\"$class\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=editTrack\"><B>&gt;&gt;</B></A></TD>\n";
             if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)

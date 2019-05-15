@@ -171,7 +171,7 @@ class AddManager extends MenuItem {
             echo "        <TH ALIGN=LEFT$width><A CLASS=\"nav\" HREF=\"?session=".$this->session->getSessionID()."&amp;action=addmgr&amp;subaction=$subaction&amp;sortBy=$command&amp;date=".$_REQUEST["date"]."\">$header</A>";
     
         if($selected && !$static)
-            echo "&nbsp;<SPAN CLASS=\"arrow" . (($selected==1)?"Down":"Up") . "\"><IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></SPAN>";
+            echo "&nbsp;<SPAN CLASS=\"sort" . (($selected==1)?"Down":"Up") . "\"><IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></SPAN>";
     
         // Give extra horizontal padding to column
         ////if(!strcmp($header, "Num"))
