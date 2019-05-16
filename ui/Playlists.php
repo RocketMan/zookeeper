@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -496,9 +496,11 @@ class Playlists extends MenuItem {
                 $header = 1;
             }
             $class = ($id==$row["id"])?"sel":"nav";
-            echo "    <TR><TD CLASS=\"arrowCell\"><DIV STYLE=\"border:0; margin:0; padding:0; line-height:4px;\"><A HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=upTrack\"><IMG SRC=\"img/arrow_up_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALT=\"up\"></A><BR>\n";
+            echo "    <TR><TD CLASS=\"arrowCell\"><A CLASS=\"songUp\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=upTrack\">\n";
+            echo "          <IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></A><BR>\n";
             echo "          <IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"><BR>\n";
-            echo "          <A HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=downTrack\"><IMG SRC=\"img/arrow_down_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALT=\"down\"></A></DIV></TD>\n";
+            echo "          <A CLASS=\"songDown\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=downTrack\">\n";
+            echo "          <IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></A></TD>\n";
             echo "      <TD VALIGN=TOP><A CLASS=\"$class\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=editTrack\"><B>&gt;&gt;</B></A></TD>\n";
             if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
                 echo "      <TD COLSPAN=4><HR SIZE=2 NOSHADE></TD></TR>\n";
@@ -1312,13 +1314,11 @@ class Playlists extends MenuItem {
                 echo "  <TR><TD ALIGN=LEFT VALIGN=TOP>" . $this->smartURL($row["artist"]) . "</TD><TD ALIGN=LEFT VALIGN=TOP>" .
                             $this->smartURL($row["track"]) . "</TD><TD VALIGN=TOP ALIGN=LEFT>";
                 if($row["REVIEWED"])
-                    echo "<A HREF=\"".
+                    echo "<A CLASS=\"albumReview\" HREF=\"".
                          "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
                          "&amp;q=".
                          "&amp;action=search&amp;session=".$this->session->getSessionID().
-                         "\"><IMG SRC=\"img/rinfo_beta.gif\" " .
-                         "ALT=\"Album Review\" " .
-                         "WIDTH=12 HEIGHT=11 BORDER=0></A></TD><TD>";
+                         "\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A></TD><TD>";
                 else
                    echo "</TD><TD VALIGN=TOP ALIGN=LEFT>";
                 if($row["tag"]) echo "<A HREF=\"" .

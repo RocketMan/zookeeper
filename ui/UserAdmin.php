@@ -87,7 +87,7 @@ class UserAdmin extends MenuItem {
             $selected = 2;
         echo "    <TH ALIGN=LEFT><A CLASS=\"nav\" HREF=\"?session=".$this->session->getSessionID()."&amp;action=adminUsers&amp;subaction=$subaction&amp;sortBy=$command\">$header</A>";
         if($selected)
-            echo "&nbsp;<IMG SRC=\"img/arrow_" . (($selected==1)?"down":"up") . "_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALIGN=MIDDLE ALT=\"sort\">";
+            echo "&nbsp;<SPAN CLASS=\"sort" . (($selected==1)?"Down":"Up") . "\"><IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></SPAN>";
         echo "</TH>\n";
     }
     

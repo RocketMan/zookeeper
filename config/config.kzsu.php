@@ -1,4 +1,9 @@
 <?php
+/*
+ * This is a configuration file for Zookeeper Online for KZSU Radio.
+ *
+ * For a more generic configuration file, see config.example.php.
+ */
 $config = [
     /**
      * name of the application
@@ -8,32 +13,32 @@ $config = [
     /**
      * station name
      */
-    'station' => '9MMM',
+    'station' => 'KZSU',
 
-    'station_medium' => '9MMM 89.7FM',
+    'station_medium' => 'KZSU 90.1FM',
 
-    'station_full' => '9MMM Fictitious Radio 89.7 FM',
+    'station_full' => 'KZSU Radio 90.1 FM',
 
-    'station_freq' => '89.7FM',
+    'station_freq' => '90.1FM',
 
-    'copyright' => '&copy; 2002-2018 Fictitious Radio, LTD.  All rights reserved.',
+    'copyright' => '&copy; 2002-2019 Stanford University.  All rights reserved.  Please read the Stanford University <A HREF="http://www.stanford.edu/home/atoz/terms.html">acceptable use policy</A>',
 
-    'logo' => 'img/9mmm_banner.png',
+    'logo' => 'img/kzsu/kzsu_aharoni.png',
 
-    'stylesheet' => 'css/nostyle.css',
+    'stylesheet' => 'css/kzsustyle.css',
 
     /**
      * e-mail settings
      */
     'email' => [
-        'md' => '',
-        'pd' => '',
-        'chartman' => '',
-        'nobody' => '',
+        'md' => 'music@kzsu.stanford.edu',
+        'pd' => 'pd@kzsu.stanford.edu',
+        'chartman' => 'chartman@kzsu.stanford.edu',
+        'nobody' => 'nobody@kzsu.stanford.edu',
         'reviewlist' => '',
     ],
 
-    'md_name' => 'Music Maestro',  // TBD move me to db
+    'md_name' => 'Juan Luna-Avin, Sarah Thomas',  // TBD move me to db
 
     /**
      * Local subnet
@@ -44,29 +49,31 @@ $config = [
      * Set this value to 0 to enable guest accounts and tag printing for
      * all addresses.
      */
-    'local_subnet' => '2.2.2.',  // IP in subnet 2.2.2.x
+    'local_subnet' => '171.66.118.',  // IP in subnet 171.66.118.
 
     /**
      * URLs
      */
     'urls' => [
-        'home' => 'https://zookeeper.ibinx.com/master',
-        'listen' => 'https://zookeeper.ibinx.com/master',
+        'home' => 'http://kzsu.stanford.edu/',
+        'listen' => 'http://listenlive.stanford.edu/',
+        'report_missing' => 'https://spreadsheets.google.com/a/kzsu.stanford.edu/viewform?hl=en&formkey=dGRuMW1GNFVQcXoxbmU3YWZHWlVna0E6MQ&$missingSelect&entry_2=%USERNAME%&entry_1=%ALBUMTAG%',
+        //'old_charts' => 'http://kzsu.stanford.edu/charts/',
     ],
 
     'contact' => [
-        'addr' => 'Morgan Park 1',
-        'city' => 'Westfield, ZQ',
-        'phone' => '+1 949 555 0899',
-        'fax' => '+1 949 555 0898',
-        'request' => '+1 949 555 0897',
+        'addr' => 'PO Box 20510',
+        'city' => 'Stanford, CA  94309',
+        'phone' => '+1 650 723 4839',
+        'fax' => '+1 650 725 5865',
+        'request' => '+1 855 723 9010',
     ],
 
     /**
      * domains allowed in the Origin header
      */
     'allowed_domains' => [
-        "ibinx.com", "9mmm.fm", "9mmm.org",
+        "ibinx.com", "stanford.edu", "kzsu.org", "kzsu.fm",
     ],
 
     /**
@@ -96,6 +103,24 @@ $config = [
     ],
 
     /**
+     * custom menu items
+     *
+     * menu items here are appended to the defaults
+     */
+    'custom_menu' => [
+      [ 'a', 'contact%', 'Contact KZSU Music', ZK\UI\KzsuContacts::class ],
+    ],
+
+    /**
+     * custom controllers
+     *
+     * controllers here override/replace the defaults
+     */
+    'custom_controllers' => [
+        'main' => ZK\UI\KzsuUIController::class,
+    ],
+
+    /**
      * label printer
      */
     'label_printer' => [
@@ -111,7 +136,8 @@ $config = [
                 'name' => 'Brother Label Printer',
                 'code' => 'DK-1201',
                 'rows' => 1,
-                'cols' => 1
+                'cols' => 1,
+                'message' => 'Select <B>kzsu-labeler</B> as your printer.  It should be using its default “paper” setting of <B>standard address labels</B> (3.5x1.1 in.)'
             ],
             '5161' => [
                 'name' => 'Avery 5161',
@@ -139,12 +165,12 @@ $config = [
         /**
          * escape seq to switch to box drawing mode, if any (empty for UTF-8)
          */
-        'box_mode' => "",
+        'box_mode' => "\x1bt1\x1b6", // ESC+t+1 graphics mode, ESC+6 for GCS 2
         /**
          * output to lpr with the specified pdf label template
          * (empty for text/box drawing mode)
          */
-        'use_template' => "",
+        'use_template' => "DK-1201",
     ],
 
     /**
@@ -162,27 +188,27 @@ $config = [
           *
           * 0 to limit spin count per show; 1 to limit spin count per DJ
           */
-        'apply_limit_per_dj' => 0,
+        'apply_limit_per_dj' => 1,
         'weekly_footer' => "\n\n--\n
 If you ever want to remove yourself from this mailing list,
-visit https://zookeeper.ibinx.com/mailman/listinfo/weekly-charts.\n
+visit https://mailman.stanford.edu/mailman/listinfo/weekly-charts.\n
 Here's the general information for the list you've subscribed to,
 in case you don't already have it:\n
-The weekly-charts mailing list is for the distribution of 9MMM's
-music charts. The charts are emailed out approximately once a week. 9MMM's
+The weekly-charts mailing list is for the distribution of KZSU's
+music charts. The charts are emailed out approximately once a week. KZSU's
 charts are compiled by tallying each play of every recording in current
-rotation (400-450 CDs/LPs/7\"s). Any questions about 9MMM's charts
-(philosophic or content-wise) can be directed to music@9mmm.fm.\n",
+rotation (400-450 CDs/LPs/7\"s). Any questions about KZSU's charts
+(philosophic or content-wise) can be directed to music@kzsu.stanford.edu.\n",
 
         'monthly_footer' => "\n\n--\n
 If you ever want to remove yourself from this mailing list,
-visit https://zookeeper.ibinx.com/mailman/listinfo/monthly-charts.\n
+visit https://mailman.stanford.edu/mailman/listinfo/monthly-charts.\n
 Here's the general information for the list you've subscribed to,
 in case you don't already have it:\n
-The monthly-charts mailing list is for the distribution of 9MMM's
-music charts. The charts are emailed out approximately once a month. 9MMM's
+The monthly-charts mailing list is for the distribution of KZSU's
+music charts. The charts are emailed out approximately once a month. KZSU's
 charts are compiled by tallying each play of every recording in current
-rotation (400-450 CDs/LPs/7\"s). Any questions about 9MMM's charts
-(philosophic or content-wise) can be directed to music@9mmm.fm.\n",
+rotation (400-450 CDs/LPs/7\"s). Any questions about KZSU's charts
+(philosophic or content-wise) can be directed to music@kzsu.stanford.edu.\n",
     ],
 ];

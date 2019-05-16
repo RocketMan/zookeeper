@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -88,12 +88,10 @@ class Home extends MenuItem {
     
              echo UI::HTMLify($artist, 20) . "</TD><TD>";
              if($topPlays[$i]["REVIEWED"])
-                 echo "<A HREF=\"".
+                 echo "<A CLASS=\"albumReview\" HREF=\"".
                       "?s=byAlbumKey&amp;n=". UI::URLify($topPlays[$i]["tag"]).
                       "&amp;action=search&amp;session=".$this->session->getSessionID().
-                      "\"><IMG SRC=\"img/rinfo_beta.gif\" " .
-                      "ALT=\"Album Review\" " .
-                      "WIDTH=12 HEIGHT=11 BORDER=0></A></TD><TD>";
+                      "\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A></TD><TD>";
              else
                 echo "</TD><TD>";
              // Album

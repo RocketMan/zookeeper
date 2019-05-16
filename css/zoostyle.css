@@ -1,3 +1,62 @@
+/* Use a CSS reset to smooth out browser incongruities. */
+/* CSS Reset from meyerweb.com v1.0 | 20080212 */
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+/*	margin: 0;
+	padding: 0;*/
+	border: 0;
+	outline: 0;
+	font-size: 100%;
+	vertical-align: baseline;
+	background: transparent;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+/* remember to define focus styles! */
+:focus {
+	outline: 0;
+}
+/* remember to highlight inserts somehow! */
+ins {
+	text-decoration: none;
+}
+del {
+	text-decoration: line-through;
+}
+/* tables still need 'cellspacing="0"' in the markup */
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+/* Show scrollbar even on short pages: solves the
+problem where content box shifts from page to page,
+which is slightly annoying to look at */
+html {
+	overflow-y: scroll;
+}
+
+
 /* ZK styles */
 
 /* restore defaults */
@@ -5,11 +64,14 @@ BODY {
     margin: 0;
     padding: 10px 0px 30px 0px;
     font-size: 10pt;
+    font-family: Helvetica, Verdana, Arial, sans-serif;
+    line-height: 1.2;
 }
 H2 {
+    font-size: 16pt;
     margin-top: 0px;
     padding-top: 0px;
-    font-size: 16pt;
+    margin-bottom: 10px;
 }
 H3, .subhead {
     color: #d83d04;
@@ -165,17 +227,32 @@ DIV.headerListen P A {
     font-size: 14px;
     line-height: 14px;
 }
+DIV.headerLogo {
+    float: left;
+    width: 200px;
+    line-height: 1.1;
+}
+DIV.headerLogo IMG {
+    padding-top: 8px;
+    width: 200px;
+}
 DIV.content {
     float: right;
     width: 650px;
+    padding: 30px;
     padding-top: 10px;
     padding-right: 10px;
     min-height: 450px;
+    margin-left: auto;
+    margin-right: auto;
+    overflow: auto;
 }
 DIV.footer {
     width: auto;
     clear: both;
     text-align: right;
+    padding-top: 15px;
+    padding-bottom: 10px;
 }
 DIV.footer A:hover {
     text-decoration: underline;
@@ -184,8 +261,7 @@ P.zktitle A {
     color: #000000;
     font-size: 18px;
     font-weight: bold;
-    margin: 0;
-    margin-left: 4px;
+    margin: 0px;
     margin-bottom: 10px;
     text-decoration: none;
 }
@@ -381,4 +457,31 @@ A.calLink {
 .calGrid, .calToday {
     color: #000000;
     background-color: #cccccc;
+}
+.songUp, .sortUp {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: URL('../img/arrow_up.gif');
+}
+.songDown, .sortDown {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: URL('../img/arrow_down.gif');
+}
+.albumReview {
+    background-image: URL('../img/rinfo.gif');
+}
+.editorUp {
+    top: 0px;
+    width: 220px;
+    height: 10px;
+    border: 0px;
+    background-image: URL('../img/list_up.gif');
+}
+.editorDown {
+    top: 0px;
+    width: 220px;
+    height: 10px;
+    border: 0px;
+    background-image: URL('../img/list_dn.gif');
 }

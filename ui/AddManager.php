@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -171,7 +171,7 @@ class AddManager extends MenuItem {
             echo "        <TH ALIGN=LEFT$width><A CLASS=\"nav\" HREF=\"?session=".$this->session->getSessionID()."&amp;action=addmgr&amp;subaction=$subaction&amp;sortBy=$command&amp;date=".$_REQUEST["date"]."\">$header</A>";
     
         if($selected && !$static)
-            echo "&nbsp;<IMG SRC=\"img/arrow_" . (($selected==1)?"down":"up") . "_beta.gif\" BORDER=0 WIDTH=8 HEIGHT=4 ALIGN=MIDDLE ALT=\"sort\">";
+            echo "&nbsp;<SPAN CLASS=\"sort" . (($selected==1)?"Down":"Up") . "\"><IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></SPAN>";
     
         // Give extra horizontal padding to column
         ////if(!strcmp($header, "Num"))
@@ -251,12 +251,10 @@ class AddManager extends MenuItem {
             // Artist/Album/Label names
             echo "<TD VALIGN=TOP>" . $artistName . "&nbsp;&nbsp;</TD><TD VALIGN=TOP>";
             if($showReview && $row["REVIEWED"]) {
-                echo "<A HREF=\"".
+                echo "<A CLASS=\"albumReview\" HREF=\"".
                      "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
                      "&amp;action=search&amp;session=".$this->session->getSessionID().
-                     "\"><IMG SRC=\"img/rinfo_beta.gif\" " .
-                     "ALT=\"Album Review\" " .
-                     "WIDTH=12 HEIGHT=11 BORDER=0></A>";
+                     "\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A>";
             }
     
             // Setup medium

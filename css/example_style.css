@@ -1,0 +1,41 @@
+/*
+ * example_style.css
+ *
+ * This is a sample stylesheet which provides station-specific
+ * customizations for Example Radio 99.9FM.
+ *
+ * These styles are applied AFTER the standard Zookeeper Online
+ * styling, so you can override as well as add to the default styling.
+ *
+ * You can use this file as the basis for your own customizations;
+ * merely specify the name of your stylesheet in the 'stylesheet'
+ * value of the config/config.php file.
+ */
+
+body {
+    background-color: #ffffff;
+}
+div.headerNavbar {
+    font-size: 20px;
+    text-align: right;
+    color: #2d3bce;
+    height: 94px;
+    line-height: 94px;
+    width: auto;
+    position: relative;
+    border-bottom: 2px solid #2d3bce;
+}
+div.headerNavbar span {
+    vertical-align: bottom;
+    line-height: normal;
+    right: 0;
+    bottom: 0;
+    position: absolute;
+}
+div.leftNav {
+    clear:both;
+    padding-left: 6px;
+}
+hr {
+    color: #2d3bce;
+}

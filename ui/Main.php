@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -33,18 +33,18 @@ use ZK\Engine\Session;
 use ZK\UI\UICommon as UI;
 
 class Main implements IController {
-    private $localUser;
-    private $session;
+    protected $localUser;
+    protected $session;
 
     public function processRequest($dispatcher) {
         $this->session = Engine::session();
 
         $this->preProcessRequest($dispatcher);
-        $this->emitHeader();
+        $this->emitResponseHeader();
         $this->emitBody($dispatcher);
     }
 
-    private function preProcessRequest($dispatcher) {
+    protected function preProcessRequest($dispatcher) {
         // Validate the requested action is authorized
         if(!empty($_REQUEST["session"]) && !empty($_REQUEST["action"]) &&
                 !$dispatcher->isActionAuth($_REQUEST["action"], $this->session) &&
@@ -68,7 +68,7 @@ class Main implements IController {
         }
     }
 
-    private function emitHeader() {
+    protected function emitResponseHeader() {
         $userAgent = $_SERVER["HTTP_USER_AGENT"];
         $nn4hack = (substr($userAgent, 0, 10) == "Mozilla/4.") &&
                       preg_match("/\(win/i", $userAgent) &&
@@ -82,9 +82,9 @@ class Main implements IController {
 <HEAD>
   <TITLE><?php echo $banner;?></TITLE>
   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-  <LINK REL="stylesheet" HREF="<?php echo Engine::param('stylesheet'); ?>">
   <LINK REL="stylesheet" HREF="<?php 
        echo $nn4hack?"css/netscape.css":"css/zoostyle.css"; ?>">
+  <LINK REL="stylesheet" HREF="<?php echo Engine::param('stylesheet'); ?>">
   <LINK REL="stylesheet" HREF="css/about.css">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Music Reviews" HREF="zkrss.php?feed=reviews">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
@@ -94,7 +94,7 @@ class Main implements IController {
 <?php 
     }
     
-    private function emitNavbar($dispatcher, $action) {
+    protected function emitNavbar($dispatcher, $action) {
         echo "    <P CLASS=\"zktitle\"><A HREF=\"?session=".$this->session->getSessionID()."\">".Engine::param('application')."</A></P>\n";
         echo "    <TABLE WIDTH=196 CELLPADDING=0>\n";
         $menu = $dispatcher->composeMenu($action, $this->session);
@@ -123,7 +123,7 @@ class Main implements IController {
         echo "    </TABLE>\n";
     }
     
-    private function emitMain($dispatcher, $action, $subaction) {
+    protected function emitMain($dispatcher, $action, $subaction) {
         echo "<TABLE WIDTH=\"100%\" CELLPADDING=0 CELLSPACING=0>\n";
         echo "<TR><TD>\n";
         echo "</TD></TR>\n<TR><TD>\n";
@@ -157,30 +157,35 @@ class Main implements IController {
         echo "</TD></TR>\n";
         echo "</TABLE>\n";
     }
-    
-    private function emitBody($dispatcher) {
+
+    protected function emitBodyHeader($dispatcher) {
         $urls = Engine::param('urls');
         $station_full = Engine::param('station_full');
 ?>
-<BODY onLoad="setFocus()">
-<DIV CLASS="box">
-  <DIV CLASS="header">
     <DIV CLASS="headerLogo">
       <A HREF="<?php echo $urls['home']; ?>">
         <IMG SRC="<?php echo Engine::param('logo'); ?>" ALT="<?php echo $station_full; ?>" TITLE="<?php echo $station_full; ?>">
       </A>
     </DIV>
     <DIV CLASS="headerNavbar">
-      <SPAN>Music with a difference...</SPAN>
+      <SPAN><?php echo Engine::param('station_slogan'); ?></SPAN>
     </DIV>
-  </DIV>
-<?php 
-    echo "  <DIV CLASS=\"leftNav\">\n";
-    $this->emitNavBar($dispatcher, $_REQUEST["action"]);
-    echo "  </DIV>\n";
-    echo "  <DIV CLASS=\"content\">\n";
+<?php
+    }
     
-    $this->emitMain($dispatcher, $_REQUEST["action"], $_REQUEST["subaction"]);
+    protected function emitBody($dispatcher) {
+?>
+<BODY onLoad="setFocus()">
+<DIV CLASS="box">
+  <DIV CLASS="header">
+<?php
+        $this->emitBodyHeader($dispatcher);
+        echo "  </DIV>\n";
+        echo "  <DIV CLASS=\"leftNav\">\n";
+        $this->emitNavBar($dispatcher, $_REQUEST["action"]);
+        echo "  </DIV>\n";
+        echo "  <DIV CLASS=\"content\">\n";
+        $this->emitMain($dispatcher, $_REQUEST["action"], $_REQUEST["subaction"]);
 ?>
   </DIV>
   <DIV CLASS="footer">
@@ -206,7 +211,7 @@ class Main implements IController {
 <?php 
     }
 
-    private function emitLogin($invalid="") {
+    protected function emitLogin($invalid="") {
 ?>
     <FORM ACTION="?" METHOD=POST>
     <TABLE CELLPADDING=2>
@@ -258,7 +263,7 @@ class Main implements IController {
         UI::setFocus("user");
     }
     
-    private function emitLoginHelp() {
+    protected function emitLoginHelp() {
     ?>
     <DIV CLASS="subhead">login help</DIV>
     <P>Google single sign-on provides integrated access to your existing
@@ -275,7 +280,7 @@ class Main implements IController {
 <?php 
     }
 
-    private function emitLoginValidate() {
+    protected function emitLoginValidate() {
         if($this->session->isAuth("u")) {
             echo "       <H3>login successful</H3>\n";
             if($this->session->isAuth("g"))
@@ -286,7 +291,7 @@ class Main implements IController {
             $this->emitLogin("badCredentials");
     }
     
-    private function emitLogout() {
+    protected function emitLogout() {
         $logoutURI = Engine::param('sso')['logout_uri'];
         $logoutURI = str_replace("{base_url}", urlencode(UI::getBaseUrl()), $logoutURI);
     
@@ -299,7 +304,7 @@ class Main implements IController {
         UI::setFocus();
     }
 
-    private function doLogin($user, $password) {
+    protected function doLogin($user, $password) {
         if(Engine::api(IUser::class)->validatePassword($user, $password, 1, $access)) {
             if(Session::checkLocal())
                 $access .= 'l';
@@ -317,14 +322,14 @@ class Main implements IController {
         }
     }
     
-    private function doLogout() {
+    protected function doLogout() {
         $this->localUser = $this->session->isAuth("U");
     
         // Kill the session
         $this->session->invalidate();
     }
     
-    private function doSSOOptions() {
+    protected function doSSOOptions() {
         $success = false;
         switch($_REQUEST["account"]) {
         case "old":
@@ -372,7 +377,7 @@ class Main implements IController {
         return false;
     }
     
-    private function doSSOOptionsPage() {
+    protected function doSSOOptionsPage() {
         $success = false;
         $row = Engine::api(IUser::class)->getSsoOptions($_REQUEST["ssoOptions"]);
         if($row)
