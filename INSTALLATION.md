@@ -31,7 +31,7 @@ For a self-administed server, you will need the following:
   certificate, the easiest way to secure your site is with Let's
   Encrypt, which provides gratis, trusted SSL certificates.  Follow
   the [Let's Encrypt guide for Apache](https://www.digitalocean.com/community/tutorials/how-to-secure-apache-with-let-s-encrypt-on-debian-9)
-  instructinos to set this up.
+  instructions to set this up.
 
 * A self-signed SSL certificate: If are using Zookeeper Online for
   development or internal use, you can use a self-signed certificate.
@@ -56,29 +56,14 @@ For a self-administed server, you will need the following:
    (For shared hosting, follow the instructions of your hosting
    provider.)
 
-2. Once the directory is chosen for the Zookeeper Online installation,
-   open a shell and change to the *parent* of the chosen directory:
+2. Install the Zookeeper Online source from the repository:
 
-    `cd example_parent_directory`
+    `git clone https://github.com/RocketMan/zookeeper /example/path/to/zookeeper`
 
-    where *example_parent_directory* is the parent directory of your
-    chosen installation directory.  Ensure you have write access to
-    this directory.
-
-3. Now you can install the Zookeeper Online source from the repository:
-
-    `git clone https://github.com/RocketMan/zookeeper`
-
-    This will create a `zookeeper` subdirectory in *example_parent_directory*.
-
-4. Change the current directory to the zookeeper subdirectory:
-
-    `cd zookeeper`
-
-5. (Optional) If you are working on a branch other than master (for
-   example, stable) check it out now:
-
-    `git checkout -b stable origin/stable`
+    where `/example/path/to/zookeeper` is your desired installation
+    directory for Zookeeper Online.  The parent of this directory (in
+    this case /example/path/to) must already exist; however, if the
+    installation directory already exists, it must be empty.
 
 
 ### Setting up the Database
