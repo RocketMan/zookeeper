@@ -141,8 +141,14 @@ div.subnavigation {
 }
 
 /* Content Styles */
+DIV.leftNav {
+	background-color: #4D0A0A;
+}
+DIV.leftNav A {
+	color: #ffffff;
+}
 div.content {
-		/* Remember to keep this in sync with contentWithoutStripe below. */
+	/* Remember to keep this in sync with contentWithoutStripe below. */
 	background-color: #fff;
 }
 
