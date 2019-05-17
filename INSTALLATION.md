@@ -61,9 +61,8 @@ For a self-administed server, you will need the following:
     `git clone https://github.com/RocketMan/zookeeper /example/path/to/zookeeper`
 
     where `/example/path/to/zookeeper` is your desired installation
-    directory for Zookeeper Online.  The parent of this directory (in
-    this case /example/path/to) must already exist; however, if the
-    installation directory already exists, it must be empty.
+    directory for Zookeeper Online.  If the installation directory
+    already exists, it must be empty.
 
 
 ### Setting up the Database
