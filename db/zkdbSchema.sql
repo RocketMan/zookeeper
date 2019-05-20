@@ -363,6 +363,7 @@ CREATE TABLE IF NOT EXISTS `tracks` (
   `track` varchar(80) DEFAULT NULL,
   `album` varchar(80) DEFAULT NULL,
   `label` varchar(80) DEFAULT NULL,
+  `created` timestamp DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `list` (`list`),
   KEY `tag` (`tag`),

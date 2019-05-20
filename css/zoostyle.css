@@ -239,9 +239,7 @@ DIV.headerLogo IMG {
 DIV.content {
     float: right;
     width: 650px;
-    padding: 30px;
-    padding-top: 10px;
-    padding-right: 10px;
+    padding: 10px;
     min-height: 450px;
     margin-left: auto;
     margin-right: auto;
@@ -327,6 +325,28 @@ P.zktitle A {
 }
 
 /* general */
+.playlistBanner {
+    font-family: verdana, arial, helvetica, sans-serif;
+    font-size: 11pt;
+    font-weight: bold;
+    color: white;
+    background-color: #2530A7;
+    line-height: 24px;
+    margin-bottom: 4px;
+}
+.playlistBanner > div {
+    font-size: 11pt;
+    float: right;
+    font-size: 10px;
+}
+
+.playlistHdr {
+    border-bottom: 1px solid gray;
+}
+.playlistTable {
+    width: 100%;
+}
+
 TH {
     font-family: verdana, arial, helvetica, sans-serif;
     font-size: 11pt;
@@ -485,3 +505,50 @@ A.calLink {
     border: 0px;
     background-image: URL('../img/list_dn.gif');
 }
+
+/* up/down & edit links for playlist edits */
+.songManager {
+    top: 8px;
+    height: 20px;
+    width: 24px;
+    position: relative;
+    font-size:12px;
+}
+
+.songManager a {
+    position: absolute;
+    line-height: 1.4;
+    background-repeat: no-repeat;
+    width: 10px;
+    height: 4px;
+}
+.songUp {
+    top: 0px;
+    background-image: URL('/img/arrow_up_beta.gif');
+}
+
+.songDown {
+    background-image: URL('/img/arrow_down_beta.gif');
+    top: 8px;
+}
+.songEdit {
+    top: -2px;
+    left: 12px;
+    font-size:14px;
+}
+
+.songLabel {
+    font-size:10px;
+}
+.songReview {
+    background-image: URL('/img/rinfo_beta.gif');
+    width:11px;
+    height:11px;
+}
+.songDivider hr {
+    position: relative;
+    top: 3px;
+    height: 0px;
+    background-color: gray;
+}
+
