@@ -25,7 +25,7 @@
 namespace ZK\Engine;
 
 class Engine {
-    const VERSION = "2.1.0-DEV";
+    const VERSION = "2.1.0";
 
     private static $apis;
     private static $config;
