@@ -122,6 +122,24 @@ class Playlists extends MenuItem {
         return $fromTime . "-" . $toTime;
     }
     
+    public static function showStartTime($timeRange) {
+        $retVal = "??";
+        $timeAr = explode("-", $timeRange);
+        if (count($timeAr) == 2)
+           $retVal = self::hourToAMPM($timeAr[0]);
+
+        return $retVal;
+    }
+
+    public static function showEndTime($timeRange) {
+        $retVal = "??";
+        $timeAr = explode("-", $timeRange);
+        if (count($timeAr) == 2)
+           $retVal = self::hourToAMPM($timeAr[1]);
+
+        return $retVal;
+    }
+    
     public static function hourToAMPM($hour, $full=0) {
         $h = (int)floor($hour/100);
         $m = (int)$hour % 100;
@@ -146,6 +164,22 @@ class Playlists extends MenuItem {
             return self::hourToAMPM($fromtime) . " - " . self::hourToAMPM($totime);
         } else
             return strtolower(htmlentities($time));
+    }
+
+    public static function timestampToDate($time) {
+        if ($time == null || $time == '') {
+            return "";
+        } else {
+            return date('D M d, Y ', strtotime($time));
+        }
+    }
+
+    public static function timestampToAMPM($time) {
+        if ($time == null || $time == '') {
+            return "";
+        } else {
+            return date('h:ia', strtotime($time));
+        }
     }
     
     public static function timeToZulu($time) {
@@ -237,6 +271,7 @@ class Playlists extends MenuItem {
             list($year, $month, $day) = explode("-", $date);
             if(strlen($fromtime) && strlen($totime))
                 $time = $this->composeTime($fromtime, $totime);
+
             if(checkdate($month, $day, $year) &&
                     ($time != "") && ($description != "")) {
                 // Success - Run the query
@@ -456,6 +491,19 @@ class Playlists extends MenuItem {
         UI::setFocus("playlist");
     }
     
+    private function makeEditDiv($row, $playlist) {
+        $sessionId = $this->session->getSessionID();
+        $href = "?session=" . $sessionId . "&amp;playlist=" . $playlist . "&amp;id=" . 
+                $row["id"] . "&amp;action=" . $this->action . "&amp;";
+        $editLink = "<A CLASS='songEdit' HREF='" . $href ."seq=editTrack'>&#x270f;</a>";
+        //NOTE: in edit mode the list is ordered new to old, so up makes it 
+        //newer in time order & vice-versa.
+        $upLink = "<A CLASS='songUp' HREF='" . $href ."seq=upTrack' />";
+        $downLink = "<A CLASS='songDown' HREF='" . $href ."seq=downTrack' />";
+        $retVal = "<div class='songManager'>" . $upLink . $downLink . $editLink . "</div>";
+        return $retVal;
+    }
+
     public function emitEditListSelDeleted() {
     ?>
     <FORM ACTION="?" METHOD=POST>
@@ -484,34 +532,17 @@ class Playlists extends MenuItem {
         UI::setFocus("playlist");
     }
     
-    private function emitList($playlist, $id) {
-    ?>
-      <HR>
-      <TABLE CELLPADDING=2>
-    <?php 
-        $records = Engine::api(IPlaylist::class)->getTracks($playlist, 1);
-        while($records && ($row = $records->fetch())) {
-            if(!$header) {
-                echo "    <TR><TH COLSPAN=2>&nbsp;</TH><TH>Tag</TH><TH>Artist</TH><TH>Track</TH><TH>Album/Label</TH></TR>\n";
-                $header = 1;
-            }
-            $class = ($id==$row["id"])?"sel":"nav";
-            echo "    <TR><TD CLASS=\"arrowCell\"><A CLASS=\"songUp\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=upTrack\">\n";
-            echo "          <IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></A><BR>\n";
-            echo "          <IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"><BR>\n";
-            echo "          <A CLASS=\"songDown\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=downTrack\">\n";
-            echo "          <IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></A></TD>\n";
-            echo "      <TD VALIGN=TOP><A CLASS=\"$class\" HREF=\"?session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;id=".$row["id"]."&amp;action=$this->action&amp;seq=editTrack\"><B>&gt;&gt;</B></A></TD>\n";
-            if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
-                echo "      <TD COLSPAN=4><HR SIZE=2 NOSHADE></TD></TR>\n";
-            else
-                echo "      <TD ALIGN=RIGHT VALIGN=TOP>".$row["tag"]."</TD><TD VALIGN=TOP>" .
-                     $this->smartURL($row["artist"]) . "</TD><TD VALIGN=TOP>" .
-                     $this->smartURL($row["track"]) . "</TD><TD VALIGN=TOP>" . 
-                     $this->smartURL($row["album"], !$row["tag"]) . "<BR><FONT CLASS=\"sub\">" .
-                     $this->smartURL($row["label"]) . "</FONT></TD></TR>\n";
-        }
-        echo "  </TABLE>\n";
+    // make header for edit & view playlist
+    private function makePlaylistHeader($isEditMode) {
+        $editCol = $isEditMode ? "<TD WIDTH='30PX' />" : "";
+        $header = "<TR class='playlistHdr' ALIGN=LEFT>" . $editCol . "<TH WIDTH='60px'>Time</TH><TH WIDTH='25%'>" .
+                  "Artist</TH><TH WIDTH='25%'>Track</TH><TH></TH><TH>Album/Label</TH></TR>";
+        return $header;
+    }
+
+    private function editPlaylist($playlist, $id) {
+        print("<HR>");
+        self::emitPlaylistBody($playlist, true);
     }
     
     private function emitTagForm($playlist, $message) {
@@ -705,9 +736,10 @@ class Playlists extends MenuItem {
         // Print the header
         $script = "?target=export";
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlist);
+        $showDateTime = self::makeShowDateAndTime($row);
         echo "<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%\">\n    <TR>\n      <TH ALIGN=LEFT>";
-        echo "Playlist for $row[0]</TH>\n      <TH ALIGN=RIGHT>$row[1]</TH>\n";
-        echo "      <TH ALIGN=RIGHT VALIGN=TOP><A CLASS=\"sub\" HREF=\"#top\" onClick='window.open(\"$script&amp;session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;format=html\")'>Printable playlist</A></TH>\n    </TR>\n  </TABLE>\n";
+        echo "$row[0]</TH>\n      <TH ALIGN=RIGHT>$showDateTime</TH>\n";
+        echo "      <TH ALIGN=RIGHT VALIGN=TOP><A CLASS=\"sub\" HREF=\"#top\" onClick='window.open(\"$script&amp;session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;format=html\")'>Print</A></TH>\n    </TR>\n  </TABLE>\n";
     }
     
     private function insertSetSeparator($playlist) {
@@ -817,7 +849,7 @@ class Playlists extends MenuItem {
     ?>
     </TD></TR>
     <TR><TD>
-    <?php $this->emitList($playlist, $id); ?>
+    <?php $this->editPlaylist($playlist, $id); ?>
     </TD></TR>
     </TABLE>
     <?php 
@@ -1281,60 +1313,107 @@ class Playlists extends MenuItem {
         }
     }
     
+    private function makeAlbumLink($row, $includeLabel) {
+        $albumName = self::swapNames($row["album"]);
+        $labelSpan = "<span class='songLabel'>/" . self::smartURL($row["label"]) . "</span>";
+        if($row["tag"]) {
+            $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($row["tag"]) .
+                          "&amp;q=&amp;action=search&amp;session=" . $this->session->getSessionID() .
+                          "' CLASS='nav'>".$albumName ."</A>";
+
+            if ($includeLabel) {
+                $albumTitle = $albumTitle . $labelSpan;
+            }
+        } else {
+            $albumTitle = $this->smartURL($albumName);
+            if ($includeLabel) 
+                $albumTitle = $albumTitle . $labelSpan;
+       }
+       return $albumTitle;
+    }
+
+
+    // converts "last, first" to "first last" 
+    private function swapNames($fullName) {
+       $retVal = $fullName;
+       $names1 = explode(", ", $fullName);
+       if (count($names1) >= 2) {
+           $names2 = explode(" ", $names1[1]);
+           $extras = array_slice($names2, 1);
+           $retVal = $names2[0] . " " . $names1[0] . " " . join(" ",  $extras);
+       }
+       return $retVal;
+    }
+
+    private function emitPlaylistBody($playlist, $editMode) {
+        $REVIEW_DIV =  "<div class='songReview'></div>";
+        $header = self::makePlaylistHeader($editMode);
+        $editCell = "";
+        echo "<TABLE class='playlistTable' CELLPADDING=1>".$header;
+
+        $records = Engine::api(IPlaylist::class)->getTracks($playlist, $editMode);
+        self::viewListGetAlbums($records, $albums);
+        Engine::api(ILibrary::class)->markAlbumsReviewed($albums);
+
+        if($albums != null && sizeof($albums) > 0) {
+            foreach($albums as $index => $row) {
+              if ($editMode)
+                  $editCell = "<TD>" . self::makeEditDiv($row, $playlist) . "</TD>";
+
+              if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK) {
+                echo "<TR class='songDivider'>".$editCell."<TD COLSPAN=5><HR></TD></TR>";
+                continue;
+              }
+
+              $reviewCell = $row["REVIEWED"] ? $REVIEW_DIV : "";
+              $artistName = self::swapNames($row["artist"]);
+              $timeplayed = self::timestampToAMPM($row["created"]);
+              $albumLink = self::makeAlbumLink($row, true);
+              echo "<TR class='songRow'>" . $editCell .
+                     "<TD>" . $timeplayed . "</TD>" .
+                     "<TD>" . $this->smartURL($artistName) . "</TD>" .
+                     "<TD>" . $this->smartURL($row["track"]) . "</TD>" .
+                     "<TD>" . $reviewCell . "</TD>" .
+                     "<TD>" . $albumLink . "</TD>" .
+                  "</TR>\n"; 
+            }
+        }
+        echo "</TABLE>\n";
+    }
+
+    private function makeShowDateAndTime($row) {
+        $showStart = self::showStartTime($row[2]);
+        $showEnd = self::showEndTime($row[2]);
+        $showDate = self::timestampToDate($row[1]);
+        $showDateTime = $showDate . " " . $showStart . "-" . $showEnd;
+        return $showDateTime;
+    }
+
     private function viewList($playlist) {
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlist, 1);
-        if($row) {
-            list($y,$m,$d) = explode("-", $row[1]);
-    
-            $script = "?target=export";
-    
-            echo "<TABLE WIDTH=\"100%\">\n  <TR><TD ALIGN=RIGHT VALIGN=TOP><A HREF=\"#top\" CLASS=\"nav\" onClick='window.open(\"$script&amp;session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;format=html\")'>Printable playlist</A></TD></TR>\n</TABLE>\n";
-            echo "<TABLE WIDTH=\"100%\" CELLPADDING=2 CELLSPACING=0>\n";
-            echo "<TR><TH CLASS=\"secSel\" ALIGN=LEFT>Playlist for $row[0]</TH>\n";
-            echo "<TH ALIGN=CENTER  CLASS=\"secSelSub\">" .
-                 date("l, j F Y", mktime(0,0,0,$m,$d,$y)) . "&nbsp;&nbsp;" .
-                 self::timeToAMPM($row[2]) . "</TH>\n";
-            echo "<TH ALIGN=RIGHT CLASS=\"secSel\">DJ: ";
-            echo "<A HREF=\"?action=viewDJ&amp;seq=selUser&amp;session=".$this->session->getSessionID()."&amp;viewuser=$row[3]\" CLASS=\"nav2\">$row[4]</A>";
-            echo "</TH></TR>\n";
-            echo "</TABLE>\n";
-    
-            // Print the tracks
-            echo "<TABLE CELLPADDING=2>\n";
-            echo "  <TR><TH ALIGN=LEFT>Artist</TH><TH ALIGN=LEFT>Track</TH><TH></TH><TH ALIGN=LEFT>Album/Label</TH></TR>\n";
-            $records = Engine::api(IPlaylist::class)->getTracks($playlist);
-            $this->viewListGetAlbums($records, $albums);
-            Engine::api(ILibrary::class)->markAlbumsReviewed($albums);
-            if(sizeof($albums) > 0)
-              foreach($albums as $index => $row) {
-                if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK) {
-                  echo "  <TR><TD ALIGN=LEFT COLSPAN=4><HR SIZE=2 NOSHADE></TD></TR>\n";
-                  continue;
-                }
-                echo "  <TR><TD ALIGN=LEFT VALIGN=TOP>" . $this->smartURL($row["artist"]) . "</TD><TD ALIGN=LEFT VALIGN=TOP>" .
-                            $this->smartURL($row["track"]) . "</TD><TD VALIGN=TOP ALIGN=LEFT>";
-                if($row["REVIEWED"])
-                    echo "<A CLASS=\"albumReview\" HREF=\"".
-                         "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
-                         "&amp;q=".
-                         "&amp;action=search&amp;session=".$this->session->getSessionID().
-                         "\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A></TD><TD>";
-                else
-                   echo "</TD><TD VALIGN=TOP ALIGN=LEFT>";
-                if($row["tag"]) echo "<A HREF=\"" .
-                      "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
-                      "&amp;q=".
-                      "&amp;action=search&amp;session=".$this->session->getSessionID().
-                      "\" CLASS=\"nav\">";
-    
-                echo $this->smartURL($row["album"], !$row["tag"]);
-                if($row["tag"]) echo "</A>"; 
-                echo "<BR><FONT CLASS=\"sub\">" .
-                            $this->smartURL($row["LABELNAME"]) . "</FONT></TD></TR>\n";
-            }
-            echo "</TABLE>\n";
-        } else
-            echo "<B>Sorry, the playlist you have requested does not exist.</B>";
+        if( !$row) {
+            echo "<B>Sorry, playlist does not exist " . $playlist . "</B>";
+            return;
+        }
+
+        $showName = $row[0];
+        $djId = $row[3];
+        $djName = $row[4];
+        $showDateTime = self::makeShowDateAndTime($row);
+
+        // make print view header
+        echo "<TABLE WIDTH='100%'>" .  
+             "<TR><TD ALIGN=RIGHT><A HREF='#top' " .
+             "CLASS='nav' onClick='window.open('?target=export&amp;session=" . 
+             $this->session->getSessionID() . "&amp;playlist='" . $playlist . 
+             "&amp;format=html)'>Print View</A></TD></TR>\n</TABLE>";
+
+        $dateDiv = "<DIV>".$showDateTime."&nbsp;</div>";
+        $djLink = "<A HREF='?action=viewDJ&amp;seq=selUser&amp;session=" . 
+                  $this->session->getSessionID() . "&amp;viewuser=$djId' CLASS='nav2'>$djName</A>";
+        echo "<DIV CLASS='playlistBanner'>&nbsp;" . $showName . " with " . $djLink.$dateDiv . "</div>";
+
+        self::emitPlaylistBody($playlist, false);
     }
     
     private function emitViewDJSortFn($a, $b) {
