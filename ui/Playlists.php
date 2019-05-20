@@ -1346,7 +1346,7 @@ class Playlists extends MenuItem {
     }
 
     private function emitPlaylistBody($playlist, $editMode) {
-        $REVIEW_DIV =  "<div class='songReview'></div>";
+        $REVIEW_DIV =  "<div class='albumReview'></div>";
         $header = self::makePlaylistHeader($editMode);
         $editCell = "";
         echo "<TABLE class='playlistTable' CELLPADDING=1>".$header;

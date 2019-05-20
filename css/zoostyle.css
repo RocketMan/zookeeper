@@ -479,6 +479,7 @@ A.calLink {
     background-color: #cccccc;
 }
 .songUp, .sortUp {
+    top: 0px;
     background-position: center;
     background-repeat: no-repeat;
     background-image: URL('../img/arrow_up.gif');
@@ -487,9 +488,12 @@ A.calLink {
     background-position: center;
     background-repeat: no-repeat;
     background-image: URL('../img/arrow_down.gif');
+    top: 8px;
 }
 .albumReview {
     background-image: URL('../img/rinfo.gif');
+    width:11px;
+    height:11px;
 }
 .editorUp {
     top: 0px;
@@ -522,15 +526,6 @@ A.calLink {
     width: 10px;
     height: 4px;
 }
-.songUp {
-    top: 0px;
-    background-image: URL('/img/arrow_up_beta.gif');
-}
-
-.songDown {
-    background-image: URL('/img/arrow_down_beta.gif');
-    top: 8px;
-}
 .songEdit {
     top: -2px;
     left: 12px;
@@ -539,11 +534,6 @@ A.calLink {
 
 .songLabel {
     font-size:10px;
-}
-.songReview {
-    background-image: URL('/img/rinfo_beta.gif');
-    width:11px;
-    height:11px;
 }
 .songDivider hr {
     position: relative;
