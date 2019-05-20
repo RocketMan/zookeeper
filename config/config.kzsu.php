@@ -127,7 +127,7 @@ $config = [
         /**
          * supported print methods (0 or more of 'lpr', 'pdf')
          */
-        'print_methods' => [ 'lpr', 'pdf' ],
+        'print_methods' => [ 'pdf' ],
         /**
          * supported PDF label templates
          */
