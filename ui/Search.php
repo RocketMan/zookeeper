@@ -76,7 +76,7 @@ class Search extends MenuItem {
     
     private static $actions = [
         [ "find", "ftSearch" ],
-        [ "findAlbum", "searchByAlbumKey" ],
+        [ "findAlbum", "findAlbum" ],
         [ "search", "doSearch" ],
     ];
 
@@ -188,6 +188,10 @@ function setFocus() {
 
     private function HTMLify($arg, $size) {
         return UI::HTMLify($arg, $size, $this->noTables);
+    }
+
+    public function findAlbum() {
+        $this->searchByAlbumKey($_REQUEST["n"]);
     }
 
     public function searchByAlbumKey($key=0) {
