@@ -433,8 +433,9 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
 
+    // NOTE: up is newer, eg list is in reverse time order
     public function moveTrackUpDown($playlist, &$id, $up) {
-        $query = "SELECT id, tag, artist, track, album, label FROM tracks " .
+        $query = "SELECT id, tag, artist, track, album, label, created FROM tracks " .
                  "WHERE list = ? ORDER BY id";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlist);
@@ -469,6 +470,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                         "track = ?, " .
                         "album = ?, " .
                         "label = ? " .
+                        "created = ? " .
                         "WHERE id = ?";
             $stmt = $this->prepare($query);
 
@@ -477,7 +479,8 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $stmt->bindValue(3, $prevRow[3]);
             $stmt->bindValue(4, $prevRow[4]);
             $stmt->bindValue(5, $prevRow[5]);
-            $stmt->bindValue(6, (int)$row[0], \PDO::PARAM_INT);
+            $stmt->bindValue(6, $prevRow[6]);
+            $stmt->bindValue(7, (int)$row[0], \PDO::PARAM_INT);
             $stmt->execute();
 
             $stmt->bindValue(1, $row[1]?$row[1]:null);
@@ -485,7 +488,8 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $stmt->bindValue(3, $row[3]);
             $stmt->bindValue(4, $row[4]);
             $stmt->bindValue(5, $row[5]);
-            $stmt->bindValue(6, (int)$prevRow[0], \PDO::PARAM_INT);
+            $stmt->bindValue(6, $row[6]);
+            $stmt->bindValue(7, (int)$prevRow[0], \PDO::PARAM_INT);
             $stmt->execute();
         }
     }
