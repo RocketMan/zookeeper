@@ -1314,7 +1314,7 @@ class Playlists extends MenuItem {
     }
     
     private function makeAlbumLink($row, $includeLabel) {
-        $albumName = self::swapNames($row["album"]);
+        $albumName = $row["album"];
         $labelSpan = "<span class='songLabel'>/" . self::smartURL($row["label"]) . "</span>";
         if($row["tag"]) {
             $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($row["tag"]) .
@@ -1402,11 +1402,10 @@ class Playlists extends MenuItem {
         $showDateTime = self::makeShowDateAndTime($row);
 
         // make print view header
-        echo "<TABLE WIDTH='100%'>" .  
-             "<TR><TD ALIGN=RIGHT><A HREF='#top' " .
-             "CLASS='nav' onClick='window.open('?target=export&amp;session=" . 
-             $this->session->getSessionID() . "&amp;playlist='" . $playlist . 
-             "&amp;format=html)'>Print View</A></TD></TR>\n</TABLE>";
+        echo "<TABLE WIDTH='100%'><TR><TD ALIGN=RIGHT><A HREF='#top' " .
+             "CLASS='nav' onClick=window.open('?target=export&amp;session=" . 
+             $this->session->getSessionID() . "&amp;playlist=" . $playlist . 
+             "&amp;format=html')>Print View</A></TD></TR></TABLE>";
 
         $dateDiv = "<DIV>".$showDateTime."&nbsp;</div>";
         $djLink = "<A HREF='?action=viewDJ&amp;seq=selUser&amp;session=" . 
