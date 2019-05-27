@@ -716,15 +716,15 @@ class Playlists extends MenuItem {
         UI::setFocus("track");
     }
     
-    private function insertTrack($playlist, $tag, $artist, $track, $album, $label) {
+    private function insertTrack($playlist, $tag, $artist, $track, $album, $label, $wantTimestamp) {
         // Run the query
         $success = Engine::api(IPlaylist::class)->insertTrack($playlist,
-                     $tag, $artist, $track, $album, $label);    
+                     $tag, $artist, $track, $album, $label, $wantTimestamp);    
     }
     
-    private function updateTrack($id, $tag, $artist, $track, $album, $label) {
+    private function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label) {
         // Run the query
-        Engine::api(IPlaylist::class)->updateTrack($id, $tag, $artist, $track, $album, $label);
+        Engine::api(IPlaylist::class)->updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label);
     }
     
     private function deleteTrack($id) {
@@ -744,7 +744,7 @@ class Playlists extends MenuItem {
     
     private function insertSetSeparator($playlist) {
         $specialTrack = IPlaylist::SPECIAL_TRACK;
-        $this->insertTrack($playlist, 0, $specialTrack, $specialTrack, $specialTrack, $specialTrack);
+        $this->insertTrack($playlist, 0, $specialTrack, $specialTrack, $specialTrack, $specialTrack, true);
     }
     
     public function emitEditor() {
@@ -820,10 +820,10 @@ class Playlists extends MenuItem {
                     }
                 }
                 if($id) {
-                    $this->updateTrack($id, $tag, $artist, $track, $album, $label);
+                    $this->updateTrack($playlist, $id, $tag, $artist, $track, $album, $label);
                     $id = "";
                 } else
-                    $this->insertTrack($playlist, $tag, $artist, $track, $album, $label);
+                    $this->insertTrack($playlist, $tag, $artist, $track, $album, $label, true);
                 $this->emitTagForm($playlist, "");
             }
             break;
@@ -1083,7 +1083,7 @@ class Playlists extends MenuItem {
                                      trim($line[0]),  // artist
                                      trim($line[1]),  // track
                                      trim($line[2]),  // album
-                                     trim($line[3])); // label
+                                     trim($line[3]), false); // label
                     $count++;
                 } else if(count($line) == 5) {
                     // artist track album tag label
@@ -1112,7 +1112,7 @@ class Playlists extends MenuItem {
                                      trim($line[0]),  // artist
                                      trim($line[1]),  // track
                                      trim($line[2]),  // album
-                                     trim($line[4])); // label
+                                     trim($line[4]), false); // label
                     $count++;
                 }
             }
@@ -1360,14 +1360,15 @@ class Playlists extends MenuItem {
               if ($editMode)
                   $editCell = "<TD>" . self::makeEditDiv($row, $playlist) . "</TD>";
 
+              $timeplayed = self::timestampToAMPM($row["created"]);
               if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK) {
-                echo "<TR class='songDivider'>".$editCell."<TD COLSPAN=5><HR></TD></TR>";
+                echo "<TR class='songDivider'>".$editCell.
+                      "<TD>".$timeplayed . "</TD><TD COLSPAN=4><HR></TD></TR>";
                 continue;
               }
 
               $reviewCell = $row["REVIEWED"] ? $REVIEW_DIV : "";
               $artistName = self::swapNames($row["artist"]);
-              $timeplayed = self::timestampToAMPM($row["created"]);
               $albumLink = self::makeAlbumLink($row, true);
               echo "<TR class='songRow'>" . $editCell .
                      "<TD>" . $timeplayed . "</TD>" .
