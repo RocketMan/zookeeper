@@ -207,11 +207,11 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $retVal;
     }
 
-    public function insertTrack($playlistId, $tag, $artist, $track, $album, $label) {
+    public function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $wantTimestamp) {
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
 
         // log time iff 'now' is within playlist start/end time.
-        $doTimestamp = self::isWithinShow($row);
+        $doTimestamp = $wantTimestamp && self::isWithinShow($row);
         $timeName    = $doTimestamp ? "created, " : "";
         $timeValue   = $doTimestamp ? "NOW(), "   : "";
 
@@ -236,24 +236,35 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $stmt->execute();
     }
     
+    // update track and set created if it is currently null, eg first edit
+    // of a track following a CSV import.
     public function updateTrack($id, $tag, $artist, $track, $album, $label) {
+        $trackRow  = Engine::api(IPlaylist::class)->getTrack($id);
+        $timestamp = $trackRow['created'];
+        if ($timestamp == null)
+            $timestamp = date('Y-m-d G:i:s');
+        
         $query = "UPDATE tracks SET ";
         $query .= "artist=?, " .
                   "track=?, " .
                   "album=?, " .
                   "label=?, " .
+                  "created=?, " .
                   "tag=" . ($tag?"?":"NULL");
         $query .= " WHERE id = ?";
+
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $artist);
         $stmt->bindValue(2, $track);
         $stmt->bindValue(3, $album);
         $stmt->bindValue(4, $label);
+        $stmt->bindValue(5, $timestamp);
         if($tag) {
-            $stmt->bindValue(5, $tag);
-            $stmt->bindValue(6, (int)$id, \PDO::PARAM_INT);
+            $stmt->bindValue(6, $tag);
+            $stmt->bindValue(7, (int)$id, \PDO::PARAM_INT);
         } else
-            $stmt->bindValue(5, (int)$id, \PDO::PARAM_INT);
+            $stmt->bindValue(6, (int)$id, \PDO::PARAM_INT);
+
         return $stmt->execute();
     }
     
@@ -456,7 +467,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                     $swap = 1;
                     $id = $row[0];
                 }
-            } else if(sizeof($prevRow)){
+            } else if(isset($prevRow) && sizeof($prevRow)){
                 // move track down
                 $swap = 1;
                 $id = $prevRow[0];
@@ -470,7 +481,6 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                         "track = ?, " .
                         "album = ?, " .
                         "label = ? " .
-                        "created = ? " .
                         "WHERE id = ?";
             $stmt = $this->prepare($query);
 
@@ -479,8 +489,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $stmt->bindValue(3, $prevRow[3]);
             $stmt->bindValue(4, $prevRow[4]);
             $stmt->bindValue(5, $prevRow[5]);
-            $stmt->bindValue(6, $prevRow[6]);
-            $stmt->bindValue(7, (int)$row[0], \PDO::PARAM_INT);
+            $stmt->bindValue(6, (int)$row[0], \PDO::PARAM_INT);
             $stmt->execute();
 
             $stmt->bindValue(1, $row[1]?$row[1]:null);
@@ -488,8 +497,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $stmt->bindValue(3, $row[3]);
             $stmt->bindValue(4, $row[4]);
             $stmt->bindValue(5, $row[5]);
-            $stmt->bindValue(6, $row[6]);
-            $stmt->bindValue(7, (int)$prevRow[0], \PDO::PARAM_INT);
+            $stmt->bindValue(6, (int)$prevRow[0], \PDO::PARAM_INT);
             $stmt->execute();
         }
     }

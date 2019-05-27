@@ -43,7 +43,7 @@ interface IPlaylist {
     function updatePlaylist($playlist, $date, $time, $description, $airname);
     function getTrack($id);
     function getTracks($playlist, $desc = 0);
-    function insertTrack($playlist, $tag, $artist, $track, $album, $label);
+    function insertTrack($playlist, $tag, $artist, $track, $album, $label, $wantTimestamp);
     function updateTrack($id, $tag, $artist, $track, $album, $label);
     function deleteTrack($id);
     function getTopPlays(&$result, $airname=0, $days=41, $count=10);
