@@ -951,7 +951,7 @@ class ChartImpl extends BaseImpl implements IChart {
     
     public function getMonthlyChartEnd($month, $year) {
         // Get start chart for following month
-        $next = self::getMonthlyChartStart($month+1, $year);
+        $next = $this->getMonthlyChartStart($month+1, $year);
         list($y,$m,$d) = explode("-", $next);
     
         // Offset back 7 days to get last chart of specified month
