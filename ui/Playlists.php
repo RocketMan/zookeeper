@@ -813,8 +813,8 @@ class Playlists extends MenuItem {
                     $track = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 100, $tag);
                     for($i = 0; $i < sizeof($track); $i++) {
                         if($track[$i]["seq"] == $ctrack) {
-                            $artist = addslashes($track[$i]["artist"]);
-                            $track = addslashes($track[$i]["track"]);
+                            $artist = $track[$i]["artist"];
+                            $track = $track[$i]["track"];
                             break;
                         }
                     }
