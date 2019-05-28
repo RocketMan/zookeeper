@@ -722,9 +722,9 @@ class Playlists extends MenuItem {
                      $tag, $artist, $track, $album, $label, $wantTimestamp);    
     }
     
-    private function updateTrack($id, $tag, $artist, $track, $album, $label) {
+    private function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label) {
         // Run the query
-        Engine::api(IPlaylist::class)->updateTrack($id, $tag, $artist, $track, $album, $label);
+        Engine::api(IPlaylist::class)->updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label);
     }
     
     private function deleteTrack($id) {
@@ -820,7 +820,7 @@ class Playlists extends MenuItem {
                     }
                 }
                 if($id) {
-                    $this->updateTrack($id, $tag, $artist, $track, $album, $label);
+                    $this->updateTrack($playlist, $id, $tag, $artist, $track, $album, $label);
                     $id = "";
                 } else
                     $this->insertTrack($playlist, $tag, $artist, $track, $album, $label, true);

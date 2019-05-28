@@ -238,11 +238,14 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     
     // update track and set created if it is currently null, eg first edit
     // of a track following a CSV import.
-    public function updateTrack($id, $tag, $artist, $track, $album, $label) {
+    public function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label) {
         $trackRow  = Engine::api(IPlaylist::class)->getTrack($id);
         $timestamp = $trackRow['created'];
-        if ($timestamp == null)
-            $timestamp = date('Y-m-d G:i:s');
+        if ($timestamp == null) {
+            $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
+            if (self::isWithinShow($playlist))
+                $timestamp = date('Y-m-d G:i:s');
+        }
         
         $query = "UPDATE tracks SET ";
         $query .= "artist=?, " .
