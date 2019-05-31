@@ -211,7 +211,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
 
         // log time iff 'now' is within playlist start/end time.
-        $doTimestamp = $wantTimestamp && self::isWithinShow($row);
+        $doTimestamp = $wantTimestamp && $this->isWithinShow($row);
         $timeName    = $doTimestamp ? "created, " : "";
         $timeValue   = $doTimestamp ? "NOW(), "   : "";
 
@@ -243,7 +243,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $timestamp = $trackRow['created'];
         if ($timestamp == null) {
             $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
-            if (self::isWithinShow($playlist))
+            if ($this->isWithinShow($playlist))
                 $timestamp = date('Y-m-d G:i:s');
         }
         
