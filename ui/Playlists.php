@@ -542,7 +542,7 @@ class Playlists extends MenuItem {
 
     private function editPlaylist($playlist, $id) {
         print("<HR>");
-        self::emitPlaylistBody($playlist, true);
+        $this->emitPlaylistBody($playlist, true);
     }
     
     private function emitTagForm($playlist, $message) {
@@ -1315,7 +1315,7 @@ class Playlists extends MenuItem {
     
     private function makeAlbumLink($row, $includeLabel) {
         $albumName = $row["album"];
-        $labelSpan = "<span class='songLabel'>/" . self::smartURL($row["label"]) . "</span>";
+        $labelSpan = "<span class='songLabel'>/" . $this->smartURL($row["label"]) . "</span>";
         if($row["tag"]) {
             $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($row["tag"]) .
                           "&amp;q=&amp;action=search&amp;session=" . $this->session->getSessionID() .
@@ -1347,18 +1347,18 @@ class Playlists extends MenuItem {
 
     private function emitPlaylistBody($playlist, $editMode) {
         $REVIEW_DIV =  "<div class='albumReview'></div>";
-        $header = self::makePlaylistHeader($editMode);
+        $header = $this->makePlaylistHeader($editMode);
         $editCell = "";
         echo "<TABLE class='playlistTable' CELLPADDING=1>".$header;
 
         $records = Engine::api(IPlaylist::class)->getTracks($playlist, $editMode);
-        self::viewListGetAlbums($records, $albums);
+        $this->viewListGetAlbums($records, $albums);
         Engine::api(ILibrary::class)->markAlbumsReviewed($albums);
 
         if($albums != null && sizeof($albums) > 0) {
             foreach($albums as $index => $row) {
               if ($editMode)
-                  $editCell = "<TD>" . self::makeEditDiv($row, $playlist) . "</TD>";
+                  $editCell = "<TD>" . $this->makeEditDiv($row, $playlist) . "</TD>";
 
               $timeplayed = self::timestampToAMPM($row["created"]);
               if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK) {
@@ -1368,8 +1368,8 @@ class Playlists extends MenuItem {
               }
 
               $reviewCell = $row["REVIEWED"] ? $REVIEW_DIV : "";
-              $artistName = self::swapNames($row["artist"]);
-              $albumLink = self::makeAlbumLink($row, true);
+              $artistName = $this->swapNames($row["artist"]);
+              $albumLink = $this->makeAlbumLink($row, true);
               echo "<TR class='songRow'>" . $editCell .
                      "<TD>" . $timeplayed . "</TD>" .
                      "<TD>" . $this->smartURL($artistName) . "</TD>" .
@@ -1400,7 +1400,7 @@ class Playlists extends MenuItem {
         $showName = $row[0];
         $djId = $row[3];
         $djName = $row[4];
-        $showDateTime = self::makeShowDateAndTime($row);
+        $showDateTime = $this->makeShowDateAndTime($row);
 
         // make print view header
         echo "<TABLE WIDTH='100%'><TR><TD ALIGN=RIGHT><A HREF='#top' " .
@@ -1413,7 +1413,7 @@ class Playlists extends MenuItem {
                   $this->session->getSessionID() . "&amp;viewuser=$djId' CLASS='nav2'>$djName</A>";
         echo "<DIV CLASS='playlistBanner'>&nbsp;" . $showName . " with " . $djLink.$dateDiv . "</div>";
 
-        self::emitPlaylistBody($playlist, false);
+        $this->emitPlaylistBody($playlist, false);
     }
     
     private function emitViewDJSortFn($a, $b) {
