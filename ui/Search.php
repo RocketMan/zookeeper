@@ -110,12 +110,12 @@ class Search extends MenuItem {
     }
 
     public function ftSearch() {
+        UI::emitJS('js/zooscript.js');
+        UI::emitJS('js/zootext.js');
 ?>
-<SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript" SRC="js/zooscript.js"></SCRIPT>
-<SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript" SRC="js/zootext.js"></SCRIPT>
 <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"><!--
 // Jim Mason <jmason@ibinx.com>
-// Copyright (C) 2005-2018 Jim Mason.  All Rights Reserved.
+// Copyright (C) 2005-2019 Jim Mason.  All Rights Reserved.
 lists = [ <?php if($this->session->isAuth("u")) echo "\"Tags\", "; ?>"Albums", "Compilations", "Labels", "Playlists", "Reviews", "Tracks" ];
 
 function onSearch(sync,e) {

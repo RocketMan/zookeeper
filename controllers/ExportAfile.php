@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -31,10 +31,6 @@ use ZK\UI\AddManager;
 class ExportAfile implements IController {
     public function processRequest($dispatcher) {
         $userAgent = $_SERVER["HTTP_USER_AGENT"];
-        $nn4hack = (substr($userAgent, 0, 10) == "Mozilla/4.") &&
-                      preg_match("/\(win/i", $userAgent) &&
-                      !preg_match("/Opera /i", $userAgent);
-        
         ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>

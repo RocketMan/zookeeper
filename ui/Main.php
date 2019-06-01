@@ -70,9 +70,6 @@ class Main implements IController {
 
     protected function emitResponseHeader() {
         $userAgent = $_SERVER["HTTP_USER_AGENT"];
-        $nn4hack = (substr($userAgent, 0, 10) == "Mozilla/4.") &&
-                      preg_match("/\(win/i", $userAgent) &&
-                      !preg_match("/Opera /i", $userAgent);
         $banner = Engine::param('application');
         $station = Engine::param('station');
         $station_full = Engine::param('station_full');
@@ -82,10 +79,9 @@ class Main implements IController {
 <HEAD>
   <TITLE><?php echo $banner;?></TITLE>
   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-  <LINK REL="stylesheet" HREF="<?php 
-       echo $nn4hack?"css/netscape.css":"css/zoostyle.css"; ?>">
-  <LINK REL="stylesheet" HREF="<?php echo Engine::param('stylesheet'); ?>">
-  <LINK REL="stylesheet" HREF="css/about.css">
+  <?php UI::emitCSS('css/zoostyle.css'); ?>
+  <?php UI::emitCSS(Engine::param('stylesheet')); ?>
+  <?php UI::emitCSS('css/about.css'); ?>
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Music Reviews" HREF="zkrss.php?feed=reviews">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio A-File Adds" HREF="zkrss.php?feed=adds">
