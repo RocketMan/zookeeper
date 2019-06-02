@@ -193,14 +193,14 @@ class UICommon {
      * decorate the specified asset for cache control
      *
      * @param asset path to target asset
-     * @return URI of decorated asset
+     * @return HTML-encoded URI of decorated asset
      */
     public static function decorate($asset) {
         $mtime = filemtime(__DIR__.'/../'.$asset);
         $ext = strrpos($asset, '.');
-        return $mtime && $ext !== FALSE?
+        return htmlspecialchars($mtime && $ext !== FALSE?
             substr($asset, 0, $ext).'-'.$mtime.
-            substr($asset, $ext):$asset;
+            substr($asset, $ext):$asset, ENT_QUOTES, 'UTF-8');
     }
 
     /**

@@ -868,7 +868,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     }
     
     private function emitCache($fields) {
-         echo UI::emitJS('js/zooscript.js');
+         UI::emitJS('js/zooscript.js');
          echo "<SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\">\n";
          echo "   fields = [";
          for($i=0; $i<sizeof($fields); $i++)
@@ -1474,7 +1474,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     ?>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=nextTrack VALUE=<?php echo (int)($_REQUEST["nextTrack"]+$this->tracksPerPage);?>>
-    <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript" SRC="<?php echo UI::decorate('js/zooscript.js'); ?>"></SCRIPT>
+    <?php UI::emitJS('js/zooscript.js'); ?>
     <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"><!--
     var focus;
     function cf(f) { focus = f; }
