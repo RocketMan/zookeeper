@@ -394,7 +394,7 @@ class AddManager extends MenuItem {
         if($this->session->isAuth("n")) {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start(); ?>
+    <?php ob_start([\JSMin::class, 'minify']); ?>
     function onExport() {
       if(document.forms[1].os.value == "email") {
         document.forms[0].subaction.value = "addsemail";
@@ -405,9 +405,7 @@ class AddManager extends MenuItem {
       }
     }
     <?php
-        $script = ob_get_contents();
-        ob_end_clean();
-        echo \JSMin::minify($script);
+        ob_end_flush();
     ?>
     // -->
     </SCRIPT>
@@ -418,7 +416,7 @@ class AddManager extends MenuItem {
     private function emitConfirmID($name, $message, $action, $id="", $rtaction="") {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start(); ?>
+    <?php ob_start([\JSMin::class, 'minify']); ?>
     function Confirm<?php echo $name; ?>(<?php if($id) echo "id"; ?>)
     {
     <?php if($rtaction) { ?>
@@ -441,9 +439,7 @@ class AddManager extends MenuItem {
       }
     }
     <?php
-        $script = ob_get_contents();
-        ob_end_clean();
-        echo \JSMin::minify($script);
+        ob_end_flush();
     ?>
     // -->
     </SCRIPT>

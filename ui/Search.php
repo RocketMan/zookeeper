@@ -114,7 +114,7 @@ class Search extends MenuItem {
         UI::emitJS('js/zootext.js');
 ?>
 <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"><!--
-<?php ob_start(); ?>
+<?php ob_start([\JSMin::class, 'minify']); ?>
 lists = [ <?php if($this->session->isAuth("u")) echo "\"Tags\", "; ?>"Albums", "Compilations", "Labels", "Playlists", "Reviews", "Tracks" ];
 
 function onSearch(sync,e) {
@@ -173,9 +173,7 @@ function setFocus() {
   document.forms[0].search.value = val;  // reset value to force cursor to end
 }
     <?php
-        $script = ob_get_contents();
-        ob_end_clean();
-        echo \JSMin::minify($script);
+        ob_end_flush();
     ?>
 // -->
 </SCRIPT>
