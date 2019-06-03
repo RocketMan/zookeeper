@@ -370,11 +370,17 @@ class Playlists extends MenuItem {
     <INPUT TYPE=HIDDEN NAME=validate VALUE="edit">
     </FORM>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start(); ?>
     function ConfirmTime() {
       return document.forms[0].fromtime.value != '0000' ||
           document.forms[0].totime.value != '0000' ||
           confirm("If your show is really on midnight - midnight, click 'OK'; otherwise, click 'Cancel' and set the correct time.");
     }
+    <?php
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+    ?>
     // -->
     </SCRIPT>
     <?php 
@@ -388,6 +394,7 @@ class Playlists extends MenuItem {
     private function emitConfirm($name, $message, $action, $rtaction="") {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start(); ?>
     function Confirm<?php echo $name; ?>()
     {
     <?php if($rtaction) { ?>
@@ -407,6 +414,11 @@ class Playlists extends MenuItem {
               echo "\""; ?>;
       }
     }
+    <?php
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+    ?>
     // -->
     </SCRIPT>
     <?php 

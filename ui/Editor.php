@@ -317,6 +317,7 @@ class Editor extends MenuItem {
              echo "       <INPUT TYPE=submit CLASS=submit NAME=printToPDF onclick=\"return validate();\" VALUE=\" Print To PDF &gt; \">\n";
          echo "    </P>\n"; ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start(); ?>
     function checkAll() {
       form = document.forms[0];
       all = form.all.checked;
@@ -345,9 +346,14 @@ class Editor extends MenuItem {
         return false;
       }
     }
+    <?php
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+    ?>
     // -->
     </SCRIPT>
-    <?php 
+    <?php
         UI::setFocus();
     }
     
@@ -379,6 +385,7 @@ class Editor extends MenuItem {
         echo "<P><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next onclick=\"return validate();\" VALUE=\" Next &gt; \"></P>\n";
 ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start(); ?>
     function validate() {
         var selected = false;
         var forms = document.getElementsByName('form');
@@ -388,6 +395,11 @@ class Editor extends MenuItem {
         alert("Select a label format");
         return false;
     }
+    <?php
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+    ?>
     // -->
     </SCRIPT>
     <?php
@@ -439,6 +451,7 @@ class Editor extends MenuItem {
         echo "    <TR><TD STYLE=\"text-align: right;\"><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next onclick=\"return validate();\" VALUE=\" Next &gt; \">\n";
         echo "    <INPUT TYPE=HIDDEN NAME=sel ID=sel VALUE=\"\"></TD></TR></TABLE>\n";
         echo "<SCRIPT LANGUAGE=\"JavaScript\" TYPE=\"text/javascript\"><!--\n";
+        ob_start();
         // 2018-06-14 this does not work in some browsers;
         // for now, we'll manually create an empty array
         //echo "    var sel = [...Array($numLabels)].map(x=>0);\n";
@@ -491,6 +504,11 @@ class Editor extends MenuItem {
 
       return true;
     }
+    <?php
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+    ?>
     // -->
     </SCRIPT>
     <?php
@@ -549,7 +567,11 @@ class Editor extends MenuItem {
         $this->emitHidden("selcount", $selCount);
         $merged = implode(",", $selLabels);
         echo "        <SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\"><!--\n";
+        ob_start();
         echo "        window.open('?target=print&session=".$this->session->getSessionID()."&form=".$form["code"]."&tags=$merged', '_blank', 'toolbar=no,location=no,width=800,height=800');\n";
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
         echo "        // -->\n";
         echo "        </SCRIPT>\n";
     }
@@ -851,8 +873,9 @@ class Editor extends MenuItem {
     }
 
     private function emitZkAlpha($moveThe = 0) {
+        echo "<SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\"><!--\n";
+        ob_start();
     ?>
-<SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"><!--
 nonalnum='.,!?&~ -+={[(|';
 function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
   val=control.value;
@@ -862,14 +885,17 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
   if(<?php echo !$moveThe?"!track && ":"";?>newVal.substr(0, 4) == 'The ') newVal=newVal.substr(4)+', The';
   control.value=newVal;
 }
-// -->
-</SCRIPT>
     <?php 
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+        echo "// -->\n</SCRIPT>\n";
     }
     
     private function emitCache($fields) {
          UI::emitJS('js/zooscript.js');
          echo "<SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\">\n";
+         ob_start();
          echo "   fields = [";
          for($i=0; $i<sizeof($fields); $i++)
               echo " '" . $fields[$i] . "',";
@@ -976,9 +1002,11 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
         }
         sync.Timer = setTimeout('onSearchNow()', 250);
     }
-    // -->
-</SCRIPT>
 <?php 
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+        echo "    // -->\n</SCRIPT>\n";
     }
     
     private function emitAlbumSel() {
@@ -1025,6 +1053,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     </TD><TD></TD></TR>
     </TABLE>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start(); ?>
     function setFocus() {
     <?php
         if($_REQUEST["seltag"]) {
@@ -1036,9 +1065,15 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
         }
     ?>
     }
+    <?php 
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+    ?>
     // -->
     </SCRIPT>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start(); ?>
     function onSearchNow() {
       var search = document.forms[0].search.value;
       if(search.lastIndexOf('.') == search.length-1 && search.length > 3)
@@ -1109,9 +1144,11 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
       }
     }
     
-    // -->
-    </SCRIPT>
     <?php 
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+        echo "    // -->\n    </SCRIPT>\n";
     }
     
     private function albumForm() {
@@ -1217,6 +1254,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
       <TR><TD></TD><TD><?php if(!$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Change Label...  ">&nbsp;&nbsp;<?php }?><INPUT TYPE=SUBMIT NAME=<?php echo $_REQUEST["new"]?"edit":"next";?> CLASS=submit VALUE="  <?php echo $_REQUEST["new"]?"Next &gt;&gt;":"Tracks...";?>  ">&nbsp;&nbsp;<?php if(!$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=done CLASS=submit VALUE="  Done!  "><?php }?></TD></TR>
     </TABLE>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start(); ?>
     function setComp() {
     disabled = document.forms[0].coll.checked;
     document.forms[0].artist.style.visibility = disabled?'hidden':'visible';
@@ -1229,9 +1267,11 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     document.getElementById("lbin").style.visibility = storage?'visible':'hidden';
     if(storage) document.forms[0].bin.focus();
     }
-    // -->
-    </SCRIPT>
     <?php 
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+        echo "    // -->\n    </SCRIPT>\n";
         $this->emitZkAlpha(1);
         echo "  <INPUT TYPE=HIDDEN NAME=new VALUE=\"".$_REQUEST["new"]."\">\n";
         UI::setFocus($coll?"album":"artist");
@@ -1281,6 +1321,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     </TD><TD></TD></TR>
     </TABLE>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start(); ?>
     function setFocus() {
     <?php
          if($_REQUEST["seltag"]) {
@@ -1295,9 +1336,15 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
          }
     ?> 
     }
+    <?php 
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+    ?>
     // -->
     </SCRIPT>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start(); ?>
     function onSearchNow() {
       loadXMLDoc("zkapi.php?method=getLabelsRq&operation=searchByName&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].search.value),0);
     }
@@ -1363,9 +1410,11 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
          }
       }
     }
-    // -->
-    </SCRIPT>
     <?php 
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+        echo "    // -->\n    </SCRIPT>\n";
     }
     
     private function labelForm() {
@@ -1405,14 +1454,17 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
       <TR><TD></TD><TD><INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  <?php echo ($this->subaction=="labels")?"Done!":($_REQUEST["seltag"]?"  OK  ":"Next &gt;&gt;");?>  ">&nbsp;</TD></TR>
     </TABLE>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start(); ?>
     function setForeign() {
     foreign = document.forms[0].foreign.checked;
     document.getElementById("lstate").style.visibility = foreign?'hidden':'visible';
     document.getElementById("lzip").innerHTML = foreign?'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country:':'Postal Code:';
     }
-    // -->
-    </SCRIPT>
     <?php 
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+        echo "    // -->\n    </SCRIPT>\n";
         $this->emitZkAlpha();
         UI::setFocus("name");
     }
@@ -1476,6 +1528,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     <INPUT TYPE=HIDDEN NAME=nextTrack VALUE=<?php echo (int)($_REQUEST["nextTrack"]+$this->tracksPerPage);?>>
     <?php UI::emitJS('js/zooscript.js'); ?>
     <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"><!--
+    <?php ob_start(); ?>
     var focus;
     function cf(f) { focus = f; }
     function nextTrack() {
@@ -1523,9 +1576,11 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
             eval('form.track' + focus + '.focus();');
         }
     }
-    // -->
-    </SCRIPT>
     <?php 
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+        echo "    // -->\n    </SCRIPT>\n";
         $this->emitZkAlpha();
         UI::setFocus("track" . ($focusTrack?$focusTrack:$_REQUEST["nextTrack"]));
     }
