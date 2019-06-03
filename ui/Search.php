@@ -114,8 +114,7 @@ class Search extends MenuItem {
         UI::emitJS('js/zootext.js');
 ?>
 <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"><!--
-// Jim Mason <jmason@ibinx.com>
-// Copyright (C) 2005-2019 Jim Mason.  All Rights Reserved.
+<?php ob_start(); ?>
 lists = [ <?php if($this->session->isAuth("u")) echo "\"Tags\", "; ?>"Albums", "Compilations", "Labels", "Playlists", "Reviews", "Tracks" ];
 
 function onSearch(sync,e) {
@@ -173,6 +172,11 @@ function setFocus() {
   if(val.length > 0) onSearchNow();
   document.forms[0].search.value = val;  // reset value to force cursor to end
 }
+    <?php
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+    ?>
 // -->
 </SCRIPT>
 <?php

@@ -665,6 +665,7 @@ class Charts extends MenuItem {
     
     ?>
     </TEXTAREA><BR><BR>
+    <?php ob_start(); ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript">
     <!--
     function highlightmetasearch() {
@@ -685,6 +686,11 @@ class Charts extends MenuItem {
         highlightmetasearch();
         document.write('<P><B>Instructions:</B><OL><LI>Open the CMJ website import chart page in another browser window and clear the textbox;<LI>Press CTRL C in this window to copy chart to clipboard;<LI>Use CTRL V to paste the chart into the upload form on the CMJ website.</OL></P>\n');
       }
+    <?php
+        $script = ob_get_contents();
+        ob_end_clean();
+        echo \JSMin::minify($script);
+    ?>
     // -->
     </SCRIPT>
     </FORM>
