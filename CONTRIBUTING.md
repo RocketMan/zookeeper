@@ -92,7 +92,7 @@ The following is an overview of the source code directory structure:
             image files
             
         js/
-            minified JavaScript files (from assets)
+            JavaScript files
             
         ui/
             UI rendering.  Menu items and their mappings are specified
