@@ -29,8 +29,8 @@ const NOTICE = "// Zookeeper Online\n".
     "// https://zookeeper.ibinx.com/\n".
     "// license GPL-3.0\n";
  
-$target = __DIR__.$_SERVER['PATH_INFO'];
-if(!file_exists($target)) {
+$target = realpath(__DIR__.$_SERVER['PATH_INFO']);
+if(!preg_match("@^".__DIR__."/@", $target) || !file_exists($target)) {
     http_response_code(404);
     return;
 }
