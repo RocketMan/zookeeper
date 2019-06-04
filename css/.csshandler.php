@@ -28,7 +28,8 @@ const NOTICE = "/* \n * Zookeeper Online\n".
     " * license GPL-3.0\n */\n";
     
 $target = realpath(__DIR__.$_SERVER['PATH_INFO']);
-if(!preg_match("@^".__DIR__."/@", $target) || !file_exists($target)) {
+if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
+        !file_exists($target)) {
     http_response_code(404);
     return;
 }
