@@ -251,7 +251,7 @@ class UserImpl extends BaseImpl implements IUser {
         $stmt->bindValue(2, $salt.md5($salt.$password));
         $stmt->bindValue(3, $realname);
         $stmt->bindValue(4, $groups);
-        $stmt->bindValue(5, $expiration);
+        $stmt->bindValue(5, $expiration?$expiration:null);
         $stmt->execute();
         return ($stmt->rowCount() > 0);
     }
