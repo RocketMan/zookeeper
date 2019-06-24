@@ -38,7 +38,7 @@ $config = [
         'reviewlist' => '',
     ],
 
-    'md_name' => 'Juan Luna-Avin, Sarah Thomas',  // TBD move me to db
+    'md_name' => 'Juan Luna-Avin et al.',  // TBD move me to db
 
     /**
      * Local subnet
