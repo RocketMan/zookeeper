@@ -82,6 +82,9 @@ class Main implements IController {
 <HEAD>
   <TITLE><?php echo $banner;?></TITLE>
   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+  <link rel="stylesheet" href="css/tablesorter/theme.default.css">
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  <script src="js/jquery.tablesorter.min.js"></script>
   <LINK REL="stylesheet" HREF="<?php 
        echo $nn4hack?"css/netscape.css":"css/zoostyle.css"; ?>">
   <LINK REL="stylesheet" HREF="<?php echo Engine::param('stylesheet'); ?>">
@@ -96,7 +99,7 @@ class Main implements IController {
     
     protected function emitNavbar($dispatcher, $action) {
         echo "    <P CLASS=\"zktitle\"><A HREF=\"?session=".$this->session->getSessionID()."\">".Engine::param('application')."</A></P>\n";
-        echo "    <TABLE WIDTH=196 CELLPADDING=0>\n";
+        echo "    <TABLE CELLPADDING=0>\n";
         $menu = $dispatcher->composeMenu($action, $this->session);
         foreach($menu as $item) {
             echo  "      <TR><TD></TD>" .
@@ -106,14 +109,14 @@ class Main implements IController {
                   "action=".$item['action']."\"><B>".$item['label'] .
                   "</B></A></TD></TR>\n";
         }
-        echo "      <TR><TD COLSPAN=2>&nbsp;</TD></TR>\n";
+        #echo "      <TR><TD COLSPAN=2>&nbsp;</TD></TR>\n";
         if($this->session->isAuth("u")) {
-            echo "      <TR><TD></TD><TH CLASS=\"nav3s\">" . $this->session->getDN() . " is logged in</TH></TR>\n";
+            #echo "      <TR><TD></TD><TH CLASS=\"nav3s\">" . $this->session->getDN() . " is logged in</TH></TR>\n";
             echo "      <TR><TD></TD><TD><A CLASS=\"nav3\" HREF=\"" .
-                 "?session=".$this->session->getSessionID()."&amp;action=logout\"><B>logout</B></A></TD></TR>\n";
+                 "?session=".$this->session->getSessionID()."&amp;action=logout\"><B>Logout</B></A></TD></TR>\n";
         } else if(!empty(Engine::param('sso')['client_id'])) {
             echo "      <TR><TD></TD><TD><A CLASS=\"nav3\" HREF=\"" .
-                 "ssoLogin.php\"><B>login</B></A>&nbsp;&nbsp;" .
+                 "ssoLogin.php\"><B>Login</B></A>&nbsp;&nbsp;" .
                  "<A STYLE=\"font-size: 90%;\" HREF=\"?action=loginHelp\">(help)</A></TD></TR>\n";
         } else {
             // no SSO configured; emit classic login link

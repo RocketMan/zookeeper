@@ -506,6 +506,14 @@ A.calLink {
     background-image: URL('../img/list_dn.gif');
 }
 
+/* tighten up tablesorter's spacing */
+.tablesorter-default  td {
+    padding: 0px 0px 0px 0px;
+}
+.tablesorter-default  .tablesorter-header {
+    padding: 0px 15px 0px 0px;
+}
+
 /* up/down & edit links for playlist edits */
 .songManager {
     top: 8px;

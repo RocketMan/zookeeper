@@ -67,6 +67,10 @@ class AddManager extends MenuItem {
     private $errorMessage;
     private $nextMessage;
 
+    public function __construct() {
+        $CATEGORY_MAP = Engine::api(IChart::class)->getCategories();
+    }
+
     public function processLocal($action, $subaction) {
         $extra = "<SPAN CLASS=\"sub\"><B>Adds Feed:</B></SPAN> <A TYPE=\"application/rss+xml\" HREF=\"zkrss.php?feed=adds\"><IMG SRC=\"img/rss.gif\" ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT=\"rss\"></A><BR><IMG SRC=\"img/blank.gif\" WIDTH=1 HEIGHT=2 BORDER=0 ALT=\"\">";
 
@@ -113,6 +117,18 @@ class AddManager extends MenuItem {
         case "Num-":
             $retval = strcmp($a["afile_number"], $b["afile_number"]);
             break;
+        case "Review":
+        case "Review-":
+            $retval = strcmp(strtolower($a["REVIEWER"]), strtolower($b["REVIEWER"]));
+            break;
+        case "Col":
+        case "Col-":
+            $catOrd = $a["afile_category"];
+            $cat1 = $catOrd  ? $this->CATEGORY_MAP[$catOrd[0] - 1]["code"] : "G";
+            $catOrd = $b["afile_category"];
+            $cat2 = $catOrd ? $this->CATEGORY_MAP[$catOrd[0] - 1]["code"] : "G";
+            $retval = strcmp($cat1, $cat2);
+            break;
         case "Label":
         case "Label-":
             $retval = strcmp($a["LABELNAME"], $b["LABELNAME"]);
@@ -153,62 +169,52 @@ class AddManager extends MenuItem {
         return (substr($_REQUEST["sortBy"], -1, 1) == "-")?-$retval:$retval;
     }
     
-    private function addManagerColHeader($subaction, $header, $static) {
-        $command = $header;
-        if(!strcmp($header, $_REQUEST["sortBy"])) {
-            $command .= "-";
-            $selected = 1;
-        } else if(!strcmp($header . "-", $_REQUEST["sortBy"]))
-            $selected = 2;
-    
-        if($header == "Num") $width = " WIDTH=60px";
-    
-        if($header == "%") $header = "&nbsp;%&nbsp;";
-    
-        if($static)
-            echo "        <TH ALIGN=LEFT$width><U>$header</U>";
-        else
-            echo "        <TH ALIGN=LEFT$width><A CLASS=\"nav\" HREF=\"?session=".$this->session->getSessionID()."&amp;action=addmgr&amp;subaction=$subaction&amp;sortBy=$command&amp;date=".$_REQUEST["date"]."\">$header</A>";
-    
-        if($selected && !$static)
-            echo "&nbsp;<SPAN CLASS=\"sort" . (($selected==1)?"Down":"Up") . "\"><IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></SPAN>";
-    
-        // Give extra horizontal padding to column
-        ////if(!strcmp($header, "Num"))
-        ////    echo "&nbsp;&nbsp;&nbsp;";
-    
-        echo "</TH>\n";
+    private function getAlbumCategory($albumRow, $categoryMap) {
+       $category = null;
+       $acats = explode(",", $albumRow["afile_category"]);
+       foreach($acats as $index => $cat) {
+           if($cat)
+               $category = $categoryMap[$cat-1]["code"];
+       }
+
+       $category = $category == null ? "G" : $category;
+       return $category;
     }
-    
+
+    private function getEditCell($albumRow) {
+       $sessionId="?session=".$this->session->getSessionID();
+
+       $hrefDate= $sessionId .  "&amp;action=addmgr&amp;subaction=adds&amp;date=$date ";
+       $class = ($id && $id == $row["id"]) ? "sel" : "nav";
+       $cellDate = "<A CLASS='nav' HREF='" . $hrefDate .
+          "' onClick='ConfirmDelete(".$row["id"]."); return false;'>[x]</A>&nbsp;";
+
+       $hrefId =  $sessionId . "&amp;action=addmgr&amp;subaction=addsedit&amp;id=" . $row["id"];
+       $cellId = "<A CLASS='$class' HREF='" . $hrefId . "'>&gt;&gt;</A>&nbsp;&nbsp;";
+
+       return "<TD>" . $cellDate . $cellId . "</TD>";
+    }
+
     public function addManagerEmitAlbums(&$records, $subaction, $showEdit, $showReview, $static=0) {
         $id = $_REQUEST["id"];
-        $showTag = $this->session->isAuth("u");
-        $showAvg = $showTag && !$static && $subaction != "adds";
-    
-        // Setup default sortBy
-        $sortBy = $_REQUEST["sortBy"];
-        if(!strlen($sortBy))
-            $_REQUEST["sortBy"] = "Artist";
+        $isAdmin = $this->session->isAuth("u");
+        $showAvg = $isAdmin && !$static && $subaction != "adds";
+        $showTag = false;
     
         // Get the chart categories
         $cats = Engine::api(IChart::class)->getCategories();
             
-        echo "  <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0";
-        ////if($static) echo " WIDTH=\"100%\"";
-        echo ">\n";
-        ////if($showEdit)
-        ////    echo "    <TR><TH CLASS=\"sub\">Del</TH><TH CLASS=\"sub\">Edit</TH>\n";
-        ////else
-            echo "    <TR><TH COLSPAN=2></TH>\n";
-        $this->addManagerColHeader($subaction, "Num", $static);
-        $this->addManagerColHeader($subaction, "Artist", $static);
-        echo "        <TH></TH>\n";  // space for [i] icon
-        $this->addManagerColHeader($subaction, "Title", $static);
-        if(!$static)
-            $this->addManagerColHeader($subaction, "Label", $static);
-        if($showAvg)
-            $this->addManagerColHeader($subaction, "**Sizzle", $static);
-        echo "    </TR>\n";
+        $labelCell = $static ? "" : "<TH>Label</TH>";
+        $avgCell = $showAvg ?  "<TH>*Sizzle</TH>" : "";
+        $editCell = $showEdit ? "<TH class='sorter-false'></TH>" : "";
+
+        echo "<TABLE class='sortable-table' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" . $editCell .
+             "<TH>Col</TH>" .
+             "<TH>Review</TH>" .
+             "<TH>ID</TH>" .
+             "<TH>Artist</TH>" .
+             "<TH>Title</TH>" . $labelCell . $avgCell .
+             "</TR></THEAD>\n";
     
         // Get albums into array
         $this->addManagerGetAlbums2($records, $albums);
@@ -217,95 +223,73 @@ class AddManager extends MenuItem {
         if($showReview)
             Engine::api(ILibrary::class)->markAlbumsReviewed($albums);
     
-        // Sort it
+        echo "<TBODY>";
         if($albums) {
             usort($albums, array($this, "addManagerSortFn"));
+
+            foreach($albums as $index => $row) {
+                echo "<TR CLASS='hborder'>";
+        
+                if($showEdit) {
+                    $editCell = $this->getEditCell($album);
+                    echo $editCell;
+                }
+        
+                $category = $this->getAlbumCategory($row, $cats);
+                echo "<TD>" . $category . "</TD>";
+                echo "<TD>" . htmlentities($row["REVIEWER"]) . "</TD>";
     
-        foreach($albums as $index => $row) {
-            echo "    <TR CLASS=\"hborder\"><TD VALIGN=TOP>";
+                // A-File Numbers
+                echo "<TD>".$row["afile_number"]."</TD>";
+        
+                $artistName = htmlentities($row["artist"]) ;
+                if($static && strlen($artistName) > 50)
+                    $artistName = substr($artistName, 0, 50) . "...";
+        
+                // Artist/Album/Label names
+                echo "<TD>" . $artistName . "&nbsp;&nbsp;</TD>";
+        
+                $albumName = htmlentities($row["album"]);
+                if($static && strlen($albumName) > 50)
+                    $albumName = substr($albumName, 0, 50) . "...";
+
+                $albumName .= $this->getMediumFormat($row["medium"]);
+        
+                $tagNum = $showTag?
+                    " <FONT CLASS='sub'>(Tag&nbsp;#". $row["tag"] .")</FONT>":"";
+        
+                if($static)
+                    echo "<TD>" . $albumName . $tagNum . "&nbsp;&nbsp;</TD>";
+                else
+                    echo "<TD><A CLASS='nav' HREF='".
+                         "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
+                         "&amp;action=search&amp;session=".$this->session->getSessionID().
+                         "'>" . $albumName . "</A>$tagNum&nbsp;&nbsp;</TD>";
     
-            // Edit link
-            if($showEdit) {
-                echo "<A CLASS=\"nav\" HREF=\"" .
-                     "?session=".$this->session->getSessionID()."&amp;action=addmgr&amp;subaction=adds&amp;date=$date\" " .
-                     "onClick=\"ConfirmDelete(".$row["id"]."); return false;\">[x]</A>&nbsp;</TD><TD VALIGN=TOP>";
-                $class = ($id && $id == $row["id"])?"sel":"nav";
-                echo "<A CLASS=\"$class\" HREF=\"" .
-                     "?session=".$this->session->getSessionID()."&amp;action=addmgr&amp;subaction=addsedit&amp;id=".$row["id"]."\">&gt;&gt;</A>&nbsp;&nbsp;";
-            } else
-                echo "</TD><TD VALIGN=TOP>";
+                if(!$static)
+                    echo "<TD>" . htmlentities($row["LABELNAME"]) . "</TD>";
     
-            // Categories
-            $acats = explode(",", $row["afile_category"]);
-            foreach($acats as $index => $cat)
-                if($cat)
-                    echo $cats[$cat-1]["code"];
-    
-            // A-File Numbers
-            echo "</TD><TD VALIGN=TOP>".$row["afile_number"]."</TD>";
-    
-            $artistName = htmlentities($row["artist"]) ;
-            if($static && strlen($artistName) > 50)
-                $artistName = substr($artistName, 0, 50) . "...";
-    
-            // Artist/Album/Label names
-            echo "<TD VALIGN=TOP>" . $artistName . "&nbsp;&nbsp;</TD><TD VALIGN=TOP>";
-            if($showReview && $row["REVIEWED"]) {
-                echo "<A CLASS=\"albumReview\" HREF=\"".
-                     "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
-                     "&amp;action=search&amp;session=".$this->session->getSessionID().
-                     "\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A>";
+                if($showAvg)
+                    echo "<TD ALIGN=CENTER>".$row["sizzle"]."</TD>";
+
+                echo "</TR>\n";
             }
-    
-            // Setup medium
-            switch($row["medium"]) {
-            case "S":
-                $medium = "&nbsp;(7\")";
-                break;
-            case "T":
-                $medium = "&nbsp;(10\")";
-                break;
-            case "V":
-                $medium = "&nbsp;(12\")";
-                break;
-            default:
-                $medium = "";
-                break;
-            }
-            $albumName = htmlentities($row["album"]);
-            if($static && strlen($albumName) > 50)
-                $albumName = substr($albumName, 0, 50) . "...";
-            $albumName .= $medium;
-    
-            $tagNum = $showTag?
-                " <FONT CLASS=\"sub\">(Tag&nbsp;#". $row["tag"] .")</FONT>":"";
-    
-            if($static)
-                echo "</TD><TD VALIGN=TOP>" . $albumName . $tagNum . "&nbsp;&nbsp;</TD>";
-            else
-                echo "</TD><TD VALIGN=TOP><A CLASS=\"nav\" HREF=\"".
-                     "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
-                     "&amp;action=search&amp;session=".$this->session->getSessionID().
-                     "\">" . $albumName . "</A>$tagNum&nbsp;&nbsp;</TD>";
-            if(!$static)
-                echo "<TD VALIGN=TOP>" . htmlentities($row["LABELNAME"]) . "</TD>";
-            if($showAvg)
-                echo "<TD ALIGN=RIGHT>".$row["sizzle"]."</TD>";
-            echo "</TR>\n";
+            echo "</TBODY>";
         }
-      }
-        echo "  </TABLE>\n";
+        echo " </TABLE>\n";
+
         if($showAvg)
-            echo "  <P><B>**Sizzle</B>: Measure of an album's average daily airplay, ".
+            echo "  <P><B>*Sizzle</B>: Measure of an album's average daily airplay, ".
                  "available for albums which have been in the A-File for a ".
                  "minimum of 7 days.  Sizzle = (raw spin count while in the ".
                  "A-File / days in A-File) * 100, where days in A-File &gt; 7.</P>\n";
     
-        if($showEdit)
+        if($showEdit) {
             $this->emitConfirmID("Delete",
                         "Delete this album from the add?",
                         "session=".$this->session->getSessionID()."&action=addmgr&subaction=addsdel",
                         "id");
+        }
     }
     
     public function addManagerMain() {
@@ -317,17 +301,11 @@ class AddManager extends MenuItem {
             $this->addManagerDel();
             break;
         default:
-            $displayDate = date("l, j F Y");
-            echo "  <TABLE WIDTH=\"100%\">\n    <TR><TH ALIGN=LEFT>";
-            echo "A-File as of $displayDate</TH>\n";
-            if($this->session->isAuth("n") || $this->session->isAuth("o")) {
-                echo "        <TD ALIGN=RIGHT VALIGN=TOP><A CLASS=\"sub\" HREF=\"#top\" onClick='window.open(\"?target=afile\")'>Printable A-File</A></TD>\n";
-            }
-            echo "    </TR>\n  </TABLE><BR>\n";
             if($this->session->isAuth("u"))
                 $results = Engine::api(IChart::class)->getCurrentsWithPlays2(date("Y-m-d"));
             else
                 $results = Engine::api(IChart::class)->getCurrents2(date("Y-m-d"));
+
             $this->addManagerEmitAlbums($results, "", $this->session->isAuth("n"), true);
             UI::setFocus();
         }
@@ -394,6 +372,10 @@ class AddManager extends MenuItem {
         if($this->session->isAuth("n")) {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    $().ready(function(){
+        $('.sortable-table').tablesorter();
+    });
+
     function onExport() {
       if(document.forms[1].os.value == "email") {
         document.forms[0].subaction.value = "addsemail";
@@ -407,6 +389,24 @@ class AddManager extends MenuItem {
     </SCRIPT>
     <?php 
         }
+    }
+    
+    private function getMediumFormat($mediumType) {
+        $medium = "";
+
+        // Setup medium
+        switch($mediumType) {
+                case "S":
+                    $medium = "&nbsp;(7\")";
+                    break;
+                case "T":
+                    $medium = "&nbsp;(10\")";
+                    break;
+                case "V":
+                    $medium = "&nbsp;(12\")";
+                    break;
+        }
+        return $medium;
     }
     
     private function emitConfirmID($name, $message, $action, $id="", $rtaction="") {
@@ -1167,6 +1167,14 @@ class AddManager extends MenuItem {
         case "Show-":
             $retval = strcasecmp($a["description"], $b["description"]);
             break;
+        case "Col":
+        case "Col-":
+            $catOrd = $a["afile_category"];
+            $cat1 = len($catOrd) > 0 ? $this->CATEGORY_MAP[$catOrd - 1]["code"] : "G";
+            $catOrd = $b["afile_category"];
+            $cat2 = len($catOrd) > 0 ? $this->CATEGORY_MAP[$catOrd - 1]["code"] : "G";
+            $retval = strcmp($cat1, $cat2);
+            break;
         case "D":
         case "D-":
             $retval = $a["duration"] - $b["duration"];
@@ -1231,34 +1239,27 @@ class AddManager extends MenuItem {
         if(!strlen($sortBy))
             $_REQUEST["sortBy"] = "Date";
     
-        echo "  <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0";
-        echo " CLASS=\"afileactivity\"";
-        echo ">\n";
-        echo "    <TR>\n";
-        $this->addManagerColHeader($subaction, "Date", $static);
-        echo "        <TD></TD>\n";
-        $this->addManagerColHeader($subaction, "DJ", $static);
-        $this->addManagerColHeader($subaction, "Airname", $static);
-        $this->addManagerColHeader($subaction, "Show", $static);
-        $this->addManagerColHeader($subaction, "D", $static);
-        $this->addManagerColHeader($subaction, "Tracks", $static);
-        $this->addManagerColHeader($subaction, "AFile", $static);
-        $this->addManagerColHeader($subaction, "%", $static);
-        echo "    </TR>\n";
-    
+        echo "<TABLE class='sortable-table' CELLPADDING=2 CELLSPACING=0 BORDER=0 CLASS='afileactivity'>";
+        echo "<THEAD><TR>";
+        echo "<TH>Date</TH>";
+        echo "<TH class='sorter-false'></TH>";
+        echo "<TH>Review</TH>";
+        echo "<TH>Airname</TH>";
+        echo "<TH>Show</TH>";
+        echo "<TH>D</TH>";
+        echo "<TH>Tracks</TH>";
+        echo "<TH>AFile</TH>";
+        echo "<TH>%</TH>";
+        echo "</TR></THEAD>";
+ 
         // Get albums into array
         $this->aFileActivityGetReport($records, $albums);
     
         // Sort it
         usort($albums, array($this, "aFileActivitySortFn"));
     
+        echo "<TBODY>";
         foreach($albums as $index => $row) {
-            if($_REQUEST["sortBy"] == "Date" && $last > 5 && $last != $row["start"]) {
-                list($y, $m, $d) = explode("-", $lastDate);
-                $showDate = str_replace(" ", "&nbsp;", date("d D", mktime(0,0,0,$m,$d,$y)));
-    
-                echo "    <TR CLASS=\"noPlaylist\">\n      <TD VALIGN=TOP>$showDate</TD>\n      <TD VALIGN=TOP CLASS=\"sub2\">".$last."00&#8209;".$row["start"]."00&nbsp;</TD>\n      <TD COLSPAN=7>No playlist</TD>\n    </TR>\n";
-            }
             $last = $row["end"];
             $lastDate = $row["showdate"];
     
@@ -1286,12 +1287,12 @@ class AddManager extends MenuItem {
                          htmlentities($row["description"]) . "</A></TD>\n";
     
             // Duration
-            echo "      <TD VALIGN=TOP ALIGN=RIGHT>" . $row["duration"] . "</TD>\n";
+            echo "<TD>" . $row["duration"] . "</TD>\n";
             
             // Totals
-            echo "      <TD VALIGN=TOP ALIGN=RIGHT>" . $row["total"] . "</TD>\n";
-            echo "      <TD VALIGN=TOP ALIGN=RIGHT>" . $row["afile"] . "</TD>\n";
-            echo "      <TD VALIGN=TOP ALIGN=RIGHT>" . $row["percent"] . "</TD>\n";
+            echo "<TD>" . $row["total"] . "</TD>\n";
+            echo "<TD>" . $row["afile"] . "</TD>\n";
+            echo "<TD>" . $row["percent"] . "</TD>\n";
     
             $total += $row["total"];
             $afile += $row["afile"];
@@ -1299,10 +1300,10 @@ class AddManager extends MenuItem {
             echo "    </TR>\n";
         }
     
+        $percent = 0;
         if($total > 0)
             $percent = round($afile / $total * 100);
-        else
-            $percent = 0;
+
         echo "    <TR>\n      <TD COLSPAN=6>&nbsp;</TD>\n      <TD><HR></TD>\n      <TD><HR></TD>\n      <TD><HR></TD>\n    </TR>\n";
         echo "    <TR>\n";
         echo "      <TH COLSPAN=6 ALIGN=RIGHT>Total:</TH>\n";
@@ -1310,6 +1311,8 @@ class AddManager extends MenuItem {
         echo "      <TH VALIGN=TOP ALIGN=RIGHT>" . $afile . "</TH>\n";
         echo "      <TH VALIGN=TOP ALIGN=RIGHT>" . $percent . "</TH>\n";
         echo "    </TR>\n";
+
+        echo "</TBODY>";
      
         echo "  </TABLE>\n";
     }
@@ -1354,5 +1357,15 @@ class AddManager extends MenuItem {
             $this->aFileActivityEmitReport($records, "activity");
         }
         UI::setFocus();
+    ?>
+    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    $().ready(function(){
+        $('.sortable-table').tablesorter();
+    });
+    // -->
+    </SCRIPT>
+
+    <?php 
     }
+
 }

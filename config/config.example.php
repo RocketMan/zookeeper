@@ -111,7 +111,7 @@ $config = [
      * menu items here are appended to the defaults
      */
     'custom_menu' => [
-//      [ 'a', 'contact%', 'Contact Example Music', ZK\UI\Example_Contacts::class ],
+//      [ 'a', 'contact%', 'Contact Us', ZK\UI\Example_Contacts::class ],
     ],
 
     /**
