@@ -69,7 +69,7 @@ class EditorImpl extends BaseImpl implements IEditor {
                         "now(), now())";
                 $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $label["pubkey"]);
-                $stmt->bindValue(2, $label["name"]);
+                $stmt->bindValue(2, trim($label["name"]));
                 $stmt->bindValue(3, $label["attention"]);
                 $stmt->bindValue(4, $label["address"]);
                 $stmt->bindValue(5, $label["city"]);
@@ -88,7 +88,7 @@ class EditorImpl extends BaseImpl implements IEditor {
                          "phone=?, fax=?, email=?, url=?, mailcount=?, " .
                          "maillist=?, modified=now() WHERE pubkey=?";
                 $stmt = $this->prepare($query);
-                $stmt->bindValue(1, $label["name"]);
+                $stmt->bindValue(1, trim($label["name"]));
                 $stmt->bindValue(2, $label["attention"]);
                 $stmt->bindValue(3, $label["address"]);
                 $stmt->bindValue(4, $label["city"]);
@@ -225,7 +225,7 @@ class EditorImpl extends BaseImpl implements IEditor {
                         "now(), now())";
                 $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $label["pubkey"]);
-                $stmt->bindValue(2, $label["name"]);
+                $stmt->bindValue(2, trim($label["name"]));
                 $stmt->bindValue(3, $label["attention"]);
                 $stmt->bindValue(4, $label["address"]);
                 $stmt->bindValue(5, $label["city"]);
@@ -244,7 +244,7 @@ class EditorImpl extends BaseImpl implements IEditor {
                          "phone=?, fax=?, email=?, url=?, mailcount=?, " .
                          "maillist=?, modified=now() WHERE pubkey=?";
                 $stmt = $this->prepare($query);
-                $stmt->bindValue(1, $label["name"]);
+                $stmt->bindValue(1, trim($label["name"]));
                 $stmt->bindValue(2, $label["attention"]);
                 $stmt->bindValue(3, $label["address"]);
                 $stmt->bindValue(4, $label["city"]);

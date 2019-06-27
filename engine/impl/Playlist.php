@@ -24,6 +24,8 @@
 
 namespace ZK\Engine;
 
+use \Datetime;
+use \DateTimeZone;
 use ZK\Engine\ILibrary;
 
 
@@ -162,7 +164,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
 
     public function getTrack($id) {
-        $query = "SELECT tag, artist, track, album, label, id FROM tracks " .
+        $query = "SELECT tag, artist, track, album, label, id, created FROM tracks " .
                  "WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
@@ -170,7 +172,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
     
     public function getTracks($playlist, $desc = 0) {
-        $query = "SELECT tag, artist, track, album, label, id FROM tracks " .
+        $query = "SELECT tag, artist, track, album, label, id, created FROM tracks " .
                  "WHERE list = ? ORDER BY id";
         if($desc)
             $query .= " DESC";
@@ -178,44 +180,94 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
         return $this->execute($stmt);
     }
-    
-    public function insertTrack($playlist, $tag, $artist, $track, $album, $label) {
+
+    // return true if "now" is within the show start/end time & date.
+    // NOTE: this routine must be tolerant of improperly formatted dates.
+    public function isWithinShow($listRow) {
+        $TIME_FORMAT = "Y-m-d Gi"; // eg, 2019-01-01 1234
+        $retVal = false;
+
+        try {
+            $timeAr = explode("-", $listRow[2]);
+            if (count($timeAr) == 2) {
+                $timeStr1 = $listRow[1] . " " . $timeAr[0];
+                $start = DateTime::createFromFormat($TIME_FORMAT, $timeStr1);
+                $endStr = $timeAr[1] == "0000" ? "2359" : $timeAr[1];
+                $timeStr2 = $listRow[1] . " " . $endStr;
+                $end = DateTime::createFromFormat($TIME_FORMAT, $timeStr2);
+
+                if (isset($start) && isset($end)) {
+                    $now = new DateTime("now");
+                    $retVal = (($now > $start) && ($now < $end));
+                }
+            }
+        } catch (Throwable $t) {
+            ;
+        }
+        return $retVal;
+    }
+
+    public function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $wantTimestamp) {
+        $row = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
+
+        // log time iff 'now' is within playlist start/end time.
+        $doTimestamp = $wantTimestamp && $this->isWithinShow($row);
+        $timeName    = $doTimestamp ? "created, " : "";
+        $timeValue   = $doTimestamp ? "NOW(), "   : "";
+
         // Insert tag?
-        $noTag = ($tag == 0) || ($tag == "");
+        $haveTag  = ($tag != 0) && ($tag != "");
+        $tagName  = $haveTag ? ", tag" : "";
+        $tagValue = $haveTag ? ", ?"   : "";
     
-        $query = "INSERT INTO tracks " .
-                 "(list, artist, track, album, label" . ($noTag?")":", tag)") .
-                 " VALUES (?, ?, ?, ?, ?" .
-                 ($noTag?")":", ?)");
+        $names = "(" . $timeName . "list, artist, track, album, label " . $tagName . ")";
+        $values = " VALUES (" . $timeValue . "?, ?, ?, ?, ?" . $tagValue . ");";
+
+        $query = "INSERT INTO tracks " . ($names) . ($values);
         $stmt = $this->prepare($query);
-        $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
+        $stmt->bindValue(1, (int)$playlistId, \PDO::PARAM_INT); 
         $stmt->bindValue(2, $artist);
         $stmt->bindValue(3, $track);
         $stmt->bindValue(4, $album);
         $stmt->bindValue(5, $label);
-        if(!$noTag)
+        if($haveTag)
             $stmt->bindValue(6, $tag);
+
         return $stmt->execute();
     }
     
-    public function updateTrack($id, $tag, $artist, $track, $album, $label) {
+    // update track and set created if it is currently null, eg first edit
+    // of a track following a CSV import.
+    public function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label) {
+        $trackRow  = Engine::api(IPlaylist::class)->getTrack($id);
+        $timestamp = $trackRow['created'];
+        if ($timestamp == null) {
+            $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
+            if ($this->isWithinShow($playlist))
+                $timestamp = date('Y-m-d G:i:s');
+        }
+        
         $query = "UPDATE tracks SET ";
         $query .= "artist=?, " .
                   "track=?, " .
                   "album=?, " .
                   "label=?, " .
+                  "created=?, " .
                   "tag=" . ($tag?"?":"NULL");
         $query .= " WHERE id = ?";
+
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $artist);
         $stmt->bindValue(2, $track);
         $stmt->bindValue(3, $album);
         $stmt->bindValue(4, $label);
+        $stmt->bindValue(5, $timestamp);
         if($tag) {
-            $stmt->bindValue(5, $tag);
-            $stmt->bindValue(6, (int)$id, \PDO::PARAM_INT);
+            $stmt->bindValue(6, $tag);
+            $stmt->bindValue(7, (int)$id, \PDO::PARAM_INT);
         } else
-            $stmt->bindValue(5, (int)$id, \PDO::PARAM_INT);
+            $stmt->bindValue(6, (int)$id, \PDO::PARAM_INT);
+
         return $stmt->execute();
     }
     
@@ -395,8 +447,9 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
 
+    // NOTE: up is newer, eg list is in reverse time order
     public function moveTrackUpDown($playlist, &$id, $up) {
-        $query = "SELECT id, tag, artist, track, album, label FROM tracks " .
+        $query = "SELECT id, tag, artist, track, album, label, created FROM tracks " .
                  "WHERE list = ? ORDER BY id";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlist);
@@ -417,7 +470,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                     $swap = 1;
                     $id = $row[0];
                 }
-            } else if(sizeof($prevRow)){
+            } else if(isset($prevRow) && sizeof($prevRow)){
                 // move track down
                 $swap = 1;
                 $id = $prevRow[0];

@@ -246,7 +246,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         $chain = [];
         $tags = [];
         $queryset = "";
-        for($i = 0; $i < sizeof($albums); $i++) {
+        for($i = 0; $albums != null && $i < sizeof($albums); $i++) {
             $tag = array_key_exists("tag", $albums[$i])?$albums[$i]["tag"]:0;
             if($tag) {
                 if(array_key_exists($tag, $tags))

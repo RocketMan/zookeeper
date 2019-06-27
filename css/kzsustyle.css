@@ -4,9 +4,6 @@
 body {
 	color: black;
 	background-color: #4D0A0A;
-	background-image: url(../img/kzsu/kzsu_heart.png);
-	background-repeat: no-repeat;
-	background-position: 30px 455px;
 }
 a {
 	color: #990010;
@@ -44,6 +41,9 @@ img.right {
 
 
 /* Header styles */
+.playlistBanner {
+    background-color: #4D0A0A;
+}
 
 div.header {
 	font-family: "century gothic", "urw gothic l",

@@ -31,9 +31,6 @@ and the presentation, which is contained in `ui` and `controllers`.
 The following is an overview of the source code directory structure:
 
     project-root/
-        assets/
-            JavaScript source for the js directory
-            
         config/
             config.php
                  This is the main configuration file.  It includes
@@ -95,7 +92,7 @@ The following is an overview of the source code directory structure:
             image files
             
         js/
-            minified JavaScript files (from assets)
+            JavaScript files
             
         ui/
             UI rendering.  Menu items and their mappings are specified
