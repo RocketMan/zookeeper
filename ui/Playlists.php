@@ -370,11 +370,15 @@ class Playlists extends MenuItem {
     <INPUT TYPE=HIDDEN NAME=validate VALUE="edit">
     </FORM>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
     function ConfirmTime() {
       return document.forms[0].fromtime.value != '0000' ||
           document.forms[0].totime.value != '0000' ||
           confirm("If your show is really on midnight - midnight, click 'OK'; otherwise, click 'Cancel' and set the correct time.");
     }
+    <?php
+        ob_end_flush();
+    ?>
     // -->
     </SCRIPT>
     <?php 
@@ -388,6 +392,7 @@ class Playlists extends MenuItem {
     private function emitConfirm($name, $message, $action, $rtaction="") {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
     function Confirm<?php echo $name; ?>()
     {
     <?php if($rtaction) { ?>
@@ -407,6 +412,9 @@ class Playlists extends MenuItem {
               echo "\""; ?>;
       }
     }
+    <?php
+        ob_end_flush();
+    ?>
     // -->
     </SCRIPT>
     <?php 
@@ -542,7 +550,7 @@ class Playlists extends MenuItem {
 
     private function editPlaylist($playlist, $id) {
         print("<HR>");
-        self::emitPlaylistBody($playlist, true);
+        $this->emitPlaylistBody($playlist, true);
     }
     
     private function emitTagForm($playlist, $message) {
@@ -716,15 +724,15 @@ class Playlists extends MenuItem {
         UI::setFocus("track");
     }
     
-    private function insertTrack($playlist, $tag, $artist, $track, $album, $label) {
+    private function insertTrack($playlist, $tag, $artist, $track, $album, $label, $wantTimestamp) {
         // Run the query
         $success = Engine::api(IPlaylist::class)->insertTrack($playlist,
-                     $tag, $artist, $track, $album, $label);    
+                     $tag, $artist, $track, $album, $label, $wantTimestamp);    
     }
     
-    private function updateTrack($id, $tag, $artist, $track, $album, $label) {
+    private function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label) {
         // Run the query
-        Engine::api(IPlaylist::class)->updateTrack($id, $tag, $artist, $track, $album, $label);
+        Engine::api(IPlaylist::class)->updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label);
     }
     
     private function deleteTrack($id) {
@@ -744,7 +752,7 @@ class Playlists extends MenuItem {
     
     private function insertSetSeparator($playlist) {
         $specialTrack = IPlaylist::SPECIAL_TRACK;
-        $this->insertTrack($playlist, 0, $specialTrack, $specialTrack, $specialTrack, $specialTrack);
+        $this->insertTrack($playlist, 0, $specialTrack, $specialTrack, $specialTrack, $specialTrack, true);
     }
     
     public function emitEditor() {
@@ -813,17 +821,17 @@ class Playlists extends MenuItem {
                     $track = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 100, $tag);
                     for($i = 0; $i < sizeof($track); $i++) {
                         if($track[$i]["seq"] == $ctrack) {
-                            $artist = addslashes($track[$i]["artist"]);
-                            $track = addslashes($track[$i]["track"]);
+                            $artist = $track[$i]["artist"];
+                            $track = $track[$i]["track"];
                             break;
                         }
                     }
                 }
                 if($id) {
-                    $this->updateTrack($id, $tag, $artist, $track, $album, $label);
+                    $this->updateTrack($playlist, $id, $tag, $artist, $track, $album, $label);
                     $id = "";
                 } else
-                    $this->insertTrack($playlist, $tag, $artist, $track, $album, $label);
+                    $this->insertTrack($playlist, $tag, $artist, $track, $album, $label, true);
                 $this->emitTagForm($playlist, "");
             }
             break;
@@ -1083,7 +1091,7 @@ class Playlists extends MenuItem {
                                      trim($line[0]),  // artist
                                      trim($line[1]),  // track
                                      trim($line[2]),  // album
-                                     trim($line[3])); // label
+                                     trim($line[3]), false); // label
                     $count++;
                 } else if(count($line) == 5) {
                     // artist track album tag label
@@ -1112,7 +1120,7 @@ class Playlists extends MenuItem {
                                      trim($line[0]),  // artist
                                      trim($line[1]),  // track
                                      trim($line[2]),  // album
-                                     trim($line[4])); // label
+                                     trim($line[4]), false); // label
                     $count++;
                 }
             }
@@ -1314,8 +1322,8 @@ class Playlists extends MenuItem {
     }
     
     private function makeAlbumLink($row, $includeLabel) {
-        $albumName = self::swapNames($row["album"]);
-        $labelSpan = "<span class='songLabel'>/" . self::smartURL($row["label"]) . "</span>";
+        $albumName = $row["album"];
+        $labelSpan = "<span class='songLabel'>/" . $this->smartURL($row["label"]) . "</span>";
         if($row["tag"]) {
             $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($row["tag"]) .
                           "&amp;q=&amp;action=search&amp;session=" . $this->session->getSessionID() .
@@ -1346,29 +1354,30 @@ class Playlists extends MenuItem {
     }
 
     private function emitPlaylistBody($playlist, $editMode) {
-        $REVIEW_DIV =  "<div class='songReview'></div>";
-        $header = self::makePlaylistHeader($editMode);
+        $REVIEW_DIV =  "<div class='albumReview'></div>";
+        $header = $this->makePlaylistHeader($editMode);
         $editCell = "";
         echo "<TABLE class='playlistTable' CELLPADDING=1>".$header;
 
         $records = Engine::api(IPlaylist::class)->getTracks($playlist, $editMode);
-        self::viewListGetAlbums($records, $albums);
+        $this->viewListGetAlbums($records, $albums);
         Engine::api(ILibrary::class)->markAlbumsReviewed($albums);
 
         if($albums != null && sizeof($albums) > 0) {
             foreach($albums as $index => $row) {
               if ($editMode)
-                  $editCell = "<TD>" . self::makeEditDiv($row, $playlist) . "</TD>";
+                  $editCell = "<TD>" . $this->makeEditDiv($row, $playlist) . "</TD>";
 
+              $timeplayed = self::timestampToAMPM($row["created"]);
               if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK) {
-                echo "<TR class='songDivider'>".$editCell."<TD COLSPAN=5><HR></TD></TR>";
+                echo "<TR class='songDivider'>".$editCell.
+                      "<TD>".$timeplayed . "</TD><TD COLSPAN=4><HR></TD></TR>";
                 continue;
               }
 
               $reviewCell = $row["REVIEWED"] ? $REVIEW_DIV : "";
-              $artistName = self::swapNames($row["artist"]);
-              $timeplayed = self::timestampToAMPM($row["created"]);
-              $albumLink = self::makeAlbumLink($row, true);
+              $artistName = $this->swapNames($row["artist"]);
+              $albumLink = $this->makeAlbumLink($row, true);
               echo "<TR class='songRow'>" . $editCell .
                      "<TD>" . $timeplayed . "</TD>" .
                      "<TD>" . $this->smartURL($artistName) . "</TD>" .
@@ -1399,21 +1408,20 @@ class Playlists extends MenuItem {
         $showName = $row[0];
         $djId = $row[3];
         $djName = $row[4];
-        $showDateTime = self::makeShowDateAndTime($row);
+        $showDateTime = $this->makeShowDateAndTime($row);
 
         // make print view header
-        echo "<TABLE WIDTH='100%'>" .  
-             "<TR><TD ALIGN=RIGHT><A HREF='#top' " .
-             "CLASS='nav' onClick='window.open('?target=export&amp;session=" . 
-             $this->session->getSessionID() . "&amp;playlist='" . $playlist . 
-             "&amp;format=html)'>Print View</A></TD></TR>\n</TABLE>";
+        echo "<TABLE WIDTH='100%'><TR><TD ALIGN=RIGHT><A HREF='#top' " .
+             "CLASS='nav' onClick=window.open('?target=export&amp;session=" . 
+             $this->session->getSessionID() . "&amp;playlist=" . $playlist . 
+             "&amp;format=html')>Print View</A></TD></TR></TABLE>";
 
         $dateDiv = "<DIV>".$showDateTime."&nbsp;</div>";
         $djLink = "<A HREF='?action=viewDJ&amp;seq=selUser&amp;session=" . 
                   $this->session->getSessionID() . "&amp;viewuser=$djId' CLASS='nav2'>$djName</A>";
         echo "<DIV CLASS='playlistBanner'>&nbsp;" . $showName . " with " . $djLink.$dateDiv . "</div>";
 
-        self::emitPlaylistBody($playlist, false);
+        $this->emitPlaylistBody($playlist, false);
     }
     
     private function emitViewDJSortFn($a, $b) {

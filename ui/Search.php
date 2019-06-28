@@ -76,7 +76,7 @@ class Search extends MenuItem {
     
     private static $actions = [
         [ "find", "ftSearch" ],
-        [ "findAlbum", "searchByAlbumKey" ],
+        [ "findAlbum", "findAlbum" ],
         [ "search", "doSearch" ],
     ];
 
@@ -110,12 +110,11 @@ class Search extends MenuItem {
     }
 
     public function ftSearch() {
+        UI::emitJS('js/zooscript.js');
+        UI::emitJS('js/zootext.js');
 ?>
-<SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript" SRC="js/zooscript.js"></SCRIPT>
-<SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript" SRC="js/zootext.js"></SCRIPT>
 <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"><!--
-// Jim Mason <jmason@ibinx.com>
-// Copyright (C) 2005-2018 Jim Mason.  All Rights Reserved.
+<?php ob_start([\JSMin::class, 'minify']); ?>
 lists = [ <?php if($this->session->isAuth("u")) echo "\"Tags\", "; ?>"Albums", "Compilations", "Labels", "Playlists", "Reviews", "Tracks" ];
 
 function onSearch(sync,e) {
@@ -173,6 +172,9 @@ function setFocus() {
   if(val.length > 0) onSearchNow();
   document.forms[0].search.value = val;  // reset value to force cursor to end
 }
+    <?php
+        ob_end_flush();
+    ?>
 // -->
 </SCRIPT>
 <?php
@@ -188,6 +190,10 @@ function setFocus() {
 
     private function HTMLify($arg, $size) {
         return UI::HTMLify($arg, $size, $this->noTables);
+    }
+
+    public function findAlbum() {
+        $this->searchByAlbumKey($_REQUEST["n"]);
     }
 
     public function searchByAlbumKey($key=0) {

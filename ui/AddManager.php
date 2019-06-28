@@ -190,7 +190,7 @@ class AddManager extends MenuItem {
           "' onClick='ConfirmDelete(".$row["id"]."); return false;'>[x]</A>&nbsp;";
 
        $hrefId =  $sessionId . "&amp;action=addmgr&amp;subaction=addsedit&amp;id=" . $row["id"];
-       $cellId = "<A CLASS='$class' HREF='" . $hrefId . "'>&gt;&gt;</A>&nbsp;&nbsp;";
+       $cellId = "<A CLASS='songEdit' HREF='" . $hrefId . "'>&#x270f;</A>";
 
        return "<TD>" . $cellDate . $cellId . "</TD>";
     }
@@ -290,6 +290,14 @@ class AddManager extends MenuItem {
                         "session=".$this->session->getSessionID()."&action=addmgr&subaction=addsdel",
                         "id");
         }
+    ?>
+    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    $().ready(function(){
+        $('.sortable-table').tablesorter();
+    });
+    // -->
+    </SCRIPT>
+    <?php 
     }
     
     public function addManagerMain() {
@@ -371,10 +379,9 @@ class AddManager extends MenuItem {
         UI::setFocus();
         if($this->session->isAuth("n")) {
     ?>
+
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    $().ready(function(){
-        $('.sortable-table').tablesorter();
-    });
+    <?php ob_start([\JSMin::class, 'minify']); ?>
 
     function onExport() {
       if(document.forms[1].os.value == "email") {
@@ -385,6 +392,7 @@ class AddManager extends MenuItem {
         document.forms[1].submit();
       }
     }
+    <?php ob_end_flush(); ?>
     // -->
     </SCRIPT>
     <?php 
@@ -412,6 +420,7 @@ class AddManager extends MenuItem {
     private function emitConfirmID($name, $message, $action, $id="", $rtaction="") {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
     function Confirm<?php echo $name; ?>(<?php if($id) echo "id"; ?>)
     {
     <?php if($rtaction) { ?>
@@ -433,6 +442,7 @@ class AddManager extends MenuItem {
               echo "\""; ?>;
       }
     }
+    <?php ob_end_flush(); ?>
     // -->
     </SCRIPT>
     <?php 

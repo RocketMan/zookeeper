@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -187,6 +187,41 @@ class UICommon {
               [ "\x85"=>"...", "\xde"=>"Th", "\xdf"=>"ss", "\xfe"=>"th" ] );
 
         return $string;
+    }
+
+    /**
+     * decorate the specified asset for cache control
+     *
+     * @param asset path to target asset
+     * @return HTML-encoded URI of decorated asset
+     */
+    public static function decorate($asset) {
+        $mtime = filemtime(__DIR__.'/../'.$asset);
+        $ext = strrpos($asset, '.');
+        return htmlspecialchars($mtime && $ext !== FALSE?
+            substr($asset, 0, $ext).'-'.$mtime.
+            substr($asset, $ext):$asset, ENT_QUOTES, 'UTF-8');
+    }
+
+    /**
+     * emit a decorated LINK to the specified stylesheet
+     *
+     * @param asset path to target stylesheet
+     */
+    public static function emitCSS($asset) {
+        echo "<LINK REL=\"stylesheet\" HREF=\"" .
+             self::decorate($asset) . "\">\n";
+    }
+
+    /**
+     * emit a decorated SCRIPT to the specified JavaScript resource
+     *
+     * @param asset path to target JavaScript resource
+     */
+    public static function emitJS($asset) {
+        echo "<SCRIPT TYPE=\"text/javascript\" " .
+             "LANGUAGE=\"JavaScript\" SRC=\"" .
+             self::decorate($asset) . "\"></SCRIPT>\n";
     }
     
     /**

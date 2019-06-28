@@ -211,7 +211,7 @@ DIV.leftNav {
     margin-top: 0px;
     margin-left: 2px;
     text-align: left;
-    width: 195px;
+    width: 165px;
 }
 DIV.leftNav A {
     color: #000000;
@@ -238,7 +238,7 @@ DIV.headerLogo IMG {
 }
 DIV.content {
     float: right;
-    width: 650px;
+    width: 710px;
     padding: 10px;
     min-height: 450px;
     margin-left: auto;
@@ -479,6 +479,7 @@ A.calLink {
     background-color: #cccccc;
 }
 .songUp, .sortUp {
+    top: 0px;
     background-position: center;
     background-repeat: no-repeat;
     background-image: URL('../img/arrow_up.gif');
@@ -487,9 +488,12 @@ A.calLink {
     background-position: center;
     background-repeat: no-repeat;
     background-image: URL('../img/arrow_down.gif');
+    top: 8px;
 }
 .albumReview {
     background-image: URL('../img/rinfo.gif');
+    width:11px;
+    height:11px;
 }
 .editorUp {
     top: 0px;
@@ -510,8 +514,8 @@ A.calLink {
 .tablesorter-default  td {
     padding: 0px 0px 0px 0px;
 }
-.tablesorter-default  .tablesorter-header {
-    padding: 0px 15px 0px 0px;
+.tablesorter-default  .header, .tablesorter-default .tablesorter-header {
+    padding: 0px 16px 0px 0px;
 }
 
 /* up/down & edit links for playlist edits */
@@ -530,6 +534,7 @@ A.calLink {
     width: 10px;
     height: 4px;
 }
+
 .songUp {
     top: 0px;
     background-image: URL('/img/arrow_up_beta.gif');
@@ -539,6 +544,7 @@ A.calLink {
     background-image: URL('/img/arrow_down_beta.gif');
     top: 8px;
 }
+
 .songEdit {
     top: -2px;
     left: 12px;
@@ -548,11 +554,13 @@ A.calLink {
 .songLabel {
     font-size:10px;
 }
+
 .songReview {
     background-image: URL('/img/rinfo_beta.gif');
     width:11px;
     height:11px;
 }
+
 .songDivider hr {
     position: relative;
     top: 3px;
