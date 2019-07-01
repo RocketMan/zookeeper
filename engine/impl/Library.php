@@ -240,7 +240,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
 
     private static function shortName($name) {
         $i = strrpos($name, " ");
-        return $i?substr($name, 0, 1).".&nbsp;".substr($name, $i+1):$name;
+        return $i?substr($name, 0, 1).".".substr($name, $i+1):$name;
     }
     
     // For a given $albums array, add a REVIEWED column for each
