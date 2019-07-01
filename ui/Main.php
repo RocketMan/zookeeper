@@ -111,9 +111,9 @@ class Main implements IController {
             $userNameDiv = "<DIV class='nav3s'>(". $this->session->getDN() . ")</DIV>";
             echo "<TR><TD></TD><TD>" . $logoutDiv . $userNameDiv . "</TD></TR>\n";
         } else if(!empty(Engine::param('sso')['client_id'])) {
-            echo "      <TR><TD></TD><TD><A CLASS=\"nav3\" HREF=\"" .
+            echo "      <TR><TD></TD><TD><DIV style='margin-top:8px'><A CLASS=\"nav3\" HREF=\"" .
                  "ssoLogin.php\"><B>Login</B></A>&nbsp;&nbsp;" .
-                 "<A STYLE=\"font-size: 90%;\" HREF=\"?action=loginHelp\">(help)</A></TD></TR>\n";
+                 "<A STYLE=\"font-size: 90%;\" HREF=\"?action=loginHelp\">(help)</A></DIV></TD></TR>\n";
         } else {
             // no SSO configured; emit classic login link
             echo "      <TR><TD></TD><TD><DIV style='margin-top:8px'><A CLASS=\"nav3\" HREF=\"" .
