@@ -32,6 +32,7 @@ use ZK\UI\UICommon as UI;
 
 class AddManager extends MenuItem {
     const MIN_REQUIRED = 4;        // minimum required A-File tracks/hour
+    private $CATEGORY_MAP;
 
     private static $subactions = [
         [ "a", "", "Current File", "addManagerMain" ],
@@ -68,7 +69,7 @@ class AddManager extends MenuItem {
     private $nextMessage;
 
     public function __construct() {
-        $CATEGORY_MAP = Engine::api(IChart::class)->getCategories();
+        $this->CATEGORY_MAP = Engine::api(IChart::class)->getCategories();
     }
 
     public function processLocal($action, $subaction) {
@@ -111,6 +112,8 @@ class AddManager extends MenuItem {
         }
     }
     
+// Not used - sorting done at client. 
+/*
     private function addManagerSortFn($a, $b) {
         switch($_REQUEST["sortBy"]) {
         case "Num":
@@ -123,10 +126,8 @@ class AddManager extends MenuItem {
             break;
         case "Col":
         case "Col-":
-            $catOrd = $a["afile_category"];
-            $cat1 = $catOrd  ? $this->CATEGORY_MAP[$catOrd[0] - 1]["code"] : "G";
-            $catOrd = $b["afile_category"];
-            $cat2 = $catOrd ? $this->CATEGORY_MAP[$catOrd[0] - 1]["code"] : "G";
+            $cat1 = $this->makeCategoryString($a["afile_category"]);
+            $cat2 = $this->makeCategoryString($b["afile_category"]);
             $retval = strcmp($cat1, $cat2);
             break;
         case "Label":
@@ -168,49 +169,48 @@ class AddManager extends MenuItem {
         }
         return (substr($_REQUEST["sortBy"], -1, 1) == "-")?-$retval:$retval;
     }
+*/
     
-    private function getAlbumCategory($albumRow, $categoryMap) {
-       $category = null;
-       $acats = explode(",", $albumRow["afile_category"]);
+    private function makeCategoryString($categories) {
+       $category = '';
+       $acats = explode(",", $categories);
        foreach($acats as $index => $cat) {
-           if($cat)
-               $category = $categoryMap[$cat-1]["code"];
+           if($cat) {
+               $category = $category . $this->CATEGORY_MAP[$cat-1]["code"];
+           }
        }
 
-       $category = $category == null ? "G" : $category;
+       $category = $category == '' ? "-" : $category;
        return $category;
     }
 
-    private function getEditCell($albumRow) {
+    private function getEditCell($row) {
+       $requestId = $_REQUEST["id"];
+       $albumId = $row["id"];
        $sessionId="?session=".$this->session->getSessionID();
 
        $hrefDate= $sessionId .  "&amp;action=addmgr&amp;subaction=adds&amp;date=$date ";
-       $class = ($id && $id == $row["id"]) ? "sel" : "nav";
+       $class = ($requestId && $requestId == $albumId) ? "sel" : "nav";
        $cellDate = "<A CLASS='nav' HREF='" . $hrefDate .
-          "' onClick='ConfirmDelete(".$row["id"]."); return false;'>[x]</A>&nbsp;";
+          "' onClick='ConfirmDelete(" . $albumId . "); return false;'>[x]</A>&nbsp;";
 
-       $hrefId =  $sessionId . "&amp;action=addmgr&amp;subaction=addsedit&amp;id=" . $row["id"];
+       $hrefId =  $sessionId . "&amp;action=addmgr&amp;subaction=addsedit&amp;id=" . $albumId;
        $cellId = "<A CLASS='songEdit' HREF='" . $hrefId . "'>&#x270f;</A>";
 
        return "<TD>" . $cellDate . $cellId . "</TD>";
     }
 
     public function addManagerEmitAlbums(&$records, $subaction, $showEdit, $showReview, $static=0) {
-        $id = $_REQUEST["id"];
-        $isAdmin = $this->session->isAuth("u");
-        $showAvg = $isAdmin && !$static && $subaction != "adds";
-        $showTag = false;
+        $isAuthenticated = $this->session->isAuth("u");
+        $showAvg = $isAuthenticated && !$static && $subaction != "adds";
     
-        // Get the chart categories
-        $cats = Engine::api(IChart::class)->getCategories();
-            
         $labelCell = $static ? "" : "<TH>Label</TH>";
         $avgCell = $showAvg ?  "<TH>*Sizzle</TH>" : "";
         $editCell = $showEdit ? "<TH class='sorter-false'></TH>" : "";
+        $reviewCell = $isAuthenticated ? "<TH>Review</TH>" : "";
 
-        echo "<TABLE class='sortable-table' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" . $editCell .
-             "<TH>Col</TH>" .
-             "<TH>Review</TH>" .
+        echo "<TABLE class='sortable-table' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
+             "<TH>Cat</TH>" .  $reviewCell .
              "<TH>ID</TH>" .
              "<TH>Artist</TH>" .
              "<TH>Title</TH>" . $labelCell . $avgCell .
@@ -225,19 +225,19 @@ class AddManager extends MenuItem {
     
         echo "<TBODY>";
         if($albums) {
-            usort($albums, array($this, "addManagerSortFn"));
-
             foreach($albums as $index => $row) {
                 echo "<TR CLASS='hborder'>";
         
                 if($showEdit) {
-                    $editCell = $this->getEditCell($album);
+                    $editCell = $this->getEditCell($row);
                     echo $editCell;
                 }
         
-                $category = $this->getAlbumCategory($row, $cats);
+                $category = $this->makeCategoryString($row['afile_category']);
                 echo "<TD>" . $category . "</TD>";
-                echo "<TD>" . htmlentities($row["REVIEWER"]) . "</TD>";
+
+                if ($isAuthenticated) 
+                    echo "<TD>" . htmlentities($row["REVIEWER"]) . "</TD>";
     
                 // A-File Numbers
                 echo "<TD>".$row["afile_number"]."</TD>";
@@ -254,9 +254,6 @@ class AddManager extends MenuItem {
                     $albumName = substr($albumName, 0, 50) . "...";
 
                 $albumName .= $this->getMediumFormat($row["medium"]);
-        
-                $tagNum = $showTag?
-                    " <FONT CLASS='sub'>(Tag&nbsp;#". $row["tag"] .")</FONT>":"";
         
                 if($static)
                     echo "<TD>" . $albumName . $tagNum . "&nbsp;&nbsp;</TD>";
@@ -352,6 +349,10 @@ class AddManager extends MenuItem {
               <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
             </FORM>
           </TH>
+          <TH ALIGN=RIGHT>
+             <A CLASS='sub' HREF='#top' onClick=window.open('?target=afile')>Print</A>
+          </TH>
+
     <?php if($this->session->isAuth("n")) { ?>
           <TD ALIGN=RIGHT>
             <FORM ACTION="?" METHOD=POST>
@@ -1157,6 +1158,8 @@ class AddManager extends MenuItem {
         }
     }
 
+// Not used: sorting done on client.
+/*
     private function aFileActivitySortFn($a, $b) {
         switch($_REQUEST["sortBy"]) {
         case "DJ":
@@ -1179,10 +1182,8 @@ class AddManager extends MenuItem {
             break;
         case "Col":
         case "Col-":
-            $catOrd = $a["afile_category"];
-            $cat1 = len($catOrd) > 0 ? $this->CATEGORY_MAP[$catOrd - 1]["code"] : "G";
-            $catOrd = $b["afile_category"];
-            $cat2 = len($catOrd) > 0 ? $this->CATEGORY_MAP[$catOrd - 1]["code"] : "G";
+            $cat1 = $this->makeCategoryString($a["afile_category"]);
+            $cat2 = $this->makeCategoryString($b["afile_category"]);
             $retval = strcmp($cat1, $cat2);
             break;
         case "D":
@@ -1209,6 +1210,7 @@ class AddManager extends MenuItem {
         }
         return (substr($_REQUEST["sortBy"], -1, 1) == "-")?-$retval:$retval;
     }
+*/
     
     private function aFileActivityGetReport(&$records, &$albums) {
         while($row = $records->fetch()) {
@@ -1253,8 +1255,8 @@ class AddManager extends MenuItem {
         echo "<THEAD><TR>";
         echo "<TH>Date</TH>";
         echo "<TH class='sorter-false'></TH>";
-        echo "<TH>Review</TH>";
-        echo "<TH>Airname</TH>";
+        echo "<TH>DJ</TH>";
+        echo "<TH>Air Name</TH>";
         echo "<TH>Show</TH>";
         echo "<TH>D</TH>";
         echo "<TH>Tracks</TH>";
@@ -1264,9 +1266,6 @@ class AddManager extends MenuItem {
  
         // Get albums into array
         $this->aFileActivityGetReport($records, $albums);
-    
-        // Sort it
-        usort($albums, array($this, "aFileActivitySortFn"));
     
         echo "<TBODY>";
         foreach($albums as $index => $row) {

@@ -108,7 +108,7 @@ $config = [
      * menu items here are appended to the defaults
      */
     'custom_menu' => [
-        [ 'a', 'contact%', 'Contact Us', ZK\UI\KzsuContacts::class ],
+        [ 'a', 'contact%', 'Submit Music', ZK\UI\KzsuContacts::class ],
     ],
 
     /**

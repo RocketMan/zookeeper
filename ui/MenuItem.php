@@ -41,9 +41,9 @@ abstract class MenuItem extends CommandTarget {
         if($extra)
             echo "</TD><TH ALIGN=RIGHT CLASS=\"secCell\">$extra</TH></TR></TABLE>\n";
 
-        echo "  <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n";
+        echo "  <TABLE style='margin-bottom:4px' CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n";
         echo "    <TR><TD CLASS=\"linkrow\" HEIGHT=5><IMG SRC=\"img/blank.gif\" HEIGHT=5 WIDTH=1 ALT=\"\"></TD></TR>\n";
-        echo "  </TABLE><BR>\n";
+        echo "  </TABLE>\n";
     
         // Dispatch the selected subaction
         $processed = 0;

@@ -511,9 +511,10 @@ A.calLink {
 }
 
 /* tighten up tablesorter's spacing */
-.tablesorter-default  td {
-    padding: 0px 0px 0px 0px;
+.tablesorter-default td {
+    padding: 0;
 }
+
 .tablesorter-default  .header, .tablesorter-default .tablesorter-header {
     padding: 0px 16px 0px 0px;
 }
@@ -535,16 +536,6 @@ A.calLink {
     height: 4px;
 }
 
-.songUp {
-    top: 0px;
-    background-image: URL('/img/arrow_up_beta.gif');
-}
-
-.songDown {
-    background-image: URL('/img/arrow_down_beta.gif');
-    top: 8px;
-}
-
 .songEdit {
     top: -2px;
     left: 12px;
@@ -553,12 +544,6 @@ A.calLink {
 
 .songLabel {
     font-size:10px;
-}
-
-.songReview {
-    background-image: URL('/img/rinfo_beta.gif');
-    width:11px;
-    height:11px;
 }
 
 .songDivider hr {
