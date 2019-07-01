@@ -83,8 +83,8 @@ class Main implements IController {
   <?php UI::emitCSS('css/zoostyle.css'); ?>
   <?php UI::emitCSS(Engine::param('stylesheet')); ?>
   <?php UI::emitCSS('css/about.css'); ?>
-  <script src="<?php echo $_SERVER['REQUEST_SCHEME']; ?>://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-  <script src="js/jquery.tablesorter.min.js"></script>
+  <SCRIPT TYPE="text/javascript" SRC="<?php echo $_SERVER['REQUEST_SCHEME']; ?>://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></SCRIPT>
+  <?php UI::emitJS('js/jquery.tablesorter.min.js'); ?>
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Music Reviews" HREF="zkrss.php?feed=reviews">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio A-File Adds" HREF="zkrss.php?feed=adds">
