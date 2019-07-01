@@ -256,7 +256,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
                 $tags[$tag] = $i;
             }
         }
-        $query = "SELECT tag FROM reviews WHERE " .
+        $query = "SELECT tag, user FROM reviews WHERE " .
                  "tag IN (0" . $queryset . ")";
         if(!$loggedIn)
             $query .= " AND private = 0";
@@ -264,8 +264,10 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         $stmt = $this->prepare($query);
         $stmt->execute();
         while($row = $stmt->fetch()) {
-            for($next = $tags[$row[0]]; $next >= 0; $next = array_key_exists($next, $chain)?$chain[$next]:-1)
+            for($next = $tags[$row[0]]; $next >= 0; $next = array_key_exists($next, $chain)?$chain[$next]:-1) {
                 $albums[$next]["REVIEWED"] = 1;
+                $albums[$next]["REVIEWER"] = $row[1];
+            }
         }
     }
 
