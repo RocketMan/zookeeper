@@ -219,8 +219,7 @@ class UICommon {
      * @param asset path to target JavaScript resource
      */
     public static function emitJS($asset) {
-        echo "<SCRIPT TYPE=\"text/javascript\" " .
-             "LANGUAGE=\"JavaScript\" SRC=\"" .
+        echo "<SCRIPT TYPE=\"text/javascript\" SRC=\"" .
              self::decorate($asset) . "\"></SCRIPT>\n";
     }
     
