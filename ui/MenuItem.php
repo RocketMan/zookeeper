@@ -41,9 +41,9 @@ abstract class MenuItem extends CommandTarget {
         if($extra)
             echo "</TD><TH ALIGN=RIGHT CLASS=\"secCell\">$extra</TH></TR></TABLE>\n";
 
-        echo "  <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n";
+        echo "  <TABLE style='margin-bottom:4px' CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n";
         echo "    <TR><TD CLASS=\"linkrow\" HEIGHT=5><IMG SRC=\"img/blank.gif\" HEIGHT=5 WIDTH=1 ALT=\"\"></TD></TR>\n";
-        echo "  </TABLE><BR>\n";
+        echo "  </TABLE>\n";
     
         // Dispatch the selected subaction
         $processed = 0;
@@ -65,7 +65,8 @@ abstract class MenuItem extends CommandTarget {
                             $subAction, $menuSubAction, $description) {
         $description = preg_replace("/ /", "&nbsp;", $description);
         $subActionLen = strlen($menuSubAction);
-        $selected = (($subActionLen?(substr($subAction, 0, $subActionLen) == $menuSubAction):($subAction == $menuSubAction))?" CLASS=\"secSel\"":" CLASS=\"secNorm\"");    echo "      <TD ALIGN=CENTER$selected>&nbsp;&nbsp;&nbsp;" .
+        $selected = (($subActionLen?(substr($subAction, 0, $subActionLen) == $menuSubAction):($subAction == $menuSubAction))?" CLASS=\"secSel\"":" CLASS=\"secNorm\"");
+        echo "      <TD ALIGN=CENTER$selected>&nbsp;&nbsp;&nbsp;" .
              "<A CLASS=\"linkhead\" HREF=\"" .
              "?session=".$this->session->getSessionID()."&amp;action=$action&amp;subaction=$menuSubAction\">$description</A>&nbsp;&nbsp;&nbsp;</TD>\n";
         echo "      <TD WIDTH=1 BGCOLOR=\"#c0c0c0\"><IMG SRC=\"img/blank.gif\" WIDTH=1 HEIGHT=1 ALT=\"\"></TD>\n";

@@ -79,9 +79,12 @@ class Main implements IController {
 <HEAD>
   <TITLE><?php echo $banner;?></TITLE>
   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+  <?php UI::emitCSS('css/tablesorter/theme.default.css'); ?>
   <?php UI::emitCSS('css/zoostyle.css'); ?>
   <?php UI::emitCSS(Engine::param('stylesheet')); ?>
   <?php UI::emitCSS('css/about.css'); ?>
+  <SCRIPT TYPE="text/javascript" SRC="<?php echo $_SERVER['REQUEST_SCHEME']; ?>://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></SCRIPT>
+  <?php UI::emitJS('js/jquery.tablesorter.min.js'); ?>
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Music Reviews" HREF="zkrss.php?feed=reviews">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio A-File Adds" HREF="zkrss.php?feed=adds">
@@ -92,7 +95,7 @@ class Main implements IController {
     
     protected function emitNavbar($dispatcher, $action) {
         echo "    <P CLASS=\"zktitle\"><A HREF=\"?session=".$this->session->getSessionID()."\">".Engine::param('application')."</A></P>\n";
-        echo "    <TABLE WIDTH=196 CELLPADDING=0>\n";
+        echo "    <TABLE CELLPADDING=0>\n";
         $menu = $dispatcher->composeMenu($action, $this->session);
         foreach($menu as $item) {
             echo  "      <TR><TD></TD>" .
@@ -102,19 +105,19 @@ class Main implements IController {
                   "action=".$item['action']."\"><B>".$item['label'] .
                   "</B></A></TD></TR>\n";
         }
-        echo "      <TR><TD COLSPAN=2>&nbsp;</TD></TR>\n";
+        #echo "      <TR><TD COLSPAN=2>&nbsp;</TD></TR>\n";
         if($this->session->isAuth("u")) {
-            echo "      <TR><TD></TD><TH CLASS=\"nav3s\">" . $this->session->getDN() . " is logged in</TH></TR>\n";
-            echo "      <TR><TD></TD><TD><A CLASS=\"nav3\" HREF=\"" .
-                 "?session=".$this->session->getSessionID()."&amp;action=logout\"><B>logout</B></A></TD></TR>\n";
+            $logoutDiv = "<DIV style='margin-top:8px'><A CLASS='nav3' HREF='" .  "?session=".$this->session->getSessionID()."&amp;action=logout'><B>Logout</B></A>";
+            $userNameDiv = "<DIV class='nav3s'>(". $this->session->getDN() . ")</DIV>";
+            echo "<TR><TD></TD><TD>" . $logoutDiv . $userNameDiv . "</TD></TR>\n";
         } else if(!empty(Engine::param('sso')['client_id'])) {
-            echo "      <TR><TD></TD><TD><A CLASS=\"nav3\" HREF=\"" .
-                 "ssoLogin.php\"><B>login</B></A>&nbsp;&nbsp;" .
-                 "<A STYLE=\"font-size: 90%;\" HREF=\"?action=loginHelp\">(help)</A></TD></TR>\n";
+            echo "      <TR><TD></TD><TD><DIV style='margin-top:8px'><A CLASS=\"nav3\" HREF=\"" .
+                 "ssoLogin.php\"><B>Login</B></A>&nbsp;&nbsp;" .
+                 "<A STYLE=\"font-size: 90%;\" HREF=\"?action=loginHelp\">(help)</A></DIV></TD></TR>\n";
         } else {
             // no SSO configured; emit classic login link
-            echo "      <TR><TD></TD><TD><A CLASS=\"nav3\" HREF=\"" .
-                 "?action=login\"><B>login</B></A></TD></TR>\n";
+            echo "      <TR><TD></TD><TD><DIV style='margin-top:8px'><A CLASS=\"nav3\" HREF=\"" .
+                 "?action=login\"><B>Login</B></A></DIV></TD></TR>\n";
         }
         echo "    </TABLE>\n";
     }
