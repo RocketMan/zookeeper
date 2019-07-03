@@ -38,7 +38,7 @@ $config = [
         'reviewlist' => '',
     ],
 
-    'md_name' => 'Juan Luna-Avin, Sarah Thomas',  // TBD move me to db
+    'md_name' => 'Juan Luna-Avin et al.',  // TBD move me to db
 
     /**
      * Local subnet
@@ -189,6 +189,8 @@ $config = [
           * 0 to limit spin count per show; 1 to limit spin count per DJ
           */
         'apply_limit_per_dj' => 1,
+        'weekly_subscribe' => "https://mailman.stanford.edu/mailman/listinfo/weekly-charts",
+        'monthly_subscribe' => "https://mailman.stanford.edu/mailman/listinfo/monthly-charts",
         'weekly_footer' => "\n\n--\n
 If you ever want to remove yourself from this mailing list,
 visit https://mailman.stanford.edu/mailman/listinfo/weekly-charts.\n

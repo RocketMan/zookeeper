@@ -698,6 +698,11 @@ class Charts extends MenuItem {
     
     public function emitSubscribe() {
         $station = Engine::param('station');
+        $chart = Engine::param('chart');
+        $weeklyPage = array_key_exists('weekly_subscribe', $chart)?
+            $chart['weekly_subscribe']:"";
+        $monthlyPage = array_key_exists('monthly_subscribe', $chart)?
+            $chart['monthly_subscribe']:"";
     ?>
     <P>
     The <?php echo $station; ?> Music Department maintains two e-mail lists:</P>
@@ -706,18 +711,28 @@ class Charts extends MenuItem {
     <LI><B>Weekly Charts e-mail list</B> - Each week, the number of plays of
     the releases in rotation are tallied up, and a chart is made showing a
     ranked list of the most played stuff on our airwaves for that week.
-    This is what's reported to the trades (CMJ, Gavin, etc).  If you'd like
-    to receive this chart each week by e-mail, please visit the Weekly Charts page.
+    This is what's reported to the trades (CMJ, Gavin, etc). <?php
+    if($weeklyPage) {
+        echo "If you'd like\n    to receive this chart each week by e-mail, ";
+        echo "please visit the\n    ";
+        echo "<A HREF=\"$weeklyPage\">Weekly Charts</A> page.\n";
+    }
+?>
     
     <LI><B>Monthly Charts e-mail list</B> - Each month, the number of plays
     of the releases in rotation for the previous month are tallied up, and
     a chart is made showing a ranked list of the most played stuff on our
-    airwaves for that month. If you'd like to receive this chart each week
-    by e-mail, please visit the Monthly Charts page.
+    airwaves for that month. <?php
+    if($monthlyPage) {
+        echo "If you'd like to receive this chart each week\n    ";
+        echo "by e-mail, please visit the <A HREF=\"$monthlyPage\">Monthly Charts</A> page.\n";
+    }
+?>
     </UL>
     
     <P>These mailing lists are one-way lists, which means you'll receive
     e-mail only from <?php echo $station; ?>.  Any reply by a subscriber will return to <?php echo $station; ?>
+
     but will not be sent to everyone else on the list.  Also, each
     subscriber's e-mail address is suppressed from the header so other
     subscribers can't collect the addresses to create a spamming list.</P>
@@ -728,7 +743,7 @@ class Charts extends MenuItem {
     <?php 
         $email = Engine::param('email')['md'];
         if($email)
-            echo "    <P>Any questions can be sent to <A HREF=\"mailto:$email\">$email</A>.</P>\n";
+            echo "<P>Any questions can be sent to <A HREF=\"mailto:$email\">$email</A>.</P>\n";
         UI::setFocus();
     }
 }

@@ -72,7 +72,7 @@ class KzsuContacts extends MenuItem {
     <TABLE BORDER=0 WIDTH="100%">
       <TR>
         <TD ALIGN="left" VALIGN="top">
-          <B>Music Director:</B><BR> <A HREF="mailto:music@kzsu.stanford.edu">Sarah Thomas</A><BR><BR><!--BR-->
+          <B>Music Directors:</B><BR> <A HREF="mailto:music@kzsu.stanford.edu">Madeline Casas / Bill Cuevas /<BR>Maryam Khademi / Juan Luna-Avin</A><BR><BR><!--BR-->
           <B>Hip-hop Directors:</B><BR> <A HREF="mailto:hiphop@kzsu.stanford.edu">Mike McDowell, Johnathan Martin</A><BR>
           <I>Office Hours:</I> Thursday 6-9pm<BR><BR>
           <B>Jazz Director:</B> <A HREF="mailto:jazz@kzsu.stanford.edu">Tom McCarter</A><BR>
@@ -81,14 +81,14 @@ class KzsuContacts extends MenuItem {
           <I>Office Hours:</I> Sunday noon-4<BR><BR>
           <B>RPM/Electronica Director:</B> <A HREF="mailto:rpm@kzsu.stanford.edu">Johnathan Martin</A><BR>
           <I>Office Hours:</I> tba<BR><BR>
-          <B>Reggae Director:</B> <A HREF="mailto:reggae@kzsu.stanford.edu">Sadie McFarlane</A><BR>
+          <B>Reggae Director:</B> <A HREF="mailto:reggae@kzsu.stanford.edu">Margy Kahn</A><BR>
           <I>Office Hours:</I> tba<BR><BR>
         </TD>
         <TD>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
         <TD ALIGN="left" VALIGN="bottom">
           <B>Classical Director:</B> <A HREF="mailto:classical@kzsu.stanford.edu">Larry Koran</A><BR>
           <I>Office Hours:</I> tba<BR><BR>
-          <B>World Directors:</B> <A HREF="mailto:world@kzsu.stanford.edu">Margy Kahn, Kamla Bhatt</A><BR>
+          <B>World Directors:</B> <A HREF="mailto:world@kzsu.stanford.edu">Margy Kahn</A><BR>
           <I>Office Hours:</I> tba<BR><BR>
           <B>Blues Director:</B> <A HREF="mailto:blues@kzsu.stanford.edu">Byrd Hale</A><BR>
           <I>Office Hours:</I> Wednesday 6-9pm, Saturday 9-noon<BR><BR>
