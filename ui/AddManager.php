@@ -206,11 +206,11 @@ class AddManager extends MenuItem {
     
         $labelCell = $static ? "" : "<TH>Label</TH>";
         $avgCell = $showAvg ?  "<TH>*Sizzle</TH>" : "";
-        $editCell = $showEdit ? "<TH class='sorter-false'></TH>" : "";
-        $reviewCell = $isAuthenticated ? "<TH>Review</TH>" : "";
+        $editCell = $showEdit ? "<TH style='width:30px' class='sorter-false'></TH>" : "";
+        $reviewCell = $isAuthenticated ? "<TH>Reviewer</TH>" : "";
 
         echo "<TABLE class='sortable-table' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
-             "<TH>Cat</TH>" .  $reviewCell .
+             "<TH class='initial-sort-col'>Cat</TH>" .  $reviewCell .
              "<TH>ID</TH>" .
              "<TH>Artist</TH>" .
              "<TH>Title</TH>" . $labelCell . $avgCell .
@@ -234,7 +234,7 @@ class AddManager extends MenuItem {
                 }
         
                 $category = $this->makeCategoryString($row['afile_category']);
-                echo "<TD>" . $category . "</TD>";
+                echo "<TD align='center'>" . $category . "</TD>";
 
                 if ($isAuthenticated) 
                     echo "<TD>" . htmlentities($row["REVIEWER"]) . "</TD>";
@@ -290,7 +290,9 @@ class AddManager extends MenuItem {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     $().ready(function(){
-        $('.sortable-table').tablesorter();
+        var $sortTable = $('.sortable-table');
+        $sortTable.tablesorter({});
+        $sortTable.find('th.initial-sort-col').trigger('sort');
     });
     // -->
     </SCRIPT>
@@ -320,12 +322,6 @@ class AddManager extends MenuItem {
         $date = $_REQUEST["date"];
         if(!UI::isNumeric($date))
             return;
-    
-        // Setup default sortBy
-        $sortBy = $_REQUEST["sortBy"];
-        if(!strlen($sortBy))
-            $_REQUEST["sortBy"] = "Num";
-    
     ?>
       <TABLE CELLPADDING=2 CELLSPACING=0 WIDTH="100%" BORDER=0>
         <TR>
@@ -350,7 +346,7 @@ class AddManager extends MenuItem {
             </FORM>
           </TH>
           <TH ALIGN=RIGHT>
-             <A CLASS='sub' HREF='#top' onClick=window.open('?target=afile')>Print</A>
+             <A CLASS='nav' HREF='#top' onClick=window.open('?target=afile')>Print View</A>
           </TH>
 
     <?php if($this->session->isAuth("n")) { ?>
@@ -1242,19 +1238,16 @@ class AddManager extends MenuItem {
     }
     
     private function aFileActivityEmitReport(&$records, $subaction, $static=0) {
+        $DAY_START_TIME = "0600";
+        $DAY_END_TIME = "0000";
         $total = 0;
         $afile = 0;
-        $last = -1;
+        $lastShowEnd = null;
+        $lastDate = null;
     
-        // Setup default sortBy
-        $sortBy = $_REQUEST["sortBy"];
-        if(!strlen($sortBy))
-            $_REQUEST["sortBy"] = "Date";
-    
-        echo "<TABLE class='sortable-table' CELLPADDING=2 CELLSPACING=0 BORDER=0 CLASS='afileactivity'>";
+        echo "<TABLE class='sortable-table' CLASS='afileactivity'>";
         echo "<THEAD><TR>";
-        echo "<TH>Date</TH>";
-        echo "<TH class='sorter-false'></TH>";
+        echo "<TH style='width:90px'>Date</TH>";
         echo "<TH>DJ</TH>";
         echo "<TH>Air Name</TH>";
         echo "<TH>Show</TH>";
@@ -1269,34 +1262,49 @@ class AddManager extends MenuItem {
     
         echo "<TBODY>";
         foreach($albums as $index => $row) {
-            $last = $row["end"];
-            $lastDate = $row["showdate"];
-    
+            $showTime = $row["showtime"];
+            $startStopAr = explode("-", $showTime);
+            $showStart = $startStopAr[0];
+            $showEnd = $startStopAr[1];
+            list($y, $m, $d) = explode("-", $row["showdate"]);
+            $showDate = str_replace(" ", "&nbsp;", date("d D", mktime(0,0,0,$m,$d,$y)));
+
+            if ($showDate != $lastDate && $showStart != $DAY_END_TIME) {
+                if ($lastShowEnd && $lastShowEnd != $DAY_END_TIME) {
+                    echo "<TR CLASS='noPlaylist'><TD>" . $lastDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $DAY_END_TIME . "</span></TD><TD COLSPAN=7>No playlist</TD></TR>";
+                }
+                $lastShowEnd = $DAY_START_TIME;
+            }
+
+            // insert no playlist row if there is a gap in the regular 
+            // program day, eg 6am - 11:59:59pm.
+            if($lastShowEnd != $showStart && $showStart != $DAY_START_TIME) {
+                echo "<TR CLASS='noPlaylist'><TD>" . $showDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $showStart . "</span></TD><TD COLSPAN=7>No playlist</TD></TR>";
+            }
+
+            $lastShowEnd = $showEnd;
+            $lastDate = $showDate;
+
             if($row["afile"] < $row["duration"] * AddManager::MIN_REQUIRED)
                 echo "    <TR CLASS=\"noQuota\">\n";
             else
                 echo "    <TR CLASS=\"hborder\">\n";
     
-            // Date
-            list($y, $m, $d) = explode("-", $row["showdate"]);
-            $showDate = str_replace(" ", "&nbsp;", date("d D", mktime(0,0,0,$m,$d,$y)));
-            echo "      <TD VALIGN=TOP>".$showDate."</TD>\n";
-            echo "      <TD VALIGN=TOP CLASS=\"sub\">".str_replace("-", "&#8209;", $row["showtime"])."&nbsp;</TD>\n";
+            echo "<TD>".$showDate." <span class='sub'>".$showTime . "</span></TD>";
     
             // User/Airname/Show names
-            $name = str_replace(" ", "&nbsp;", htmlentities($row["name"]));
-            echo "      <TD VALIGN=TOP>" . $name . "</TD>\n";
-            //$name = str_replace(" ", "&nbsp;", htmlentities($row["airname"]));
+            $name = htmlentities($row["name"]);
+            echo "<TD>" . $name . "</TD>\n";
             $name = htmlentities($row["airname"]);
-            echo "      <TD VALIGN=TOP>" . $name . "</TD>\n";
+            echo "<TD>" . $name . "</TD>\n";
     
-            echo "      <TD VALIGN=TOP><A CLASS=\"nav\" HREF=\"".
-                         "?action=viewDJ&amp;playlist=".$row["id"].
-                         "&amp;seq=selList&amp;session=".$this->session->getSessionID()."\">".
-                         htmlentities($row["description"]) . "</A></TD>\n";
+            echo "<TD><A CLASS=\"nav\" HREF=\"".
+                  "?action=viewDJ&amp;playlist=".$row["id"].
+                  "&amp;seq=selList&amp;session=".$this->session->getSessionID()."\">".
+                  htmlentities($row["description"]) . "</A></TD>\n";
     
             // Duration
-            echo "<TD>" . $row["duration"] . "</TD>\n";
+            echo "<TD align='right'>" . $row["duration"] . "</TD>\n";
             
             // Totals
             echo "<TD>" . $row["total"] . "</TD>\n";
@@ -1309,31 +1317,22 @@ class AddManager extends MenuItem {
             echo "    </TR>\n";
         }
     
+        echo "</TBODY>";
         $percent = 0;
         if($total > 0)
             $percent = round($afile / $total * 100);
 
-        echo "    <TR>\n      <TD COLSPAN=6>&nbsp;</TD>\n      <TD><HR></TD>\n      <TD><HR></TD>\n      <TD><HR></TD>\n    </TR>\n";
-        echo "    <TR>\n";
-        echo "      <TH COLSPAN=6 ALIGN=RIGHT>Total:</TH>\n";
-        echo "      <TH VALIGN=TOP ALIGN=RIGHT>" . $total . "</TH>\n";
-        echo "      <TH VALIGN=TOP ALIGN=RIGHT>" . $afile . "</TH>\n";
-        echo "      <TH VALIGN=TOP ALIGN=RIGHT>" . $percent . "</TH>\n";
-        echo "    </TR>\n";
-
-        echo "</TBODY>";
-     
-        echo "  </TABLE>\n";
+        echo "<TR style='border-top: 2px solid gray'>";
+        echo "<TH COLSPAN=5 ALIGN=RIGHT>Total:</TH>";
+        echo "<TH>" . $total . "</TH>";
+        echo "<TH>" . $afile . "</TH>";
+        echo "<TH>" . $percent . "</TH>";
+        echo "</TR></TFOOTER>";
+        echo "  </TABLE>";
     }
     
     public function aFileActivityShowWeekly() {
         $date = $_REQUEST["date"];
-    
-        // Setup default sortBy
-        $sortBy = $_REQUEST["sortBy"];
-        if(!strlen($sortBy))
-            $_REQUEST["sortBy"] = "Date";
-    
     ?>
       <TABLE CELLPADDING=2 CELLSPACING=0 WIDTH="100%" BORDER=0>
         <TR>
@@ -1369,7 +1368,10 @@ class AddManager extends MenuItem {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     $().ready(function(){
-        $('.sortable-table').tablesorter();
+        var INITIAL_SORT_COL = 0; //date
+        $('.sortable-table').tablesorter({
+            sortList: [[INITIAL_SORT_COL, 0]],
+        });
     });
     // -->
     </SCRIPT>

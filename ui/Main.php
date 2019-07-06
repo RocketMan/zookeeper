@@ -107,7 +107,7 @@ class Main implements IController {
         }
         #echo "      <TR><TD COLSPAN=2>&nbsp;</TD></TR>\n";
         if($this->session->isAuth("u")) {
-            $logoutDiv = "<DIV style='margin-top:8px'><A CLASS='nav3' HREF='" .  "?session=".$this->session->getSessionID()."&amp;action=logout'><B>Logout</B></A>";
+            $logoutDiv = "<DIV style='margin-top:8px'><A CLASS='nav3' HREF='" .  "?session=".$this->session->getSessionID()."&amp;action=logout'><B>Logout</B></A></DIV>";
             $userNameDiv = "<DIV class='nav3s'>(". $this->session->getDN() . ")</DIV>";
             echo "<TR><TD></TD><TD>" . $logoutDiv . $userNameDiv . "</TD></TR>\n";
         } else if(!empty(Engine::param('sso')['client_id'])) {
