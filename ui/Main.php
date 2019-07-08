@@ -299,8 +299,12 @@ class Main implements IController {
             echo "<P>Your Zookeeper Online session has ended.</P>\n";
             echo "<P><B>Please remember to sign out of Google as well.</B></P>\n";
             echo "<P><A HREF=\"$logoutURI\"><B>Sign out of Google now</B></A></P>\n";
-        }
-        UI::setFocus();
+            echo "<SCRIPT TYPE=\"text/javascript\"><!--\n";
+            echo "function setFocus() {";
+            echo "window.location.replace(\"$logoutURI\");";    
+            echo "} // -->\n</SCRIPT>\n";
+        } else
+            UI::setFocus();
     }
 
     protected function doLogin($user, $password) {
