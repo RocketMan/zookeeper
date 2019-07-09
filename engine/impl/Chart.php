@@ -129,8 +129,8 @@ class ChartImpl extends BaseImpl implements IChart {
                  "a.created, a.updated, a.category, p.name label ".
                  "FROM currents c, albumvol a, publist p ".
                  "WHERE c.tag = a.tag AND a.pubkey = p.pubkey ".
-                 "AND adddate <= ? AND ".
-                        "pulldate > ?";
+                 "AND adddate <= ? AND pulldate > ? ".
+                 "ORDER BY a.artist, a.album";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $date);
         $stmt->bindValue(2, $date);
