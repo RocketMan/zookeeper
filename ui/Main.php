@@ -33,7 +33,8 @@ use ZK\Engine\Session;
 use ZK\UI\UICommon as UI;
 
 class Main implements IController {
-    protected $localUser;
+    protected $ssoUser;
+    protected $dn;
     protected $session;
 
     public function processRequest($dispatcher) {
@@ -292,15 +293,18 @@ class Main implements IController {
     
     protected function emitLogout() {
         $logoutURI = Engine::param('sso')['logout_uri'];
-        $logoutURI = str_replace("{base_url}", urlencode(UI::getBaseUrl()), $logoutURI);
+        $logoutURI = str_replace("{base_url}", urlencode(UI::getBaseUrl()."?action=logout"), $logoutURI);
+
+        $dn = $this->session->getDN()?$this->session->getDN():$this->dn;
     
-        echo "<H3>" . $this->session->getDN() . " logged out</H3>\n";
-        if(!$this->localUser) {
-            echo "<P>Your Zookeeper Online session has ended.</P>\n";
-            echo "<P><B>Please remember to sign out of Google as well.</B></P>\n";
-            echo "<P><A HREF=\"$logoutURI\"><B>Sign out of Google now</B></A></P>\n";
-        }
-        UI::setFocus();
+        echo "<H3>$dn logged out</H3>\n";
+        if($this->ssoUser) {
+            echo "<SCRIPT TYPE=\"text/javascript\"><!--\n";
+            echo "function setFocus() {";
+            echo "window.location.replace(\"$logoutURI\");";    
+            echo "} // -->\n</SCRIPT>\n";
+        } else
+            UI::setFocus();
     }
 
     protected function doLogin($user, $password) {
@@ -322,7 +326,15 @@ class Main implements IController {
     }
     
     protected function doLogout() {
-        $this->localUser = $this->session->isAuth("U");
+        $this->ssoUser = $this->session->isAuth("u") &&
+            !$this->session->isAuth("U");
+
+        if($this->ssoUser)
+            setcookie("dn", base64_encode($this->session->getDN()), 0, "/", $_SERVER['SERVER_NAME']);
+        else if(isset($_COOKIE["dn"])) {
+            $this->dn = base64_decode($_COOKIE["dn"]);
+            setcookie("dn", "", time() - 3600, "/", $_SERVER['SERVER_NAME']);
+        }
     
         // Kill the session
         $this->session->invalidate();

@@ -208,12 +208,14 @@ class AddManager extends MenuItem {
         $labelCell = $static ? "" : "<TH>Label</TH>";
         $avgCell = $showAvg ?  "<TH>*Sizzle</TH>" : "";
         $editCell = $showEdit ? "<TH style='width:30px' class='sorter-false'></TH>" : "";
-        $reviewCell = $isAuthenticated ? "<TH>Reviewer</TH>" : "";
+        $reviewCell = $showReview && $isAuthenticated ? "<TH>Reviewer</TH>" : "";
+        $legacyReviewCell = $showReview && !$isAuthenticated && !$static ?
+                               "<TH class='sorter-false'></TH>" : "";
 
         echo "<TABLE class='sortable-table' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
              "<TH class='initial-sort-col'>Cat</TH>" .  $reviewCell .
              "<TH>ID</TH>" .
-             "<TH>Artist</TH>" .
+             "<TH>Artist</TH>" . $legacyReviewCell .
              "<TH>Title</TH>" . $labelCell . $avgCell .
              "</TR></THEAD>\n";
     
@@ -237,7 +239,7 @@ class AddManager extends MenuItem {
                 $category = $this->makeCategoryString($row['afile_category']);
                 echo "<TD align='center'>" . $category . "</TD>";
 
-                if ($isAuthenticated) 
+                if ($reviewCell)
                     echo "<TD>" . htmlentities($row["REVIEWER"]) . "</TD>";
     
                 // A-File Numbers
@@ -249,6 +251,17 @@ class AddManager extends MenuItem {
         
                 // Artist/Album/Label names
                 echo "<TD>" . $artistName . "&nbsp;&nbsp;</TD>";
+                
+                if($legacyReviewCell) {
+                    echo "<TD VALIGN=TOP>";
+                    if($row["REVIEWED"]) {
+                        echo "<A CLASS=\"albumReview\" HREF=\"".
+                             "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
+                             "&amp;action=search&amp;session=".$this->session->getSessionID().
+                             "\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A>";
+                    }
+                    echo "</TD>";
+                }
         
                 $albumName = htmlentities($row["album"]);
                 if($static && strlen($albumName) > 50)
