@@ -22,6 +22,7 @@
  *
  */
 
+
 namespace ZK\UI;
 
 use ZK\Engine\Engine;
@@ -206,13 +207,13 @@ class AddManager extends MenuItem {
     
         $labelCell = $static ? "" : "<TH>Label</TH>";
         $avgCell = $showAvg ?  "<TH>*Sizzle</TH>" : "";
-        $editCell = $showEdit ? "<TH class='sorter-false'></TH>" : "";
+        $editCell = $showEdit ? "<TH style='width:30px' class='sorter-false'></TH>" : "";
         $reviewCell = $showReview && $isAuthenticated ? "<TH>Reviewer</TH>" : "";
         $legacyReviewCell = $showReview && !$isAuthenticated && !$static ?
                                "<TH class='sorter-false'></TH>" : "";
 
         echo "<TABLE class='sortable-table' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
-             "<TH>Cat</TH>" .  $reviewCell .
+             "<TH class='initial-sort-col'>Cat</TH>" .  $reviewCell .
              "<TH>ID</TH>" .
              "<TH>Artist</TH>" . $legacyReviewCell .
              "<TH>Title</TH>" . $labelCell . $avgCell .
@@ -236,7 +237,7 @@ class AddManager extends MenuItem {
                 }
         
                 $category = $this->makeCategoryString($row['afile_category']);
-                echo "<TD>" . $category . "</TD>";
+                echo "<TD align='center'>" . $category . "</TD>";
 
                 if ($reviewCell)
                     echo "<TD>" . htmlentities($row["REVIEWER"]) . "</TD>";
@@ -303,10 +304,9 @@ class AddManager extends MenuItem {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     $().ready(function(){
-        var INITIAL_SORT_COL = 0; //category
-        $('.sortable-table').tablesorter({
-            sortList: [[INITIAL_SORT_COL, 0]],
-        });
+        var $sortTable = $('.sortable-table');
+        $sortTable.tablesorter({});
+        $sortTable.find('th.initial-sort-col').trigger('sort');
     });
     // -->
     </SCRIPT>
