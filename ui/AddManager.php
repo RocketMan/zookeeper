@@ -74,7 +74,11 @@ class AddManager extends MenuItem {
     }
 
     public function processLocal($action, $subaction) {
-        $extra = "<SPAN CLASS=\"sub\"><B>Adds Feed:</B></SPAN> <A TYPE=\"application/rss+xml\" HREF=\"zkrss.php?feed=adds\"><IMG SRC=\"img/rss.gif\" ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT=\"rss\"></A><BR><IMG SRC=\"img/blank.gif\" WIDTH=1 HEIGHT=2 BORDER=0 ALT=\"\">";
+        $extra = "";
+        if(!$subaction &&
+                 ($this->session->isAuth("n") || $this->session->isAuth("o")))
+            $extra .= "<A CLASS='nav' HREF='#top' onClick=window.open('?target=afile')>Print View</A>&nbsp;&nbsp;";
+        $extra .= "<SPAN CLASS=\"sub\"><B>Adds Feed:</B></SPAN> <A TYPE=\"application/rss+xml\" HREF=\"zkrss.php?feed=adds\"><IMG SRC=\"img/rss.gif\" ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT=\"rss\"></A><BR><IMG SRC=\"img/blank.gif\" WIDTH=1 HEIGHT=2 BORDER=0 ALT=\"\">";
 
         return $this->dispatchSubAction($action, $subaction, self::$subactions, $extra);
     }
@@ -359,10 +363,6 @@ class AddManager extends MenuItem {
               <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
             </FORM>
           </TH>
-          <TH ALIGN=RIGHT>
-             <A CLASS='nav' HREF='#top' onClick=window.open('?target=afile')>Print View</A>
-          </TH>
-
     <?php if($this->session->isAuth("n")) { ?>
           <TD ALIGN=RIGHT>
             <FORM ACTION="?" METHOD=POST>
