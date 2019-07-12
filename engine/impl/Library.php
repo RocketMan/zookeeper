@@ -238,9 +238,8 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         return $retVal;
     }
 
-    private static function shortName($name) {
-        $i = strrpos($name, " ");
-        return $i?substr($name, $i+1):$name;
+    private static function displayName($airname, $realname) {
+        return $airname?$airname:$realname;
     }
     
     // For a given $albums array, add a REVIEWED column for each
@@ -260,8 +259,9 @@ class LibraryImpl extends BaseImpl implements ILibrary {
                 $tags[$tag] = $i;
             }
         }
-        $query = "SELECT tag, realname FROM reviews r " .
-                 "LEFT JOIN users u ON r.user = u.name WHERE " .
+        $query = "SELECT tag, a.airname, realname FROM reviews r " .
+                 "LEFT JOIN users u ON r.user = u.name " .
+                 "LEFT JOIN airnames a ON r.airname = a.id WHERE " .
                  "tag IN (0" . $queryset . ")";
         if(!$loggedIn)
             $query .= " AND private = 0";
@@ -271,7 +271,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         while($row = $stmt->fetch()) {
             for($next = $tags[$row[0]]; $next >= 0; $next = array_key_exists($next, $chain)?$chain[$next]:-1) {
                 $albums[$next]["REVIEWED"] = 1;
-                $albums[$next]["REVIEWER"] = self::shortName($row[1]);
+                $albums[$next]["REVIEWER"] = self::displayName($row[1], $row[2]);
             }
         }
     }

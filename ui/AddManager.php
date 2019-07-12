@@ -33,7 +33,6 @@ use ZK\UI\UICommon as UI;
 
 class AddManager extends MenuItem {
     const MIN_REQUIRED = 4;        // minimum required A-File tracks/hour
-    private $CATEGORY_MAP;
 
     private static $subactions = [
         [ "a", "", "Current File", "addManagerMain" ],
@@ -68,9 +67,15 @@ class AddManager extends MenuItem {
     private $editingAlbum;
     private $errorMessage;
     private $nextMessage;
+    private $categoryMapCache; // cache for virtual property 'categoryMap'
 
-    public function __construct() {
-        $this->CATEGORY_MAP = Engine::api(IChart::class)->getCategories();
+    public function __get($var) {
+        // lazy load the chart categoryMap
+        if($var == 'categoryMap') {
+            if(!isset($this->categoryMapCache))
+                $this->categoryMapCache = Engine::api(IChart::class)->getCategories();
+            return $this->categoryMapCache;
+        }
     }
 
     public function processLocal($action, $subaction) {
@@ -181,7 +186,7 @@ class AddManager extends MenuItem {
        $acats = explode(",", $categories);
        foreach($acats as $index => $cat) {
            if($cat) {
-               $category = $category . $this->CATEGORY_MAP[$cat-1]["code"];
+               $category = $category . $this->categoryMap[$cat-1]["code"];
            }
        }
 
@@ -212,9 +217,9 @@ class AddManager extends MenuItem {
         $labelCell = $static ? "" : "<TH>Label</TH>";
         $avgCell = $showAvg ?  "<TH>*Sizzle</TH>" : "";
         $editCell = $showEdit ? "<TH style='width:30px' class='sorter-false'></TH>" : "";
-        $reviewCell = $showReview && $isAuthenticated ? "<TH>Reviewer</TH>" : "";
-        $legacyReviewCell = $showReview && !$isAuthenticated && !$static ?
-                               "<TH class='sorter-false'></TH>" : "";
+        $reviewCell = $showReview /* && $isAuthenticated */ ? "<TH style='width:120px'>Reviewer</TH>" : "";
+        $legacyReviewCell = /* $showReview && !$isAuthenticated && !$static ?
+                               "<TH class='sorter-false'></TH>" : */ "";
 
         echo "<TABLE class='sortable-table' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
              "<TH class='initial-sort-col'>Cat</TH>" .  $reviewCell .
@@ -589,9 +594,6 @@ class AddManager extends MenuItem {
     ?>
           <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
     <?php 
-        // Get the chart categories
-        $cats = Engine::api(IChart::class)->getCategories();
-    
         // Setup selected categories
         $cl = explode(",", $catlist);
         foreach($cl as $index => $cat)
@@ -603,20 +605,20 @@ class AddManager extends MenuItem {
         for($i=0; $i<4; $i++) {
             echo "        <TR><TD>";
             $selected = $selcats[$i]?" CHECKED":"";
-            if($cats[$i]["name"])
-                echo "<INPUT TYPE=CHECKBOX NAME=cat$i$selected>".htmlentities(stripslashes($cats[$i]["name"]));
+            if($this->categoryMap[$i]["name"])
+                echo "<INPUT TYPE=CHECKBOX NAME=cat$i$selected>".htmlentities(stripslashes($this->catetory_map[$i]["name"]));
             echo "</TD><TD>";
             $selected = $selcats[$i+4]?" CHECKED":"";
-            if($cats[$i+4]["name"])
-                echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+4)."$selected>".htmlentities(stripslashes($cats[$i+4]["name"]));
+            if($this->categoryMap[$i+4]["name"])
+                echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+4)."$selected>".htmlentities(stripslashes($this->categoryMap[$i+4]["name"]));
             echo "</TD><TD>";
             $selected = $selcats[$i+8]?" CHECKED":"";
-            if($cats[$i+8]["name"])
-                echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+8)."$selected>".htmlentities(stripslashes($cats[$i+8]["name"]));
+            if($this->categoryMap[$i+8]["name"])
+                echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+8)."$selected>".htmlentities(stripslashes($this->categoryMap[$i+8]["name"]));
             echo "</TD><TD>";
             $selected = $selcats[$i+12]?" CHECKED":"";
-            if($cats[$i+12]["name"])
-                echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+12)."$selected>".htmlentities(stripslashes($cats[$i+12]["name"]));
+            if($this->categoryMap[$i+12]["name"])
+                echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+12)."$selected>".htmlentities(stripslashes($this->categoryMap[$i+12]["name"]));
             echo "</TD></TR>\n";
         }
     ?>
@@ -665,14 +667,11 @@ class AddManager extends MenuItem {
             <TR><TD ALIGN=RIGHT>Add Date:</TD><TD ALIGN=LEFT><?php echo $adddate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT><?php echo $pulldate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
-        // Get the chart categories
-        $cats = Engine::api(IChart::class)->getCategories();
-    
         $emitted = false;
         for($i=0; $i<16; $i++)
             if($_POST["cat".$i]) {
                 if($emitted) echo ", ";
-                echo htmlentities(stripslashes($cats[$i]["name"]));
+                echo htmlentities(stripslashes($this->categoryMap[$i]["name"]));
                 $emitted = true;
             }
     ?></TD></TR>
@@ -815,14 +814,11 @@ class AddManager extends MenuItem {
             <TR><TD ALIGN=RIGHT>Add Date:</TD><TD ALIGN=LEFT><?php echo $adddate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT><?php echo $pulldate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
-        // Get the chart categories
-        $cats = Engine::api(IChart::class)->getCategories();
-    
         $emitted = false;
         for($i=0; $i<16; $i++)
             if($_POST["cat".$i]) {
                 if($emitted) echo ", ";
-                echo htmlentities(stripslashes($cats[$i]["name"]));
+                echo htmlentities(stripslashes($this->categoryMap[$i]["name"]));
                 $emitted = true;
             }
     ?></TD></TR>
@@ -935,8 +931,7 @@ class AddManager extends MenuItem {
         <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
           <TR><TH>&nbsp;</TH><TH>Category</TH><TH>Code&nbsp;</TH><TH>Director</TH><TH>E-Mail Address</TH></TR>
     <?php 
-        $cats = Engine::api(IChart::class)->getCategories();
-        foreach($cats as $index => $cat) {
+        foreach($this->categoryMap as $index => $cat) {
             $i = $cat["id"];
             echo "      <TR><TD ALIGN=RIGHT>$i.</TD>\n";
             echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=name$i VALUE=\"".htmlentities(stripslashes($cat["name"]))."\" CLASS=input SIZE=20 MAXLENGTH=80></TD>\n";
@@ -987,9 +982,6 @@ class AddManager extends MenuItem {
             if($i != strlen($address)) {
                 echo "  <P CLASS=\"header\">E-Mail address is invalid.</P>\n";
             } else {
-                // Get the chart categories
-                $cats = Engine::api(IChart::class)->getCategories();
-    
                 // Fetch the add        
                 $records = Engine::api(IChart::class)->getAdd2($date);
                 $this->addManagerGetAlbums($records, $albums);
@@ -1021,7 +1013,7 @@ class AddManager extends MenuItem {
                     $catsx = explode(",", $row["afile_category"]);
                     foreach($catsx as $index => $cat)
                         if($cat)
-                            $ac .= $cats[$cat-1]["code"];
+                            $ac .= $this->categoryMap[$cat-1]["code"];
                     if($format == "tab") {
                         $line = $row["adddate"] . "\t" . $row["pulldate"] . "\t" . $ac . "\t" .
                               $row["afile_number"] . "\t";
@@ -1104,9 +1096,6 @@ class AddManager extends MenuItem {
     public function viewCurrents($tag) {
         $row = Engine::api(IChart::class)->getAlbumByTag($tag);
         if($row) {
-            // Get the chart categories
-            $cats = Engine::api(IChart::class)->getCategories();
-    
             $header = 0;
      
             if(!$header) {
@@ -1132,9 +1121,9 @@ class AddManager extends MenuItem {
                 $emitted = false;
                 $albumcats = explode(",", $row["category"]);
                 foreach($albumcats as $index => $cat) {
-                    if(!$cat || !$cats[$cat-1]["name"] || substr($cats[$cat-1]["name"], 0, 1) == "(") continue;
+                    if(!$cat || !$this->categoryMap[$cat-1]["name"] || substr($this->categoryMap[$cat-1]["name"], 0, 1) == "(") continue;
                     if($emitted) echo ", ";
-                    echo htmlentities(stripslashes($cats[$cat-1]["name"]));
+                    echo htmlentities(stripslashes($this->categoryMap[$cat-1]["name"]));
                     $emitted = true;
                 }
                 echo "</TD>";
