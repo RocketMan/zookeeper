@@ -39,9 +39,14 @@ class ReviewImpl extends BaseImpl implements IReview {
         $row = $this->executeAndFetch($stmt, \PDO::FETCH_BOTH);
         return $row[0];
     }
-    
-    public function getRecentReviews($user = "", $weeks = 0, $limit = 0, $loggedIn = 0) {
+
+    private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0) {
         $query = "SELECT r.tag, a.airname, r.user, r.created FROM reviews r ";
+        
+        if(!$weeks)
+            $query .= "LEFT JOIN currents c ON c.tag = r.tag AND " .
+                      "c.adddate <= NOW() AND c.pulldate > NOW() ";
+                      
         $query .= "LEFT JOIN airnames a ON r.airname = a.id ";
     
         $op = "AND";
@@ -52,25 +57,50 @@ class ReviewImpl extends BaseImpl implements IReview {
             $query .= "WHERE r.private=0 ";
         else
             $op = "WHERE";
+
+        if($weeks)
+            $query .= "$op r.created >= ? ";
+        else
+            $query .= "$op c.tag IS NOT NULL ";
+
+        return $query;
+    }
     
+    public function getRecentReviews($user = "", $weeks = 0, $limit = 0, $loggedIn = 0) {
+        if($weeks) {
+            // The UNION construct is obtuse but efficient, as it allows
+            // us to use multiple indexes on the reviews table, thus
+            // avoiding a table scan, which MySQL would do otherwise.
+            //
+            // See: https://www.techfounder.net/2008/10/15/optimizing-or-union-operations-in-mysql/
+            $query = "SELECT z.tag, z.airname, z.user, z.created FROM (";
+            $query .= $this->getRecentSubquery($user, $weeks, $loggedIn);
+            $query .= "UNION ";
+            $query .= $this->getRecentSubquery($user, 0, $loggedIn);
+            $query .= ") AS z GROUP BY z.tag ORDER BY z.created DESC";
+        } else {
+            $query = $this->getRecentSubquery($user, 0, $loggedIn);
+            $query .= "GROUP BY r.tag ORDER BY r.created DESC";
+        }
+            
+        if($limit)
+            $query .= " LIMIT ?";
+
+        $stmt = $this->prepare($query);
+        
+        $p = 1;
+        if($user)
+            $stmt->bindValue($p++, $user);
         if($weeks) {
             $t = getdate(time());
             $start = date("Y-m-d", mktime(0,0,0,
                                        $t["mon"],
                                        $t["mday"]- $weeks*7,
                                        $t["year"]));
-            $query .= "$op r.created >= ? ";
-        }
-            
-        $query .= "GROUP BY r.tag ORDER BY r.created DESC";
-        if($limit)
-            $query .= " LIMIT ?";
-        $stmt = $this->prepare($query);
-        $p = 1;
-        if($user)
-            $stmt->bindValue($p++, $user);
-        if($weeks)
             $stmt->bindValue($p++, $start);
+            if($user)
+                $stmt->bindValue($p++, $user);
+        }
         if($limit)
             $stmt->bindValue($p++, (int)$limit, \PDO::PARAM_INT);
         return $this->execute($stmt, \PDO::FETCH_BOTH);

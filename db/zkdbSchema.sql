@@ -260,6 +260,7 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   PRIMARY KEY (`id`),
   KEY `user` (`user`),
   KEY `tag` (`tag`),
+  KEY `created` (`created`),
   FULLTEXT KEY `review` (`review`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
