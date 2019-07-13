@@ -82,29 +82,65 @@ class Reviews extends MenuItem {
         echo "</TD></TR>\n";
     }
     
+    private function makeRecentReviewsHeader() {
+        return "<THEAD><TR>" .
+             "<TH ALIGN=LEFT>Album</TH>" .
+             "<TH ALIGN=LEFT>Artist</TH>" .
+             "<TH ALIGN=LEFT>Collection</TH>" .
+             "<TH ALIGN=LEFT>Reviewer</TH>" .
+             "</TR></THEAD>";
+    }
+
     public function viewRecentReviews() {
-        echo "<TABLE CELLSPACING=0 WIDTH=\"100%\">\n";
-        echo "  <TR><TH ALIGN=LEFT CLASS=\"subhead\">Albums Reviewed by ".Engine::param('station')." DJs <SPAN CLASS=\"subhead2\">during the last 2 weeks</SPAN></TH><TH ALIGN=RIGHT CLASS=\"sub\"><B>Review Feed:</B> <A TYPE=\"application/rss+xml\" HREF=\"zkrss.php?feed=reviews\"><IMG SRC=\"img/rss.gif\" ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT=\"rss\"></A></TH></TR>\n";
-        echo "</TABLE>\n<TABLE WIDTH=\"100%\">\n";
-        echo "  <TR><TH ALIGN=LEFT>Album</TH><TH ALIGN=LEFT>Artist</TH><TH ALIGN=LEFT>Collection</TH><TH ALIGN=LEFT>Reviewed by</TH></TR>\n";
+        echo "<DIV CLASS='subhead'>Albums Reviewed by ".
+             Engine::param('station').
+             " DJs <SPAN CLASS='subhead2'>during the last 2 weeks</SPAN> " .
+             "<div style='float:right' CLASS='sub'><B>Review Feed:</B>" .
+             "<A TYPE='application/rss+xml' HREF='zkrss.php?feed=reviews'>" .
+             "<IMG SRC='img/rss.gif' ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT='rss'></A></DIV></DIV>";
+
+        $reviewsHeader = $this->makeRecentReviewsHeader();
+        echo "<TABLE class='sortable-table' WIDTH='100%'>";
+        echo $reviewsHeader;
+        echo "<TBODY>";
+
         $results = Engine::api(IReview::class)->getRecentReviews("", 2, 0, $this->session->isAuth("u"));
         $libAPI = Engine::api(ILibrary::class);
         while($results && ($row = $results->fetch())) {
             $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
             $this->emitReviewRow($row, $albums);
         }
+        echo "</TBODY>";
+        echo "</TABLE>";
+
         if($this->session->isAuth("u")) {
+            echo "<div CLASS='subhead'>Your Most Recent Reviews</div>";
             $results = Engine::api(IReview::class)->getRecentReviews($this->session->getUser(), 0, 15, 1);
-            echo "  <TR><TD COLSPAN=5>&nbsp;</TD></TR>\n";
-            echo "<TR><TH COLSPAN=5 CLASS=\"subhead\" ALIGN=LEFT>Your Most Recent Reviews</TH></TR>\n";
-            echo "  <TR><TH ALIGN=LEFT>Album</TH><TH ALIGN=LEFT>Artist</TH><TH ALIGN=LEFT>Collection</TH><TH ALIGN=LEFT>Reviewed by</TH><TH>&nbsp;</TH></TR>\n";
+
+            echo "<TABLE class='sortable-table' WIDTH='100%'>";
+            echo $reviewsHeader;
+            echo "<TBODY>";
             while($results && ($row = $results->fetch())) {
                 $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
                 $this->emitReviewRow($row, $albums);
             }
+            echo "</TBODY>";
+            echo "</TABLE>\n";
         }
-        echo "</TABLE>\n";
         UI::setFocus();
+      ?>
+
+      <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+        $().ready(function(){
+            var INITIAL_SORT_COL = 0; //date
+            $('.sortable-table').tablesorter({
+                sortList: [[INITIAL_SORT_COL, 0]],
+            });
+        });
+        // -->
+      </SCRIPT>
+
+    <?php
     }
     
     public function viewReview() {
