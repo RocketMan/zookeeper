@@ -178,7 +178,7 @@ class Playlists extends MenuItem {
         if ($time == null || $time == '') {
             return "";
         } else {
-            return date('h:ia', strtotime($time));
+            return date('h:i a', strtotime($time));
         }
     }
     
@@ -543,7 +543,7 @@ class Playlists extends MenuItem {
     // make header for edit & view playlist
     private function makePlaylistHeader($isEditMode) {
         $editCol = $isEditMode ? "<TD WIDTH='30PX' />" : "";
-        $header = "<TR class='playlistHdr' ALIGN=LEFT>" . $editCol . "<TH WIDTH='60px'>Time</TH><TH WIDTH='25%'>" .
+        $header = "<TR class='playlistHdr' ALIGN=LEFT>" . $editCol . "<TH WIDTH='64px'>Time</TH><TH WIDTH='25%'>" .
                   "Artist</TH><TH WIDTH='25%'>Track</TH><TH></TH><TH>Album/Label</TH></TR>";
         return $header;
     }
