@@ -92,9 +92,8 @@ class Reviews extends MenuItem {
     }
 
     public function viewRecentReviews() {
-        echo "<DIV CLASS='subhead'>Albums Reviewed by ".
-             Engine::param('station').
-             " DJs <SPAN CLASS='subhead2'>during the last 2 weeks</SPAN> " .
+        echo "<DIV CLASS='subhead'>Recent Reviews by " .
+             Engine::param('station')." DJs " .
              "<div style='float:right' CLASS='sub'><B>Review Feed:</B>" .
              "<A TYPE='application/rss+xml' HREF='zkrss.php?feed=reviews'>" .
              "<IMG SRC='img/rss.gif' ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT='rss'></A></DIV></DIV>";
