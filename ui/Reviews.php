@@ -87,14 +87,14 @@ class Reviews extends MenuItem {
              "<TH ALIGN=LEFT>Album</TH>" .
              "<TH ALIGN=LEFT>Artist</TH>" .
              "<TH ALIGN=LEFT>Collection</TH>" .
-             "<TH ALIGN=LEFT>Reviewer</TH>" .
+             "<TH ALIGN=LEFT STYLE='width:120px'>Reviewer</TH>" .
              "</TR></THEAD>";
     }
 
     public function viewRecentReviews() {
         echo "<DIV CLASS='subhead'>Recent Reviews by " .
              Engine::param('station')." DJs " .
-             "<div style='float:right' CLASS='sub'><B>Review Feed:</B>" .
+             "<div style='float:right' CLASS='sub'><B>Review Feed:</B> " .
              "<A TYPE='application/rss+xml' HREF='zkrss.php?feed=reviews'>" .
              "<IMG SRC='img/rss.gif' ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT='rss'></A></DIV></DIV>";
 
