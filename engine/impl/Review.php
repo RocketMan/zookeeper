@@ -43,7 +43,7 @@ class ReviewImpl extends BaseImpl implements IReview {
     private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0) {
         $query = "SELECT r.tag, a.airname, r.user, r.created FROM reviews r ";
         
-        if(!$weeks)
+        if($weeks < 0)
             $query .= "LEFT JOIN currents c ON c.tag = r.tag AND " .
                       "c.adddate <= NOW() AND c.pulldate > NOW() ";
                       
@@ -58,9 +58,9 @@ class ReviewImpl extends BaseImpl implements IReview {
         else
             $op = "WHERE";
 
-        if($weeks)
+        if($weeks > 0)
             $query .= "$op r.created >= ? ";
-        else
+        else if($weeks < 0)
             $query .= "$op c.tag IS NOT NULL ";
 
         return $query;
@@ -76,7 +76,7 @@ class ReviewImpl extends BaseImpl implements IReview {
             $query = "SELECT z.tag, z.airname, z.user, z.created FROM (";
             $query .= $this->getRecentSubquery($user, $weeks, $loggedIn);
             $query .= "UNION ";
-            $query .= $this->getRecentSubquery($user, 0, $loggedIn);
+            $query .= $this->getRecentSubquery($user, -1, $loggedIn);
             $query .= ") AS z GROUP BY z.tag ORDER BY z.created DESC";
         } else {
             $query = $this->getRecentSubquery($user, 0, $loggedIn);
