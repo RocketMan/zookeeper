@@ -28,7 +28,6 @@ namespace ZK\Engine;
  * Music review operations
  */
 interface IReview {
-    function getNumReviews($tag, $loggedIn = 0);
     function getRecentReviews($user = "", $weeks = 0, $limit = 0, $loggedIn = 0);
     function getReviews($tag, $byName=1, $user = "", $loggedIn = 0);
     function insertReview($tag, $private, $airname, $review, $user);

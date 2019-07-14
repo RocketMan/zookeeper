@@ -29,17 +29,6 @@ namespace ZK\Engine;
  * Music review operations
  */
 class ReviewImpl extends BaseImpl implements IReview {
-    public function getNumReviews($tag, $loggedIn = 0) {
-        settype($tag, "integer");
-        $query = "SELECT count(*) FROM reviews WHERE tag=?";
-        if(!$loggedIn)
-            $query .= " AND private = 0";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, tag);
-        $row = $this->executeAndFetch($stmt, \PDO::FETCH_BOTH);
-        return $row[0];
-    }
-
     private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0) {
         $query = "SELECT r.tag, a.airname, r.user, r.created FROM reviews r ";
         
