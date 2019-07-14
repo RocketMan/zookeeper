@@ -166,9 +166,13 @@ class RSS extends CommandTarget implements IController {
     public function recentReviews() {
        $station = Engine::param('station');
        $weeks = $_REQUEST["weeks"];
+       $limit = $_REQUEST["limit"];
 
        if(!$weeks)
           $weeks = 2;
+
+       if(!$limit)
+          $limit = 20;
     
        $title = "$station Radio Music Reviews";
     
@@ -178,7 +182,7 @@ class RSS extends CommandTarget implements IController {
        echo "<managingEditor>".Engine::param('email')['md']."</managingEditor>\n";
        echo "<ttl>20</ttl>\n";
        echo "<language>en-us</language>\n";
-       $results = Engine::api(IReview::class)->getRecentReviews("", $weeks);
+       $results = Engine::api(IReview::class)->getRecentReviews("", $weeks, $limit);
        while($results && ($row = $results->fetch())) {
           // Link to album
           $link = UI::getBaseUrl()."?action=viewRecentReview&amp;tag=$row[0]";
