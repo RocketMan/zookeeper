@@ -36,6 +36,9 @@ div.leftNav {
     clear:both;
     padding-left: 6px;
 }
+div.content {
+    width: 704px;
+}
 hr {
     color: #2d3bce;
 }
