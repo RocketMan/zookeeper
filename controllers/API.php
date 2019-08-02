@@ -268,13 +268,32 @@ class API extends CommandTarget implements IController {
         $key = $_REQUEST["key"];
         $fields = API::TRACK_DETAIL_FIELDS;
 
-        $records = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 200, $key);
-        if(!sizeof($records)) {
+        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $key);
+        if(!$key || !sizeof($albums)) {
+            $this->emitError("getTracksRs", 100, "Unknown tag", ["tag" => $key]);
+            return;
+        }
+        
+        $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $albums[0]["pubkey"]);
+        
+        $artist = strcmp(substr($albums[0]["artist"], 0, 8), "[coll]: ")?
+                      $albums[0]["artist"]:"Various Artists";
+        $label = sizeof($labels)?$labels[0]["name"]:"(Unknown)";
+
+        if($albums[0]["iscoll"])
+            $records = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 200, $key);
+        else {
             $records = Engine::api(ILibrary::class)->search(ILibrary::TRACK_KEY, 0, 200, $key);
             self::array_remove($fields, "artist");
         }
 
         $attrs = $this->addSuccess();
+        $attrs["tag"] = $key;
+        $attrs["artist"] = $artist;
+        $attrs["album"] = $albums[0]["album"];
+        $attrs["label"] = $label;
+        $attrs["collection"] = Search::GENRES[$albums[0]["category"]];
+        $attrs["medium"] = Search::MEDIA[$albums[0]["medium"]];
         $attrs["isCompilation"] = in_array("artist", $fields)?"true":"false";
         $this->startResponse("getTracksRs", $attrs);
         $this->emitDataSetArray("trackrec", $fields, $records);
@@ -300,13 +319,13 @@ class API extends CommandTarget implements IController {
             echo "  \"type\": \"$name\",\n";
             if($attrs)
                 foreach($attrs as $key => $value)
-                    echo "  \"$key\": \"$value\",\n";
+                    echo "  \"$key\": \"".self::jsonspecialchars($value)."\",\n";
             echo "  \"data\": [";
         } else {
             echo "<$name";
             if($attrs)
                 foreach($attrs as $key => $value)
-                    echo " $key=\"$value\"";
+                    echo " $key=\"".self::spec2hex($value)."\"";
             echo ">\n";
         }
     }
@@ -329,8 +348,11 @@ class API extends CommandTarget implements IController {
         return $this->addStatus(0, "Success");
     }
     
-    private function emitError($request, $code, $message) {
-        $this->startResponse($request, $this->addStatus($code, $message));
+    private function emitError($request, $code, $message, $opts = null) {
+        $attrs = $this->addStatus($code, $message);
+        if($opts)
+            $attrs += $opts;
+        $this->startResponse($request, $attrs);
         $this->endResponse($request);
     }
     
@@ -388,7 +410,7 @@ class API extends CommandTarget implements IController {
                  }
                  if($this->json)
                      echo "$nextProp      \"$field\": \"".
-                          self::spec2hex(stripslashes($val)).
+                          self::jsonspecialchars(stripslashes($val)).
                           "\"";
                  else
                      echo "<$field>".
@@ -431,7 +453,12 @@ class API extends CommandTarget implements IController {
     }
     
     private static function spec2hex($str) {
-        return preg_replace("/[[:cntrl:]]/", "", htmlspecialchars($str));
+        return preg_replace("/[[:cntrl:]]/", "", htmlspecialchars($str, ENT_XML1, 'UTF-8'));
+    }
+    
+    private static function jsonspecialchars($str) {
+        return str_replace(["\\", "\"", "\n", "\r", "\t"],
+                           ["\\\\", "\\\"", "\\n", "\\r", "\\t"], $str);
     }
 }
 
