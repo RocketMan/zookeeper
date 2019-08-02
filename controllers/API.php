@@ -301,7 +301,7 @@ class API extends CommandTarget implements IController {
             if($attrs)
                 foreach($attrs as $key => $value)
                     echo "  \"$key\": \"$value\",\n";
-            echo "  \"data\": [\n";
+            echo "  \"data\": [";
         } else {
             echo "<$name";
             if($attrs)
@@ -313,7 +313,7 @@ class API extends CommandTarget implements IController {
 
     private function endResponse($name) {
         if($this->json)
-            echo "  ]\n}\n";
+            echo "]\n}\n";
         else
             echo "</$name>\n";
     }
@@ -359,8 +359,10 @@ class API extends CommandTarget implements IController {
     }
 
     private function emitDataSetArray($name, $fields, &$data) {
+        $nextToken = "";
         for($i=0; $i<sizeof($data); $i++) {
-             echo $this->json?"    {\n":"<$name>\n";
+             echo $this->json?"$nextToken{\n":"<$name>\n";
+             $nextProp = "";
              for($j=0; $j<sizeof($fields); $j++) {
                  $field = $fields[$j];
                  $row = $data[$i];
@@ -385,16 +387,18 @@ class API extends CommandTarget implements IController {
                     }
                  }
                  if($this->json)
-                     echo "      \"$field\": \"".
+                     echo "$nextProp      \"$field\": \"".
                           self::spec2hex(stripslashes($val)).
-                          "\",\n";
+                          "\"";
                  else
                      echo "<$field>".
                           self::spec2hex(stripslashes($val)).
                           "</$field>\n";
+                 $nextProp = ",\n";
              }
-    
-             echo $this->json?"    },\n":"</$name>\n";
+
+             $nextToken = ",\n    ";
+             echo $this->json?"\n    }":"</$name>\n";
         }
     }
 
