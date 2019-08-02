@@ -65,6 +65,10 @@ class API extends CommandTarget implements IController {
         "track"
     ];
 
+    const TRACK_DETAIL_FIELDS = [
+        "seq", "artist", "track"
+    ];
+
     private static $ftFields = [
         "tags" => API::ALBUM_FIELDS,
         "albums" => API::ALBUM_FIELDS,
@@ -83,6 +87,7 @@ class API extends CommandTarget implements IController {
         [ "getCurrentsRq", "getCurrents" ],
         [ "getChartsRq", "getCharts" ],
         [ "getPlaylistsRq", "getPlaylists" ],
+        [ "getTracksRq", "getTracks" ],
     ];
 
     private static $pager_operations = [
@@ -96,16 +101,20 @@ class API extends CommandTarget implements IController {
 
     private $limit;
     private $catCodes;
+    private $json;
 
     public function processRequest($dispatcher) {
+        $this->json = $_REQUEST["json"];
         $this->emitHeader();
-        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xml>\n";
+        if(!$this->json)
+            echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xml>\n";
         $this->session = Engine::session();
         $this->limit = $_REQUEST["size"];
         if(!$this->limit || $this->limit > API::MAX_LIMIT)
             $this->limit = API::MAX_LIMIT;
         $this->processLocal($_REQUEST["method"], null);
-        echo "</xml>\n";
+        if(!$this->json)
+            echo "</xml>\n";
     }
 
     public function processLocal($action, $subaction) {
@@ -124,9 +133,9 @@ class API extends CommandTarget implements IController {
                      $op,
                      $_REQUEST["key"],
                      $this->limit);
-            echo "<getAlbumsRs".$this->emitSuccess().">\n";
+            $this->startResponse("getAlbumsRs", $this->addSuccess());
             $this->emitDataSetArray("albumrec", API::ALBUM_FIELDS, $records);
-            echo "</getAlbumsRs>\n";
+            $this->endResponse("getAlbumsRs");
         } else
             $this->emitError("getAlbumsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
     }
@@ -138,9 +147,9 @@ class API extends CommandTarget implements IController {
                      $op,
                      $_REQUEST["key"],
                      $this->limit);
-            echo "<getLabelsRs".$this->emitSuccess().">\n";
+            $this->startResponse("getLabelsRs", $this->addSuccess());
             $this->emitDataSetArray("labelrec", API::LABEL_FIELDS, $records);
-            echo "</getLabelsRs>\n";
+            $this->endResponse("getLabelsRs");
         } else
             $this->emitError("getLabelsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
     }
@@ -176,18 +185,25 @@ class API extends CommandTarget implements IController {
     
         // main chart
         Engine::api(IChart::class)->getChart2($records, 0, $date, 30);
-        echo "<getChartRs chart=\"General\" week-ending=\"$date\"".$this->emitSuccess().">\n";
+
+        $attrs = $this->addSuccess();
+        $attrs["chart"] = "General";
+        $attrs["week-ending"] = $date;
+        $this->startResponse("getChartRs", attrs);
         $this->emitDataSetArray("albumrec", $chartfields, $records, 0);
-        echo "</getChartRs>\n";
+        $this->endResponse("getChartRs");
     
         // genre charts
         $genres = [5, 7, 6, 1, 2, 4, 3, 8];
         for($i=0; $i<sizeof($genres); $i++) {
              unset($records);
              Engine::api(IChart::class)->getChart2($records, 0, $date, 10, $genres[$i]);
-             echo "<getChartRs chart=\"".$this->catCodes[$genres[$i]-1]["name"]."\" week-ending=\"$date\"".$this->emitSuccess().">\n";
+             $attrs = $this->addSuccess();
+             $attrs["chart"] = $this->catCodes[$genres[$i]-1]["name"];
+             $attrs["week-ending"] = $date;
+             $this->startResponse("getChartRs", $attrs);
              $this->emitDataSetArray("albumrec", $chartfields, $records, 0);
-             echo "</getChartRs>\n";
+             $this->endResponse("getChartRs");
         }
     }
     
@@ -210,7 +226,7 @@ class API extends CommandTarget implements IController {
              $this->emitError("getPlaylistsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
              return;
         }
-        echo "<getPlaylistsRs".$this->emitSuccess().">\n";
+        $this->startResponse("getPlaylistsRs", $this->addSuccess());
         while($row = $result->fetch()) {
              echo "<show name=\"".self::spec2hex(stripslashes($row["description"]))."\" ".
                    "date=\"".$row["showdate"]."\" ".
@@ -245,7 +261,24 @@ class API extends CommandTarget implements IController {
              } else
                  echo "/>\n";
         }
-        echo "</getPlaylistsRs>\n";
+        $this->endResponse("getPlaylistsRs");
+    }
+
+    public function getTracks() {
+        $key = $_REQUEST["key"];
+        $fields = API::TRACK_DETAIL_FIELDS;
+
+        $records = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 200, $key);
+        if(!sizeof($records)) {
+            $records = Engine::api(ILibrary::class)->search(ILibrary::TRACK_KEY, 0, 200, $key);
+            self::array_remove($fields, "artist");
+        }
+
+        $attrs = $this->addSuccess();
+        $attrs["isCompilation"] = in_array("artist", $fields)?"true":"false";
+        $this->startResponse("getTracksRs", $attrs);
+        $this->emitDataSetArray("trackrec", $fields, $records);
+        $this->endResponse("getTracksRs");
     }
     
     public function getCurrents() {
@@ -256,27 +289,55 @@ class API extends CommandTarget implements IController {
                     "city", "state", "zip");
     
         $records = Engine::api(IChart::class)->getCurrentsWithPlays2();
-        echo "<getCurrentsRs".$this->emitSuccess().">\n";
+        $this->startResponse("getCurrentsRs", $this->addSuccess());
         $this->emitDataSet("albumrec", $currentfields, $records);
-        echo "</getCurrentsRs>\n";
+        $this->endResponse("getCurrentsRs");
     }
 
-    private function emitStatus($code, $message) {
-        return " code=\"$code\" message=\"$message\"";
+    private function startResponse($name, $attrs=null) {
+        if($this->json) {
+            echo "{\n";
+            echo "  \"type\": \"$name\",\n";
+            if($attrs)
+                foreach($attrs as $key => $value)
+                    echo "  \"$key\": \"$value\",\n";
+            echo "  \"data\": [\n";
+        } else {
+            echo "<$name";
+            if($attrs)
+                foreach($attrs as $key => $value)
+                    echo " $key=\"$value\"";
+            echo ">\n";
+        }
+    }
+
+    private function endResponse($name) {
+        if($this->json)
+            echo "  ]\n}\n";
+        else
+            echo "</$name>\n";
+    }
+
+    private function addStatus($code, $message) {
+        $attrs = [];
+        $attrs["code"] = $code;
+        $attrs["message"] = $message;
+        return $attrs;
     }
     
-    private function emitSuccess() {
-        return $this->emitStatus(0, "Success");
+    private function addSuccess() {
+        return $this->addStatus(0, "Success");
     }
     
     private function emitError($request, $code, $message) {
-        echo "<$request";
-        echo $this->emitStatus($code, $message);
-        echo ">\n</$request>\n";
+        $this->startResponse($request, $this->addStatus($code, $message));
+        $this->endResponse($request);
     }
     
     private function emitHeader() {
-        header("Content-type: text/xml; charset=UTF-8");
+        header("Content-type: ".
+            ($this->json?"application/vnd.api+json":"text/xml").
+            "; charset=UTF-8");
     
         $origin = $_SERVER['HTTP_ORIGIN'];
         if($origin) {
@@ -299,7 +360,7 @@ class API extends CommandTarget implements IController {
 
     private function emitDataSetArray($name, $fields, &$data) {
         for($i=0; $i<sizeof($data); $i++) {
-             echo "<$name>\n";
+             echo $this->json?"    {\n":"<$name>\n";
              for($j=0; $j<sizeof($fields); $j++) {
                  $field = $fields[$j];
                  $row = $data[$i];
@@ -323,12 +384,17 @@ class API extends CommandTarget implements IController {
                         continue 2;
                     }
                  }
-                 echo "<$field>".
-                      self::spec2hex(stripslashes($val)).
-                      "</$field>\n";
+                 if($this->json)
+                     echo "      \"$field\": \"".
+                          self::spec2hex(stripslashes($val)).
+                          "\",\n";
+                 else
+                     echo "<$field>".
+                          self::spec2hex(stripslashes($val)).
+                          "</$field>\n";
              }
     
-             echo "</$name>\n";
+             echo $this->json?"    },\n":"</$name>\n";
         }
     }
 
