@@ -133,7 +133,7 @@ class API extends CommandTarget implements IController {
                      $op,
                      $_REQUEST["key"],
                      $this->limit);
-            $this->startResponse("getAlbumsRs", $this->addSuccess());
+            $this->startResponse("getAlbumsRs");
             $this->emitDataSetArray("albumrec", API::ALBUM_FIELDS, $records);
             $this->endResponse("getAlbumsRs");
         } else
@@ -147,7 +147,7 @@ class API extends CommandTarget implements IController {
                      $op,
                      $_REQUEST["key"],
                      $this->limit);
-            $this->startResponse("getLabelsRs", $this->addSuccess());
+            $this->startResponse("getLabelsRs");
             $this->emitDataSetArray("labelrec", API::LABEL_FIELDS, $records);
             $this->endResponse("getLabelsRs");
         } else
@@ -189,7 +189,7 @@ class API extends CommandTarget implements IController {
         $attrs = $this->addSuccess();
         $attrs["chart"] = "General";
         $attrs["week-ending"] = $date;
-        $this->startResponse("getChartRs", attrs);
+        $this->startResponse("getChartRs", $attrs);
         $this->emitDataSetArray("albumrec", $chartfields, $records, 0);
         $this->endResponse("getChartRs");
     
@@ -226,7 +226,7 @@ class API extends CommandTarget implements IController {
              $this->emitError("getPlaylistsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
              return;
         }
-        $this->startResponse("getPlaylistsRs", $this->addSuccess());
+        $this->startResponse("getPlaylistsRs");
         while($row = $result->fetch()) {
              echo "<show name=\"".self::spec2hex(stripslashes($row["description"]))."\" ".
                    "date=\"".$row["showdate"]."\" ".
@@ -294,7 +294,7 @@ class API extends CommandTarget implements IController {
         $attrs["label"] = $label;
         $attrs["collection"] = Search::GENRES[$albums[0]["category"]];
         $attrs["medium"] = Search::MEDIA[$albums[0]["medium"]];
-        $attrs["isCompilation"] = in_array("artist", $fields)?"true":"false";
+        $attrs["isCompilation"] = $albums[0]["iscoll"]?"true":"false";
         $this->startResponse("getTracksRs", $attrs);
         $this->emitDataSetArray("trackrec", $fields, $records);
         $this->endResponse("getTracksRs");
@@ -308,24 +308,24 @@ class API extends CommandTarget implements IController {
                     "city", "state", "zip");
     
         $records = Engine::api(IChart::class)->getCurrentsWithPlays2();
-        $this->startResponse("getCurrentsRs", $this->addSuccess());
+        $this->startResponse("getCurrentsRs");
         $this->emitDataSet("albumrec", $currentfields, $records);
         $this->endResponse("getCurrentsRs");
     }
 
     private function startResponse($name, $attrs=null) {
+        if(!$attrs)
+            $attrs = $this->addSuccess();
+            
         if($this->json) {
-            echo "{\n";
-            echo "  \"type\": \"$name\",\n";
-            if($attrs)
-                foreach($attrs as $key => $value)
-                    echo "  \"$key\": \"".self::jsonspecialchars($value)."\",\n";
+            echo "{\n  \"type\": \"$name\",\n";
+            foreach($attrs as $key => $value)
+                echo "  \"$key\": \"".self::jsonspecialchars($value)."\",\n";
             echo "  \"data\": [";
         } else {
             echo "<$name";
-            if($attrs)
-                foreach($attrs as $key => $value)
-                    echo " $key=\"".self::spec2hex($value)."\"";
+            foreach($attrs as $key => $value)
+                echo " $key=\"".self::spec2hex($value)."\"";
             echo ">\n";
         }
     }
@@ -382,12 +382,10 @@ class API extends CommandTarget implements IController {
 
     private function emitDataSetArray($name, $fields, &$data) {
         $nextToken = "";
-        for($i=0; $i<sizeof($data); $i++) {
+        foreach($data as $row) {
              echo $this->json?"$nextToken{\n":"<$name>\n";
              $nextProp = "";
-             for($j=0; $j<sizeof($fields); $j++) {
-                 $field = $fields[$j];
-                 $row = $data[$i];
+             foreach($fields as $field) {
                  $val = $row[$field];
                  if($name == "albumrec") {
                     switch($field) {
