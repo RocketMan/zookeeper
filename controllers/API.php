@@ -107,6 +107,7 @@ class API extends CommandTarget implements IController {
     private $catCodes;
     private $json;
     private $indent = 0;
+    private $nextToken = "";
 
     public function processRequest($dispatcher) {
         $this->json = $_REQUEST["json"];
@@ -163,21 +164,17 @@ class API extends CommandTarget implements IController {
         $results = Engine::api(ILibrary::class)->searchFullText(
             $_REQUEST["type"], $_REQUEST["key"], $this->limit,
             $_REQUEST["offset"]);
-        $attrs = [];
+        $attrs = $this->addSuccess();
         $attrs["total"] = $results[0];
         $attrs[$this->json?"dataType":"type"] = $_REQUEST["type"];
         $this->startResponse("searchRs", $attrs);
-        $nextToken = "";
         foreach ($results[1] as $result) {
             $attrs = [];
             $attrs["more"] = $result["more"];
             $attrs["offset"] = $result["offset"];
-            echo $nextToken;
             $this->startResponse($result["type"], $attrs);
             $this->emitDataSetArray($result["recordName"], self::$ftFields[$result["type"]], $result["result"]);
             $this->endResponse($result["type"]);
-            if($this->json)
-                $nextToken = ",\n".str_repeat("  ",$this->indent+1);
         }
         $this->endResponse("searchRs");
     }
@@ -198,28 +195,32 @@ class API extends CommandTarget implements IController {
              $date = $week["week"];
         }
     
+        $this->startResponse("getChartRs");
+        
         // main chart
         Engine::api(IChart::class)->getChart2($records, 0, $date, 30);
 
-        $attrs = $this->addSuccess();
+        $attrs = [];
         $attrs["chart"] = "General";
         $attrs["week-ending"] = $date;
-        $this->startResponse("getChartRs", $attrs);
+        $this->startResponse("chart", $attrs);
         $this->emitDataSetArray("albumrec", $chartfields, $records, 0);
-        $this->endResponse("getChartRs");
+        $this->endResponse("chart");
     
         // genre charts
         $genres = [5, 7, 6, 1, 2, 4, 3, 8];
         for($i=0; $i<sizeof($genres); $i++) {
              unset($records);
              Engine::api(IChart::class)->getChart2($records, 0, $date, 10, $genres[$i]);
-             $attrs = $this->addSuccess();
+             $attrs = [];
              $attrs["chart"] = $this->catCodes[$genres[$i]-1]["name"];
              $attrs["week-ending"] = $date;
-             $this->startResponse("getChartRs", $attrs);
+             $this->startResponse("chart", $attrs);
              $this->emitDataSetArray("albumrec", $chartfields, $records, 0);
-             $this->endResponse("getChartRs");
+             $this->endResponse("chart");
         }
+        
+        $this->endResponse("getChartRs");
     }
     
     public function getPlaylists() {
@@ -244,14 +245,13 @@ class API extends CommandTarget implements IController {
         }
         $this->startResponse("getPlaylistsRs");
         if($this->json) {
-            $nextToken = "";
             while($row = $result->fetch()) {
                 $attrs = [];
                 $attrs["name"] = $row["description"];
                 $attrs["date"] = $row["showdate"];
                 $attrs["time"] = $row["showtime"];
                 $attrs["airname"] = $row["airname"];
-                echo $nextToken;
+                $attrs["id"] = $id?$id:$row["id"];
                 $this->startResponse("show", $attrs);
                 if($includeTracks && $includeTracks != "false") {
                     $tracks = Engine::api(IPlaylist::class)->getTracks($id?$id:$row["id"]);
@@ -271,7 +271,6 @@ class API extends CommandTarget implements IController {
                     $this->emitDataSetArray("event", API::PLAYLIST_DETAIL_FIELDS, $events);
                 }
                 $this->endResponse("show");
-                $nextToken = ",\n".str_repeat("  ",$this->indent+1);
             }
         } else {
             while($row = $result->fetch()) {
@@ -366,6 +365,8 @@ class API extends CommandTarget implements IController {
             $attrs = $this->addSuccess();
             
         if($this->json) {
+            echo $this->nextToken;
+            $this->nextToken = "";
             $this->indent += 1;
             $i = $this->indent > 1?$this->indent+1:$this->indent;
             $indent = str_repeat("  ", $i);
@@ -383,6 +384,7 @@ class API extends CommandTarget implements IController {
 
     private function endResponse($name) {
         if($this->json) {
+            $this->nextToken = ",\n".str_repeat("  ", $this->indent);
             $this->indent -= 1;
             $i = $this->indent?$this->indent+1:$this->indent;
             echo "\n".str_repeat("  ", $i+1)."]\n".str_repeat("  ", $i)."}";
@@ -434,7 +436,7 @@ class API extends CommandTarget implements IController {
     }
 
     private function emitDataSetArray($name, $fields, &$data) {
-        $indent = str_repeat("  ", $this->indent+2);
+        $indent = str_repeat("  ", $this->indent*2);
         $nextToken = "";
         foreach($data as $row) {
              echo $this->json?"$nextToken{\n":"<$name>\n";
