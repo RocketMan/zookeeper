@@ -64,7 +64,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                                $showDate="", $airname="", $user="", $desc=1) {
         if($withAirname)
             $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
-                     "a.id, a.airname FROM lists l LEFT JOIN airnames a " .
+                     "a.id airid, a.airname FROM lists l LEFT JOIN airnames a " .
                      "ON l.airname = a.id ";
         else
             $query = "SELECT id, showdate, showtime, description FROM lists l ";
