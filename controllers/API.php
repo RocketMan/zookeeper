@@ -65,6 +65,10 @@ class API extends CommandTarget implements IController {
         "track"
     ];
 
+    const PLAYLIST_DETAIL_FIELDS = [
+        "type", "comment", "artist", "track", "album", "label"
+    ];
+
     const TRACK_DETAIL_FIELDS = [
         "seq", "artist", "track"
     ];
@@ -102,6 +106,7 @@ class API extends CommandTarget implements IController {
     private $limit;
     private $catCodes;
     private $json;
+    private $indent = 0;
 
     public function processRequest($dispatcher) {
         $this->json = $_REQUEST["json"];
@@ -158,13 +163,23 @@ class API extends CommandTarget implements IController {
         $results = Engine::api(ILibrary::class)->searchFullText(
             $_REQUEST["type"], $_REQUEST["key"], $this->limit,
             $_REQUEST["offset"]);
-        echo "<searchRs total=\"".$results[0]."\" type=\"".$_REQUEST["type"]."\">\n";
+        $attrs = [];
+        $attrs["total"] = $results[0];
+        $attrs[$this->json?"dataType":"type"] = $_REQUEST["type"];
+        $this->startResponse("searchRs", $attrs);
+        $nextToken = "";
         foreach ($results[1] as $result) {
-            echo "<".$result["type"]." more=\"".$result["more"]."\" offset=\"".$result["offset"]."\">\n";
+            $attrs = [];
+            $attrs["more"] = $result["more"];
+            $attrs["offset"] = $result["offset"];
+            echo $nextToken;
+            $this->startResponse($result["type"], $attrs);
             $this->emitDataSetArray($result["recordName"], self::$ftFields[$result["type"]], $result["result"]);
-            echo "</".$result["type"].">\n";
+            $this->endResponse($result["type"]);
+            if($this->json)
+                $nextToken = ",\n".str_repeat("  ",$this->indent);
         }
-        echo "</searchRs>\n";
+        $this->endResponse("searchRs");
     }
 
     public function getCharts() {
@@ -208,6 +223,7 @@ class API extends CommandTarget implements IController {
     }
     
     public function getPlaylists() {
+        $id = 0;
         $key = $_REQUEST["key"];
         $includeTracks = $_REQUEST["includeTracks"];
 
@@ -227,39 +243,71 @@ class API extends CommandTarget implements IController {
              return;
         }
         $this->startResponse("getPlaylistsRs");
-        while($row = $result->fetch()) {
-             echo "<show name=\"".self::spec2hex(stripslashes($row["description"]))."\" ".
-                   "date=\"".$row["showdate"]."\" ".
-                   "time=\"".$row["showtime"]."\" ".
-                   "airname=\"".self::spec2hex(stripslashes($row["airname"]))."\" ".
-                   "id=\"".($id?$id:$row["id"])."\"";
-             if($includeTracks && $includeTracks != "false") {
-                 echo ">\n";
-                 $tracks = Engine::api(IPlaylist::class)->getTracks($id?$id:$row["id"]);
-                 while($track = $tracks->fetch()) {
-                     if(substr($track["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
-                         if(strpos($track["artist"], IPlaylist::COMMENT_FLAG) > 0)
-                            echo "<comment>".self::spec2hex(stripslashes($track["track"].$track["album"].$track["label"]))."</comment>\n";
-                         else
-                            echo "<break/>\n";
-                     else {
-                         echo "<track";
-                         if($track["artist"] != "")
-                              echo " artist=\"".self::spec2hex(stripslashes($track["artist"]))."\"";
-                         if($track["track"] != "")
-                              echo " track=\"".self::spec2hex(stripslashes($track["track"]))."\"";
-                         if($track["album"] != "")
-                              echo " album=\"".self::spec2hex(stripslashes($track["album"]))."\"";
-                         if($track["label"] != "")
-                              echo " label=\"".self::spec2hex(stripslashes($track["label"]))."\"";
-                         if($track["tag"] != "")
-                              echo " tag=\"".$track["tag"]."\"";
-                         echo "/>\n";
-                     }
-                 }
-                 echo "</show>\n";
-             } else
-                 echo "/>\n";
+        if($this->json) {
+            $nextToken = "";
+            while($row = $result->fetch()) {
+                $attrs = [];
+                $attrs["name"] = $row["description"];
+                $attrs["date"] = $row["showdate"];
+                $attrs["time"] = $row["showtime"];
+                $attrs["airname"] = $row["airname"];
+                echo $nextToken;
+                $this->startResponse("show", $attrs);
+                if($includeTracks && $includeTracks != "false") {
+                    $tracks = Engine::api(IPlaylist::class)->getTracks($id?$id:$row["id"]);
+                    $events = [];
+                    while($track = $tracks->fetch()) {
+                        if(substr($track["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
+                            if(strpos($track["artist"], IPlaylist::COMMENT_FLAG) > 0)
+                                $events[] = ["type" => "comment", "comment" => $track["track"].$track["album"].$track["label"]];
+                            else
+                                $events[] = ["type" => "break"];
+                        else {
+                            $track["type"] = "track";
+                            $track["comment"] = "";
+                            $events[] = $track;
+                        }
+                    }
+                    $this->emitDataSetArray("event", API::PLAYLIST_DETAIL_FIELDS, $events);
+                }
+                $this->endResponse("show");
+                $nextToken = ",\n".str_repeat("  ",$this->indent);
+            }
+        } else {
+            while($row = $result->fetch()) {
+                echo "<show name=\"".self::spec2hex(stripslashes($row["description"]))."\" ".
+                     "date=\"".$row["showdate"]."\" ".
+                     "time=\"".$row["showtime"]."\" ".
+                     "airname=\"".self::spec2hex(stripslashes($row["airname"]))."\" ".
+                     "id=\"".($id?$id:$row["id"])."\"";
+                if($includeTracks && $includeTracks != "false") {
+                    echo ">\n";
+                    $tracks = Engine::api(IPlaylist::class)->getTracks($id?$id:$row["id"]);
+                    while($track = $tracks->fetch()) {
+                        if(substr($track["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
+                            if(strpos($track["artist"], IPlaylist::COMMENT_FLAG) > 0)
+                                echo "<comment>".self::spec2hex(stripslashes($track["track"].$track["album"].$track["label"]))."</comment>\n";
+                            else
+                                echo "<break/>\n";
+                        else {
+                            echo "<track";
+                            if($track["artist"] != "")
+                                echo " artist=\"".self::spec2hex(stripslashes($track["artist"]))."\"";
+                            if($track["track"] != "")
+                                echo " track=\"".self::spec2hex(stripslashes($track["track"]))."\"";
+                            if($track["album"] != "")
+                                echo " album=\"".self::spec2hex(stripslashes($track["album"]))."\"";
+                            if($track["label"] != "")
+                                echo " label=\"".self::spec2hex(stripslashes($track["label"]))."\"";
+                            if($track["tag"] != "")
+                                echo " tag=\"".$track["tag"]."\"";
+                            echo "/>\n";
+                        }
+                    }
+                    echo "</show>\n";
+                } else
+                    echo "/>\n";
+            }
         }
         $this->endResponse("getPlaylistsRs");
     }
@@ -318,10 +366,12 @@ class API extends CommandTarget implements IController {
             $attrs = $this->addSuccess();
             
         if($this->json) {
-            echo "{\n  \"type\": \"$name\",\n";
+            $this->indent += 1;
+            $indent = str_repeat("  ", $this->indent);
+            echo "{\n$indent\"type\": \"$name\",\n";
             foreach($attrs as $key => $value)
-                echo "  \"$key\": \"".self::jsonspecialchars($value)."\",\n";
-            echo "  \"data\": [";
+                echo "$indent\"$key\": \"".self::jsonspecialchars($value)."\",\n";
+            echo "$indent\"data\": [";
         } else {
             echo "<$name";
             foreach($attrs as $key => $value)
@@ -331,9 +381,10 @@ class API extends CommandTarget implements IController {
     }
 
     private function endResponse($name) {
-        if($this->json)
-            echo "]\n}\n";
-        else
+        if($this->json) {
+            $this->indent -= 1;
+            echo "]\n".str_repeat("  ", $this->indent)."}";
+        } else
             echo "</$name>\n";
     }
 
@@ -381,6 +432,7 @@ class API extends CommandTarget implements IController {
     }
 
     private function emitDataSetArray($name, $fields, &$data) {
+        $indent = str_repeat("  ", $this->indent);
         $nextToken = "";
         foreach($data as $row) {
              echo $this->json?"$nextToken{\n":"<$name>\n";
@@ -402,12 +454,17 @@ class API extends CommandTarget implements IController {
                         $val = Search::LOCATIONS[$val];
                         break;
                     case "afile_category":
-                        $this->emitAFileCat($val);
+                        $val = $this->getAFileCatList($val);
+                        if($this->json)
+                            echo "$nextProp$indent  \"charts\": $val";
+                        else
+                            echo "<charts>$val</charts>\n";
+                        $nextProp = ",\n";
                         continue 2;
                     }
                  }
                  if($this->json)
-                     echo "$nextProp      \"$field\": \"".
+                     echo "$nextProp$indent  \"$field\": \"".
                           self::jsonspecialchars(stripslashes($val)).
                           "\"";
                  else
@@ -417,8 +474,8 @@ class API extends CommandTarget implements IController {
                  $nextProp = ",\n";
              }
 
-             $nextToken = ",\n    ";
-             echo $this->json?"\n    }":"</$name>\n";
+             $nextToken = ",\n$indent";
+             echo $this->json?"\n$indent}":"</$name>\n";
         }
     }
 
@@ -426,18 +483,31 @@ class API extends CommandTarget implements IController {
         return Engine::api(IChart::class)->getCategories();
     }
 
-    private function emitAFileCat($cats) {
+    private function getAFileCatList($cats) {
+        $result = "";
+        
         if(!isset($this->catCodes))
             $this->catCodes = $this->getAFileCats();
 
-        echo "<charts>\n";
+        if($this->json) {
+            $pre = ", \"";
+            $post = "\"";
+        } else {
+            $pre = "<chart>";
+            $post = "</chart>\n";
+        }
+        
         if($cats) {
              $cats = explode(",", $cats);
-             for($i=0; $i<sizeof($cats); $i++)
-                 if(substr($this->catCodes[$cats[$i]-1]["name"], 0, 1) != "(")
-                    echo "<chart>".$this->catCodes[$cats[$i]-1]["name"]."</chart>\n";
+             foreach($cats as $cat)
+                 if(substr($this->catCodes[$cat-1]["name"], 0, 1) != "(")
+                    $result .= $pre.$this->catCodes[$cat-1]["name"].$post;
         }
-        echo "</charts>\n";
+
+        if($this->json)
+            $result = "[" . substr($result, 2) . "]";
+
+        return $result;
     }
     
     private static function array_remove(&$array) {
