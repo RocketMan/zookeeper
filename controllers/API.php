@@ -177,7 +177,7 @@ class API extends CommandTarget implements IController {
             $this->emitDataSetArray($result["recordName"], self::$ftFields[$result["type"]], $result["result"]);
             $this->endResponse($result["type"]);
             if($this->json)
-                $nextToken = ",\n".str_repeat("  ",$this->indent);
+                $nextToken = ",\n".str_repeat("  ",$this->indent+1);
         }
         $this->endResponse("searchRs");
     }
@@ -271,7 +271,7 @@ class API extends CommandTarget implements IController {
                     $this->emitDataSetArray("event", API::PLAYLIST_DETAIL_FIELDS, $events);
                 }
                 $this->endResponse("show");
-                $nextToken = ",\n".str_repeat("  ",$this->indent);
+                $nextToken = ",\n".str_repeat("  ",$this->indent+1);
             }
         } else {
             while($row = $result->fetch()) {
@@ -367,7 +367,8 @@ class API extends CommandTarget implements IController {
             
         if($this->json) {
             $this->indent += 1;
-            $indent = str_repeat("  ", $this->indent);
+            $i = $this->indent > 1?$this->indent+1:$this->indent;
+            $indent = str_repeat("  ", $i);
             echo "{\n$indent\"type\": \"$name\",\n";
             foreach($attrs as $key => $value)
                 echo "$indent\"$key\": \"".self::jsonspecialchars($value)."\",\n";
@@ -383,7 +384,8 @@ class API extends CommandTarget implements IController {
     private function endResponse($name) {
         if($this->json) {
             $this->indent -= 1;
-            echo "]\n".str_repeat("  ", $this->indent)."}";
+            $i = $this->indent?$this->indent+1:$this->indent;
+            echo "\n".str_repeat("  ", $i+1)."]\n".str_repeat("  ", $i)."}";
         } else
             echo "</$name>\n";
     }
@@ -432,7 +434,7 @@ class API extends CommandTarget implements IController {
     }
 
     private function emitDataSetArray($name, $fields, &$data) {
-        $indent = str_repeat("  ", $this->indent);
+        $indent = str_repeat("  ", $this->indent+2);
         $nextToken = "";
         foreach($data as $row) {
              echo $this->json?"$nextToken{\n":"<$name>\n";
