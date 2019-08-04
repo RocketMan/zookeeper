@@ -207,6 +207,8 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $retVal;
     }
 
+    // insert playlist track. return following: 0 - fail, 1 - success no 
+    // timestamp, 2 - sucess with timestamp.
     public function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $wantTimestamp) {
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
 
@@ -233,7 +235,11 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         if($haveTag)
             $stmt->bindValue(6, $tag);
 
-        return $stmt->execute();
+        $updateStatus = $stmt->execute();
+        if ($updateStatus == 1 && $doTimestamp)
+            $updateStatus = 2;
+
+        return $updateStatus;
     }
     
     // update track and set created if it is currently null, eg first edit
