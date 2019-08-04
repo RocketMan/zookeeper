@@ -37,12 +37,30 @@ class Main implements IController {
     protected $dn;
     protected $session;
 
+    private function getRequestHeader($headerName)
+    {
+        $headers = getallheaders();
+        return isset($headerName) ? $headers[$headerName] : null;
+    }
+
     public function processRequest($dispatcher) {
         $this->session = Engine::session();
 
+        $contentType = $_REQUEST["Content-Type"];
+        $action =  $_REQUEST["action"];
+        $subAction =  $_REQUEST["subaction"];
+        $acceptHdr = $this->getRequestHeader("Accept");
+        $isJson = substr($acceptHdr, 0, 16)  === 'application/json';
+
+
         $this->preProcessRequest($dispatcher);
-        $this->emitResponseHeader();
-        $this->emitBody($dispatcher);
+        if ($isJson == 1) {
+            //TODO: add validation
+            $dispatcher->dispatch($action, $subaction, $this->session);
+        } else {
+            $this->emitResponseHeader();
+            $this->emitBody($dispatcher);
+        }
     }
 
     protected function preProcessRequest($dispatcher) {
@@ -50,8 +68,9 @@ class Main implements IController {
         if(!empty($_REQUEST["session"]) && !empty($_REQUEST["action"]) &&
                 !$dispatcher->isActionAuth($_REQUEST["action"], $this->session) &&
                 $_REQUEST["action"] != "loginValidate" &&
-                $_REQUEST["action"] != "logout")
+                $_REQUEST["action"] != "logout") {
             $_REQUEST["action"] = "invalidSession";
+         }
         
         // Setup/teardown a session
         switch($_REQUEST["action"]) {
@@ -84,7 +103,7 @@ class Main implements IController {
   <?php UI::emitCSS('css/zoostyle.css'); ?>
   <?php UI::emitCSS(Engine::param('stylesheet')); ?>
   <?php UI::emitCSS('css/about.css'); ?>
-  <SCRIPT TYPE="text/javascript" SRC="<?php echo $_SERVER['REQUEST_SCHEME']; ?>://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></SCRIPT>
+  <?php UI::emitJS('js/jquery_2.0.3.min.js'); ?>
   <?php UI::emitJS('js/jquery.tablesorter.min.js'); ?>
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Music Reviews" HREF="zkrss.php?feed=reviews">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
@@ -124,6 +143,7 @@ class Main implements IController {
     }
     
     protected function emitMain($dispatcher, $action, $subaction) {
+        error_log("enter main: " . $action . ", " . $subaction);
         echo "<TABLE WIDTH=\"100%\" CELLPADDING=0 CELLSPACING=0>\n";
         echo "<TR><TD>\n";
         echo "</TD></TR>\n<TR><TD>\n";

@@ -28,6 +28,7 @@ namespace ZK\Engine;
  * Playlist operations
  */
 interface IPlaylist {
+    //NOTE: must match SPECIAL_TRACK value in javascript.
     const SPECIAL_TRACK = "~~~~~~~~";
     const COMMENT_FLAG = "C";
 

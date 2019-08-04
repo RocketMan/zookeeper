@@ -409,6 +409,32 @@ TH.sec {
     border: 1px solid #3b0000;
     width: 120px;
 }
+.zk-hidden {
+    display: none;
+}
+
+.track-editor {
+    padding-top: 4px;
+}
+
+.track-editor input, .track-editor select {
+    width: 300px;
+    box-sizing: border-box;
+    height: 20px;
+    margin-bottom: 4px;
+}
+
+.track-editor button {
+    width: 140px;
+    box-sizing: border-box;
+}
+
+.track-editor label {
+    width: 40px;
+    display:inline-block;
+    font-weight: bold;
+}
+
 INPUT[type="radio"], 
 INPUT[type="checkbox"] {
     height: 15px;
