@@ -143,6 +143,7 @@ class Main implements IController {
     }
     
     protected function emitMain($dispatcher, $action, $subaction) {
+        error_log("enter main: " . $action . ", " . $subaction);
         echo "<TABLE WIDTH=\"100%\" CELLPADDING=0 CELLSPACING=0>\n";
         echo "<TR><TD>\n";
         echo "</TD></TR>\n<TR><TD>\n";
