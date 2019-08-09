@@ -66,7 +66,7 @@ class API extends CommandTarget implements IController {
     ];
 
     const PLAYLIST_DETAIL_FIELDS = [
-        "type", "comment", "artist", "track", "album", "label"
+        "type", "comment", "artist", "track", "album", "label", "tag"
     ];
 
     const TRACK_DETAIL_FIELDS = [
@@ -110,7 +110,8 @@ class API extends CommandTarget implements IController {
     private $nextToken = "";
 
     public function processRequest($dispatcher) {
-        $this->json = $_REQUEST["json"];
+        $this->json = $_REQUEST["json"] ||
+            substr($_SERVER["HTTP_ACCEPT"], 0, 16) == "application/json";
         $this->emitHeader();
         if(!$this->json)
             echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xml>\n";
@@ -264,7 +265,6 @@ class API extends CommandTarget implements IController {
                                 $events[] = ["type" => "break"];
                         else {
                             $track["type"] = "track";
-                            $track["comment"] = "";
                             $events[] = $track;
                         }
                     }
