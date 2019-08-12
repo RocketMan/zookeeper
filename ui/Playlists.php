@@ -611,7 +611,7 @@ class Playlists extends MenuItem {
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <div>
                 <label>Type:</label>
-                <select style='height:22px' id='track-type-pick'>
+                <select id='track-type-pick'>
                    <option value='tag-entry'>Tag ID</option>
                    <option value='manual-entry'>Manual</option>
                 </select>
@@ -621,11 +621,16 @@ class Playlists extends MenuItem {
                     <div>
                         <label>Tag:</label>
                         <input id='track-tag' />
+                        <span class='track-info' id='tag-status'>Enter tag ID followed by TAB or Enter</span>
                     </div>
                     <div>
                         <label>Track:</label>
                         <select id='track-title-pick'>
                         </select>
+                    </div>
+                    <div style='padding-bottom: 8px'>
+                        <label>&nbsp;</label>
+                        <span style='color:gray' id='tag-artist'></span>
                     </div>
                 </div>
  
@@ -657,9 +662,13 @@ class Playlists extends MenuItem {
         <hr>
 
         <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+        function setFocus(){}
+
         $().ready(function(){
             //NOTE: must match php definition
             const SPECIAL_TRACK = "~~~~~~~~";
+            $("#track-type-pick").val('tag-entry');
+            $("#track-tag").focus();
 
             function setAddButtonState(enableIt) {
                 $("#track-submit").prop("disabled", !enableIt);
@@ -669,7 +678,8 @@ class Playlists extends MenuItem {
                 var mode = $("#track-type-pick").val();
                 $("#manual-entry input").val('');
                 $("#track-title-pick").val('0');
-                $("#track-title-pick  option").remove();
+                $("#tag-status").text('');
+                $("#tag-artist").text('');
                 setAddButtonState(false);
 
                 if (clearTagInfo) {
@@ -691,15 +701,25 @@ class Playlists extends MenuItem {
                 return !isEmpty;
             }
 
+            function showUserError(msg) {
+                $('#tag-status').text(msg).removeClass('track-info').addClass('track-error');
+            }
+
             function getDiskInfo(id) {
+                const INVALID_TAG = 100;
                 clearUserInput(false);
-                var url = "/zkapi.php?method=getTracksRq&json=1&key=" + id;
+                var url = "zkapi.php?method=getTracksRq&json=1&key=" + id;
                 $.ajax({
                     dataType : 'json',
                     type: 'GET',
                     accept: "application/json; charset=utf-8",
                     url: url,
                 }).done(function (diskInfo) { //TODO: success?
+                    if (diskInfo.code == INVALID_TAG) {
+                        showUserError(id + ' is not a valid tag.');
+                        return;
+                    }
+
                     var options = "<option value=''>Select Track</option>";
                     tracks = diskInfo.data;
                     for (var i=0; i < tracks.length; i++) {
@@ -713,9 +733,10 @@ class Playlists extends MenuItem {
                     $("#track-track").val("");
                     $("#track-submit").attr("disabled");
                     $("#track-submit").prop("disabled", true);
+                    $("#tag-artist").text(diskInfo.artist  + '-' + diskInfo.album);
 
                 }).fail(function (jqXHR, textStatus, errorThrown) {
-                    console.log('ajax error: ' + textStatus);
+                    showUserError('Ajax error: ' + textStatus);
                 });
             }
 
@@ -759,8 +780,8 @@ class Playlists extends MenuItem {
 
                 $.ajax({
                     type: "POST",
-                    url: "/?action=addTrack",
-                    dataType: 'json',
+                    url: "?action=addTrack",
+                    dataType : 'json',
                     accept: "application/json; charset=utf-8",
                     data: postData,
                     success: function(respObj) {
@@ -769,7 +790,7 @@ class Playlists extends MenuItem {
                     },
                     error: function (jqXHR, textStatus, errorThrown) {
                         clearUserInput(true);
-                        console.log('submit error: %o, %o', jqXHR, textStatus);
+                        showUserError("Your track was not saved: " + textStatus);
                     }
                 });
             }
@@ -788,27 +809,19 @@ class Playlists extends MenuItem {
                 submitTrack(SPECIAL_TRACK);
             });
 
-            var tagIdTimer = null;
-            var tagId = '';
-            $("#track-tag").on('input', function() {
-                const TAG_ID_MIN_LENGTH = 5;
-                newId = this.value;
-
-                if (newId != tagId) {
-                    tagId = newId;
-                    clearUserInput(false);
-                    console.log('clear it: ' + tagId);
-                    window.clearTimeout(tagIdTimer);
+            $("#track-tag").on('keyup', function(e) {
+                showUserError('');
+                if (e.keyCode == 13) {
+                    $(this).blur();
+                    $('#track-title-pick').focus();
                 }
+            });
 
-                // wait for end of input before firing ajax
-                tagIdTimer = window.setTimeout(function() {
-                    if (tagId.length >= TAG_ID_MIN_LENGTH) {
-                        console.log('call getdiskInfo: ' + tagId);
-                        getDiskInfo(tagId);
-                    }
-                }, 500);
-           });
+            $("#track-tag").on('blur', function() {
+                var tagId = this.value.trim();
+                if (tagId.length > 0)
+                    getDiskInfo(tagId);
+            });
         });
         // -->
         </SCRIPT>
@@ -1554,7 +1567,7 @@ class Playlists extends MenuItem {
     
     private function makeAlbumLink($row, $includeLabel) {
         $albumName = $row["album"];
-        $labelSpan = "<span class='songLabel'>/" . $this->smartURL($row["label"]) . "</span>";
+        $labelSpan = "<span class='songLabel'> / " . $this->smartURL($row["label"]) . "</span>";
         if($row["tag"]) {
             $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($row["tag"]) .
                           "&amp;q=&amp;action=search&amp;session=" . $this->session->getSessionID() .

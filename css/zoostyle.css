@@ -413,6 +413,13 @@ TH.sec {
     display: none;
 }
 
+.track-info {
+    color: gray;
+}
+.track-error {
+    color: red;
+}
+
 .track-editor {
     padding-top: 4px;
 }
@@ -420,7 +427,7 @@ TH.sec {
 .track-editor input, .track-editor select {
     width: 300px;
     box-sizing: border-box;
-    height: 20px;
+    height: 24px;
     margin-bottom: 4px;
 }
 
@@ -430,7 +437,7 @@ TH.sec {
 }
 
 .track-editor label {
-    width: 40px;
+    width: 44px;
     display:inline-block;
     font-weight: bold;
 }
