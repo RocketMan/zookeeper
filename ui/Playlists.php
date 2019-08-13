@@ -600,7 +600,7 @@ class Playlists extends MenuItem {
 
     private function emitTagForm($playlistId, $message) {
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
-        $this->emitPlaylistBanner($playlist);
+        $this->emitPlaylistBanner($playlistId, $playlist);
         $this->emitTrackEditor($playlistId);
     }
     
@@ -705,6 +705,15 @@ class Playlists extends MenuItem {
                 $('#tag-status').text(msg).removeClass('track-info').addClass('track-error');
             }
 
+            // remove the prefix shown in the track picker values.
+            function stripTrackPrefix(trackTitle) {
+                var dotIdx = trackTitle.search(/[0-9]\. /);
+                if (dotIdx >= 0)
+                    trackTitle = trackTitle.substr(dotIdx + 3);
+
+                return trackTitle;
+           }
+            
             function getDiskInfo(id) {
                 const INVALID_TAG = 100;
                 clearUserInput(false);
@@ -724,7 +733,8 @@ class Playlists extends MenuItem {
                     tracks = diskInfo.data;
                     for (var i=0; i < tracks.length; i++) {
                         var trackName = tracks[i].track;
-                        options += `<option value='${trackName}'>${i+1}. ${trackName}</option>`;
+                        //NOTE: check stripTrackPrefix() when changing this.
+                        options += `<option>${i+1}. ${trackName}</option>`;
                     }
                     $("#track-title-pick").find('option').remove().end().append(options);
                     $("#track-artist").val(diskInfo.artist);
@@ -749,9 +759,9 @@ class Playlists extends MenuItem {
 
 
             $("#track-title-pick").on('change', function() {
-                var newTrack = this.value;
-                $("#track-track").val(newTrack);
-                setAddButtonState(newTrack.length > 0);
+                var trackTitle = stripTrackPrefix(this.value);
+                $("#track-track").val(trackTitle);
+                setAddButtonState(trackTitle.length > 0);
             });
 
             $("#manual-entry input").on('input', function() {
@@ -1650,16 +1660,16 @@ class Playlists extends MenuItem {
         return $showDateTime;
     }
 
-    private function emitPlaylistBanner($playlist) {
-        $showName = $playlist[0];
-        $djId = $playlist[3];
-        $djName = $playlist[4];
+    private function emitPlaylistBanner($playlistId, $playlist) {
+        $showName = $playlist['description'];
+        $djId = $playlist['id'];
+        $djName = $playlist['airname'];
         $showDateTime = $this->makeShowDateAndTime($playlist);
 
         // make print view header
         echo "<TABLE WIDTH='100%'><TR><TD ALIGN=RIGHT><A HREF='#top' " .
              "CLASS='nav' onClick=window.open('?target=export&amp;session=" . 
-             $this->session->getSessionID() . "&amp;playlist=" . $playlist . 
+             $this->session->getSessionID() . "&amp;playlist=" . $playlistId . 
              "&amp;format=html')>Print View</A></TD></TR></TABLE>";
 
         $dateDiv = "<DIV>".$showDateTime."&nbsp;</div>";
@@ -1676,7 +1686,7 @@ class Playlists extends MenuItem {
             return;
         }
 
-        $this->emitPlaylistBanner($row);
+        $this->emitPlaylistBanner($playlistId, $row);
         $this->emitPlaylistBody($playlistId, false);
     }
     
