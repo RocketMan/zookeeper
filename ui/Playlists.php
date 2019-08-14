@@ -662,11 +662,11 @@ class Playlists extends MenuItem {
         <hr>
 
         <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
         function setFocus(){}
 
         $().ready(function(){
-            //NOTE: must match php definition
-            const SPECIAL_TRACK = "~~~~~~~~";
+            const SPECIAL_TRACK = "<?php echo IPlaylist::SPECIAL_TRACK; ?>";
             var tagId = "";
             var trackList = []; //populated by ajax query
 
@@ -838,6 +838,7 @@ class Playlists extends MenuItem {
                     getDiskInfo(newId);
             });
         });
+    <?php ob_end_flush(); ?>
         // -->
         </SCRIPT>
     <?php
