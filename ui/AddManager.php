@@ -1254,7 +1254,6 @@ class AddManager extends MenuItem {
         echo "<TH>DJ</TH>";
         echo "<TH>Air Name</TH>";
         echo "<TH>Show</TH>";
-        echo "<TH>D</TH>";
         echo "<TH>Tracks</TH>";
         echo "<TH>AFile</TH>";
         echo "<TH>%</TH>";
@@ -1282,7 +1281,7 @@ class AddManager extends MenuItem {
             // insert no playlist row if there is a gap in the regular 
             // program day, eg 6am - 11:59:59pm.
             if($lastShowEnd != $showStart && $showStart != $DAY_START_TIME) {
-                echo "<TR CLASS='noPlaylist'><TD>" . $showDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $showStart . "</span></TD><TD COLSPAN=7>No playlist</TD></TR>";
+                echo "<TR CLASS='noPlaylist'><TD>" . $showDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $showStart . "</span></TD><TD COLSPAN=6>No playlist</TD></TR>";
             }
 
             $lastShowEnd = $showEnd;
@@ -1306,9 +1305,6 @@ class AddManager extends MenuItem {
                   "&amp;seq=selList&amp;session=".$this->session->getSessionID()."\">".
                   htmlentities($row["description"]) . "</A></TD>\n";
     
-            // Duration
-            echo "<TD align='right'>" . $row["duration"] . "</TD>\n";
-            
             // Totals
             echo "<TD>" . $row["total"] . "</TD>\n";
             echo "<TD>" . $row["afile"] . "</TD>\n";
