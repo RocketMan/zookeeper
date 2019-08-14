@@ -621,7 +621,7 @@ class Playlists extends MenuItem {
                     <div>
                         <label>Tag:</label>
                         <input id='track-tag' />
-                        <span class='track-info' id='tag-status'>Enter tag ID followed by TAB or Enter</span>
+                        <span class='track-info' id='tag-status'>Enter tag ID followed by Tab or Enter</span>
                     </div>
                     <div>
                         <label>Track:</label>
@@ -641,7 +641,7 @@ class Playlists extends MenuItem {
                     </div>
                     <div>
                         <label>Track:</label>
-                        <input id='track-track' />
+                        <input id='track-title' />
                     </div>
                     <div>
                         <label>Album:</label>
@@ -667,6 +667,9 @@ class Playlists extends MenuItem {
         $().ready(function(){
             //NOTE: must match php definition
             const SPECIAL_TRACK = "~~~~~~~~";
+            var tagId = "";
+            var trackList = []; //populated by ajax query
+
             $("#track-type-pick").val('tag-entry');
             $("#track-tag").focus();
 
@@ -684,6 +687,9 @@ class Playlists extends MenuItem {
 
                 if (clearTagInfo) {
                     $("#track-tag").val('').focus();
+                    $("#track-title-pick").find('option').remove();
+                    trackList = [];
+                    tagId = "";
                 }
 
                 if (mode == 'manual-entry') {
@@ -705,18 +711,11 @@ class Playlists extends MenuItem {
                 $('#tag-status').text(msg).removeClass('track-info').addClass('track-error');
             }
 
-            // remove the prefix shown in the track picker values.
-            function stripTrackPrefix(trackTitle) {
-                var dotIdx = trackTitle.search(/[0-9]\. /);
-                if (dotIdx >= 0)
-                    trackTitle = trackTitle.substr(dotIdx + 3);
-
-                return trackTitle;
-           }
-            
             function getDiskInfo(id) {
                 const INVALID_TAG = 100;
+                $("#track-title-pick").find('option').remove();
                 clearUserInput(false);
+                tagId = ""
                 var url = "zkapi.php?method=getTracksRq&json=1&key=" + id;
                 $.ajax({
                     dataType : 'json',
@@ -729,18 +728,19 @@ class Playlists extends MenuItem {
                         return;
                     }
 
+                    tagId = id;
                     var options = "<option value=''>Select Track</option>";
-                    tracks = diskInfo.data;
-                    for (var i=0; i < tracks.length; i++) {
-                        var trackName = tracks[i].track;
-                        //NOTE: check stripTrackPrefix() when changing this.
-                        options += `<option>${i+1}. ${trackName}</option>`;
+                    trackList = diskInfo.data;
+                    for (var i=0; i < trackList.length; i++) {
+                        var track = trackList[i];
+                        var artist = track.artist ? track.artist + ' - ' : '';
+                        options += `<option value='${i}' >${i+1}. ${artist} ${track.track}</option>`;
                     }
                     $("#track-title-pick").find('option').remove().end().append(options);
                     $("#track-artist").val(diskInfo.artist);
                     $("#track-label").val(diskInfo.label);
                     $("#track-album").val(diskInfo.album);
-                    $("#track-track").val("");
+                    $("#track-title").val("");
                     $("#track-submit").attr("disabled");
                     $("#track-submit").prop("disabled", true);
                     $("#tag-artist").text(diskInfo.artist  + '-' + diskInfo.album);
@@ -759,9 +759,14 @@ class Playlists extends MenuItem {
 
 
             $("#track-title-pick").on('change', function() {
-                var trackTitle = stripTrackPrefix(this.value);
-                $("#track-track").val(trackTitle);
-                setAddButtonState(trackTitle.length > 0);
+                var index= parseInt(this.value);
+                var track = trackList[index];
+                $("#track-title").val(track.track);
+                // collections have an artist per track.
+                if (track.artist)
+                    $("#track-artist").val(track.artist);
+
+                setAddButtonState(true);
             });
 
             $("#manual-entry input").on('input', function() {
@@ -770,12 +775,12 @@ class Playlists extends MenuItem {
             });
             
             function submitTrack(artist) {
-                var label, album, track;
+                var label, album, title;
 
                 if (artist !== SPECIAL_TRACK) {
                     label =  $("#track-label").val();
                     album =  $("#track-album").val();
-                    track =  $("#track-track").val();
+                    title =  $("#track-title").val();
                 }
 
                 var postData = {
@@ -785,7 +790,7 @@ class Playlists extends MenuItem {
                     artist: artist,
                     label: label,
                     album: album,
-                    track: track,
+                    track: title,
                 };
 
                 $.ajax({
@@ -827,10 +832,10 @@ class Playlists extends MenuItem {
                 }
             });
 
-            $("#track-tag").on('blur', function() {
-                var tagId = this.value.trim();
-                if (tagId.length > 0)
-                    getDiskInfo(tagId);
+            $("#track-title-pick").on('focus', function() {
+                var newId = $("#track-tag").val()
+                if (newId.length > 0 && newId != tagId)
+                    getDiskInfo(newId);
             });
         });
         // -->
