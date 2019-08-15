@@ -156,6 +156,10 @@ class Playlists extends MenuItem {
                     $created = $date->format('D M d, Y G:i');
                     $_REQUEST["created"] = $created;
                 }
+                // JM 2019-08-15 action and id need to be set
+                // for hyperlinks genereated by makeTrackRow (#54)
+                $this->action = $_REQUEST["oaction"];
+                $_REQUEST["id"] = Engine::lastInsertId();
                 $newRow = $this->makeTrackRow($_REQUEST, $playlist, True);
                 $retVal['row'] = $newRow;
             }
@@ -795,7 +799,7 @@ class Playlists extends MenuItem {
 
                 $.ajax({
                     type: "POST",
-                    url: "?action=addTrack",
+                    url: "?action=addTrack&oaction=<?php echo $this->action; ?>",
                     dataType : 'json',
                     accept: "application/json; charset=utf-8",
                     data: postData,
