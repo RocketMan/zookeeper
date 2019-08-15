@@ -37,20 +37,13 @@ class Main implements IController {
     protected $dn;
     protected $session;
 
-    private function getRequestHeader($headerName)
-    {
-        $headers = getallheaders();
-        return isset($headerName) ? $headers[$headerName] : null;
-    }
-
     public function processRequest($dispatcher) {
         $this->session = Engine::session();
 
         $contentType = $_REQUEST["Content-Type"];
         $action =  $_REQUEST["action"];
         $subAction =  $_REQUEST["subaction"];
-        $acceptHdr = $this->getRequestHeader("Accept");
-        $isJson = substr($acceptHdr, 0, 16)  === 'application/json';
+        $isJson = substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
 
         $this->preProcessRequest($dispatcher);
         if ($isJson == 1) {
