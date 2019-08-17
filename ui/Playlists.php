@@ -1618,32 +1618,32 @@ class Playlists extends MenuItem {
     }
 
     private function makeTrackRow($row, $playlist, $editMode) {
-              $retVal = "";
-              $editCell = $editMode ?  $editCell = "<TD>" . 
-                          $this->makeEditDiv($row, $playlist) . "</TD>" : "";
+        $REVIEW_DIV =  "<div class='albumReview'></div>";
+        $retVal = "";
+        $editCell = $editMode ?  $editCell = "<TD>" . 
+                    $this->makeEditDiv($row, $playlist) . "</TD>" : "";
 
-              $timeplayed = self::timestampToAMPM($row["created"]);
+        $timeplayed = self::timestampToAMPM($row["created"]);
 
-              if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK) {
-                $retVal = "<TR class='songDivider'>".$editCell.
-                          "<TD>".$timeplayed . "</TD><TD COLSPAN=4><HR></TD></TR>";
-              } else {
-                  $reviewCell = $row["REVIEWED"] ? $REVIEW_DIV : "";
-                  $artistName = $this->swapNames($row["artist"]);
-                  $albumLink = $this->makeAlbumLink($row, true);
-                  $retVal = "<TR class='songRow'>" . $editCell .
-                         "<TD>" . $timeplayed . "</TD>" .
-                         "<TD>" . $this->smartURL($artistName) . "</TD>" .
-                         "<TD>" . $this->smartURL($row["track"]) . "</TD>" .
-                         "<TD>" . $reviewCell . "</TD>" .
-                         "<TD>" . $albumLink . "</TD>" .
+        if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK) {
+            $retVal = "<TR class='songDivider'>".$editCell.
+                      "<TD>".$timeplayed . "</TD><TD COLSPAN=4><HR></TD></TR>";
+        } else {
+            $reviewCell = $row["REVIEWED"] ? $REVIEW_DIV : "";
+            $artistName = $this->swapNames($row["artist"]);
+            $albumLink = $this->makeAlbumLink($row, true);
+            $retVal = "<TR class='songRow'>" . $editCell .
+                      "<TD>" . $timeplayed . "</TD>" .
+                      "<TD>" . $this->smartURL($artistName) . "</TD>" .
+                      "<TD>" . $this->smartURL($row["track"]) . "</TD>" .
+                      "<TD>" . $reviewCell . "</TD>" .
+                      "<TD>" . $albumLink . "</TD>" .
                       "</TR>\n"; 
-              }
-              return $retVal;
-            }
+        }
+        return $retVal;
+    }
 
     private function emitPlaylistBody($playlist, $editMode) {
-        $REVIEW_DIV =  "<div class='albumReview'></div>";
         $header = $this->makePlaylistHeader($editMode);
         $editCell = "";
         echo "<TABLE class='playlistTable' CELLPADDING=1>";
