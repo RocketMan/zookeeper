@@ -24,11 +24,6 @@
 
 require('../ui/3rdp/JSMin.php');
 
-const NOTICE = "// Zookeeper Online\n".
-    "// Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>\n".
-    "// https://zookeeper.ibinx.com/\n".
-    "// license GPL-3.0\n";
- 
 $target = realpath(__DIR__.$_SERVER['PATH_INFO']);
 if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
         !file_exists($target)) {
@@ -40,14 +35,9 @@ header("Content-Type: application/javascript");
 header("Last-Modified: ".gmdate('D, d M Y H:i:s', filemtime($target))." GMT");
 
 ob_start("ob_gzhandler");
-ob_start("minify_js");
-
-// function for minifying the JS
-function minify_js($buffer) {
-    return JSMin::minify($buffer);
-}
+ob_start([\JSMin::class, 'minify']);
 
 require_once($target);
 
-ob_end_flush();
-ob_end_flush();
+ob_end_flush(); // JSMin::minify
+ob_end_flush(); // ob_gzhandler

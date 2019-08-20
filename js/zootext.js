@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -19,6 +19,8 @@
 // version 3, along with this program.  If not, see
 // http://www.gnu.org/licenses/
 //
+
+/*! Zookeeper Online (C) 1997-2019 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 function emitMore(table, data, type) {
   var more = data.getAttribute("more");
