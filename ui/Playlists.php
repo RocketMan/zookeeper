@@ -156,6 +156,10 @@ class Playlists extends MenuItem {
                     $created = $date->format('D M d, Y G:i');
                     $_REQUEST["created"] = $created;
                 }
+                // JM 2019-08-15 action and id need to be set
+                // for hyperlinks genereated by makeTrackRow (#54)
+                $this->action = $_REQUEST["oaction"];
+                $_REQUEST["id"] = Engine::lastInsertId();
                 $newRow = $this->makeTrackRow($_REQUEST, $playlist, True);
                 $retVal['row'] = $newRow;
             }
@@ -662,11 +666,11 @@ class Playlists extends MenuItem {
         <hr>
 
         <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
         function setFocus(){}
 
         $().ready(function(){
-            //NOTE: must match php definition
-            const SPECIAL_TRACK = "~~~~~~~~";
+            const SPECIAL_TRACK = "<?php echo IPlaylist::SPECIAL_TRACK; ?>";
             var tagId = "";
             var trackList = []; //populated by ajax query
 
@@ -795,7 +799,7 @@ class Playlists extends MenuItem {
 
                 $.ajax({
                     type: "POST",
-                    url: "?action=addTrack",
+                    url: "?action=addTrack&oaction=<?php echo $this->action; ?>",
                     dataType : 'json',
                     accept: "application/json; charset=utf-8",
                     data: postData,
@@ -838,6 +842,7 @@ class Playlists extends MenuItem {
                     getDiskInfo(newId);
             });
         });
+    <?php ob_end_flush(); ?>
         // -->
         </SCRIPT>
     <?php
@@ -1613,32 +1618,32 @@ class Playlists extends MenuItem {
     }
 
     private function makeTrackRow($row, $playlist, $editMode) {
-              $retVal = "";
-              $editCell = $editMode ?  $editCell = "<TD>" . 
-                          $this->makeEditDiv($row, $playlist) . "</TD>" : "";
+        $REVIEW_DIV =  "<div class='albumReview'></div>";
+        $retVal = "";
+        $editCell = $editMode ?  $editCell = "<TD>" . 
+                    $this->makeEditDiv($row, $playlist) . "</TD>" : "";
 
-              $timeplayed = self::timestampToAMPM($row["created"]);
+        $timeplayed = self::timestampToAMPM($row["created"]);
 
-              if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK) {
-                $retVal = "<TR class='songDivider'>".$editCell.
-                          "<TD>".$timeplayed . "</TD><TD COLSPAN=4><HR></TD></TR>";
-              } else {
-                  $reviewCell = $row["REVIEWED"] ? $REVIEW_DIV : "";
-                  $artistName = $this->swapNames($row["artist"]);
-                  $albumLink = $this->makeAlbumLink($row, true);
-                  $retVal = "<TR class='songRow'>" . $editCell .
-                         "<TD>" . $timeplayed . "</TD>" .
-                         "<TD>" . $this->smartURL($artistName) . "</TD>" .
-                         "<TD>" . $this->smartURL($row["track"]) . "</TD>" .
-                         "<TD>" . $reviewCell . "</TD>" .
-                         "<TD>" . $albumLink . "</TD>" .
+        if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK) {
+            $retVal = "<TR class='songDivider'>".$editCell.
+                      "<TD>".$timeplayed . "</TD><TD COLSPAN=4><HR></TD></TR>";
+        } else {
+            $reviewCell = $row["REVIEWED"] ? $REVIEW_DIV : "";
+            $artistName = $this->swapNames($row["artist"]);
+            $albumLink = $this->makeAlbumLink($row, true);
+            $retVal = "<TR class='songRow'>" . $editCell .
+                      "<TD>" . $timeplayed . "</TD>" .
+                      "<TD>" . $this->smartURL($artistName) . "</TD>" .
+                      "<TD>" . $this->smartURL($row["track"]) . "</TD>" .
+                      "<TD>" . $reviewCell . "</TD>" .
+                      "<TD>" . $albumLink . "</TD>" .
                       "</TR>\n"; 
-              }
-              return $retVal;
-            }
+        }
+        return $retVal;
+    }
 
     private function emitPlaylistBody($playlist, $editMode) {
-        $REVIEW_DIV =  "<div class='albumReview'></div>";
         $header = $this->makePlaylistHeader($editMode);
         $editCell = "";
         echo "<TABLE class='playlistTable' CELLPADDING=1>";

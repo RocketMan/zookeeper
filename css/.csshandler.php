@@ -22,11 +22,6 @@
  *
  */
  
-const NOTICE = "/* \n * Zookeeper Online\n".
-    " * Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>\n".
-    " * https://zookeeper.ibinx.com/\n".
-    " * license GPL-3.0\n */\n";
-    
 $target = realpath(__DIR__.$_SERVER['PATH_INFO']);
 if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
         !file_exists($target)) {
@@ -53,5 +48,5 @@ function compress($buffer) {
 
 require_once($target);
 
-ob_end_flush();
-ob_end_flush();
+ob_end_flush(); // compress
+ob_end_flush(); // ob_gzhandler
