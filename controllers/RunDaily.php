@@ -405,9 +405,9 @@ class RunDaily implements IController {
                 $fancyDate = date("F Y", mktime(0,0,0,$month,$d,$y));
                 $body = self::rule("Chart for the Month of $fancyDate",
                                    0,
-                                   Engine::param('station_medium'))."\n";
+                                   Engine::param('station_medium'));
                 $body .= self::rule("Music Director: ".Engine::param('md_name'),
-                                   0);
+                                   0)."\n";
                 $body .= self::rule($contact['addr'], -1, "",
                                    "Vox: ".$contact['phone']);
                 $body .= self::rule($contact['city'], -1, "",
