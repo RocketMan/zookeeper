@@ -29,6 +29,8 @@
  *
  * The first item in the list is the default if no action is specified.
  */
+
+//NOTE: server must be restarted for changes to take effect.
 $menu = [
 //  access, action,        menu label,              implementation class
     [ 'a', 'home',         0,                       ZK\UI\Home::class ],
@@ -39,7 +41,10 @@ $menu = [
     [ 'a', 'searchReview%', 0,                      ZK\UI\Reviews::class ],
     [ 'a', 'addmgr',       'A-File',                ZK\UI\AddManager::class ],
     [ 'u', 'newList%',     'New Playlist',          ZK\UI\Playlists::class ],
-    [ 'u', 'editList%',    'Edit Playlist',         ZK\UI\Playlists::class ],
+    [ 'u', 'editList%',     '0',                    ZK\UI\Playlists::class ],
+    [ 'u', 'deleteList%',   '0',                    ZK\UI\Playlists::class ],
+    [ 'u', 'restoreList%',  '0',                    ZK\UI\Playlists::class ],
+    [ 'u', 'editListSel%',  'Edit Playlist',         ZK\UI\Playlists::class ],
     [ 'u', 'showLink',     'Link to Playlist',      ZK\UI\Playlists::class ],
     [ 'u', 'importExport', 'Import/Export',         ZK\UI\Playlists::class ],
     [ 'a', 'viewDJ%',      'DJ Zone!',              ZK\UI\Playlists::class ],

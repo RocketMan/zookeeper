@@ -420,26 +420,33 @@ TH.sec {
     color: red;
 }
 
-.track-editor {
+.pl-form {
+    margin-top: 8px;
+    margin-left: 4px;
+}
+.pl-form-entry {
     padding-top: 4px;
 }
 
-.track-editor input, .track-editor select {
+.pl-form-entry input, .pl-form-entry select {
     width: 300px;
     box-sizing: border-box;
     height: 24px;
     margin-bottom: 4px;
 }
 
-.track-editor button {
+.pl-form-entry button {
     width: 140px;
     box-sizing: border-box;
 }
 
-.track-editor label {
-    width: 44px;
+.form-entry label, .pl-form-entry label {
     display:inline-block;
     font-weight: bold;
+}
+
+.pl-form-entry label {
+    width: 116px;
 }
 
 INPUT[type="radio"], 
