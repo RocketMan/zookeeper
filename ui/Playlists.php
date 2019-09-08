@@ -470,7 +470,6 @@ class Playlists extends MenuItem {
                     $description = $playlist['description'];
                     $time = $playlist['showtime'];
                     $airName = $playlist['airname'];
-                    error_log("got Show: " . $time);
                     break;
                 }
             }
