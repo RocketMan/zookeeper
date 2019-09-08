@@ -325,10 +325,14 @@ class Playlists extends MenuItem {
                     var roundedDateTime = getRoundedDateTime(15);
                     // returns <YYYY-MM-DD>T<HH:MM:SS.MMM>Z
                     var dateTimeAr = roundedDateTime.toISOString().split('T');
-                    var showStart = dateTimeAr[1];
-                    showStart = showStart.substring(0, showStart.length - 8);
                     $("#show-date").val(dateTimeAr[0]);
-                    $("#show-start").val(showStart);
+
+                    // set to quarter hour if empty
+                    if ($("#show-start").val() == '') {
+                        var showStart = dateTimeAr[1];
+                        showStart = showStart.substring(0, showStart.length - 8);
+                        $("#show-start").val(showStart);
+                    }
                 }
     
                 $("#new-show").on("submit", function(e) {
@@ -439,6 +443,8 @@ class Playlists extends MenuItem {
 
     // build the form used to add/modify playlist meta data
     public function emitEditList() {
+        $WEEK_SECONDS = 60 *60 * 24 * 7;
+        $DATE_FORMAT = "Y-m-d";
         $playlistId = $_REQUEST["playlist"];
         $description = '';
         $date = '';
@@ -451,7 +457,25 @@ class Playlists extends MenuItem {
             $time = $row[2];
             if(!$airname)
                 $airname = $row[3];
+        } else {
+            $nowDateStr =  (new DateTime())->format($DATE_FORMAT);
+            $nowDateTimestamp =  (new DateTime($nowDateStr))->getTimestamp();
+
+            // see if there is a PL on this day last week. if so use it.
+            $playlists = Engine::api(IPlaylist::class)->getPlaylists(1, 1, "", 1, $this->session->getUser(), 1, 10);
+            while ($playlists && ($playlist = $playlists->fetch())) {
+                $showDate = new DateTime($playlist['showdate']);
+                $dateInterval = $nowDateTimestamp - $showDate->getTimestamp();
+                if ($dateInterval == $WEEK_SECONDS) {
+                    $description = $playlist['description'];
+                    $time = $playlist['showtime'];
+                    $airName = $playlist['airname'];
+                    error_log("got Show: " . $time);
+                    break;
+                }
+            }
         }
+
         $this->emitEditListForm($description, $time, $date, $playlistId);
     }
 
