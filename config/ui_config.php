@@ -41,6 +41,8 @@ $menu = [
     [ 'a', 'searchReview%', 0,                      ZK\UI\Reviews::class ],
     [ 'a', 'addmgr',       'A-File',                ZK\UI\AddManager::class ],
     [ 'u', 'newList%',     'New Playlist',          ZK\UI\Playlists::class ],
+    [ 'u', 'addAirname%',   '0',                    ZK\UI\Playlists::class ],
+    [ 'u', 'addAirnamePost%','0',                    ZK\UI\Playlists::class ],
     [ 'u', 'editList%',     '0',                    ZK\UI\Playlists::class ],
     [ 'u', 'deleteList%',   '0',                    ZK\UI\Playlists::class ],
     [ 'u', 'restoreList%',  '0',                    ZK\UI\Playlists::class ],

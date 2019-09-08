@@ -42,6 +42,8 @@ class Playlists extends MenuItem {
         [ "deleteList", "handleDeleteListPost" ],
         [ "restoreList", "handleRestoreListPost" ],
         [ "editListPost", "handleListPost" ],
+        [ "addAirname", "emitNewAirName"],
+        [ "addAirnamePost", "handleAirnamePost"],
         [ "editListSel", "emitEditListPicker" ],
         [ "newListEditor", "emitEditor" ],
         [ "editListEditor", "emitEditor" ],
@@ -265,10 +267,10 @@ class Playlists extends MenuItem {
     
     // emits the html & javascript to edit & create a new playlist.
     // TODO: show error message if post was incorrect
-    private function emitEditListForm($description, $timeRange, $date, $playlistId) {
+    private function emitEditListForm($airName, $description, $timeRange, $date, $playlistId) {
         $isoDate = $date ? str_replace("/", "-", $date) : '';
         $isoTimeAr = $timeRange ? explode("-", $timeRange) : ['',''];
-        $airNames = $this->getDJAirNames();
+        $airNames = $this->getDJAirNames($airName);
         $userAction = $playlistId ? "Edit " : "Create ";
         ?>
 
@@ -291,10 +293,12 @@ class Playlists extends MenuItem {
                 <INPUT id='show-end' step='60' required type='time' value="<?php echo $isoTimeAr[1]; ?>" NAME='totime' />
             </div>
             <div>
-                <label>DJ Air Name:</label>
+                <label>Air Name:</label>
                 <SELECT NAME=airname>
                   <?php echo $airNames; ?>
                 </SELECT>
+                <a href='/?session=<?php echo $this->session->getSessionID();?>&
+action=addAirname&playlist=<?php echo $playlistId;?>' >Add Air Name</a>
             </div>
             <div>
                 <label></label>
@@ -345,53 +349,43 @@ class Playlists extends MenuItem {
     <?php 
     }
     
-    private function emitNewAirNameForm($playlistId) {
+    public function emitNewAirName() {
+        $this->emitNewAirNameForm(null);
+    }
+
+    public function emitNewAirNameForm($errMsg) {
     ?>
-    <P CLASS="header">Add New Airname</P>
+    <P CLASS="header"><b>Add Air Name</b></P>
     <?php echo $errorMessage; ?>
     <FORM ACTION="?" METHOD=POST>
     <TABLE CELLPADDING=2 CELLSPACING=0>
       <TR>
-        <TD ALIGN=RIGHT>Airname:</TD>
-        <TD><INPUT TYPE=TEXT NAME=djname CLASS=input SIZE=30></TD>
+        <TD ALIGN=RIGHT>Air Name:</TD>
+        <TD><INPUT required TYPE=TEXT NAME=djname CLASS=input SIZE=30></TD>
       </TR>
       <TR>
         <TD>&nbsp;</TD>
-        <TD><INPUT TYPE=SUBMIT NAME="newairname" VALUE=" Add Airname "></TD>
+        <TD><INPUT TYPE=SUBMIT NAME="newairname" VALUE=" Submit Air Name "></TD>
       </TR>
     </TABLE>
-    <INPUT TYPE=HIDDEN NAME=button VALUE=" Setup New Airname... ">
     <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
-    <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $playlistId?'editList':'newList';?>">
-    <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
-    <INPUT TYPE=HIDDEN NAME=description VALUE="<?php echo htmlentities(stripslashes($description));?>">
-    <INPUT TYPE=HIDDEN NAME=date VALUE="<?php echo htmlentities(stripslashes($date));?>">
-    <INPUT TYPE=HIDDEN NAME=time VALUE="<?php echo htmlentities(stripslashes($time));?>">
-    <INPUT TYPE=HIDDEN NAME=fromtime VALUE="<?php echo htmlentities(stripslashes($fromtime));?>">
-    <INPUT TYPE=HIDDEN NAME=totime VALUE="<?php echo htmlentities(stripslashes($totime));?>">
-    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
+    <INPUT TYPE=HIDDEN NAME=action VALUE="addAirnamePost">
     </FORM>
     <?php 
     }
 
     // handles post for playlist creation and edit
     public function handleAirNamePost() {
-            $displayForm = 1;
-            $djname = trim($_REQUEST["djname"]);
-            if($_REQUEST["newairname"] == " Add Airname " && $djname) {
-                // Insert new airname
-                $success = Engine::api(IDJ::class)->insertAirname($djname, $this->session->getUser());
-                if($success > 0) {
-                    $airname = Engine::lastInsertId();
-                    $button = "";
-                    $displayForm = 0;
-                } else
-                    $errorMessage = "<B><FONT CLASS='error'>Airname '$djname' is invalid or already exists.</FONT></B>";
-            }
-            if ($displayForm) {
-                UI::setFocus("djname");
-                return;
-            }
+        $djname = trim($_REQUEST["djname"]);
+        $success = Engine::api(IDJ::class)->insertAirname($djname, $this->session->getUser());
+        if($success > 0) {
+            $airname = Engine::lastInsertId();
+            $this->emitEditList();
+        } else {
+            $errorMessage = "<B><FONT CLASS='error'>'$djname' is invalid or already exists.</FONT></B>";
+            $this->emitNewAirNameForm($errorMessage);
+        }
+        
     }
 
     // handles post for playlist creation and edit
@@ -402,9 +396,10 @@ class Playlists extends MenuItem {
         $airname = $_REQUEST["airname"];
         $playlistId = $_REQUEST["playlist"];
         $button = $_REQUEST["button"];
-        $fromtime = $_REQUEST["fromtime"];
-        $totime = $_REQUEST["totime"];
+        $fromtime = substr($_REQUEST["fromtime"], 0, 5);
+        $totime   = subStr($_REQUEST["totime"], 0, 5);
     
+
         list($year, $month, $day) = explode("-", $date);
         if(strlen($fromtime) && strlen($totime))
             $time = $this->composeTime($fromtime, $totime);
@@ -426,18 +421,19 @@ class Playlists extends MenuItem {
                 $this->emitEditor();
             }
         } else {
-            emitEditListForm($description,  $time, $date, $playlistId);
+            emitEditListForm($airname, $description,  $time, $date, $playlistId);
         }
     }
 
-    private function getDJAirNames() {
+    private function getDJAirNames($airName) {
         $airNames = '';
         $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
         while ($records && ($row = $records->fetch())) {
-           $selected = ($row[0] == $airname)?" SELECTED" : "";
-           $airName = "<OPTION VALUE='" . $row[0] . "'" . $selected . ">" . $row[1] . "</OPTION>";
-           $airNames = $airNames . $airName;
+           $selected = $row[0] == $airName ? " SELECTED" : "";
+           $newItem = "<OPTION VALUE='" . $row[0] . "'" . $selected . ">" . $row[1] . "</OPTION>";
+           $airNames = $airNames . $newItem;
         }
+        $airNames .=  "<OPTION VALUE=''>None</OPTION>";
         return $airNames;
     }
 
@@ -475,7 +471,7 @@ class Playlists extends MenuItem {
             }
         }
 
-        $this->emitEditListForm($description, $time, $date, $playlistId);
+        $this->emitEditListForm($airname, $description, $time, $date, $playlistId);
     }
 
     private function emitConfirm($name, $message, $action, $rtaction="") {
@@ -577,7 +573,7 @@ class Playlists extends MenuItem {
       
         <form class='pl-form' id='active-form' ACTION="?" METHOD=POST>
             <B>Active Playlists (<?php echo $activeCount; ?>):</B><BR>
-            <select style='width:400px' name=playlist SIZE=10>
+            <select id='active-list-picker' style='width:400px' name=playlist SIZE=10>
                 <?php echo $playlists; ?>
             </select>
             <div style='margin-top:4px'>
@@ -601,6 +597,10 @@ class Playlists extends MenuItem {
                         $("#active-form").addClass('zk-hidden');
                         $("#deleted-form").removeClass('zk-hidden');
                     }
+                });
+
+                $("#active-list-picker").dblclick(function() {
+                    $("#active-form").submit();
                 });
 
                 $("#delete-list").click(function() {
@@ -1259,7 +1259,7 @@ class Playlists extends MenuItem {
             }
             if ($displayForm) {
     ?>
-    <P CLASS="header">Add New Airname</P>
+    <P CLASS="header"><b>Add Air Name</b></P>
     <?php echo $errorMessage; ?>
     <FORM ACTION="?" METHOD=POST>
     <TABLE CELLPADDING=2 CELLSPACING=0>
@@ -1342,7 +1342,7 @@ class Playlists extends MenuItem {
             echo "        <TD><INPUT TYPE=TEXT NAME=time VALUE=\"". htmlentities(stripslashes($time)) . "\" CLASS=input SIZE=15></TD>\n";
     ?>
           </TR><TR>
-            <TD ALIGN=RIGHT>DJ Airname:</TD>
+            <TD ALIGN=RIGHT>Airname:</TD>
             <TD><SELECT NAME=airname>
     <?php 
             $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
