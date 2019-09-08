@@ -439,22 +439,18 @@ action=addAirname&playlist=<?php echo $playlistId;?>' >Add Air Name</a>
 
     // build the form used to add/modify playlist meta data
     public function emitEditList() {
-        $WEEK_SECONDS = 60 *60 * 24 * 7;
-        $DATE_FORMAT = "Y-m-d";
         $playlistId = $_REQUEST["playlist"];
+        $airName = '';
         $description = '';
         $date = '';
         $time = '';
 
+        $sourcePlaylist = null;
         if(isset($playlistId) && $playlistId > 0) {
-            $row = Engine::api(IPlaylist::class)->getPlaylist($playlistId);
-            $description = $row[0];
-            $date = $row[1];
-            $time = $row[2];
-            if(!$airname)
-                $airname = $row[3];
+            $sourcePlaylist = Engine::api(IPlaylist::class)->getPlaylist($playlistId);
         } else {
-            $nowDateStr =  (new DateTime())->format($DATE_FORMAT);
+            $WEEK_SECONDS = 60 *60 * 24 * 7;
+            $nowDateStr =  (new DateTime())->format("Y-m-d");
             $nowDateTimestamp =  (new DateTime($nowDateStr))->getTimestamp();
 
             // see if there is a PL on this day last week. if so use it.
@@ -463,15 +459,20 @@ action=addAirname&playlist=<?php echo $playlistId;?>' >Add Air Name</a>
                 $showDate = new DateTime($playlist['showdate']);
                 $dateInterval = $nowDateTimestamp - $showDate->getTimestamp();
                 if ($dateInterval == $WEEK_SECONDS) {
-                    $description = $playlist['description'];
-                    $time = $playlist['showtime'];
-                    $airName = $playlist['airname'];
+                    $sourcePlaylist = $playlist;
                     break;
                 }
             }
         }
 
-        $this->emitEditListForm($airname, $description, $time, $date, $playlistId);
+        if ($sourcePlaylist) {
+            $description = $sourcePlaylist['description'];
+            $date = $sourcePlaylist['showdate'];
+            $time = $sourcePlaylist['showtime'];
+            $airName = $sourcePlaylist['airname'];
+        }
+
+        $this->emitEditListForm($airName, $description, $time, $date, $playlistId);
     }
 
     private function emitConfirm($name, $message, $action, $rtaction="") {
