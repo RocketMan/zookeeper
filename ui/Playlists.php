@@ -295,7 +295,7 @@ class Playlists extends MenuItem {
     
     // emits the html & javascript to edit & create a new playlist.
     // TODO: show error message if post was incorrect
-    private function emitEditListForm($airName, $description, $zkTimeRange, $date, $playlistId) {
+    private function emitEditListForm($airName, $description, $zkTimeRange, $date, $playlistId, $errorMsg) {
         $isoDate = $date ? str_replace("/", "-", $date) : '';
         $isoTimeAr = $this->zkTimeRangeToISOTimeAr($zkTimeRange);
         $airNames = $this->getDJAirNames($airName);
@@ -303,6 +303,8 @@ class Playlists extends MenuItem {
         ?>
 
         <DIV CLASS='playlistBanner'>&nbsp; <?php echo $userAction;?> Playlist</div>
+        <span class='error'><?php echo $errorMsg; ?></span>
+
         <FORM id='new-show' class='pl-form-entry' ACTION="?" METHOD=POST>
             <div>
                 <label>Show Name:</label>
@@ -310,7 +312,7 @@ class Playlists extends MenuItem {
             </div>
             <div>
                 <label>Show Date:</label>
-                <INPUT id='show-date' required type='date' value="<?php echo $isoDate;?>" NAME='date' />
+                <INPUT id='show-date-picker' required type='date' value="<?php echo $isoDate;?>" />
             </div>
             <div>
                 <label>Start Time:</label>
@@ -318,22 +320,26 @@ class Playlists extends MenuItem {
             </div>
             <div>
                 <label>End Time:</label>
-                <INPUT id='show-end' step='60' required type='time' value="<?php echo $isoTimeAr[1]; ?>" NAME='totime' />
+                <INPUT id='show-end' step='60' placeholder='HH:MM' required type='time' value="<?php echo $isoTimeAr[1]; ?>" NAME='totime' />
             </div>
             <div>
                 <label>Air Name:</label>
                 <SELECT NAME=airname>
                   <?php echo $airNames; ?>
                 </SELECT>
-                <a style='font-size:10px' href='?session=<?php echo $this->session->getSessionID();?>&action=addAirname&playlist=<?php echo $playlistId;?>' >Add Air Name</a>
             </div>
             <div>
                 <label></label>
                 <INPUT id='edit-submit-but' TYPE=SUBMIT NAME=button VALUE="Create">
             </div>
+            <div>
+                <label></label>
+                <a style='font-size:10px' href='?session=<?php echo $this->session->getSessionID();?>&action=addAirname&playlist=<?php echo $playlistId;?>' >Add Air Name</a>
+            </div>
     
+            <INPUT id='show-date' TYPE=HIDDEN NAME='date' VALUE="">
             <INPUT TYPE=HIDDEN NAME=action VALUE="editListPost">
-            <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
+            <INPUT id='playlist-id' TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
             <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         </FORM>
     
@@ -341,6 +347,13 @@ class Playlists extends MenuItem {
             function setFocus(){}
     
             $().ready(function(){
+                var checkDate = document.createElement("input");
+                checkDate.setAttribute("type", "date");
+                if (checkDate.type!="date") {
+                    console.log("registering jquery date picker");
+                    $('#show-date-picker').datepicker();
+                }
+
                 function getRoundedDateTime(minutes) {
                     let now = new Date();
                     now = new Date(now.getTime() - now.getTimezoneOffset()*60000);
@@ -349,14 +362,14 @@ class Playlists extends MenuItem {
                     return roundedDate
                 }
     
-                var isUpdate = $("#show-date").val().length > 0;
+                var isUpdate = $("#playlist-id").val().length > 0;
                 if (isUpdate) {
                     $('#edit-submit-but').prop('value' ,'Update');
                 } else {
                     var roundedDateTime = getRoundedDateTime(15);
                     // returns <YYYY-MM-DD>T<HH:MM:SS.MMM>Z
                     var dateTimeAr = roundedDateTime.toISOString().split('T');
-                    $("#show-date").val(dateTimeAr[0]);
+                    $("#show-date-picker").val(dateTimeAr[0]);
 
                     // set to quarter hour if empty
                     if ($("#show-start").val() == '') {
@@ -367,7 +380,15 @@ class Playlists extends MenuItem {
                 }
     
                 $("#new-show").on("submit", function(e) {
-                    console.log("submit form");
+                    // rearrange DP local format to ISO
+                    var pickerDate = $('#show-date-picker').val();
+                    if (pickerDate.indexOf('/') > 0) {
+                        console.log('adjust datepicker date');
+                        var dateAr = pickerDate.split('/');
+                        pickerDate = dateAr[2] + '-' + dateAr[0] + '-' + dateAr[1];
+                    }
+
+                    $('#show-date').val(pickerDate);
                     return true;
                 });
             });
@@ -380,7 +401,7 @@ class Playlists extends MenuItem {
         $this->emitNewAirNameForm(null);
     }
 
-    public function emitNewAirNameForm($errMsg) {
+    public function emitNewAirNameForm($errorMsg) {
     ?>
         <DIV CLASS='playlistBanner'>&nbsp; Add Air Name</div>
         <?php echo $errorMessage; ?>
@@ -427,7 +448,11 @@ class Playlists extends MenuItem {
         $showTime = $this->composeTime($fromtime, $totime);
         list($year, $month, $day) = explode("-", $date);
 
-        if(checkdate($month, $day, $year) && $showTime != '' && ($description != "")) {
+        $goodDate = checkdate($month, $day, $year);
+        $goodTime = $showTime != '';
+        $goodDescription = $description != "";
+
+        if($goodDate && $goodTime && $goodDescription) {
             // Success - Run the query
             if(isset($playlistId) && $playlistId > 0) {
                 $success = Engine::api(IPlaylist::class)->updatePlaylist(
@@ -444,7 +469,8 @@ class Playlists extends MenuItem {
                 $this->emitEditor();
             }
         } else {
-            $this->emitEditListForm($airname, $description,  $showTime, $date, $playlistId);
+            $errMsg = $goodDate ? "Missing field" : "Invalid date " . $date;
+            $this->emitEditListForm($airname, $description,  $showTime, $date, $playlistId, $errMsg);
         }
     }
 
@@ -497,7 +523,7 @@ class Playlists extends MenuItem {
             $airName = $sourcePlaylist['airname'];
         }
 
-        $this->emitEditListForm($airName, $description, $time, $date, $playlistId);
+        $this->emitEditListForm($airName, $description, $time, $date, $playlistId, null);
     }
 
     private function emitConfirm($name, $message, $action, $rtaction="") {

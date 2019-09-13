@@ -104,6 +104,17 @@ class Main implements IController {
   <?php UI::emitCSS('css/about.css'); ?>
   <?php UI::emitJS('js/jquery.min.js'); ?>
   <?php UI::emitJS('js/jquery.tablesorter.min.js'); ?>
+
+  <!-- pull down date picker if browser is stupid -->
+  <script type="text/javascript">
+    var datefield=document.createElement("input");
+    datefield.setAttribute("type", "date");
+    if (datefield.type!="date") {
+        document.write('<link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/base/jquery-ui.css" rel="stylesheet" type="text/css" />\n')
+        document.write('<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js"><\/script>\n') 
+    }
+  </script>
+
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Music Reviews" HREF="zkrss.php?feed=reviews">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio A-File Adds" HREF="zkrss.php?feed=adds">
