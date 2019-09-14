@@ -37,13 +37,20 @@ class Main implements IController {
     protected $dn;
     protected $session;
 
+    private function getRequestHeader($headerName)
+    {
+        $headers = getallheaders();
+        return isset($headerName) ? $headers[$headerName] : null;
+    }
+
     public function processRequest($dispatcher) {
         $this->session = Engine::session();
 
         $contentType = $_REQUEST["Content-Type"];
         $action =  $_REQUEST["action"];
         $subAction =  $_REQUEST["subaction"];
-        $isJson = substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
+        $acceptHdr = $this->getRequestHeader("Accept");
+        $isJson = substr($acceptHdr, 0, 16)  === 'application/json';
 
         $this->preProcessRequest($dispatcher);
         if ($isJson == 1) {
@@ -97,6 +104,20 @@ class Main implements IController {
   <?php UI::emitCSS('css/about.css'); ?>
   <?php UI::emitJS('js/jquery.min.js'); ?>
   <?php UI::emitJS('js/jquery.tablesorter.min.js'); ?>
+
+  <!-- pull down date & time pickers if browser is stupid -->
+  <script type="text/javascript">
+    var datefield=document.createElement("input");
+    datefield.setAttribute("type", "date");
+    if (datefield.type!="date") {
+        document.write('<link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/base/jquery-ui.css" rel="stylesheet" type="text/css" />');
+        document.write('<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js"><\/script>') 
+
+        document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css" />');
+        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"><\/script>');
+    }
+  </script>
+
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Music Reviews" HREF="zkrss.php?feed=reviews">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio A-File Adds" HREF="zkrss.php?feed=adds">

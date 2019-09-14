@@ -37,8 +37,14 @@ use ZK\UI\UICommon as UI;
 class Playlists extends MenuItem {
     //NOTE: update ui_config.php when changing the actions.
     private static $actions = [
-        [ "newList", "emitEditListNew" ],
-        [ "editList", "emitEditListSel" ],
+        [ "newList", "emitEditList" ],
+        [ "editList", "emitEditList" ],
+        [ "deleteList", "handleDeleteListPost" ],
+        [ "restoreList", "handleRestoreListPost" ],
+        [ "editListPost", "handleListPost" ],
+        [ "addAirname", "emitNewAirName"],
+        [ "addAirnamePost", "handleAirnamePost"],
+        [ "editListSel", "emitEditListPicker" ],
         [ "newListEditor", "emitEditor" ],
         [ "editListEditor", "emitEditor" ],
         [ "showLink", "emitShowLink" ],
@@ -53,8 +59,6 @@ class Playlists extends MenuItem {
     private $action;
     private $subaction;
 
-    private $noTables = false;
-    
     public function processLocal($action, $subaction) {
         $this->action = $action;
         $this->subaction = $subaction;
@@ -122,8 +126,36 @@ class Playlists extends MenuItem {
             return false;
     }
     
+    // split ZK time range into an array of start/end ISO times.
+    private function zkTimeRangeToISOTimeAr($zkTimeRange) {
+        $retVal = ['',''];
+        $timeAr = explode("-", $zkTimeRange);
+        if (count($timeAr) == 2) {
+            $retVal[0] = substr($timeAr[0], 0, 2) . ':' . substr($timeAr[0], 2,4);
+            $retVal[1] = substr($timeAr[1], 0, 2) . ':' . substr($timeAr[1], 2,4);
+        }
+        
+        return $retVal;
+    }
+ 
+    // convert HHMM or HH:MM pairs into ZK time range, eg HHMM-HHMM
+    // return range string if valid else empty string.
     private function composeTime($fromTime, $toTime) {
-        return $fromTime . "-" . $toTime;
+        $retVal = '';
+
+        // in case it sends HH:MM instead of HHMM
+        if (strlen($fromTime) == 5)
+            $fromTime = substr($fromTime, 0, 2) . substr($fromTime, 3,5);
+
+        if (strlen($toTime) == 5)
+            $toTime = substr($toTime, 0, 2) . substr($toTime, 3,5);
+
+        if (strlen($fromTime) == 4 && strlen($toTime) == 4)
+            $retVal = $fromTime . "-" . $toTime;
+        else
+            error_log("Error: invalid playlist time -" . $fromTime . "-, -" . $toTime ."-");
+
+        return $retVal;
     }
     
     // add track from an ajax post from client. return new track row
@@ -261,184 +293,240 @@ class Playlists extends MenuItem {
         $this->newEntity(Search::class)->doSearch();
     }
     
-    private function emitEditList($editlist) {
+    // emits the html & javascript to edit & create a new playlist.
+    // TODO: show error message if post was incorrect
+    private function emitEditListForm($airName, $description, $zkTimeRange, $date, $playlistId, $errorMsg) {
+        $isoDate = $date ? str_replace("/", "-", $date) : '';
+        $isoTimeAr = $this->zkTimeRangeToISOTimeAr($zkTimeRange);
+        $airNames = $this->getDJAirNames($airName);
+        $userAction = $playlistId ? "Edit " : "Create ";
+        ?>
+
+        <DIV CLASS='playlistBanner'>&nbsp; <?php echo $userAction;?> Playlist</div>
+        <span class='error'><?php echo $errorMsg; ?></span>
+
+        <FORM id='new-show' class='pl-form-entry' ACTION="?" METHOD=POST>
+            <div>
+                <label>Show Name:</label>
+                <input id='show-description' required name='description' size=30 value="<?php echo htmlentities(stripslashes($description));?>" />
+            </div>
+            <div>
+                <label>Show Date:</label>
+                <INPUT id='show-date-picker' required type='date' value="<?php echo $isoDate;?>" />
+            </div>
+            <div>
+                <label>Start Time:</label>
+                <INPUT id='show-start' class='timepicker' step='60' required type='time' value="<?php echo $isoTimeAr[0]; ?>" NAME='fromtime' />
+            </div>
+            <div>
+                <label>End Time:</label>
+                <INPUT id='show-end' step='60' class='timepicker' required type='time' value="<?php echo $isoTimeAr[1]; ?>" NAME='totime' />
+            </div>
+            <div>
+                <label>Air Name:</label>
+                <SELECT NAME=airname>
+                  <?php echo $airNames; ?>
+                </SELECT>
+            </div>
+            <div>
+                <label></label>
+                <INPUT id='edit-submit-but' TYPE=SUBMIT NAME=button VALUE="Create">
+            </div>
+            <div>
+                <label></label>
+                <a style='font-size:10px' href='?session=<?php echo $this->session->getSessionID();?>&action=addAirname&playlist=<?php echo $playlistId;?>' >Add Air Name</a>
+            </div>
+
+            <INPUT id='show-date' TYPE=HIDDEN NAME='date' VALUE="">
+            <INPUT TYPE=HIDDEN NAME=action VALUE="editListPost">
+            <INPUT id='playlist-id' TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
+            <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
+        </FORM>
+    
+        <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+            function setFocus(){}
+    
+            $().ready(function(){
+                var checkDate = document.createElement("input");
+                checkDate.setAttribute("type", "date");
+                if (checkDate.type!="date") {
+                    console.log("registering jquery date picker");
+                    $('#show-date-picker').datepicker();
+                    $('input.timepicker').timepicker({timeFormat:'H:mm'});
+                }
+
+                function getRoundedDateTime(minutes) {
+                    let now = new Date();
+                    now = new Date(now.getTime() - now.getTimezoneOffset()*60000);
+                    let ms = 1000 * 60 * minutes; // convert minutes to ms
+                    let roundedDate = new Date(Math.round(now.getTime() / ms) * ms);
+                    return roundedDate
+                }
+    
+                var isUpdate = $("#playlist-id").val().length > 0;
+                if (isUpdate) {
+                    $('#edit-submit-but').prop('value' ,'Update');
+                } else {
+                    var roundedDateTime = getRoundedDateTime(15);
+                    // returns <YYYY-MM-DD>T<HH:MM:SS.MMM>Z
+                    var dateTimeAr = roundedDateTime.toISOString().split('T');
+                    $("#show-date-picker").val(dateTimeAr[0]);
+
+                    // set to quarter hour if empty
+                    if ($("#show-start").val() == '') {
+                        var showStart = dateTimeAr[1];
+                        showStart = showStart.substring(0, showStart.length - 8);
+                        $("#show-start").val(showStart);
+                    }
+                }
+    
+                $("#new-show").on("submit", function(e) {
+                    // rearrange DP local format to ISO
+                    var pickerDate = $('#show-date-picker').val();
+                    if (pickerDate.indexOf('/') > 0) {
+                        console.log('adjust datepicker date');
+                        var dateAr = pickerDate.split('/');
+                        pickerDate = dateAr[2] + '-' + dateAr[0] + '-' + dateAr[1];
+                    }
+
+                    $('#show-date').val(pickerDate);
+                    return true;
+                });
+            });
+        // -->
+        </SCRIPT>
+    <?php 
+    }
+    
+    public function emitNewAirName() {
+        $this->emitNewAirNameForm(null);
+    }
+
+    public function emitNewAirNameForm($errorMsg) {
+    ?>
+        <DIV CLASS='playlistBanner'>&nbsp; Add Air Name</div>
+        <?php echo $errorMessage; ?>
+        <FORM class='pl-form-entry' ACTION="?" METHOD=POST>
+            <div>
+                <label>Air Name:</label>
+                <INPUT required TYPE=TEXT NAME=djname CLASS=input SIZE=30>
+            </div>
+            <div>
+                <label></label>
+                <INPUT TYPE=SUBMIT NAME="newairname" VALUE=" Submit Air Name ">
+            </div>
+    
+            <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
+            <INPUT TYPE=HIDDEN NAME=action VALUE="addAirnamePost">
+        </FORM>
+    <?php 
+    }
+
+    // handles post for playlist creation and edit
+    public function handleAirNamePost() {
+        $djname = trim($_REQUEST["djname"]);
+        $playlistId = trim($_REQUEST["playlist"]);
+        $success = Engine::api(IDJ::class)->insertAirname($djname, $this->session->getUser());
+        if($success > 0) {
+            $airname = Engine::lastInsertId();
+            $this->emitEditList();
+        } else {
+            $errorMessage = "<B><FONT CLASS='error'>'$djname' is invalid or already exists.</FONT></B>";
+            $this->emitNewAirNameForm($errorMessage);
+        }
+        
+    }
+
+    // handles post for playlist creation and edit
+    public function handleListPost() {
         $description = $_REQUEST["description"];
         $date = $_REQUEST["date"];
-        $time = $_REQUEST["time"];
         $airname = $_REQUEST["airname"];
-        $playlist = $_REQUEST["playlist"];
+        $playlistId = $_REQUEST["playlist"];
         $button = $_REQUEST["button"];
-        $fromtime = $_REQUEST["fromtime"];
-        $totime = $_REQUEST["totime"];
-    
-        if($editlist)
-            $playlist = $editlist;
-        if($button == " Setup New Airname... ") {
-            $displayForm = 1;
-            $djname = trim($_REQUEST["djname"]);
-            if($_REQUEST["newairname"] == " Add Airname " && $djname) {
-                // Insert new airname
-                $success = Engine::api(IDJ::class)->insertAirname($djname, $this->session->getUser());
-                if($success > 0) {
-                    $airname = Engine::lastInsertId();
-                    $button = "";
-                    $displayForm = 0;
-                } else
-                    $errorMessage = "<B><FONT CLASS=\"error\">Airname '$djname' is invalid or already exists.</FONT></B>";
-            }
-            if ($displayForm) {
-    ?>
-    <P CLASS="header">Add New Airname</P>
-    <?php echo $errorMessage; ?>
-    <FORM ACTION="?" METHOD=POST>
-    <TABLE CELLPADDING=2 CELLSPACING=0>
-      <TR>
-        <TD ALIGN=RIGHT>Airname:</TD>
-        <TD><INPUT TYPE=TEXT NAME=djname CLASS=input SIZE=30></TD>
-      </TR>
-      <TR>
-        <TD>&nbsp;</TD>
-        <TD><INPUT TYPE=SUBMIT NAME="newairname" VALUE=" Add Airname "></TD>
-      </TR>
-    </TABLE>
-    <INPUT TYPE=HIDDEN NAME=button VALUE=" Setup New Airname... ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
-    <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $playlist?'editList':'newList';?>">
-    <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
-    <INPUT TYPE=HIDDEN NAME=description VALUE="<?php echo htmlentities(stripslashes($description));?>">
-    <INPUT TYPE=HIDDEN NAME=date VALUE="<?php echo htmlentities(stripslashes($date));?>">
-    <INPUT TYPE=HIDDEN NAME=time VALUE="<?php echo htmlentities(stripslashes($time));?>">
-    <INPUT TYPE=HIDDEN NAME=fromtime VALUE="<?php echo htmlentities(stripslashes($fromtime));?>">
-    <INPUT TYPE=HIDDEN NAME=totime VALUE="<?php echo htmlentities(stripslashes($totime));?>">
-    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
-    </FORM>
-    <?php 
-                UI::setFocus("djname");
-                return;
-            }
-        }
-        if($_REQUEST["validate"] == "edit") {
-            list($year, $month, $day) = explode("-", $date);
-            if(strlen($fromtime) && strlen($totime))
-                $time = $this->composeTime($fromtime, $totime);
+        $fromtime = substr($_REQUEST["fromtime"], 0, 5);
+        $totime   = subStr($_REQUEST["totime"], 0, 5);
+        $showTime = $this->composeTime($fromtime, $totime);
+        list($year, $month, $day) = explode("-", $date);
 
-            if(checkdate($month, $day, $year) &&
-                    ($time != "") && ($description != "")) {
-                // Success - Run the query
-                if($playlist) {
-                    $success = Engine::api(IPlaylist::class)->updatePlaylist(
-                            $playlist, $date, $time, $description, $airname);
-                    $this->action = "editListEditor";
-                    $this->emitEditor();
-                } else {
-                    $success = Engine::api(IPlaylist::class)->insertPlaylist(
-                             $this->session->getUser(),
-                             $date, $time, $description, $airname);
-                    $_REQUEST["playlist"] = Engine::lastInsertId();
-                    $this->action = "newListEditor";
-                    $this->emitEditor();
-                }
-                return;
-            } else
-                echo "<B><FONT CLASS=\"error\">Ensure fields are not blank and date is valid.</FONT></B>\n";
-        }
-        if($playlist) {
-            echo "<P CLASS=\"header\">Edit Show Information</P>\n";
-            $row = Engine::api(IPlaylist::class)->getPlaylist($playlist);
-            $description = $row[0];
-            $date = $row[1];
-            $time = $row[2];
-            if(!$airname)
-                $airname = $row[3];
+        $goodDate = checkdate($month, $day, $year);
+        $goodTime = $showTime != '';
+        $goodDescription = $description != "";
+
+        if($goodDate && $goodTime && $goodDescription) {
+            // Success - Run the query
+            if(isset($playlistId) && $playlistId > 0) {
+                $success = Engine::api(IPlaylist::class)->updatePlaylist(
+                        $playlistId, $date, $showTime, $description, $airname);
+                $this->action = "editListEditor";
+                $this->emitEditor();
+            } else {
+                $success = Engine::api(IPlaylist::class)->insertPlaylist(
+                         $this->session->getUser(),
+                         $date, $showTime, $description, $airname);
+
+                $_REQUEST["playlist"] = Engine::lastInsertId();
+                $this->action = "newListEditor";
+                $this->emitEditor();
+            }
         } else {
-            echo "<P CLASS=\"header\">Enter Show Information</P>\n";
-            $date = date("Y-m-d");
+            $errMsg = $goodDate ? "Missing field" : "Invalid date " . $date;
+            $this->emitEditListForm($airname, $description,  $showTime, $date, $playlistId, $errMsg);
         }
-    ?>
-    <FORM ACTION="?" METHOD=POST>
-    <TABLE CELLPADDING=2 CELLSPACING=0>
-      <TR>
-        <TD ALIGN=RIGHT>Show Name:</TD>
-        <TD><INPUT TYPE=TEXT NAME=description VALUE="<?php echo htmlentities(stripslashes($description));?>" CLASS=input SIZE=30></TD>
-      </TR><TR>
-        <TD ALIGN=RIGHT>Date:</TD>
-        <TD><INPUT TYPE=TEXT NAME=date VALUE="<?php echo htmlentities(stripslashes($date));?>" CLASS=input SIZE=15></TD>
-      </TR><TR>
-        <TD ALIGN=RIGHT>Time Slot:</TD>
-    <?php 
-        if(strlen($fromtime) && strlen($totime)
-                       || $this->extractTime($time, $fromtime, $totime)) {
-            // Emit the time in canonical format
-            echo "    <TD><SELECT NAME=fromtime>\n";
-            for($i=0; $i<24; $i++) {
-                for($j=0; $j<60; $j+=30) {
-                    $ovalue = sprintf("%02d%02d", $i, $j);
-                    $selected = ($ovalue == $fromtime)?" SELECTED":"";
-                    echo "          <OPTION VALUE=\"$ovalue\"$selected>".self::hourToAMPM($ovalue, 1)."\n";
-                }
-            }
-            echo "        </SELECT> - <SELECT NAME=totime>\n";
-            for($i=0; $i<24; $i++) {
-                for($j=0; $j<60; $j+=30) {
-                    $ovalue = sprintf("%02d%02d", $i, $j);
-                    $selected = ($ovalue == $totime)?" SELECTED":"";
-                    echo "          <OPTION VALUE=\"$ovalue\"$selected>".self::hourToAMPM($ovalue, 1)."\n";
-                }
-            }
-            echo "        </SELECT></TD>\n";
-        } else
-            // Emit the time in legacy format
-            echo "    <TD><INPUT TYPE=TEXT NAME=time VALUE=\"". htmlentities(stripslashes($time)) . "\" CLASS=input SIZE=15></TD>\n";
-    ?>
-      </TR><TR>
-        <TD ALIGN=RIGHT>DJ Airname:</TD>
-        <TD><SELECT NAME=airname>
-    <?php 
+    }
+
+    private function getDJAirNames($airName) {
+        $airNames = '';
         $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
         while ($records && ($row = $records->fetch())) {
-           $selected = ($row[0] == $airname)?" SELECTED":"";
-           echo "            <OPTION VALUE=\"" . $row[0] ."\"" . $selected .
-                ">$row[1]\n";
+           $selected = $row[1] == $airName ? " SELECTED" : "";
+           $newItem = "<OPTION VALUE='" . $row[0] . "'" . $selected . ">" . $row[1] . "</OPTION>";
+           $airNames = $airNames . $newItem;
         }
-        $selected = $airname?"":" SELECTED";
-        echo "            <OPTION VALUE=\"\"$selected>(unpublished playlist)\n";
-    ?>
-            </SELECT><INPUT TYPE=SUBMIT NAME=button VALUE=" Setup New Airname... "></TD>
-      </TR><TR>
-        <TD>&nbsp;</TD>
-    <?php 
-        if($playlist)
-            echo "    <TD><INPUT TYPE=SUBMIT onClick=\"return ConfirmTime();\" VALUE=\" Next &gt;&gt; \"></TD>\n";
-        else
-            echo "    <TD><INPUT TYPE=SUBMIT onClick=\"return ConfirmTime();\" VALUE=\" Create \"></TD>\n";
-    ?>
-      </TR>
-    </TABLE>
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
-    <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $playlist?'editList':'newList';?>">
-    <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
-    <INPUT TYPE=HIDDEN NAME=validate VALUE="edit">
-    </FORM>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-    function ConfirmTime() {
-      return document.forms[0].fromtime.value != '0000' ||
-          document.forms[0].totime.value != '0000' ||
-          confirm("If your show is really on midnight - midnight, click 'OK'; otherwise, click 'Cancel' and set the correct time.");
+
+        $selectedVal = $airName == null || $airName == '' ? ' selected ' : '';
+        $airNames .=  "<OPTION " . $selectedVal . " VALUE=''>None</OPTION>";
+        return $airNames;
     }
-    <?php
-        ob_end_flush();
-    ?>
-    // -->
-    </SCRIPT>
-    <?php 
-        UI::setFocus("description");
+
+    // build the form used to add/modify playlist meta data
+    public function emitEditList() {
+        $playlistId = $_REQUEST["playlist"];
+        $airName = '';
+        $description = '';
+        $date = '';
+        $time = '';
+
+        $sourcePlaylist = null;
+        if(isset($playlistId) && $playlistId > 0) {
+            $sourcePlaylist = Engine::api(IPlaylist::class)->getPlaylist($playlistId);
+        } else {
+            $WEEK_SECONDS = 60 *60 * 24 * 7;
+            $nowDateStr =  (new DateTime())->format("Y-m-d");
+            $nowDateTimestamp =  (new DateTime($nowDateStr))->getTimestamp();
+
+            // see if there is a PL on this day last week. if so use it.
+            $playlists = Engine::api(IPlaylist::class)->getPlaylists(1, 1, "", 1, $this->session->getUser(), 1, 10);
+            while ($playlists && ($playlist = $playlists->fetch())) {
+                $showDate = new DateTime($playlist['showdate']);
+                $dateInterval = $nowDateTimestamp - $showDate->getTimestamp();
+                if ($dateInterval == $WEEK_SECONDS) {
+                    $sourcePlaylist = $playlist;
+                    break;
+                }
+            }
+        }
+
+        if ($sourcePlaylist) {
+            $description = $sourcePlaylist['description'];
+            $date = $sourcePlaylist['showdate'];
+            $time = $sourcePlaylist['showtime'];
+            $airName = $sourcePlaylist['airname'];
+        }
+
+        $this->emitEditListForm($airName, $description, $time, $date, $playlistId, null);
     }
-    
-    private function deletePlaylist($playlist) {
-        Engine::api(IPlaylist::class)->deletePlaylist($playlist);
-    }
-    
+
     private function emitConfirm($name, $message, $action, $rtaction="") {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
@@ -482,71 +570,102 @@ class Playlists extends MenuItem {
         $this->emitEditList(0);
     }
     
-    public function emitEditListSel() {
-        $playlist = $_REQUEST["playlist"];
-        if(($_REQUEST["button"] == " Delete ") && $playlist)
-            $this->deletePlaylist($playlist);
-        else if($_REQUEST["validate"] && $playlist) {
-            if($this->subaction == "restore") {
-                $this->restorePlaylist($playlist);
-            } else {
-                $this->emitEditList($playlist);
-                return;
-            }
+    public function handleDeleteListPost() {
+        $playlistId = $_REQUEST["playlist"];
+        Engine::api(IPlaylist::class)->deletePlaylist($playlistId);
+        $this->emitEditListPicker();
+    }
+
+    public function handleRestoreListPost() {
+        $playlistId = $_REQUEST["playlist"];
+        $this->restorePlaylist($playlistId);
+        $this->emitEditListPicker();
+    }
+
+    // emit form for selecting a playlist for editing, deletion or undelete.
+    public function emitEditListPicker() {
+        $activePlaylists = Engine::api(IPlaylist::class)->getListsSelNormal($this->session->getUser());
+        $playlists = "";
+        $activeCount = 0;
+        while($activePlaylists && ($row = $activePlaylists->fetch())) {
+            $playlists = $playlists . "<OPTION VALUE='$row[0]'>$row[1] -- $row[3]</OPTION>";
+
+           $activeCount++;
         }
 
-        $menu[] = [ "u", "", "Playlists", "emitEditListSelNormal" ];
-        if($this->getDeletedPlaylistCount())
-            $menu[] = [ "u", "restore", "Deleted Playlists", "emitEditListSelDeleted" ];
-        else
-            $this->subaction = "";
-        $this->dispatchSubaction($this->action, $this->subaction, $menu);
-    }
-    
-    // CheckBrowserCaps
-    //
-    // Check browser's capabilities:
-    //     noTables property set true if browser does not support tables
-    //
-    private function checkBrowserCaps() {
-        // For now, we naively assume all browsers support tables except Lynx.
-        $this->noTables = (substr($_SERVER["HTTP_USER_AGENT"], 0, 5) == "Lynx/");
-    }
+        $deletedPlaylists = Engine::api(IPlaylist::class)->getListsSelDeleted($this->session->getUser());
+        $deletedOptions = '';
+        $deletedCount = 0;
+        while($deletedPlaylists && ($row = $deletedPlaylists->fetch())) {
+            $deletedOptions .= "<OPTION VALUE='$row[0]'>$row[1] -- $row[3] (expires $row[4])";
+            $deletedCount++;
+        }
+        $typeVisibility = strlen($deletedOptions) == 0 ? 'zk-hidden' : '';
+        ?>
 
-    public function emitEditListSelNormal() {
-    ?>
-    <FORM ACTION="?" METHOD=POST>
-    <B>Select Playlist:</B><BR>
-    <TABLE CELLPADDING=0 BORDER=0><TR><TD>
-    <SELECT NAME=playlist SIZE=10>
-    <?php 
-        // Setup $noTables for handling of 'Delete' function
-        $this->checkBrowserCaps();
+        <div CLASS='playlistBanner'>&nbsp; Select Playlist</div>
+        <div class='form-entry <?php echo $typeVisibility; ?>' >
+            <label>Type:</label>
+            <select id='list-type-picker'>
+                <option value='active-type'>Active</option>
+                <option value='deleted-type'>Deleted</option>
+            </select>
+        </div>
+
+        <form class='pl-form zk-hidden' id='deleted-form' ACTION="?" METHOD=POST>
+        <B>Deleted Playlists (<?php echo $deletedCount; ?>):</B><BR>
+        <select sytle='width:400px' name=playlist size=10>
+            <?php echo $deletedOptions; ?>
+        </select>
+        <div style='margin-top:4px'>
+            <input TYPE=SUBMIT VALUE=" Restore ">
+        </div>
+        <input TYPE=hidden name=action VALUE="restoreList">
+        <input TYPE=hidden name=session VALUE="<?php echo $this->session->getSessionID();?>">
+        </form>
+      
+        <form class='pl-form' id='active-form' ACTION="?" METHOD=POST>
+            <B>Active Playlists (<?php echo $activeCount; ?>):</B><BR>
+            <select id='active-list-picker' style='width:400px' name=playlist SIZE=10>
+                <?php echo $playlists; ?>
+            </select>
+            <div style='margin-top:4px'>
+                <input TYPE=SUBMIT VALUE=" Edit ">&nbsp;&nbsp;&nbsp;
+                <input id='delete-list' TYPE=BUTTON VALUE="Delete">
+            </div>
+            <input TYPE=hidden name=session VALUE="<?php echo $this->session->getSessionID();?>">
+            <input id='action-type' TYPE=hidden name=action VALUE="editList">
+        </form>
+
+        <script LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+            function setFocus(){}
     
-        $records = Engine::api(IPlaylist::class)->getListsSelNormal($this->session->getUser());
-        while($records && ($row = $records->fetch()))
-            echo "  <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3]\n";
-    ?>
-    </SELECT></TD></TR>
-    <TR><TD>
-    <INPUT TYPE=SUBMIT NAME=button VALUE=" Edit ">&nbsp;&nbsp;&nbsp;
-    <?php if($this->noTables) { ?>
-    <INPUT TYPE=SUBMIT NAME=button VALUE=" Delete ">
-    <?php } else { ?>
-    <INPUT TYPE=BUTTON NAME=button onClick="ConfirmDelete()" VALUE=" Delete ">
-    <?php } ?>
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
-    <INPUT TYPE=HIDDEN NAME=action VALUE="editList">
-    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
-    </TD></TR></TABLE>
-    </FORM>
-    <?php 
-        if(!$this->noTables)
-            $this->emitConfirm("Delete",
-                        "This will delete the selected playlist.  Are you sure you want to do this?",
-                        "button=+Delete+&session=".$this->session->getSessionID()."&action=editList&validate=y",
-                        "playlist");
-        UI::setFocus("playlist");
+            $().ready(function(){
+                $("#list-type-picker").change(function() {
+                    var $showType = $(this).val();
+                    if ($showType == 'active-type') {
+                        $("#deleted-form").addClass('zk-hidden');
+                        $("#active-form").removeClass('zk-hidden');
+                    } else {
+                        $("#active-form").addClass('zk-hidden');
+                        $("#deleted-form").removeClass('zk-hidden');
+                    }
+                });
+
+                $("#active-list-picker").dblclick(function() {
+                    $("#active-form").submit();
+                });
+
+                $("#delete-list").click(function() {
+                    if (confirm("Are your sure?")) {
+                        $("#action-type").val('deleteList');
+                        $("#active-form").submit();
+                    }
+                });
+            });
+        // -->
+        </script>
+        <?php
     }
     
     private function makeEditDiv($row, $playlist) {
@@ -562,34 +681,6 @@ class Playlists extends MenuItem {
         return $retVal;
     }
 
-    public function emitEditListSelDeleted() {
-    ?>
-    <FORM ACTION="?" METHOD=POST>
-    <B>Select Playlist to Restore:</B><BR>
-    <TABLE CELLPADDING=0 BORDER=0><TR><TD>
-    <SELECT NAME=playlist SIZE=10>
-    <?php 
-        // Setup $this->noTables for handling of 'Delete' function
-        $this->checkBrowserCaps();
-    
-        $records = Engine::api(IPlaylist::class)->getListsSelDeleted($this->session->getUser());
-        while($records && ($row = $records->fetch())) {
-            echo "  <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3] (expires $row[4])\n";
-        }
-    ?>
-    </SELECT></TD></TR>
-    <TR><TD>
-    <INPUT TYPE=SUBMIT NAME=button VALUE=" Restore ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
-    <INPUT TYPE=HIDDEN NAME=action VALUE="editList">
-    <INPUT TYPE=HIDDEN NAME=subaction VALUE="restore">
-    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
-    </TD></TR></TABLE>
-    <P><B>Note: Deleted playlists automatically expire on the date indicated.</B></P></FORM>
-    <?php 
-        UI::setFocus("playlist");
-    }
-    
     // make header for edit & view playlist
     private function makePlaylistHeader($isEditMode) {
         $editCol = $isEditMode ? "<TD WIDTH='30PX' />" : "";
@@ -610,7 +701,7 @@ class Playlists extends MenuItem {
     
     private function emitTrackEditor($playlistId) {
     ?>
-        <div class='track-editor'>
+        <div class='pl-form-entry'>
             <input id='track-session' type='hidden' value='session VALUE="<?php echo $this->session->getSessionID(); ?>'>
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <div>
@@ -881,8 +972,6 @@ class Playlists extends MenuItem {
     }
     
     private function emitEditForm($playlist, $id, $album, $track) {
-      // Setup $this->noTables for handling of 'Delete' function
-      $this->checkBrowserCaps();
       $sep = $id && substr($album["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK;
     ?>
       <P CLASS="header"><?php echo $id?"Editing highlighted":"Adding";?> <?php echo $sep?"set separator":"track"?>:</P>
@@ -927,11 +1016,8 @@ class Playlists extends MenuItem {
           <TD>
     <?php if($id) { ?>
               <INPUT TYPE=SUBMIT NAME=button VALUE="  Save  ">&nbsp;&nbsp;&nbsp;
-    <?php     if($this->noTables) { ?>
               <INPUT TYPE=SUBMIT NAME=button VALUE=" Delete ">
-    <?php     } else { ?>
               <INPUT TYPE=BUTTON NAME=button onClick="ConfirmDelete()" VALUE=" Delete ">
-    <?php     } ?>
               <INPUT TYPE=HIDDEN NAME=id VALUE="<?php echo $id;?>">
     <?php } else { ?>
               <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
@@ -946,7 +1032,7 @@ class Playlists extends MenuItem {
       </TABLE>
       </FORM>
     <?php 
-        if($id && !$this->noTables)
+        if($id)
             $this->emitConfirm("Delete",
                         "Delete this track?",
                         "button=+Delete+&session=".$this->session->getSessionID()."&action=$this->action&playlist=$playlist&id=$id&seq=editForm");
@@ -1226,7 +1312,7 @@ class Playlists extends MenuItem {
             }
             if ($displayForm) {
     ?>
-    <P CLASS="header">Add New Airname</P>
+    <P CLASS="header"><b>Add Air Name</b></P>
     <?php echo $errorMessage; ?>
     <FORM ACTION="?" METHOD=POST>
     <TABLE CELLPADDING=2 CELLSPACING=0>
@@ -1259,14 +1345,13 @@ class Playlists extends MenuItem {
         if(!$date)
             $date = date("Y-m-d");
         list($year, $month, $day) = explode("-", $date);
-        if(strlen($fromtime) && strlen($totime))
-            $time = $this->composeTime($fromtime, $totime);
+        $time = $this->composeTime($fromtime, $totime);
         if(!$userfile || $userfile == "none" ||
                 $description == "" ||
-                $time == "" ||
+                $time == '' ||
                 !checkdate($month, $day, $year)) {
             if($validate == "edit")
-                echo "<B><FONT CLASS=\"error\">Ensure fields are not blank and date is valid.</FONT></B><BR>\n";
+                echo "<B><FONT CLASS='error'>Ensure fields are not blank and date is valid.</FONT></B><BR>\n";
     ?>
       <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
         <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
@@ -1309,7 +1394,7 @@ class Playlists extends MenuItem {
             echo "        <TD><INPUT TYPE=TEXT NAME=time VALUE=\"". htmlentities(stripslashes($time)) . "\" CLASS=input SIZE=15></TD>\n";
     ?>
           </TR><TR>
-            <TD ALIGN=RIGHT>DJ Airname:</TD>
+            <TD ALIGN=RIGHT>Airname:</TD>
             <TD><SELECT NAME=airname>
     <?php 
             $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());

@@ -61,7 +61,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
     
     public function getPlaylists($onlyPublished=0, $withAirname=0,
-                               $showDate="", $airname="", $user="", $desc=1) {
+                               $showDate="", $airname="", $user="", $desc=1, $limit=null) {
         if($withAirname)
             $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
                      "a.id airid, a.airname FROM lists l LEFT JOIN airnames a " .
@@ -78,6 +78,10 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $query .= "AND l.airname IS NOT NULL ";
         $desc = $desc?"DESC":"";
         $query .= "ORDER BY l.showdate $desc, l.showtime $desc, l.id $desc";
+
+        if ($limit)
+            $query .= " limit $limit ";
+
         $stmt = $this->prepare($query);
 
         $p = 1;
