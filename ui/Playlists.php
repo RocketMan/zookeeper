@@ -344,6 +344,7 @@ class Playlists extends MenuItem {
         </FORM>
     
         <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
             function setFocus(){}
     
             $().ready(function(){
@@ -393,6 +394,7 @@ class Playlists extends MenuItem {
                     return true;
                 });
             });
+    <?php ob_end_flush(); ?>
         // -->
         </SCRIPT>
     <?php 
@@ -637,7 +639,8 @@ class Playlists extends MenuItem {
             <input id='action-type' TYPE=hidden name=action VALUE="editList">
         </form>
 
-        <script LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+        <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
             function setFocus(){}
     
             $().ready(function(){
@@ -663,8 +666,9 @@ class Playlists extends MenuItem {
                     }
                 });
             });
+    <?php ob_end_flush(); ?>
         // -->
-        </script>
+        </SCRIPT>
         <?php
     }
     

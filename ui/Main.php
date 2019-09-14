@@ -99,7 +99,8 @@ class Main implements IController {
   <?php UI::emitJS('js/jquery.tablesorter.min.js'); ?>
 
   <!-- pull down date & time pickers if browser is stupid -->
-  <script type="text/javascript">
+  <SCRIPT TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
     var datefield=document.createElement("input");
     datefield.setAttribute("type", "date");
     if (datefield.type!="date") {
@@ -109,7 +110,9 @@ class Main implements IController {
         document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css" />');
         document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"><\/script>');
     }
-  </script>
+    <?php ob_end_flush(); ?>
+  // -->
+  </SCRIPT>
 
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Music Reviews" HREF="zkrss.php?feed=reviews">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
@@ -450,6 +453,7 @@ class Main implements IController {
     </FORM>
     </DIV>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
     function showOld() {
         document.getElementById("oldSect").style.display = "block";
         document.getElementById("newSect").style.display = "none"; }
@@ -462,6 +466,7 @@ class Main implements IController {
         showOld();
 <?php } ?>
     }
+    <?php ob_end_flush(); ?>
     // -->
     </SCRIPT>
 <?php 
