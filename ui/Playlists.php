@@ -316,11 +316,11 @@ class Playlists extends MenuItem {
             </div>
             <div>
                 <label>Start Time:</label>
-                <INPUT id='show-start' step='60' required type='time' value="<?php echo $isoTimeAr[0]; ?>" NAME='fromtime' />
+                <INPUT id='show-start' class='timepicker' step='60' required type='time' value="<?php echo $isoTimeAr[0]; ?>" NAME='fromtime' />
             </div>
             <div>
                 <label>End Time:</label>
-                <INPUT id='show-end' step='60' placeholder='HH:MM' required type='time' value="<?php echo $isoTimeAr[1]; ?>" NAME='totime' />
+                <INPUT id='show-end' step='60' class='timepicker' required type='time' value="<?php echo $isoTimeAr[1]; ?>" NAME='totime' />
             </div>
             <div>
                 <label>Air Name:</label>
@@ -336,7 +336,7 @@ class Playlists extends MenuItem {
                 <label></label>
                 <a style='font-size:10px' href='?session=<?php echo $this->session->getSessionID();?>&action=addAirname&playlist=<?php echo $playlistId;?>' >Add Air Name</a>
             </div>
-    
+
             <INPUT id='show-date' TYPE=HIDDEN NAME='date' VALUE="">
             <INPUT TYPE=HIDDEN NAME=action VALUE="editListPost">
             <INPUT id='playlist-id' TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
@@ -352,6 +352,7 @@ class Playlists extends MenuItem {
                 if (checkDate.type!="date") {
                     console.log("registering jquery date picker");
                     $('#show-date-picker').datepicker();
+                    $('input.timepicker').timepicker({timeFormat:'H:mm'});
                 }
 
                 function getRoundedDateTime(minutes) {
@@ -478,7 +479,7 @@ class Playlists extends MenuItem {
         $airNames = '';
         $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
         while ($records && ($row = $records->fetch())) {
-           $selected = $row[0] == $airName ? " SELECTED" : "";
+           $selected = $row[1] == $airName ? " SELECTED" : "";
            $newItem = "<OPTION VALUE='" . $row[0] . "'" . $selected . ">" . $row[1] . "</OPTION>";
            $airNames = $airNames . $newItem;
         }
