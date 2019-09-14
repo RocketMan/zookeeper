@@ -334,7 +334,7 @@ class Playlists extends MenuItem {
             </div>
             <div>
                 <label></label>
-                <a style='font-size:10px' href='?session=<?php echo $this->session->getSessionID();?>&action=addAirname&playlist=<?php echo $playlistId;?>' >Add Air Name</a>
+                <a style='font-size:10px' href='?session=<?php echo $this->session->getSessionID();?>&amp;action=addAirname&amp;playlist=<?php echo $playlistId;?>' >Add Air Name</a>
             </div>
 
             <INPUT id='show-date' TYPE=HIDDEN NAME='date' VALUE="">
