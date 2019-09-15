@@ -428,7 +428,8 @@ class Playlists extends MenuItem {
             <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action;?>">
             <INPUT TYPE=HIDDEN NAME=subaction VALUE="addAirnamePost">
         </FORM>
-    <?php 
+    <?php
+        UI::setFocus("djname");
     }
 
     // handles post for playlist creation and edit
