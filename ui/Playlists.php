@@ -37,18 +37,17 @@ use ZK\UI\UICommon as UI;
 class Playlists extends MenuItem {
     //NOTE: update ui_config.php when changing the actions.
     private static $actions = [
-        [ "newList", "emitEditList" ],
-        [ "editList", "emitEditList" ],
-        [ "deleteList", "handleDeleteListPost" ],
-        [ "restoreList", "handleRestoreListPost" ],
-        [ "editListPost", "handleListPost" ],
-        [ "addAirname", "emitNewAirName"],
-        [ "addAirnamePost", "handleAirnamePost"],
-        [ "editListSel", "emitEditListPicker" ],
+        [ "newList", "newOrEditList" ],
         [ "newListEditor", "emitEditor" ],
+        [ "newListPost", "handleListPost" ],
+        [ "editList", "emitEditListPicker" ],
+        [ "editListDelete", "handleDeleteListPost" ],
+        [ "editListDetails", "newOrEditList" ],
+        [ "editListDetailsPost", "handleListPost" ],
         [ "editListEditor", "emitEditor" ],
-        [ "showLink", "emitShowLink" ],
+        [ "editListRestore", "handleRestoreListPost" ],
         [ "importExport", "emitImportExportList" ],
+        [ "showLink", "emitShowLink" ],
         [ "viewDJ", "emitViewDJ" ],
         [ "viewDJReviews", "viewDJReviews" ],
         [ "viewDate", "emitViewDate" ],
@@ -56,6 +55,12 @@ class Playlists extends MenuItem {
         [ "addTrack", "handleAddTrack" ],
     ];
 
+    private static $newOrEditSubactions = [
+        [ "", "emitEditList" ],
+        [ "addAirname", "emitNewAirName" ],
+        [ "addAirnamePost", "handleAirNamePost" ],
+    ];
+    
     private $action;
     private $subaction;
 
@@ -334,11 +339,11 @@ class Playlists extends MenuItem {
             </div>
             <div>
                 <label></label>
-                <a style='font-size:10px' href='?session=<?php echo $this->session->getSessionID();?>&amp;action=addAirname&amp;playlist=<?php echo $playlistId;?>' >Add Air Name</a>
+                <a style='font-size:10px' href='?session=<?php echo $this->session->getSessionID();?>&amp;action=<?php echo $this->action;?>&amp;subaction=addAirname&amp;playlist=<?php echo $playlistId;?>' >Add Air Name</a>
             </div>
 
             <INPUT id='show-date' TYPE=HIDDEN NAME='date' VALUE="">
-            <INPUT TYPE=HIDDEN NAME=action VALUE="editListPost">
+            <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action; ?>Post">
             <INPUT id='playlist-id' TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
             <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         </FORM>
@@ -404,7 +409,7 @@ class Playlists extends MenuItem {
         $this->emitNewAirNameForm(null);
     }
 
-    public function emitNewAirNameForm($errorMsg) {
+    public function emitNewAirNameForm($errorMessage) {
     ?>
         <DIV CLASS='playlistBanner'>&nbsp; Add Air Name</div>
         <?php echo $errorMessage; ?>
@@ -417,9 +422,11 @@ class Playlists extends MenuItem {
                 <label></label>
                 <INPUT TYPE=SUBMIT NAME="newairname" VALUE=" Submit Air Name ">
             </div>
-    
+
+            <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $_REQUEST["playlist"];?>">
             <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
-            <INPUT TYPE=HIDDEN NAME=action VALUE="addAirnamePost">
+            <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action;?>">
+            <INPUT TYPE=HIDDEN NAME=subaction VALUE="addAirnamePost">
         </FORM>
     <?php 
     }
@@ -430,8 +437,8 @@ class Playlists extends MenuItem {
         $playlistId = trim($_REQUEST["playlist"]);
         $success = Engine::api(IDJ::class)->insertAirname($djname, $this->session->getUser());
         if($success > 0) {
-            $airname = Engine::lastInsertId();
-            $this->emitEditList();
+            $this->action = $playlistId?"editListDetails":"newList";
+            $this->emitEditList($djname);
         } else {
             $errorMessage = "<B><FONT CLASS='error'>'$djname' is invalid or already exists.</FONT></B>";
             $this->emitNewAirNameForm($errorMessage);
@@ -491,10 +498,13 @@ class Playlists extends MenuItem {
         return $airNames;
     }
 
+    public function newOrEditList() {
+        $this->dispatchAction($this->subaction, self::$newOrEditSubactions);
+    }
+
     // build the form used to add/modify playlist meta data
-    public function emitEditList() {
+    public function emitEditList($airName='') {
         $playlistId = $_REQUEST["playlist"];
-        $airName = '';
         $description = '';
         $date = '';
         $time = '';
@@ -523,7 +533,8 @@ class Playlists extends MenuItem {
             $description = $sourcePlaylist['description'];
             $date = $sourcePlaylist['showdate'];
             $time = $sourcePlaylist['showtime'];
-            $airName = $sourcePlaylist['airname'];
+            if(!$airName)
+                $airName = $sourcePlaylist['airname'];
         }
 
         $this->emitEditListForm($airName, $description, $time, $date, $playlistId, null);
@@ -568,10 +579,6 @@ class Playlists extends MenuItem {
         return Engine::api(IPlaylist::class)->getDeletedPlaylistCount($this->session->getUser());
     }
 
-    public function emitEditListNew() {
-        $this->emitEditList(0);
-    }
-    
     public function handleDeleteListPost() {
         $playlistId = $_REQUEST["playlist"];
         Engine::api(IPlaylist::class)->deletePlaylist($playlistId);
@@ -622,7 +629,7 @@ class Playlists extends MenuItem {
         <div style='margin-top:4px'>
             <input TYPE=SUBMIT VALUE=" Restore ">
         </div>
-        <input TYPE=hidden name=action VALUE="restoreList">
+        <input TYPE=hidden name=action VALUE="editListRestore">
         <input TYPE=hidden name=session VALUE="<?php echo $this->session->getSessionID();?>">
         </form>
       
@@ -636,7 +643,7 @@ class Playlists extends MenuItem {
                 <input id='delete-list' TYPE=BUTTON VALUE="Delete">
             </div>
             <input TYPE=hidden name=session VALUE="<?php echo $this->session->getSessionID();?>">
-            <input id='action-type' TYPE=hidden name=action VALUE="editList">
+            <input id='action-type' TYPE=hidden name=action VALUE="editListDetails">
         </form>
 
         <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
@@ -661,7 +668,7 @@ class Playlists extends MenuItem {
 
                 $("#delete-list").click(function() {
                     if (confirm("Are your sure?")) {
-                        $("#action-type").val('deleteList');
+                        $("#action-type").val('editListDelete');
                         $("#active-form").submit();
                     }
                 });
