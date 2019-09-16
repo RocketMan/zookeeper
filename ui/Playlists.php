@@ -489,7 +489,7 @@ class Playlists extends MenuItem {
         $airNames = '';
         $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
         while ($records && ($row = $records->fetch())) {
-           $selected = $row[1] == $airName ? " SELECTED" : "";
+           $selected = $row[0] == $airName ? " SELECTED" : "";
            $newItem = "<OPTION VALUE='" . $row[0] . "'" . $selected . ">" . $row[1] . "</OPTION>";
            $airNames = $airNames . $newItem;
         }
