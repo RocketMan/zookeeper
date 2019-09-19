@@ -665,9 +665,8 @@ class Charts extends MenuItem {
     
     ?>
     </TEXTAREA><BR><BR>
+    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     <?php ob_start([\JSMin::class, 'minify']); ?>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript">
-    <!--
     function highlightmetasearch() {
       document.textform.textfield.select(); document.textform.textfield.focus();
     }

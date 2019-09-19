@@ -29,6 +29,8 @@
  *
  * The first item in the list is the default if no action is specified.
  */
+
+//NOTE: server must be restarted for changes to take effect.
 $menu = [
 //  access, action,        menu label,              implementation class
     [ 'a', 'home',         0,                       ZK\UI\Home::class ],
@@ -45,7 +47,7 @@ $menu = [
     [ 'a', 'viewDJ%',      'DJ Zone!',              ZK\UI\Playlists::class ],
     [ 'a', 'viewDate',     'Playlists by Date',     ZK\UI\Playlists::class ],
     [ 'u', 'updateDJInfo', 'Update Profile',        ZK\UI\Playlists::class ],
-    [ 'u', 'addTrack',     '0',                     ZK\UI\Playlists::class ],
+    [ 'u', 'addTrack',     0,                       ZK\UI\Playlists::class ],
     [ 'U', 'changePass',   'Change Password',       ZK\UI\ChangePass::class ],
     [ 'p', 'deepStorage',  'Deep Storage',          ZK\UI\DeepStorage::class ],
     [ 'x', 'adminUsers',   'Administer Users',      ZK\UI\UserAdmin::class ],

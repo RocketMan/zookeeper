@@ -97,6 +97,23 @@ class Main implements IController {
   <?php UI::emitCSS('css/about.css'); ?>
   <?php UI::emitJS('js/jquery.min.js'); ?>
   <?php UI::emitJS('js/jquery.tablesorter.min.js'); ?>
+
+  <!-- pull down date & time pickers if browser is stupid -->
+  <SCRIPT TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
+    var datefield=document.createElement("input");
+    datefield.setAttribute("type", "date");
+    if (datefield.type!="date") {
+        document.write('<link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/base/jquery-ui.css" rel="stylesheet" type="text/css" />');
+        document.write('<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js"><\/script>') 
+
+        document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css" />');
+        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"><\/script>');
+    }
+    <?php ob_end_flush(); ?>
+  // -->
+  </SCRIPT>
+
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Music Reviews" HREF="zkrss.php?feed=reviews">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio A-File Adds" HREF="zkrss.php?feed=adds">
@@ -436,6 +453,7 @@ class Main implements IController {
     </FORM>
     </DIV>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
     function showOld() {
         document.getElementById("oldSect").style.display = "block";
         document.getElementById("newSect").style.display = "none"; }
@@ -448,6 +466,7 @@ class Main implements IController {
         showOld();
 <?php } ?>
     }
+    <?php ob_end_flush(); ?>
     // -->
     </SCRIPT>
 <?php 
