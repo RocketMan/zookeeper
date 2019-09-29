@@ -146,6 +146,9 @@ class Playlists extends MenuItem {
     // convert HHMM or HH:MM pairs into ZK time range, eg HHMM-HHMM
     // return range string if valid else empty string.
     private function composeTime($fromTime, $toTime) {
+        $SHOW_MIN_LEN = 15; // 15 minutes
+        $SHOW_MAX_LEN = 6 * 60; // 6 hours
+        $TIME_FORMAT = "Y-m-d Gi"; // eg, 2019-01-01 1234
         $retVal = '';
 
         // in case it sends HH:MM instead of HHMM
@@ -155,7 +158,16 @@ class Playlists extends MenuItem {
         if (strlen($toTime) == 5)
             $toTime = substr($toTime, 0, 2) . substr($toTime, 3,5);
 
-        if (strlen($fromTime) == 4 && strlen($toTime) == 4)
+        $start = DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $fromTime);
+        $end =  DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $toTime);
+
+        $validRange = false;
+        if (isset($start) && isset($end)) {
+            $minutes = ($end->getTimestamp() - $start->getTimestamp()) / 60;
+            $validRange = ($minutes > $SHOW_MIN_LEN) && ($minutes < $SHOW_MAX_LEN);
+        }
+
+        if ($validRange)
             $retVal = $fromTime . "-" . $toTime;
         else
             error_log("Error: invalid playlist time -" . $fromTime . "-, -" . $toTime ."-");
@@ -480,7 +492,12 @@ class Playlists extends MenuItem {
                 $this->emitEditor();
             }
         } else {
-            $errMsg = $goodDate ? "Missing field" : "Invalid date " . $date;
+            $errMsg = "Missing field";
+            if ($goodDate == false)
+                $errMsg = "Invalid date " . $date;
+            else if ($goodTime == false)
+                $errMsg = "Invalid time range (min 1/4 hour, max 6 hours) " . $fromtime . " - " . $totime;
+
             $this->emitEditListForm($airname, $description,  $showTime, $date, $playlistId, $errMsg);
         }
     }
@@ -1028,7 +1045,6 @@ class Playlists extends MenuItem {
           <TD>
     <?php if($id) { ?>
               <INPUT TYPE=SUBMIT NAME=button VALUE="  Save  ">&nbsp;&nbsp;&nbsp;
-              <INPUT TYPE=SUBMIT NAME=button VALUE=" Delete ">
               <INPUT TYPE=BUTTON NAME=button onClick="ConfirmDelete()" VALUE=" Delete ">
               <INPUT TYPE=HIDDEN NAME=id VALUE="<?php echo $id;?>">
     <?php } else { ?>
@@ -1702,14 +1718,15 @@ class Playlists extends MenuItem {
     }
 
 
-    // converts "last, first" to "first last" 
+    // converts "last, first" to "first last" being careful to not swap
+    // other formats that have comas. call only for ZK library entries
+    // since manual entries don't need this. Test cases: The Band, CSN&Y,
+    // Bing Crosby & Fred Astaire, eg: 694717, 911685.
     private function swapNames($fullName) {
        $retVal = $fullName;
-       $names1 = explode(", ", $fullName);
-       if (count($names1) >= 2) {
-           $names2 = explode(" ", $names1[1]);
-           $extras = array_slice($names2, 1);
-           $retVal = $names2[0] . " " . $names1[0] . " " . join(" ",  $extras);
+       $namesAr = explode(", ", $fullName);
+       if (count($namesAr) == 2 && strrpos($namesAr[1], ' ') < 1) {
+           $retVal = $namesAr[1] . " " . $namesAr[0];
        }
        return $retVal;
     }
@@ -1726,8 +1743,11 @@ class Playlists extends MenuItem {
             $retVal = "<TR class='songDivider'>".$editCell.
                       "<TD>".$timeplayed . "</TD><TD COLSPAN=4><HR></TD></TR>";
         } else {
-            $reviewCell = $row["REVIEWED"] ? $REVIEW_DIV : "";
-            $artistName = $this->swapNames($row["artist"]);
+            $reviewCell = $row["REVIEWED"] ?  $REVIEW_DIV : "";
+            $artistName = $row["artist"];
+            if ($row["tag"]) // don't swap manual entries
+                $artistName = $this->swapNames($artistName);
+
             $albumLink = $this->makeAlbumLink($row, true);
             $retVal = "<TR class='songRow'>" . $editCell .
                       "<TD>" . $timeplayed . "</TD>" .
