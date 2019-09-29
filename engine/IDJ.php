@@ -30,6 +30,7 @@ namespace ZK\Engine;
 interface IDJ {
     function getAirnames($user=0, $id=0);
     function getActiveAirnames($viewAll=0);
+    function getAirname($djname, $user="");
     function updateAirname($url, $email, $id=0, $user="");
     function insertAirname($djname, $user);
     function reassignAirname($id, $user);

@@ -37,12 +37,12 @@ use ZK\UI\UICommon as UI;
 class Playlists extends MenuItem {
     //NOTE: update ui_config.php when changing the actions.
     private static $actions = [
-        [ "newList", "newOrEditList" ],
+        [ "newList", "emitEditList" ],
         [ "newListEditor", "emitEditor" ],
         [ "newListPost", "handleListPost" ],
         [ "editList", "emitEditListPicker" ],
         [ "editListDelete", "handleDeleteListPost" ],
-        [ "editListDetails", "newOrEditList" ],
+        [ "editListDetails", "emitEditList" ],
         [ "editListDetailsPost", "handleListPost" ],
         [ "editListEditor", "emitEditor" ],
         [ "editListRestore", "handleRestoreListPost" ],
@@ -55,12 +55,6 @@ class Playlists extends MenuItem {
         [ "addTrack", "handleAddTrack" ],
     ];
 
-    private static $newOrEditSubactions = [
-        [ "", "emitEditList" ],
-        [ "addAirname", "emitNewAirName" ],
-        [ "addAirnamePost", "handleAirNamePost" ],
-    ];
-    
     private $action;
     private $subaction;
 
@@ -315,7 +309,7 @@ class Playlists extends MenuItem {
     private function emitEditListForm($airName, $description, $zkTimeRange, $date, $playlistId, $errorMsg) {
         $isoDate = $date ? str_replace("/", "-", $date) : '';
         $isoTimeAr = $this->zkTimeRangeToISOTimeAr($zkTimeRange);
-        $airNames = $this->getDJAirNames($airName);
+        $airNames = $this->getDJAirNames();
         $userAction = $playlistId ? "Edit " : "Create ";
         ?>
 
@@ -341,21 +335,22 @@ class Playlists extends MenuItem {
             </div>
             <div>
                 <label>Air Name:</label>
-                <SELECT NAME=airname>
+                <INPUT TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php echo !is_null($airName)?$airName:($description?"None":""); ?>'/>
+                <DATALIST ID="airnames">
                   <?php echo $airNames; ?>
-                </SELECT>
+                </DATALIST>
             </div>
             <div>
                 <label></label>
                 <INPUT id='edit-submit-but' TYPE=SUBMIT NAME=button VALUE="Create">
             </div>
-            <div>
-                <label></label>
-                <a style='font-size:10px' href='?session=<?php echo $this->session->getSessionID();?>&amp;action=<?php echo $this->action;?>&amp;subaction=addAirname&amp;playlist=<?php echo $playlistId;?>' >Add Air Name</a>
-            </div>
 
             <INPUT id='show-date' TYPE=HIDDEN NAME='date' VALUE="">
-            <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action; ?>Post">
+            <?php
+                // if action does not already end in 'Post', append it
+                $suffix = substr_compare($this->action, "Post", -4)?"Post":"";
+            ?>
+            <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action.$suffix; ?>">
             <INPUT id='playlist-id' TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
             <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         </FORM>
@@ -417,75 +412,58 @@ class Playlists extends MenuItem {
     <?php 
     }
     
-    public function emitNewAirName() {
-        $this->emitNewAirNameForm(null);
-    }
-
-    public function emitNewAirNameForm($errorMessage) {
-    ?>
-        <DIV CLASS='playlistBanner'>&nbsp; Add Air Name</div>
-        <?php echo $errorMessage; ?>
-        <FORM class='pl-form-entry' ACTION="?" METHOD=POST>
-            <div>
-                <label>Air Name:</label>
-                <INPUT required TYPE=TEXT NAME=djname CLASS=input SIZE=30>
-            </div>
-            <div>
-                <label></label>
-                <INPUT TYPE=SUBMIT NAME="newairname" VALUE=" Submit Air Name ">
-            </div>
-
-            <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $_REQUEST["playlist"];?>">
-            <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
-            <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action;?>">
-            <INPUT TYPE=HIDDEN NAME=subaction VALUE="addAirnamePost">
-        </FORM>
-    <?php
-        UI::setFocus("djname");
-    }
-
-    // handles post for playlist creation and edit
-    public function handleAirNamePost() {
-        $djname = trim($_REQUEST["djname"]);
-        $playlistId = trim($_REQUEST["playlist"]);
-        $success = Engine::api(IDJ::class)->insertAirname($djname, $this->session->getUser());
-        if($success > 0) {
-            $this->action = $playlistId?"editListDetails":"newList";
-            $this->emitEditList($djname);
-        } else {
-            $errorMessage = "<B><FONT CLASS='error'>'$djname' is invalid or already exists.</FONT></B>";
-            $this->emitNewAirNameForm($errorMessage);
-        }
-        
-    }
-
     // handles post for playlist creation and edit
     public function handleListPost() {
         $description = $_REQUEST["description"];
         $date = $_REQUEST["date"];
-        $airname = $_REQUEST["airname"];
-        $playlistId = $_REQUEST["playlist"];
-        $button = $_REQUEST["button"];
         $fromtime = substr($_REQUEST["fromtime"], 0, 5);
-        $totime   = subStr($_REQUEST["totime"], 0, 5);
+        $totime   = substr($_REQUEST["totime"], 0, 5);
         $showTime = $this->composeTime($fromtime, $totime);
         list($year, $month, $day) = explode("-", $date);
 
         $goodDate = checkdate($month, $day, $year);
-        $goodTime = $showTime != '';
-        $goodDescription = $description != "";
+        $goodTime = $showTime !== '';
+        $goodDescription = $description !== '';
 
-        if($goodDate && $goodTime && $goodDescription) {
-            // Success - Run the query
+        $airname = trim($_REQUEST["airname"]);
+        $goodAirname = $airname !== '';
+
+        if($goodDate && $goodTime && $goodDescription && $goodAirname) {
+            // process the airname
+            if(!strcasecmp($airname, "None")) {
+                // unpublished playlist
+                $aid = 0;
+            } else {
+                // lookup airname for this DJ
+                $aid = Engine::api(IDJ::class)->getAirname($airname, $this->session->getUser());
+                if(!$aid) {
+                    // airname does not exist; try to create it
+                    $success = Engine::api(IDJ::class)->insertAirname($airname, $this->session->getUser());
+                    if($success > 0) {
+                        // success!
+                        $aid = Engine::lastInsertId();
+                    } else {
+                        // airname creation failed
+                        // alert the user and re-display the form
+                        $errorMessage = "'$airname' is invalid or already exists.";
+                        $this->emitEditListError($errorMessage);
+                        return;
+                    }
+                }
+            }
+
+            $playlistId = $_REQUEST["playlist"];
             if(isset($playlistId) && $playlistId > 0) {
+                // update existing playlist
                 $success = Engine::api(IPlaylist::class)->updatePlaylist(
-                        $playlistId, $date, $showTime, $description, $airname);
+                        $playlistId, $date, $showTime, $description, $aid);
                 $this->action = "editListEditor";
                 $this->emitEditor();
             } else {
+                // create new playlist
                 $success = Engine::api(IPlaylist::class)->insertPlaylist(
                          $this->session->getUser(),
-                         $date, $showTime, $description, $airname);
+                         $date, $showTime, $description, $aid);
 
                 $_REQUEST["playlist"] = Engine::lastInsertId();
                 $this->action = "newListEditor";
@@ -498,38 +476,50 @@ class Playlists extends MenuItem {
             else if ($goodTime == false)
                 $errMsg = "Invalid time range (min 1/4 hour, max 6 hours) " . $fromtime . " - " . $totime;
 
-            $this->emitEditListForm($airname, $description,  $showTime, $date, $playlistId, $errMsg);
+            $this->emitEditListError($errMsg);
         }
     }
 
-    private function getDJAirNames($airName) {
+    // emitEditList functionality if there are errors
+    protected function emitEditListError($errMsg="") {
+        $description = $_REQUEST["description"];
+        $date = $_REQUEST["date"];
+        $airname = $_REQUEST["airname"];
+        $playlistId = $_REQUEST["playlist"];
+        $button = $_REQUEST["button"];
+        $fromtime = substr($_REQUEST["fromtime"], 0, 5);
+        $totime   = substr($_REQUEST["totime"], 0, 5);
+        $showTime = $this->composeTime($fromtime, $totime);
+
+        if($errMsg)
+            $errMsg = "<B><FONT CLASS='error'>$errMsg</FONT></B>";
+
+        $this->emitEditListForm($airname, $description, $showTime, $date, $playlistId, $errMsg);
+    }
+
+    private function getDJAirNames() {
         $airNames = '';
         $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
         while ($records && ($row = $records->fetch())) {
-           $selected = $row[0] == $airName ? " SELECTED" : "";
-           $newItem = "<OPTION VALUE='" . $row[0] . "'" . $selected . ">" . $row[1] . "</OPTION>";
-           $airNames = $airNames . $newItem;
+           $newItem = "<OPTION VALUE='".$row['airname']."'>";
+           $airNames .= $newItem;
         }
 
-        $selectedVal = $airName == null || $airName == '' ? ' selected ' : '';
-        $airNames .=  "<OPTION " . $selectedVal . " VALUE=''>None</OPTION>";
-        return $airNames;
-    }
-
-    public function newOrEditList() {
-        $this->dispatchAction($this->subaction, self::$newOrEditSubactions);
+        $airNames .=  "<OPTION VALUE='None'>";
+        return $airNames."\n";
     }
 
     // build the form used to add/modify playlist meta data
-    public function emitEditList($airName='') {
+    public function emitEditList() {
         $playlistId = $_REQUEST["playlist"];
         $description = '';
         $date = '';
         $time = '';
+        $airName = '';
 
         $sourcePlaylist = null;
         if(isset($playlistId) && $playlistId > 0) {
-            $sourcePlaylist = Engine::api(IPlaylist::class)->getPlaylist($playlistId);
+            $sourcePlaylist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
         } else {
             $WEEK_SECONDS = 60 *60 * 24 * 7;
             $nowDateStr =  (new DateTime())->format("Y-m-d");
@@ -551,8 +541,7 @@ class Playlists extends MenuItem {
             $description = $sourcePlaylist['description'];
             $date = $sourcePlaylist['showdate'];
             $time = $sourcePlaylist['showtime'];
-            if(!$airName)
-                $airName = $sourcePlaylist['airname'];
+            $airName = $sourcePlaylist['airname'];
         }
 
         $this->emitEditListForm($airName, $description, $time, $date, $playlistId, null);
