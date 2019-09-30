@@ -136,8 +136,24 @@ class Playlists extends MenuItem {
         
         return $retVal;
     }
+
+    // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
+    // returns empty string if invalid
+    private function normalizeTime($t) {
+        // is time in H:MM or HH:MM format?
+        $d = \DateTime::createFromFormat("H:i", $t);
+        if($d)
+            $x = $d->format("Hi");
+        // ...or is time already in HHMM format?
+        else if(strlen($t) == 4 && preg_match('/^[0-9]+$/', $t))
+            $x = $t;
+        // ...if neither, it is invalid
+        else
+            $x = '';
+        return $x;
+    }
  
-    // convert HHMM or HH:MM pairs into ZK time range, eg HHMM-HHMM
+    // convert HHMM or (H)H:MM pairs into ZK time range, eg HHMM-HHMM
     // return range string if valid else empty string.
     private function composeTime($fromTime, $toTime) {
         $SHOW_MIN_LEN = 15; // 15 minutes
@@ -145,15 +161,11 @@ class Playlists extends MenuItem {
         $TIME_FORMAT = "Y-m-d Gi"; // eg, 2019-01-01 1234
         $retVal = '';
 
-        // in case it sends HH:MM instead of HHMM
-        if (strlen($fromTime) == 5)
-            $fromTime = substr($fromTime, 0, 2) . substr($fromTime, 3,5);
+        $fromTimeN = $this->normalizeTime($fromTime);
+        $toTimeN = $this->normalizeTime($toTime);
 
-        if (strlen($toTime) == 5)
-            $toTime = substr($toTime, 0, 2) . substr($toTime, 3,5);
-
-        $start = DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $fromTime);
-        $end =  DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $toTime);
+        $start = DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $fromTimeN);
+        $end =  DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $toTimeN);
 
         $validRange = false;
         if (isset($start) && isset($end)) {
@@ -162,7 +174,7 @@ class Playlists extends MenuItem {
         }
 
         if ($validRange)
-            $retVal = $fromTime . "-" . $toTime;
+            $retVal = $fromTimeN . "-" . $toTimeN;
         else
             error_log("Error: invalid playlist time -" . $fromTime . "-, -" . $toTime ."-");
 
