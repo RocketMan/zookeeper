@@ -175,7 +175,7 @@ class Playlists extends MenuItem {
 
         if ($validRange)
             $retVal = $fromTimeN . "-" . $toTimeN;
-        else
+        else if ($fromTime || $toTime)
             error_log("Error: invalid playlist time -" . $fromTime . "-, -" . $toTime ."-");
 
         return $retVal;
