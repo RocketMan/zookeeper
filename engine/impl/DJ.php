@@ -52,6 +52,18 @@ class DJImpl extends BaseImpl implements IDJ {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
+    public function getAirname($djname, $user="") {
+        $query = "SELECT id FROM airnames WHERE airname=?";
+        if($user)
+            $query .= " AND dj=?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $djname);
+        if($user)
+            $stmt->bindValue(2, $user);
+        $result = $this->executeAndFetch($stmt);
+        return $result?$result['id']:0;
+    }
+    
     public function updateAirname($url, $email, $id=0, $user="") {
         $query = "UPDATE airnames " .
                  "SET url=?, email=?";
