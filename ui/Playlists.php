@@ -168,7 +168,7 @@ class Playlists extends MenuItem {
         $end =  DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $toTimeN);
 
         $validRange = false;
-        if (isset($start) && isset($end)) {
+        if ($fromTimeN && $toTimeN && isset($start) && isset($end)) {
             $minutes = ($end->getTimestamp() - $start->getTimestamp()) / 60;
             $validRange = ($minutes > $SHOW_MIN_LEN) && ($minutes < $SHOW_MAX_LEN);
         }
