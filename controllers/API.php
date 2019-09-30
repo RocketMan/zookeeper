@@ -274,10 +274,10 @@ class API extends CommandTarget implements IController {
             }
         } else {
             while($row = $result->fetch()) {
-                echo "<show name=\"".self::spec2hex(stripslashes($row["description"]))."\" ".
+                echo "<show name=\"".self::spec2hexAttr(stripslashes($row["description"]))."\" ".
                      "date=\"".$row["showdate"]."\" ".
                      "time=\"".$row["showtime"]."\" ".
-                     "airname=\"".self::spec2hex(stripslashes($row["airname"]))."\" ".
+                     "airname=\"".self::spec2hexAttr(stripslashes($row["airname"]))."\" ".
                      "id=\"".($id?$id:$row["id"])."\"";
                 if($includeTracks && $includeTracks != "false") {
                     echo ">\n";
@@ -291,13 +291,13 @@ class API extends CommandTarget implements IController {
                         else {
                             echo "<track";
                             if($track["artist"] != "")
-                                echo " artist=\"".self::spec2hex(stripslashes($track["artist"]))."\"";
+                                echo " artist=\"".self::spec2hexAttr(stripslashes($track["artist"]))."\"";
                             if($track["track"] != "")
-                                echo " track=\"".self::spec2hex(stripslashes($track["track"]))."\"";
+                                echo " track=\"".self::spec2hexAttr(stripslashes($track["track"]))."\"";
                             if($track["album"] != "")
-                                echo " album=\"".self::spec2hex(stripslashes($track["album"]))."\"";
+                                echo " album=\"".self::spec2hexAttr(stripslashes($track["album"]))."\"";
                             if($track["label"] != "")
-                                echo " label=\"".self::spec2hex(stripslashes($track["label"]))."\"";
+                                echo " label=\"".self::spec2hexAttr(stripslashes($track["label"]))."\"";
                             if($track["tag"] != "")
                                 echo " tag=\"".$track["tag"]."\"";
                             echo "/>\n";
@@ -377,7 +377,7 @@ class API extends CommandTarget implements IController {
         } else {
             echo "<$name";
             foreach($attrs as $key => $value)
-                echo " $key=\"".self::spec2hex($value)."\"";
+                echo " $key=\"".self::spec2hexAttr($value)."\"";
             echo ">\n";
         }
     }
@@ -526,6 +526,10 @@ class API extends CommandTarget implements IController {
     
     private static function spec2hex($str) {
         return preg_replace("/[[:cntrl:]]/", "", htmlspecialchars($str, ENT_XML1, 'UTF-8'));
+    }
+
+    private static function spec2hexAttr($str) {
+        return str_replace("\"", "&quot;", self::spec2hex($str));
     }
     
     private static function jsonspecialchars($str) {
