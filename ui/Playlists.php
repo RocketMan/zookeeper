@@ -774,7 +774,7 @@ class Playlists extends MenuItem {
                     </div>
                     <div>
                         <label>Label:</label>
-                        <input id='track-label' /}>
+                        <input id='track-label' />
                     </div>
                 </div>
             </div> <!-- track-entry -->
@@ -1509,6 +1509,7 @@ class Playlists extends MenuItem {
 
             $_REQUEST["playlist"] = $playlist;
             $this->action = "newListEditor";
+            $this->emitEditor();
         }
     }
     
