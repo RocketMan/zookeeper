@@ -169,6 +169,9 @@ class Playlists extends MenuItem {
 
         $validRange = false;
         if ($start && $end) {
+            // if end is less than start, assume next day
+            if($end < $start)
+                $end->modify('+1 day');
             $minutes = ($end->getTimestamp() - $start->getTimestamp()) / 60;
             $validRange = ($minutes > $SHOW_MIN_LEN) && ($minutes < $SHOW_MAX_LEN);
         }
