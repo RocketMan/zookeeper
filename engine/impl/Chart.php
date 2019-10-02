@@ -122,15 +122,16 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
-    public function getCurrents2($date) {
+    public function getCurrents2($date, $sort=0) {
         $query = "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
                  "c.category as afile_category, ".
                  "a.artist, a.album, a.medium, a.size, ".
                  "a.created, a.updated, a.category, p.name label ".
                  "FROM currents c, albumvol a, publist p ".
                  "WHERE c.tag = a.tag AND a.pubkey = p.pubkey ".
-                 "AND adddate <= ? AND pulldate > ? ".
-                 "ORDER BY a.artist, a.album";
+                 "AND adddate <= ? AND pulldate > ?";
+        if($sort)
+            $query .= " ORDER BY a.artist, a.album";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $date);
         $stmt->bindValue(2, $date);
