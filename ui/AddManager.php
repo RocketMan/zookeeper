@@ -87,11 +87,28 @@ class AddManager extends MenuItem {
 
         return $this->dispatchSubAction($action, $subaction, self::$subactions, $extra);
     }
+
+    private static function afileDefaultSort($a, $b) {
+        // primary sort by artist name
+        $cmp = strcmp($a["artist"], $b["artist"]);
+        switch($cmp) {
+        case 0:
+            // secondary sort by album title
+            $cmp = strcmp($a["album"], $b["album"]);
+            break;
+        default:
+            break;
+        }
+        return $cmp;
+    }
     
-    public function addManagerGetAlbums(&$records, &$albums) {
+    public function addManagerGetAlbums(&$records, &$albums, $sort=0) {
         while($records && ($row = $records->fetch())) {
             $albums[] = $row;
         }
+        
+        if($sort)
+            usort($albums, ['ZK\\UI\\AddManager', 'afileDefaultSort']);
     }
     
     private function makeCategoryString($categories) {
@@ -123,7 +140,7 @@ class AddManager extends MenuItem {
        return "<TD>" . $cellDate . $cellId . "</TD>";
     }
 
-    public function addManagerEmitAlbums(&$records, $subaction, $showEdit, $showReview, $static=0) {
+    public function addManagerEmitAlbums(&$records, $subaction, $showEdit, $showReview, $static=0, $sort=0) {
         $isAuthenticated = $this->session->isAuth("u");
         $showAvg = $isAuthenticated && !$static && $subaction != "adds";
     
@@ -142,7 +159,7 @@ class AddManager extends MenuItem {
              "</TR></THEAD>\n";
     
         // Get albums into array
-        $this->addManagerGetAlbums($records, $albums);
+        $this->addManagerGetAlbums($records, $albums, $sort);
     
         // Mark reviewed albums
         if($showReview)
@@ -249,7 +266,7 @@ class AddManager extends MenuItem {
             else
                 $results = Engine::api(IChart::class)->getCurrents(date("Y-m-d"));
 
-            $this->addManagerEmitAlbums($results, "", $this->session->isAuth("n"), true);
+            $this->addManagerEmitAlbums($results, "", $this->session->isAuth("n"), true, false, true);
             UI::setFocus();
         }
     }

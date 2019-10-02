@@ -36,7 +36,7 @@ interface IChart {
     function getNextAID();
     function getAddDates($limit="");
     function getAdd($date);
-    function getCurrents($date);
+    function getCurrents($date, $sort=0);
     function getCurrentsWithPlays($date=0);
     function addAlbum($aid, $tag, $adddate, $pulldate, $cats);
     function updateAlbum($id, $aid, $tag, $adddate, $pulldate, $cats);
