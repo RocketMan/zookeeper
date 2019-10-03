@@ -55,10 +55,10 @@ class ExportAfile implements IController {
         $displayDate = date("l, j F Y");
         $station = Engine::param("station");
         echo "  <H2 CLASS=\"header\">$station A-FILE AS OF " . strtoupper($displayDate) . "</H2>\n";
-        $results = Engine::api(IChart::class)->getCurrents2(date("Y-m-d"), 1);
+        $results = Engine::api(IChart::class)->getCurrents2(date("Y-m-d"));
         $addmgr = new AddManager();
         $addmgr->session = Engine::session();
-        $addmgr->addManagerEmitAlbums($results, "", false, true, true);
+        $addmgr->addManagerEmitAlbums($results, "", false, true, true, true);
         echo "</BODY>\n</HTML>\n";
     }
 }
