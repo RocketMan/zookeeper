@@ -90,7 +90,6 @@ class AddManager extends MenuItem {
     
     public function addManagerGetAlbums(&$records, &$albums) {
         while($records && ($row = $records->fetch())) {
-            $row["LABELNAME"] = $row["label"];
             $albums[] = $row;
         }
     }
@@ -201,7 +200,7 @@ class AddManager extends MenuItem {
                          "'>" . $albumName . "</A>$tagNum&nbsp;&nbsp;</TD>";
     
                 if(!$static)
-                    echo "<TD>" . htmlentities($row["LABELNAME"]) . "</TD>";
+                    echo "<TD>" . htmlentities($row["label"]) . "</TD>";
     
                 if($showAvg)
                     echo "<TD ALIGN=CENTER>".$row["sizzle"]."</TD>";
@@ -957,7 +956,7 @@ class AddManager extends MenuItem {
                         $line = sprintf("%-2s %3d %-28s %-30s %-12s\r\n",
                               $ac, $row["afile_number"], substr(UI::deLatin1ify($row["artist"]), 0, 28),
                               substr(UI::deLatin1ify($row["album"]), 0, 30),
-                              substr(UI::deLatin1ify($row["LABELNAME"]), 0, 12));
+                              substr(UI::deLatin1ify($row["label"]), 0, 12));
                     $body .= $line;
                 }
                 if($format == "tab")

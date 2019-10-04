@@ -1694,7 +1694,6 @@ class Playlists extends MenuItem {
     
     private function viewListGetAlbums(&$records, &$albums) {
         while($row = $records->fetch()) {
-            $row["LABELNAME"] = $row["label"];
             $albums[] = $row;
         }
     }
