@@ -35,11 +35,8 @@ interface IChart {
     function updateCategory($i, $name, $code, $dir, $email);
     function getNextAID();
     function getAddDates($limit="");
-    function getAdd($date);
     function getAdd2($date);
-    function getCurrents($date);
     function getCurrents2($date);
-    function getCurrentsWithPlays($date);
     function getCurrentsWithPlays2($date=0);
     function addAlbum($aid, $tag, $adddate, $pulldate, $cats);
     function updateAlbum($id, $aid, $tag, $adddate, $pulldate, $cats);
@@ -51,10 +48,7 @@ interface IChart {
     function getChartDatesByYear($year, $limit=0);
     function getChartYears($limit=0);
     function getChartMonths($limit=0);
-    function getChartSortFn($a, $b);
     function getChart(&$result, $startDate, $endDate, $limit="", $category="");
-    function getChart2(&$result, $startDate, $endDate, $limit="", $category="");
-    function getBottom(&$result, $startDate, $endDate, $limit="", $category="");
     function getChartEMail();
     function updateChartEMail($i, $address);
     function getWeeklyActivity($date);

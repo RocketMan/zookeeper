@@ -213,9 +213,6 @@ class Charts extends MenuItem {
         if(!$monthly)
             $this->emitChart($startDate, $endDate, $catLimit, "8"); // C/X
     
-        ////if($this->session->isAuth("u"))
-        ////    $this->emitBottom($startDate, $endDate, 90);
-    
         UI::setFocus();
     }
     
@@ -338,9 +335,6 @@ class Charts extends MenuItem {
         if(!$monthly)
             $this->emitChart($startDate, $endDate, $catLimit, "8"); // C/X
     
-        ////if($this->session->isAuth("u"))
-        ////    $this->emitBottom($startDate, $endDate, 90);
-    
         UI::setFocus();
     }
     
@@ -398,66 +392,6 @@ class Charts extends MenuItem {
                              "&amp;action=search&amp;session=".$this->session->getSessionID().
                              "\">". UI::HTMLify($album, 20) . "</A></I>$medium (" .
                      UI::HTMLify($label, 20) . ")\n";
-            }
-            echo "  </OL></TD></TR>\n</TABLE><BR>\n";
-        }
-    }
-    
-    private function emitBottom($startDate, $endDate, $limit="", $category="") {
-        $chartAPI = Engine::api(IChart::class);
-        $chartAPI->getBottom($chart, $startDate, $endDate, $limit, $category);
-        Engine::api(ILibrary::class)->markAlbumsReviewed($chart);
-        if(sizeof($chart)) {
-            echo "<TABLE WIDTH=\"100%\" BORDER=0 CELLPADDING=2 CELLSPACING=0>\n";
-            echo "  <TR><TH ALIGN=LEFT";
-            if($category) {
-                echo " COLSPAN=2>";
-                // Get the chart categories
-                $cats = $chartAPI->getCategories();
-    
-                echo "LEAST PLAYED&nbsp;";
-                echo strtoupper($cats[$category-1]["name"]);
-            } else {
-                echo ">";
-                echo "LEAST PLAYED";
-                echo "</TH><TH ALIGN=RIGHT>spins.&nbsp;ARTIST&nbsp;<I>ALBUM</I>&nbsp;(LABEL)";
-            }
-    
-            echo "</TH></TR>\n  <TR><TD COLSPAN=2>\n    <OL>\n";
-            for($i=0; $i < sizeof($chart); $i++) {
-    
-                // Fixup the artist, album, and label names
-                $artist = $chart[$i]["artist"];
-                $label = str_replace(" Records", "", $chart[$i]["LABEL"]);
-                $label = str_replace(" Recordings", "", $label);
-    
-                // Setup medium
-                $album = $chart[$i]["album"];
-                switch($chart[$i]["medium"]) {
-                case "S":
-                    $medium = " 7\"";
-                    break;
-                case "T":
-                    $medium = " 10\"";
-                    break;
-                case "V":
-                    $medium = " 12\"";
-                    break;
-                default:
-                    $medium = "";
-                    break;
-                }
-    
-                echo "      <LI VALUE=\"". $chart[$i]["PLAYS"] ."\">";
-                // Artist
-                echo UI::HTMLify(strtoupper($artist), 20) . " <I>";
-                // Album & Label
-                echo "<A CLASS=\"calNav\" HREF=\"".
-                             "?s=byAlbumKey&amp;n=". UI::URLify($chart[$i]["tag"]).
-                             "&amp;q=10".
-                             "&amp;action=search&amp;session=".$this->session->getSessionID().
-                             "\">". UI::HTMLify($album, 20) . "</A></I>$medium (" .
-                     UI::HTMLify($label, 20) . ")<BR>\n";
             }
             echo "  </OL></TD></TR>\n</TABLE><BR>\n";
         }

@@ -92,13 +92,6 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
-    public function getAdd($date) {
-        $query = "SELECT * FROM currents WHERE adddate = ? ORDER BY id";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $date);
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
-    }
-    
     public function getAdd2($date) {
         $query = "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
                  "c.category as afile_category, ".
@@ -110,16 +103,6 @@ class ChartImpl extends BaseImpl implements IChart {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $date);
         return $this->execute($stmt);
-    }
-    
-    public function getCurrents($date) {
-        $query = "SELECT id, afile_number, tag, adddate, pulldate, ".
-        "category as afile_category FROM currents WHERE adddate <= ? AND ".
-                        "pulldate > ?";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $date);
-        $stmt->bindValue(2, $date);
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
     public function getCurrents2($date) {
@@ -135,71 +118,6 @@ class ChartImpl extends BaseImpl implements IChart {
         $stmt->bindValue(1, $date);
         $stmt->bindValue(2, $date);
         return $this->execute($stmt);
-    }
-    
-    public function getCurrentsWithPlays($date) {
-        // First, select out the currents with plays and add those up
-        $query = "CREATE TEMPORARY TABLE tmp_current_plays ".
-                 "ENGINE=MEMORY ".
-                 "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
-                 "category, count(t.tag) plays FROM tracks t ".
-                 "JOIN lists l ON t.list = l.id ".
-                 "RIGHT JOIN currents c ON c.tag = t.tag ".
-                 "WHERE l.showdate BETWEEN c.adddate AND c.pulldate ".
-                 "AND adddate <=? AND pulldate > ? ".
-                 "GROUP BY t.tag";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $date);
-        $stmt->bindValue(2, $date);
-        $stmt->execute();
-    
-        // Now, get the currents with no plays
-        $query = "CREATE TEMPORARY TABLE tmp_current_no_plays ".
-                 "ENGINE=MEMORY ".
-                 "SELECT id, afile_number, tag, adddate, pulldate, ".
-                 "category, 0 FROM currents ".
-                 "WHERE adddate <= ? AND pulldate > ? ".
-                 "AND tag NOT IN (SELECT tag FROM tmp_current_plays)";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $date);
-        $stmt->bindValue(2, $date);
-        $stmt->execute();
-    
-        // Result is the union of these two result sets
-        $query = "SELECT * FROM tmp_current_plays ".
-                 "UNION SELECT * FROM tmp_current_no_plays";
-        $stmt = $this->prepare($query);
-        $result = $this->execute($stmt, \PDO::FETCH_BOTH);
-    
-        // Clean up
-        $stmt = $this->prepare("DROP TABLE tmp_current_plays");
-        $stmt->execute();
-        $stmt = $this->prepare("DROP TABLE tmp_current_no_plays");
-        $stmt->execute();
-    
-        return $result;
-    
-        /*
-        // JM 2006-08-14
-        // This query didn't work, because if an album got spins (t.tag is
-        // not NULL), but those spins are outside the a-file period
-        // (l.showdate is NULL), then the album will be omitted from the list.
-        // But if we remote the (t.tag is NULL or l.showdate is not null)
-        // constraint, the album will appear, but the play count will be wrong.
-        //
-        $query = "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
-                     "category, count(t.tag) plays FROM currents c ".
-                     "LEFT JOIN tracks t ON t.tag = c.tag ".
-                     "LEFT JOIN lists l ON l.id = t.list ".
-                     "AND l.showdate BETWEEN adddate AND pulldate ".
-                     "WHERE adddate <= ? AND pulldate > ? ".
-                     "AND (t.tag IS NULL OR l.showdate IS NOT NULL) ".
-                     "GROUP BY c.tag";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $date);
-        $stmt->bindValue(2, $date);
-        return $this->execute($stmt);
-        */
     }
     
     public function getCurrentsWithPlays2($date=0) {
@@ -396,29 +314,6 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt);
     }
     
-    public function getChartSortFn($a, $b) {
-        // First, sort by descending number of plays
-        $retval = $b["PLAYS"] - $a["PLAYS"];
-    
-        // Then, sort by descending number of plays from last week
-        if(!$retval)
-            $retval = (int)$b["PREVWEEK"] - (int)$a["PREVWEEK"];
-    
-        // Then, sort by tag number
-        if(!$retval)
-            $retval = $a["tag"] - $b["tag"];
-    
-        // Next, sort by artist name
-        ////if(!$retval)
-        ////    $retval = strcasecmp($a["artist"], $b["artist"]);
-    
-        // Finally, sort by album name
-        ////if(!$retval)
-        ////    $retval = strcasecmp($a["album"], $b["album"]);
-    
-        return $retval;
-    }
-
     private function getChartAlbumInfo(&$albums) {
         $queryset = "";
         $tags = [];
@@ -427,7 +322,7 @@ class ChartImpl extends BaseImpl implements IChart {
             $queryset .= ", $tag";
             $tags[$tag] = &$album;
         }
-        $query = "SELECT tag, artist, album, medium, name " .
+        $query = "SELECT tag, artist, album, category, medium, size, name " .
                  "FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey " .
                  "WHERE tag IN (0" . $queryset . ")";
         $stmt = $this->prepare($query);
@@ -439,7 +334,10 @@ class ChartImpl extends BaseImpl implements IChart {
             else
                 $album["artist"] = $row["artist"];
             $album["album"] = $row["album"];
+            $album["category"] = $row["category"];
             $album["medium"] = $row["medium"];
+            $album["size"] = $row["size"];
+            $album["label"] = $row["name"];
             $album["LABEL"] = $row["name"];
         }
     }
@@ -519,6 +417,7 @@ class ChartImpl extends BaseImpl implements IChart {
         while($row = $stmt->fetch()) {
             $result[$i]["tag"] = $row[0];
             $result[$i]["PLAYS"] = $row[1];
+            $result[$i]["rank"] = $i+1;
             if(!$startDate) {
                 $result[$i]["PREVWEEK"] = $row[2];
                 $result[$i]["PREVRANK"] = $row[3];
@@ -550,6 +449,7 @@ class ChartImpl extends BaseImpl implements IChart {
                     $result[$i]["PLAYS"] = 0;
                     $result[$i]["PREVWEEK"] = $row[1];
                     $result[$i]["PREVRANK"] = $row[2];
+                    $result[$i]["rank"] = $i+1;
     
                     $tagCache[$row[0]] = 1;
     
@@ -583,191 +483,7 @@ class ChartImpl extends BaseImpl implements IChart {
                             $result[$i]["PLAYS"] = 0;
                             $result[$i]["PREVWEEK"] = $row[1];
                             $result[$i]["PREVRANK"] = 0;
-    
-                            $tagCache[$row[0]] = 1;
-    
-                            $i++;
-                        }
-                    }
-                }
-            }
-            $stmt = $this->prepare("DROP TABLE tmp_lastweek");
-            $stmt->execute();
-        }
-        
-        $this->getChartAlbumInfo($result);
-    }
-    
-    public function getChart2(&$result, $startDate, $endDate, $limit="", $category="") {
-        $tagCache = [];
-        $query = "SELECT plays.tag, sum(plays) p";
-    
-        if(!$startDate)
-            $query .= ", w.prev, w.lw";
-    
-        $query .= ", a.artist, a.album, a.medium, a.size,".
-                  " a.created, a.updated, a.category, l.name label";
-    
-        $query .= " FROM plays";
-        $query .= " JOIN albumvol a ON plays.tag = a.tag";
-        $query .= " JOIN publist l ON a.pubkey = l.pubkey";
-    
-        if(!$startDate) {
-            // We're doing a weekly chart, so go back and get last week's
-            // plays as well.
-            list($y, $m, $d) = explode("-", $endDate);
-            $lastWeek = date("Y-m-d", mktime(0,0,0,$m,$d-7,$y));
-    
-            $queryLast = "CREATE TEMPORARY TABLE tmp_lastweek " .
-                         "(lw int primary key auto_increment, unique(tag)) " .
-                         "ENGINE=MEMORY ";
-    
-            $queryLast .= "SELECT p.tag, sum(plays) prev,";
-            $queryLast .= " a.artist, a.album, a.medium, a.size,";
-            $queryLast .= " a.created, a.updated, a.category, l.name label";
-            $queryLast .= " FROM plays p";
-            $queryLast .= " JOIN albumvol a ON p.tag = a.tag";
-            $queryLast .= " JOIN publist l ON a.pubkey = l.pubkey";
-            $queryLast .= " WHERE week=?";
-            if($category)
-                $queryLast .= " AND find_in_set(?, p.category)";
-            $queryLast .= " GROUP BY tag";
-            $stmt = $this->prepare($queryLast);
-            $stmt->bindValue(1, $lastWeek);
-            if($category)
-                $stmt->bindValue(2, $category);
-            $stmt->execute();
-    
-            $query .= " LEFT JOIN tmp_lastweek w ON w.tag = plays.tag";
-        }
-    
-        if($startDate && $endDate)
-            $query .= " WHERE week BETWEEN ? AND ?";
-        else if($startDate)
-            $query .= " WHERE week >= ?";
-        else
-            $query .= " WHERE week = ?";
-        if($category)
-            $query .= " AND find_in_set(?, plays.category)";
-        
-        $query .= " GROUP BY plays.tag ORDER BY p DESC";
-    
-        if(!$startDate)
-            $query .= ", prev DESC";
-    
-        $query .= ", plays.tag";
-    
-        if($limit)
-            $query .= " LIMIT ?";
-        
-        $stmt = $this->prepare($query);
-        $p = 1;
-        if($startDate && $endDate) {
-            $stmt->bindValue($p++, $startDate);
-            $stmt->bindValue($p++, $endDate);
-        } else if($startDate)
-            $stmt->bindValue($p++, $startDate);
-        else
-            $stmt->bindValue($p++, $endDate);
-        if($category)
-            $stmt->bindValue($p++, $category);
-        if($limit)
-            $stmt->bindValue($p++, (int)$limit, \PDO::PARAM_INT);
-
-            $stmt->execute();
-    
-        //echo "DEBUG LAST: $queryLast<BR>";
-        //echo "DEBUG: $query<BR>";
-    
-        // Prepare the results
-        $i = 0;
-        while($row = $stmt->fetch()) {
-            $result[$i] = array_merge($row);
-            $result[$i]["rank"] = $i+1;
-            $result[$i]["LABEL"] = $row["label"];
-            $result[$i]["tag"] = $row[0];
-            $result[$i]["PLAYS"] = $row[1];
-            if(!$startDate) {
-                $result[$i]["PREVWEEK"] = $row[2];
-                $result[$i]["PREVRANK"] = $row[3];
-            }
-    
-            $tagCache[$row[0]] = 1;
-    
-            $i++;
-        }
-    
-        // Cleanup
-        if(!$startDate) {
-            if(!$limit || $i < $limit) {
-                // append zero play albums for this week to fill out chart
-                $query = "SELECT w.tag, prev, lw, plays,";
-                $query .= " a.artist, a.album, a.medium, a.size,";
-                $query .= " a.created, a.updated, a.category, l.name label";
-                $query .= " FROM tmp_lastweek w";
-                $query .= " JOIN albumvol a ON w.tag = a.tag";
-                $query .= " JOIN publist l ON a.pubkey = l.pubkey";
-                $query .= " LEFT JOIN plays ON w.tag = plays.tag";
-                $query .= " AND plays.week=?";
-                $query .= " WHERE plays IS NULL";
-                $query .= " ORDER BY prev DESC, w.tag";
-                if($limit)
-                    $query .= " LIMIT ?" ;
-                $stmt = $this->prepare($query);
-                $stmt->bindValue(1, $endDate);
-                if($limit)
-                    $stmt->bindValue(2, (int)($limit - $i), \PDO::PARAM_INT);
-    
-                $stmt->execute();
-                while($row = $stmt->fetch()) {
-                    $result[$i] = array_merge($row);
-                    $result[$i]["rank"] = $i+1;
-                    $result[$i]["LABEL"] = $row["label"];
-                    $result[$i]["tag"] = $row[0];
-                    $result[$i]["PLAYS"] = 0;
-                    $result[$i]["PREVWEEK"] = $row[1];
-                    $result[$i]["PREVRANK"] = $row[2];
-    
-                    $tagCache[$row[0]] = 1;
-    
-                    $i++;
-                }
-    
-                // Unbounded charts may need padding, too
-                if(!$limit || $limit > 17)
-                    $limit = 17;  // a respectable number
-    
-                // If there's STILL not enough, go back until we pad it out
-                $d -= 14;
-                $maxWeeks = 10;
-                while($maxWeeks-- && $i < $limit) {
-                    $lastWeek = date("Y-m-d", mktime(0,0,0,$m,$d,$y));
-                    $d -= 7;
-    
-                    $queryLast = "SELECT p.tag, sum(plays) prev,".
-                                 " a.artist, a.album, a.medium, a.size,".
-                                 " a.created, a.updated, a.category, l.name label".
-                                 " FROM plays p, albumvol a, publist l".
-                                 " WHERE week=?".
-                                 " AND p.tag = a.tag AND a.pubkey = l.pubkey";
-                    if($category)
-                        $queryLast .= " AND find_in_set(?, p.category)";
-                    $queryLast .= " GROUP BY tag ORDER BY prev";
-                    $stmt = $this->prepare($queryLast);
-                    $stmt->bindValue(1, $lastWeek);
-                    if($category)
-                        $stmt->bindValue(2, $category);
-                    $stmt->execute();
-    
-                    while($i < $limit && ($row = $stmt->fetch())) {
-                        if(!array_key_exists($row[0], $tagCache)) {
-                            $result[$i] = array_merge($row);
                             $result[$i]["rank"] = $i+1;
-                            $result[$i]["LABEL"] = $row["label"];
-                            $result[$i]["tag"] = $row[0];
-                            $result[$i]["PLAYS"] = 0;
-                            $result[$i]["PREVWEEK"] = $row[1];
-                            $result[$i]["PREVRANK"] = 0;
     
                             $tagCache[$row[0]] = 1;
     
@@ -779,61 +495,7 @@ class ChartImpl extends BaseImpl implements IChart {
             $stmt = $this->prepare("DROP TABLE tmp_lastweek");
             $stmt->execute();
         }
-    }
-    
-    public function getBottom(&$result, $startDate, $endDate, $limit="", $category="") {
-        $query = "SELECT currents.tag, sum(plays) p FROM currents";
-        $query .= " LEFT JOIN plays ON plays.tag = currents.tag";
-    
-        if($startDate && $endDate)
-            $query .= " WHERE (? BETWEEN adddate AND pulldate OR"
-                   . " ? BETWEEN adddate and pulldate) AND"
-                   . " (plays.tag IS NULL OR week BETWEEN ? AND ?)";
-        else if($startDate)
-            $query .= " WHERE ? BETWEEN adddate AND pulldate AND"
-                   . " (plays.tag IS NULL OR week >= ?)";
-        else
-            $query .= " WHERE ? BETWEEN adddate AND pulldate AND"
-                   . " (plays.tag IS NULL OR week = ?)";
-        if($category)
-            $query .= " AND find_in_set(?, category)";
-    
-        $query .= " GROUP BY currents.tag ORDER BY p";
-    
-        $query .= ", currents.tag";
-    
-        if($limit)
-            $query .= " LIMIT ?";
-        $stmt = $this->prepare($query);
-        $p = 1;
-        if($startDate && $endDate) {
-            $stmt->bindValue($p++, $startDate);
-            $stmt->bindValue($p++, $endDate);
-            $stmt->bindValue($p++, $startDate);
-            $stmt->bindValue($p++, $endDate);
-        } else if($startDate) {
-            $stmt->bindValue($p++, $startDate);
-            $stmt->bindValue($p++, $startDate);
-        } else {
-            $stmt->bindValue($p++, $endDate);
-            $stmt->bindValue($p++, $endDate);
-        }
-        if($category)
-            $stmt->bindValue($p++, $category);
-        if($limit)
-            $stmt->bindValue($p++, (int)$limit, \PDO::PARAM_INT);
-            
-        $stmt->execute();
-    
-        // Prepare the results
-        $i = 0;
-        while($row = $stmt->fetch()) {
-            $result[$i]["tag"] = $row[0];
-            $result[$i]["PLAYS"] = $row[1];
-    
-            $i++;
-        }
-
+        
         $this->getChartAlbumInfo($result);
     }
     

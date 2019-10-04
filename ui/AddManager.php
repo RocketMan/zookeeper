@@ -95,92 +95,6 @@ class AddManager extends MenuItem {
         }
     }
     
-    private function addManagerGetAlbums(&$records, &$albums) {
-        $libraryAPI = Engine::api(ILibrary::class);
-        while($records && ($row = $records->fetch())) {
-            $albumrec = $libraryAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row["tag"]);
-            if(sizeof($albumrec) > 0) {
-                //list($y, $m, $d) = explode("-", $row["adddate"]);
-                //$diff = ($now - mktime(0,0,0,$m,$d,$y))/86400;  // 86400sec = 1day
-                //if($diff > 7)
-                //    $row["CLICKS"] = floor($row["plays"]/$diff*100);
-                $row["artist"] = $albumrec[0]["artist"];
-                $row["album"] = $albumrec[0]["album"];
-                $row["medium"] = $albumrec[0]["medium"];
-                $labelKey = $albumrec[0]["pubkey"];
-                if(!$labelCache[$labelKey]) {
-                    // Secondary search for label name
-                    $label = $libraryAPI->search(ILibrary::LABEL_PUBKEY, 0, 1, $labelKey);
-                    if(sizeof($label)){
-                        $labelCache[$labelKey] = $label[0]["name"];
-                    } else
-                        $labelCache[$labelKey] = "(Unknown)";
-                }
-                $row["LABELNAME"] = $labelCache[$labelKey];
-            }
-            $albums[] = $row;
-        }
-    }
-    
-// Not used - sorting done at client. 
-/*
-    private function addManagerSortFn($a, $b) {
-        switch($_REQUEST["sortBy"]) {
-        case "Num":
-        case "Num-":
-            $retval = strcmp($a["afile_number"], $b["afile_number"]);
-            break;
-        case "Review":
-        case "Review-":
-            $retval = strcmp(strtolower($a["REVIEWER"]), strtolower($b["REVIEWER"]));
-            break;
-        case "Col":
-        case "Col-":
-            $cat1 = $this->makeCategoryString($a["afile_category"]);
-            $cat2 = $this->makeCategoryString($b["afile_category"]);
-            $retval = strcmp($cat1, $cat2);
-            break;
-        case "Label":
-        case "Label-":
-            $retval = strcmp($a["LABELNAME"], $b["LABELNAME"]);
-            break;
-        case "Title":
-        case "Title-":
-            $retval = strcmp($a["album"], $b["album"]);
-            break;
-        case "AddDate":
-        case "AddDate-":
-            $retval = strcmp($a[3], $b[3]);
-            break;
-        case "PullDate":
-        case "PullDate-":
-            $retval = strcmp($a[4], $b[4]);
-            break;
-        case "**Sizzle":
-        case "**Sizzle-":
-            $isSetA = isset($a["sizzle"]);
-            $isSetB = isset($b["sizzle"]);
-            if($isSetA && $isSetB)
-                $retval = $b["sizzle"] - $a["sizzle"];
-            else if($isSetA)
-                $retval = -1;
-            else if($isSetB)
-                $retval = 1;
-            else
-                $retval = 0;
-    
-            // Secondary sort on the A-File number
-            if($retval == 0)
-                $retval = strcmp($a["afile_number"], $b["afile_number"]);
-            break;
-        default:
-            $retval = strcmp($a["artist"], $b["artist"]);
-            break;
-        }
-        return (substr($_REQUEST["sortBy"], -1, 1) == "-")?-$retval:$retval;
-    }
-*/
-    
     private function makeCategoryString($categories) {
        $category = '';
        $acats = explode(",", $categories);
@@ -984,7 +898,7 @@ class AddManager extends MenuItem {
             } else {
                 // Fetch the add        
                 $records = Engine::api(IChart::class)->getAdd2($date);
-                $this->addManagerGetAlbums($records, $albums);
+                $this->addManagerGetAlbums2($records, $albums);
     
                 $from = Engine::param('application')." <$instance_chartman>";
                 $subject = Engine::param('station').": Adds for $date";
@@ -1156,60 +1070,6 @@ class AddManager extends MenuItem {
             echo "<BR>\n";
         }
     }
-
-// Not used: sorting done on client.
-/*
-    private function aFileActivitySortFn($a, $b) {
-        switch($_REQUEST["sortBy"]) {
-        case "DJ":
-        case "DJ-":
-            // Field is formatted "FirstName [MI] LastName"; we want to flip it
-            // to "LastName FirstName" for the purposes of the sort comparison.
-            $name1=explode(" ", $a["name"]);
-            $name2=explode(" ", $b["name"]);
-            $name1c=$name1[sizeof($name1)-1] . " " . $name1[0];
-            $name2c=$name2[sizeof($name2)-1] . " " . $name2[0];
-            $retval = strcasecmp($name1c, $name2c);
-            break;
-        case "Airname":
-        case "Airname-":
-            $retval = strcasecmp($a["airname"], $b["airname"]);
-            break;
-        case "Show":
-        case "Show-":
-            $retval = strcasecmp($a["description"], $b["description"]);
-            break;
-        case "Col":
-        case "Col-":
-            $cat1 = $this->makeCategoryString($a["afile_category"]);
-            $cat2 = $this->makeCategoryString($b["afile_category"]);
-            $retval = strcmp($cat1, $cat2);
-            break;
-        case "D":
-        case "D-":
-            $retval = $a["duration"] - $b["duration"];
-            break;
-        case "Tracks":
-        case "Tracks-":
-            $retval = $a["total"] - $b["total"];
-            break;
-        case "AFile":
-        case "AFile-":
-            $retval = $a["afile"] - $b["afile"];
-            break;
-        case "%":
-        case "%-":
-            $retval = $a["percent"] - $b["percent"];
-            break;
-        default:
-            $retval = strcmp($a["showdate"], $b["showdate"]);
-            if($retval == 0)
-                $retval = $a["start"] - $b["start"];
-            break;
-        }
-        return (substr($_REQUEST["sortBy"], -1, 1) == "-")?-$retval:$retval;
-    }
-*/
     
     private function aFileActivityGetReport(&$records, &$albums) {
         while($row = $records->fetch()) {
