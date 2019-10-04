@@ -226,7 +226,6 @@ function setFocus() {
         if($medium == " CD") $medium = "";
     
         $showMissing = "missing";
-        $missingSelect = "entry_0=Missing+:(";
         echo "<TD WIDTH=80>&nbsp;</TD>" .
              "<TD ALIGN=RIGHT>Collection:</TD><TD><B>";
         switch($albums[0]["location"]) {
@@ -237,7 +236,6 @@ function setFocus() {
         case 'M':
             echo "<I>Missing</I>";
             $showMissing = "found";
-            $missingSelect = "entry_0=Found!++:)";
             break;
         case 'E':
             echo "<I>Review Shelf</I>";
@@ -257,8 +255,7 @@ function setFocus() {
         if($this->session->isAuth("u") && $showMissing) {
             $urls = Engine::param('urls');
             if(array_key_exists('report_missing', $urls)) {
-                $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
-                $url = str_replace('%USERNAME%', UI::URLify($user[0]["realname"]), $urls['report_missing']);
+                $url = str_replace('%USERNAME%', UI::URLify($this->session->getDN()), $urls['report_missing']);
                 $url = str_replace('%ALBUMTAG%', $albums[0]["tag"], $url);
                 echo "&nbsp;&nbsp;<A HREF=\"$url\" CLASS=\"nav\" TARGET=\"_blank\">[report $showMissing...]</A>";
             }
