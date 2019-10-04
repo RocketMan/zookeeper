@@ -100,7 +100,7 @@ class Home extends MenuItem {
                              "&amp;action=search&amp;session=".$this->session->getSessionID().
                              "\">";
              echo UI::HTMLify($topPlays[$i]["album"], 20) . "</A></TD><TD>" .
-                  UI::HTMLify($topPlays[$i]["LABEL"], 20) . "</TD></TR>\n";
+                  UI::HTMLify($topPlays[$i]["label"], 20) . "</TD></TR>\n";
           }
           echo "</TABLE>\n";
        }

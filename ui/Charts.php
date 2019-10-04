@@ -362,7 +362,7 @@ class Charts extends MenuItem {
     
                 // Fixup the artist, album, and label names
                 $artist = $chart[$i]["artist"];
-                $label = str_replace(" Records", "", $chart[$i]["LABEL"]);
+                $label = str_replace(" Records", "", $chart[$i]["label"]);
                 $label = str_replace(" Recordings", "", $label);
     
                 // Setup medium
@@ -418,7 +418,7 @@ class Charts extends MenuItem {
             for($i=0; $i < sizeof($chart); $i++) {
                 // Fixup the artist, album, and label names
                 $artist = $chart[$i]["artist"];
-                $label = str_replace(" Records", "", $chart[$i]["LABEL"]);
+                $label = str_replace(" Records", "", $chart[$i]["label"]);
                 $label = str_replace(" Recordings", "", $label);
     
                 // Setup medium
@@ -472,7 +472,7 @@ class Charts extends MenuItem {
                 // Fixup the artist, album, and label names
                 $artist = preg_replace("/, [Tt]he$/", "", $chart[$i]["artist"]);
                 $album = preg_replace("/, [Tt]he$/", "", $chart[$i]["album"]);
-                $label = str_replace(" Records", "", $chart[$i]["LABEL"]);
+                $label = str_replace(" Records", "", $chart[$i]["label"]);
                 $label = str_replace(" Recordings", "", $label);
     
                 // Quote singles in the hip hop chart only

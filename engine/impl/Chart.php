@@ -338,7 +338,6 @@ class ChartImpl extends BaseImpl implements IChart {
             $album["medium"] = $row["medium"];
             $album["size"] = $row["size"];
             $album["label"] = $row["name"];
-            $album["LABEL"] = $row["name"];
         }
     }
     
