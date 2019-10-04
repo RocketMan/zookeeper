@@ -92,7 +92,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
-    public function getAdd2($date) {
+    public function getAdd($date) {
         $query = "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
                  "c.category as afile_category, ".
                  "a.artist, a.album, a.medium, a.size, ".
@@ -105,7 +105,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt);
     }
     
-    public function getCurrents2($date) {
+    public function getCurrents($date) {
         $query = "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
                  "c.category as afile_category, ".
                  "a.artist, a.album, a.medium, a.size, ".
@@ -120,7 +120,7 @@ class ChartImpl extends BaseImpl implements IChart {
         return $this->execute($stmt);
     }
     
-    public function getCurrentsWithPlays2($date=0) {
+    public function getCurrentsWithPlays($date=0) {
         if(!$date)
             $date = date("Y-m-d");
     

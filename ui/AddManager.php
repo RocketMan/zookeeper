@@ -88,7 +88,7 @@ class AddManager extends MenuItem {
         return $this->dispatchSubAction($action, $subaction, self::$subactions, $extra);
     }
     
-    public function addManagerGetAlbums2(&$records, &$albums) {
+    public function addManagerGetAlbums(&$records, &$albums) {
         while($records && ($row = $records->fetch())) {
             $row["LABELNAME"] = $row["label"];
             $albums[] = $row;
@@ -143,7 +143,7 @@ class AddManager extends MenuItem {
              "</TR></THEAD>\n";
     
         // Get albums into array
-        $this->addManagerGetAlbums2($records, $albums);
+        $this->addManagerGetAlbums($records, $albums);
     
         // Mark reviewed albums
         if($showReview)
@@ -246,9 +246,9 @@ class AddManager extends MenuItem {
             break;
         default:
             if($this->session->isAuth("u"))
-                $results = Engine::api(IChart::class)->getCurrentsWithPlays2(date("Y-m-d"));
+                $results = Engine::api(IChart::class)->getCurrentsWithPlays(date("Y-m-d"));
             else
-                $results = Engine::api(IChart::class)->getCurrents2(date("Y-m-d"));
+                $results = Engine::api(IChart::class)->getCurrents(date("Y-m-d"));
 
             $this->addManagerEmitAlbums($results, "", $this->session->isAuth("n"), true);
             UI::setFocus();
@@ -303,7 +303,7 @@ class AddManager extends MenuItem {
     <?php 
         if(!$datevalid && $first) $date = $first;
         if($date) {
-            $records = Engine::api(IChart::class)->getAdd2($date);
+            $records = Engine::api(IChart::class)->getAdd($date);
             $this->addManagerEmitAlbums($records, "adds", $this->session->isAuth("n"), true);
         }
         UI::setFocus();
@@ -897,8 +897,8 @@ class AddManager extends MenuItem {
                 echo "  <P CLASS=\"header\">E-Mail address is invalid.</P>\n";
             } else {
                 // Fetch the add        
-                $records = Engine::api(IChart::class)->getAdd2($date);
-                $this->addManagerGetAlbums2($records, $albums);
+                $records = Engine::api(IChart::class)->getAdd($date);
+                $this->addManagerGetAlbums($records, $albums);
     
                 $from = Engine::param('application')." <$instance_chartman>";
                 $subject = Engine::param('station').": Adds for $date";

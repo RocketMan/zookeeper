@@ -232,7 +232,7 @@ class RSS extends CommandTarget implements IController {
     
     public function emitAddRSS($addDate, &$title) {
         $station = Engine::param('station');
-        $results = Engine::api(IChart::class)->getAdd2($addDate);
+        $results = Engine::api(IChart::class)->getAdd($addDate);
         if($results) {
             $title = "$station Adds ";
     

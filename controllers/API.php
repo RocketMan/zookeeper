@@ -354,7 +354,7 @@ class API extends CommandTarget implements IController {
         self::array_remove($currentfields, "name", "address",
                     "city", "state", "zip");
     
-        $records = Engine::api(IChart::class)->getCurrentsWithPlays2();
+        $records = Engine::api(IChart::class)->getCurrentsWithPlays();
         $this->startResponse("getCurrentsRs");
         $this->emitDataSet("albumrec", $currentfields, $records);
         $this->endResponse("getCurrentsRs");

@@ -35,9 +35,9 @@ interface IChart {
     function updateCategory($i, $name, $code, $dir, $email);
     function getNextAID();
     function getAddDates($limit="");
-    function getAdd2($date);
-    function getCurrents2($date);
-    function getCurrentsWithPlays2($date=0);
+    function getAdd($date);
+    function getCurrents($date);
+    function getCurrentsWithPlays($date=0);
     function addAlbum($aid, $tag, $adddate, $pulldate, $cats);
     function updateAlbum($id, $aid, $tag, $adddate, $pulldate, $cats);
     function deleteAlbum($id);
