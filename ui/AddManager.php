@@ -108,7 +108,7 @@ class AddManager extends MenuItem {
         }
         
         if($sort)
-            usort($albums, ['ZK\\UI\\AddManager', 'afileDefaultSort']);
+            usort($albums, [__CLASS__, 'afileDefaultSort']);
     }
     
     private function makeCategoryString($categories) {
