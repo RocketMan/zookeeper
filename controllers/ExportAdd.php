@@ -60,7 +60,7 @@ class ExportAdd implements IController {
         $records = Engine::api(IChart::class)->getAdd($date);
         
         // Retrieve the albums into an array
-        (new AddManager())->addManagerGetAlbums2($records, $albums);
+        (new AddManager())->addManagerGetAlbums($records, $albums);
         
         // Emit the albums
         foreach($albums as $index => $row) {
