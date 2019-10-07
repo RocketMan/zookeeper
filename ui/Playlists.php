@@ -1985,12 +1985,12 @@ class Playlists extends MenuItem {
         }
     
         if(isset($dj))
-        usort($dj, array($this, "emitViewDJSortFn"));
+            usort($dj, array($this, "emitViewDJSortFn"));
     
         for($j = 0; $j < $i; $j++) {
             $row = $dj[$j];
-            $cur = strtoupper(substr($row["sort"], 0, 1));
-            if($cur < "A") $cur = "#";
+            $cur = UI::deLatin1ify(strtoupper(substr($row["sort"], 0, 1)));
+            if($cur < "A" || $cur > "Z") $cur = "#";
             if($cur != $last) {
                 $last = $cur;
                 echo "</TD></TR>\n  <TR><TD COLSPAN=2>&nbsp;</TD></TR>\n  <TR><TH VALIGN=TOP><A NAME=\"$last\">$last</A>&nbsp;&nbsp;</TH>\n      <TD VALIGN=TOP>";
