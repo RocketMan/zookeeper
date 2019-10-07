@@ -24,8 +24,6 @@
 
 namespace ZK\Engine;
 
-use \Datetime;
-use \DateTimeZone;
 use ZK\Engine\ILibrary;
 
 
@@ -195,13 +193,13 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $timeAr = explode("-", $listRow[2]);
             if (count($timeAr) == 2) {
                 $timeStr1 = $listRow[1] . " " . $timeAr[0];
-                $start = DateTime::createFromFormat($TIME_FORMAT, $timeStr1);
+                $start = \DateTime::createFromFormat($TIME_FORMAT, $timeStr1);
                 $endStr = $timeAr[1] == "0000" ? "2359" : $timeAr[1];
                 $timeStr2 = $listRow[1] . " " . $endStr;
-                $end = DateTime::createFromFormat($TIME_FORMAT, $timeStr2);
+                $end = \DateTime::createFromFormat($TIME_FORMAT, $timeStr2);
 
                 if (isset($start) && isset($end)) {
-                    $now = new DateTime("now");
+                    $now = new \DateTime("now");
                     $retVal = (($now > $start) && ($now < $end));
                 }
             }
