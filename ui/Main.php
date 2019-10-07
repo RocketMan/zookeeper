@@ -39,15 +39,12 @@ class Main implements IController {
 
     public function processRequest($dispatcher) {
         $this->session = Engine::session();
-
-        $contentType = $_REQUEST["Content-Type"];
-        $action =  $_REQUEST["action"];
-        $subAction =  $_REQUEST["subaction"];
-        $isJson = substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
-
         $this->preProcessRequest($dispatcher);
-        if ($isJson == 1) {
-            //TODO: add validation
+
+        $isJson = substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
+        if ($isJson) {
+            $action =  $_REQUEST["action"];
+            $subAction =  $_REQUEST["subaction"];
             $dispatcher->dispatch($action, $subaction, $this->session);
         } else {
             $this->emitResponseHeader();
