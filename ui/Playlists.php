@@ -1981,6 +1981,10 @@ class Playlists extends MenuItem {
         $i = 0;
         while($records && ($row = $records->fetch())) {
             $row["sort"] = preg_match("/^the /i", $row[1])?substr($row[1], 4):$row[1];
+            // sort symbols beyond Z with the numerics and other special chars
+            if(UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1))) > "Z")
+                $row["sort"] = "@".$row["sort"];
+
             $dj[$i++] = $row;
         }
     
@@ -1989,8 +1993,8 @@ class Playlists extends MenuItem {
     
         for($j = 0; $j < $i; $j++) {
             $row = $dj[$j];
-            $cur = UI::deLatin1ify(strtoupper(substr($row["sort"], 0, 1)));
-            if($cur < "A" || $cur > "Z") $cur = "#";
+            $cur = UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1)));
+            if($cur < "A") $cur = "#";
             if($cur != $last) {
                 $last = $cur;
                 echo "</TD></TR>\n  <TR><TD COLSPAN=2>&nbsp;</TD></TR>\n  <TR><TH VALIGN=TOP><A NAME=\"$last\">$last</A>&nbsp;&nbsp;</TH>\n      <TD VALIGN=TOP>";
