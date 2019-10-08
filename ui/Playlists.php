@@ -168,14 +168,17 @@ class Playlists extends MenuItem {
         $end =  DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $toTimeN);
 
         $validRange = false;
-        if (isset($start) && isset($end)) {
+        if ($start && $end) {
+            // if end is less than start, assume next day
+            if($end < $start)
+                $end->modify('+1 day');
             $minutes = ($end->getTimestamp() - $start->getTimestamp()) / 60;
             $validRange = ($minutes > $SHOW_MIN_LEN) && ($minutes < $SHOW_MAX_LEN);
         }
 
         if ($validRange)
             $retVal = $fromTimeN . "-" . $toTimeN;
-        else
+        else if ($fromTime || $toTime)
             error_log("Error: invalid playlist time -" . $fromTime . "-, -" . $toTime ."-");
 
         return $retVal;
@@ -774,7 +777,7 @@ class Playlists extends MenuItem {
                     </div>
                     <div>
                         <label>Label:</label>
-                        <input id='track-label' /}>
+                        <input id='track-label' />
                     </div>
                 </div>
             </div> <!-- track-entry -->
@@ -1509,6 +1512,7 @@ class Playlists extends MenuItem {
 
             $_REQUEST["playlist"] = $playlist;
             $this->action = "newListEditor";
+            $this->emitEditor();
         }
     }
     

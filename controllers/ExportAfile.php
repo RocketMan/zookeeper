@@ -58,7 +58,7 @@ class ExportAfile implements IController {
         $results = Engine::api(IChart::class)->getCurrents2(date("Y-m-d"));
         $addmgr = new AddManager();
         $addmgr->session = Engine::session();
-        $addmgr->addManagerEmitAlbums($results, "", false, true, true);
+        $addmgr->addManagerEmitAlbums($results, "", false, true, true, true);
         echo "</BODY>\n</HTML>\n";
     }
 }
