@@ -24,8 +24,6 @@
 
 namespace ZK\UI;
 
-use \Datetime;
-
 use ZK\Engine\Engine;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
@@ -164,8 +162,8 @@ class Playlists extends MenuItem {
         $fromTimeN = $this->normalizeTime($fromTime);
         $toTimeN = $this->normalizeTime($toTime);
 
-        $start = DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $fromTimeN);
-        $end =  DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $toTimeN);
+        $start = \DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $fromTimeN);
+        $end =  \DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $toTimeN);
 
         $validRange = false;
         if ($start && $end) {
@@ -537,13 +535,13 @@ class Playlists extends MenuItem {
             $sourcePlaylist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
         } else {
             $WEEK_SECONDS = 60 *60 * 24 * 7;
-            $nowDateStr =  (new DateTime())->format("Y-m-d");
-            $nowDateTimestamp =  (new DateTime($nowDateStr))->getTimestamp();
+            $nowDateStr =  (new \DateTime())->format("Y-m-d");
+            $nowDateTimestamp =  (new \DateTime($nowDateStr))->getTimestamp();
 
             // see if there is a PL on this day last week. if so use it.
             $playlists = Engine::api(IPlaylist::class)->getPlaylists(1, 1, "", 1, $this->session->getUser(), 1, 10);
             while ($playlists && ($playlist = $playlists->fetch())) {
-                $showDate = new DateTime($playlist['showdate']);
+                $showDate = new \DateTime($playlist['showdate']);
                 $dateInterval = $nowDateTimestamp - $showDate->getTimestamp();
                 if ($dateInterval == $WEEK_SECONDS) {
                     $sourcePlaylist = $playlist;
@@ -1698,7 +1696,6 @@ class Playlists extends MenuItem {
     
     private function viewListGetAlbums(&$records, &$albums) {
         while($row = $records->fetch()) {
-            $row["LABELNAME"] = $row["label"];
             $albums[] = $row;
         }
     }
@@ -1988,15 +1985,19 @@ class Playlists extends MenuItem {
         $i = 0;
         while($records && ($row = $records->fetch())) {
             $row["sort"] = preg_match("/^the /i", $row[1])?substr($row[1], 4):$row[1];
+            // sort symbols beyond Z with the numerics and other special chars
+            if(UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1))) > "Z")
+                $row["sort"] = "@".$row["sort"];
+
             $dj[$i++] = $row;
         }
     
         if(isset($dj))
-        usort($dj, array($this, "emitViewDJSortFn"));
+            usort($dj, array($this, "emitViewDJSortFn"));
     
         for($j = 0; $j < $i; $j++) {
             $row = $dj[$j];
-            $cur = strtoupper(substr($row["sort"], 0, 1));
+            $cur = UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1)));
             if($cur < "A") $cur = "#";
             if($cur != $last) {
                 $last = $cur;

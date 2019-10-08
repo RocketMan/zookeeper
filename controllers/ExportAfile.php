@@ -55,7 +55,7 @@ class ExportAfile implements IController {
         $displayDate = date("l, j F Y");
         $station = Engine::param("station");
         echo "  <H2 CLASS=\"header\">$station A-FILE AS OF " . strtoupper($displayDate) . "</H2>\n";
-        $results = Engine::api(IChart::class)->getCurrents2(date("Y-m-d"));
+        $results = Engine::api(IChart::class)->getCurrents(date("Y-m-d"));
         $addmgr = new AddManager();
         $addmgr->session = Engine::session();
         $addmgr->addManagerEmitAlbums($results, "", false, true, true, true);

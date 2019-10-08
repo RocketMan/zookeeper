@@ -188,7 +188,7 @@ class API extends CommandTarget implements IController {
 
         $chartfields = API::ALBUM_FIELDS;
         array_push($chartfields, "label", "rank");
-        self::array_remove($chartfields, "name", "address", "city", "state", "zip", "location", "bin");
+        self::array_remove($chartfields, "name", "address", "city", "state", "zip", "location", "bin", "created", "updated");
     
         if(!$date) {
              $weeks = Engine::api(IChart::class)->getChartDates(1);
@@ -196,10 +196,10 @@ class API extends CommandTarget implements IController {
              $date = $week["week"];
         }
     
-        $this->startResponse("getChartRs");
+        $this->startResponse("getChartsRs");
         
         // main chart
-        Engine::api(IChart::class)->getChart2($records, 0, $date, 30);
+        Engine::api(IChart::class)->getChart($records, 0, $date, 30);
 
         $attrs = [];
         $attrs["chart"] = "General";
@@ -212,7 +212,7 @@ class API extends CommandTarget implements IController {
         $genres = [5, 7, 6, 1, 2, 4, 3, 8];
         for($i=0; $i<sizeof($genres); $i++) {
              unset($records);
-             Engine::api(IChart::class)->getChart2($records, 0, $date, 10, $genres[$i]);
+             Engine::api(IChart::class)->getChart($records, 0, $date, 10, $genres[$i]);
              $attrs = [];
              $attrs["chart"] = $this->catCodes[$genres[$i]-1]["name"];
              $attrs["week-ending"] = $date;
@@ -221,7 +221,7 @@ class API extends CommandTarget implements IController {
              $this->endResponse("chart");
         }
         
-        $this->endResponse("getChartRs");
+        $this->endResponse("getChartsRs");
     }
     
     public function getPlaylists() {
@@ -354,7 +354,7 @@ class API extends CommandTarget implements IController {
         self::array_remove($currentfields, "name", "address",
                     "city", "state", "zip");
     
-        $records = Engine::api(IChart::class)->getCurrentsWithPlays2();
+        $records = Engine::api(IChart::class)->getCurrentsWithPlays();
         $this->startResponse("getCurrentsRs");
         $this->emitDataSet("albumrec", $currentfields, $records);
         $this->endResponse("getCurrentsRs");

@@ -93,7 +93,7 @@ class RSS extends CommandTarget implements IController {
             for($i=0; $i < sizeof($chart); $i++) {
                 // Fixup the artist, album, and label names
                 $artist = $chart[$i]["artist"];
-                $label = str_replace(" Records", "", $chart[$i]["LABEL"]);
+                $label = str_replace(" Records", "", $chart[$i]["label"]);
                 $label = str_replace(" Recordings", "", $label);
     
                 // Setup medium
@@ -232,7 +232,7 @@ class RSS extends CommandTarget implements IController {
     
     public function emitAddRSS($addDate, &$title) {
         $station = Engine::param('station');
-        $results = Engine::api(IChart::class)->getAdd2($addDate);
+        $results = Engine::api(IChart::class)->getAdd($addDate);
         if($results) {
             $title = "$station Adds ";
     
