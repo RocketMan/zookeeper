@@ -198,7 +198,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                 $timeStr2 = $listRow[1] . " " . $endStr;
                 $end = \DateTime::createFromFormat($TIME_FORMAT, $timeStr2);
 
-                if (isset($start) && isset($end)) {
+                if ($start && $end) {
                     $now = new \DateTime("now");
                     $retVal = (($now > $start) && ($now < $end));
                 }
