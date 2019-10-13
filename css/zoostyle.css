@@ -363,6 +363,7 @@ TH.sec {
     background-color: #2530a7;
 }
 .error {
+    font-weight: bold;
     color: #cc0000;
 }
 .input { }

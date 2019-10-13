@@ -198,9 +198,8 @@ class Playlists extends MenuItem {
         $updateStatus = 0; //failure
         $retMsg = 'success';
         if ($isSeparator == False && 
-            (empty($playlist) || empty($artist) || empty($album) || 
-             empty($track) || empty($label))) {
-            $retMsg = "Required field missing: -" . $playlist . "-, -" . $artist . "-, -" . $album . "-, -" . $track . "-, -" . $label . "-";
+            (empty($playlist) || empty($artist) || empty($track))) {
+            $retMsg = "required field missing: -" . $playlist . "-, -" . $artist . "-, -" . $track . "-";
         } else {
             $updateStatus = Engine::api(IPlaylist::class)->insertTrack($playlist, $tag, $artist, $track, $album, $label, True);
 
@@ -735,6 +734,7 @@ class Playlists extends MenuItem {
         <div class='pl-form-entry'>
             <input id='track-session' type='hidden' value='session VALUE="<?php echo $this->session->getSessionID(); ?>'>
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
+            <label></label><span id='error-msg' class='error'></span>
             <div>
                 <label>Type:</label>
                 <select id='track-type-pick'>
@@ -763,11 +763,11 @@ class Playlists extends MenuItem {
                 <div id='manual-entry' class='zk-hidden' >
                     <div>
                         <label>Artist:</label>
-                        <input id='track-artist' />
+                        <input required id='track-artist' />
                     </div>
                     <div>
                         <label>Track:</label>
-                        <input id='track-title' />
+                        <input required id='track-title' />
                     </div>
                     <div>
                         <label>Album:</label>
@@ -807,6 +807,7 @@ class Playlists extends MenuItem {
                 var mode = $("#track-type-pick").val();
                 $("#manual-entry input").val('');
                 $("#track-title-pick").val('0');
+                $("#error-msg").text('');
                 $("#tag-status").text('');
                 $("#tag-artist").text('');
                 setAddButtonState(false);
@@ -826,7 +827,7 @@ class Playlists extends MenuItem {
             // return true if have all required fields.
             function haveAllUserInput()  {
                 var isEmpty = false;
-                $("#manual-entry input").each(function() {
+                $("#manual-entry input[required]").each(function() {
                     isEmpty = isEmpty || $(this).val().length == 0;
                 });
 
@@ -834,7 +835,7 @@ class Playlists extends MenuItem {
             }
 
             function showUserError(msg) {
-                $('#tag-status').text(msg).removeClass('track-info').addClass('track-error');
+                $('#error-msg').text(msg);
             }
 
             function getDiskInfo(id) {
@@ -930,8 +931,7 @@ class Playlists extends MenuItem {
                         clearUserInput(true);
                     },
                     error: function (jqXHR, textStatus, errorThrown) {
-                        clearUserInput(true);
-                        showUserError("Your track was not saved: " + textStatus);
+                        showUserError("Your track was not saved: " + jqXHR.responseJSON.status);
                     }
                 });
             }
@@ -1702,7 +1702,11 @@ class Playlists extends MenuItem {
     
     private function makeAlbumLink($row, $includeLabel) {
         $albumName = $row["album"];
-        $labelSpan = "<span class='songLabel'> / " . $this->smartURL($row["label"]) . "</span>";
+        $labelName = $row["label"];
+        if (empty($albumName) && empty($labelName))
+            return "";
+
+        $labelSpan = "<span class='songLabel'> / " . $this->smartURL($labelName) . "</span>";
         if($row["tag"]) {
             $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($row["tag"]) .
                           "&amp;q=&amp;action=search&amp;session=" . $this->session->getSessionID() .
