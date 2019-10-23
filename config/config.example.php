@@ -100,8 +100,8 @@ $config = [
     'db' => [
         'driver' => 'mysql',
         'host' => 'localhost',
-        'database' => '',
-        'user' => '',
+        'database' => 'zookeeper',
+        'user' => 'root',
         'pass' => '',
     ],
 
