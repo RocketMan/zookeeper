@@ -44,7 +44,7 @@ class Main implements IController {
         $isJson = substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
         if ($isJson) {
             $action =  $_REQUEST["action"];
-            $subAction =  $_REQUEST["subaction"];
+            $subaction =  $_REQUEST["subaction"];
             $dispatcher->dispatch($action, $subaction, $this->session);
         } else {
             $this->emitResponseHeader();

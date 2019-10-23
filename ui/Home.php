@@ -50,7 +50,7 @@ class Home extends MenuItem {
        if($weeks && ($lastWeek = $weeks->fetch()))
           list($y,$m,$d) = explode("-", $lastWeek["week"]);
     
-       if(!$y)
+       if(! isset($y) || !$y)
           return;    // No charts!  bail.
     
        if(!$numWeeks || $numWeeks == 1)

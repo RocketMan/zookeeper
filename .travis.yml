@@ -1,0 +1,41 @@
+language: php
+
+php:
+  - 5.6
+  - 7.2
+
+services:
+  - mysql
+
+before_install:
+  - mysql -e 'CREATE DATABASE zookeeper'
+
+before_script:
+  # Install Apache
+  - sudo apt-get update
+  - sudo apt-get install apache2 libapache2-mod-fastcgi
+  # Enable php-fpm
+  - sudo cp ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf.default ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf
+  - sudo a2enmod rewrite actions fastcgi alias
+  - echo "cgi.fix_pathinfo = 1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  - sudo sed -i -e "s,www-data,travis,g" /etc/apache2/envvars
+  - sudo chown -R travis:travis /var/lib/apache2/fastcgi
+  - ~/.phpenv/versions/$(phpenv version-name)/sbin/php-fpm
+  # Configure Apache vhosts
+  - sudo cp -f build/travis-ci-apache /etc/apache2/sites-available/000-default.conf
+  - sudo sed -e "s?%TRAVIS_BUILD_DIR%?$(pwd)?g" --in-place /etc/apache2/sites-available/000-default.conf
+  - sudo service apache2 restart
+  # Set timezone
+  - phpenv config-add build/zookeeper.ini
+  # Copy configuration file
+  - cp config/config.example.php config/config.php
+  # Set up MySQL
+  - mysql -u root zookeeper < db/zkdbSchema.sql
+  - mysql -u root zookeeper < db/categories.sql
+  - mysql -u root zookeeper < db/chartemail.sql
+  - mysql -u root zookeeper < db/bootstrapUser.sql
+  # Set some $_SERVER vars used in Main.php
+  - export HTTP_ACCEPT="application/json"
+  - export HTTP_USER_AGENT="Travis CI"
+
+script: php zk test action=test subaction=test
