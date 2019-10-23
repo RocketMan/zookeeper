@@ -1,4 +1,5 @@
 ## Zookeeper Online
+[![Build Status](https://travis-ci.org/rocketman/zookeeper.svg?branch=master)](https://travis-ci.org/rocketman/zookeeper)
 
 Zookeeper Online is a music database and charting application for
 college and independent radio.
