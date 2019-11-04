@@ -28,7 +28,27 @@ namespace ZK\Engine;
  * DJ operations
  */
 class DJImpl extends BaseImpl implements IDJ {
+    /*
+     * remove airnames which are not linked to a playlist or a music review
+     */
+    private function purgeUnusedAirnames($user) {
+        // derived table is necessary so SELECT can reference DELETE table
+        $query = "DELETE FROM airnames WHERE id IN (".
+                 "SELECT id FROM (".
+                 "SELECT a.id FROM airnames a ".
+                 "LEFT JOIN lists l ON a.id = l.airname ".
+                 "LEFT JOIN reviews r ON a.id = r.airname ".
+                 "WHERE a.dj=? AND l.id IS NULL AND r.id IS NULL) ".
+                 "x)";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        $stmt->execute();
+    }
+
     public function getAirnames($user=0, $id=0) {
+        if($user && !$id)
+            $this->purgeUnusedAirnames($user);
+
         $query = "SELECT a.id, airname, url, email, name, realname FROM airnames a LEFT JOIN users u ON a.dj = u.name ";
         if($id)
             $query .= "WHERE a.id = ?";

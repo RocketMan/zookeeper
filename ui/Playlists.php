@@ -349,8 +349,8 @@ class Playlists extends MenuItem {
             </div>
             <div>
                 <label>Air Name:</label>
-                <INPUT TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php echo !is_null($airName)?$airName:($description?"None":""); ?>'/>
-                <DATALIST ID="airnames">
+                <INPUT id='show-airname' TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php echo !is_null($airName)?$airName:($description?"None":""); ?>'/>
+                <DATALIST id='airnames'>
                   <?php echo $airNames; ?>
                 </DATALIST>
             </div>
@@ -408,6 +408,21 @@ class Playlists extends MenuItem {
                 }
     
                 $("#new-show").on("submit", function(e) {
+                    // check for new airname
+                    var airname = $('#show-airname').val().trim().toLowerCase();
+                    var isNew = true;
+                    $('#airnames option').each(function() {
+                        if($(this).val().toLowerCase() == airname) {
+                            isNew = false;
+                            return false;
+                        }
+                    });
+
+                    if(isNew && !confirm('Create new air name "' +
+                           $('#show-airname').val() + '"?')) {
+                        return false;
+                    }
+
                     // rearrange DP local format to ISO
                     var pickerDate = $('#show-date-picker').val();
                     if (pickerDate.indexOf('/') > 0) {
