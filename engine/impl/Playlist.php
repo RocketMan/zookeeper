@@ -123,7 +123,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         } else
             $query .= "AND MID(l.showtime, 6, 4) > ? ";
         $query .= "AND l.airname IS NOT NULL ";
-        $query .= "ORDER BY l.showtime DESC LIMIT 1";
+        $query .= "ORDER BY l.showtime DESC, l.id DESC LIMIT 1";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, date("Y-m-d"));
         $stmt->bindValue(2, $hour);
