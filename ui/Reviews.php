@@ -195,27 +195,15 @@ class Reviews extends MenuItem {
             return;
         }
     
-        $djAPI = Engine::api(IDJ::class);
         $libAPI = Engine::api(ILibrary::class);
         $revAPI = Engine::api(IReview::class);
         $records = $revAPI->getReviews($tag, 1, "", 1);
         if(sizeof($records) && ($row = $records[0])) {
-            if($airname) {
-                $airnames = $djAPI->getAirnames($airname);
-                while ($arow = $airnames->fetch()) {
-                    $name = $arow["airname"];
-                    $email = $arow["email"];
-                }
-            }
-        
-            if(!$name) {
-                $djs = $libAPI->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
-                $name = $djs[0]["realname"];
-            }
+            $djs = $libAPI->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
+            $name = $djs[0]["realname"];
     
             // JM 2018-03-16 for now, force all from nobody
-            //if(!$email)
-                $email = $instance_nobody;
+            $email = $instance_nobody;
        
             $from = "$name <$email>";
     
