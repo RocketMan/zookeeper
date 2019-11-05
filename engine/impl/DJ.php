@@ -45,8 +45,8 @@ class DJImpl extends BaseImpl implements IDJ {
         $stmt->execute();
     }
 
-    public function getAirnames($user=0, $id=0) {
-        if($user && !$id)
+    public function getAirnames($user=0, $id=0, $noPrune=0) {
+        if($user && !$id && !$noPrune)
             $this->purgeUnusedAirnames($user);
 
         $query = "SELECT a.id, airname, url, email, name, realname FROM airnames a LEFT JOIN users u ON a.dj = u.name ";

@@ -367,7 +367,7 @@ class Reviews extends MenuItem {
       <TR><TD ALIGN=RIGHT>Reviewer:</TD>
           <TD><SELECT NAME=airname>
     <?php 
-        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
+        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, $djname);
         while ($row = $records->fetch()) {
            $selected = ($row[0] == $airname)?" SELECTED":"";
            echo "            <OPTION VALUE=\"" . $row[0] ."\"" . $selected .
