@@ -1537,20 +1537,17 @@ class Playlists extends MenuItem {
         $url = $_REQUEST["url"];
         $email = $_REQUEST["email"];
         $airname = $_REQUEST["airname"];
+        $name = $_REQUEST["name"];
     
         if($validate && $airname) {
             // Update DJ info
-    
-            if(!strcmp($url, "http://"))
-                $url = "";
-    
-            $success = Engine::api(IDJ::class)->updateAirname($url,
+            $success = Engine::api(IDJ::class)->updateAirname($name, $url,
                      $email, $multi?0:$airname, $this->session->getUser());
-            if($success >= 0) {
+            if($success) {
                 echo "<B>Your profile has been updated.</B>\n";
                 return;
             } else
-                echo "<B><FONT CLASS=\"error\">Update failed.  Try again later.</FONT></B>";
+                echo "<B><FONT CLASS=\"error\">'$name' is invalid or already exists.</FONT></B>";
             // fall through...
         }
         $results = Engine::api(IDJ::class)->getAirnames(
@@ -1571,20 +1568,21 @@ class Playlists extends MenuItem {
             break;
         case 1:
             // Only one airname; emit form
-            $url = "http://";
     ?>
     <FORM ACTION="?" METHOD=POST>
-    <P><B>Update website and e-mail for airname '<?php echo $airnames[0]['airname'];?>'</B></P>
+    <P><B>Update airname '<?php echo $airnames[0]['airname'];?>'</B></P>
     <TABLE CELLPADDING=2 BORDER=0>
+      <TR><TD ALIGN=RIGHT>Airname:</TD>
+        <TD><INPUT id='name' TYPE=TEXT NAME=name VALUE="<?php echo $name?$name:$airnames[0]['airname'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
       <TR><TD ALIGN=RIGHT>URL:</TD>
-        <TD><INPUT TYPE=TEXT NAME=url VALUE="<?php echo $airnames[0]['url'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
+        <TD><INPUT TYPE=TEXT NAME=url VALUE="<?php echo $url?$url:$airnames[0]['url'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
       <TR><TD ALIGN=RIGHT>e-mail:</TD>
-        <TD><INPUT TYPE=TEXT NAME=email VALUE="<?php echo $airnames[0]['email'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
+        <TD><INPUT TYPE=TEXT NAME=email VALUE="<?php echo $email?$email:$airnames[0]['email'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
     <?php 
-            // As we know that multiple DJs are using the 'music' account
-            // (tsk, tsk), let's supress the account update option for music.
-            if($multi && $this->session->getUser() != "music" && $this->session->getUser() != "kzsu")
-                echo "  <TR><TD>&nbsp</TD><TD><INPUT TYPE=CHECKBOX NAME=multi>&nbsp;Check here to apply this update to all of your DJ airnames</TD></TR>";
+            // Suppress the account update option for local-only accounts,
+            // as they tend to be shared.
+            if($multi && !$this->session->isAuth("g"))
+                echo "  <TR><TD>&nbsp</TD><TD><INPUT id='multi' TYPE=CHECKBOX NAME=multi>&nbsp;Check here to apply the URL and e-mail to all of your DJ airnames</TD></TR>";
     ?>
       <TR><TD COLSPAN=2>&nbsp;</TD></TR>
       <TR><TD>&nbsp;</TD><TD><INPUT TYPE=SUBMIT VALUE="  Update  ">
@@ -1594,8 +1592,21 @@ class Playlists extends MenuItem {
               <INPUT TYPE=HIDDEN NAME=validate VALUE="y"></TD></TR>
     </TABLE>
     </FORM>
+    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
+        $("#multi").click(function(e) {
+            if($(this).is(':checked')) {
+                $("#name").attr("disabled","disabled");
+                $("#name").val("<?php echo $airnames[0]['airname'];?>");
+            } else {
+                $("#name").removeAttr("disabled");
+            }
+        });
+    <?php ob_end_flush(); ?>
+        // -->
+        </SCRIPT>
     <?php 
-            UI::setFocus("url");
+            UI::setFocus($name?"name":"url");
             break;
         default:
             // Multiple airnames; emit airname selection form

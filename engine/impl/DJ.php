@@ -84,18 +84,22 @@ class DJImpl extends BaseImpl implements IDJ {
         return $result?$result['id']:0;
     }
     
-    public function updateAirname($url, $email, $id=0, $user="") {
+    public function updateAirname($djname, $url, $email, $id=0, $user="") {
         $query = "UPDATE airnames " .
                  "SET url=?, email=?";
         if($id)
-            $query .= " WHERE id=?";
+            $query .= ", airname=? WHERE id=?";
         else
             $query .= " WHERE dj=?";
             $stmt = $this->prepare($query);
         $stmt->bindValue(1, $url);
         $stmt->bindValue(2, $email);
-        $stmt->bindValue(3, $id?$id:$dj);
-        return $stmt->execute()?$stmt->rowCount():0;
+        if($id) {
+            $stmt->bindValue(3, $djname);
+            $stmt->bindValue(4, $id);
+        } else
+            $stmt->bindValue(3, $user);
+        return $stmt->execute();
     }
     
     public function insertAirname($djname, $user) {
