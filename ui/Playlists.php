@@ -1548,7 +1548,7 @@ class Playlists extends MenuItem {
             $success = Engine::api(IDJ::class)->updateAirname($name, $url,
                      $email, $multi?0:$airname, $this->session->getUser());
             if($success) {
-                echo "<B>Your profile has been updated.</B>\n";
+                echo "<B>Your airname has been updated.</B>\n";
                 return;
             } else
                 echo "<B><FONT CLASS=\"error\">'$name' is invalid or already exists.</FONT></B>";
@@ -1564,9 +1564,9 @@ class Playlists extends MenuItem {
         case 0:
             // No airnames
     ?>
-    <P><B><FONT CLASS="error">You have no published playlists or airnames.</FONT></B></P>
-    <P>You must setup a DJ Airname for at least one playlist
-       before you can update your profile.</P>
+    <P><B><FONT CLASS="error">You have no airnames</FONT></B></P>
+    <P>Publish at least one playlist or music review to create
+       an airname.</P>
     <?php 
             UI::setFocus();
             break;
