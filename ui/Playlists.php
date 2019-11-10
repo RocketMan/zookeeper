@@ -1537,7 +1537,7 @@ class Playlists extends MenuItem {
         $url = $_REQUEST["url"];
         $email = $_REQUEST["email"];
         $airname = $_REQUEST["airname"];
-        $name = $_REQUEST["name"];
+        $name = trim($_REQUEST["name"]);
     
         if($validate && $airname) {
             // Update DJ info
