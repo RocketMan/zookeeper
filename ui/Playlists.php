@@ -406,7 +406,11 @@ class Playlists extends MenuItem {
                         $("#show-start").val(showStart);
                     }
                 }
-    
+
+                $("#show-airname").blur(function(e) {
+                    $(this).val($.trim($(this).val()));
+                });
+
                 $("#new-show").on("submit", function(e) {
                     // check for new airname
                     var airname = $('#show-airname').val().trim().toLowerCase();
