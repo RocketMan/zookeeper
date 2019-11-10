@@ -1573,7 +1573,7 @@ class Playlists extends MenuItem {
         case 1:
             // Only one airname; emit form
     ?>
-    <FORM ACTION="?" METHOD=POST>
+    <FORM id="update-airname" ACTION="?" METHOD=POST>
     <P><B>Update airname '<?php echo $airnames[0]['airname'];?>'</B></P>
     <TABLE CELLPADDING=2 BORDER=0>
       <TR><TD ALIGN=RIGHT>Airname:</TD>
@@ -1598,15 +1598,22 @@ class Playlists extends MenuItem {
     </FORM>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     <?php ob_start([\JSMin::class, 'minify']); ?>
+        var oldAirname = "<?php echo $airnames[0]['airname'];?>";
         $("#name").blur(function(e) {
             $(this).val($.trim($(this).val()));
         });
         $("#multi").click(function(e) {
             if($(this).is(':checked')) {
                 $("#name").attr("disabled","disabled");
-                $("#name").val("<?php echo $airnames[0]['airname'];?>");
+                $("#name").val(oldAirname);
             } else {
                 $("#name").removeAttr("disabled");
+            }
+        });
+        $("#update-airname").on("submit", function(e) {
+            if($("#name").val() != oldAirname &&
+                    !confirm('Change airname "' + oldAirname + '" to "' + $("#name").val() + '"?')) {
+                return false;
             }
         });
     <?php ob_end_flush(); ?>
