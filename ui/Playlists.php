@@ -1573,7 +1573,7 @@ class Playlists extends MenuItem {
     <P><B>Update airname '<?php echo $airnames[0]['airname'];?>'</B></P>
     <TABLE CELLPADDING=2 BORDER=0>
       <TR><TD ALIGN=RIGHT>Airname:</TD>
-        <TD><INPUT id='name' TYPE=TEXT NAME=name VALUE="<?php echo $name?$name:$airnames[0]['airname'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
+        <TD><INPUT id='name' TYPE=TEXT NAME=name required VALUE="<?php echo $name?$name:$airnames[0]['airname'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
       <TR><TD ALIGN=RIGHT>URL:</TD>
         <TD><INPUT TYPE=TEXT NAME=url VALUE="<?php echo $url?$url:$airnames[0]['url'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
       <TR><TD ALIGN=RIGHT>e-mail:</TD>
@@ -1594,6 +1594,9 @@ class Playlists extends MenuItem {
     </FORM>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     <?php ob_start([\JSMin::class, 'minify']); ?>
+        $("#name").blur(function(e) {
+            $(this).val($.trim($(this).val()));
+        });
         $("#multi").click(function(e) {
             if($(this).is(':checked')) {
                 $("#name").attr("disabled","disabled");
