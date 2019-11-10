@@ -46,7 +46,7 @@ $menu = [
     [ 'u', 'importExport', 'Import/Export',         ZK\UI\Playlists::class ],
     [ 'a', 'viewDJ%',      'DJ Zone!',              ZK\UI\Playlists::class ],
     [ 'a', 'viewDate',     'Playlists by Date',     ZK\UI\Playlists::class ],
-    [ 'u', 'updateDJInfo', 'Update Profile',        ZK\UI\Playlists::class ],
+    [ 'u', 'updateDJInfo', 'Update Airname',        ZK\UI\Playlists::class ],
     [ 'u', 'addTrack',     0,                       ZK\UI\Playlists::class ],
     [ 'U', 'changePass',   'Change Password',       ZK\UI\ChangePass::class ],
     [ 'p', 'deepStorage',  'Deep Storage',          ZK\UI\DeepStorage::class ],
