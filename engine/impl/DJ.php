@@ -28,7 +28,27 @@ namespace ZK\Engine;
  * DJ operations
  */
 class DJImpl extends BaseImpl implements IDJ {
-    public function getAirnames($user=0, $id=0) {
+    /*
+     * remove airnames which are not linked to a playlist or a music review
+     */
+    private function purgeUnusedAirnames($user) {
+        // derived table is necessary so SELECT can reference DELETE table
+        $query = "DELETE FROM airnames WHERE id IN (".
+                 "SELECT id FROM (".
+                 "SELECT a.id FROM airnames a ".
+                 "LEFT JOIN lists l ON a.id = l.airname ".
+                 "LEFT JOIN reviews r ON a.id = r.airname ".
+                 "WHERE a.dj=? AND l.id IS NULL AND r.id IS NULL) ".
+                 "x)";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        $stmt->execute();
+    }
+
+    public function getAirnames($user=0, $id=0, $noPrune=0) {
+        if($user && !$id && !$noPrune)
+            $this->purgeUnusedAirnames($user);
+
         $query = "SELECT a.id, airname, url, email, name, realname FROM airnames a LEFT JOIN users u ON a.dj = u.name ";
         if($id)
             $query .= "WHERE a.id = ?";
@@ -64,18 +84,22 @@ class DJImpl extends BaseImpl implements IDJ {
         return $result?$result['id']:0;
     }
     
-    public function updateAirname($url, $email, $id=0, $user="") {
+    public function updateAirname($djname, $url, $email, $id=0, $user="") {
         $query = "UPDATE airnames " .
                  "SET url=?, email=?";
         if($id)
-            $query .= " WHERE id=?";
+            $query .= ", airname=? WHERE id=?";
         else
             $query .= " WHERE dj=?";
             $stmt = $this->prepare($query);
         $stmt->bindValue(1, $url);
         $stmt->bindValue(2, $email);
-        $stmt->bindValue(3, $id?$id:$dj);
-        return $stmt->execute()?$stmt->rowCount():0;
+        if($id) {
+            $stmt->bindValue(3, $djname);
+            $stmt->bindValue(4, $id);
+        } else
+            $stmt->bindValue(3, $user);
+        return $stmt->execute();
     }
     
     public function insertAirname($djname, $user) {

@@ -94,6 +94,21 @@ class API extends CommandTarget implements IController {
         [ "getTracksRq", "getTracks" ],
     ];
 
+    /*
+     * These APIs permit cross-origin scripting across all origins.
+     */
+    private static $publicMethods = [
+        "getPlaylistsRq"
+    ];
+
+    /*
+     * Allowed HTTP methods for pre-flighted CORS requests.
+     * Technically, this should be unnecessary, as the spec
+     * provides a default set of GET, HEAD, and POST.
+     * We provide an explicit response just to be sure.
+     */
+    private static $defaultACAM = "GET, HEAD, POST";
+
     private static $pager_operations = [
         "prevLine" => ILibrary::OP_PREV_LINE,
         "nextLine" => ILibrary::OP_NEXT_LINE,
@@ -112,7 +127,8 @@ class API extends CommandTarget implements IController {
     public function processRequest($dispatcher) {
         $this->json = $_REQUEST["json"] ||
             substr($_SERVER["HTTP_ACCEPT"], 0, 16) == "application/json";
-        $this->emitHeader();
+        if($this->emitHeader($_REQUEST["method"]))
+            return;
         if(!$this->json)
             echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xml>\n";
         $this->session = Engine::session();
@@ -411,21 +427,40 @@ class API extends CommandTarget implements IController {
         $this->endResponse($request);
     }
     
-    private function emitHeader() {
+    private function emitHeader($method) {
+        $preflight = $_SERVER['REQUEST_METHOD'] == "OPTIONS";
+        if($preflight)
+            http_response_code(204); // 204 No Content
+
+        // Even if we return 204 above, PHP is going to include
+        // a default Content-type anyway, if we do not supply one.
+        // Go ahead and give the Content-type in all cases.
         header("Content-type: ".
             ($this->json?"application/vnd.api+json":"text/xml").
             "; charset=UTF-8");
-    
+
         $origin = $_SERVER['HTTP_ORIGIN'];
         if($origin) {
-            $allowed_domains = Engine::param('allowed_domains');
-            for($i=0; $i < sizeof($allowed_domains); $i++) {
-               if(preg_match("/" . preg_quote($allowed_domains[$i]) . "$/", $origin)) {
-                   header("Access-Control-Allow-Origin: " . $origin);
-                   break;
-               }
+            if($method && in_array($method, self::$publicMethods)) {
+                header("Access-Control-Allow-Origin: *");
+            } else {
+                $allowed_domains = Engine::param('allowed_domains');
+                for($i=0; $i < sizeof($allowed_domains); $i++) {
+                    if(preg_match("/" . preg_quote($allowed_domains[$i]) . "$/", $origin)) {
+                        header("Access-Control-Allow-Origin: " . $origin);
+                        header("Access-Control-Allow-Credentials: true");
+                        break;
+                    }
+                }
+            }
+
+            if($preflight) {
+                header("Access-Control-Allow-Methods: " . self::$defaultACAM);
+                header("Access-Control-Max-Age: 7200");
             }
         }
+
+        return $preflight;
     }
     
     private function emitDataSet($name, $fields, $rows) {

@@ -198,9 +198,8 @@ class Playlists extends MenuItem {
         $updateStatus = 0; //failure
         $retMsg = 'success';
         if ($isSeparator == False && 
-            (empty($playlist) || empty($artist) || empty($album) || 
-             empty($track) || empty($label))) {
-            $retMsg = "Required field missing: -" . $playlist . "-, -" . $artist . "-, -" . $album . "-, -" . $track . "-, -" . $label . "-";
+            (empty($playlist) || empty($artist) || empty($track))) {
+            $retMsg = "required field missing: -" . $playlist . "-, -" . $artist . "-, -" . $track . "-";
         } else {
             $updateStatus = Engine::api(IPlaylist::class)->insertTrack($playlist, $tag, $artist, $track, $album, $label, True);
 
@@ -348,8 +347,8 @@ class Playlists extends MenuItem {
             </div>
             <div>
                 <label>Air Name:</label>
-                <INPUT TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php echo !is_null($airName)?$airName:($description?"None":""); ?>'/>
-                <DATALIST ID="airnames">
+                <INPUT id='show-airname' TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php echo !is_null($airName)?$airName:($description?"None":""); ?>'/>
+                <DATALIST id='airnames'>
                   <?php echo $airNames; ?>
                 </DATALIST>
             </div>
@@ -405,8 +404,27 @@ class Playlists extends MenuItem {
                         $("#show-start").val(showStart);
                     }
                 }
-    
+
+                $("#show-airname").blur(function(e) {
+                    $(this).val($.trim($(this).val()));
+                });
+
                 $("#new-show").on("submit", function(e) {
+                    // check for new airname
+                    var airname = $('#show-airname').val().trim().toLowerCase();
+                    var isNew = true;
+                    $('#airnames option').each(function() {
+                        if($(this).val().toLowerCase() == airname) {
+                            isNew = false;
+                            return false;
+                        }
+                    });
+
+                    if(isNew && !confirm('Create new air name "' +
+                           $('#show-airname').val() + '"?')) {
+                        return false;
+                    }
+
                     // rearrange DP local format to ISO
                     var pickerDate = $('#show-date-picker').val();
                     if (pickerDate.indexOf('/') > 0) {
@@ -735,6 +753,7 @@ class Playlists extends MenuItem {
         <div class='pl-form-entry'>
             <input id='track-session' type='hidden' value='session VALUE="<?php echo $this->session->getSessionID(); ?>'>
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
+            <label></label><span id='error-msg' class='error'></span>
             <div>
                 <label>Type:</label>
                 <select id='track-type-pick'>
@@ -763,11 +782,11 @@ class Playlists extends MenuItem {
                 <div id='manual-entry' class='zk-hidden' >
                     <div>
                         <label>Artist:</label>
-                        <input id='track-artist' />
+                        <input required id='track-artist' />
                     </div>
                     <div>
                         <label>Track:</label>
-                        <input id='track-title' />
+                        <input required id='track-title' />
                     </div>
                     <div>
                         <label>Album:</label>
@@ -807,6 +826,7 @@ class Playlists extends MenuItem {
                 var mode = $("#track-type-pick").val();
                 $("#manual-entry input").val('');
                 $("#track-title-pick").val('0');
+                $("#error-msg").text('');
                 $("#tag-status").text('');
                 $("#tag-artist").text('');
                 setAddButtonState(false);
@@ -826,7 +846,7 @@ class Playlists extends MenuItem {
             // return true if have all required fields.
             function haveAllUserInput()  {
                 var isEmpty = false;
-                $("#manual-entry input").each(function() {
+                $("#manual-entry input[required]").each(function() {
                     isEmpty = isEmpty || $(this).val().length == 0;
                 });
 
@@ -834,7 +854,7 @@ class Playlists extends MenuItem {
             }
 
             function showUserError(msg) {
-                $('#tag-status').text(msg).removeClass('track-info').addClass('track-error');
+                $('#error-msg').text(msg);
             }
 
             function getDiskInfo(id) {
@@ -930,8 +950,7 @@ class Playlists extends MenuItem {
                         clearUserInput(true);
                     },
                     error: function (jqXHR, textStatus, errorThrown) {
-                        clearUserInput(true);
-                        showUserError("Your track was not saved: " + textStatus);
+                        showUserError("Your track was not saved: " + jqXHR.responseJSON.status);
                     }
                 });
             }
@@ -1427,7 +1446,7 @@ class Playlists extends MenuItem {
             <TD ALIGN=RIGHT>Airname:</TD>
             <TD><SELECT NAME=airname>
     <?php 
-            $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
+            $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, $djname);
             while ($records && ($row = $records->fetch())) {
                 $selected = ($row[0] == $airname)?" SELECTED":"";
                 echo "              <OPTION VALUE=\"" . $row[0] ."\"" . $selected .
@@ -1520,20 +1539,17 @@ class Playlists extends MenuItem {
         $url = $_REQUEST["url"];
         $email = $_REQUEST["email"];
         $airname = $_REQUEST["airname"];
+        $name = trim($_REQUEST["name"]);
     
         if($validate && $airname) {
             // Update DJ info
-    
-            if(!strcmp($url, "http://"))
-                $url = "";
-    
-            $success = Engine::api(IDJ::class)->updateAirname($url,
+            $success = Engine::api(IDJ::class)->updateAirname($name, $url,
                      $email, $multi?0:$airname, $this->session->getUser());
-            if($success >= 0) {
-                echo "<B>Your profile has been updated.</B>\n";
+            if($success) {
+                echo "<B>Your airname has been updated.</B>\n";
                 return;
             } else
-                echo "<B><FONT CLASS=\"error\">Update failed.  Try again later.</FONT></B>";
+                echo "<B><FONT CLASS=\"error\">'$name' is invalid or already exists.</FONT></B>";
             // fall through...
         }
         $results = Engine::api(IDJ::class)->getAirnames(
@@ -1546,28 +1562,29 @@ class Playlists extends MenuItem {
         case 0:
             // No airnames
     ?>
-    <P><B><FONT CLASS="error">You have no published playlists or airnames.</FONT></B></P>
-    <P>You must setup a DJ Airname for at least one playlist
-       before you can update your profile.</P>
+    <P><B><FONT CLASS="error">You have no airnames</FONT></B></P>
+    <P>Publish at least one playlist or music review to create
+       an airname.</P>
     <?php 
             UI::setFocus();
             break;
         case 1:
             // Only one airname; emit form
-            $url = "http://";
     ?>
-    <FORM ACTION="?" METHOD=POST>
-    <P><B>Update website and e-mail for airname '<?php echo $airnames[0]['airname'];?>'</B></P>
+    <FORM id="update-airname" ACTION="?" METHOD=POST>
+    <P><B>Update airname '<?php echo $airnames[0]['airname'];?>'</B></P>
     <TABLE CELLPADDING=2 BORDER=0>
+      <TR><TD ALIGN=RIGHT>Airname:</TD>
+        <TD><INPUT id='name' TYPE=TEXT NAME=name required VALUE="<?php echo $name?$name:$airnames[0]['airname'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
       <TR><TD ALIGN=RIGHT>URL:</TD>
-        <TD><INPUT TYPE=TEXT NAME=url VALUE="<?php echo $airnames[0]['url'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
+        <TD><INPUT TYPE=TEXT NAME=url VALUE="<?php echo $url?$url:$airnames[0]['url'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
       <TR><TD ALIGN=RIGHT>e-mail:</TD>
-        <TD><INPUT TYPE=TEXT NAME=email VALUE="<?php echo $airnames[0]['email'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
+        <TD><INPUT TYPE=TEXT NAME=email VALUE="<?php echo $email?$email:$airnames[0]['email'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
     <?php 
-            // As we know that multiple DJs are using the 'music' account
-            // (tsk, tsk), let's supress the account update option for music.
-            if($multi && $this->session->getUser() != "music" && $this->session->getUser() != "kzsu")
-                echo "  <TR><TD>&nbsp</TD><TD><INPUT TYPE=CHECKBOX NAME=multi>&nbsp;Check here to apply this update to all of your DJ airnames</TD></TR>";
+            // Suppress the account update option for local-only accounts,
+            // as they tend to be shared.
+            if($multi && !$this->session->isAuth("g"))
+                echo "  <TR><TD>&nbsp</TD><TD><INPUT id='multi' TYPE=CHECKBOX NAME=multi>&nbsp;Check here to apply the URL and e-mail to all of your DJ airnames</TD></TR>";
     ?>
       <TR><TD COLSPAN=2>&nbsp;</TD></TR>
       <TR><TD>&nbsp;</TD><TD><INPUT TYPE=SUBMIT VALUE="  Update  ">
@@ -1577,8 +1594,31 @@ class Playlists extends MenuItem {
               <INPUT TYPE=HIDDEN NAME=validate VALUE="y"></TD></TR>
     </TABLE>
     </FORM>
+    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
+        var oldAirname = "<?php echo $airnames[0]['airname'];?>";
+        $("#name").blur(function(e) {
+            $(this).val($.trim($(this).val()));
+        });
+        $("#multi").click(function(e) {
+            if($(this).is(':checked')) {
+                $("#name").attr("disabled","disabled");
+                $("#name").val(oldAirname);
+            } else {
+                $("#name").removeAttr("disabled");
+            }
+        });
+        $("#update-airname").on("submit", function(e) {
+            if($("#name").val() != oldAirname &&
+                    !confirm('Change airname "' + oldAirname + '" to "' + $("#name").val() + '"?')) {
+                return false;
+            }
+        });
+    <?php ob_end_flush(); ?>
+        // -->
+        </SCRIPT>
     <?php 
-            UI::setFocus("url");
+            UI::setFocus($name?"name":"url");
             break;
         default:
             // Multiple airnames; emit airname selection form
@@ -1702,7 +1742,11 @@ class Playlists extends MenuItem {
     
     private function makeAlbumLink($row, $includeLabel) {
         $albumName = $row["album"];
-        $labelSpan = "<span class='songLabel'> / " . $this->smartURL($row["label"]) . "</span>";
+        $labelName = $row["label"];
+        if (empty($albumName) && empty($labelName))
+            return "";
+
+        $labelSpan = "<span class='songLabel'> / " . $this->smartURL($labelName) . "</span>";
         if($row["tag"]) {
             $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($row["tag"]) .
                           "&amp;q=&amp;action=search&amp;session=" . $this->session->getSessionID() .

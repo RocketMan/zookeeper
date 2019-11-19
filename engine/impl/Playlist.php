@@ -121,7 +121,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         } else
             $query .= "AND MID(l.showtime, 6, 4) > ? ";
         $query .= "AND l.airname IS NOT NULL ";
-        $query .= "ORDER BY l.showtime DESC LIMIT 1";
+        $query .= "ORDER BY l.showtime DESC, l.id DESC LIMIT 1";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, date("Y-m-d"));
         $stmt->bindValue(2, $hour);
@@ -129,15 +129,41 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt, \PDO::FETCH_BOTH);
     }
     
+    private function purgeEmptyPlaylist($user, $date) {
+        // search for last entered playlist by this DJ on this date
+        $query = "SELECT l.id AS lid, t.id AS tid FROM lists l ".
+                 "LEFT JOIN tracks t ON l.id = t.list ".
+                 "WHERE dj = ? AND showdate = ? ".
+                 "ORDER BY l.id DESC LIMIT 1";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        $stmt->bindValue(2, $date);
+        $result = $this->executeAndFetch($stmt);
+        if($result && !$result['tid']) {
+            // DJ's last entered playlist on this date has no tracks; delete it
+            //
+            // Note:  This is an unceremonious, non-restorable delete, as
+            // the empty playlist is deemed to have no value.
+            $query = "DELETE FROM lists WHERE id = ?";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $result['lid']);
+            $stmt->execute();
+        }
+    }
+
     public function insertPlaylist($user, $date, $time, $description, $airname) {
         list($year, $month, $day) = explode("-", $date);
+        $canonicalDate = "$year-$month-$day";
+
+        $this->purgeEmptyPlaylist($user, $canonicalDate);
+
         $query = "INSERT INTO lists " .
                  "(dj, showdate, showtime, description, airname) VALUES " .
                  "(?, ?, ?, ?, " .
                  ($airname?"?":"NULL") . ")";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
-        $stmt->bindValue(2, "$year-$month-$day");
+        $stmt->bindValue(2, $canonicalDate);
         $stmt->bindValue(3, $time);
         $stmt->bindValue(4, $description);
         if($airname)
