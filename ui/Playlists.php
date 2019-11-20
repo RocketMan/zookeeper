@@ -221,9 +221,7 @@ class Playlists extends MenuItem {
         }
 
         $retVal['status'] = $retMsg;
-        if ($updateStatus == 0)
-            http_response_code(400);
-
+        http_response_code($updateStatus == 0 ? 400 : 200);
         echo json_encode($retVal);
     }
 
@@ -404,10 +402,11 @@ class Playlists extends MenuItem {
                         $("#show-start").val(showStart);
                     }
                 }
-
+    
                 $("#show-airname").blur(function(e) {
                     $(this).val($.trim($(this).val()));
                 });
+
 
                 $("#new-show").on("submit", function(e) {
                     // check for new airname
@@ -749,16 +748,27 @@ class Playlists extends MenuItem {
     }
     
     private function emitTrackEditor($playlistId) {
+        $nmeAr = Engine::param('nme');
+        $nmeOpts = '';
+        $nmePrefix = IPlaylist::NME_PREFIX;
+        if ($nmeAr) {
+            foreach ($nmeAr as $nme)
+                $nmeOpts = $nmeOpts . "<option data-args='" . $nme['args'] . "' value='" . $nmePrefix . $nme['name'] . "'>" . $nme['name'] . "</option>";
+        }
+
     ?>
         <div class='pl-form-entry'>
             <input id='track-session' type='hidden' value='session VALUE="<?php echo $this->session->getSessionID(); ?>'>
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <label></label><span id='error-msg' class='error'></span>
             <div>
+                <a style='padding-right:4px;' href='#' class='nav pull-right' onClick=window.open('?target=export&playlist=<?php echo $playlistId ?>&format=html')>Print View</a>
+
                 <label>Type:</label>
                 <select id='track-type-pick'>
                    <option value='tag-entry'>Tag ID</option>
                    <option value='manual-entry'>Manual</option>
+                   <?php echo $nmeOpts; ?>
                 </select>
             </div>
             <div id='track-entry'>
@@ -797,10 +807,16 @@ class Playlists extends MenuItem {
                         <input id='track-label' />
                     </div>
                 </div>
+                <div id='nme-entry' class='zk-hidden' >
+                    <div>
+                        <label>Name/ID:</label>
+                        <input id='nme-id' />
+                    </div>
+                </div>
             </div> <!-- track-entry -->
             <div>
                 <label></label>
-                <button DISABLED id='track-submit' >Add Track</button>
+                <button DISABLED id='track-submit' >Add Item</button>
                 <button style='margin-left:17px;' id='track-separator'>Add Separator</button>
             </div>
         </div> <!-- track-editor -->
@@ -811,7 +827,9 @@ class Playlists extends MenuItem {
         function setFocus(){}
 
         $().ready(function(){
+            const NME_ENTRY='nme-entry';
             const SPECIAL_TRACK = "<?php echo IPlaylist::SPECIAL_TRACK; ?>";
+            const NME_PREFIX    = "<?php echo IPlaylist::NME_PREFIX; ?>";
             var tagId = "";
             var trackList = []; //populated by ajax query
 
@@ -829,6 +847,7 @@ class Playlists extends MenuItem {
                 $("#error-msg").text('');
                 $("#tag-status").text('');
                 $("#tag-artist").text('');
+                $("#nme-entry input").val('');
                 setAddButtonState(false);
 
                 if (clearTagInfo) {
@@ -843,13 +862,32 @@ class Playlists extends MenuItem {
                 }
             }
 
+            function isNmeType(entryType)  {
+                var retVal = entryType.startsWith(NME_PREFIX);
+                return retVal;
+            }
+
+            function getEntryMode()  {
+                var entryMode = $('#track-type-pick').val();
+                if (isNmeType(entryMode))
+                    entryMode = NME_ENTRY;
+
+                return entryMode;
+            }
+
             // return true if have all required fields.
             function haveAllUserInput()  {
                 var isEmpty = false;
-                $("#manual-entry input[required]").each(function() {
-                    isEmpty = isEmpty || $(this).val().length == 0;
-                });
+                var entryMode = getEntryMode();
 
+                if (entryMode == 'manual-entry') {
+                    $("#manual-entry input[required]").each(function() {
+                        isEmpty = isEmpty || $(this).val().length == 0;
+                    });
+                } else if (entryMode == NME_ENTRY) {
+                    isEmpty = $('#nme-id').val().length == 0;
+                }
+                    
                 return !isEmpty;
             }
 
@@ -897,10 +935,20 @@ class Playlists extends MenuItem {
             }
 
             $("#track-type-pick").on('change', function() {
-                var newType = this.value;
+                // display the user entry div for this type
+                var newType = getEntryMode();
                 clearUserInput(true);
                 $("#track-entry > div").addClass("zk-hidden");
                 $("#" + newType).removeClass("zk-hidden");
+                if (newType == NME_ENTRY) {
+                    var option = $("option:selected", this);
+                    var argCnt = $(option).data("args");
+                    // insert default value if no user entry required.
+                    if (argCnt == 0) {
+                        $("#nme-id").val($(option).text());
+                        setAddButtonState(true);
+                    }
+                }
             });
 
 
@@ -919,14 +967,26 @@ class Playlists extends MenuItem {
                 var haveAll = haveAllUserInput();
                 setAddButtonState(haveAll);
             });
-            
-            function submitTrack(artist) {
-                var label, album, title;
 
-                if (artist !== SPECIAL_TRACK) {
+            $("#nme-entry input").on('input', function() {
+                var haveAll = haveAllUserInput();
+                setAddButtonState(haveAll);
+            });
+            
+            function submitTrack(addSeparator) {
+                var artist, label, album, track;
+                var trackType =  $("#track-type-pick").val();
+
+                if (isNmeType(trackType) || addSeparator) {
+                    artist = SPECIAL_TRACK;
+                    track  =  $("#nme-id").val();
+                    album  = addSeparator ? 'nme-separator' : trackType;
+                    label  = ''; // unused
+                } else {
+                    artist = $("#track-artist").val();
                     label =  $("#track-label").val();
                     album =  $("#track-album").val();
-                    title =  $("#track-title").val();
+                    track =  $("#track-title").val();
                 }
 
                 var postData = {
@@ -936,7 +996,7 @@ class Playlists extends MenuItem {
                     artist: artist,
                     label: label,
                     album: album,
-                    track: title,
+                    track: track,
                 };
 
                 $.ajax({
@@ -961,12 +1021,11 @@ class Playlists extends MenuItem {
                     alert('A required field is missing');
                     return;
                 }
-                var artist = $("#track-artist").val();
-                submitTrack(artist);
+                submitTrack(false);
             });
 
             $("#track-separator").click(function(e) {
-                submitTrack(SPECIAL_TRACK);
+                submitTrack(true);
             });
 
             $("#track-tag").on('keyup', function(e) {
@@ -988,8 +1047,6 @@ class Playlists extends MenuItem {
         </SCRIPT>
     <?php
     }
-
-
     private function emitTrackField($tag, $seltrack, $id) {
         $matched = 0;
         $track = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 100, $tag);
@@ -1645,7 +1702,6 @@ class Playlists extends MenuItem {
             break;
         }
     }
-    
     public function emitShowLink() {
         $validate = $_REQUEST["validate"];
         $playlist = $_REQUEST["playlist"];
@@ -1767,12 +1823,32 @@ class Playlists extends MenuItem {
     // converts "last, first" to "first last" being careful to not swap
     // other formats that have comas. call only for ZK library entries
     // since manual entries don't need this. Test cases: The Band, CSN&Y,
-    // Bing Crosby & Fred Astaire, eg: 694717, 911685.
+    // Bing Crosby & Fred Astaire, Bunett, June and Maqueque, Electro, Brad 
+    // Feat. Marwan Kanafaneg: 694717, 418485, 911685, 914824, 880994.
     private function swapNames($fullName) {
-       $retVal = $fullName;
-       $namesAr = explode(", ", $fullName);
-       if (count($namesAr) == 2 && strrpos($namesAr[1], ' ') < 1) {
-           $retVal = $namesAr[1] . " " . $namesAr[0];
+        $suffixMap = [ "with" => "", "and" => "", "feat." => "" ];
+    
+        $namesAr = explode(", ", $fullName);
+        if (count($namesAr) == 2) {
+            $spacesAr = explode(" ", $namesAr[1]);
+            $spacesCnt = count($spacesAr);
+            if ($spacesCnt == 1) {
+                $fullName = $namesAr[1] . " " . $namesAr[0];
+            } else if ($spacesCnt > 1) {
+                $key = strtolower($spacesAr[1]);
+                if (array_key_exists($key, $suffixMap)) {
+                    $fullName = $spacesAr[0] . ' ' . $namesAr[0] . ' ' . substr($namesAr[1], strlen($spacesAr[0]));
+                }
+            }
+        }
+        return $fullName;
+    }
+
+    // return user presentable string for the nme type, eg PROMO
+    private function getNmeUserValue($nmeType) {
+       $retVal = $nmeType;
+       if (UI::startsWith($nmeType, IPlaylist::NME_PREFIX)) {
+           $retVal = strtoupper(substr($nmeType, strlen(IPlaylist::NME_PREFIX)));
        }
        return $retVal;
     }
@@ -1784,10 +1860,19 @@ class Playlists extends MenuItem {
                     $this->makeEditDiv($row, $playlist) . "</TD>" : "";
 
         $timeplayed = self::timestampToAMPM($row["created"]);
+        $isSpecial = $row["artist"] == IPlaylist::SPECIAL_TRACK;
+        $isSeparator = $isSpecial && empty($row['track']);
 
-        if(substr($row["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK) {
+        if ($isSeparator) {
             $retVal = "<TR class='songDivider'>".$editCell.
                       "<TD>".$timeplayed . "</TD><TD COLSPAN=4><HR></TD></TR>";
+        } else if ($isSpecial) {
+            $nmeType = $this->getNmeUserValue($row["album"]);
+            $retVal = "<TR class='songRow'>" . $editCell .
+                      "<TD>" . $timeplayed . "</TD>" .
+                      "<TD>" . $nmeType . "</TD>" .
+                      "<TD>" . $row["track"] . "</TD>" .
+                      "<TD></TD><TD></TD></TR>"; 
         } else {
             $reviewCell = $row["REVIEWED"] ?  $REVIEW_DIV : "";
             $artistName = $row["artist"];
@@ -1812,6 +1897,7 @@ class Playlists extends MenuItem {
         echo "<TABLE class='playlistTable' CELLPADDING=1>";
         echo "<THEAD>" . $header . "</THEAD>";
 
+        $isLoggedIn = empty($this->session->getSessionID()) == False;
         $records = Engine::api(IPlaylist::class)->getTracks($playlist, $editMode);
         $this->viewListGetAlbums($records, $albums);
         Engine::api(ILibrary::class)->markAlbumsReviewed($albums);
@@ -1819,11 +1905,13 @@ class Playlists extends MenuItem {
         echo "<TBODY>";
         if($albums != null && sizeof($albums) > 0) {
             foreach($albums as $index => $row) {
-                echo $this->makeTrackRow($row, $playlist, $editMode);
+                if ($isLoggedIn || $row["artist"] != IPlaylist::SPECIAL_TRACK)
+                    echo $this->makeTrackRow($row, $playlist, $editMode);
             }
         }
         echo "</TBODY></TABLE>\n";
     }
+
 
     private function makeShowDateAndTime($row) {
         $showStart = self::showStartTime($row[2]);
@@ -1838,12 +1926,6 @@ class Playlists extends MenuItem {
         $djId = $playlist['id'];
         $djName = $playlist['airname'];
         $showDateTime = $this->makeShowDateAndTime($playlist);
-
-        // make print view header
-        echo "<TABLE WIDTH='100%'><TR><TD ALIGN=RIGHT><A HREF='#top' " .
-             "CLASS='nav' onClick=window.open('?target=export&amp;session=" . 
-             $this->session->getSessionID() . "&amp;playlist=" . $playlistId . 
-             "&amp;format=html')>Print View</A></TD></TR></TABLE>";
 
         $dateDiv = "<DIV>".$showDateTime."&nbsp;</div>";
         $djLink = "<A HREF='?action=viewDJ&amp;seq=selUser&amp;session=" . 
