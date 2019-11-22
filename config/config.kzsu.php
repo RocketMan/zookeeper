@@ -11,17 +11,6 @@ $config = [
     'application' => 'Zookeeper Online',
 
     /**
-     * define the non-music entries (NME) that can be
-     * entered into the playlist via the playlist editor.
-     * Note, that as 'special' tracks they are not shown when
-     * playlist is viewed.
-    'nme' => [
-        ['name' => 'LID', 'args'  => 0],
-        ['name' => 'PROMO','args' => 1],
-        ['name' => 'PSA',  'args'  => 1]
-     ],
-
-    /**
      * station name
      */
     'station' => 'KZSU',
@@ -130,6 +119,18 @@ $config = [
     'custom_controllers' => [
         'main' => ZK\UI\KzsuUIController::class,
     ],
+
+    /**
+     * define the non-music entries (NME) that can be
+     * entered into the playlist via the playlist editor.
+     * Note, that as 'special' tracks they are not shown when
+     * playlist is viewed.
+     */
+    'nme' => [
+        ['name' => 'LID', 'args'  => 0],
+        ['name' => 'PROMO','args' => 1],
+        ['name' => 'PSA',  'args'  => 1]
+     ],
 
     /**
      * label printer
