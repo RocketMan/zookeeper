@@ -31,6 +31,7 @@ interface IPlaylist {
     //NOTE: must match SPECIAL_TRACK value in javascript.
     const SPECIAL_TRACK = "~~~~~~~~";
     const COMMENT_FLAG = "C";
+    const LOG_FLAG = "L";
 
     function getShowdates($year, $month);
     function getPlaylist($playlist, $withAirname=0);
@@ -44,8 +45,11 @@ interface IPlaylist {
     function updatePlaylist($playlist, $date, $time, $description, $airname);
     function getTrack($id);
     function getTracks($playlist, $desc = 0);
+    function getTracksWithObserver($playlist, PlaylistObserver $observer, $desc = 0);
     function insertTrack($playlist, $tag, $artist, $track, $album, $label, $wantTimestamp);
     function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label);
+    function insertTrackEntry($playlist, PlaylistEntry $entry, $wantTimestamp);
+    function updateTrackEntry($playlist, PlaylistEntry $entry);
     function deleteTrack($id);
     function getTopPlays(&$result, $airname=0, $days=41, $count=10);
     function getLastPlays($tag, $count=0);

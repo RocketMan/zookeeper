@@ -24,8 +24,6 @@
 
 namespace ZK\Engine;
 
-use ZK\Engine\ILibrary;
-
 
 /**
  * Playlist operations
@@ -209,6 +207,12 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt);
     }
 
+    public function getTracksWithObserver($playlist, PlaylistObserver $observer, $desc = 0) {
+        $tracks = $this->getTracks($playlist, $desc);
+        while($tracks && ($track = $tracks->fetch()))
+            $observer->observe(new PlaylistEntry($track));
+    }
+
     // return true if "now" is within the show start/end time & date.
     // NOTE: this routine must be tolerant of improperly formatted dates.
     public function isWithinShow($listRow) {
@@ -303,6 +307,22 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $stmt->bindValue(6, (int)$id, \PDO::PARAM_INT);
 
         return $stmt->execute();
+    }
+
+    public function insertTrackEntry($playlist, PlaylistEntry $entry, $wantTimestamp) {
+        $this->insertTrack($playlist, $entry->getTag(), $entry->getArtist(),
+                                      $entry->getTrack(), $entry->getAlbum(),
+                                      $entry->getLabel(),
+                                      $wantTimestamp);
+    }
+
+    public function updateTrackEntry($playlist, PlaylistEntry $entry) {
+        $this->updateTrack($playlist, $entry->getId(),
+                                      $entry->getTag(),
+                                      $entry->getArtist(),
+                                      $entry->getTrack(),
+                                      $entry->getAlbum(),
+                                      $entry->getLabel());
     }
     
     public function deleteTrack($id) {
