@@ -65,7 +65,7 @@ class PlaylistEntry {
     public function __call($name, $args) {
         if(substr($name, 0, 3) === "get") {
             $property = strtolower(substr($name, 3));
-            if(in_array($property, $this->entry))
+            if(array_key_exists($property, $this->entry))
                 return $this->entry[$property];
             else
                 return "";
