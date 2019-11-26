@@ -310,14 +310,15 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
 
     public function insertTrackEntry($playlist, PlaylistEntry $entry, $wantTimestamp) {
-        $this->insertTrack($playlist, $entry->getTag(), $entry->getArtist(),
+        return $this->insertTrack($playlist,
+                                      $entry->getTag(), $entry->getArtist(),
                                       $entry->getTrack(), $entry->getAlbum(),
                                       $entry->getLabel(),
                                       $wantTimestamp);
     }
 
     public function updateTrackEntry($playlist, PlaylistEntry $entry) {
-        $this->updateTrack($playlist, $entry->getId(),
+        return $this->updateTrack($playlist, $entry->getId(),
                                       $entry->getTag(),
                                       $entry->getArtist(),
                                       $entry->getTrack(),

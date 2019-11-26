@@ -28,9 +28,7 @@ namespace ZK\Engine;
  * Playlist operations
  */
 interface IPlaylist {
-    //NOTE: must match SPECIAL_TRACK value in javascript.
     const SPECIAL_TRACK = "~~~~~~~~";
-    const NME_PREFIX = "nme-";
     const COMMENT_FLAG = "C";
     const LOG_FLAG = "L";
 

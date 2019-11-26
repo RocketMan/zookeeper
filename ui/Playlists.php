@@ -29,10 +29,14 @@ use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IReview;
+use ZK\Engine\PlaylistEntry;
+use ZK\Engine\PlaylistObserver;
 
 use ZK\UI\UICommon as UI;
 
 class Playlists extends MenuItem {
+    /* private */ const NME_PREFIX = "nme-";
+
     //NOTE: update ui_config.php when changing the actions.
     private static $actions = [
         [ "newList", "emitEditList" ],
@@ -186,39 +190,57 @@ class Playlists extends MenuItem {
     // upon success else 400 response.
     public function handleAddTrack() {
         $retVal = [];
-        $tag = $_REQUEST["tag"];
+        $type = $_REQUEST["type"];
         $playlist = trim($_REQUEST["playlist"]);
         $artist = trim($_REQUEST["artist"]);
-        $album = trim($_REQUEST["album"]);
         $track = trim($_REQUEST["track"]);
-        $label = trim($_REQUEST["label"]);
         $_REQUEST["created"] = '';
-        $isSeparator = $artist == IPlaylist::SPECIAL_TRACK;
+        $entry = null;
+        switch($type) {
+        case PlaylistEntry::TYPE_SET_SEPARATOR:
+            $entry = (new PlaylistEntry())->setSetSeparator();
+            break;
+        case PlaylistEntry::TYPE_LOG_EVENT:
+            $entry = (new PlaylistEntry())->setLogEvent(
+                $_REQUEST["eventType"], trim($_REQUEST["eventCode"]));
+            break;
+        default:
+            // spin
+            if (empty($playlist) || empty($artist) || empty($track)) {
+                $retMsg = "required field missing: -" . $playlist . "-, -" . $artist . "-, -" . $track . "-";
+            } else {
+                // Technically, we should call ->setTag()->setArtist()..etc
+                // on an empty PlaylistEntry, but since everyting is already
+                // in place in the request array for a spin, just use it.
+                // So simple is it.
+                $entry = new PlaylistEntry($_REQUEST);
+            }
+            break;
+        }
 
-        $updateStatus = 0; //failure
-        $retMsg = 'success';
-        if ($isSeparator == False && 
-            (empty($playlist) || empty($artist) || empty($track))) {
-            $retMsg = "required field missing: -" . $playlist . "-, -" . $artist . "-, -" . $track . "-";
-        } else {
-            $updateStatus = Engine::api(IPlaylist::class)->insertTrack($playlist, $tag, $artist, $track, $album, $label, True);
-
+        if($entry) {
+            $retMsg = 'success';
+            $updateStatus = Engine::api(IPlaylist::class)->insertTrackEntry($playlist, $entry, true);
             if ($updateStatus === 0) {
                 $retMsg = 'DB update error';
              } else {
                 if ($updateStatus === 2) {
                     $date = new \DateTime('now');
                     $created = $date->format('D M d, Y G:i');
-                    $_REQUEST["created"] = $created;
+                    $entry->setCreated($created);
                 }
                 // JM 2019-08-15 action and id need to be set
-                // for hyperlinks genereated by makeTrackRow (#54)
+                // for hyperlinks genereated by makePlaylistObserver (#54)
                 $this->action = $_REQUEST["oaction"];
-                $_REQUEST["id"] = Engine::lastInsertId();
-                $newRow = $this->makeTrackRow($_REQUEST, $playlist, True);
+                $entry->setId(Engine::lastInsertId());
+                ob_start();
+                $this->makePlaylistObserver($playlist, true)->observe($entry);
+                $newRow = ob_get_contents();
+                ob_end_clean();
                 $retVal['row'] = $newRow;
             }
-        }
+        } else
+            $updateStatus = 0; //failure
 
         $retVal['status'] = $retMsg;
         http_response_code($updateStatus == 0 ? 400 : 200);
@@ -750,7 +772,7 @@ class Playlists extends MenuItem {
     private function emitTrackEditor($playlistId) {
         $nmeAr = Engine::param('nme');
         $nmeOpts = '';
-        $nmePrefix = IPlaylist::NME_PREFIX;
+        $nmePrefix = self::NME_PREFIX;
         if ($nmeAr) {
             foreach ($nmeAr as $nme)
                 $nmeOpts = $nmeOpts . "<option data-args='" . $nme['args'] . "' value='" . $nmePrefix . $nme['name'] . "'>" . $nme['name'] . "</option>";
@@ -762,7 +784,7 @@ class Playlists extends MenuItem {
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <label></label><span id='error-msg' class='error'></span>
             <div>
-                <a style='padding-right:4px;' href='#' class='nav pull-right' onClick=window.open('?target=export&playlist=<?php echo $playlistId ?>&format=html')>Print View</a>
+                <a style='padding-right:4px;' href='#' class='nav pull-right' onClick=window.open('?target=export&amp;playlist=<?php echo $playlistId ?>&amp;format=html')>Print View</a>
 
                 <label>Type:</label>
                 <select id='track-type-pick'>
@@ -828,8 +850,7 @@ class Playlists extends MenuItem {
 
         $().ready(function(){
             const NME_ENTRY='nme-entry';
-            const SPECIAL_TRACK = "<?php echo IPlaylist::SPECIAL_TRACK; ?>";
-            const NME_PREFIX    = "<?php echo IPlaylist::NME_PREFIX; ?>";
+            const NME_PREFIX  = "<?php echo self::NME_PREFIX; ?>";
             var tagId = "";
             var trackList = []; //populated by ajax query
 
@@ -866,6 +887,10 @@ class Playlists extends MenuItem {
                 var retVal = entryType.startsWith(NME_PREFIX);
                 return retVal;
             }
+
+            function getEventType(entryType) {
+                return entryType.substring(NME_PREFIX.length);
+             }
 
             function getEntryMode()  {
                 var entryMode = $('#track-type-pick').val();
@@ -974,14 +999,15 @@ class Playlists extends MenuItem {
             });
             
             function submitTrack(addSeparator) {
-                var artist, label, album, track;
+                var artist, label, album, track, type, eventType, eventCode;
                 var trackType =  $("#track-type-pick").val();
 
-                if (isNmeType(trackType) || addSeparator) {
-                    artist = SPECIAL_TRACK;
-                    track  =  $("#nme-id").val();
-                    album  = addSeparator ? 'nme-separator' : trackType;
-                    label  = ''; // unused
+                if (addSeparator) {
+                    type = <?php echo PlaylistEntry::TYPE_SET_SEPARATOR; ?>;
+                } else if (isNmeType(trackType)) {
+                    type = <?php echo PlaylistEntry::TYPE_LOG_EVENT; ?>;
+                    eventType = getEventType(trackType);
+                    eventCode = $("#nme-id").val();
                 } else {
                     artist = $("#track-artist").val();
                     label =  $("#track-label").val();
@@ -992,11 +1018,14 @@ class Playlists extends MenuItem {
                 var postData = {
                     playlist: $("#track-playlist").val(),
                     session: $("#track-session").val(),
+                    type: type,
                     tag: $("#track-tag").val(),
                     artist: artist,
                     label: label,
                     album: album,
                     track: track,
+                    eventType: eventType,
+                    eventCode: eventCode
                 };
 
                 $.ajax({
@@ -1079,13 +1108,47 @@ class Playlists extends MenuItem {
     }
     
     private function emitEditForm($playlist, $id, $album, $track) {
-      $sep = $id && substr($album["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK;
+      $entry = new PlaylistEntry($album);
+      $sep = $id && $entry->isType(PlaylistEntry::TYPE_SET_SEPARATOR);
+      $event = $id && $entry->isType(PlaylistEntry::TYPE_LOG_EVENT);
     ?>
-      <P CLASS="header"><?php echo $id?"Editing highlighted":"Adding";?> <?php echo $sep?"set separator":"track"?>:</P>
+      <P CLASS="header"><?php echo $id?"Editing highlighted":"Adding";?> <?php
+      switch($entry->getType()) {
+      case PlaylistEntry::TYPE_SET_SEPARATOR:
+          echo "set separator";
+          break;
+      case PlaylistEntry::TYPE_LOG_EVENT:
+          echo "program log entry";
+          break;
+      default:
+          echo "track";
+          break;
+      } ?>:</P>
       <FORM ACTION="?" METHOD=POST>
     <?php if($sep) { ?>
       <INPUT TYPE=HIDDEN NAME=separator VALUE="true">
       <TABLE>
+    <?php } else if($event) { ?>
+      <INPUT TYPE=HIDDEN NAME=logevent VALUE="true">
+      <TABLE CELLPADDING=0 CELLSPACING=0>
+        <TR>
+          <TD ALIGN=RIGHT>Type:</TD><TD ALIGN=LEFT><SELECT NAME=etype STYLE='width: 290px !important'>
+<?php
+          $current = $entry->getLogEventType();
+          $nmeAr = Engine::param('nme');
+          if ($nmeAr) {
+              foreach ($nmeAr as $nme) {
+                  $selected = ($nme['name'] == $current)?" SELECTED":"";
+                  echo "            <OPTION VALUE='" . $nme['name'] . "'$selected>" . $nme['name'] . "</OPTION>\n";
+               }
+          }
+?>
+          </SELECT></TD>
+        </TR>
+        <TR>
+          <TD ALIGN=RIGHT>Name/ID:</TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=ecode MAXLENGTH=80 required VALUE="<?php echo htmlentities($entry->getLogEventCode());?>" CLASS=input STYLE='width: 280px !important'></TD>
+        </TR>
     <?php } else if($album == "" || $album["tag"] == "") { ?>
       <TABLE CELLPADDING=0 CELLSPACING=0>
         <TR>
@@ -1208,8 +1271,7 @@ class Playlists extends MenuItem {
     }
     
     private function insertSetSeparator($playlist) {
-        $specialTrack = IPlaylist::SPECIAL_TRACK;
-        $this->insertTrack($playlist, 0, $specialTrack, $specialTrack, $specialTrack, $specialTrack, true);
+        $this->insertTrackEntry($playlist, (new PlaylistEntry())->setSetSeparator(), true);
     }
     
     public function emitEditor() {
@@ -1225,6 +1287,7 @@ class Playlists extends MenuItem {
         $otrack = $_REQUEST["otrack"];
         $label = $_REQUEST["label"];
         $separator = $_REQUEST["separator"];
+        $logevent = $_REQUEST["logevent"];
     ?>
     <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
     <TR><TD>
@@ -1260,14 +1323,13 @@ class Playlists extends MenuItem {
             } else if($separator) {
                 $id = "";
                 $this->emitTagForm($playlist, "");
-            } else if(($artist == "") || ($album == "") ||
-                            (($label == "") && ($tag == ""))) {
+            } else if(!$logevent && $artist == "") {
                 $albuminfo = ["tag"=>$tag,
                               "artist"=>stripslashes($artist),
                               "album"=>stripslashes($album),
                               "label"=>stripslashes($label)];
                 $this->emitEditForm($playlist, $id, $albuminfo, stripslashes($track));
-            } else if(($track == "") && ($ctrack == "")) {
+            } else if(!$logevent && ($track == "") && ($ctrack == "")) {
                 $albuminfo = ["tag"=>$tag,
                               "artist"=>stripslashes($artist),
                               "album"=>stripslashes($album),
@@ -1285,7 +1347,13 @@ class Playlists extends MenuItem {
                     }
                 }
                 if($id) {
-                    $this->updateTrack($playlist, $id, $tag, $artist, $track, $album, $label);
+                    if($logevent)
+                        Engine::api(IPlaylist::class)->updateTrackEntry($playlist,
+                                (new PlaylistEntry())->
+                                setId($id)->
+                                setLogEvent($_REQUEST["etype"], $_REQUEST["ecode"]));
+                    else
+                        $this->updateTrack($playlist, $id, $tag, $artist, $track, $album, $label);
                     $id = "";
                 } else
                     $this->insertTrack($playlist, $tag, $artist, $track, $album, $label, true);
@@ -1844,51 +1912,61 @@ class Playlists extends MenuItem {
         return $fullName;
     }
 
-    // return user presentable string for the nme type, eg PROMO
-    private function getNmeUserValue($nmeType) {
-       $retVal = $nmeType;
-       if (UI::startsWith($nmeType, IPlaylist::NME_PREFIX)) {
-           $retVal = strtoupper(substr($nmeType, strlen(IPlaylist::NME_PREFIX)));
-       }
-       return $retVal;
-    }
+    private function makePlaylistObserver($playlist, $editMode) {
+        $break = false;
+        return (new PlaylistObserver())->onComment(function($entry) {
+                $editCell = $editMode ? "<TD>" .
+                    $this->makeEditDiv($entry->asArray(), $playlist) . "</TD>" : "";
+                $timeplayed = self::timestampToAMPM($entry->getCreated());
+                echo "<TR class='songRow'>" . $editCell .
+                     "<TD>$timeplayed</TD>" .
+                     "<TD COLSPAN=4>".$entry->getComment()."</TD></TR>";
+                $break = false;
+            })->onLogEvent(function($entry) use($playlist, $editMode, &$break) {
+                if($this->session->isAuth("u")) {
+                    // display log entries only for authenticated users
+                    $editCell = $editMode ? "<TD>" .
+                        $this->makeEditDiv($entry->asArray(), $playlist) . "</TD>" : "";
+                    $timeplayed = self::timestampToAMPM($entry->getCreated());
+                    echo "<TR class='songRow'>" . $editCell .
+                         "<TD>$timeplayed</TD>" .
+                         "<TD>".$entry->getLogEventType()."</TD>" .
+                         "<TD>".$entry->getLogEventCode()."</TD>" .
+                         "<TD></TD><TD></TD></TR>";
+                    $break = false;
+                } else if(!$break) {
+                    echo "<TR class='songDivider'>" . $editCell .
+                         "<TD>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>";
+                    $break = true;
+                }
+            })->onSetSeparator(function($entry) use($playlist, $editMode, &$break) {
+                if($editMode || !$break) {
+                    $editCell = $editMode ? "<TD>" .
+                        $this->makeEditDiv($entry->asArray(), $playlist) . "</TD>" : "";
+                    $timeplayed = self::timestampToAMPM($entry->getCreated());
+                    echo "<TR class='songDivider'>" . $editCell .
+                         "<TD>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>";
+                    $break = true;
+                }
+            })->onSpin(function($entry) use($playlist, $editMode, &$break) {
+                $editCell = $editMode ? "<TD>" .
+                    $this->makeEditDiv($entry->asArray(), $playlist) . "</TD>" : "";
+                $timeplayed = self::timestampToAMPM($entry->getCreated());
+                $reviewCell = $entry->getReviewed() ? "<div class='albumReview'></div>" : "";
+                $artistName = $entry->getArtist();
+                if (!$entry->getTag()) // don't swap manual entries
+                    $artistName = $this->swapNames($artistName);
 
-    private function makeTrackRow($row, $playlist, $editMode) {
-        $REVIEW_DIV =  "<div class='albumReview'></div>";
-        $retVal = "";
-        $editCell = $editMode ?  $editCell = "<TD>" . 
-                    $this->makeEditDiv($row, $playlist) . "</TD>" : "";
-
-        $timeplayed = self::timestampToAMPM($row["created"]);
-        $isSpecial = $row["artist"] == IPlaylist::SPECIAL_TRACK;
-        $isSeparator = $isSpecial && empty($row['track']);
-
-        if ($isSeparator) {
-            $retVal = "<TR class='songDivider'>".$editCell.
-                      "<TD>".$timeplayed . "</TD><TD COLSPAN=4><HR></TD></TR>";
-        } else if ($isSpecial) {
-            $nmeType = $this->getNmeUserValue($row["album"]);
-            $retVal = "<TR class='songRow'>" . $editCell .
-                      "<TD>" . $timeplayed . "</TD>" .
-                      "<TD>" . $nmeType . "</TD>" .
-                      "<TD>" . $row["track"] . "</TD>" .
-                      "<TD></TD><TD></TD></TR>"; 
-        } else {
-            $reviewCell = $row["REVIEWED"] ?  $REVIEW_DIV : "";
-            $artistName = $row["artist"];
-            if ($row["tag"]) // don't swap manual entries
-                $artistName = $this->swapNames($artistName);
-
-            $albumLink = $this->makeAlbumLink($row, true);
-            $retVal = "<TR class='songRow'>" . $editCell .
-                      "<TD>" . $timeplayed . "</TD>" .
-                      "<TD>" . $this->smartURL($artistName) . "</TD>" .
-                      "<TD>" . $this->smartURL($row["track"]) . "</TD>" .
-                      "<TD>" . $reviewCell . "</TD>" .
-                      "<TD>" . $albumLink . "</TD>" .
-                      "</TR>\n"; 
-        }
-        return $retVal;
+                $albumLink = $this->makeAlbumLink($entry->asArray(), true);
+                echo "<TR class='songRow'>" . $editCell .
+                     "<TD>$timeplayed</TD>" .
+                     "<TD>" . $this->smartURL($artistName) . "</TD>" .
+                     "<TD>" . $this->smartURL($entry->getTrack()) . "</TD>" .
+                     "<TD>$reviewCell</TD>" .
+                     "<TD>$albumLink</TD>" .
+                     "</TR>\n";
+                $break = false;
+            });
     }
 
     private function emitPlaylistBody($playlist, $editMode) {
@@ -1897,18 +1975,15 @@ class Playlists extends MenuItem {
         echo "<TABLE class='playlistTable' CELLPADDING=1>";
         echo "<THEAD>" . $header . "</THEAD>";
 
-        $isLoggedIn = empty($this->session->getSessionID()) == False;
         $records = Engine::api(IPlaylist::class)->getTracks($playlist, $editMode);
         $this->viewListGetAlbums($records, $albums);
         Engine::api(ILibrary::class)->markAlbumsReviewed($albums);
 
+        $observer = $this->makePlaylistObserver($playlist, $editMode);
         echo "<TBODY>";
-        if($albums != null && sizeof($albums) > 0) {
-            foreach($albums as $index => $row) {
-                if ($isLoggedIn || $row["artist"] != IPlaylist::SPECIAL_TRACK)
-                    echo $this->makeTrackRow($row, $playlist, $editMode);
-            }
-        }
+        if($albums != null && sizeof($albums) > 0)
+            foreach($albums as $album)
+                $observer->observe(new PlaylistEntry($album));
         echo "</TBODY></TABLE>\n";
     }
 
