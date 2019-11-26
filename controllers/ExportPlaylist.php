@@ -27,6 +27,8 @@ namespace ZK\Controllers;
 use ZK\Engine\Engine;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
+use ZK\Engine\PlaylistEntry;
+use ZK\Engine\PlaylistObserver;
 
 class ExportPlaylist extends CommandTarget implements IController {
     private static $actions = [
@@ -84,26 +86,46 @@ class ExportPlaylist extends CommandTarget implements IController {
         echo "  <show name=\"$this->show\"\n";
         echo "        dj=\"".$this->dj."\"\n";
         echo "        date=\"$this->date\"/>\n";
-    
-        $i=1;
-        while($row = $this->records->fetch()) {
-            if(substr($row['artist'], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
+
+        $observer = (new PlaylistObserver())->onComment(function($entry) use(&$break) {
+            echo "  <comment>".htmlspecialchars(stripslashes($entry->getComment()))."</comment>\n";
+            $break = false;
+        })->onLogEvent(function($entry) use(&$break) {
+            if(!$break) {
                 echo "  <break/>\n";
-            else {
-                echo "  <track>\n";
-                if($row['artist'] != "")
-                    echo "    <artist name=\"".htmlspecialchars($row['artist'])."\"/>\n";
-                if($row['track'] != "")
-                    echo "    <trackname name=\"".htmlspecialchars($row['track'])."\"/>\n";
-                if($row['album'] != "")
-                    echo "    <album name=\"".htmlspecialchars($row['album'])."\"/>\n";
-                if($row['label'] != "")
-                    echo "    <label name=\"".htmlspecialchars($row['label'])."\"/>\n";
-                if($row['tag'] != "")
-                    echo "    <tag number=\"".$row['tag']."\"/>\n";
-                echo "    <sequence number=\"".$i++."\"/>\n";
-                echo "  </track>\n";
+                $break = true;
             }
+        })->onSetSeparator(function($entry) use(&$break) {
+            if(!$break) {
+                echo "  <break/>\n";
+                $break = true;
+            }
+        })->onSpin(function($entry) use(&$break, &$i) {
+            echo "  <track>\n";
+            $artist = $entry->getArtist();
+            if($artist)
+                echo "    <artist name=\"".htmlspecialchars(stripslashes($artist))."\"/>\n";
+            $track = $entry->getTrack();
+            if($track)
+                echo "    <track name=\"".htmlspecialchars(stripslashes($track))."\"/>\n";
+            $album = $entry->getAlbum();
+            if($album)
+                echo "    <album name=\"".htmlspecialchars(stripslashes($album))."\"/>\n";
+            $label = $entry->getLabel();
+            if($label)
+                echo "    <label name=\"".htmlspecialchars(stripslashes($label))."\"/>\n";
+            $tag = $entry->getTag();
+            if($tag)
+                echo "    <tag number=\"$tag\"/>\n";
+            echo "    <sequence number=\"".$i++."\"/>\n";
+            echo "  </track>\n";
+            $break = false;
+        });
+
+        $i=1;
+        $break = false;
+        while($row = $this->records->fetch()) {
+            $observer->observe(new PlaylistEntry($row));
         }
         echo "</playlist>\n";
     }
@@ -122,9 +144,15 @@ class ExportPlaylist extends CommandTarget implements IController {
     
         // emit the tracks
         echo "Artist\tTrack\tAlbum\tTag\tLabel\n";
+        $observer = (new PlaylistObserver())->onSpin(function($entry) {
+            echo $entry->getArtist()."\t".
+                 $entry->getTrack()."\t".
+                 $entry->getAlbum()."\t".
+                 $entry->getTag()."\t".
+                 $entry->getLabel()."\n";
+        });
         while($row = $this->records->fetch()) {
-            if(substr($row['artist'], 0, strlen(IPlaylist::SPECIAL_TRACK)) != IPlaylist::SPECIAL_TRACK)
-                echo $row['artist']."\t".$row['track']."\t".$row['album']."\t".$row['tag']."\t".$row['label']."\n";
+            $observer->observe(new PlaylistEntry($row));
         }
     }
     
@@ -170,18 +198,33 @@ class ExportPlaylist extends CommandTarget implements IController {
         <TR><TH>Artist</TH><TH>Track</TH><TH COLSPAN=2>Album/Label</TH></TR>
     <?php 
         // Print the tracks
-        while($row = $this->records->fetch()) {
-            if(substr($row['artist'], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
+        $observer = (new PlaylistObserver())->onComment(function($entry) use(&$break) {
+            echo "    <TR><TD COLSPAN=4>".$entry->getComment()."</TD></TR>\n";
+            $break = false;
+        })->onLogEvent(function($entry) use(&$break) {
+            if(!$break) {
                 echo "    <TR><TD COLSPAN=4><HR SIZE=2 NOSHADE></TD></TR>\n";
-            else {
-                echo "    <TR><TD ALIGN=LEFT VALIGN=TOP>".htmlentities($row['artist']) . "</TD><TD ALIGN=LEFT VALIGN=TOP>" .
-                     htmlentities($row['track']). "</TD><TD ALIGN=LEFT>" .
-                     htmlentities($row['album']). "<BR><FONT CLASS=\"sub\">" .
-                     htmlentities($row['label']). "</FONT></TD><TD ALIGN=RIGHT VALIGN=TOP>";
-                if($this->session->isAuth("u"))
-                     echo htmlentities($row['tag']);
-                echo "</TD></TR>\n";
+                $break = true;
             }
+        })->onSetSeparator(function($entry) use(&$break) {
+            if(!$break) {
+                echo "    <TR><TD COLSPAN=4><HR SIZE=2 NOSHADE></TD></TR>\n";
+                $break = true;
+            }
+        })->onSpin(function($entry) use(&$break) {
+            echo "    <TR><TD ALIGN=LEFT VALIGN=TOP>".htmlentities($entry->getArtist()) . "</TD><TD ALIGN=LEFT VALIGN=TOP>" .
+                 htmlentities($entry->getTrack()). "</TD><TD ALIGN=LEFT>" .
+                 htmlentities($entry->getAlbum()). "<BR><FONT CLASS=\"sub\">" .
+                 htmlentities($entry->getLabel()). "</FONT></TD><TD ALIGN=RIGHT VALIGN=TOP>";
+            if($this->session->isAuth("u"))
+                 echo htmlentities($entry->getTag());
+            echo "</TD></TR>\n";
+            $break = false;
+        });
+
+        $break = false;
+        while($row = $this->records->fetch()) {
+            $observer->observe(new PlaylistEntry($row));
         }
     ?>
       </TABLE>

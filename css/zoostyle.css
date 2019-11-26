@@ -107,6 +107,10 @@ TABLE.afileactivity {
     border-color: #cccccc;
     vertical-align: baseline;
 }
+.pull-right {
+    float: right;
+}
+
 .noPlaylist, .noPlaylist TD {
     background-color: #000000;
     color: #ffffff;

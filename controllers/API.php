@@ -29,6 +29,7 @@ use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IReview;
+use ZK\Engine\PlaylistObserver;
 
 use ZK\UI\Search;
 use ZK\UI\UICommon as UI;
@@ -66,7 +67,7 @@ class API extends CommandTarget implements IController {
     ];
 
     const PLAYLIST_DETAIL_FIELDS = [
-        "type", "comment", "artist", "track", "album", "label", "tag"
+        "type", "comment", "artist", "track", "album", "label", "tag", "event", "code"
     ];
 
     const TRACK_DETAIL_FIELDS = [
@@ -271,19 +272,21 @@ class API extends CommandTarget implements IController {
                 $attrs["id"] = $id?$id:$row["id"];
                 $this->startResponse("show", $attrs);
                 if($includeTracks && $includeTracks != "false") {
-                    $tracks = Engine::api(IPlaylist::class)->getTracks($id?$id:$row["id"]);
-                    $events = [];
-                    while($track = $tracks->fetch()) {
-                        if(substr($track["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
-                            if(strpos($track["artist"], IPlaylist::COMMENT_FLAG) > 0)
-                                $events[] = ["type" => "comment", "comment" => $track["track"].$track["album"].$track["label"]];
-                            else
-                                $events[] = ["type" => "break"];
-                        else {
-                            $track["type"] = "track";
-                            $events[] = $track;
-                        }
-                    }
+                    Engine::api(IPlaylist::class)->getTracksWithObserver($id?$id:$row["id"],
+                        (new PlaylistObserver())->onComment(function($entry) use(&$events) {
+                            $events[] = ["type" => "comment",
+                                         "comment" => $entry->getComment()];
+                        })->onLogEvent(function($entry) use(&$events) {
+                            $events[] = ["type" => "logEvent",
+                                         "event" => $entry->getLogEventType(),
+                                         "code" => $entry->getLogEventCode()];
+                        })->onSetSeparator(function($entry) use(&$events) {
+                            $events[] = ["type" => "break"];
+                        })->onSpin(function($entry) use(&$events) {
+                            $spin = $entry->asArray();
+                            $spin["type"] = "track";
+                            $events[] = $spin;
+                        }));
                     $this->emitDataSetArray("event", API::PLAYLIST_DETAIL_FIELDS, $events);
                 }
                 $this->endResponse("show");
@@ -296,29 +299,44 @@ class API extends CommandTarget implements IController {
                      "airname=\"".self::spec2hexAttr(stripslashes($row["airname"]))."\" ".
                      "id=\"".($id?$id:$row["id"])."\"";
                 if($includeTracks && $includeTracks != "false") {
+                    $break = false;
                     echo ">\n";
-                    $tracks = Engine::api(IPlaylist::class)->getTracks($id?$id:$row["id"]);
-                    while($track = $tracks->fetch()) {
-                        if(substr($track["artist"], 0, strlen(IPlaylist::SPECIAL_TRACK)) == IPlaylist::SPECIAL_TRACK)
-                            if(strpos($track["artist"], IPlaylist::COMMENT_FLAG) > 0)
-                                echo "<comment>".self::spec2hex(stripslashes($track["track"].$track["album"].$track["label"]))."</comment>\n";
-                            else
+
+                    Engine::api(IPlaylist::class)->getTracksWithObserver($id?$id:$row["id"],
+                        (new PlaylistObserver())->onComment(function($entry) use(&$break) {
+                            echo "<comment>".self::spec2hex(stripslashes($entry->getComment()))."</comment>\n";
+                            $break = false;
+                        })->onLogEvent(function($entry) use(&$break) {
+                            if(!$break) {
                                 echo "<break/>\n";
-                        else {
+                                $break = true;
+                            }
+                        })->onSetSeparator(function($entry) use(&$break) {
+                            if(!$break) {
+                                echo "<break/>\n";
+                                $break = true;
+                            }
+                        })->onSpin(function($entry) use(&$break) {
                             echo "<track";
-                            if($track["artist"] != "")
-                                echo " artist=\"".self::spec2hexAttr(stripslashes($track["artist"]))."\"";
-                            if($track["track"] != "")
-                                echo " track=\"".self::spec2hexAttr(stripslashes($track["track"]))."\"";
-                            if($track["album"] != "")
-                                echo " album=\"".self::spec2hexAttr(stripslashes($track["album"]))."\"";
-                            if($track["label"] != "")
-                                echo " label=\"".self::spec2hexAttr(stripslashes($track["label"]))."\"";
-                            if($track["tag"] != "")
-                                echo " tag=\"".$track["tag"]."\"";
+                            $artist = $entry->getArtist();
+                            if($artist)
+                                echo " artist=\"".self::spec2hexAttr(stripslashes($artist))."\"";
+                            $track = $entry->getTrack();
+                            if($track)
+                                echo " track=\"".self::spec2hexAttr(stripslashes($track))."\"";
+                            $album = $entry->getAlbum();
+                            if($album)
+                                echo " album=\"".self::spec2hexAttr(stripslashes($album))."\"";
+                            $label = $entry->getLabel();
+                            if($label)
+                                echo " label=\"".self::spec2hexAttr(stripslashes($label))."\"";
+                            $tag = $entry->getTag();
+                            if($tag)
+                                echo " tag=\"$tag\"";
+
                             echo "/>\n";
-                        }
-                    }
+                            $break = false;
+                        }));
                     echo "</show>\n";
                 } else
                     echo "/>\n";

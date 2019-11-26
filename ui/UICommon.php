@@ -118,6 +118,12 @@ class UICommon {
                preg_replace("{/[^/]+$}", "/", $uri);
     }
     
+    public static function startsWith ($string, $startString) 
+    { 
+        $len = strlen($startString); 
+        return (substr($string, 0, $len) === $startString); 
+    } 
+
     /**
      * encode the specified argument for inclusion in a URL
      *
