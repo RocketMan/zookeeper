@@ -60,6 +60,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
                   "LEFT JOIN lists l ON t.list = l.id " .
                   "LEFT JOIN airnames a ON l.airname = a.id " .
                   "WHERE l.airname IS NOT NULL AND " .
+                  "t.artist NOT LIKE '" . IPlaylist::SPECIAL_TRACK . "%'" .
                   "MATCH (artist,album,track) AGAINST(? IN BOOLEAN MODE) " .
                   "ORDER BY showdate DESC, list DESC, t.id" ],
          [ "reviews", "reviewrec", "reviews", "review",
