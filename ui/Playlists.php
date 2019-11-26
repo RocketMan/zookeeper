@@ -1914,7 +1914,7 @@ class Playlists extends MenuItem {
 
     private function makePlaylistObserver($playlist, $editMode) {
         $break = false;
-        return (new PlaylistObserver())->onComment(function($entry) {
+        return (new PlaylistObserver())->onComment(function($entry) use($playlist, $editMode, &$break) {
                 $editCell = $editMode ? "<TD>" .
                     $this->makeEditDiv($entry->asArray(), $playlist) . "</TD>" : "";
                 $timeplayed = self::timestampToAMPM($entry->getCreated());

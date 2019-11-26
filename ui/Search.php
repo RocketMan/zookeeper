@@ -577,7 +577,7 @@ function setFocus() {
             // Album
             if(!$this->noTables) {
                 echo "</TD><TD>";
-                if($albums[$i]["REVIEWED"])
+                if($albums[$i]["reviewed"])
                         echo "<A CLASS=\"albumReview\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($albums[$i]["tag"]).
                              "&amp;q=". $this->maxresults.
@@ -874,7 +874,7 @@ function setFocus() {
                 // Album
                 if(!$this->noTables) {
                     echo "</TD><TD>";
-                    if($tracks[$i]["REVIEWED"])
+                    if($tracks[$i]["reviewed"])
                         echo "<A CLASS=\"albumReview\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($tracks[$i]["tag"]).
                              "&amp;q=". $this->maxresults.

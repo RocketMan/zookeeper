@@ -179,7 +179,7 @@ class AddManager extends MenuItem {
                 echo "<TD align='center'>" . $category . "</TD>";
 
                 if ($reviewCell)
-                    echo "<TD>" . htmlentities($row["REVIEWER"]) . "</TD>";
+                    echo "<TD>" . htmlentities($row["reviewer"]) . "</TD>";
     
                 // A-File Numbers
                 echo "<TD>".$row["afile_number"]."</TD>";
@@ -193,7 +193,7 @@ class AddManager extends MenuItem {
                 
                 if($legacyReviewCell) {
                     echo "<TD VALIGN=TOP>";
-                    if($row["REVIEWED"]) {
+                    if($row["reviewed"]) {
                         echo "<A CLASS=\"albumReview\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
                              "&amp;action=search&amp;session=".$this->session->getSessionID().

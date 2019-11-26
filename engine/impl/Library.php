@@ -242,8 +242,8 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         return $airname?$airname:$realname;
     }
     
-    // For a given $albums array, add a REVIEWED column for each
-    // album which has at least one music review. 
+    // For a given $albums array, add 'reviewed' and 'reviewer' columns
+    // for each album which has at least one music review.
     //
     public function markAlbumsReviewed(&$albums, $loggedIn = 0) {
         $chain = [];
@@ -270,8 +270,8 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         $stmt->execute();
         while($row = $stmt->fetch()) {
             for($next = $tags[$row[0]]; $next >= 0; $next = array_key_exists($next, $chain)?$chain[$next]:-1) {
-                $albums[$next]["REVIEWED"] = 1;
-                $albums[$next]["REVIEWER"] = self::displayName($row[1], $row[2]);
+                $albums[$next]["reviewed"] = 1;
+                $albums[$next]["reviewer"] = self::displayName($row[1], $row[2]);
             }
         }
     }

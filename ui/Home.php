@@ -87,7 +87,7 @@ class Home extends MenuItem {
              $artist = preg_match("/^COLL$/i", $topPlays[$i]["artist"])?"Various Artists":$topPlays[$i]["artist"];
     
              echo UI::HTMLify($artist, 20) . "</TD><TD>";
-             if($topPlays[$i]["REVIEWED"])
+             if($topPlays[$i]["reviewed"])
                  echo "<A CLASS=\"albumReview\" HREF=\"".
                       "?s=byAlbumKey&amp;n=". UI::URLify($topPlays[$i]["tag"]).
                       "&amp;action=search&amp;session=".$this->session->getSessionID().
