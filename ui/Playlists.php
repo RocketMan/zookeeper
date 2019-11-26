@@ -192,9 +192,7 @@ class Playlists extends MenuItem {
         $retVal = [];
         $type = $_REQUEST["type"];
         $playlist = trim($_REQUEST["playlist"]);
-        $artist = trim($_REQUEST["artist"]);
-        $track = trim($_REQUEST["track"]);
-        $_REQUEST["created"] = '';
+
         $entry = null;
         switch($type) {
         case PlaylistEntry::TYPE_SET_SEPARATOR:
@@ -206,6 +204,8 @@ class Playlists extends MenuItem {
             break;
         default:
             // spin
+            $artist = trim($_REQUEST["artist"]);
+            $track = trim($_REQUEST["track"]);
             if (empty($playlist) || empty($artist) || empty($track)) {
                 $retMsg = "required field missing: -" . $playlist . "-, -" . $artist . "-, -" . $track . "-";
             } else {
@@ -1975,15 +1975,15 @@ class Playlists extends MenuItem {
         echo "<TABLE class='playlistTable' CELLPADDING=1>";
         echo "<THEAD>" . $header . "</THEAD>";
 
-        $records = Engine::api(IPlaylist::class)->getTracks($playlist, $editMode);
-        $this->viewListGetAlbums($records, $albums);
-        Engine::api(ILibrary::class)->markAlbumsReviewed($albums);
+        $result = Engine::api(IPlaylist::class)->getTracks($playlist, $editMode);
+        $this->viewListGetAlbums($result, $entries);
+        Engine::api(ILibrary::class)->markAlbumsReviewed($entries);
 
         $observer = $this->makePlaylistObserver($playlist, $editMode);
         echo "<TBODY>";
-        if($albums != null && sizeof($albums) > 0)
-            foreach($albums as $album)
-                $observer->observe(new PlaylistEntry($album));
+        if($entries != null && sizeof($entries) > 0)
+            foreach($entries as $entry)
+                $observer->observe(new PlaylistEntry($entry));
         echo "</TBODY></TABLE>\n";
     }
 
