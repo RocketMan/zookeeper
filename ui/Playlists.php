@@ -1009,6 +1009,7 @@ class Playlists extends MenuItem {
                     eventType = getEventType(trackType);
                     eventCode = $("#nme-id").val();
                 } else {
+                    type = <?php echo PlaylistEntry::TYPE_SPIN; ?>;
                     artist = $("#track-artist").val();
                     label =  $("#track-label").val();
                     album =  $("#track-album").val();
