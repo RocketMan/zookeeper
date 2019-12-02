@@ -88,14 +88,17 @@ class Main implements IController {
 <HEAD>
   <TITLE><?php echo $banner;?></TITLE>
   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+  <?php
+      $favicon = Engine::param('favicon');
+      if($favicon)
+          echo "<LINK REL=\"icon\" HREF=\"$favicon\">\n";
+  ?>
   <?php UI::emitCSS('css/tablesorter/theme.default.css'); ?>
   <?php UI::emitCSS('css/zoostyle.css'); ?>
   <?php UI::emitCSS(Engine::param('stylesheet')); ?>
   <?php UI::emitCSS('css/about.css'); ?>
   <?php UI::emitJS('js/jquery.min.js'); ?>
   <?php UI::emitJS('js/jquery.tablesorter.min.js'); ?>
-
-  <link rel="shortcut icon" href="img/<?php echo Engine::param('station_dir'); ?>/favicon.ico">
 
   <!-- pull down date & time pickers if browser is stupid -->
   <SCRIPT TYPE="text/javascript"><!--

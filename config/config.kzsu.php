@@ -24,7 +24,7 @@ $config = [
     'copyright' => '&copy; 2002-2019 Stanford University.  All rights reserved.  Please read the Stanford University <A HREF="http://www.stanford.edu/home/atoz/terms.html">acceptable use policy</A>',
 
     'logo' => 'img/kzsu/kzsu_aharoni.png',
-    'station_dir' => 'kzsu',
+    'favicon' => 'img/kzsu/favicon.ico',
 
     'stylesheet' => 'css/kzsustyle.css',
 
