@@ -95,6 +95,8 @@ class Main implements IController {
   <?php UI::emitJS('js/jquery.min.js'); ?>
   <?php UI::emitJS('js/jquery.tablesorter.min.js'); ?>
 
+  <link rel="shortcut icon" href="img/<?php echo Engine::param('station_dir'); ?>/favicon.ico">
+
   <!-- pull down date & time pickers if browser is stupid -->
   <SCRIPT TYPE="text/javascript"><!--
     <?php ob_start([\JSMin::class, 'minify']); ?>

@@ -1888,31 +1888,6 @@ class Playlists extends MenuItem {
        return $albumTitle;
     }
 
-
-    // converts "last, first" to "first last" being careful to not swap
-    // other formats that have comas. call only for ZK library entries
-    // since manual entries don't need this. Test cases: The Band, CSN&Y,
-    // Bing Crosby & Fred Astaire, Bunett, June and Maqueque, Electro, Brad 
-    // Feat. Marwan Kanafaneg: 694717, 418485, 911685, 914824, 880994.
-    private function swapNames($fullName) {
-        $suffixMap = [ "with" => "", "and" => "", "feat." => "" ];
-    
-        $namesAr = explode(", ", $fullName);
-        if (count($namesAr) == 2) {
-            $spacesAr = explode(" ", $namesAr[1]);
-            $spacesCnt = count($spacesAr);
-            if ($spacesCnt == 1) {
-                $fullName = $namesAr[1] . " " . $namesAr[0];
-            } else if ($spacesCnt > 1) {
-                $key = strtolower($spacesAr[1]);
-                if (array_key_exists($key, $suffixMap)) {
-                    $fullName = $spacesAr[0] . ' ' . $namesAr[0] . ' ' . substr($namesAr[1], strlen($spacesAr[0]));
-                }
-            }
-        }
-        return $fullName;
-    }
-
     private function makePlaylistObserver($playlist, $editMode) {
         $break = false;
         return (new PlaylistObserver())->onComment(function($entry) use($playlist, $editMode, &$break) {
@@ -1955,8 +1930,8 @@ class Playlists extends MenuItem {
                 $timeplayed = self::timestampToAMPM($entry->getCreated());
                 $reviewCell = $entry->getReviewed() ? "<div class='albumReview'></div>" : "";
                 $artistName = $entry->getArtist();
-                if (!$entry->getTag()) // don't swap manual entries
-                    $artistName = $this->swapNames($artistName);
+                if ($entry->getTag()) // don't swap manual entries
+                    $artistName = UI::swapNames($artistName);
 
                 $albumLink = $this->makeAlbumLink($entry->asArray(), true);
                 echo "<TR class='songRow'>" . $editCell .
@@ -1989,7 +1964,7 @@ class Playlists extends MenuItem {
     }
 
 
-    private function makeShowDateAndTime($row) {
+    public static function makeShowDateAndTime($row) {
         $showStart = self::showStartTime($row[2]);
         $showEnd = self::showEndTime($row[2]);
         $showDate = self::timestampToDate($row[1]);
@@ -2001,7 +1976,7 @@ class Playlists extends MenuItem {
         $showName = $playlist['description'];
         $djId = $playlist['id'];
         $djName = $playlist['airname'];
-        $showDateTime = $this->makeShowDateAndTime($playlist);
+        $showDateTime = self::makeShowDateAndTime($playlist);
 
         $dateDiv = "<DIV>".$showDateTime."&nbsp;</div>";
         $djLink = "<A HREF='?action=viewDJ&amp;seq=selUser&amp;session=" . 

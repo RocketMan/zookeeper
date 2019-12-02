@@ -22,6 +22,8 @@ $config = [
 
     'station_full' => 'Example Fictitious Radio 99.9 FM',
 
+    'station_dir' => 'example99',
+
     'station_freq' => '99.9FM',
 
     'station_slogan' => 'Music with a difference...',

@@ -33,15 +33,19 @@ use ZK\UI\UICommon as UI;
 
 class Home extends MenuItem {
     public function processLocal($action, $subaction) {
-        echo "    <H2>". Engine::param('station'). " Music :: " . Engine::param('application') . "</H2>\n";
-        if($this->session->isAuth("u"))
-            echo "    <P>Remember to <B>logout</B> when you have finished.</P>\n";
+        echo "<H2>". Engine::param('station'). " Music :: " . Engine::param('application') . "</H2>\n";
+        $requestLine = Engine::param('contact')['request'];
+        if ($requestLine)
+            echo "<div class='home-hdr'><label>Request Line:</label> $requestLine</div>";
+
+        $musicDirEmail = Engine::param('email')['md'];
+        $musicDirName = Engine::param('md_name');
+        echo "<div class='home-hdr'><label>Music Director:</label><A HREF='mailto: $musicDirEmail'> $musicDirName</A></div>";
+
         $this->emitWhatsOnNow();
         $this->emitTopPlays();
-        echo "    <TABLE WIDTH=\"100%\">\n";
-        echo "      <TR><TH ALIGN=LEFT CLASS=\"subhead\">For complete album charting, see our\n";
-        echo "          <A CLASS=\"subhead\" HREF=\"?session=".$this->session->getSessionID()."&amp;action=viewChart\"><B>Airplay Charts</B></A>.\n      </TH></TR>\n    </TABLE>\n";
-        UI::setFocus();
+        echo "<div style='border:0; margin-top:16px' CLASS='subhead'>For complete album charting, see our ";
+        echo "<A CLASS='subhead' HREF='?session=".$this->session->getSessionID()."&amp;action=viewChart'><B>Airplay Charts</B></A></div>";
     }
 
     private function emitTopPlays($numweeks=1, $limit=10) {
@@ -67,73 +71,67 @@ class Home extends MenuItem {
     
        Engine::api(ILibrary::class)->markAlbumsReviewed($topPlays);
        if(sizeof($topPlays)) {
-          $nn4 = (substr($_SERVER["HTTP_USER_AGENT"], 0, 10) == "Mozilla/4.");
-          if($nn4)
-              echo "<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=0 WIDTH=\"100%\">\n";
-          else
-              echo "<TABLE WIDTH=\"100%\">\n";
-          echo "  <TR><TH ALIGN=LEFT CLASS=\"subhead\">";
+         echo "<TABLE WIDTH=\"100%\">\n";
+
+          echo "<TR><TH ALIGN=LEFT CLASS=\"subhead\">";
           $formatEndDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
-          echo Engine::param('station') . "'s Top $limit Albums\n" .
-               "    <BR><FONT CLASS=\"subhead2\">for the ";
+          echo "Our Top $limit Albums\n" .
+          "    <BR><FONT CLASS=\"subhead2\">for the ";
           echo ($numweeks == 1)?"week":"$numweeks week period";
-          echo " ending $formatEndDate</FONT></TH><TD ALIGN=RIGHT STYLE=\"vertical-align: bottom;\">Music Director: <A HREF=\"mailto:" . Engine::param('email')['md'] . "\">" . Engine::param('md_name') . "</A></TD></TR>\n";
-          echo "</TABLE>\n<TABLE>\n";
-          echo "  <TR><TH></TH><TH ALIGN=LEFT>Artist</TH><TH></TH><TH ALIGN=LEFT>Album</TH><TH ALIGN=LEFT>Label</TH></TR>\n";
+          echo " ending $formatEndDate</FONT></TH><TD ALIGN=RIGHT STYLE=\"vertical-align: bottom;\"></TR></TABLE>";
+
+          echo "<TABLE class='top-albums'><TR style='border-bottom:1px solid gray'><TH></TH><TH ALIGN=LEFT COLSPAN=2>Artist</TH><TH ALIGN=LEFT>Album</TH><TH ALIGN=LEFT>Label</TH></TR>\n";
           for($i=0; $i < sizeof($topPlays); $i++) {
-             echo "  <TR><TD ALIGN=RIGHT>".(string)($i + 1).".</TD><TD>";
-    
-             // Setup artist correctly for collections
-             $artist = preg_match("/^COLL$/i", $topPlays[$i]["artist"])?"Various Artists":$topPlays[$i]["artist"];
-    
-             echo UI::HTMLify($artist, 20) . "</TD><TD>";
-             if($topPlays[$i]["reviewed"])
-                 echo "<A CLASS=\"albumReview\" HREF=\"".
-                      "?s=byAlbumKey&amp;n=". UI::URLify($topPlays[$i]["tag"]).
-                      "&amp;action=search&amp;session=".$this->session->getSessionID().
-                      "\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A></TD><TD>";
-             else
-                echo "</TD><TD>";
+             $tagId = $topPlays[$i]["tag"];
+             $artist = $topPlays[$i]["artist"];
+             $haveReview = $topPlays[$i]["reviewed"];
+             $album = UI::HTMLify($topPlays[$i]["album"], 20);
+             $label = UI::HTMLify($topPlays[$i]["label"], 20);
+
+             // Setup artist correctly for collections & swap names if from library
+             if (preg_match("/^COLL$/i", $artist))
+                 $artist = "Various Artists";
+             else if ($tagId)
+                 $artist = UI::swapNames($artist);
+
+             $artist = UI::HTMLify($artist, 20);
+             echo "<TR>";
+             echo "<TD style='padding-right:4px' ALIGN=RIGHT>".(string)($i + 1).".</TD>";
+             echo "<TD>$artist</TD>";
+
+             $reviewClass = $haveReview ? "albumReview" : "albumNoReview";
+
+             echo "<td style='padding-right:4px'><div class='$reviewClass'></div></td>";
              // Album
-             echo "<A CLASS=\"nav\" HREF=\"".
-                             "?s=byAlbumKey&amp;n=". UI::URLify($topPlays[$i]["tag"]).
-                             "&amp;action=search&amp;session=".$this->session->getSessionID().
-                             "\">";
-             echo UI::HTMLify($topPlays[$i]["album"], 20) . "</A></TD><TD>" .
-                  UI::HTMLify($topPlays[$i]["label"], 20) . "</TD></TR>\n";
+             echo "<TD>" .
+                  "<A CLASS='nav' HREF='?s=byAlbumKey&amp;n=" . UI::URLify($tagId).
+                  "&amp;action=search&amp;session=" . $this->session->getSessionID(). "'>".
+                  "$album</A></TD>";
+
+             echo "<TD>$label</TD>";
+             echo "</TR>\n";
           }
           echo "</TABLE>\n";
        }
     }
     
     private function emitWhatsOnNow() {
+        echo "<div class='subhead'>On Now:<div class='home-onnow'>\n";
         $record = Engine::api(IPlaylist::class)->getWhatsOnNow();
-        echo "<TABLE WIDTH=\"100%\" BORDER=0 CELLPADDING=2 CELLSPACING=0 STYLE=\"border-style: solid; border-width: 1px 0px 1px 0px; border-color: #cccccc\">\n  <TR><TH ALIGN=LEFT COLSPAN=3 CLASS=\"subhead\">";
-        echo "On ". Engine::param('station') . " now:</TH></TR>\n  ";
+        $sessionId = $this->session->getSessionID();
         if($record && ($row = $record->fetch())) {
-            echo "<TR><TH ALIGN=LEFT COLSPAN=3><A HREF=\"".
-                 "?action=viewDJ&amp;seq=selUser&amp;viewuser=".$row["airid"]."&amp;session=".$this->session->getSessionID().
-                 "\" CLASS=\"calNav\">" . htmlentities($row["airname"]) . "</A>&nbsp;&nbsp;&nbsp;";
-            echo "<A HREF=\"".
-                 "?action=viewDate&amp;seq=selList&amp;playlist=".$row[0].
-                 "&amp;session=".$this->session->getSessionID()."\" CLASS=\"nav\">" . htmlentities($row["description"]);
-            echo "</A></TH></TR>\n  ";
-            echo "<TR><TH ALIGN=RIGHT VALIGN=BOTTOM CLASS=\"sub\">" . date("l, j M") . "&nbsp;&nbsp;</TH>\n      <TH ALIGN=LEFT VALIGN=BOTTOM CLASS=\"sub\">" . Playlists::timeToAMPM($row["showtime"]) . " " . date("T") . "</TH>\n";
-            $requestLine = Engine::param('contact')['request'];
-            if($requestLine)
-                echo "      <TD ALIGN=RIGHT VALIGN=BOTTOM ROWSPAN=2>Request Line:&nbsp;&nbsp;$requestLine&nbsp;&nbsp;&nbsp;".Engine::param('station_freq')."</TD></TR>\n";
-            else
-                echo "      <TD></TD></TR>\n";
-            echo "  <TR>" . Playlists::timeToZulu($row["showtime"]). "</TR>\n";
+            $airId = $row["airid"];
+            $airName = htmlentities($row["airname"]);
+            $description = htmlentities($row["description"]);
+            $showDateTime = Playlists::makeShowDateAndTime($row);
+            $hrefAirName =  "?action=viewDJ&amp;seq=selUser&amp;viewuser=$airId&amp;session=$sessionId";
+            $hrefPL = "?action=viewDate&amp;seq=selList&amp;playlist=$row[0]&amp;session=$sessionId";
+            echo "<A HREF='$hrefPL' CLASS='nav'>$description</A>&nbsp;with&nbsp;";
+            echo "<A HREF='$hrefAirName' CLASS='calNav'>$airName</A>";
+            echo "<div class='home-datetime'>$showDateTime</div>";
         } else {
-            echo "<TR><TH ALIGN=LEFT COLSPAN=3>[No playlist available]</TH></TR>\n  ";
-            echo "<TR><TH COLSPAN=2>&nbsp;</TH>\n";
-            $requestLine = Engine::param('contact')['request'];
-            if($requestLine)
-                echo "    <TD ALIGN=RIGHT VALIGN=BOTTOM>Request Line:&nbsp;&nbsp;$requestLine&nbsp;&nbsp;&nbsp;".Engine::param('station_freq')."</TD></TR>\n";
-            else
-                echo "    <TD></TD></TR>\n";
+            echo "<div class='home-datetime'>[No playlist available]</div>";
         }
-        echo "</TABLE><BR>\n";
+        echo "</div></div>\n";
     }
 }
