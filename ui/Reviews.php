@@ -130,12 +130,14 @@ class Reviews extends MenuItem {
       ?>
 
       <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
         $().ready(function(){
             var INITIAL_SORT_COL = 0; //date
             $('.sortable-table').tablesorter({
                 sortList: [[INITIAL_SORT_COL, 0]],
             });
         });
+    <?php ob_end_flush(); ?>
         // -->
       </SCRIPT>
 
