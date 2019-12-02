@@ -738,10 +738,10 @@ class Playlists extends MenuItem {
         <?php
     }
     
-    private function makeEditDiv($row, $playlist) {
+    private function makeEditDiv($entry, $playlist) {
         $sessionId = $this->session->getSessionID();
         $href = "?session=" . $sessionId . "&amp;playlist=" . $playlist . "&amp;id=" . 
-                $row["id"] . "&amp;action=" . $this->action . "&amp;";
+                $entry->getId() . "&amp;action=" . $this->action . "&amp;";
         $editLink = "<A CLASS='songEdit' HREF='" . $href ."seq=editTrack'>&#x270f;</a>";
         //NOTE: in edit mode the list is ordered new to old, so up makes it 
         //newer in time order & vice-versa.
@@ -1865,15 +1865,15 @@ class Playlists extends MenuItem {
         }
     }
     
-    private function makeAlbumLink($row, $includeLabel) {
-        $albumName = $row["album"];
-        $labelName = $row["label"];
+    private function makeAlbumLink($entry, $includeLabel) {
+        $albumName = $entry->getAlbum();
+        $labelName = $entry->getLabel();
         if (empty($albumName) && empty($labelName))
             return "";
 
         $labelSpan = "<span class='songLabel'> / " . $this->smartURL($labelName) . "</span>";
-        if($row["tag"]) {
-            $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($row["tag"]) .
+        if($entry->getTag()) {
+            $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($entry->getTag()) .
                           "&amp;q=&amp;action=search&amp;session=" . $this->session->getSessionID() .
                           "' CLASS='nav'>".$albumName ."</A>";
 
@@ -1892,7 +1892,7 @@ class Playlists extends MenuItem {
         $break = false;
         return (new PlaylistObserver())->onComment(function($entry) use($playlist, $editMode, &$break) {
                 $editCell = $editMode ? "<TD>" .
-                    $this->makeEditDiv($entry->asArray(), $playlist) . "</TD>" : "";
+                    $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                 $timeplayed = self::timestampToAMPM($entry->getCreated());
                 echo "<TR class='songRow'>" . $editCell .
                      "<TD>$timeplayed</TD>" .
@@ -1902,7 +1902,7 @@ class Playlists extends MenuItem {
                 if($this->session->isAuth("u")) {
                     // display log entries only for authenticated users
                     $editCell = $editMode ? "<TD>" .
-                        $this->makeEditDiv($entry->asArray(), $playlist) . "</TD>" : "";
+                        $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                     $timeplayed = self::timestampToAMPM($entry->getCreated());
                     echo "<TR class='songRow'>" . $editCell .
                          "<TD>$timeplayed</TD>" .
@@ -1918,7 +1918,7 @@ class Playlists extends MenuItem {
             })->onSetSeparator(function($entry) use($playlist, $editMode, &$break) {
                 if($editMode || !$break) {
                     $editCell = $editMode ? "<TD>" .
-                        $this->makeEditDiv($entry->asArray(), $playlist) . "</TD>" : "";
+                        $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                     $timeplayed = self::timestampToAMPM($entry->getCreated());
                     echo "<TR class='songDivider'>" . $editCell .
                          "<TD>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>";
@@ -1926,14 +1926,14 @@ class Playlists extends MenuItem {
                 }
             })->onSpin(function($entry) use($playlist, $editMode, &$break) {
                 $editCell = $editMode ? "<TD>" .
-                    $this->makeEditDiv($entry->asArray(), $playlist) . "</TD>" : "";
+                    $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                 $timeplayed = self::timestampToAMPM($entry->getCreated());
                 $reviewCell = $entry->getReviewed() ? "<div class='albumReview'></div>" : "";
                 $artistName = $entry->getArtist();
                 if ($entry->getTag()) // don't swap manual entries
                     $artistName = UI::swapNames($artistName);
 
-                $albumLink = $this->makeAlbumLink($entry->asArray(), true);
+                $albumLink = $this->makeAlbumLink($entry, true);
                 echo "<TR class='songRow'>" . $editCell .
                      "<TD>$timeplayed</TD>" .
                      "<TD>" . $this->smartURL($artistName) . "</TD>" .
