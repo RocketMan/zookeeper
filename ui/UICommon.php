@@ -195,6 +195,34 @@ class UICommon {
         return $string;
     }
 
+
+   /**
+    *  converts "last, first" to "first last" being careful to not swap
+    *  other formats that have commas. call only for ZK library entries
+    *  since manual entries don't need this. Test cases: The Band, CSN&Y,
+    *  Bing Crosby & Fred Astaire, Bunett, June and Maqueque, Electro, Brad 
+    *  Feat. Marwan Kanafaneg, Kallick, Kathy Band: 694717, 418485, 911685, 
+    *  914824, 880994, 1134313.
+    */
+    public static function swapNames($fullName) {
+        $suffixMap = [ "band" => "", "with" => "", "and" => "", "feat." => "" ];
+    
+        $namesAr = explode(", ", $fullName);
+        if (count($namesAr) == 2) {
+            $spacesAr = explode(" ", $namesAr[1]);
+            $spacesCnt = count($spacesAr);
+            if ($spacesCnt == 1) {
+                $fullName = $namesAr[1] . " " . $namesAr[0];
+            } else if ($spacesCnt > 1) {
+                $key = strtolower($spacesAr[1]);
+                if (array_key_exists($key, $suffixMap)) {
+                    $fullName = $spacesAr[0] . ' ' . $namesAr[0] . ' ' . substr($namesAr[1], strlen($spacesAr[0]));
+                }
+            }
+        }
+        return $fullName;
+    }
+
     /**
      * decorate the specified asset for cache control
      *

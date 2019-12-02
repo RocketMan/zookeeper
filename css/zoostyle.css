@@ -73,14 +73,24 @@ H2 {
     padding-top: 0px;
     margin-bottom: 10px;
 }
-H3, .subhead {
+H3, .subhead  {
     color: #d83d04;
     font-size: 14pt;
     font-weight: bold;
-    padding-top: 10px;
+    padding-top: 8px;
     margin-bottom: 5px;
     text-align: left;
 }
+th.subhead {
+    padding-top: 0px;
+}
+    
+div.subhead {
+    padding-top: 4px;
+    border-top: 1px solid gray;
+    border-bottom: 1px solid gray;
+}
+   
 LI {
     display: list-item;
 }
@@ -135,6 +145,32 @@ TABLE.afileactivity {
 TD.ind {
     width: 15px;
 }
+
+/* home page */
+.top-albums {
+    margin-top: 4px;
+}
+
+.home-datetime {
+    font-size: 12px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+.home-onnow > label {
+    font-weight: bold;
+    display: inline-block;
+    padding-bottom: 8px;
+}
+
+.home-hdr > label {
+    font-weight: bold;
+    display: inline-block;
+    width: 100px;
+}
+.top-albums td {
+    padding-right: 50px;
+}
+
 
 /* playlist editor */
 .arrowCell {
@@ -351,7 +387,7 @@ P.zktitle A {
     width: 100%;
 }
 
-TH {
+.home-onnow, TH {
     font-family: verdana, arial, helvetica, sans-serif;
     font-size: 11pt;
     font-weight: bold;
@@ -536,6 +572,10 @@ A.calLink {
 }
 .albumReview {
     background-image: URL('../img/rinfo.gif');
+    width:11px;
+    height:11px;
+}
+.albumNoReview {
     width:11px;
     height:11px;
 }

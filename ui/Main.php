@@ -88,6 +88,11 @@ class Main implements IController {
 <HEAD>
   <TITLE><?php echo $banner;?></TITLE>
   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+  <?php
+      $favicon = Engine::param('favicon');
+      if($favicon)
+          echo "<LINK REL=\"icon\" HREF=\"$favicon\">\n";
+  ?>
   <?php UI::emitCSS('css/tablesorter/theme.default.css'); ?>
   <?php UI::emitCSS('css/zoostyle.css'); ?>
   <?php UI::emitCSS(Engine::param('stylesheet')); ?>

@@ -29,6 +29,7 @@ $config = [
     'copyright' => '&copy; 2002-2019 Fictitious Radio, LTD.  All rights reserved.',
 
     'logo' => 'img/example_banner.png',
+    'favicon' => 'img/favicon.ico',
 
     'stylesheet' => 'css/example_style.css',
 
