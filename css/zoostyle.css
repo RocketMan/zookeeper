@@ -637,3 +637,7 @@ A.calLink {
     background-color: gray;
 }
 
+.logEntry, .logEntry TD {
+    background-color: #cccccc;
+/*    color: #cc0000;*/
+}

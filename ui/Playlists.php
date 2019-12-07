@@ -1904,10 +1904,10 @@ class Playlists extends MenuItem {
                     $editCell = $editMode ? "<TD>" .
                         $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                     $timeplayed = self::timestampToAMPM($entry->getCreated());
-                    echo "<TR class='songRow'>" . $editCell .
+                    echo "<TR class='logEntry'>" . $editCell .
                          "<TD>$timeplayed</TD>" .
-                         "<TD><I>".$entry->getLogEventType()."</I></TD>" .
-                         "<TD><I>".$entry->getLogEventCode()."</I></TD>" .
+                         "<TD>".$entry->getLogEventType()."</TD>" .
+                         "<TD>".$entry->getLogEventCode()."</TD>" .
                          "<TD></TD><TD></TD></TR>";
                     $break = false;
                 } else if(!$break) {
