@@ -1906,8 +1906,8 @@ class Playlists extends MenuItem {
                     $timeplayed = self::timestampToAMPM($entry->getCreated());
                     echo "<TR class='songRow'>" . $editCell .
                          "<TD>$timeplayed</TD>" .
-                         "<TD>".$entry->getLogEventType()."</TD>" .
-                         "<TD>".$entry->getLogEventCode()."</TD>" .
+                         "<TD><I>".$entry->getLogEventType()."</I></TD>" .
+                         "<TD><I>".$entry->getLogEventCode()."</I></TD>" .
                          "<TD></TD><TD></TD></TR>";
                     $break = false;
                 } else if(!$break) {
