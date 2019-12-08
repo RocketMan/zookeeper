@@ -1894,9 +1894,9 @@ class Playlists extends MenuItem {
                 $editCell = $editMode ? "<TD>" .
                     $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                 $timeplayed = self::timestampToAMPM($entry->getCreated());
-                echo "<TR class='songRow'>" . $editCell .
+                echo "<TR class='commentRow'>" . $editCell .
                      "<TD>$timeplayed</TD>" .
-                     "<TD COLSPAN=4>".$entry->getComment()."</TD></TR>";
+                     "<TD COLSPAN=4>".$entry->getComment()."</TD></TR>\n";
                 $break = false;
             })->onLogEvent(function($entry) use($playlist, $editMode, &$break) {
                 if($this->session->isAuth("u")) {
@@ -1908,11 +1908,11 @@ class Playlists extends MenuItem {
                          "<TD>$timeplayed</TD>" .
                          "<TD>".$entry->getLogEventType()."</TD>" .
                          "<TD>".$entry->getLogEventCode()."</TD>" .
-                         "<TD></TD><TD></TD></TR>";
+                         "<TD></TD><TD></TD></TR>\n";
                     $break = false;
                 } else if(!$break) {
                     echo "<TR class='songDivider'>" . $editCell .
-                         "<TD>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>";
+                         "<TD>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
                     $break = true;
                 }
             })->onSetSeparator(function($entry) use($playlist, $editMode, &$break) {
@@ -1921,7 +1921,7 @@ class Playlists extends MenuItem {
                         $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                     $timeplayed = self::timestampToAMPM($entry->getCreated());
                     echo "<TR class='songDivider'>" . $editCell .
-                         "<TD>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>";
+                         "<TD>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
                     $break = true;
                 }
             })->onSpin(function($entry) use($playlist, $editMode, &$break) {
