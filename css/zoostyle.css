@@ -637,7 +637,17 @@ A.calLink {
     background-color: gray;
 }
 
-.logEntry, .logEntry TD {
-    background-color: #cccccc;
-/*    color: #cc0000;*/
+.logEntry, .logEntry TD,
+.logEntryEdit, .logEntryEdit TD {
+    /* entire log entry row */
+}
+
+.logEntry TD:not(:nth-of-type(1)) {
+    /* log entry non-time details in view playlist (not editor) */
+    border-top: 1px solid #686868;
+    border-bottom: 1px solid #686868;
+}
+
+.logEntryEdit TD:nth-of-type(n+3) {
+    /* log entry non-time details in playlist editor */
 }
