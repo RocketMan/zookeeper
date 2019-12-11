@@ -199,7 +199,7 @@ class ExportPlaylist extends CommandTarget implements IController {
     <?php 
         // Print the tracks
         $observer = (new PlaylistObserver())->onComment(function($entry) use(&$break) {
-            echo "    <TR><TD COLSPAN=4>".$entry->getComment()."</TD></TR>\n";
+            echo "    <TR><TD COLSPAN=4>".(new \Parsedown())->line(nl2br(htmlentities($entry->getComment())))."</TD></TR>\n";
             $break = false;
         })->onLogEvent(function($entry) use(&$break) {
             if(!$break) {
