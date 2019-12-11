@@ -198,6 +198,9 @@ class Playlists extends MenuItem {
         case PlaylistEntry::TYPE_SET_SEPARATOR:
             $entry = (new PlaylistEntry())->setSetSeparator();
             break;
+        case PlaylistEntry::TYPE_COMMENT:
+            $entry = (new PlaylistEntry())->setComment(trim($_REQUEST["comment"]));
+            break;
         case PlaylistEntry::TYPE_LOG_EVENT:
             $entry = (new PlaylistEntry())->setLogEvent(
                 $_REQUEST["eventType"], trim($_REQUEST["eventCode"]));
@@ -790,6 +793,7 @@ class Playlists extends MenuItem {
                 <select id='track-type-pick'>
                    <option value='tag-entry'>Tag ID</option>
                    <option value='manual-entry'>Manual</option>
+                   <option value='comment-entry'>Comment</option>
                    <?php echo $nmeOpts; ?>
                 </select>
             </div>
@@ -829,6 +833,12 @@ class Playlists extends MenuItem {
                         <input id='track-label' />
                     </div>
                 </div>
+                <div id='comment-entry' class='zk-hidden' >
+                    <div>
+                        <label style='vertical-align: top'>Comment:</label>
+                        <textarea wrap=virtual id='comment-data' rows=4></textarea>
+                    </div>
+                </div>
                 <div id='nme-entry' class='zk-hidden' >
                     <div>
                         <label>Name/ID:</label>
@@ -864,6 +874,7 @@ class Playlists extends MenuItem {
             function clearUserInput(clearTagInfo) {
                 var mode = $("#track-type-pick").val();
                 $("#manual-entry input").val('');
+                $("#comment-entry input").val('');
                 $("#track-title-pick").val('0');
                 $("#error-msg").text('');
                 $("#tag-status").text('');
@@ -878,8 +889,13 @@ class Playlists extends MenuItem {
                     tagId = "";
                 }
 
-                if (mode == 'manual-entry') {
+                switch(mode) {
+                case 'manual-entry':
                     $('#track-artist').focus();
+                    break;
+                case 'comment-entry':
+                    $('#comment-data').focus();
+                    break;
                 }
             }
 
@@ -909,6 +925,8 @@ class Playlists extends MenuItem {
                     $("#manual-entry input[required]").each(function() {
                         isEmpty = isEmpty || $(this).val().length == 0;
                     });
+                } else if (entryMode == 'comment-entry') {
+                    isEmpty = $('#comment-data').val().length == 0;
                 } else if (entryMode == NME_ENTRY) {
                     isEmpty = $('#nme-id').val().length == 0;
                 }
@@ -993,6 +1011,11 @@ class Playlists extends MenuItem {
                 setAddButtonState(haveAll);
             });
 
+            $("#comment-entry textarea").on('input', function() {
+                var haveAll = haveAllUserInput();
+                setAddButtonState(haveAll);
+            });
+
             $("#nme-entry input").on('input', function() {
                 var haveAll = haveAllUserInput();
                 setAddButtonState(haveAll);
@@ -1008,6 +1031,9 @@ class Playlists extends MenuItem {
                     type = <?php echo PlaylistEntry::TYPE_LOG_EVENT; ?>;
                     eventType = getEventType(trackType);
                     eventCode = $("#nme-id").val();
+                } else if (trackType == 'comment-entry') {
+                    type = <?php echo PlaylistEntry::TYPE_COMMENT; ?>;
+                    comment = $("#comment-data").val();
                 } else {
                     type = <?php echo PlaylistEntry::TYPE_SPIN; ?>;
                     artist = $("#track-artist").val();
@@ -1026,7 +1052,8 @@ class Playlists extends MenuItem {
                     album: album,
                     track: track,
                     eventType: eventType,
-                    eventCode: eventCode
+                    eventCode: eventCode,
+                    comment: comment
                 };
 
                 $.ajax({
@@ -1112,6 +1139,7 @@ class Playlists extends MenuItem {
       $entry = new PlaylistEntry($album);
       $sep = $id && $entry->isType(PlaylistEntry::TYPE_SET_SEPARATOR);
       $event = $id && $entry->isType(PlaylistEntry::TYPE_LOG_EVENT);
+      $comment = $id && $entry->isType(PlaylistEntry::TYPE_COMMENT);
     ?>
       <P CLASS="header"><?php echo $id?"Editing highlighted":"Adding";?> <?php
       switch($entry->getType()) {
@@ -1121,6 +1149,9 @@ class Playlists extends MenuItem {
       case PlaylistEntry::TYPE_LOG_EVENT:
           echo "program log entry";
           break;
+          case PlaylistEntry::TYPE_COMMENT:
+          echo "comment";
+          break;
       default:
           echo "track";
           break;
@@ -1129,6 +1160,13 @@ class Playlists extends MenuItem {
     <?php if($sep) { ?>
       <INPUT TYPE=HIDDEN NAME=separator VALUE="true">
       <TABLE>
+    <?php } else if($comment) { ?>
+      <INPUT TYPE=HIDDEN NAME=comment VALUE="true">
+      <TABLE CELLPADDING=0 CELLSPACING=0>
+        <TR>
+          <TD ALIGN=RIGHT STYLE='vertical-align: top'>Comment:</TD>
+          <TD ALIGN=LEFT><TEXTAREA WRAP=VIRTUAL NAME=ctext ROWS=4 STYLE='width: 280px !important'><?php echo htmlentities($entry->getComment()); ?></TEXTAREA></TD>
+        </TR>
     <?php } else if($event) { ?>
       <INPUT TYPE=HIDDEN NAME=logevent VALUE="true">
       <TABLE CELLPADDING=0 CELLSPACING=0>
@@ -1208,6 +1246,10 @@ class Playlists extends MenuItem {
                         "button=+Delete+&session=".$this->session->getSessionID()."&action=$this->action&playlist=$playlist&id=$id&seq=editForm");
         if($sep)
             UI::setFocus();
+        else if($event)
+            UI::setFocus("etype");
+        else if($comment)
+            UI::setFocus("ctext");
         else
             UI::setFocus(($album == "" || $album["tag"] == "")?"artist":"track");
     }
@@ -1289,6 +1331,7 @@ class Playlists extends MenuItem {
         $label = $_REQUEST["label"];
         $separator = $_REQUEST["separator"];
         $logevent = $_REQUEST["logevent"];
+        $comment = $_REQUEST["comment"];
     ?>
     <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
     <TR><TD>
@@ -1324,13 +1367,14 @@ class Playlists extends MenuItem {
             } else if($separator) {
                 $id = "";
                 $this->emitTagForm($playlist, "");
-            } else if(!$logevent && $artist == "") {
+            } else if(!$logevent && !$comment && $artist == "") {
                 $albuminfo = ["tag"=>$tag,
                               "artist"=>stripslashes($artist),
                               "album"=>stripslashes($album),
                               "label"=>stripslashes($label)];
                 $this->emitEditForm($playlist, $id, $albuminfo, stripslashes($track));
-            } else if(!$logevent && ($track == "") && ($ctrack == "")) {
+            } else if(!$logevent && !$comment &&
+                          ($track == "") && ($ctrack == "")) {
                 $albuminfo = ["tag"=>$tag,
                               "artist"=>stripslashes($artist),
                               "album"=>stripslashes($album),
@@ -1348,12 +1392,15 @@ class Playlists extends MenuItem {
                     }
                 }
                 if($id) {
-                    if($logevent)
+                    if($logevent || $comment) {
+                        $entry = (new PlaylistEntry())->setId($id);
+                        if($logevent)
+                            $entry->setLogEvent($_REQUEST["etype"], $_REQUEST["ecode"]);
+                        else
+                            $entry->setComment($_REQUEST["ctext"]);
                         Engine::api(IPlaylist::class)->updateTrackEntry($playlist,
-                                (new PlaylistEntry())->
-                                setId($id)->
-                                setLogEvent($_REQUEST["etype"], $_REQUEST["ecode"]));
-                    else
+                                $entry);
+                    } else
                         $this->updateTrack($playlist, $id, $tag, $artist, $track, $album, $label);
                     $id = "";
                 } else
@@ -1894,9 +1941,9 @@ class Playlists extends MenuItem {
                 $editCell = $editMode ? "<TD>" .
                     $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                 $timeplayed = self::timestampToAMPM($entry->getCreated());
-                echo "<TR class='commentRow'>" . $editCell .
+                echo "<TR class='commentRow".($editMode?"Edit":"")."'>" . $editCell .
                      "<TD>$timeplayed</TD>" .
-                     "<TD COLSPAN=4>".$entry->getComment()."</TD></TR>\n";
+                     "<TD COLSPAN=4>".(new \Parsedown())->line(nl2br(htmlentities($entry->getComment())))."</TD>";
                 $break = false;
             })->onLogEvent(function($entry) use($playlist, $editMode, &$break) {
                 if($this->session->isAuth("u")) {

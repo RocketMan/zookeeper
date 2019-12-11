@@ -183,7 +183,6 @@ TD.ind {
     border-style: solid;
     border-width: 1px 1px 0px 1px;
     border-color: #cccccc;
-    font-family: verdana, arial, helvetica, sans-serif;
     font-size: 80%;
     background-color: #eeeeee;
     color: #000000;
@@ -192,7 +191,6 @@ TD.ind {
     border-style: solid;
     border-width: 0px 1px 1px 1px;
     border-color: #cccccc;
-    font-family: verdana, arial, helvetica, sans-serif;
     font-size: 80%;
     color: #000000;
 }
@@ -321,21 +319,18 @@ P.zktitle A {
 
 /* secondary navigation */
 .linkhead:active {
-    font-family: verdana, arial, helvetica, sans-serif;
     font-size: 100%;
     font-weight: bold;
     color: #cc0000;
     text-decoration: none;
 }
 .linkhead:link {
-    font-family: verdana, arial, helvetica, sans-serif;
     font-size: 100%;
     font-weight: bold;
     color: #ffffff;
     text-decoration: none;
 }
 .linkhead:visited {
-    font-family: verdana, arial, helvetica, sans-serif;
     font-size: 100%;
     font-weight: bold;
     color: #ffffff;
@@ -366,7 +361,6 @@ P.zktitle A {
 
 /* general */
 .playlistBanner {
-    font-family: verdana, arial, helvetica, sans-serif;
     font-size: 11pt;
     font-weight: bold;
     color: white;
@@ -388,7 +382,6 @@ P.zktitle A {
 }
 
 .home-onnow, TH {
-    font-family: verdana, arial, helvetica, sans-serif;
     font-size: 11pt;
     font-weight: bold;
     color: #000000;
@@ -472,6 +465,12 @@ TH.sec {
     width: 300px;
     box-sizing: border-box;
     height: 24px;
+    margin-bottom: 4px;
+}
+
+.pl-form-entry textarea {
+    width: 300px;
+    box-sizing: border-box;
     margin-bottom: 4px;
 }
 
@@ -643,11 +642,24 @@ A.calLink {
 }
 
 .logEntry TD:not(:nth-of-type(1)) {
-    /* log entry non-time details in view playlist (not editor) */
-    border-top: 1px solid #686868;
-    border-bottom: 1px solid #686868;
+    /* log entry details in view playlist (not editor) */
 }
 
 .logEntryEdit TD:nth-of-type(n+3) {
-    /* log entry non-time details in playlist editor */
+    /* log entry details in playlist editor */
+}
+
+.commentRow, .commentRow TD,
+.commentRowEdit, .commentRowEdit TD {
+    /* entire comment row */
+}
+
+.commentRow TD:not(:nth-of-type(1)) {
+    /* comment details in view playlist (not editor) */
+    background-color: #ffffcc;
+    font-size: small;
+}
+
+.commentRowEdit TD:nth-of-type(n+3) {
+    /* comment details in playlist editor */
 }
