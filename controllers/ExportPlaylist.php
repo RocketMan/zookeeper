@@ -30,6 +30,8 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
 
+use ZK\UI\UICommon as UI;
+
 class ExportPlaylist extends CommandTarget implements IController {
     private static $actions = [
         [ "html", "emitHTML" ],
@@ -199,7 +201,7 @@ class ExportPlaylist extends CommandTarget implements IController {
     <?php 
         // Print the tracks
         $observer = (new PlaylistObserver())->onComment(function($entry) use(&$break) {
-            echo "    <TR><TD COLSPAN=4>".(new \Parsedown())->line(nl2br(htmlentities($entry->getComment())))."</TD></TR>\n";
+            echo "    <TR><TD COLSPAN=4>".UI::markdown($entry->getComment())."</TD></TR>\n";
             $break = false;
         })->onLogEvent(function($entry) use(&$break) {
             if(!$break) {
