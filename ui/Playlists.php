@@ -199,7 +199,7 @@ class Playlists extends MenuItem {
             $entry = (new PlaylistEntry())->setSetSeparator();
             break;
         case PlaylistEntry::TYPE_COMMENT:
-            $entry = (new PlaylistEntry())->setComment(trim($_REQUEST["comment"]));
+            $entry = (new PlaylistEntry())->setComment(substr(trim($_REQUEST["comment"]), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
             break;
         case PlaylistEntry::TYPE_LOG_EVENT:
             $entry = (new PlaylistEntry())->setLogEvent(
@@ -836,7 +836,8 @@ class Playlists extends MenuItem {
                 <div id='comment-entry' class='zk-hidden' >
                     <div>
                         <label style='vertical-align: top'>Comment:</label>
-                        <textarea wrap=virtual id='comment-data' rows=4></textarea>
+                        <textarea wrap=virtual id='comment-data' rows=4 maxlength=<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> required></textarea>
+                        <span class='remaining' id='remaining'>(0/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)</span>
                     </div>
                 </div>
                 <div id='nme-entry' class='zk-hidden' >
@@ -1085,6 +1086,11 @@ class Playlists extends MenuItem {
                 submitTrack(true);
             });
 
+            $("#comment-data").on('keyup', function(e) {
+                len = this.value.length;
+                $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
+            });
+
             $("#track-tag").on('keyup', function(e) {
                 showUserError('');
                 if (e.keyCode == 13) {
@@ -1165,7 +1171,11 @@ class Playlists extends MenuItem {
       <TABLE CELLPADDING=0 CELLSPACING=0>
         <TR>
           <TD ALIGN=RIGHT STYLE='vertical-align: top'>Comment:</TD>
-          <TD ALIGN=LEFT><TEXTAREA WRAP=VIRTUAL NAME=ctext ROWS=4 STYLE='width: 280px !important'><?php echo htmlentities($entry->getComment()); ?></TEXTAREA></TD>
+          <TD ALIGN=LEFT><TEXTAREA WRAP=VIRTUAL NAME=ctext id=ctext ROWS=4 MAXLENGTH=<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> STYLE='width: 280px !important' REQUIRED><?php
+              $comment = $entry->getComment();
+              $len = strlen($comment);
+              echo htmlentities($comment); ?></TEXTAREA><span class='remaining' id='remaining'>(<?php echo $len."/".PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)</span>
+</TD>
         </TR>
     <?php } else if($event) { ?>
       <INPUT TYPE=HIDDEN NAME=logevent VALUE="true">
@@ -1239,10 +1249,19 @@ class Playlists extends MenuItem {
       </TR>
       </TABLE>
       </FORM>
+      <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
+            $("#ctext").on('keyup', function(e) {
+                len = this.value.length;
+                $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
+            });
+    <?php ob_end_flush(); ?>
+      // -->
+      </SCRIPT>
     <?php 
         if($id)
             $this->emitConfirm("Delete",
-                        "Delete this track?",
+                        "Delete this entry?",
                         "button=+Delete+&session=".$this->session->getSessionID()."&action=$this->action&playlist=$playlist&id=$id&seq=editForm");
         if($sep)
             UI::setFocus();
@@ -1397,7 +1416,7 @@ class Playlists extends MenuItem {
                         if($logevent)
                             $entry->setLogEvent($_REQUEST["etype"], $_REQUEST["ecode"]);
                         else
-                            $entry->setComment($_REQUEST["ctext"]);
+                            $entry->setComment(substr(trim($_REQUEST["ctext"]), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
                         Engine::api(IPlaylist::class)->updateTrackEntry($playlist,
                                 $entry);
                     } else
@@ -1943,7 +1962,7 @@ class Playlists extends MenuItem {
                 $timeplayed = self::timestampToAMPM($entry->getCreated());
                 echo "<TR class='commentRow".($editMode?"Edit":"")."'>" . $editCell .
                      "<TD>$timeplayed</TD>" .
-                     "<TD COLSPAN=4>".(new \Parsedown())->line(nl2br(htmlentities($entry->getComment())))."</TD>";
+                     "<TD COLSPAN=4>".UI::markdown($entry->getComment())."</TD>\n";
                 $break = false;
             })->onLogEvent(function($entry) use($playlist, $editMode, &$break) {
                 if($this->session->isAuth("u")) {

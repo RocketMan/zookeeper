@@ -180,7 +180,7 @@ class Reviews extends MenuItem {
                 if($this->session->getUser() == $row[4])
                     echo "  <TR COLSPAN=3><TD><FONT SIZE=-1><A HREF=\"?session=".$this->session->getSessionID()."&amp;action=searchReviewEdit&amp;tag=$tag\">[This is my review and I want to edit it]</A></FONT></TD></TR>\n";
                 echo "  <TR><TD COLSPAN=3 CLASS=\"review\">\n";
-                echo (new \Parsedown())->line(nl2br(htmlentities($row[2])));
+                echo UI::markdown($row[2]);
                 echo "\n  </TD></TR>\n";
             }
     

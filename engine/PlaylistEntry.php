@@ -49,6 +49,9 @@ class PlaylistEntry {
     const TYPE_LOG_EVENT = 2;
     const TYPE_SET_SEPARATOR = 3;
 
+    const MAX_COMMENT_LENGTH = 240;
+
+
     protected $entry = [];
 
 

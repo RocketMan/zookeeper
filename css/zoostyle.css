@@ -67,13 +67,13 @@ BODY {
     font-family: Helvetica, Verdana, Arial, sans-serif;
     line-height: 1.2;
 }
-H2 {
+H1 {
     font-size: 16pt;
     margin-top: 0px;
     padding-top: 0px;
     margin-bottom: 10px;
 }
-H3, .subhead  {
+H2, .subhead  {
     color: #d83d04;
     font-size: 14pt;
     font-weight: bold;
@@ -101,6 +101,7 @@ OL, UL {
     display: block;
     margin: 1.12em 0;
     margin-left: 30px;
+    padding-left: 0px;
 }
 OL UL, UL OL, UL UL, OL OL {
     margin-top: 0;
@@ -446,7 +447,7 @@ TH.sec {
 .zk-hidden {
     display: none;
 }
-.track-info {
+.track-info, .remaining {
     color: gray;
 }
 .track-error {
@@ -656,7 +657,6 @@ A.calLink {
 
 .commentRow TD:not(:nth-of-type(1)) {
     /* comment details in view playlist (not editor) */
-    background-color: #ffffcc;
     font-size: small;
 }
 

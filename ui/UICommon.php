@@ -118,11 +118,23 @@ class UICommon {
                preg_replace("{/[^/]+$}", "/", $uri);
     }
     
-    public static function startsWith ($string, $startString) 
-    { 
+    public static function startsWith($string, $startString) {
         $len = strlen($startString); 
         return (substr($string, 0, $len) === $startString); 
-    } 
+    }
+
+    /**
+     * return the specified markdown as html
+     *
+     * html found in the input text is automatically escaped;
+     * newlines are automatically converted to line breaks.
+     */
+    public static function markdown($text) {
+        return \Parsedown::instance()->
+               setBreaksEnabled(true)->
+               setSafeMode(true)->
+               text($text);
+    }
 
     /**
      * encode the specified argument for inclusion in a URL

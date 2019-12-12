@@ -312,7 +312,7 @@ class Main implements IController {
 
     protected function emitLoginValidate() {
         if($this->session->isAuth("u")) {
-            echo "       <H3>login successful</H3>\n";
+            echo "       <H2>login successful</H2>\n";
             if($this->session->isAuth("g"))
                 echo "   <P><B>IMPORTANT:  This login can be used ONLY at the station.</B></P>\n";
             Editor::emitQueueHook($this->session);
@@ -327,7 +327,7 @@ class Main implements IController {
 
         $dn = $this->session->getDN()?$this->session->getDN():$this->dn;
     
-        echo "<H3>$dn logged out</H3>\n";
+        echo "<H2>$dn logged out</H2>\n";
         if($this->ssoUser) {
             echo "<SCRIPT TYPE=\"text/javascript\"><!--\n";
             echo "function setFocus() {";

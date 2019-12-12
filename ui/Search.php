@@ -676,7 +676,7 @@ function setFocus() {
             if(!$closed)
                 echo $this->closeList();
         } else {
-            echo "<H3>No albums found</H3>\n";
+            echo "<H2>No albums found</H2>\n";
             if($this->exactMatch)
                 echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
         }
@@ -811,7 +811,7 @@ function setFocus() {
             if(!$closed)
                 echo $this->closeList();
         } else {
-            echo "<H3>No albums found</H3>\n";
+            echo "<H2>No albums found</H2>\n";
         }
     }
     
@@ -967,7 +967,7 @@ function setFocus() {
             if(!$closed)
                 echo $this->closeList();
         } else {
-            echo "<H3>No tracks found</H3>\n";
+            echo "<H2>No tracks found</H2>\n";
             if($this->exactMatch)
                 echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
         }
@@ -1052,7 +1052,7 @@ function setFocus() {
             if(!$closed)
                 echo $this->closeList();
         } else {
-            echo "<H3>No labels found</H3>\n";
+            echo "<H2>No labels found</H2>\n";
             if($this->exactMatch)
                 echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
         }

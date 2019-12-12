@@ -33,7 +33,7 @@ use ZK\UI\UICommon as UI;
 
 class Home extends MenuItem {
     public function processLocal($action, $subaction) {
-        echo "<H2>". Engine::param('station'). " Music :: " . Engine::param('application') . "</H2>\n";
+        echo "<H1>". Engine::param('station'). " Music :: " . Engine::param('application') . "</H1>\n";
         $requestLine = Engine::param('contact')['request'];
         if ($requestLine)
             echo "<div class='home-hdr'><label>Request Line:</label> $requestLine</div>";
