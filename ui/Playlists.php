@@ -1023,7 +1023,7 @@ class Playlists extends MenuItem {
             });
             
             function submitTrack(addSeparator) {
-                var artist, label, album, track, type, eventType, eventCode;
+                var artist, label, album, track, type, eventType, eventCode, comment;
                 var trackType =  $("#track-type-pick").val();
 
                 if (addSeparator) {
