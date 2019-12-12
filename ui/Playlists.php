@@ -1086,7 +1086,7 @@ class Playlists extends MenuItem {
                 submitTrack(true);
             });
 
-            $("#comment-data").on('keyup', function(e) {
+            $("#comment-data").on('input propertychange', function(e) {
                 len = this.value.length;
                 $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
             });
@@ -1251,7 +1251,7 @@ class Playlists extends MenuItem {
       </FORM>
       <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     <?php ob_start([\JSMin::class, 'minify']); ?>
-            $("#ctext").on('keyup', function(e) {
+            $("#ctext").on('input propertychange', function(e) {
                 len = this.value.length;
                 $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
             });
