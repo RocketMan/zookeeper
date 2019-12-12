@@ -1962,7 +1962,8 @@ class Playlists extends MenuItem {
                 $timeplayed = self::timestampToAMPM($entry->getCreated());
                 echo "<TR class='commentRow".($editMode?"Edit":"")."'>" . $editCell .
                      "<TD>$timeplayed</TD>" .
-                     "<TD COLSPAN=4>".UI::markdown($entry->getComment())."</TD>\n";
+                     "<TD COLSPAN=4>".UI::markdown($entry->getComment()).
+                     "</TD></TR>\n";
                 $break = false;
             })->onLogEvent(function($entry) use($playlist, $editMode, &$break) {
                 if($this->session->isAuth("u")) {
