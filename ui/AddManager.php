@@ -723,6 +723,7 @@ class AddManager extends MenuItem {
         if($validate) {
             // Add the album
             $emitted = false;
+            $catstr = "";
             for($i=0; $i<16; $i++)
                 if($_POST["cat".$i]) {
                     if($emitted) $catstr .= ",";
