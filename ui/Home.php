@@ -40,7 +40,7 @@ class Home extends MenuItem {
 
         $musicDirEmail = Engine::param('email')['md'];
         $musicDirName = Engine::param('md_name');
-        echo "<div class='home-hdr'><label>Music Director:</label><A HREF='mailto: $musicDirEmail'> $musicDirName</A></div>";
+        echo "<div class='home-hdr'><label>Music Director:</label> <A HREF='mailto: $musicDirEmail'>$musicDirName</A></div>";
 
         $this->emitWhatsOnNow();
         $this->emitTopPlays();

@@ -285,6 +285,7 @@ class API extends CommandTarget implements IController {
                         })->onSpin(function($entry) use(&$events) {
                             $spin = $entry->asArray();
                             $spin["type"] = "track";
+                            $spin["artist"] = UI::swapNames($spin["artist"]);
                             $events[] = $spin;
                         }));
                     $this->emitDataSetArray("event", API::PLAYLIST_DETAIL_FIELDS, $events);

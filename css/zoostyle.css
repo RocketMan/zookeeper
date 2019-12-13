@@ -153,7 +153,7 @@ TD.ind {
 }
 
 .home-datetime {
-    font-size: 12px;
+/*    font-size: 12px;*/
     padding-top: 4px;
     padding-bottom: 4px;
 }
@@ -319,6 +319,9 @@ P.zktitle A {
 .nav3s { color: #d83d04; font-size: 80%; }
 
 /* secondary navigation */
+.linkhead {
+    font-family: verdana, arial, helvetica, sans-serif;
+}
 .linkhead:active {
     font-size: 100%;
     font-weight: bold;
