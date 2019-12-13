@@ -318,7 +318,7 @@ class API extends CommandTarget implements IController {
                             }
                         })->onSpin(function($entry) use(&$break) {
                             echo "<track";
-                            $artist = $entry->getArtist();
+                            $artist = UI::swapNames($entry->getArtist());
                             if($artist)
                                 echo " artist=\"".self::spec2hexAttr(stripslashes($artist))."\"";
                             $track = $entry->getTrack();
@@ -370,7 +370,7 @@ class API extends CommandTarget implements IController {
 
         $attrs = $this->addSuccess();
         $attrs["tag"] = $key;
-        $attrs["artist"] = $artist;
+        $attrs["artist"] =  UI::swapNames($artist);
         $attrs["album"] = $albums[0]["album"];
         $attrs["label"] = $label;
         $attrs["collection"] = Search::GENRES[$albums[0]["category"]];

@@ -971,7 +971,7 @@ class Playlists extends MenuItem {
                     $("#track-title").val("");
                     $("#track-submit").attr("disabled");
                     $("#track-submit").prop("disabled", true);
-                    $("#tag-artist").text(diskInfo.artist  + '-' + diskInfo.album);
+                    $("#tag-artist").text(diskInfo.artist  + ' - ' + diskInfo.album);
 
                 }).fail(function (jqXHR, textStatus, errorThrown) {
                     showUserError('Ajax error: ' + textStatus);
@@ -1996,9 +1996,7 @@ class Playlists extends MenuItem {
                     $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                 $timeplayed = self::timestampToAMPM($entry->getCreated());
                 $reviewCell = $entry->getReviewed() ? "<div class='albumReview'></div>" : "";
-                $artistName = $entry->getArtist();
-                if ($entry->getTag()) // don't swap manual entries
-                    $artistName = UI::swapNames($artistName);
+                $artistName = UI::swapNames($entry->getArtist());
 
                 $albumLink = $this->makeAlbumLink($entry, true);
                 echo "<TR class='songRow'>" . $editCell .
