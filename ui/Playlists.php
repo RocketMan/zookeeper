@@ -1015,6 +1015,9 @@ class Playlists extends MenuItem {
             $("#comment-entry textarea").on('input', function() {
                 var haveAll = haveAllUserInput();
                 setAddButtonState(haveAll);
+
+                len = this.value.length;
+                $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
             });
 
             $("#nme-entry input").on('input', function() {
@@ -1084,11 +1087,6 @@ class Playlists extends MenuItem {
 
             $("#track-separator").click(function(e) {
                 submitTrack(true);
-            });
-
-            $("#comment-data").on('input propertychange', function(e) {
-                len = this.value.length;
-                $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
             });
 
             $("#track-tag").on('keyup', function(e) {
@@ -1168,7 +1166,7 @@ class Playlists extends MenuItem {
       <TABLE>
     <?php } else if($comment) { ?>
       <INPUT TYPE=HIDDEN NAME=comment VALUE="true">
-      <TABLE CELLPADDING=0 CELLSPACING=0>
+      <TABLE>
         <TR>
           <TD ALIGN=RIGHT STYLE='vertical-align: top'>Comment:</TD>
           <TD ALIGN=LEFT><TEXTAREA WRAP=VIRTUAL NAME=ctext id=ctext ROWS=4 MAXLENGTH=<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> STYLE='width: 280px !important' REQUIRED><?php
@@ -1179,7 +1177,7 @@ class Playlists extends MenuItem {
         </TR>
     <?php } else if($event) { ?>
       <INPUT TYPE=HIDDEN NAME=logevent VALUE="true">
-      <TABLE CELLPADDING=0 CELLSPACING=0>
+      <TABLE>
         <TR>
           <TD ALIGN=RIGHT>Type:</TD><TD ALIGN=LEFT><SELECT NAME=etype STYLE='width: 290px !important'>
 <?php
@@ -1199,14 +1197,14 @@ class Playlists extends MenuItem {
           <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=ecode MAXLENGTH=80 required VALUE="<?php echo htmlentities($entry->getLogEventCode());?>" CLASS=input STYLE='width: 280px !important'></TD>
         </TR>
     <?php } else if($album == "" || $album["tag"] == "") { ?>
-      <TABLE CELLPADDING=0 CELLSPACING=0>
+      <TABLE>
         <TR>
           <TD ALIGN=RIGHT>Artist:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=artist MAXLENGTH=80 VALUE="<?php echo htmlentities($album?$album["artist"]:"");?>" CLASS=input SIZE=40></TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=artist MAXLENGTH=80 VALUE="<?php echo htmlentities($album?$album["artist"]:"");?>" CLASS=input SIZE=40 REQUIRED></TD>
         </TR>
         <TR>
           <TD ALIGN=RIGHT>Track:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=track MAXLENGTH=80 VALUE="<?php echo htmlentities($track);?>" CLASS=input SIZE=40></TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=track MAXLENGTH=80 VALUE="<?php echo htmlentities($track);?>" CLASS=input SIZE=40 REQUIRED></TD>
         </TR>
         <TR>
           <TD ALIGN=RIGHT>Album:</TD>
@@ -2402,4 +2400,3 @@ class ZKCalendar extends \Calendar {
         return $link;
     }
 }
-
