@@ -1186,7 +1186,7 @@ class Playlists extends MenuItem {
           <TD ALIGN=LEFT><TEXTAREA WRAP=VIRTUAL NAME=ctext id=ctext ROWS=4 MAXLENGTH=<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> STYLE='width: 280px !important' REQUIRED><?php
               $comment = $entry->getComment();
               $len = strlen(str_replace("\r\n", "\n", $comment));
-              echo htmlentities($comment); ?></TEXTAREA><span class='remaining' id='remaining'>(<?php echo $len."/".PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)</span>
+              echo htmlentities($comment); ?></TEXTAREA><div style='display: inline-block;'><span class='remaining' id='remaining'>(<?php echo $len."/".PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)</span><br/><a id='markdown-help-link' href='#'>formatting help</a></div>
 </TD>
         </TR>
     <?php } else if($event) { ?>
@@ -1260,12 +1260,24 @@ class Playlists extends MenuItem {
           </TD>
       </TR>
       </TABLE>
+    <?php UI::markdownHelp(); ?>
       </FORM>
       <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     <?php ob_start([\JSMin::class, 'minify']); ?>
             $("#ctext").on('input', function(e) {
                 var len = this.value.length;
                 $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
+            });
+
+            $("#markdown-help-link").click(function() {
+                if($("#markdown-help").is(":visible")) {
+                    $("#markdown-help").hide();
+                    $("#markdown-help-link").text("formatting help");
+                } else {
+                    $("#markdown-help").css('padding-left','80px');
+                    $("#markdown-help").show();
+                    $("#markdown-help-link").text("hide help");
+                }
             });
     <?php ob_end_flush(); ?>
       // -->
