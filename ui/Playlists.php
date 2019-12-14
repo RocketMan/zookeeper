@@ -895,6 +895,7 @@ class Playlists extends MenuItem {
                     $('#track-artist').focus();
                     break;
                 case 'comment-entry':
+                    $("#remaining").html("(0/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
                     $('#comment-data').focus();
                     break;
                 }
@@ -1247,8 +1248,8 @@ class Playlists extends MenuItem {
       </FORM>
       <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     <?php ob_start([\JSMin::class, 'minify']); ?>
-            $("#ctext").on('input propertychange', function(e) {
-                len = this.value.length;
+            $("#ctext").on('input', function(e) {
+                var len = this.value.length;
                 $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
             });
     <?php ob_end_flush(); ?>
