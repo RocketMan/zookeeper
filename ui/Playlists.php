@@ -875,7 +875,7 @@ class Playlists extends MenuItem {
             function clearUserInput(clearTagInfo) {
                 var mode = $("#track-type-pick").val();
                 $("#manual-entry input").val('');
-                $("#comment-entry input").val('');
+                $("#comment-entry textarea").val('');
                 $("#track-title-pick").val('0');
                 $("#error-msg").text('');
                 $("#tag-status").text('');
@@ -1013,11 +1013,9 @@ class Playlists extends MenuItem {
             });
 
             $("#comment-entry textarea").on('input', function() {
-                var haveAll = haveAllUserInput();
-                setAddButtonState(haveAll);
-
-                len = this.value.length;
+                var len = this.value.length;
                 $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
+                setAddButtonState(len > 0);
             });
 
             $("#nme-entry input").on('input', function() {
