@@ -136,6 +136,23 @@ class UICommon {
                text($text);
     }
 
+    public static function markdownHelp() { ?>
+
+        <div id='markdown-help' class='markdown-help'>
+          <table>
+            <tr><th>type this:</th><th>to get this:</th></tr>
+            <tr><td>*italics*</td><td><I>italics</I></td></tr>
+            <tr><td>**bold**</td><td><b>bold</b></td></tr>
+            <tr><td>* item 1<br>* item 2<br>* item 3</td><td><ul><li>item 1</li><li>item 2</li><li>item 3</li></ul></td></tr>
+            <tr><td>1. item 1<br>2. item 2<br>3. item 3</td><td><ol><li>item 1</li><li>item 2</li><li>item 3</li></ol></td></tr>
+            <tr><td>## heading</td><td><H2>heading</H2></td></tr>
+            <tr><td style="font-size: small;">[RocketMan](https://github.com/RocketMan)</td><td><A HREF="https://github.com/RocketMan">RocketMan</A></td></tr>
+          </table>
+        </div>
+
+<?php
+    }
+
     /**
      * encode the specified argument for inclusion in a URL
      *

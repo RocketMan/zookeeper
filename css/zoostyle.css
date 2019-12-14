@@ -666,3 +666,23 @@ A.calLink {
 .commentRowEdit TD:nth-of-type(n+3) {
     /* comment details in playlist editor */
 }
+
+.markdown-help {
+    padding: 10px 0px;
+    display: none;
+}
+
+.markdown-help table,
+.markdown-help table td,
+.markdown-help table th {
+    border: 1px solid #333;
+    background-color: #ffc;
+    padding: 2px 10px;
+    min-width: 180px;
+    text-align: left;
+}
+
+.markdown-help table th {
+    background-color: #333;
+    color: white;
+}

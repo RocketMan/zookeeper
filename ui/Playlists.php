@@ -837,8 +837,12 @@ class Playlists extends MenuItem {
                     <div>
                         <label style='vertical-align: top'>Comment:</label>
                         <textarea wrap=virtual id='comment-data' rows=4 maxlength=<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> required></textarea>
-                        <span class='remaining' id='remaining'>(0/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)</span>
+                        <div style='display: inline-block;'>
+                            <span class='remaining' id='remaining'>(0/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)</span><br/>
+                            <a id='markdown-help-link' href='#'>formatting help</a>
+                        </div>
                     </div>
+                    <?php UI::markdownHelp(); ?>
                 </div>
                 <div id='nme-entry' class='zk-hidden' >
                     <div>
@@ -1017,6 +1021,17 @@ class Playlists extends MenuItem {
                 var len = this.value.length;
                 $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
                 setAddButtonState(len > 0);
+            });
+
+            $("#markdown-help-link").click(function() {
+                if($("#markdown-help").is(":visible")) {
+                    $("#markdown-help").hide();
+                    $("#markdown-help-link").text("formatting help");
+                } else {
+                    $("#markdown-help").css('padding-left','80px');
+                    $("#markdown-help").show();
+                    $("#markdown-help-link").text("hide help");
+                }
             });
 
             $("#nme-entry input").on('input', function() {
