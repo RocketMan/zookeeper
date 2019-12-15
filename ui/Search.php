@@ -506,25 +506,22 @@ function setFocus() {
       <TR><TD>
         <TABLE CELLPADDING=2>
           <TR>
-            <TD ALIGN=RIGHT><B>Search the Library by:</B></TD>
+            <TD ALIGN=RIGHT><B>Search by:</B></TD>
             <TD><INPUT TYPE=RADIO NAME=s VALUE="byArtist"<?php echo $chkArtist;?>>Artist</TD>
             <TD><INPUT TYPE=RADIO NAME=s VALUE="byAlbum"<?php echo $chkAlbum;?>>Album</TD>
             <TD><INPUT TYPE=RADIO NAME=s VALUE="byTrack"<?php echo $chkTrack;?>>Track</TD>
             <TD><INPUT TYPE=RADIO NAME=s VALUE="byLabel"<?php echo $chkLabel;?>>Label</TD>
           </TR>
           <TR>
-            <TD ALIGN=RIGHT>For:</TD>
-            <TD COLSPAN=4><INPUT TYPE=TEXT NAME=n<?php echo $searchFor;?> SIZE=40 CLASS=input autocomplete=off></TD>
+            <TD ALIGN=RIGHT><b>For:</b></TD>
+            <TD COLSPAN=4><INPUT TYPE=TEXT NAME=n<?php echo $searchFor;?> SIZE=35 CLASS=input autocomplete=off></TD>
           </TR>
           <TR>
-            <TD ALIGN=RIGHT>Results per page:</TD>
-            <TD><SELECT NAME=q>
-              <OPTION<?php echo $o_ten;?>>10
-              <OPTION<?php echo $o_fifteen;?>>15
-              <OPTION<?php echo $o_twenty;?>>20
-              <OPTION<?php echo $o_fifty;?>>50</SELECT></TD>
-            <TD COLSPAN=2><INPUT TYPE=CHECKBOX NAME=m VALUE=1<?php echo $chkExact;?>>Exact match only</TD>
-            <TD ALIGN=RIGHT><INPUT TYPE=SUBMIT VALUE="Search"></TD>
+            <TD></TD>
+            <TD><INPUT TYPE=SUBMIT VALUE="Search"></TD>
+            <TD COLSPAN=2><INPUT TYPE=CHECKBOX NAME=m VALUE=1<?php echo $chkExact;?>>Exact match</TD>
+            <!-- fix page size to 50 -->
+            <TD><input type='hidden' name='q' value=50></input></TD>
           </TR>
         </TABLE>
       </TD></TR>
@@ -532,10 +529,8 @@ function setFocus() {
     <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="search">
     </FORM>
+    <BR>
     <?php 
-        if($title)
-            echo "<BR>\n<TABLE WIDTH=\"100%\"><TR><TH ALIGN=LEFT CLASS=\"subhead\">$title</TH></TR></TABLE>\n";
-    
         UI::setFocus("n");
     }
     
@@ -548,7 +543,7 @@ function setFocus() {
                 if($this->noTables)
                     echo "<PRE><B>Artist               Album                Coll    Medium  Label               </B>\n";
                 else
-                    echo "<TABLE CELLPADDING=2>\n  <TR><TH>Artist</TH><TH></TH><TH>Album</TH><TH>Collection</TH><TH COLSPAN=2>Medium</TH><TH>Add Date</TH><TH>Label</TH></TR>\n";
+                    echo "<TABLE class='searchTable' CELLPADDING=2><THEAD><TR><TH >Artist</TH><TH></TH><TH>Album</TH><TH>Collection</TH><TH COLSPAN=2>Media</TH><TH>Added</TH><TH>Label</TH></TR></THEAD>\n";
                 $opened = 1;
             }
             $count++;
@@ -576,15 +571,9 @@ function setFocus() {
             echo $this->HTMLify($albums[$i]["artist"], 20) . "</A>";
             // Album
             if(!$this->noTables) {
-                echo "</TD><TD>";
-                if($albums[$i]["reviewed"])
-                        echo "<A CLASS=\"albumReview\" HREF=\"".
-                             "?s=byAlbumKey&amp;n=". UI::URLify($albums[$i]["tag"]).
-                             "&amp;q=". $this->maxresults.
-                             "&amp;action=search&amp;session=".$this->session->getSessionID().
-                             "\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A></TD><TD>";
-                else
-                    echo "</TD><TD>";
+                $divClass = $albums[$i]["reviewed"] ? "albumReview" : "albumNoReview";
+
+                echo "</TD><TD style='padding: 0 0 0 6px'><div class='$divClass'></div></TD><TD>";
             }
             echo "<A HREF=\"".
                                "?s=byAlbumKey&amp;n=". UI::URLify($albums[$i]["tag"]).
@@ -678,7 +667,7 @@ function setFocus() {
         } else {
             echo "<H2>No albums found</H2>\n";
             if($this->exactMatch)
-                echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
+                echo "Hint: Uncheck \"Exact match\" box to broaden search.";
         }
     }
     
@@ -849,7 +838,7 @@ function setFocus() {
                     # 20 20 20 7 7
                     echo "<PRE><B>Artist               Album                Track Name           Coll    Medium  </B>\n";
                 else
-                    echo "<TABLE CELLPADDING=2>\n  <TR><TH>Artist</TH><TH></TH><TH>Album</TH><TH>Track Name</TH><TH>Collection</TH><TH COLSPAN=2>Medium</TH><TH>Label</TH></TR>\n";
+                    echo "<TABLE class='searchTable' CELLPADDING=2><THEAD><TR><TH>Artist</TH><TH></TH><TH>Album</TH><TH>Track</TH><TH>Collection</TH><TH COLSPAN=2>Media</TH><TH>Label</TH></TR></THEAD>\n";
                 $opened = 1;
             }
             $count++;
@@ -873,15 +862,9 @@ function setFocus() {
                 echo $this->HTMLify($artistName, 20), "</A>";
                 // Album
                 if(!$this->noTables) {
-                    echo "</TD><TD>";
-                    if($tracks[$i]["reviewed"])
-                        echo "<A CLASS=\"albumReview\" HREF=\"".
-                             "?s=byAlbumKey&amp;n=". UI::URLify($tracks[$i]["tag"]).
-                             "&amp;q=". $this->maxresults.
-                             "&amp;action=search&amp;session=".$this->session->getSessionID().
-                             "\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A></TD><TD>";
-                    else
-                        echo "</TD><TD>";
+                    $divClass = $albums[$i]["reviewed"] ? "albumReview" : "albumNoReview";
+
+                    echo "</TD><TD style='padding: 0 0 0 6px'><div class='$divClass'></div></TD><TD>";
                 }
                 echo "<A HREF=\"".
                                "?s=byAlbumKey&amp;n=". UI::URLify($album[0]["tag"]).
@@ -969,7 +952,7 @@ function setFocus() {
         } else {
             echo "<H2>No tracks found</H2>\n";
             if($this->exactMatch)
-                echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
+                echo "Hint: Uncheck \"Exact match\" box to broaden search.";
         }
     }
     
@@ -984,7 +967,7 @@ function setFocus() {
                     # 20 20 12
                     echo "<PRE><B>Name                 Location             Last Updated</B>\n";
                 else
-                    echo "<TABLE CELLPADDING=2>\n  <TR><TH>Name</TH><TH COLSPAN=2>Location</TH><TH>Last Updated</TH></TR>\n";
+                    echo "<TABLE class='searchTable' CELLPADDING=2><THEAD><TR><TH>Name</TH><TH COLSPAN=2>Location</TH><TH>Last Updated</TH></TR></THEAD>\n";
                 $opened = 1;
             }
             // Name
@@ -1054,7 +1037,7 @@ function setFocus() {
         } else {
             echo "<H2>No labels found</H2>\n";
             if($this->exactMatch)
-                echo "Hint: Uncheck \"Exact match only\" box to broaden search.";
+                echo "Hint: Uncheck \"Exact match\" box to broaden search.";
         }
     }
     
