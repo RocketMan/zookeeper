@@ -561,6 +561,15 @@ A.calLink {
     color: #000000;
     background-color: #cccccc;
 }
+
+/* base styling for tables that show list data, eg tracks.
+ */
+.searchTable {
+    text-align:left;
+}
+.searchTable > thead > tr {
+    border-bottom: 1px solid gray;
+}
 .songUp, .sortUp {
     top: 0px;
     background-position: center;
