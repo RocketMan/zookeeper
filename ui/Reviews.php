@@ -180,7 +180,7 @@ class Reviews extends MenuItem {
                 if($this->session->getUser() == $row[4])
                     echo "  <TR COLSPAN=3><TD><FONT SIZE=-1><A HREF=\"?session=".$this->session->getSessionID()."&amp;action=searchReviewEdit&amp;tag=$tag\">[This is my review and I want to edit it]</A></FONT></TD></TR>\n";
                 echo "  <TR><TD COLSPAN=3 CLASS=\"review\">\n";
-                echo UI::markdown($row[2]);
+                echo nl2br(htmlentities($row[2]));
                 echo "\n  </TD></TR>\n";
             }
     
@@ -375,7 +375,7 @@ class Reviews extends MenuItem {
                           <INPUT TYPE=RADIO NAME=private VALUE=1<?php if($_REQUEST["private"])echo " CHECKED";?>>Private</TD></TR>
       <TR><TD COLSPAN=2>
         <SPAN CLASS=input><TEXTAREA WRAP=VIRTUAL NAME=review COLS=50 ROWS=20>
-<?php echo htmlentities($review);?></TEXTAREA></SPAN>
+<?php echo htmlentities($review);?></TEXTAREA></SPAN><BR>
       </TD></TR>
       <TR><TD ALIGN=LEFT COLSPAN=2>
     <?php 
@@ -387,33 +387,17 @@ class Reviews extends MenuItem {
           <INPUT TYPE=SUBMIT NAME=button VALUE=" Post Review! ">
     <?php    $email = " CHECKED";
            } ?>
-      <span style='float: right;'><a id='markdown-help-link' href='#'>formatting help</a></span>
       </TD></TR>
       <TR><TD ALIGN=LEFT COLSPAN=2>
         <INPUT TYPE=CHECKBOX NAME=noise<?php echo $email;?>>E-mail review to Noise
       </TD></TR>
     </TABLE>
-    <?php UI::markdownHelp(); ?>
     <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=created VALUE="<?php echo $_REQUEST["created"];?>">
     <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $_REQUEST["tag"];?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="searchReviewEdit">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </FORM>
-        <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-            $("#markdown-help-link").click(function() {
-                if($("#markdown-help").is(":visible")) {
-                    $("#markdown-help").hide();
-                    $("#markdown-help-link").text("formatting help");
-                } else {
-                    $("#markdown-help").show();
-                    $("#markdown-help-link").text("hide help");
-                }
-            });
-    <?php ob_end_flush(); ?>
-        // -->
-        </SCRIPT>
     <?php 
         UI::setFocus("review");
     }
