@@ -199,7 +199,7 @@ class Playlists extends MenuItem {
             $entry = (new PlaylistEntry())->setSetSeparator();
             break;
         case PlaylistEntry::TYPE_COMMENT:
-            $entry = (new PlaylistEntry())->setComment(substr(trim(str_replace("\r\n", "\n", $_REQUEST["comment"])), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
+            $entry = (new PlaylistEntry())->setComment(mb_substr(trim(str_replace("\r\n", "\n", $_REQUEST["comment"])), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
             break;
         case PlaylistEntry::TYPE_LOG_EVENT:
             $entry = (new PlaylistEntry())->setLogEvent(
@@ -1185,7 +1185,7 @@ class Playlists extends MenuItem {
           <TD ALIGN=RIGHT STYLE='vertical-align: top'>Comment:</TD>
           <TD ALIGN=LEFT><TEXTAREA WRAP=VIRTUAL NAME=ctext id=ctext ROWS=4 MAXLENGTH=<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> STYLE='width: 280px !important' REQUIRED><?php
               $comment = $entry->getComment();
-              $len = strlen(str_replace("\r\n", "\n", $comment));
+              $len = mb_strlen(str_replace("\r\n", "\n", $comment));
               echo htmlentities($comment); ?></TEXTAREA><div style='display: inline-block;'><span class='remaining' id='remaining'>(<?php echo $len."/".PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)</span><br/><a id='markdown-help-link' href='#'>formatting help</a></div>
 </TD>
         </TR>
@@ -1440,7 +1440,7 @@ class Playlists extends MenuItem {
                         if($logevent)
                             $entry->setLogEvent($_REQUEST["etype"], $_REQUEST["ecode"]);
                         else
-                            $entry->setComment(substr(trim(str_replace("\r\n", "\n", $_REQUEST["ctext"])), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
+                            $entry->setComment(mb_substr(trim(str_replace("\r\n", "\n", $_REQUEST["ctext"])), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
                         Engine::api(IPlaylist::class)->updateTrackEntry($playlist,
                                 $entry);
                     } else

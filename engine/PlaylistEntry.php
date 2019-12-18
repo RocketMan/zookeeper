@@ -133,16 +133,16 @@ class PlaylistEntry {
      */
     public function setComment($comment) {
         $this->entry['artist'] = IPlaylist::SPECIAL_TRACK . IPlaylist::COMMENT_FLAG;
-        if(strlen($comment) < 80) {
+        if(mb_strlen($comment) < 80) {
             $this->entry['track'] = $comment;
         } else {
-            $this->entry['track'] = substr($comment, 0, 80);
-            $rest = substr($comment, 80);
-            if(strlen($rest) < 80) {
+            $this->entry['track'] = mb_substr($comment, 0, 80);
+            $rest = mb_substr($comment, 80);
+            if(mb_strlen($rest) < 80) {
                 $this->entry['album'] = $rest;
             } else {
-                $this->entry['album'] = substr($rest, 0, 80);
-                $this->entry['label'] = substr($rest, 80);
+                $this->entry['album'] = mb_substr($rest, 0, 80);
+                $this->entry['label'] = mb_substr($rest, 80);
             }
         }
         return $this;
