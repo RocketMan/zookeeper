@@ -1990,16 +1990,16 @@ class Playlists extends MenuItem {
                      "</TD></TR>\n";
                 $break = false;
             })->onLogEvent(function($entry) use($playlist, $editMode, &$break) {
+                $timeplayed = self::timestampToAMPM($entry->getCreated());
                 if($this->session->isAuth("u")) {
                     // display log entries only for authenticated users
                     $editCell = $editMode ? "<TD>" .
                         $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
-                    $timeplayed = self::timestampToAMPM($entry->getCreated());
                     echo "<TR class='logEntry".($editMode?"Edit":"")."'>" . $editCell .
                          "<TD>$timeplayed</TD>" .
                          "<TD>".$entry->getLogEventType()."</TD>" .
-                         "<TD>".$entry->getLogEventCode()."</TD>" .
-                         "<TD></TD><TD></TD></TR>\n";
+                         "<TD COLSPAN=3>".$entry->getLogEventCode()."</TD>" .
+                         "</TR>\n";
                     $break = false;
                 } else if(!$break) {
                     echo "<TR class='songDivider'>" . $editCell .
