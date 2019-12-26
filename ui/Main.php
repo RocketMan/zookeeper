@@ -167,15 +167,17 @@ class Main implements IController {
         case "ssoError":
             $this->emitLogin($action);
             break;
-        case "loginValidate":
-            $this->emitLoginValidate();
-            break;
         case "ssoOptions":
             $this->doSSOOptionsPage();
             break;
         case "logout":
             $this->emitLogout();
             break;
+        case "loginValidate":
+            if(!$this->emitLoginValidate())
+                break;
+            // login validation successful
+            // fall through...
         case "invalidAction":
             // user is not authorized for requested action
             // treat as unknown action and display home page
@@ -310,14 +312,15 @@ class Main implements IController {
     }
 
     protected function emitLoginValidate() {
+        $success = false;
         if($this->session->isAuth("u")) {
-            echo "       <H2>login successful</H2>\n";
             if($this->session->isAuth("g"))
                 echo "   <P><B>IMPORTANT:  This login can be used ONLY at the station.</B></P>\n";
             Editor::emitQueueHook($this->session);
-            UI::setFocus();
+            $success = true;
         } else
             $this->emitLogin("badCredentials");
+        return $success;
     }
     
     protected function emitLogout() {
