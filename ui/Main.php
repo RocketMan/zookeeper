@@ -154,9 +154,6 @@ class Main implements IController {
     }
     
     protected function emitMain($dispatcher, $action, $subaction) {
-        echo "<TABLE WIDTH=\"100%\" CELLPADDING=0 CELLSPACING=0>\n";
-        echo "<TR><TD>\n";
-        echo "</TD></TR>\n<TR><TD>\n";
         switch($action) {
         case "login":
             $this->emitLogin();
@@ -188,8 +185,6 @@ class Main implements IController {
             $dispatcher->dispatch($action, $subaction, $this->session);
             break;
         }
-        echo "</TD></TR>\n";
-        echo "</TABLE>\n";
     }
 
     protected function emitBodyHeader($dispatcher) {

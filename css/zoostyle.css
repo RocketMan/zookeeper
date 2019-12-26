@@ -276,6 +276,7 @@ DIV.headerLogo IMG {
     width: 200px;
 }
 DIV.content {
+    position: relative;
     float: right;
     width: 710px;
     padding: 10px;
