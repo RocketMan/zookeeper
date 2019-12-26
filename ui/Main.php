@@ -58,7 +58,7 @@ class Main implements IController {
                 !$dispatcher->isActionAuth($_REQUEST["action"], $this->session) &&
                 $_REQUEST["action"] != "loginValidate" &&
                 $_REQUEST["action"] != "logout") {
-            $_REQUEST["action"] = "invalidSession";
+            $_REQUEST["action"] = "invalidAction";
          }
         
         // Setup/teardown a session
@@ -179,6 +179,10 @@ class Main implements IController {
         case "logout":
             $this->emitLogout();
             break;
+        case "invalidAction":
+            // user is not authorized for requested action
+            // treat as unknown action and display home page
+            // fall through...
         default:
             // dispatch action
             $dispatcher->dispatch($action, $subaction, $this->session);

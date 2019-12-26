@@ -100,7 +100,7 @@ class Dispatcher {
      */
     public function isActionAuth($action, $session) {
         $entry = $this->match($action);
-        return $entry && $session->isAuth($entry[0]);
+        return !$entry || $session->isAuth($entry[0]);
     }
 
     /**

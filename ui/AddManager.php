@@ -1150,7 +1150,7 @@ class AddManager extends MenuItem {
 
             if ($showDate != $lastDate && $showStart != $DAY_END_TIME) {
                 if ($lastShowEnd && $lastShowEnd != $DAY_END_TIME) {
-                    echo "<TR CLASS='noPlaylist'><TD>" . $lastDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $DAY_END_TIME . "</span></TD><TD COLSPAN=7>No playlist</TD></TR>";
+                    echo "<TR CLASS='noPlaylist'><TD>" . $lastDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $DAY_END_TIME . "</span></TD><TD COLSPAN=6>No playlist</TD></TR>";
                 }
                 $lastShowEnd = $DAY_START_TIME;
             }
@@ -1199,7 +1199,7 @@ class AddManager extends MenuItem {
             $percent = round($afile / $total * 100);
 
         echo "<TR style='border-top: 2px solid gray'>";
-        echo "<TH COLSPAN=5 ALIGN=RIGHT>Total:</TH>";
+        echo "<TH COLSPAN=4 ALIGN=RIGHT>Total:</TH>";
         echo "<TH>" . $total . "</TH>";
         echo "<TH>" . $afile . "</TH>";
         echo "<TH>" . $percent . "</TH>";
