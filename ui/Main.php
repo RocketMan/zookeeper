@@ -54,15 +54,19 @@ class Main implements IController {
 
     protected function preProcessRequest($dispatcher) {
         // Validate the requested action is authorized
-        if(!empty($_REQUEST["session"]) && !empty($_REQUEST["action"]) &&
-                !$dispatcher->isActionAuth($_REQUEST["action"], $this->session) &&
-                $_REQUEST["action"] != "loginValidate" &&
-                $_REQUEST["action"] != "logout") {
+        $action = $_REQUEST["action"];
+        $session = $_REQUEST["session"];
+
+        if(!empty($session) && !empty($action) &&
+                !$dispatcher->isActionAuth($action, $this->session) &&
+                $action != "loginValidate" &&
+                $action != "logout") {
             $_REQUEST["action"] = "invalidSession";
+            $action = "invalidSession";
          }
         
         // Setup/teardown a session
-        switch($_REQUEST["action"]) {
+        switch($action) {
         case "loginValidate":
             if(!$this->session->isAuth("u"))
                 $this->doLogin($_REQUEST["user"], $_REQUEST["password"]);
@@ -312,11 +316,12 @@ class Main implements IController {
 
     protected function emitLoginValidate() {
         if($this->session->isAuth("u")) {
-            echo "       <H2>login successful</H2>\n";
             if($this->session->isAuth("g"))
                 echo "   <P><B>IMPORTANT:  This login can be used ONLY at the station.</B></P>\n";
             Editor::emitQueueHook($this->session);
-            UI::setFocus();
+            $home = new Home();
+            $home->session = $this->session;
+            $home->processLocal("", "");
         } else
             $this->emitLogin("badCredentials");
     }
