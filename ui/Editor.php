@@ -866,14 +866,28 @@ class Editor extends MenuItem {
         echo "<SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\"><!--\n";
         ob_start([\JSMin::class, 'minify']);
     ?>
-nonalnum='.,!?&~ -+={[(|';
+nonalnum=/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/;
+stopwords=/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i;
 function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
-  val=control.value;
-  newVal='';
-  for(i=0; i<val.length; i++)
-  newVal += (i==0 || nonalnum.indexOf(val.charAt(i-1),0) >= 0)?val.charAt(i).toUpperCase():val.charAt(i).toLowerCase();
-  if(<?php echo !$moveThe?"!track && ":"";?>newVal.substr(0, 4) == 'The ') newVal=newVal.substr(4)+', The';
-  control.value=newVal;
+    var val=control.value;
+    var newVal=val.split(nonalnum).map(function(word, index, array) {
+        // words starting with caps are kept as-is
+        if(word.search(/^[A-Z]+/) > -1)
+            return word;
+
+        // stopwords are not capitalized, unless first or last
+        if(word.search(stopwords) > -1 &&
+                index !== 0 &&
+                index !== array.length - 1)
+            return word.toLowerCase();
+
+        // otherwise, capitalize the word
+        return word.charAt(0).toUpperCase() +
+               word.substr(1).toLowerCase();
+    }).join('');
+    if(<?php echo !$moveThe?"!track && ":"";?>newVal.substr(0, 4) == 'The ')
+        newVal=newVal.substr(4)+', The';
+    control.value=newVal;
 }
     <?php 
         ob_end_flush();
