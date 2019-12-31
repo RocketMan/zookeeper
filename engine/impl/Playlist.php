@@ -213,9 +213,19 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $observer->observe(new PlaylistEntry($track));
     }
 
+   public function isNowWithinShow($listRow) {
+        $nowDateTime = new \DateTime("now");
+        return $this->isWithinShow($nowDateTime, $listRow);
+   }
+
+   public function isDateTimeWithinShow($timeStamp, $listRow) {
+        $dateTime = new \DateTime($timestamp);
+        return $this->isWithinShow($dateTime, $listRow);
+   }
+           
     // return true if "now" is within the show start/end time & date.
     // NOTE: this routine must be tolerant of improperly formatted dates.
-    public function isWithinShow($listRow) {
+    public function isWithinShow($dateTime, $listRow) {
         $TIME_FORMAT = "Y-m-d Gi"; // eg, 2019-01-01 1234
         $retVal = false;
 
@@ -229,12 +239,11 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                 $end = \DateTime::createFromFormat($TIME_FORMAT, $timeStr2);
 
                 if ($start && $end) {
-                    $now = new \DateTime("now");
-                    $retVal = (($now > $start) && ($now < $end));
+                    $retVal = (($dateTime >= $start) && ($dateTime <= $end));
                 }
             }
         } catch (Throwable $t) {
-            ;
+            error_log("Error: invalid date $t");
         }
         return $retVal;
     }
@@ -245,7 +254,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
 
         // log time iff 'now' is within playlist start/end time.
-        $doTimestamp = $wantTimestamp && $this->isWithinShow($row);
+        $doTimestamp = $wantTimestamp && $this->isNowWithinShow($row);
         $timeName    = $doTimestamp ? "created, " : "";
         $timeValue   = $doTimestamp ? "NOW(), "   : "";
 
@@ -275,15 +284,25 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
     
     // update track and set created if it is currently null, eg first edit
-    // of a track following a CSV import.
-    public function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label) {
+    // of a track following a CSV import (unless dateTimeStr is within show bounds
+    // then use it, eg time change to an NME.
+    public function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label, $dateTimeStr) {
+        $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
         $trackRow  = Engine::api(IPlaylist::class)->getTrack($id);
         $timestamp = $trackRow['created'];
-        if ($timestamp == null) {
-            $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
-            if ($this->isWithinShow($playlist))
-                $timestamp = date('Y-m-d G:i:s');
+        $timeChanged = false;
+
+        if (strlen($dateTimeStr) > 0) {
+            if ($this->isDateTimeWithinShow($dateTimeStr, $playlist)) {
+                $timestamp = $dateTimeStr;
+                $timeChanged = true;
+            } else {
+                error_log("Error: ignoring time update for $id, $dateTime");
+            }
         }
+        
+        if ($timestamp == null && $this->isNowWithinShow($playlist))
+                $timestamp = date('Y-m-d G:i:s');
         
         $query = "UPDATE tracks SET ";
         $query .= "artist=?, " .
@@ -306,6 +325,10 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         } else
             $stmt->bindValue(6, (int)$id, \PDO::PARAM_INT);
 
+        //TODO: add method to reorder track if time changed.
+        if ($timeChanged)
+            error_log("TODO: reoder playlist to match the new spin time");
+
         return $stmt->execute();
     }
 
@@ -318,12 +341,15 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
 
     public function updateTrackEntry($playlist, PlaylistEntry $entry) {
-        return $this->updateTrack($playlist, $entry->getId(),
+        $createdDate = $entry->getCreated();
+        $success = $this->updateTrack($playlist, $entry->getId(),
                                       $entry->getTag(),
                                       $entry->getArtist(),
                                       $entry->getTrack(),
                                       $entry->getAlbum(),
-                                      $entry->getLabel());
+                                      $entry->getLabel(),
+                                      $entry->getCreated());
+        return $track;
     }
     
     public function deleteTrack($id) {

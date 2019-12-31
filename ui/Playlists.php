@@ -155,6 +155,17 @@ class Playlists extends MenuItem {
         return $x;
     }
  
+    // return time portion of YYYY-MM-DD HH:MM:SS as HH:MM for use in HTML
+    // timepicker.
+    private function getTimepickerTime($isoTime) {
+        $ISO_TIME_LENGTH = 19;
+        $retVal = trim($isoTime);
+        if (strlen($retVal) == $ISO_TIME_LENGTH)
+            $retVal = substr($isoTime, 11, 5);
+
+        return $retVal;
+    }
+
     // convert HHMM or (H)H:MM pairs into ZK time range, eg HHMM-HHMM
     // return range string if valid else empty string.
     private function composeTime($fromTime, $toTime) {
@@ -1153,8 +1164,10 @@ class Playlists extends MenuItem {
         echo "      </SELECT>\n";
     }
     
-    private function emitEditForm($playlist, $id, $album, $track) {
+    private function emitEditForm($playlistId, $id, $album, $track) {
       $entry = new PlaylistEntry($album);
+      $showTimeAr = null; // populate only for NME edits
+      $showTimeRange = "";
       $sep = $id && $entry->isType(PlaylistEntry::TYPE_SET_SEPARATOR);
       $event = $id && $entry->isType(PlaylistEntry::TYPE_LOG_EVENT);
       $comment = $id && $entry->isType(PlaylistEntry::TYPE_COMMENT);
@@ -1165,6 +1178,13 @@ class Playlists extends MenuItem {
           echo "set separator";
           break;
       case PlaylistEntry::TYPE_LOG_EVENT:
+          $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
+          $showTimeAr = $this->zkTimeRangeToISOTimeAr($playlist['showtime']);
+          $startAMPM = self::timestampToAMPM($showTimeAr[0]);
+          //TODO: don't let end time exceed now.
+          $endAMPM = self::timestampToAMPM($showTimeAr[1]);
+          $showTimeRange = "$startAMPM - $endAMPM";
+          $timepickerTime = $this->getTimepickerTime($entry->getCreated());
           echo "program log entry";
           break;
           case PlaylistEntry::TYPE_COMMENT:
@@ -1210,6 +1230,13 @@ class Playlists extends MenuItem {
           <TD ALIGN=RIGHT>Name/ID:</TD>
           <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=ecode MAXLENGTH=80 required VALUE="<?php echo htmlentities($entry->getLogEventCode());?>" CLASS=input STYLE='width: 280px !important'></TD>
         </TR>
+        <TR>
+          <TD ALIGN=RIGHT>Time:</TD>
+          <TD ALIGN=LEFT>
+              <INPUT class='timepicker' NAME=etime step='60' required type='time' value="<?php echo $timepickerTime ?>" min="<?php echo $showTimeAr[0] ?>" max="<?php echo $showTimeAr[1] ?>" /> <span style='font-size:8pt;'>(<?php echo $showTimeRange ?>)</span>
+              <INPUT type='hidden' NAME='edate' value="<?php echo $playlist['showdate'] ?>" />
+          </TD>
+        </TR>
     <?php } else if($album == "" || $album["tag"] == "") { ?>
       <TABLE>
         <TR>
@@ -1253,7 +1280,7 @@ class Playlists extends MenuItem {
               <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
     <?php } ?>
               <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
-              <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
+              <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
               <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action;?>">
               <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $album["tag"];?>">
               <INPUT TYPE=HIDDEN NAME=seq VALUE="editForm">
@@ -1338,7 +1365,7 @@ class Playlists extends MenuItem {
     
     private function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label) {
         // Run the query
-        Engine::api(IPlaylist::class)->updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label);
+        Engine::api(IPlaylist::class)->updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label, null);
     }
     
     private function deleteTrack($id) {
@@ -1441,6 +1468,10 @@ class Playlists extends MenuItem {
                             $entry->setLogEvent($_REQUEST["etype"], $_REQUEST["ecode"]);
                         else
                             $entry->setComment(substr(trim(str_replace("\r\n", "\n", $_REQUEST["ctext"])), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
+
+                        $timestamp = $_REQUEST["edate"] . " " . $_REQUEST["etime"] . ":00";
+                        $entry->setCreated($timestamp);
+
                         Engine::api(IPlaylist::class)->updateTrackEntry($playlist,
                                 $entry);
                     } else
