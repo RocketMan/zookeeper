@@ -310,7 +310,7 @@ class Charts extends MenuItem {
             $startDate = $chartAPI->getMonthlyChartStart(1, $dstart);
             $endDate = $chartAPI->getMonthlyChartEnd(12, $dend);
             $name = "$dstart - $dend";
-            if($endDate - $earliestYear < 10)
+            if($dend - $earliestYear < 10)
                 $name .= " (based on available data)";
             echo "<P CLASS=\"header\">$station Top 100 for the decennium $name</P>\n";
             $monthly = 0;
