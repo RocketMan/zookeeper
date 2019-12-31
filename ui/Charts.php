@@ -224,10 +224,15 @@ class Charts extends MenuItem {
         $month = $_REQUEST["month"];
         $day = $_REQUEST["day"];
         $cyear = $_REQUEST["cyear"];
+        $dnum = $_REQUEST["dnum"];
+
+        $config = Engine::param('chart');
+        $earliestYear = array_key_exists('earliest_chart_year', $config)?
+            (int)$config['earliest_chart_year']:2003;
     
         $monthly = 1;
     
-        if(!$cyear && !$month) {
+        if(!$dnum && !$cyear && !$month) {
             if(!$year) {
                 // current year
                 $today = getdate(time());
@@ -258,15 +263,25 @@ class Charts extends MenuItem {
                         continue;
                     }
     
-                    $genYearChart = 0;
+                    $genDecChart = $genYearChart = 0;
                     list($y, $m, $d) = explode("-", $week["week"]);
     
                     if($year != $y) {
                         if($year)
                             echo "      </UL>\n    </TD></TR>\n";
+                        if($m == 12 && $y % 10 == 9) {
+                            $genDecChart = 1;
+                            $dnum = intdiv($y, 10);
+                            $dstart = $y - 9;
+                            $name = ($dstart % 100)?"$dstart's":"noughties";
+                            if($y - $earliestYear < 10)
+                                $name .= " (based on available data)";
+                            echo "    <TR><TH CLASS=\"header\" ALIGN=LEFT>Amalgamated charts $dstart - $y</TH></TR>\n    <TR><TD>\n      <UL>\n";
+                            echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=amalgamated&amp;dnum=$dnum&amp;session=".$this->session->getSessionID()."\">Top 100 for the decennium that was the $name</A>\n      </UL><UL>\n";
+                        }
                         echo "    <TR><TH CLASS=\"header\" ALIGN=LEFT>Amalgamated charts $y</TH></TR>\n    <TR><TD>\n      <UL>\n";
     
-                        if($y >= 2003 &&  // first year we have charts for full year
+                        if($y >= $earliestYear &&  // first year we have charts for full year
                                 $m == 12)
                             $genYearChart = 1;
                         $year = $y;
@@ -288,8 +303,18 @@ class Charts extends MenuItem {
             UI::setFocus();
             return;
         }
-    
-        if($cyear) {
+
+        if($dnum) {
+            $dstart = (int)$dnum * 10;
+            $dend = $dstart + 9;
+            $startDate = $chartAPI->getMonthlyChartStart(1, $dstart);
+            $endDate = $chartAPI->getMonthlyChartEnd(12, $dend);
+            $name = "$dstart - $dend";
+            if($endDate - $earliestYear < 10)
+                $name .= " (based on available data)";
+            echo "<P CLASS=\"header\">$station Top 100 for the decennium $name</P>\n";
+            $monthly = 0;
+        } else if($cyear) {
             $startDate = $chartAPI->getMonthlyChartStart(1, $cyear);
             $endDate = $chartAPI->getMonthlyChartEnd(12, $cyear);
             echo "<P CLASS=\"header\">$station Top 100 for the year $cyear</P>\n";
@@ -311,7 +336,7 @@ class Charts extends MenuItem {
     // monthly = hip hop, reggae/world, jazz, blues, country, heavy shit, dance
     //     limit to 60 main, 10/cat
     
-        if($cyear) {
+        if($dnum || $cyear) {
             $mainLimit = "100";
             $catLimit = "30";
         } else {
@@ -326,7 +351,7 @@ class Charts extends MenuItem {
         if($this->session->isAuth("r"))
             $this->emitChart($startDate, $endDate, $catLimit, "9"); // reggae
         $this->emitChart($startDate, $endDate, $catLimit, "6"); // jazz
-        if($monthly || $cyear) {
+        if($monthly || $cyear || $dnum) {
             $this->emitChart($startDate, $endDate, $catLimit, "1"); // blues
             $this->emitChart($startDate, $endDate, $catLimit, "2"); // country
         }
