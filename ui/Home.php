@@ -44,7 +44,7 @@ class Home extends MenuItem {
 
         $this->emitWhatsOnNow();
         $this->emitTopPlays();
-        echo "<div style='border:0; margin-top:16px' CLASS='subhead'>For complete album charting, see our ";
+        echo "<div style='border:0; position:absolute; bottom:0px' CLASS='subhead'>For complete album charting, see our ";
         echo "<A CLASS='subhead' HREF='?session=".$this->session->getSessionID()."&amp;action=viewChart'><B>Airplay Charts</B></A></div>";
     }
 
@@ -80,7 +80,7 @@ class Home extends MenuItem {
           echo ($numweeks == 1)?"week":"$numweeks week period";
           echo " ending $formatEndDate</FONT></TH><TD ALIGN=RIGHT STYLE=\"vertical-align: bottom;\"></TR></TABLE>";
 
-          echo "<TABLE class='top-albums'><TR style='border-bottom:1px solid gray'><TH></TH><TH ALIGN=LEFT COLSPAN=2>Artist</TH><TH ALIGN=LEFT>Album</TH><TH ALIGN=LEFT>Label</TH></TR>\n";
+          echo "<TABLE width='100%' class='top-albums'><TR style='border-bottom:1px solid gray'><TH></TH><TH ALIGN=LEFT COLSPAN=2>Artist</TH><TH ALIGN=LEFT>Album/Label</TH></TR>\n";
           for($i=0; $i < sizeof($topPlays); $i++) {
              $tagId = $topPlays[$i]["tag"];
              $artist = $topPlays[$i]["artist"];
@@ -96,7 +96,7 @@ class Home extends MenuItem {
 
              $artist = UI::HTMLify($artist, 20);
              echo "<TR>";
-             echo "<TD style='padding-right:4px' ALIGN=RIGHT>".(string)($i + 1).".</TD>";
+             echo "<TD style='font-weight:bold; padding-right:0px' ALIGN=LEFT>".(string)($i + 1).".</TD>";
              echo "<TD>$artist</TD>";
 
              $reviewClass = $haveReview ? "albumReview" : "albumNoReview";
@@ -106,9 +106,7 @@ class Home extends MenuItem {
              echo "<TD>" .
                   "<A CLASS='nav' HREF='?s=byAlbumKey&amp;n=" . UI::URLify($tagId).
                   "&amp;action=search&amp;session=" . $this->session->getSessionID(). "'>".
-                  "$album</A></TD>";
-
-             echo "<TD>$label</TD>";
+                  "$album</A> / $label </TD>";
              echo "</TR>\n";
           }
           echo "</TABLE>\n";

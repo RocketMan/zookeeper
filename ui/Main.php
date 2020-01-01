@@ -58,7 +58,7 @@ class Main implements IController {
                 !$dispatcher->isActionAuth($_REQUEST["action"], $this->session) &&
                 $_REQUEST["action"] != "loginValidate" &&
                 $_REQUEST["action"] != "logout") {
-            $_REQUEST["action"] = "invalidSession";
+            $_REQUEST["action"] = "invalidAction";
          }
         
         // Setup/teardown a session
@@ -154,9 +154,6 @@ class Main implements IController {
     }
     
     protected function emitMain($dispatcher, $action, $subaction) {
-        echo "<TABLE WIDTH=\"100%\" CELLPADDING=0 CELLSPACING=0>\n";
-        echo "<TR><TD>\n";
-        echo "</TD></TR>\n<TR><TD>\n";
         switch($action) {
         case "login":
             $this->emitLogin();
@@ -170,22 +167,26 @@ class Main implements IController {
         case "ssoError":
             $this->emitLogin($action);
             break;
-        case "loginValidate":
-            $this->emitLoginValidate();
-            break;
         case "ssoOptions":
             $this->doSSOOptionsPage();
             break;
         case "logout":
             $this->emitLogout();
             break;
+        case "loginValidate":
+            if(!$this->emitLoginValidate())
+                break;
+            // login validation successful
+            // fall through...
+        case "invalidAction":
+            // user is not authorized for requested action
+            // treat as unknown action and display home page
+            // fall through...
         default:
             // dispatch action
             $dispatcher->dispatch($action, $subaction, $this->session);
             break;
         }
-        echo "</TD></TR>\n";
-        echo "</TABLE>\n";
     }
 
     protected function emitBodyHeader($dispatcher) {
@@ -311,14 +312,15 @@ class Main implements IController {
     }
 
     protected function emitLoginValidate() {
+        $success = false;
         if($this->session->isAuth("u")) {
-            echo "       <H2>login successful</H2>\n";
             if($this->session->isAuth("g"))
                 echo "   <P><B>IMPORTANT:  This login can be used ONLY at the station.</B></P>\n";
             Editor::emitQueueHook($this->session);
-            UI::setFocus();
+            $success = true;
         } else
             $this->emitLogin("badCredentials");
+        return $success;
     }
     
     protected function emitLogout() {

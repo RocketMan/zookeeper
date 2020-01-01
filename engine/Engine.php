@@ -109,7 +109,7 @@ class Engine {
         $dns = $db['driver'] .
                 ':host=' . $db['host'] .
                 ';dbname=' . $db[$databaseName] .
-                ';charset=utf8';
+                ';charset=utf8mb4';
         return new \PDO($dns, $db['user'], $db['pass']);
     }
 

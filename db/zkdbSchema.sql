@@ -36,7 +36,7 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
+/*!40101 SET NAMES utf8mb4 */;
 
 --
 -- Database: `zkdb`
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `airnames` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `airname_2` (`airname`),
   KEY `airname` (`airname`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
 
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS `albumvol` (
   KEY `pubkey` (`pubkey`),
   KEY `aat` (`artist`,`album`,`tag`),
   FULLTEXT KEY `artist_2` (`artist`,`album`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
 
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `categories` (
   `email` varchar(80) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `name` (`name`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 PACK_KEYS=1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 PACK_KEYS=1;
 
 -- --------------------------------------------------------
 
@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS `chartemail` (
   `address` varchar(255) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   KEY `chart` (`chart`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS `colltracknames` (
   KEY `artist` (`artist`),
   KEY `tag_2` (`tag`,`seq`),
   FULLTEXT KEY `artist_2` (`artist`,`track`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
 
@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS `currents` (
   KEY `adddate` (`adddate`),
   KEY `pulldate` (`pulldate`),
   KEY `category` (`category`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 PACK_KEYS=1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 PACK_KEYS=1 ;
 
 -- --------------------------------------------------------
 
@@ -176,8 +176,9 @@ CREATE TABLE IF NOT EXISTS `lists` (
   PRIMARY KEY (`id`),
   KEY `dj` (`dj`),
   KEY `showdate` (`showdate`),
-  KEY `airname` (`airname`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+  KEY `airname` (`airname`),
+  KEY `sa` (`showdate`, `airname`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
 
@@ -210,7 +211,7 @@ CREATE TABLE IF NOT EXISTS `plays` (
   KEY `tag` (`tag`),
   KEY `week` (`week`),
   KEY `category` (`category`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 PACK_KEYS=1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 PACK_KEYS=1 ;
 
 -- --------------------------------------------------------
 
@@ -241,7 +242,7 @@ CREATE TABLE IF NOT EXISTS `publist` (
   KEY `name` (`name`),
   KEY `np` (`name`,`pubkey`),
   FULLTEXT KEY `name_2` (`name`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
 
@@ -262,7 +263,7 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   KEY `tag` (`tag`),
   KEY `created` (`created`),
   FULLTEXT KEY `review` (`review`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
 
@@ -281,7 +282,7 @@ CREATE TABLE IF NOT EXISTS `sessions` (
   PRIMARY KEY (`id`),
   KEY `sessionkey` (`sessionkey`),
   KEY `logon` (`logon`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
 
@@ -296,7 +297,7 @@ CREATE TABLE IF NOT EXISTS `ssoredirect` (
   `created` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `sessionkey` (`sessionkey`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
 
@@ -313,7 +314,7 @@ CREATE TABLE IF NOT EXISTS `ssosetup` (
   `url` mediumtext,
   PRIMARY KEY (`id`),
   KEY `sessionkey` (`sessionkey`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
 
@@ -330,7 +331,7 @@ CREATE TABLE IF NOT EXISTS `tagqueue` (
   UNIQUE KEY `ut` (`user`,`tag`),
   KEY `user` (`user`),
   KEY `keyed` (`keyed`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
 
@@ -348,7 +349,7 @@ CREATE TABLE IF NOT EXISTS `tracknames` (
   KEY `track` (`track`),
   KEY `tag_2` (`tag`,`seq`),
   FULLTEXT KEY `track_2` (`track`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
 
@@ -370,7 +371,7 @@ CREATE TABLE IF NOT EXISTS `tracks` (
   KEY `tag` (`tag`),
   KEY `aal` (`artist`,`album`,`label`),
   FULLTEXT KEY `artist` (`artist`,`album`,`track`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
 
@@ -391,7 +392,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   UNIQUE KEY `ssoaccount` (`ssoaccount`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
