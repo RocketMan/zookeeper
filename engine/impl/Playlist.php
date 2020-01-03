@@ -189,6 +189,103 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $stmt->execute();
     }
 
+    private function populateSeq($list) {
+        $query = "SET @seq = 0; ".
+                 "UPDATE tracks SET seq = (@seq := @seq + 1) ".
+                 "WHERE list = ? ORDER BY id";
+         $stmt = $this->prepare($query);
+        $stmt->bindValue(1, (int)$list, \PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    private function getSeq($list, $id) {
+        $query = "SELECT seq FROM tracks WHERE id = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
+        $row = $this->executeAndFetch($stmt);
+        if(!$row || !$row['seq']) {
+            if($this->populateSeq($list))
+                $row = $this->executeAndFetch($stmt);
+        }
+        return $row?$row['seq']:false;
+    }
+
+    private function nextSeq($list) {
+        $query = "SELECT MAX(seq) max FROM tracks WHERE list = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $list);
+        $row = $this->executeAndFetch($stmt);
+        return $row && $row['max']?$row['max'] + 1:0;
+    }
+
+    public function moveTrack($list, $id, $toId) {
+        $fromSeq = $this->getSeq($list, $id);
+        $toSeq = $this->getSeq($list, $toId);
+        if($fromSeq && $toSeq) {
+            if($fromSeq < $toSeq) {
+                $setClause = "seq = seq - 1";
+                $whereClause = "seq > ? AND seq <= ?";
+            } else {
+                $setClause = "seq = seq + 1";
+                $whereClause = "seq < ? AND seq >= ?";
+            }
+            $query = "UPDATE tracks SET $setClause ".
+                     "WHERE $whereClause AND list = ?";
+             $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $fromSeq);
+            $stmt->bindValue(2, $toSeq);
+            $stmt->bindValue(3, $list);
+            if($stmt->execute()) {
+                $query = "UPDATE tracks SET seq = ? WHERE id = ?";
+                $stmt = $this->prepare($query);
+                $stmt->bindValue(1, $toSeq);
+                $stmt->bindValue(2, $id);
+                return $stmt->execute();
+            }
+        }
+        return false;
+    }
+
+    private function reorderForTime($list, $id, $timestamp) {
+        $curSeq = $this->getSeq($list, $id);
+
+        $query = "SELECT id FROM tracks ".
+                 "WHERE list = ? ".
+                 "AND created < ? ".
+                 "ORDER BY created DESC";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $list);
+        $stmt->bindValue(2, $timestamp);
+        $row = $this->executeAndFetch($stmt);
+        $lowid = $row?$row['id']:0;
+
+         if($lowid) {
+            $lowSeq = $this->getSeq($list, $lowid);
+            if($lowSeq > $curSeq) {
+                return $this->moveTrack($list, $id, $lowid + 1);
+            }
+        }
+
+        $query = "SELECT id FROM tracks ".
+                 "WHERE list = ? ".
+                 "AND created > ? ".
+                 "ORDER BY created";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $list);
+        $stmt->bindValue(2, $timestamp);
+        $row = $this->executeAndFetch($stmt);
+        $highid = $row?$row['id']:0;
+
+        if($highid) {
+            $highSeq = $this->getSeq($list, $highid);
+            if($highSeq < $curSeq) {
+                return $this->moveTrack($list, $id, $highid);
+            }
+        }
+
+        return true;
+    }
+
     public function getTrack($id) {
         $query = "SELECT tag, artist, track, album, label, id, created FROM tracks " .
                  "WHERE id = ?";
@@ -198,10 +295,10 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
     
     public function getTracks($playlist, $desc = 0) {
-        $query = "SELECT tag, artist, track, album, label, id, created FROM tracks " .
-                 "WHERE list = ? ORDER BY id";
         if($desc)
-            $query .= " DESC";
+            $desc = "DESC";
+        $query = "SELECT tag, artist, track, album, label, id, created FROM tracks " .
+                 "WHERE list = ? ORDER BY seq $desc, id $desc";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
         return $this->execute($stmt);
@@ -263,8 +360,8 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $tagName  = $haveTag ? ", tag" : "";
         $tagValue = $haveTag ? ", ?"   : "";
     
-        $names = "(" . $timeName . "list, artist, track, album, label " . $tagName . ")";
-        $values = " VALUES (" . $timeValue . "?, ?, ?, ?, ?" . $tagValue . ");";
+        $names = "(" . $timeName . "list, artist, track, album, label, seq " . $tagName . ")";
+        $values = " VALUES (" . $timeValue . "?, ?, ?, ?, ?, ?" . $tagValue . ");";
 
         $query = "INSERT INTO tracks " . ($names) . ($values);
         $stmt = $this->prepare($query);
@@ -273,8 +370,9 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $stmt->bindValue(3, $track);
         $stmt->bindValue(4, $album);
         $stmt->bindValue(5, $label);
+        $stmt->bindValue(6, $this->nextSeq($playlistId));
         if($haveTag)
-            $stmt->bindValue(6, $tag);
+            $stmt->bindValue(7, $tag);
 
         $updateStatus = $stmt->execute();
         if ($updateStatus == 1 && $doTimestamp)
@@ -286,24 +384,24 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     // update track and set created if it is currently null, eg first edit
     // of a track following a CSV import (unless dateTimeStr is within show bounds
     // then use it, eg time change to an NME.
-    public function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label, $dateTimeStr) {
+    public function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label, $dateTime) {
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
         $trackRow  = Engine::api(IPlaylist::class)->getTrack($id);
         $timestamp = $trackRow['created'];
         $timeChanged = false;
 
-        if (strlen($dateTimeStr) > 0) {
-            if ($this->isDateTimeWithinShow($dateTimeStr, $playlist)) {
-                $timestamp = $dateTimeStr;
+        if ($dateTime) {
+            if ($this->isDateTimeWithinShow($dateTime, $playlist)) {
+                $timestamp = $dateTime;
                 $timeChanged = true;
             } else {
                 error_log("Error: ignoring time update for $id, $dateTime");
             }
         }
-        
+
         if ($timestamp == null && $this->isNowWithinShow($playlist))
-                $timestamp = date('Y-m-d G:i:s');
-        
+            $timestamp = date('Y-m-d G:i:s');
+
         $query = "UPDATE tracks SET ";
         $query .= "artist=?, " .
                   "track=?, " .
@@ -325,11 +423,12 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         } else
             $stmt->bindValue(6, (int)$id, \PDO::PARAM_INT);
 
-        //TODO: add method to reorder track if time changed.
-        if ($timeChanged)
-            error_log("TODO: reoder playlist to match the new spin time");
+        if($stmt->execute()) {
+            return $timeChanged?
+                $this->reorderForTime($playlistId, $id, $timestamp):true;
+        }
 
-        return $stmt->execute();
+        return false;
     }
 
     public function insertTrackEntry($playlist, PlaylistEntry $entry, $wantTimestamp) {
@@ -341,15 +440,13 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
 
     public function updateTrackEntry($playlist, PlaylistEntry $entry) {
-        $createdDate = $entry->getCreated();
-        $success = $this->updateTrack($playlist, $entry->getId(),
+        return $this->updateTrack($playlist, $entry->getId(),
                                       $entry->getTag(),
                                       $entry->getArtist(),
                                       $entry->getTrack(),
                                       $entry->getAlbum(),
                                       $entry->getLabel(),
                                       $entry->getCreated());
-        return $track;
     }
     
     public function deleteTrack($id) {

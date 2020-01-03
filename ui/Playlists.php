@@ -1313,7 +1313,7 @@ class Playlists extends MenuItem {
         if($id)
             $this->emitConfirm("Delete",
                         "Delete this entry?",
-                        "button=+Delete+&session=".$this->session->getSessionID()."&action=$this->action&playlist=$playlist&id=$id&seq=editForm");
+                        "button=+Delete+&session=".$this->session->getSessionID()."&action=$this->action&playlist=$playlistId&id=$id&seq=editForm");
         if($sep)
             UI::setFocus();
         else if($event)

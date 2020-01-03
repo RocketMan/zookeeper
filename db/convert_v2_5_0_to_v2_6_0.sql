@@ -59,7 +59,11 @@ ALTER TABLE `tracknames` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_genera
 ALTER TABLE `tracks` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ALTER TABLE `users` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
-ALTER TABLE `lists` ADD INDEX sa (showdate, airname);
+ALTER TABLE `tracks` ADD COLUMN `seq` smallint NOT NULL DEFAULT 0;
+ALTER TABLE `tracks` ADD INDEX `lsi` (`list`,`seq`,`id`);
+ALTER TABLE `tracks` ADD INDEX `lc` (`list`, `created`);
+
+ALTER TABLE `lists` ADD INDEX `sa` (`showdate`,`airname`);
 
 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT;
 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS;
