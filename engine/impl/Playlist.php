@@ -221,6 +221,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     public function moveTrack($list, $id, $toId) {
         $fromSeq = $this->getSeq($list, $id);
         $toSeq = $this->getSeq($list, $toId);
+
         if($fromSeq && $toSeq) {
             if($fromSeq < $toSeq) {
                 $setClause = "seq = seq - 1";
@@ -231,7 +232,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             }
             $query = "UPDATE tracks SET $setClause ".
                      "WHERE $whereClause AND list = ?";
-             $stmt = $this->prepare($query);
+            $stmt = $this->prepare($query);
             $stmt->bindValue(1, $fromSeq);
             $stmt->bindValue(2, $toSeq);
             $stmt->bindValue(3, $list);
@@ -259,10 +260,10 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $row = $this->executeAndFetch($stmt);
         $lowid = $row?$row['id']:0;
 
-         if($lowid) {
+        if($lowid) {
             $lowSeq = $this->getSeq($list, $lowid);
             if($lowSeq > $curSeq) {
-                return $this->moveTrack($list, $id, $lowid + 1);
+                return $this->moveTrack($list, $id, $lowid);
             }
         }
 
@@ -316,10 +317,10 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
    }
 
    public function isDateTimeWithinShow($timeStamp, $listRow) {
-        $dateTime = new \DateTime($timestamp);
+        $dateTime = new \DateTime($timeStamp);
         return $this->isWithinShow($dateTime, $listRow);
    }
-           
+
     // return true if "now" is within the show start/end time & date.
     // NOTE: this routine must be tolerant of improperly formatted dates.
     public function isWithinShow($dateTime, $listRow) {
