@@ -193,7 +193,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $query = "SET @seq = 0; ".
                  "UPDATE tracks SET seq = (@seq := @seq + 1) ".
                  "WHERE list = ? ORDER BY id";
-         $stmt = $this->prepare($query);
+        $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$list, \PDO::PARAM_INT);
         return $stmt->execute();
     }
@@ -284,6 +284,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             }
         }
 
+        // entry is already in order, return success
         return true;
     }
 

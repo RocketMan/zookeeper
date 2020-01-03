@@ -61,7 +61,7 @@ ALTER TABLE `users` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 ALTER TABLE `tracks` ADD COLUMN `seq` smallint NOT NULL DEFAULT 0;
 ALTER TABLE `tracks` ADD INDEX `lsi` (`list`,`seq`,`id`);
-ALTER TABLE `tracks` ADD INDEX `lc` (`list`, `created`);
+ALTER TABLE `tracks` ADD INDEX `lc` (`list`,`created`);
 
 ALTER TABLE `lists` ADD INDEX `sa` (`showdate`,`airname`);
 
