@@ -218,7 +218,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $row && $row['max']?$row['max'] + 1:0;
     }
 
-    public function moveTrack($list, $id, $toId) {
+    public function moveTrack($list, $id, $toId, $clearTimestamp=true) {
         $fromSeq = $this->getSeq($list, $id);
         $toSeq = $this->getSeq($list, $toId);
 
@@ -237,7 +237,8 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $stmt->bindValue(2, $toSeq);
             $stmt->bindValue(3, $list);
             if($stmt->execute()) {
-                $query = "UPDATE tracks SET seq = ? WHERE id = ?";
+                $clear = $clearTimestamp?", created = NULL":"";
+                $query = "UPDATE tracks SET seq = ? $clear WHERE id = ?";
                 $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $toSeq);
                 $stmt->bindValue(2, $id);
@@ -250,7 +251,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     private function reorderForTime($list, $id, $timestamp) {
         $curSeq = $this->getSeq($list, $id);
 
-        $query = "SELECT id FROM tracks ".
+        $query = "SELECT id, seq FROM tracks ".
                  "WHERE list = ? ".
                  "AND created < ? ".
                  "ORDER BY created DESC ".
@@ -262,13 +263,13 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $lowid = $row?$row['id']:0;
 
         if($lowid) {
-            $lowSeq = $this->getSeq($list, $lowid);
+            $lowSeq = $row['seq'];
             if($lowSeq > $curSeq) {
-                return $this->moveTrack($list, $id, $lowid);
+                return $this->moveTrack($list, $id, $lowid, false);
             }
         }
 
-        $query = "SELECT id FROM tracks ".
+        $query = "SELECT id, seq FROM tracks ".
                  "WHERE list = ? ".
                  "AND created > ? ".
                  "ORDER BY created ".
@@ -280,9 +281,9 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $highid = $row?$row['id']:0;
 
         if($highid) {
-            $highSeq = $this->getSeq($list, $highid);
+            $highSeq = $row['seq'];
             if($highSeq < $curSeq) {
-                return $this->moveTrack($list, $id, $highid);
+                return $this->moveTrack($list, $id, $highid, false);
             }
         }
 
@@ -631,7 +632,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     // NOTE: up is newer, eg list is in reverse time order
     public function moveTrackUpDown($playlist, &$id, $up) {
         $query = "SELECT id, tag, artist, track, album, label, created FROM tracks " .
-                 "WHERE list = ? ORDER BY id";
+                 "WHERE list = ? ORDER BY seq, id";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlist);
         $stmt->execute();
