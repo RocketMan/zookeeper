@@ -253,7 +253,8 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $query = "SELECT id FROM tracks ".
                  "WHERE list = ? ".
                  "AND created < ? ".
-                 "ORDER BY created DESC";
+                 "ORDER BY created DESC ".
+                 "LIMIT 1";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $list);
         $stmt->bindValue(2, $timestamp);
@@ -270,7 +271,8 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $query = "SELECT id FROM tracks ".
                  "WHERE list = ? ".
                  "AND created > ? ".
-                 "ORDER BY created";
+                 "ORDER BY created ".
+                 "LIMIT 1";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $list);
         $stmt->bindValue(2, $timestamp);
@@ -297,8 +299,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
     
     public function getTracks($playlist, $desc = 0) {
-        if($desc)
-            $desc = "DESC";
+        $desc = $desc?"DESC":"";
         $query = "SELECT tag, artist, track, album, label, id, created FROM tracks " .
                  "WHERE list = ? ORDER BY seq $desc, id $desc";
         $stmt = $this->prepare($query);
