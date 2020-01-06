@@ -198,7 +198,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $stmt->execute();
     }
 
-    private function getSeq($list, $id) {
+    public function getSeq($list, $id) {
         $query = "SELECT seq FROM tracks WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
@@ -382,6 +382,12 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         if ($updateStatus == 1 && $doTimestamp)
             $updateStatus = 2;
 
+        if($doTimestamp) {
+            $updateStatus = $this->reorderForTime($playlistId,
+                                                  Engine::lastInsertId(),
+                                                  date('Y-m-d G:i:s'))?2:0;
+        }
+
         return $updateStatus;
     }
     
@@ -453,10 +459,26 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
     
     public function deleteTrack($id) {
-        $query = "DELETE FROM tracks WHERE id = ?";
-          $stmt = $this->prepare($query);
+        $query = "SELECT list, seq FROM tracks WHERE id = ?";
+        $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
-        return $stmt->execute();
+        $row = $this->executeAndFetch($stmt);
+
+        $query = "DELETE FROM tracks WHERE id = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
+        $success = $stmt->execute();
+
+        if($success && $row && $row['seq']) {
+            $query = "UPDATE tracks SET seq = seq - 1 ".
+                     "WHERE seq > ? AND list = ?";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $row['seq']);
+            $stmt->bindValue(2, $row['list']);
+            $success = $stmt->execute();
+        }
+
+        return $success;
     }
     
     public function getTopPlays(&$result, $airname=0, $days=41, $count=10) {

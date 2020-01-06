@@ -42,6 +42,7 @@ interface IPlaylist {
     function getWhatsOnNow();
     function insertPlaylist($user, $date, $time, $description, $airname);
     function updatePlaylist($playlist, $date, $time, $description, $airname);
+    function getSeq($list, $id);
     function moveTrack($list, $id, $toId, $clearTimestamp=true);
     function getTrack($id);
     function getTracks($playlist, $desc = 0);
