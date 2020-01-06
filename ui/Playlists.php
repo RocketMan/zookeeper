@@ -1166,8 +1166,12 @@ class Playlists extends MenuItem {
     
     private function emitEditForm($playlistId, $id, $album, $track) {
       $entry = new PlaylistEntry($album);
-      $showTimeAr = null; // populate only for NME edits
-      $showTimeRange = "";
+      $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
+      $showTimeAr = $this->zkTimeRangeToISOTimeAr($playlist['showtime']);
+      $startAMPM = self::timestampToAMPM($showTimeAr[0]);
+      $endAMPM = self::timestampToAMPM($showTimeAr[1]);
+      $showTimeRange = "$startAMPM - $endAMPM";
+      $timepickerTime = $this->getTimepickerTime($entry->getCreated());
       $sep = $id && $entry->isType(PlaylistEntry::TYPE_SET_SEPARATOR);
       $event = $id && $entry->isType(PlaylistEntry::TYPE_LOG_EVENT);
       $comment = $id && $entry->isType(PlaylistEntry::TYPE_COMMENT);
@@ -1178,13 +1182,6 @@ class Playlists extends MenuItem {
           echo "set separator";
           break;
       case PlaylistEntry::TYPE_LOG_EVENT:
-          $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
-          $showTimeAr = $this->zkTimeRangeToISOTimeAr($playlist['showtime']);
-          $startAMPM = self::timestampToAMPM($showTimeAr[0]);
-          //TODO: don't let end time exceed now.
-          $endAMPM = self::timestampToAMPM($showTimeAr[1]);
-          $showTimeRange = "$startAMPM - $endAMPM";
-          $timepickerTime = $this->getTimepickerTime($entry->getCreated());
           echo "program log entry";
           break;
           case PlaylistEntry::TYPE_COMMENT:
@@ -1195,12 +1192,11 @@ class Playlists extends MenuItem {
           break;
       } ?>:</P>
       <FORM ACTION="?" METHOD=POST>
+      <TABLE>
     <?php if($sep) { ?>
       <INPUT TYPE=HIDDEN NAME=separator VALUE="true">
-      <TABLE>
     <?php } else if($comment) { ?>
       <INPUT TYPE=HIDDEN NAME=comment VALUE="true">
-      <TABLE>
         <TR>
           <TD ALIGN=RIGHT STYLE='vertical-align: top'>Comment:</TD>
           <TD ALIGN=LEFT><TEXTAREA WRAP=VIRTUAL NAME=ctext id=ctext ROWS=4 MAXLENGTH=<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> STYLE='width: 280px !important' REQUIRED><?php
@@ -1211,7 +1207,6 @@ class Playlists extends MenuItem {
         </TR>
     <?php } else if($event) { ?>
       <INPUT TYPE=HIDDEN NAME=logevent VALUE="true">
-      <TABLE>
         <TR>
           <TD ALIGN=RIGHT>Type:</TD><TD ALIGN=LEFT><SELECT NAME=etype STYLE='width: 290px !important'>
 <?php
@@ -1230,15 +1225,7 @@ class Playlists extends MenuItem {
           <TD ALIGN=RIGHT>Name/ID:</TD>
           <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=ecode MAXLENGTH=80 required VALUE="<?php echo htmlentities($entry->getLogEventCode());?>" CLASS=input STYLE='width: 280px !important'></TD>
         </TR>
-        <TR>
-          <TD ALIGN=RIGHT>Time:</TD>
-          <TD ALIGN=LEFT>
-              <INPUT class='timepicker' NAME=etime step='60' required type='time' value="<?php echo $timepickerTime ?>" min="<?php echo $showTimeAr[0] ?>" max="<?php echo $showTimeAr[1] ?>" /> <span style='font-size:8pt;'>(<?php echo $showTimeRange ?>)</span>
-              <INPUT type='hidden' NAME='edate' value="<?php echo $playlist['showdate'] ?>" />
-          </TD>
-        </TR>
     <?php } else if($album == "" || $album["tag"] == "") { ?>
-      <TABLE>
         <TR>
           <TD ALIGN=RIGHT>Artist:</TD>
           <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=artist MAXLENGTH=80 VALUE="<?php echo htmlentities($album?$album["artist"]:"");?>" CLASS=input SIZE=40 REQUIRED></TD>
@@ -1260,7 +1247,6 @@ class Playlists extends MenuItem {
       <INPUT TYPE=HIDDEN NAME=album VALUE="<?php echo htmlentities($album["album"]);?>">
       <INPUT TYPE=HIDDEN NAME=otrack VALUE="<?php echo htmlentities(stripslashes($track));?>">
       <INPUT TYPE=HIDDEN NAME=label VALUE="<?php echo htmlentities($album["label"]);?>">
-      <TABLE>
         <TR><TD ALIGN=RIGHT>Artist:</TD>
             <TH ALIGN=LEFT><?php echo htmlentities($album["artist"]); ?></TH></TR>
         <TR><TD ALIGN=RIGHT>Album:</TD>
@@ -1269,6 +1255,13 @@ class Playlists extends MenuItem {
             <TD ALIGN=LEFT><?php $this->emitTrackField($album["tag"], $track, $id); ?></TD>
         </TR>
     <?php } ?>
+      <TR>
+          <TD ALIGN=RIGHT>Time:</TD>
+          <TD ALIGN=LEFT>
+              <INPUT class='timepicker' NAME=etime step='60' type='time' value="<?php echo $timepickerTime ?>" min="<?php echo $showTimeAr[0] ?>" max="<?php echo $showTimeAr[1] ?>" /> <span style='font-size:8pt;'>(<?php echo $showTimeRange ?>)</span>
+              <INPUT type='hidden' NAME='edate' value="<?php echo $playlist['showdate'] ?>" />
+          </TD>
+        </TR>
         <TR>
           <TD>&nbsp;</TD>
           <TD>
@@ -1361,11 +1354,6 @@ class Playlists extends MenuItem {
         // Run the query
         $success = Engine::api(IPlaylist::class)->insertTrack($playlist,
                      $tag, $artist, $track, $album, $label, $wantTimestamp);    
-    }
-    
-    private function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label) {
-        // Run the query
-        Engine::api(IPlaylist::class)->updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label, null);
     }
     
     private function deleteTrack($id) {
@@ -1462,6 +1450,10 @@ class Playlists extends MenuItem {
                     }
                 }
                 if($id) {
+                    $timestamp = null;
+                    if ($_REQUEST["etime"])  //in case user blanked out the time
+                        $timestamp = $_REQUEST["edate"] . " " . $_REQUEST["etime"] . ":00";
+
                     if($logevent || $comment) {
                         $entry = (new PlaylistEntry())->setId($id);
                         if($logevent)
@@ -1469,13 +1461,13 @@ class Playlists extends MenuItem {
                         else
                             $entry->setComment(mb_substr(trim(str_replace("\r\n", "\n", $_REQUEST["ctext"])), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
 
-                        $timestamp = $_REQUEST["edate"] . " " . $_REQUEST["etime"] . ":00";
-                        $entry->setCreated($timestamp);
 
+                        $entry->setCreated($timestamp);
                         Engine::api(IPlaylist::class)->updateTrackEntry($playlist,
                                 $entry);
-                    } else
-                        $this->updateTrack($playlist, $id, $tag, $artist, $track, $album, $label);
+                    } else {
+                        Engine::api(IPlaylist::class)->updateTrack($playlist, $id, $tag, $artist, $track, $album, $label, $timestamp);
+                    }
                     $id = "";
                 } else
                     $this->insertTrack($playlist, $tag, $artist, $track, $album, $label, true);

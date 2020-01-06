@@ -427,12 +427,11 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         } else
             $stmt->bindValue(6, (int)$id, \PDO::PARAM_INT);
 
-        if($stmt->execute()) {
-            return $timeChanged?
-                $this->reorderForTime($playlistId, $id, $timestamp):true;
-        }
+        $success = $stmt->execute();
+        if($success && $timeChanged)
+            $success = $this->reorderForTime($playlistId, $id, $timestamp);
 
-        return false;
+        return $success;
     }
 
     public function insertTrackEntry($playlist, PlaylistEntry $entry, $wantTimestamp) {
