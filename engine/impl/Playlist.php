@@ -379,10 +379,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $stmt->bindValue(7, $tag);
 
         $updateStatus = $stmt->execute();
-        if ($updateStatus == 1 && $doTimestamp)
-            $updateStatus = 2;
-
-        if($doTimestamp) {
+        if ($updateStatus == 1 && $doTimestamp) {
             $updateStatus = $this->reorderForTime($playlistId,
                                                   Engine::lastInsertId(),
                                                   date('Y-m-d G:i:s'))?2:0;
