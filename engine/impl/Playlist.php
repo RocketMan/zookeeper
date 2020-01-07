@@ -351,7 +351,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
 
     // insert playlist track. return following: 0 - fail, 1 - success no 
     // timestamp, 2 - sucess with timestamp.
-    public function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $wantTimestamp) {
+    public function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $wantTimestamp, &$id = null) {
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
 
         // log time iff 'now' is within playlist start/end time.
@@ -379,10 +379,22 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $stmt->bindValue(7, $tag);
 
         $updateStatus = $stmt->execute();
+        $id = Engine::lastInsertId();
+
         if ($updateStatus == 1 && $doTimestamp) {
-            $updateStatus = $this->reorderForTime($playlistId,
-                                                  Engine::lastInsertId(),
-                                                  date('Y-m-d G:i:s'))?2:0;
+            // if inserted row is latest, then reordering is unnecessary
+            $query = "SELECT created, id FROM tracks ".
+                     "WHERE list = ? ".
+                     "ORDER BY created DESC LIMIT 1";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, (int)$playlistId, \PDO::PARAM_INT);
+            $row = $this->executeAndFetch($stmt);
+            if($row && $row['id'] != $id) {
+                $updateStatus = $this->reorderForTime($playlistId,
+                                                      $id,
+                                                      date('Y-m-d G:i:s'))?2:0;
+            } else
+                $updateStatus = 2;
         }
 
         return $updateStatus;
@@ -438,11 +450,16 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
 
     public function insertTrackEntry($playlist, PlaylistEntry $entry, $wantTimestamp) {
-        return $this->insertTrack($playlist,
+        $id = 0;
+        $success = $this->insertTrack($playlist,
                                       $entry->getTag(), $entry->getArtist(),
                                       $entry->getTrack(), $entry->getAlbum(),
                                       $entry->getLabel(),
-                                      $wantTimestamp);
+                                      $wantTimestamp,
+                                      $id);
+        if($success)
+            $entry->setId($id);
+        return $success;
     }
 
     public function updateTrackEntry($playlist, PlaylistEntry $entry) {

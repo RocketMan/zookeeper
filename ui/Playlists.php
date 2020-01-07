@@ -246,7 +246,6 @@ class Playlists extends MenuItem {
                 // JM 2019-08-15 action and id need to be set
                 // for hyperlinks genereated by makePlaylistObserver (#54)
                 $this->action = $_REQUEST["oaction"];
-                $entry->setId(Engine::lastInsertId());
                 ob_start();
                 $this->makePlaylistObserver($playlist, true)->observe($entry);
                 $newRow = ob_get_contents();
