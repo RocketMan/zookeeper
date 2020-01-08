@@ -251,6 +251,7 @@ class Playlists extends MenuItem {
                 $newRow = ob_get_contents();
                 ob_end_clean();
                 $retVal['row'] = $newRow;
+                $retVal['seq'] = Engine::api(IPlaylist::class)->getSeq(0, $entry->getId());
             }
         } else
             $updateStatus = 0; //failure
@@ -1091,7 +1092,19 @@ class Playlists extends MenuItem {
                     accept: "application/json; charset=utf-8",
                     data: postData,
                     success: function(respObj) {
-                        $(".playlistTable > tbody").prepend(respObj.row);
+                        // Non-zero seq specifies the ordinial of the playlist
+                        // entry, where 1 is first (oldest) playlist entry.
+                        if(respObj.seq > 0) {
+                            // Calculate the zero-based row index.
+                            // Table is ordered latest to oldest, which means
+                            // we must reverse the sense of seq.
+                            var rows = $(".playlistTable > tbody > tr");
+                            var index = rows.length - respObj.seq + 1;
+                            rows.eq(index).before(respObj.row);
+                        } else {
+                            // This is the latest track; insert as first row.
+                            $(".playlistTable > tbody").prepend(respObj.row);
+                        }
                         clearUserInput(true);
                     },
                     error: function (jqXHR, textStatus, errorThrown) {

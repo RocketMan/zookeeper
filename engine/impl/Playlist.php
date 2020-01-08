@@ -204,7 +204,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
         $row = $this->executeAndFetch($stmt);
         if(!$row || !$row['seq']) {
-            if($this->populateSeq($list))
+            if($list && $this->populateSeq($list))
                 $row = $this->executeAndFetch($stmt);
         }
         return $row?$row['seq']:false;
@@ -383,7 +383,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
 
         if ($updateStatus == 1 && $doTimestamp) {
             // if inserted row is latest, then reordering is unnecessary
-            $query = "SELECT created, id FROM tracks ".
+            $query = "SELECT id FROM tracks ".
                      "WHERE list = ? ".
                      "ORDER BY created DESC LIMIT 1";
             $stmt = $this->prepare($query);
