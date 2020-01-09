@@ -416,7 +416,7 @@ class Playlists extends MenuItem {
 
                 function getRoundedDateTime(minutes) {
                     let now = new Date();
-                    now = new Date(now.getTime() - now.getTimezoneOffset()*60000);
+                    now = new Date(now.getTime() - <?php echo round(date('Z')/-60, 2); /* server TZ equivalent of javascript now.getTimezoneOffset() */ ?>*60000);
                     let ms = 1000 * 60 * minutes; // convert minutes to ms
                     let roundedDate = new Date(Math.round(now.getTime() / ms) * ms);
                     return roundedDate
@@ -1430,20 +1430,18 @@ class Playlists extends MenuItem {
                 $this->emitEditForm($playlist, $id, "", "");
             break;
         case "editForm":
+            $nme = $separator || $logevent || $comment;
             if(($button == " Delete ") && $id) {
                 $this->deleteTrack($id);
                 $id = "";
                 $this->emitTagForm($playlist, "");
-            } else if($separator) {
-                $id = "";
-                $this->emitTagForm($playlist, "");
-            } else if(!$logevent && !$comment && $artist == "") {
+            } else if(!$nme && $artist == "") {
                 $albuminfo = ["tag"=>$tag,
                               "artist"=>stripslashes($artist),
                               "album"=>stripslashes($album),
                               "label"=>stripslashes($label)];
                 $this->emitEditForm($playlist, $id, $albuminfo, stripslashes($track));
-            } else if(!$logevent && !$comment &&
+            } else if(!$nme &&
                           ($track == "") && ($ctrack == "")) {
                 $albuminfo = ["tag"=>$tag,
                               "artist"=>stripslashes($artist),
@@ -1466,13 +1464,14 @@ class Playlists extends MenuItem {
                     if ($_REQUEST["etime"])  //in case user blanked out the time
                         $timestamp = $_REQUEST["edate"] . " " . $_REQUEST["etime"] . ":00";
 
-                    if($logevent || $comment) {
+                    if($nme) {
                         $entry = (new PlaylistEntry())->setId($id);
                         if($logevent)
                             $entry->setLogEvent($_REQUEST["etype"], $_REQUEST["ecode"]);
-                        else
+                        else if($comment)
                             $entry->setComment(mb_substr(trim(str_replace("\r\n", "\n", $_REQUEST["ctext"])), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
-
+                        else
+                            $entry->setSetSeparator();
 
                         $entry->setCreated($timestamp);
                         Engine::api(IPlaylist::class)->updateTrackEntry($playlist,
