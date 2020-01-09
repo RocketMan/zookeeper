@@ -366,10 +366,13 @@ CREATE TABLE IF NOT EXISTS `tracks` (
   `album` varchar(80) DEFAULT NULL,
   `label` varchar(80) DEFAULT NULL,
   `created` timestamp NULL DEFAULT NULL,
+  `seq` smallint(6) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `list` (`list`),
   KEY `tag` (`tag`),
   KEY `aal` (`artist`,`album`,`label`),
+  KEY `lsi` (`list`,`seq`,`id`),
+  KEY `lc` (`list`,`created`),
   FULLTEXT KEY `artist` (`artist`,`album`,`track`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
