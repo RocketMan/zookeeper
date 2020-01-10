@@ -1100,7 +1100,10 @@ class Playlists extends MenuItem {
                             // we must reverse the sense of seq.
                             var rows = $(".playlistTable > tbody > tr");
                             var index = rows.length - respObj.seq + 1;
-                            rows.eq(index).before(respObj.row);
+                            if(index < rows.length)
+                                rows.eq(index).before(respObj.row);
+                            else
+                                rows.eq(rows.length - 1).after(respObj.row);
                         } else {
                             // This is the latest track; insert as first row.
                             $(".playlistTable > tbody").prepend(respObj.row);
