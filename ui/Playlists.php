@@ -139,6 +139,19 @@ class Playlists extends MenuItem {
         return $retVal;
     }
 
+    // return array of timestamps that represent show start/end date & times
+    private function zkTimeRangeToISODateTimeAr($playlist) {
+        $retVal = ['', ''];
+        $date = $playlist['showdate'];
+        $zkTimeRange = $playlist['showtime'];
+        $timeAr = explode("-", $zkTimeRange);
+        if (count($timeAr) == 2) {
+            $retVal[0] = $date . ' ' . substr($timeAr[0], 0, 2) . ':' . substr($timeAr[0], 2,4) . ':00';
+            $retVal[1] = $date . ' ' . substr($timeAr[1], 0, 2) . ':' . substr($timeAr[1], 2,4) . ':00';
+        }
+        return $retVal;
+    }
+
     // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
     // returns empty string if invalid
     private function normalizeTime($t) {
@@ -303,6 +316,14 @@ class Playlists extends MenuItem {
             return self::hourToAMPM($fromtime) . " - " . self::hourToAMPM($totime);
         } else
             return strtolower(htmlentities($time));
+    }
+
+    public static function timestampToTime($time) {
+        if ($time == null || $time == '') {
+            return "";
+        } else {
+            return date('G:i:s', strtotime($time));
+        }
     }
 
     public static function timestampToDate($time) {
@@ -1182,9 +1203,16 @@ class Playlists extends MenuItem {
     private function emitEditForm($playlistId, $id, $album, $track) {
       $entry = new PlaylistEntry($album);
       $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
-      $showTimeAr = $this->zkTimeRangeToISOTimeAr($playlist['showtime']);
+      $showTimeAr = $this->zkTimeRangeToISODateTimeAr($playlist);
       $startAMPM = self::timestampToAMPM($showTimeAr[0]);
-      $endAMPM = self::timestampToAMPM($showTimeAr[1]);
+      $startTime = new \DateTime($showTimeAr[0]);
+      $endTime = new \DateTime($showTimeAr[1]);
+      $nowTime = new \DateTime("now");
+      $isLive = $nowTime >= $startTime && $nowTime <= $endTime;
+      $endTime = $isLive ? $nowTime : $endTime;
+      $showTimeAr[0] = self::timestampToTime($showTimeAr[0]);
+      $showTimeAr[1] = $endTime->format('G:i:s');
+      $endAMPM = $endTime->format('g:i a');
       $showTimeRange = "$startAMPM - $endAMPM";
       $timepickerTime = $this->getTimepickerTime($entry->getCreated());
       $sep = $id && $entry->isType(PlaylistEntry::TYPE_SET_SEPARATOR);
