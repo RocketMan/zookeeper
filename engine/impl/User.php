@@ -161,7 +161,6 @@ class UserImpl extends BaseImpl implements IUser {
     
     public function validatePassword($user, $password, $updateTimestamp, &$groups=0) {
         $success = 0;
-        return 1;
     
         $userl = strtolower($user.$password);
         $posUnion = strpos($userl, " union ");
@@ -203,7 +202,6 @@ class UserImpl extends BaseImpl implements IUser {
                 $success = 1;
             }
         }
-        $success = 1; //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         if($success)
             $groups = $result["groups"];
         return $success;

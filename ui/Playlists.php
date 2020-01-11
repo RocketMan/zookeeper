@@ -1205,12 +1205,14 @@ class Playlists extends MenuItem {
       $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
       $showTimeAr = $this->zkTimeRangeToISODateTimeAr($playlist);
       $startAMPM = self::timestampToAMPM($showTimeAr[0]);
+      $startTime = new \DateTime($showTimeAr[0]);
       $endTime = new \DateTime($showTimeAr[1]);
       $nowTime = new \DateTime("now");
-      $endTime = $endTime > $nowTime ? $nowTime : $endTime;
+      $isLive = $nowTime >= $startTime && $nowTime <= $endTime;
+      $endTime = $isLive ? $nowTime : $endTime;
       $showTimeAr[0] = self::timestampToTime($showTimeAr[0]);
       $showTimeAr[1] = $endTime->format('G:i:s');
-      $endAMPM = $endTime->format('g:i A');
+      $endAMPM = $endTime->format('g:i a');
       $showTimeRange = "$startAMPM - $endAMPM";
       $timepickerTime = $this->getTimepickerTime($entry->getCreated());
       $sep = $id && $entry->isType(PlaylistEntry::TYPE_SET_SEPARATOR);
