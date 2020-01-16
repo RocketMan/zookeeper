@@ -536,7 +536,7 @@ class AddManager extends MenuItem {
             echo "        <TR><TD>";
             $selected = $selcats[$i]?" CHECKED":"";
             if($this->categoryMap[$i]["name"])
-                echo "<INPUT TYPE=CHECKBOX NAME=cat$i$selected>".htmlentities(stripslashes($this->catetory_map[$i]["name"]));
+                echo "<INPUT TYPE=CHECKBOX NAME=cat$i$selected>".htmlentities(stripslashes($this->categoryMap[$i]["name"]));
             echo "</TD><TD>";
             $selected = $selcats[$i+4]?" CHECKED":"";
             if($this->categoryMap[$i+4]["name"])
