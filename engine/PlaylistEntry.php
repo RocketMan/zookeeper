@@ -81,6 +81,30 @@ class PlaylistEntry {
         }
     }
 
+    public static function fromJSON($json) {
+        $entry = new PlaylistEntry();
+        switch($json->type) {
+        case "break":
+            $entry->setSetSeparator();
+            break;
+        case "comment":
+            $entry->setComment($json->comment);
+            break;
+        case "logEvent":
+            $entry->setLogEvent($json->event, $json->code);
+            break;
+        case "track":
+            $entry->setArtist($json->artist);
+            $entry->setTrack($json->track);
+            $entry->setAlbum($json->album);
+            $entry->setLabel($json->label);
+            $entry->setTag($json->tag);
+            break;
+        }
+        $entry->setCreated($json->created);
+        return $entry;
+    }
+
     /**
      * return the type of this playlist entry
      *

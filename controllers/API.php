@@ -67,7 +67,7 @@ class API extends CommandTarget implements IController {
     ];
 
     const PLAYLIST_DETAIL_FIELDS = [
-        "type", "comment", "artist", "track", "album", "label", "tag", "event", "code"
+        "type", "comment", "artist", "track", "album", "label", "tag", "event", "code", "created"
     ];
 
     const TRACK_DETAIL_FIELDS = [

@@ -1546,7 +1546,8 @@ class Playlists extends MenuItem {
     
     public function emitImportExportList() {
        $menu[] = [ "u", "", "Export Playlist", "emitExportList" ];
-       $menu[] = [ "u", "import", "Import Playlist", "emitImportList" ];
+       $menu[] = [ "u", "importCSV", "Import Playlist (CSV)", "emitImportList" ];
+       $menu[] = [ "u", "importJSON", "Import Playlist (JSON)", "emitImportJSON" ];
        $this->dispatchSubaction($this->action, $this->subaction, $menu);
     }
     
@@ -1566,8 +1567,11 @@ class Playlists extends MenuItem {
     <TR><TD>
        <B>Export As:</B>
        <INPUT TYPE=RADIO NAME=format VALUE=csv CHECKED>CSV
+       <INPUT TYPE=RADIO NAME=format VALUE=json>JSON
+       <!--
        <INPUT TYPE=RADIO NAME=format VALUE=xml>XML
        <INPUT TYPE=RADIO NAME=format VALUE=html>HTML
+       -->
     </TD></TR>
     <TR><TD>
     <INPUT TYPE=SUBMIT VALUE=" Export Playlist ">
@@ -1658,7 +1662,7 @@ class Playlists extends MenuItem {
     <INPUT TYPE=HIDDEN NAME=button VALUE=" Setup New Airname... ">
     <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
-    <INPUT TYPE=HIDDEN NAME=subaction VALUE="import">
+    <INPUT TYPE=HIDDEN NAME=subaction VALUE="importCSV">
     <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
     <INPUT TYPE=HIDDEN NAME=description VALUE="<?php echo htmlentities(stripslashes($description));?>">
     <INPUT TYPE=HIDDEN NAME=date VALUE="<?php echo htmlentities(stripslashes($date));?>">
@@ -1685,7 +1689,7 @@ class Playlists extends MenuItem {
     ?>
       <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
         <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
-        <INPUT TYPE=HIDDEN NAME=subaction VALUE="import">
+        <INPUT TYPE=HIDDEN NAME=subaction VALUE="importCSV">
         <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=HIDDEN NAME=validate VALUE="edit">
         <INPUT TYPE=HIDDEN NAME=MAX_FILE_SIZE VALUE=100000>
@@ -1814,6 +1818,94 @@ class Playlists extends MenuItem {
         }
     }
     
+    public function emitImportJSON() {
+        $displayForm = true;
+        $userfile = $_FILES['userfile']['tmp_name'];
+        if($userfile) {
+            // read the JSON file
+            $file = "";
+            $fd = fopen($userfile, "r");
+            while(!self::zkfeof($fd, $tempbuf))
+                $file .= self::zkfgets($fd, 1024, $tempbuf);
+            fclose($fd);
+
+            // parse the file
+            $json = json_decode($file);
+
+            // validate json root node is type 'show'
+            if(!$json || $json->type != "show") {
+                // also allow for 'show' encapsulated within a 'getPlaylistsRs'
+                if($json && $json->data[0]->type == "show")
+                    $json = $json->data[0];
+                else
+                    echo "<B><FONT CLASS='error'>File is not in the expected format.  Ensure file is a valid JSON playlist.</FONT></B><BR>\n";
+            }
+
+            if($json->type == "show") {
+                // validate the show's properties
+                $valid = false;
+                list($year, $month, $day) = explode("-", $json->date);
+                if($json->airname && $json->name && $json->time &&
+                        checkdate($month, $day, $year))
+                    $valid = true;
+
+                // lookup the airname
+                if($valid) {
+                    $airname = Engine::api(IDJ::class)->getAirname($json->airname, $this->session->getUser());
+                    if(!$airname)
+                        $valid = false;
+                }
+
+                // create the playlist
+                if($valid) {
+                    $papi = Engine::api(IPlaylist::class);
+                    $papi->insertPlaylist($this->session->getUser(), $json->date, $json->time, $json->name, $airname);
+                    $playlist = Engine::lastInsertId();
+
+                    // insert the tracks
+                    foreach($json->data as $pentry) {
+                        $entry = PlaylistEntry::fromJSON($pentry);
+                        $papi->insertTrackEntry($playlist, $entry, false);
+                        // if there is a timestamp, set it via update
+                        if($pentry->created)
+                            $papi->updateTrackEntry($playlist, $entry);
+                    }
+
+                    // display the editor
+                    $_REQUEST["playlist"] = $playlist;
+                    $this->action = "newListEditor";
+                    $this->emitEditor();
+                    $displayForm = false;
+                } else
+                    echo "<B><FONT CLASS='error'>Show details are invalid.</FONT></B><BR>\n";
+            }
+        }
+
+        if($displayForm) {
+    ?>
+      <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
+        <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
+        <INPUT TYPE=HIDDEN NAME=subaction VALUE="importJSON">
+        <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
+        <INPUT TYPE=HIDDEN NAME=MAX_FILE_SIZE VALUE=100000>
+        <TABLE CELLPADDING=2 CELLSPACING=0>
+          <TR>
+            <TD ALIGN=RIGHT>Import from file:</TD><TD><INPUT NAME=userfile TYPE=file></TD>
+          </TR><TR>
+            <TD>&nbsp;</TD>
+            <TD CLASS="sub">NOTE: File must be a UTF-8 encoded JSON playlist,
+                such as previously exported via Export Playlist.</TD>
+          </TR><TR>
+            <TD>&nbsp;</TD>
+            <TD><INPUT TYPE=submit VALUE=" Import Playlist "></TD>
+          </TR>
+        </TABLE>
+      </FORM>
+    <?php
+            UI::setFocus("userfile");
+        }
+    }
+
     public function updateDJInfo() {
         $validate = $_REQUEST["validate"];
         $multi = $_REQUEST["multi"];
