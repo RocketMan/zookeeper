@@ -783,7 +783,7 @@ class AddManager extends MenuItem {
                 // Emit header
                 $title = $this->addManagerGetTitle($seq);
                 echo "  <FORM ACTION=\"\" METHOD=POST>\n";
-                echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>\n      <TR><TH>$title</TH></TR>\n      <TR><TD HEIGHT=130 VALIGN=MIDDLE>\n";
+                echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>\n      <TR><TH ALIGN=LEFT>$title</TH></TR>\n      <TR><TD HEIGHT=130 VALIGN=MIDDLE>\n";
     
             }
     
