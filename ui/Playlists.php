@@ -1546,8 +1546,8 @@ class Playlists extends MenuItem {
     
     public function emitImportExportList() {
        $menu[] = [ "u", "", "Export Playlist", "emitExportList" ];
-       $menu[] = [ "u", "importCSV", "Import Playlist (CSV)", "emitImportList" ];
        $menu[] = [ "u", "importJSON", "Import Playlist (JSON)", "emitImportJSON" ];
+       $menu[] = [ "u", "importCSV", "Import Playlist (CSV)", "emitImportList" ];
        $this->dispatchSubaction($this->action, $this->subaction, $menu);
     }
     
@@ -1566,8 +1566,8 @@ class Playlists extends MenuItem {
     </SELECT></TD></TR>
     <TR><TD>
        <B>Export As:</B>
-       <INPUT TYPE=RADIO NAME=format VALUE=csv CHECKED>CSV
-       <INPUT TYPE=RADIO NAME=format VALUE=json>JSON
+       <INPUT TYPE=RADIO NAME=format VALUE=json CHECKED>JSON
+       <INPUT TYPE=RADIO NAME=format VALUE=csv>CSV
        <!--
        <INPUT TYPE=RADIO NAME=format VALUE=xml>XML
        <INPUT TYPE=RADIO NAME=format VALUE=html>HTML
