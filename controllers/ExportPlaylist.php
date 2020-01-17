@@ -37,6 +37,7 @@ class ExportPlaylist extends CommandTarget implements IController {
         [ "html", "emitHTML" ],
         [ "xml", "emitXML" ],
         [ "csv", "emitCSV" ],
+        [ "json", "emitJSON" ],
     ];
 
     private $dj;
@@ -48,8 +49,12 @@ class ExportPlaylist extends CommandTarget implements IController {
     public function processRequest($dispatcher) {
         // Ensure user has selected a playlist
         $playlist = intval($_REQUEST["playlist"]);
-        if($playlist == 0)
+        if($playlist == 0) {
+            $referer = $_SERVER["HTTP_REFERER"];
+            if($referer)
+                header("Location: $referer");
             exit;
+        }
         
         // Get the show and DJ information
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlist, 1);
@@ -75,6 +80,12 @@ class ExportPlaylist extends CommandTarget implements IController {
 
     public function processLocal($action, $subaction) {
         $this->dispatchAction($action, self::$actions);
+    }
+
+    public function emitJSON() {
+        header("Location: ".UI::getBaseUrl().
+               "zkapi.php?method=getPlaylistsRq&operation=byID&key=".
+               $_REQUEST["playlist"]."&json=1&includeTracks=1");
     }
 
     public function emitXML() {

@@ -67,7 +67,7 @@ class API extends CommandTarget implements IController {
     ];
 
     const PLAYLIST_DETAIL_FIELDS = [
-        "type", "comment", "artist", "track", "album", "label", "tag", "event", "code"
+        "type", "comment", "artist", "track", "album", "label", "tag", "event", "code", "created"
     ];
 
     const TRACK_DETAIL_FIELDS = [
@@ -275,13 +275,16 @@ class API extends CommandTarget implements IController {
                     Engine::api(IPlaylist::class)->getTracksWithObserver($id?$id:$row["id"],
                         (new PlaylistObserver())->onComment(function($entry) use(&$events) {
                             $events[] = ["type" => "comment",
-                                         "comment" => $entry->getComment()];
+                                         "comment" => $entry->getComment(),
+                                         "created" => $entry->getCreated()];
                         })->onLogEvent(function($entry) use(&$events) {
                             $events[] = ["type" => "logEvent",
                                          "event" => $entry->getLogEventType(),
-                                         "code" => $entry->getLogEventCode()];
+                                         "code" => $entry->getLogEventCode(),
+                                         "created" => $entry->getCreated()];
                         })->onSetSeparator(function($entry) use(&$events) {
-                            $events[] = ["type" => "break"];
+                            $events[] = ["type" => "break",
+                                         "created" => $entry->getCreated()];
                         })->onSpin(function($entry) use(&$events) {
                             $spin = $entry->asArray();
                             $spin["type"] = "track";
