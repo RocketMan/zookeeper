@@ -1851,9 +1851,17 @@ class Playlists extends MenuItem {
 
                 // lookup the airname
                 if($valid) {
-                    $airname = Engine::api(IDJ::class)->getAirname($json->airname, $this->session->getUser());
-                    if(!$airname)
-                        $valid = false;
+                    $djapi = Engine::api(IDJ::class);
+                    $airname = $djapi->getAirname($json->airname, $this->session->getUser());
+                    if(!$airname) {
+                        // airname does not exist; try to create it
+                        $success = $djapi->insertAirname($json->airname, $this->session->getUser());
+                        if($success > 0) {
+                            // success!
+                            $airname = Engine::lastInsertId();
+                        } else
+                            $valid = false;
+                    }
                 }
 
                 // create the playlist
