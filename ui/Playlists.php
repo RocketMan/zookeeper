@@ -1841,7 +1841,7 @@ class Playlists extends MenuItem {
                     echo "<B><FONT CLASS='error'>File is not in the expected format.  Ensure file is a valid JSON playlist.</FONT></B><BR>\n";
             }
 
-            if($json->type == "show") {
+            if($json && $json->type == "show") {
                 // validate the show's properties
                 $valid = false;
                 list($year, $month, $day) = explode("-", $json->date);
