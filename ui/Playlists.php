@@ -1785,14 +1785,17 @@ class Playlists extends MenuItem {
             <TD ALIGN=RIGHT>Import from file:</TD><TD><INPUT NAME=userfile TYPE=file></TD>
           </TR><TR>
             <TD>&nbsp;</TD>
-            <TD CLASS="sub">NOTE: File must be UTF-8 encoded and tab delimited,<BR>
-                with one track per line.  Each line may contain either 4 or 5 columns:<BR><BR>
-                &nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; label</B> &nbsp;or<BR><BR>&nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label</B>,<BR><BR>
-                where each column is separated by a tab character.<BR>
-                Any file data not in this format will be ignored.</TD>
+            <TD><INPUT TYPE=submit VALUE=" Import Playlist "></TD>
           </TR><TR>
             <TD>&nbsp;</TD>
-            <TD><INPUT TYPE=submit VALUE=" Import Playlist "></TD>
+            <TD CLASS="sub"><div class='user-tip' style='display: block; max-width: 550px;'>
+                <h3>CSV Format</h3>
+                <p>File must be UTF-8 encoded and tab delimited, with one
+                track per line.  Each line may contain either 4 or 5 columns:</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; label</B> &nbsp;or<BR><BR>
+                &nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label</B>,</p>
+                <p>where each column is separated by a tab character.</p>
+                <p>Any file data not in this format will be ignored.</p></div></TD>
           </TR>
         </TABLE>
       </FORM>
@@ -1941,11 +1944,12 @@ class Playlists extends MenuItem {
             <TD ALIGN=RIGHT>Import from file:</TD><TD><INPUT NAME=userfile TYPE=file></TD>
           </TR><TR>
             <TD>&nbsp;</TD>
-            <TD CLASS="sub">NOTE: File must be a UTF-8 encoded JSON playlist,
-                such as previously exported via Export Playlist.</TD>
+            <TD><INPUT TYPE=submit VALUE=" Import Playlist "></TD>
           </TR><TR>
             <TD>&nbsp;</TD>
-            <TD><INPUT TYPE=submit VALUE=" Import Playlist "></TD>
+            <TD CLASS="sub"><div class='user-tip' style='display: block'>
+                <p>File must be a UTF-8 encoded JSON playlist,
+                such as previously exported via Export Playlist.</p></div></TD>
           </TR>
         </TABLE>
       </FORM>
