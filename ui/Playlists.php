@@ -1566,7 +1566,7 @@ class Playlists extends MenuItem {
     </SELECT></TD></TR>
     <TR><TD>
        <B>Export As:</B>
-       <INPUT TYPE=RADIO NAME=format VALUE=json CHECKED>JSON
+       <INPUT TYPE=RADIO NAME=format VALUE=json>JSON
        <INPUT TYPE=RADIO NAME=format VALUE=csv>CSV
        <!--
        <INPUT TYPE=RADIO NAME=format VALUE=xml>XML
@@ -1579,8 +1579,48 @@ class Playlists extends MenuItem {
     <INPUT TYPE=HIDDEN NAME=target VALUE="export">
     </TD></TR></TABLE>
     </FORM>
+    <div id='json-help' class='user-tip'>
+
+    <h3>About JSON</h3>
+
+    <p>The JSON format preserves all playlist details, including log
+    entries, comments, and time marks.  It is the more modern,
+    comprehensive export alternative.</p>
+
+    <p>You should choose JSON if you wish to preserve all aspects of
+    your playlist for subsequent import.</p>
+
+    </div>
+    <div id='csv-help' class='user-tip'>
+
+    <h3>About CSV</h3>
+
+    <p>CSV is a simple, tab-delimited format that preserves track
+    details only.</p>
+
+    <p>This format is suitable for use with spreadsheets and legacy
+    applications.</p>
+
+    </div>
+      <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
+            $('input:radio[name="format"]').change(function() {
+                if($(this).is(':checked') && $(this).val() == "json") {
+                    $("#json-help").show();
+                    $("#csv-help").hide();
+                } else {
+                    $("#json-help").hide();
+                    $("#csv-help").show();
+                }
+            });
+            function setFocus() {
+                $("input[name='format']:eq(0)").click();
+                $("select[name='playlist']").focus();
+            }
+    <?php ob_end_flush(); ?>
+      // -->
+      </SCRIPT>
     <?php 
-        UI::setFocus("playlist");
     }
     
     private static function zkfeof(&$fd, &$tempbuf) {
@@ -1873,9 +1913,9 @@ class Playlists extends MenuItem {
                     // insert the tracks
                     foreach($json->data as $pentry) {
                         $entry = PlaylistEntry::fromJSON($pentry);
-                        $papi->insertTrackEntry($playlist, $entry, false);
+                        $success = $papi->insertTrackEntry($playlist, $entry, false);
                         // if there is a timestamp, set it via update
-                        if($pentry->created)
+                        if($success && $pentry->created)
                             $papi->updateTrackEntry($playlist, $entry);
                     }
 

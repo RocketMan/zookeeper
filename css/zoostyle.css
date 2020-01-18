@@ -696,3 +696,13 @@ A.calLink {
     background-color: #333;
     color: white;
 }
+
+.user-tip {
+    margin-top: 10px;
+    padding: 2px 10px;
+    display: none;
+    border: 1px solid #333;
+    background-color: #ffc;
+    min-width: 180px;
+    text-align: left;
+}
