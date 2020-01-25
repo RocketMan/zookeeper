@@ -243,6 +243,8 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                 $stmt->bindValue(1, $toSeq);
                 $stmt->bindValue(2, $id);
                 return $stmt->execute();
+            } else {
+                error_log("moveTrack: " . print_r($stmt->errorInfo(), true));
             }
         }
         return false;
@@ -379,6 +381,11 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $stmt->bindValue(7, $tag);
 
         $updateStatus = $stmt->execute();
+        if(!$updateStatus) {
+            error_log("insertTrack: " . print_r($stmt->errorInfo(), true));
+            error_log("insertTrack: list=$playlistId, tag=$tag, artist=$artist, track=$track, album=$album, label=$label, wantTimestamp=$wantTimestamp");
+        }
+
         $id = Engine::lastInsertId();
 
         if ($updateStatus == 1 && $doTimestamp) {
@@ -443,6 +450,9 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $stmt->bindValue(6, (int)$id, \PDO::PARAM_INT);
 
         $success = $stmt->execute();
+        if(!$success)
+            error_log("updateTrack: " . print_r($stmt->errorInfo(), true));
+
         if($success && $timeChanged)
             $success = $this->reorderForTime($playlistId, $id, $timestamp);
 
