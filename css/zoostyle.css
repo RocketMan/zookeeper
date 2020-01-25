@@ -573,6 +573,7 @@ A.calLink {
 }
 .songUp, .sortUp {
     top: 0px;
+    left: 12px;
     background-position: center;
     background-repeat: no-repeat;
     background-image: URL('../img/arrow_up.gif');
@@ -582,6 +583,7 @@ A.calLink {
     background-repeat: no-repeat;
     background-image: URL('../img/arrow_down.gif');
     top: 8px;
+    left: 12px;
 }
 .albumReview {
     background-image: URL('../img/rinfo.gif');
@@ -620,7 +622,7 @@ A.calLink {
 .songManager {
     top: 8px;
     height: 20px;
-    width: 24px;
+    width: 38px;
     position: relative;
     font-size:12px;
 }
@@ -635,7 +637,7 @@ A.calLink {
 
 .songEdit {
     top: -2px;
-    left: 12px;
+    left: 14px;
     font-size:14px;
 }
 
@@ -705,4 +707,19 @@ A.calLink {
     background-color: #ffc;
     min-width: 180px;
     text-align: left;
+}
+
+.grab {
+    position: absolute;
+    line-height: 1.4;
+    cursor: grab;
+}
+.grabbed {
+    border: 1px solid #888;
+    background-color: #f9fbdf;
+/* box-shadow doesn't work in webkit: */
+    box-shadow: 0 0 13px #000;
+}
+.grabCursor, .grabCursor * {
+    cursor: move !important;
 }

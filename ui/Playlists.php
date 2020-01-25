@@ -55,6 +55,7 @@ class Playlists extends MenuItem {
         [ "viewDate", "emitViewDate" ],
         [ "updateDJInfo", "updateDJInfo" ],
         [ "addTrack", "handleAddTrack" ],
+        [ "moveTrack", "handleMoveTrack" ],
     ];
 
     private $action;
@@ -281,6 +282,23 @@ class Playlists extends MenuItem {
 
         $retVal['status'] = $retMsg;
         http_response_code($updateStatus == 0 ? 400 : 200);
+        echo json_encode($retVal);
+    }
+
+    public function handleMoveTrack() {
+        $retVal = [];
+        $list = $_REQUEST["playlist"];
+        $from = $_REQUEST["fromId"];
+        $to = $_REQUEST["toId"];
+
+        if($list && $from && $to && $from != $to) {
+            $success = Engine::api(IPlaylist::class)->moveTrack($list, $from, $to);
+            $retMsg = $success?"success":"DB update error";
+        } else
+            $retMsg = "invalid request";
+
+        $retVal['status'] = $retMsg;
+        http_response_code($success?200:400);
         echo json_encode($retVal);
     }
 
@@ -790,9 +808,10 @@ class Playlists extends MenuItem {
         $editLink = "<A CLASS='songEdit' HREF='" . $href ."seq=editTrack'>&#x270f;</a>";
         //NOTE: in edit mode the list is ordered new to old, so up makes it 
         //newer in time order & vice-versa.
+        $dnd = "<DIV class='grab' data-list='$playlist' data-id='".$entry->getId()."'>&#x2630;</DIV>";
         $upLink = "<A CLASS='songUp' HREF='" . $href ."seq=upTrack' />";
         $downLink = "<A CLASS='songDown' HREF='" . $href ."seq=downTrack' />";
-        $retVal = "<div class='songManager'>" . $upLink . $downLink . $editLink . "</div>";
+        $retVal = "<div class='songManager'>" . $dnd . /* $upLink . $downLink .*/ $editLink . "</div>";
         return $retVal;
     }
 
@@ -904,7 +923,6 @@ class Playlists extends MenuItem {
         <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     <?php ob_start([\JSMin::class, 'minify']); ?>
         function setFocus(){}
-
         $().ready(function(){
             const NME_ENTRY='nme-entry';
             const NME_PREFIX  = "<?php echo self::NME_PREFIX; ?>";
@@ -2279,6 +2297,8 @@ class Playlists extends MenuItem {
             foreach($entries as $entry)
                 $observer->observe(new PlaylistEntry($entry));
         echo "</TBODY></TABLE>\n";
+
+        UI::emitJS('js/playlist.js');
     }
 
 
