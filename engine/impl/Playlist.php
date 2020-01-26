@@ -389,10 +389,8 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $stmt->bindValue(7, $tag);
 
         $updateStatus = $stmt->execute();
-        if(!$updateStatus) {
+        if(!$updateStatus)
             error_log("insertTrack: " . print_r($stmt->errorInfo(), true));
-            error_log("insertTrack: list=$playlistId, tag=$tag, artist=$artist, track=$track, album=$album, label=$label, wantTimestamp=$wantTimestamp");
-        }
 
         $id = Engine::lastInsertId();
 

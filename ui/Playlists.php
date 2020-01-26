@@ -825,7 +825,7 @@ class Playlists extends MenuItem {
 
     ?>
         <div class='pl-form-entry'>
-            <input id='track-session' type='hidden' value='session VALUE="<?php echo $this->session->getSessionID(); ?>'>
+            <input id='track-session' type='hidden' value='<?php echo $this->session->getSessionID(); ?>'>
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <label></label><span id='error-msg' class='error'></span>
             <div>
@@ -1128,7 +1128,7 @@ class Playlists extends MenuItem {
                         switch(respObj.seq*1) {
                         case -1:
                             // playlist is out of sync with table; reload
-                            location.href = "?action=<?php echo $this->action . "&playlist=$playlistId"; ?>";
+                            location.href = "?action=<?php echo $this->action . "&playlist=$playlistId&session=" . $this->session->getSessionID(); ?>";
                             break;
                         case 0:
                             // playlist is in natural order; prepend
