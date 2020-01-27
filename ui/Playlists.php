@@ -216,6 +216,12 @@ class Playlists extends MenuItem {
         $retVal = [];
         $type = $_REQUEST["type"];
         $playlist = trim($_REQUEST["playlist"]);
+        $size = $_REQUEST["size"];
+        if(isset($size) && $playlist) {
+            $count = Engine::api(IPlaylist::class)->getTrackCount($playlist);
+            // if size matches count, set to 0 (in sync) else -1 (out of sync)
+            $size = $count == $size?0:-1;
+        }
 
         $entry = null;
         switch($type) {
@@ -264,7 +270,11 @@ class Playlists extends MenuItem {
                 $newRow = ob_get_contents();
                 ob_end_clean();
                 $retVal['row'] = $newRow;
-                $retVal['seq'] = Engine::api(IPlaylist::class)->getSeq(0, $entry->getId());
+                // seq is one of:
+                //   -1     client playlist is out of sync with the service
+                //   0      playlist is in natural order
+                //   > 0    ordinal of inserted entry
+                $retVal['seq'] = $size?$size:Engine::api(IPlaylist::class)->getSeq(0, $entry->getId());
             }
         } else
             $updateStatus = 0; //failure
@@ -815,7 +825,7 @@ class Playlists extends MenuItem {
 
     ?>
         <div class='pl-form-entry'>
-            <input id='track-session' type='hidden' value='session VALUE="<?php echo $this->session->getSessionID(); ?>'>
+            <input id='track-session' type='hidden' value='<?php echo $this->session->getSessionID(); ?>'>
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <label></label><span id='error-msg' class='error'></span>
             <div>
@@ -1103,7 +1113,8 @@ class Playlists extends MenuItem {
                     track: track,
                     eventType: eventType,
                     eventCode: eventCode,
-                    comment: comment
+                    comment: comment,
+                    size: $(".playlistTable > tbody > tr").length,
                 };
 
                 $.ajax({
@@ -1113,10 +1124,21 @@ class Playlists extends MenuItem {
                     accept: "application/json; charset=utf-8",
                     data: postData,
                     success: function(respObj) {
-                        // Non-zero seq specifies the ordinial of the playlist
-                        // entry, where 1 is first (oldest) playlist entry.
-                        if(respObj.seq > 0) {
-                            // Calculate the zero-based row index.
+                        // *1 to coerce to int as switch uses strict comparison
+                        switch(respObj.seq*1) {
+                        case -1:
+                            // playlist is out of sync with table; reload
+                            location.href = "?action=<?php echo $this->action . "&playlist=$playlistId&session=" . $this->session->getSessionID(); ?>";
+                            break;
+                        case 0:
+                            // playlist is in natural order; prepend
+                            $(".playlistTable > tbody").prepend(respObj.row);
+                            break;
+                        default:
+                            // seq specifies the ordinal of the entry,
+                            // where 1 is the first (oldest).
+                            //
+                            // Calculate the zero-based row index from seq.
                             // Table is ordered latest to oldest, which means
                             // we must reverse the sense of seq.
                             var rows = $(".playlistTable > tbody > tr");
@@ -1125,9 +1147,7 @@ class Playlists extends MenuItem {
                                 rows.eq(index).before(respObj.row);
                             else
                                 rows.eq(rows.length - 1).after(respObj.row);
-                        } else {
-                            // This is the latest track; insert as first row.
-                            $(".playlistTable > tbody").prepend(respObj.row);
+                            break;
                         }
                         clearUserInput(true);
                     },
@@ -1546,7 +1566,8 @@ class Playlists extends MenuItem {
     
     public function emitImportExportList() {
        $menu[] = [ "u", "", "Export Playlist", "emitExportList" ];
-       $menu[] = [ "u", "import", "Import Playlist", "emitImportList" ];
+       $menu[] = [ "u", "importJSON", "Import Playlist (JSON)", "emitImportJSON" ];
+       $menu[] = [ "u", "importCSV", "Import Playlist (CSV)", "emitImportList" ];
        $this->dispatchSubaction($this->action, $this->subaction, $menu);
     }
     
@@ -1565,9 +1586,12 @@ class Playlists extends MenuItem {
     </SELECT></TD></TR>
     <TR><TD>
        <B>Export As:</B>
-       <INPUT TYPE=RADIO NAME=format VALUE=csv CHECKED>CSV
+       <INPUT TYPE=RADIO NAME=format VALUE=json>JSON
+       <INPUT TYPE=RADIO NAME=format VALUE=csv>CSV
+       <!--
        <INPUT TYPE=RADIO NAME=format VALUE=xml>XML
        <INPUT TYPE=RADIO NAME=format VALUE=html>HTML
+       -->
     </TD></TR>
     <TR><TD>
     <INPUT TYPE=SUBMIT VALUE=" Export Playlist ">
@@ -1575,8 +1599,48 @@ class Playlists extends MenuItem {
     <INPUT TYPE=HIDDEN NAME=target VALUE="export">
     </TD></TR></TABLE>
     </FORM>
+    <div id='json-help' class='user-tip'>
+
+    <h3>About JSON</h3>
+
+    <p>The JSON format preserves all playlist details, including log
+    entries, comments, and time marks.  It is the more modern,
+    comprehensive export alternative.</p>
+
+    <p>You should choose JSON if you wish to preserve all aspects of
+    your playlist for subsequent import.</p>
+
+    </div>
+    <div id='csv-help' class='user-tip'>
+
+    <h3>About CSV</h3>
+
+    <p>CSV is a simple, tab-delimited format that preserves track
+    details only.</p>
+
+    <p>This format is suitable for use with spreadsheets and legacy
+    applications.</p>
+
+    </div>
+      <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <?php ob_start([\JSMin::class, 'minify']); ?>
+            $('input:radio[name="format"]').change(function() {
+                if($(this).is(':checked') && $(this).val() == "json") {
+                    $("#json-help").show();
+                    $("#csv-help").hide();
+                } else {
+                    $("#json-help").hide();
+                    $("#csv-help").show();
+                }
+            });
+            function setFocus() {
+                $("input[name='format']:eq(0)").click();
+                $("select[name='playlist']").focus();
+            }
+    <?php ob_end_flush(); ?>
+      // -->
+      </SCRIPT>
     <?php 
-        UI::setFocus("playlist");
     }
     
     private static function zkfeof(&$fd, &$tempbuf) {
@@ -1658,7 +1722,7 @@ class Playlists extends MenuItem {
     <INPUT TYPE=HIDDEN NAME=button VALUE=" Setup New Airname... ">
     <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
-    <INPUT TYPE=HIDDEN NAME=subaction VALUE="import">
+    <INPUT TYPE=HIDDEN NAME=subaction VALUE="importCSV">
     <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
     <INPUT TYPE=HIDDEN NAME=description VALUE="<?php echo htmlentities(stripslashes($description));?>">
     <INPUT TYPE=HIDDEN NAME=date VALUE="<?php echo htmlentities(stripslashes($date));?>">
@@ -1685,7 +1749,7 @@ class Playlists extends MenuItem {
     ?>
       <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
         <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
-        <INPUT TYPE=HIDDEN NAME=subaction VALUE="import">
+        <INPUT TYPE=HIDDEN NAME=subaction VALUE="importCSV">
         <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=HIDDEN NAME=validate VALUE="edit">
         <INPUT TYPE=HIDDEN NAME=MAX_FILE_SIZE VALUE=100000>
@@ -1741,14 +1805,17 @@ class Playlists extends MenuItem {
             <TD ALIGN=RIGHT>Import from file:</TD><TD><INPUT NAME=userfile TYPE=file></TD>
           </TR><TR>
             <TD>&nbsp;</TD>
-            <TD CLASS="sub">NOTE: File must be UTF-8 encoded and tab delimited,<BR>
-                with one track per line.  Each line may contain either 4 or 5 columns:<BR><BR>
-                &nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; label</B> &nbsp;or<BR><BR>&nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label</B>,<BR><BR>
-                where each column is separated by a tab character.<BR>
-                Any file data not in this format will be ignored.</TD>
+            <TD><INPUT TYPE=submit VALUE=" Import Playlist "></TD>
           </TR><TR>
             <TD>&nbsp;</TD>
-            <TD><INPUT TYPE=submit VALUE=" Import Playlist "></TD>
+            <TD CLASS="sub"><div class='user-tip' style='display: block; max-width: 550px;'>
+                <h3>CSV Format</h3>
+                <p>File must be UTF-8 encoded and tab delimited, with one
+                track per line.  Each line may contain either 4 or 5 columns:</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; label</B> &nbsp;or<BR><BR>
+                &nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label</B>,</p>
+                <p>where each column is separated by a tab character.</p>
+                <p>Any file data not in this format will be ignored.</p></div></TD>
           </TR>
         </TABLE>
       </FORM>
@@ -1814,6 +1881,103 @@ class Playlists extends MenuItem {
         }
     }
     
+    public function emitImportJSON() {
+        $displayForm = true;
+        $userfile = $_FILES['userfile']['tmp_name'];
+        if($userfile) {
+            // read the JSON file
+            $file = "";
+            $fd = fopen($userfile, "r");
+            while(!self::zkfeof($fd, $tempbuf))
+                $file .= self::zkfgets($fd, 1024, $tempbuf);
+            fclose($fd);
+
+            // parse the file
+            $json = json_decode($file);
+
+            // validate json root node is type 'show'
+            if(!$json || $json->type != "show") {
+                // also allow for 'show' encapsulated within a 'getPlaylistsRs'
+                if($json && $json->data[0]->type == "show")
+                    $json = $json->data[0];
+                else
+                    echo "<B><FONT CLASS='error'>File is not in the expected format.  Ensure file is a valid JSON playlist.</FONT></B><BR>\n";
+            }
+
+            if($json && $json->type == "show") {
+                // validate the show's properties
+                $valid = false;
+                list($year, $month, $day) = explode("-", $json->date);
+                if($json->airname && $json->name && $json->time &&
+                        checkdate($month, $day, $year))
+                    $valid = true;
+
+                // lookup the airname
+                if($valid) {
+                    $djapi = Engine::api(IDJ::class);
+                    $airname = $djapi->getAirname($json->airname, $this->session->getUser());
+                    if(!$airname) {
+                        // airname does not exist; try to create it
+                        $success = $djapi->insertAirname($json->airname, $this->session->getUser());
+                        if($success > 0) {
+                            // success!
+                            $airname = Engine::lastInsertId();
+                        } else
+                            $valid = false;
+                    }
+                }
+
+                // create the playlist
+                if($valid) {
+                    $papi = Engine::api(IPlaylist::class);
+                    $papi->insertPlaylist($this->session->getUser(), $json->date, $json->time, $json->name, $airname);
+                    $playlist = Engine::lastInsertId();
+
+                    // insert the tracks
+                    foreach($json->data as $pentry) {
+                        $entry = PlaylistEntry::fromJSON($pentry);
+                        $success = $papi->insertTrackEntry($playlist, $entry, false);
+                        // if there is a timestamp, set it via update
+                        if($success && $pentry->created)
+                            $papi->updateTrackEntry($playlist, $entry);
+                    }
+
+                    // display the editor
+                    $_REQUEST["playlist"] = $playlist;
+                    $this->action = "newListEditor";
+                    $this->emitEditor();
+                    $displayForm = false;
+                } else
+                    echo "<B><FONT CLASS='error'>Show details are invalid.</FONT></B><BR>\n";
+            }
+        }
+
+        if($displayForm) {
+    ?>
+      <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
+        <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
+        <INPUT TYPE=HIDDEN NAME=subaction VALUE="importJSON">
+        <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
+        <INPUT TYPE=HIDDEN NAME=MAX_FILE_SIZE VALUE=100000>
+        <TABLE CELLPADDING=2 CELLSPACING=0>
+          <TR>
+            <TD ALIGN=RIGHT>Import from file:</TD><TD><INPUT NAME=userfile TYPE=file></TD>
+          </TR><TR>
+            <TD>&nbsp;</TD>
+            <TD><INPUT TYPE=submit VALUE=" Import Playlist "></TD>
+          </TR><TR>
+            <TD>&nbsp;</TD>
+            <TD CLASS="sub"><div class='user-tip' style='display: block'>
+                <p>File must be a UTF-8 encoded JSON playlist,
+                such as previously exported via Export Playlist.</p></div></TD>
+          </TR>
+        </TABLE>
+      </FORM>
+    <?php
+            UI::setFocus("userfile");
+        }
+    }
+
     public function updateDJInfo() {
         $validate = $_REQUEST["validate"];
         $multi = $_REQUEST["multi"];

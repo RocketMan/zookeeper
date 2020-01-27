@@ -536,7 +536,7 @@ class AddManager extends MenuItem {
             echo "        <TR><TD>";
             $selected = $selcats[$i]?" CHECKED":"";
             if($this->categoryMap[$i]["name"])
-                echo "<INPUT TYPE=CHECKBOX NAME=cat$i$selected>".htmlentities(stripslashes($this->catetory_map[$i]["name"]));
+                echo "<INPUT TYPE=CHECKBOX NAME=cat$i$selected>".htmlentities(stripslashes($this->categoryMap[$i]["name"]));
             echo "</TD><TD>";
             $selected = $selcats[$i+4]?" CHECKED":"";
             if($this->categoryMap[$i+4]["name"])
@@ -783,7 +783,7 @@ class AddManager extends MenuItem {
                 // Emit header
                 $title = $this->addManagerGetTitle($seq);
                 echo "  <FORM ACTION=\"\" METHOD=POST>\n";
-                echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>\n      <TR><TH>$title</TH></TR>\n      <TR><TD HEIGHT=130 VALIGN=MIDDLE>\n";
+                echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>\n      <TR><TH ALIGN=LEFT>$title</TH></TR>\n      <TR><TD HEIGHT=130 VALIGN=MIDDLE>\n";
     
             }
     

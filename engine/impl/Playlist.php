@@ -243,6 +243,8 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                 $stmt->bindValue(1, $toSeq);
                 $stmt->bindValue(2, $id);
                 return $stmt->execute();
+            } else {
+                error_log("moveTrack: " . print_r($stmt->errorInfo(), true));
             }
         }
         return false;
@@ -314,6 +316,14 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $observer->observe(new PlaylistEntry($track));
     }
 
+    public function getTrackCount($playlist) {
+        $query = "SELECT COUNT(*) AS count FROM tracks WHERE list = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
+        $row = $this->executeAndFetch($stmt);
+        return $row?$row['count']:0;
+    }
+
    public function isNowWithinShow($listRow) {
         $nowDateTime = new \DateTime("now");
         return $this->isWithinShow($nowDateTime, $listRow);
@@ -379,6 +389,9 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $stmt->bindValue(7, $tag);
 
         $updateStatus = $stmt->execute();
+        if(!$updateStatus)
+            error_log("insertTrack: " . print_r($stmt->errorInfo(), true));
+
         $id = Engine::lastInsertId();
 
         if ($updateStatus == 1 && $doTimestamp) {
@@ -443,6 +456,9 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $stmt->bindValue(6, (int)$id, \PDO::PARAM_INT);
 
         $success = $stmt->execute();
+        if(!$success)
+            error_log("updateTrack: " . print_r($stmt->errorInfo(), true));
+
         if($success && $timeChanged)
             $success = $this->reorderForTime($playlistId, $id, $timestamp);
 
