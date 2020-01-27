@@ -216,6 +216,12 @@ class Playlists extends MenuItem {
         $retVal = [];
         $type = $_REQUEST["type"];
         $playlist = trim($_REQUEST["playlist"]);
+        $size = $_REQUEST["size"];
+        if(isset($size) && $playlist) {
+            $count = Engine::api(IPlaylist::class)->getTrackCount($playlist);
+            // if size matches count, set to 0 (in sync) else -1 (out of sync)
+            $size = $count == $size?0:-1;
+        }
 
         $entry = null;
         switch($type) {
@@ -264,7 +270,11 @@ class Playlists extends MenuItem {
                 $newRow = ob_get_contents();
                 ob_end_clean();
                 $retVal['row'] = $newRow;
-                $retVal['seq'] = Engine::api(IPlaylist::class)->getSeq(0, $entry->getId());
+                // seq is one of:
+                //   -1     client playlist is out of sync with the service
+                //   0      playlist is in natural order
+                //   > 0    ordinal of inserted entry
+                $retVal['seq'] = $size?$size:Engine::api(IPlaylist::class)->getSeq(0, $entry->getId());
             }
         } else
             $updateStatus = 0; //failure
@@ -1103,7 +1113,8 @@ class Playlists extends MenuItem {
                     track: track,
                     eventType: eventType,
                     eventCode: eventCode,
-                    comment: comment
+                    comment: comment,
+                    size: $(".playlistTable > tbody > tr").length,
                 };
 
                 $.ajax({
@@ -1113,10 +1124,21 @@ class Playlists extends MenuItem {
                     accept: "application/json; charset=utf-8",
                     data: postData,
                     success: function(respObj) {
-                        // Non-zero seq specifies the ordinial of the playlist
-                        // entry, where 1 is first (oldest) playlist entry.
-                        if(respObj.seq > 0) {
-                            // Calculate the zero-based row index.
+                        // *1 to coerce to int as switch uses strict comparison
+                        switch(respObj.seq*1) {
+                        case -1:
+                            // playlist is out of sync with table; reload
+                            location.href = "?action=<?php echo $this->action . "&playlist=$playlistId"; ?>";
+                            break;
+                        case 0:
+                            // playlist is in natural order; prepend
+                            $(".playlistTable > tbody").prepend(respObj.row);
+                            break;
+                        default:
+                            // seq specifies the ordinal of the entry,
+                            // where 1 is the first (oldest).
+                            //
+                            // Calculate the zero-based row index from seq.
                             // Table is ordered latest to oldest, which means
                             // we must reverse the sense of seq.
                             var rows = $(".playlistTable > tbody > tr");
@@ -1125,9 +1147,7 @@ class Playlists extends MenuItem {
                                 rows.eq(index).before(respObj.row);
                             else
                                 rows.eq(rows.length - 1).after(respObj.row);
-                        } else {
-                            // This is the latest track; insert as first row.
-                            $(".playlistTable > tbody").prepend(respObj.row);
+                            break;
                         }
                         clearUserInput(true);
                     },

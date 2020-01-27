@@ -316,6 +316,14 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             $observer->observe(new PlaylistEntry($track));
     }
 
+    public function getTrackCount($playlist) {
+        $query = "SELECT COUNT(*) AS count FROM tracks WHERE list = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
+        $row = $this->executeAndFetch($stmt);
+        return $row?$row['count']:0;
+    }
+
    public function isNowWithinShow($listRow) {
         $nowDateTime = new \DateTime("now");
         return $this->isWithinShow($nowDateTime, $listRow);
