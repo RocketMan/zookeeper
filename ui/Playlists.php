@@ -294,8 +294,10 @@ class Playlists extends MenuItem {
         if($list && $from && $to && $from != $to) {
             $success = Engine::api(IPlaylist::class)->moveTrack($list, $from, $to);
             $retMsg = $success?"success":"DB update error";
-        } else
+        } else {
+            $success = false;
             $retMsg = "invalid request";
+        }
 
         $retVal['status'] = $retMsg;
         http_response_code($success?200:400);
@@ -447,84 +449,12 @@ class Playlists extends MenuItem {
             ?>
             <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action.$suffix; ?>">
             <INPUT id='playlist-id' TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
+            <INPUT id='timezone-offset' type=hidden value='<?php echo round(date('Z')/-60, 2); /* server TZ equivalent of javascript now.getTimezoneOffset() */ ?>'>
             <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         </FORM>
-    
-        <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-            function setFocus(){}
-    
-            $().ready(function(){
-                var checkDate = document.createElement("input");
-                checkDate.setAttribute("type", "date");
-                if (checkDate.type!="date") {
-                    console.log("registering jquery date picker");
-                    $('#show-date-picker').datepicker();
-                    $('input.timepicker').timepicker({timeFormat:'H:mm'});
-                }
 
-                function getRoundedDateTime(minutes) {
-                    let now = new Date();
-                    now = new Date(now.getTime() - <?php echo round(date('Z')/-60, 2); /* server TZ equivalent of javascript now.getTimezoneOffset() */ ?>*60000);
-                    let ms = 1000 * 60 * minutes; // convert minutes to ms
-                    let roundedDate = new Date(Math.round(now.getTime() / ms) * ms);
-                    return roundedDate
-                }
-    
-                var isUpdate = $("#playlist-id").val().length > 0;
-                if (isUpdate) {
-                    $('#edit-submit-but').prop('value' ,'Update');
-                } else {
-                    var roundedDateTime = getRoundedDateTime(15);
-                    // returns <YYYY-MM-DD>T<HH:MM:SS.MMM>Z
-                    var dateTimeAr = roundedDateTime.toISOString().split('T');
-                    $("#show-date-picker").val(dateTimeAr[0]);
-
-                    // set to quarter hour if empty
-                    if ($("#show-start").val() == '') {
-                        var showStart = dateTimeAr[1];
-                        showStart = showStart.substring(0, showStart.length - 8);
-                        $("#show-start").val(showStart);
-                    }
-                }
-    
-                $("#show-airname").blur(function(e) {
-                    $(this).val($.trim($(this).val()));
-                });
-
-
-                $("#new-show").on("submit", function(e) {
-                    // check for new airname
-                    var airname = $('#show-airname').val().trim().toLowerCase();
-                    var isNew = true;
-                    $('#airnames option').each(function() {
-                        if($(this).val().toLowerCase() == airname) {
-                            isNew = false;
-                            return false;
-                        }
-                    });
-
-                    if(isNew && !confirm('Create new air name "' +
-                           $('#show-airname').val() + '"?')) {
-                        return false;
-                    }
-
-                    // rearrange DP local format to ISO
-                    var pickerDate = $('#show-date-picker').val();
-                    if (pickerDate.indexOf('/') > 0) {
-                        console.log('adjust datepicker date');
-                        var dateAr = pickerDate.split('/');
-                        pickerDate = dateAr[2] + '-' + dateAr[0] + '-' + dateAr[1];
-                    }
-
-                    $('#show-date').val(pickerDate);
-                    return true;
-                });
-            });
-    <?php ob_end_flush(); ?>
-        // -->
-        </SCRIPT>
-    <?php 
+    <?php
+        UI::emitJS('js/playlisteditor.js');
     }
     
     // handles post for playlist creation and edit
@@ -846,6 +776,12 @@ class Playlists extends MenuItem {
         <div class='pl-form-entry'>
             <input id='track-session' type='hidden' value='<?php echo $this->session->getSessionID(); ?>'>
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
+            <input id='track-action' type='hidden' value='<?php echo $this->action; ?>'>
+            <input id='const-prefix' type='hidden' value='<?php echo self::NME_PREFIX; ?>'>
+            <input id='const-set-separator' type='hidden' value='<?php echo PlaylistEntry::TYPE_SET_SEPARATOR; ?>'>
+            <input id='const-log-event' type='hidden' value='<?php echo PlaylistEntry::TYPE_LOG_EVENT; ?>'>
+            <input id='const-comment' type='hidden' value='<?php echo PlaylistEntry::TYPE_COMMENT; ?>'>
+            <input id='const-spin' type='hidden' value='<?php echo PlaylistEntry::TYPE_SPIN; ?>'>
             <label></label><span id='error-msg' class='error'></span>
             <div>
                 <a style='padding-right:4px;' href='#' class='nav pull-right' onClick=window.open('?target=export&amp;playlist=<?php echo $playlistId ?>&amp;format=html')>Print View</a>
@@ -902,6 +838,8 @@ class Playlists extends MenuItem {
                             <span class='remaining' id='remaining'>(0/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)</span><br/>
                             <a id='markdown-help-link' href='#'>formatting help</a>
                         </div>
+                        <input id='comment-max' type='hidden' value='<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?>'>
+
                     </div>
                     <?php UI::markdownHelp(); ?>
                 </div>
@@ -919,292 +857,6 @@ class Playlists extends MenuItem {
             </div>
         </div> <!-- track-editor -->
         <hr>
-
-        <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-        function setFocus(){}
-        $().ready(function(){
-            const NME_ENTRY='nme-entry';
-            const NME_PREFIX  = "<?php echo self::NME_PREFIX; ?>";
-            var tagId = "";
-            var trackList = []; //populated by ajax query
-
-            $("#track-type-pick").val('tag-entry');
-            $("#track-tag").focus();
-
-            function setAddButtonState(enableIt) {
-                $("#track-submit").prop("disabled", !enableIt);
-            }
-            
-            function clearUserInput(clearTagInfo) {
-                var mode = $("#track-type-pick").val();
-                $("#manual-entry input").val('');
-                $("#comment-entry textarea").val('');
-                $("#track-title-pick").val('0');
-                $("#error-msg").text('');
-                $("#tag-status").text('');
-                $("#tag-artist").text('');
-                $("#nme-entry input").val('');
-                setAddButtonState(false);
-
-                if (clearTagInfo) {
-                    $("#track-tag").val('').focus();
-                    $("#track-title-pick").find('option').remove();
-                    trackList = [];
-                    tagId = "";
-                }
-
-                switch(mode) {
-                case 'manual-entry':
-                    $('#track-artist').focus();
-                    break;
-                case 'comment-entry':
-                    $("#remaining").html("(0/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
-                    $('#comment-data').focus();
-                    break;
-                }
-            }
-
-            function isNmeType(entryType)  {
-                var retVal = entryType.startsWith(NME_PREFIX);
-                return retVal;
-            }
-
-            function getEventType(entryType) {
-                return entryType.substring(NME_PREFIX.length);
-             }
-
-            function getEntryMode()  {
-                var entryMode = $('#track-type-pick').val();
-                if (isNmeType(entryMode))
-                    entryMode = NME_ENTRY;
-
-                return entryMode;
-            }
-
-            // return true if have all required fields.
-            function haveAllUserInput()  {
-                var isEmpty = false;
-                var entryMode = getEntryMode();
-
-                if (entryMode == 'manual-entry') {
-                    $("#manual-entry input[required]").each(function() {
-                        isEmpty = isEmpty || $(this).val().length == 0;
-                    });
-                } else if (entryMode == 'comment-entry') {
-                    isEmpty = $('#comment-data').val().length == 0;
-                } else if (entryMode == NME_ENTRY) {
-                    isEmpty = $('#nme-id').val().length == 0;
-                }
-                    
-                return !isEmpty;
-            }
-
-            function showUserError(msg) {
-                $('#error-msg').text(msg);
-            }
-
-            function getDiskInfo(id) {
-                const INVALID_TAG = 100;
-                $("#track-title-pick").find('option').remove();
-                clearUserInput(false);
-                tagId = ""
-                var url = "zkapi.php?method=getTracksRq&json=1&key=" + id;
-                $.ajax({
-                    dataType : 'json',
-                    type: 'GET',
-                    accept: "application/json; charset=utf-8",
-                    url: url,
-                }).done(function (diskInfo) { //TODO: success?
-                    if (diskInfo.code == INVALID_TAG) {
-                        showUserError(id + ' is not a valid tag.');
-                        return;
-                    }
-
-                    tagId = id;
-                    var options = "<option value=''>Select Track</option>";
-                    trackList = diskInfo.data;
-                    for (var i=0; i < trackList.length; i++) {
-                        var track = trackList[i];
-                        var artist = track.artist ? track.artist + ' - ' : '';
-                        options += `<option value='${i}' >${i+1}. ${artist} ${track.track}</option>`;
-                    }
-                    $("#track-title-pick").find('option').remove().end().append(options);
-                    $("#track-artist").val(diskInfo.artist);
-                    $("#track-label").val(diskInfo.label);
-                    $("#track-album").val(diskInfo.album);
-                    $("#track-title").val("");
-                    $("#track-submit").attr("disabled");
-                    $("#track-submit").prop("disabled", true);
-                    $("#tag-artist").text(diskInfo.artist  + ' - ' + diskInfo.album);
-
-                }).fail(function (jqXHR, textStatus, errorThrown) {
-                    showUserError('Ajax error: ' + textStatus);
-                });
-            }
-
-            $("#track-type-pick").on('change', function() {
-                // display the user entry div for this type
-                var newType = getEntryMode();
-                clearUserInput(true);
-                $("#track-entry > div").addClass("zk-hidden");
-                $("#" + newType).removeClass("zk-hidden");
-                if (newType == NME_ENTRY) {
-                    var option = $("option:selected", this);
-                    var argCnt = $(option).data("args");
-                    // insert default value if no user entry required.
-                    if (argCnt == 0) {
-                        $("#nme-id").val($(option).text());
-                        setAddButtonState(true);
-                    }
-                }
-            });
-
-
-            $("#track-title-pick").on('change', function() {
-                var index= parseInt(this.value);
-                var track = trackList[index];
-                $("#track-title").val(track.track);
-                // collections have an artist per track.
-                if (track.artist)
-                    $("#track-artist").val(track.artist);
-
-                setAddButtonState(true);
-            });
-
-            $("#manual-entry input").on('input', function() {
-                var haveAll = haveAllUserInput();
-                setAddButtonState(haveAll);
-            });
-
-            $("#comment-entry textarea").on('input', function() {
-                var len = this.value.length;
-                $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
-                setAddButtonState(len > 0);
-            });
-
-            $("#markdown-help-link").click(function() {
-                if($("#markdown-help").is(":visible")) {
-                    $("#markdown-help").hide();
-                    $("#markdown-help-link").text("formatting help");
-                } else {
-                    $("#markdown-help").css('padding-left','80px');
-                    $("#markdown-help").show();
-                    $("#markdown-help-link").text("hide help");
-                }
-            });
-
-            $("#nme-entry input").on('input', function() {
-                var haveAll = haveAllUserInput();
-                setAddButtonState(haveAll);
-            });
-            
-            function submitTrack(addSeparator) {
-                var artist, label, album, track, type, eventType, eventCode, comment;
-                var trackType =  $("#track-type-pick").val();
-
-                if (addSeparator) {
-                    type = <?php echo PlaylistEntry::TYPE_SET_SEPARATOR; ?>;
-                } else if (isNmeType(trackType)) {
-                    type = <?php echo PlaylistEntry::TYPE_LOG_EVENT; ?>;
-                    eventType = getEventType(trackType);
-                    eventCode = $("#nme-id").val();
-                } else if (trackType == 'comment-entry') {
-                    type = <?php echo PlaylistEntry::TYPE_COMMENT; ?>;
-                    comment = $("#comment-data").val();
-                } else {
-                    type = <?php echo PlaylistEntry::TYPE_SPIN; ?>;
-                    artist = $("#track-artist").val();
-                    label =  $("#track-label").val();
-                    album =  $("#track-album").val();
-                    track =  $("#track-title").val();
-                }
-
-                var postData = {
-                    playlist: $("#track-playlist").val(),
-                    session: $("#track-session").val(),
-                    type: type,
-                    tag: $("#track-tag").val(),
-                    artist: artist,
-                    label: label,
-                    album: album,
-                    track: track,
-                    eventType: eventType,
-                    eventCode: eventCode,
-                    comment: comment,
-                    size: $(".playlistTable > tbody > tr").length,
-                };
-
-                $.ajax({
-                    type: "POST",
-                    url: "?action=addTrack&oaction=<?php echo $this->action; ?>",
-                    dataType : 'json',
-                    accept: "application/json; charset=utf-8",
-                    data: postData,
-                    success: function(respObj) {
-                        // *1 to coerce to int as switch uses strict comparison
-                        switch(respObj.seq*1) {
-                        case -1:
-                            // playlist is out of sync with table; reload
-                            location.href = "?action=<?php echo $this->action . "&playlist=$playlistId&session=" . $this->session->getSessionID(); ?>";
-                            break;
-                        case 0:
-                            // playlist is in natural order; prepend
-                            $(".playlistTable > tbody").prepend(respObj.row);
-                            break;
-                        default:
-                            // seq specifies the ordinal of the entry,
-                            // where 1 is the first (oldest).
-                            //
-                            // Calculate the zero-based row index from seq.
-                            // Table is ordered latest to oldest, which means
-                            // we must reverse the sense of seq.
-                            var rows = $(".playlistTable > tbody > tr");
-                            var index = rows.length - respObj.seq + 1;
-                            if(index < rows.length)
-                                rows.eq(index).before(respObj.row);
-                            else
-                                rows.eq(rows.length - 1).after(respObj.row);
-                            break;
-                        }
-                        clearUserInput(true);
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                        showUserError("Your track was not saved: " + jqXHR.responseJSON.status);
-                    }
-                });
-            }
-
-            $("#track-submit").click(function(e) {
-                // double check that we have everything.
-                if (haveAllUserInput() == false) {
-                    alert('A required field is missing');
-                    return;
-                }
-                submitTrack(false);
-            });
-
-            $("#track-separator").click(function(e) {
-                submitTrack(true);
-            });
-
-            $("#track-tag").on('keyup', function(e) {
-                showUserError('');
-                if (e.keyCode == 13) {
-                    $(this).blur();
-                    $('#track-title-pick').focus();
-                }
-            });
-
-            $("#track-title-pick").on('focus', function() {
-                var newId = $("#track-tag").val()
-                if (newId.length > 0 && newId != tagId)
-                    getDiskInfo(newId);
-            });
-        });
-    <?php ob_end_flush(); ?>
-        // -->
-        </SCRIPT>
     <?php
     }
     private function emitTrackField($tag, $seltrack, $id) {
@@ -2298,7 +1950,8 @@ class Playlists extends MenuItem {
                 $observer->observe(new PlaylistEntry($entry));
         echo "</TBODY></TABLE>\n";
 
-        UI::emitJS('js/playlist.js');
+        if($editMode)
+            UI::emitJS('js/trackeditor.js');
     }
 
 
