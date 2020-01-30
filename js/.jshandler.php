@@ -34,6 +34,14 @@ if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
 header("Content-Type: application/javascript");
 header("Last-Modified: ".gmdate('D, d M Y H:i:s', filemtime($target))." GMT");
 
+// only announce source maps on files which are not already minified
+if(substr_compare($target, ".min.js", -7)) {
+    $uri = $_SERVER["REQUEST_URI"];
+    $i = strrpos($uri, ".");
+    $base = ($i !== false)?substr($uri, 0, $i):$uri;
+    header("SourceMap: ${base}.map");
+}
+
 ob_start("ob_gzhandler");
 ob_start([\JSMin::class, 'minify']);
 

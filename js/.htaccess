@@ -2,5 +2,7 @@
 RewriteEngine on
 # rewrite asset-numericStamp.ext to asset.ext and minify
 RewriteCond $1 !^\..*$
-RewriteRule ^([^-]+)(-[0-9]+)?\.(.+)$ .jshandler.php/$1.$3 [L]
+RewriteRule ^([^-]+)(-[0-9]+)(^\.src)?\.js$ .jshandler.php/$1.js [L]
+RewriteRule ^([^-]+)(-[0-9]+)\.src\.js$ $1.js [L]
+RewriteRule ^([^-]+)(-[0-9]+)?\.map$ .mapgenerator.php/$1.js [L]
 </IfModule>
