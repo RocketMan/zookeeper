@@ -360,7 +360,7 @@ $().ready(function(){
                 var rows = tr.closest("table").find("tr");
                 var ti = tr.index();
                 var target = rows.eq(ti+(si<ti?0:2)).find(".grab");
-                var listId = source.data("list");
+                var listId = $("#track-playlist").val();
                 var sourceId = source.data("id");
                 var targetId = target.data("id");
                 moveTrack(listId, sourceId, targetId, tr, si, rows);

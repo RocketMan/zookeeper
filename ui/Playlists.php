@@ -738,7 +738,7 @@ class Playlists extends MenuItem {
         $editLink = "<A CLASS='songEdit' HREF='" . $href ."seq=editTrack'>&#x270f;</a>";
         //NOTE: in edit mode the list is ordered new to old, so up makes it 
         //newer in time order & vice-versa.
-        $dnd = "<DIV class='grab' data-list='$playlist' data-id='".$entry->getId()."'>&#x2630;</DIV>";
+        $dnd = "<DIV class='grab' data-id='".$entry->getId()."'>&#x2630;</DIV>";
         $upLink = "<A CLASS='songUp' HREF='" . $href ."seq=upTrack' />";
         $downLink = "<A CLASS='songDown' HREF='" . $href ."seq=downTrack' />";
         $retVal = "<div class='songManager'>" . $dnd . /* $upLink . $downLink .*/ $editLink . "</div>";
