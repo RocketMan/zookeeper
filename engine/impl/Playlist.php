@@ -345,10 +345,15 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             if (count($timeAr) == 2) {
                 $timeStr1 = $listRow[1] . " " . $timeAr[0];
                 $start = \DateTime::createFromFormat($TIME_FORMAT, $timeStr1);
-                $endStr = $timeAr[1] == "0000" ? "2359" : $timeAr[1];
-                $timeStr2 = $listRow[1] . " " . $endStr;
-                $end = \DateTime::createFromFormat($TIME_FORMAT, $timeStr2);
-
+                // end time can be midnight or later
+                // in this case, adjust to the next day
+                if($start) {
+                    $end = clone $start;
+                    if($timeAr[1] < $timeAr[0])
+                        $end->modify("+1 day");
+                    $end->setTime(substr($timeAr[1], 0, 2),
+                                  substr($timeAr[1], 2, 2));
+                }
                 if ($start && $end) {
                     $retVal = (($dateTime >= $start) && ($dateTime <= $end));
                 }
