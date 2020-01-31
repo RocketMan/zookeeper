@@ -319,6 +319,7 @@ $().ready(function(){
             success: function(respObj) {
                 // move succeeded, clear timestamp
                 tr.find("td").eq(1).html("");
+                $("#error-msg").text("");
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 // move failed; restore original sequence
