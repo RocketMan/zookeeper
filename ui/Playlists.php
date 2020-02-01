@@ -510,9 +510,18 @@ class Playlists extends MenuItem {
                          $this->session->getUser(),
                          $date, $showTime, $description, $aid);
 
-                $_REQUEST["playlist"] = Engine::lastInsertId();
-                $this->action = "newListEditor";
-                $this->emitEditor();
+                if($success) {
+                    // force browser nav to new playlist so subsequent
+                    // reloads in the track editor work as expected
+                    echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
+                         "function setFocus() {".
+                         "location.href='?action=newListEditor&playlist=".
+                         Engine::lastInsertId()."';}\n".
+                         "// -->\n</SCRIPT>\n";
+                    return;
+                } else {
+                    $this->emitEditListError("Internal error.  Try again.");
+                }
             }
         } else {
             $errMsg = "Missing field";
