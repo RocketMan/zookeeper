@@ -41,7 +41,7 @@ $().ready(function(){
 
     var isUpdate = $("#playlist-id").val().length > 0;
     if (isUpdate) {
-        $('#edit-submit-but').prop('value' ,'Update');
+        $('#edit-submit-but').prop('value' ,'Next >');
     } else {
         var roundedDateTime = getRoundedDateTime(15);
         // returns <YYYY-MM-DD>T<HH:MM:SS.MMM>Z
