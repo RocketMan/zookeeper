@@ -54,10 +54,10 @@ function getAlbums(op, key) {
                 break;
             case 'nextLine':
             case 'nextPage':
-                list.prop('selectedIndex', list.length - 1);
+                list.prop('selectedIndex', items.length - 1);
                 break;
             default:
-                list.prop('selectedIndex', list.length / 2);
+                list.prop('selectedIndex', items.length / 2);
                 break;
             }
 
