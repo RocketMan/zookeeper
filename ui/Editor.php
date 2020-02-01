@@ -894,136 +894,25 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
         echo "// -->\n</SCRIPT>\n";
     }
     
-    private function emitCache($fields) {
-         UI::emitJS('js/zooscript.js');
-         echo "<SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\">\n";
-         ob_start([\JSMin::class, 'minify']);
-         echo "   fields = [";
-         for($i=0; $i<sizeof($fields); $i++)
-              echo " '" . $fields[$i] . "',";
-         echo " ];\n";
-         // 2018-06-14 this does not work in some browsers;
-         // for now, we'll manually create an empty array
-         //echo "   data = [...Array($this->limit)].map(e => Array(".sizeof($fields).").fill(''));\n\n";
-         // BEGIN WORKAROUND
-         echo "   data = [\n";
-         for($i=0; $i<$this->limit; $i++) {
-             echo "      [ ";
-             for($j=0; $j<sizeof($fields); $j++)
-                 echo "'', ";
-             echo "],\n";
-         }
-         echo "];\n\n";
-         // END WORKAROUND
-    ?>
-    function changeList() {
-        i = document.forms[0].list.selectedIndex;
-        document.forms[0].sel<?php echo $fields[0];?>.value = data[i][0];
-        if (document.getElementById && !window.opera) {
-            for(j=0; j<fields.length; j++) {
-                if(document.getElementById(fields[j]))
-                    if(fields[j] == 'email' || fields[j] == 'url') {
-                        var html = '<A HREF="';
-                        if(fields[j] == 'email' && data[i][j].indexOf('mailto:') != 0)
-                            html += 'mailto:';
-                        else if(fields[j] == 'url' && data[i][j].indexOf('http://') != 0)
-                            html += 'http://';
-                        html += data[i][j] + '"';
-                        if(fields[j] == 'url')
-                            html += ' TARGET="_blank"';
-                        html += '>' + data[i][j] + '</A>';
-                        document.getElementById(fields[j]).innerHTML = html;
-                    } else
-                        document.getElementById(fields[j]).innerHTML = data[i][j] + "&nbsp;";
-            }
-        } else if (document.all) {
-            for(j=0; j<fields.length; j++) {
-                if(eval("document.all." + fields[j]))
-                    if(fields[j] == 'email' || fields[j] == 'url') {
-                        var html = '<A HREF="';
-                        if(fields[j] == 'email' && data[i][j].indexOf('mailto:') != 0)
-                            html += 'mailto:';
-                        else if(fields[j] == 'url' && data[i][j].indexOf('http://') != 0)
-                            html += 'http://';
-                        html += data[i][j] + '"';
-                        if(fields[j] == 'url')
-                            html += ' TARGET="_blank"';
-                        html += '>' + data[i][j] + '</A>';
-                        eval("document.all." + fields[j] + ".innerHTML = " + html);
-                    } else
-                        eval("document.all." + fields[j] + ".innerHTML = " + data[i][j]);
-            }
-        }
-    }
    
-    function onSearch(sync,e) {
-        if(e.type == 'keyup' && (e.keyCode == 33 ||
-               e.keyCode == 34 || e.keyCode == 38 || e.keyCode == 40))
-        {
-            switch(e.keyCode) {
-            case 33:
-              // page up
-              if(sync.list.selectedIndex == 0) {
-                upDown(e);
-                return;
-              }
-              sync.list.selectedIndex = 0;
-              break;
-            case 38:
-              // line up
-              if(sync.list.selectedIndex == 0) {
-                upDown(e);
-                return;
-              }
-              sync.list.selectedIndex--;
-              break;
-            case 34:
-              // page down
-              if(sync.list.selectedIndex == sync.list.length-1) {
-                upDown(e);
-                return;
-              }
-              sync.list.selectedIndex = sync.list.length-1;
-              break;
-            case 40:
-              // line down
-              if(sync.list.selectedIndex == sync.list.length-1) {
-                upDown(e);
-                return;
-              }
-              sync.list.selectedIndex++;
-              break;
-            }
-            changeList();
-            return;
-        }
-    
-        if(sync.Timer) {
-            clearTimeout(sync.Timer);
-            sync.Timer = null;
-        }
-        sync.Timer = setTimeout('onSearchNow()', 250);
-    }
-<?php 
-        ob_end_flush();
-        echo "    // -->\n</SCRIPT>\n";
-    }
     
     private function emitAlbumSel() {
-         $this->emitCache(API::ALBUM_FIELDS);
+         UI::emitJS('js/libed.album.js');
+         UI::emitJS('js/libed.common.js');
     
          echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH=\"100%\"><TR><TD VALIGN=TOP WIDTH=220>\n";
-         echo "  <INPUT TYPE=HIDDEN NAME=seltag VALUE=\"\">\n";
+         echo "  <INPUT TYPE=HIDDEN NAME=seltag id='seltag' VALUE=\"".$_REQUEST["seltag"]."\">\n";
          echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH=\"100%\">";
-         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search VALUE=\"$osearch\" autocomplete=off onkeyup=\"onSearch(document.forms[0],event);\" onkeypress=\"return event.keyCode != 13;\"><BR>\n";
+         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$osearch\" autocomplete=off onkeyup=\"onSearch(document.forms[0],event);\" onkeypress=\"return event.keyCode != 13;\"><BR>\n";
          echo "<SPAN CLASS=\"sub\">compilation?</SPAN><INPUT TYPE=CHECKBOX NAME=coll" . ($osearch&&$_REQUEST["coll"]?" CHECKED":"") . " onclick=\"onSearch(document.forms[0],event);\"></TD><TD></TD></TR>\n";
-         echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorUp\" onclick=\"return scrollUp();\"><BR><SELECT style=\"width:220px;\" class=\"select\" NAME=list SIZE=$this->limit onChange='changeList()' onKeyDown='return upDown(event);'>\n";
+         echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" id='bup' VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorUp\"><BR><SELECT style=\"width:220px;\" class=\"select\" NAME=list id='list' SIZE=$this->limit>\n";
          for($i=0; $i<$this->limit; $i++)
               echo "  <OPTION VALUE=\"\">\n";
-         echo "</SELECT><BR><INPUT NAME=\"bdown\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorDown\" onclick=\"return scrollDown(-1);\"></TD>\n";
+         echo "</SELECT><BR><INPUT NAME=\"bdown\" id='bdown' VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorDown\" ></TD>\n";
          echo "</TR></TABLE>\n";
-         echo "  <INPUT TYPE=HIDDEN NAME=up VALUE=\"\">\n";
-         echo "  <INPUT TYPE=HIDDEN NAME=down VALUE=\"\">\n";
+         echo "  <INPUT TYPE=HIDDEN NAME=up id='up' VALUE=\"\">\n";
+         echo "  <INPUT TYPE=HIDDEN NAME=down id='down' VALUE=\"\">\n";
+         echo "  <INPUT TYPE=HIDDEN id='list-size' VALUE=\"$this->limit\">\n";
     ?>
     </TD><TD>
     <TABLE>
@@ -1052,101 +941,9 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     <!--/P-->
     </TD><TD></TD></TR>
     </TABLE>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-    function setFocus() {
     <?php
-        if($_REQUEST["seltag"]) {
-              echo "   loadXMLDoc(\"zkapi.php?method=getAlbumsRq&operation=searchByTag&size=$this->limit&key=".$_REQUEST["seltag"]."\",0);\n";
-              echo "   document.forms[0].list.focus();\n";
-        } else {
-              echo "   scrollUp();\n";
-              echo "   document.forms[0].search.focus();\n";
-        }
-    ?>
     }
-    <?php 
-        ob_end_flush();
-    ?>
-    // -->
-    </SCRIPT>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-    function onSearchNow() {
-      var search = document.forms[0].search.value;
-      if(search.lastIndexOf('.') == search.length-1 && search.length > 3)
-         loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=searchByTag&size=<?php echo $this->limit; ?>&key=" + urlEncode(search),0);
-      else
-         loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=searchByName&size=<?php echo $this->limit; ?>&key=" + (document.forms[0].coll.checked?"[coll]: ":"") + urlEncode(search),0);
-    }
-    
-    function scrollUp() {
-      return loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=prevPage&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),-1);
-    }
-    
-    function scrollDown(selected) {
-      return loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=nextPage&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].down.value),selected);
-    }
-    
-    function upDown(e) {
-      select = document.forms[0].list;
-      if(e.keyCode == 33 && select.selectedIndex == 0) {
-         // page up
-         scrollUp();
-      } else if(e.keyCode == 34 && select.selectedIndex == select.length-1) {
-         // page down
-         scrollDown(1);
-      } else if(e.keyCode == 38 && select.selectedIndex == 0) {
-         // line up
-         loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=prevLine&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),-1);
-      } else if(e.keyCode == 40 && select.selectedIndex == select.length-1) {
-         // line down
-         loadXMLDoc("zkapi.php?method=getAlbumsRq&operation=nextLine&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),1);
-      }
-      return true;
-    }
-    
-    function processReqChange(req,selected) {
-      if(req.readyState == 4) {
-         // document loaded
-         if (req.status == 200) {
-            // success!
-            list = document.forms[0].list;
-            while(list.length > 0) list.remove(0);
-            items = req.responseXML.getElementsByTagName("albumrec");
-            for(var i=0; i<items.length; i++) {
-              var opt = document.createElement("option");
-              opt.value = getNodeValue(items[i].getElementsByTagName("tag"));
-              opt.appendChild(document.createTextNode(getNodeValue(items[i].getElementsByTagName("artist"))));
-              list.appendChild(opt);
-              for(var j=0; j<fields.length; j++)
-                 data[i][j] = getNodeValue(items[i].getElementsByTagName(fields[j]));
-            }
-            switch(selected) {
-            case -1:
-              list.selectedIndex = 0;
-              break;
-            case 1:
-              list.selectedIndex = list.length-1;
-              break;
-            default:
-              list.selectedIndex = list.length/2;
-              break;
-            }
-            changeList();
-            document.forms[0].up.value = getNodeValue(items[0].getElementsByTagName("artist")) + "|" + getNodeValue(items[0].getElementsByTagName("album")) + "|" + getNodeValue(items[0].getElementsByTagName("tag"));
-            document.forms[0].down.value = getNodeValue(items[items.length-1].getElementsByTagName("artist")) + "|" + getNodeValue(items[items.length-1].getElementsByTagName("album")) + "|" + getNodeValue(items[items.length-1].getElementsByTagName("tag"));
-         } else {
-            alert("There was a problem retrieving the XML data:\n" + req.statusText);
-         }
-      }
-    }
-    
-    <?php 
-        ob_end_flush();
-        echo "    // -->\n    </SCRIPT>\n";
-    }
-    
+
     private function albumForm() {
     ?>
     <TABLE>
@@ -1272,19 +1069,23 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     }
     
     private function emitLabelSel() {
-        $this->emitCache(API::LABEL_FIELDS);
+         UI::emitJS('js/libed.label.js');
+         UI::emitJS('js/libed.common.js');
     
         echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH=\"100%\"><TR><TD VALIGN=TOP WIDTH=230>\n";
-        echo "  <INPUT TYPE=HIDDEN NAME=selpubkey VALUE=\"\">\n";
+        echo "  <INPUT TYPE=HIDDEN NAME=selpubkey id='selpubkey' VALUE=\"".$_REQUEST["selpubkey"]."\">\n";
         echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH=\"100%\">";
-        echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search VALUE=\"$osearch\" autocomplete=off onkeyup=\"onSearch(document.forms[0],event);\" onkeypress=\"return event.keyCode != 13;\"></TD></TR>\n";
-        echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorUp\" onclick=\"return scrollUp();\"><BR><SELECT style=\"width:220px;\" class=\"select\" NAME=list SIZE=$this->limit onChange='changeList()' onKeyDown='return upDown(event);'>\n";
+        echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$osearch\" autocomplete=off onkeyup=\"onSearch(document.forms[0],event);\" onkeypress=\"return event.keyCode != 13;\"></TD></TR>\n";
+        echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorUp\"><BR><SELECT style=\"width:220px;\" class=\"select\" NAME=list id='list' SIZE=$this->limit>\n";
         for($i=0; $i<$this->limit; $i++)
             echo "  <OPTION VALUE=\"\">\n";
-        echo "</SELECT><BR><INPUT NAME=\"bdown\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorDown\" onclick=\"return scrollDown(-1);\"></TD>\n";
+        echo "</SELECT><BR><INPUT NAME=\"bdown\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorDown\"></TD>\n";
         echo "</TR></TABLE>\n";
-        echo "  <INPUT TYPE=HIDDEN NAME=up VALUE=\"\">\n";
-        echo "  <INPUT TYPE=HIDDEN NAME=down VALUE=\"\">\n";
+        echo "  <INPUT TYPE=HIDDEN NAME=up id='up' VALUE=\"\">\n";
+        echo "  <INPUT TYPE=HIDDEN NAME=down id='down' VALUE=\"\">\n";
+        echo "  <INPUT TYPE=HIDDEN id='list-size' VALUE=\"$this->limit\">\n";
+        echo "  <INPUT TYPE=HIDDEN id='seltag' VALUE=\"".$_REQUEST["seltag"]."\">\n";
+        echo "  <INPUT TYPE=HIDDEN id='req-name' VALUE=\"".$_REQUEST["name"]."\">\n";
     ?>
     </TD><TD>
     <TABLE>
@@ -1314,97 +1115,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     <!--/P-->
     </TD><TD></TD></TR>
     </TABLE>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-    function setFocus() {
     <?php
-         if($_REQUEST["seltag"]) {
-              echo "   loadXMLDoc(\"zkapi.php?method=getLabelsRq&operation=searchByTag&size=$this->limit&key=".$_REQUEST["seltag"]."\");\n";
-              echo "   document.forms[0].list.focus();\n";
-         } else if($_REQUEST["name"]) {
-              echo "   loadXMLDoc(\"zkapi.php?method=getLabelsRq&operation=searchByName&size=$this->limit&key=".UI::URLify($_REQUEST["name"])."\",0);\n";
-              echo "   document.forms[0].list.focus();\n";
-         } else {
-              echo "   scrollUp();\n";
-              echo "   document.forms[0].search.focus();\n";
-         }
-    ?> 
-    }
-    <?php 
-        ob_end_flush();
-    ?>
-    // -->
-    </SCRIPT>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-    function onSearchNow() {
-      loadXMLDoc("zkapi.php?method=getLabelsRq&operation=searchByName&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].search.value),0);
-    }
-    
-    function scrollUp() {
-      return loadXMLDoc("zkapi.php?method=getLabelsRq&operation=prevPage&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),-1);
-    }
-    
-    function scrollDown(selected) {
-      return loadXMLDoc("zkapi.php?method=getLabelsRq&operation=nextPage&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].down.value),selected);
-    }
-    
-    function upDown(e) { 
-      select = document.forms[0].list;
-      if(e.keyCode == 33 && select.selectedIndex == 0) {
-         // page up
-         scrollUp();
-      } else if(e.keyCode == 34 && select.selectedIndex == select.length-1) {
-         // page down
-         scrollDown(1);
-      } else if(e.keyCode == 38 && select.selectedIndex == 0) {
-         // line up
-         loadXMLDoc("zkapi.php?method=getLabelsRq&operation=prevLine&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),-1);
-      } else if(e.keyCode == 40 && select.selectedIndex == select.length-1) {
-         // line down
-         loadXMLDoc("zkapi.php?method=getLabelsRq&operation=nextLine&size=<?php echo $this->limit; ?>&key=" + urlEncode(document.forms[0].up.value),1);
-      }
-      return true;
-    }
-    
-    function processReqChange(req,selected) {
-      if(req.readyState == 4) {
-         // document loaded
-         if (req.status == 200) {
-            // success!
-            list = document.forms[0].list;
-            while(list.length > 0) list.remove(0);
-            items = req.responseXML.getElementsByTagName("labelrec");
-            for(var i=0; i<items.length; i++) {
-              var opt = document.createElement("option");
-              opt.value = getNodeValue(items[i].getElementsByTagName("pubkey"));
-              opt.appendChild(document.createTextNode(getNodeValue(items[i].getElementsByTagName("name"))));
-              list.appendChild(opt);
-              for(var j=0; j<fields.length; j++)
-                 data[i][j] = getNodeValue(items[i].getElementsByTagName(fields[j]));
-            }
-            switch(selected) {
-            case -1:
-              list.selectedIndex = 0;
-              break;
-            case 1:
-              list.selectedIndex = list.length-1;
-              break;
-            default:
-              list.selectedIndex = list.length/2;
-              break;
-            }
-            changeList();
-            document.forms[0].up.value = getNodeValue(items[0].getElementsByTagName("name")) + "|" + getNodeValue(items[0].getElementsByTagName("pubkey"));
-            document.forms[0].down.value = getNodeValue(items[items.length-1].getElementsByTagName("name")) + "|" + getNodeValue(items[items.length-1].getElementsByTagName("pubkey"));
-         } else {
-            alert("There was a problem retrieving the XML data:\n" + req.statusText);
-         }
-      }
-    }
-    <?php 
-        ob_end_flush();
-        echo "    // -->\n    </SCRIPT>\n";
     }
     
     private function labelForm() {
