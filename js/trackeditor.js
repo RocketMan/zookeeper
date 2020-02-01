@@ -197,6 +197,77 @@ $().ready(function(){
         setAddButtonState(haveAll);
     });
 
+    function moveTrack(list, fromId, toId, tr, si, rows) {
+        var postData = {
+            session: $("#track-session").val(),
+            playlist: list,
+            fromId: fromId,
+            toId: toId
+        };
+
+        $.ajax({
+            type: "POST",
+            url: "?action=moveTrack",
+            dataType : "json",
+            accept: "application/json; charset=utf-8",
+            data: postData,
+            success: function(respObj) {
+                // move succeeded, clear timestamp
+                tr.find("td").eq(1).html("");
+                $("#error-msg").text("");
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                // move failed; restore original sequence
+                if(tr.index() < si)
+                    rows.eq(si+1).after(tr);
+                else
+                    rows.eq(si).after(tr);
+
+                $('#error-msg').text("Error moving track: " + jqXHR.responseJSON.status);
+            }
+        });
+    }
+
+    // grabStart DnD code adapted from NateS
+    //
+    // Reference: https://stackoverflow.com/questions/2072848/reorder-html-table-rows-using-drag-and-drop/42720364
+    function grabStart(e) {
+        var tr = $(e.target).closest("TR"), si = tr.index(), sy = e.pageY, b = $(document.body), drag;
+        b.addClass("grabCursor").css("userSelect", "none");
+        tr.addClass("grabbed");
+        function move (e) {
+            if (!drag && Math.abs(e.pageY - sy) < 10) return;
+            drag = true;
+            tr.siblings().each(function() {
+                var s = $(this), i = s.index(), y = s.offset().top;
+                if (e.pageY >= y && e.pageY < y + s.outerHeight()/2) {
+                    if (i < tr.index())
+                        tr.insertBefore(s);
+                    else
+                        tr.insertAfter(s);
+                    return false;
+                }
+            });
+        }
+        function up (e) {
+            if (drag && si != tr.index()) {
+                drag = false;
+                var source = tr.find(".grab");
+                var rows = tr.closest("table").find("tr");
+                var ti = tr.index();
+                var target = rows.eq(ti+(si<ti?0:2)).find(".grab");
+                var listId = $("#track-playlist").val();
+                var sourceId = source.data("id");
+                var targetId = target.data("id");
+                moveTrack(listId, sourceId, targetId, tr, si, rows);
+            }
+            $(document).unbind("mousemove", move).unbind("mouseup", up);
+            b.removeClass("grabCursor").css("userSelect", "none");
+            tr.removeClass("grabbed");
+        }
+        $(document).mousemove(move).mouseup(up);
+    }
+
     function submitTrack(addSeparator) {
         var artist, label, album, track, type, eventType, eventCode, comment;
         var trackType =  $("#track-type-pick").val();
@@ -305,77 +376,6 @@ $().ready(function(){
     });
 
     $(".playlistTable .grab").mousedown(grabStart);
-
-    function moveTrack(list, fromId, toId, tr, si, rows) {
-        var postData = {
-            session: $("#track-session").val(),
-            playlist: list,
-            fromId: fromId,
-            toId: toId
-        };
-
-        $.ajax({
-            type: "POST",
-            url: "?action=moveTrack",
-            dataType : "json",
-            accept: "application/json; charset=utf-8",
-            data: postData,
-            success: function(respObj) {
-                // move succeeded, clear timestamp
-                tr.find("td").eq(1).html("");
-                $("#error-msg").text("");
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                // move failed; restore original sequence
-                if(tr.index() < si)
-                    rows.eq(si+1).after(tr);
-                else
-                    rows.eq(si).after(tr);
-
-                $('#error-msg').text("Error moving track: " + jqXHR.responseJSON.status);
-            }
-        });
-    }
-
-    // grabStart DnD code adapted from NateS
-    //
-    // Reference: https://stackoverflow.com/questions/2072848/reorder-html-table-rows-using-drag-and-drop/42720364
-    function grabStart(e) {
-        var tr = $(e.target).closest("TR"), si = tr.index(), sy = e.pageY, b = $(document.body), drag;
-        b.addClass("grabCursor").css("userSelect", "none");
-        tr.addClass("grabbed");
-        function move (e) {
-            if (!drag && Math.abs(e.pageY - sy) < 10) return;
-            drag = true;
-            tr.siblings().each(function() {
-                var s = $(this), i = s.index(), y = s.offset().top;
-                if (e.pageY >= y && e.pageY < y + s.outerHeight()/2) {
-                    if (i < tr.index())
-                        tr.insertBefore(s);
-                    else
-                        tr.insertAfter(s);
-                    return false;
-                }
-            });
-        }
-        function up (e) {
-            if (drag && si != tr.index()) {
-                drag = false;
-                var source = tr.find(".grab");
-                var rows = tr.closest("table").find("tr");
-                var ti = tr.index();
-                var target = rows.eq(ti+(si<ti?0:2)).find(".grab");
-                var listId = $("#track-playlist").val();
-                var sourceId = source.data("id");
-                var targetId = target.data("id");
-                moveTrack(listId, sourceId, targetId, tr, si, rows);
-            }
-            $(document).unbind("mousemove", move).unbind("mouseup", up);
-            b.removeClass("grabCursor").css("userSelect", "none");
-            tr.removeClass("grabbed");
-        }
-        $(document).mousemove(move).mouseup(up);
-    }
 });
 
 function setFocus() {}
