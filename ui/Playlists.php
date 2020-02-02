@@ -454,7 +454,7 @@ class Playlists extends MenuItem {
         </FORM>
 
     <?php
-        UI::emitJS('js/playlisteditor.js');
+        UI::emitJS('js/pled.info.js');
     }
     
     // handles post for playlist creation and edit
@@ -1960,7 +1960,7 @@ class Playlists extends MenuItem {
         echo "</TBODY></TABLE>\n";
 
         if($editMode)
-            UI::emitJS('js/trackeditor.js');
+            UI::emitJS('js/pled.track.js');
     }
 
 
