@@ -1030,17 +1030,6 @@ class Playlists extends MenuItem {
                 var len = this.value.length;
                 $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
             });
-
-            $("#markdown-help-link").click(function() {
-                if($("#markdown-help").is(":visible")) {
-                    $("#markdown-help").hide();
-                    $("#markdown-help-link").text("formatting help");
-                } else {
-                    $("#markdown-help").css('padding-left','80px');
-                    $("#markdown-help").show();
-                    $("#markdown-help-link").text("hide help");
-                }
-            });
     <?php ob_end_flush(); ?>
       // -->
       </SCRIPT>
