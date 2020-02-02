@@ -1,8 +1,14 @@
 <IfModule mod_rewrite.c>
 RewriteEngine on
-# rewrite asset-numericStamp.ext to asset.ext and minify
-RewriteCond $1 !^\..*$
-RewriteRule ^([^-]+)(-[0-9]+)(^\.src)?\.js$ .jshandler.php/$1.js [L]
-RewriteRule ^([^-]+)(-[0-9]+)\.src\.js$ $1.js [L]
+
+# rewrite asset-numericStamp.js to asset.js and minify
+RewriteCond $0 !^\..*$
+RewriteCond $0 !\.src\.js$
+RewriteRule ^([^-]+)(-[0-9]+)?\.js$ .jshandler.php/$1.js [L]
+
+# rewrite asset-numericStamp.src.js to asset.js
+RewriteRule ^([^-]+)(-[0-9]+)?\.src.js $1.js [END]
+
+# rewrite asset-numericStamp.map to source map for asset.js
 RewriteRule ^([^-]+)(-[0-9]+)?\.map$ .mapgenerator.php/$1.js [L]
 </IfModule>
