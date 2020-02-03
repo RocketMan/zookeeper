@@ -345,6 +345,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             if (count($timeAr) == 2) {
                 $timeStr1 = $listRow[1] . " " . $timeAr[0];
                 $start = \DateTime::createFromFormat($TIME_FORMAT, $timeStr1);
+                $start->modify("-5 minutes");
                 // end time can be midnight or later
                 // in this case, adjust to the next day
                 if($start) {
@@ -353,6 +354,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                         $end->modify("+1 day");
                     $end->setTime(substr($timeAr[1], 0, 2),
                                   substr($timeAr[1], 2, 2));
+                    $end->modify("+15 minutes");
                 }
                 if ($start && $end) {
                     $retVal = (($dateTime >= $start) && ($dateTime <= $end));

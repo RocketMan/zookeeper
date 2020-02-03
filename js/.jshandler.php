@@ -42,6 +42,10 @@ if(substr_compare($target, ".min.js", -7)) {
     header("SourceMap: ${base}.map");
 }
 
+// for HEAD requests, there is nothing more to do
+if($_SERVER['REQUEST_METHOD'] == "HEAD")
+    return;
+
 ob_start("ob_gzhandler");
 ob_start([\JSMin::class, 'minify']);
 

@@ -36,6 +36,10 @@ if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
 header("Content-Type: application/json");
 header("Last-Modified: ".gmdate('D, d M Y H:i:s', filemtime($target))." GMT");
 
+// for HEAD requests, there is nothing more to do
+if($_SERVER['REQUEST_METHOD'] == "HEAD")
+    return;
+
 // generate the destination (minified) contents...
 // this must be the same algorithm used in .jshandler.php
 $minified = explode("\n", JSMIN::minify(file_get_contents($target)));

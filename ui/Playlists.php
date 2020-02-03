@@ -454,7 +454,7 @@ class Playlists extends MenuItem {
         </FORM>
 
     <?php
-        UI::emitJS('js/playlisteditor.js');
+        UI::emitJS('js/pled.info.js');
     }
     
     // handles post for playlist creation and edit
@@ -510,9 +510,18 @@ class Playlists extends MenuItem {
                          $this->session->getUser(),
                          $date, $showTime, $description, $aid);
 
-                $_REQUEST["playlist"] = Engine::lastInsertId();
-                $this->action = "newListEditor";
-                $this->emitEditor();
+                if($success) {
+                    // force browser nav to new playlist so subsequent
+                    // reloads in the track editor work as expected
+                    echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
+                         "function setFocus() {".
+                         "location.href='?action=newListEditor&playlist=".
+                         Engine::lastInsertId()."';}\n".
+                         "// -->\n</SCRIPT>\n";
+                    return;
+                } else {
+                    $this->emitEditListError("Internal error.  Try again.");
+                }
             }
         } else {
             $errMsg = "Missing field";
@@ -1020,17 +1029,6 @@ class Playlists extends MenuItem {
             $("#ctext").on('input', function(e) {
                 var len = this.value.length;
                 $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
-            });
-
-            $("#markdown-help-link").click(function() {
-                if($("#markdown-help").is(":visible")) {
-                    $("#markdown-help").hide();
-                    $("#markdown-help-link").text("formatting help");
-                } else {
-                    $("#markdown-help").css('padding-left','80px');
-                    $("#markdown-help").show();
-                    $("#markdown-help-link").text("hide help");
-                }
             });
     <?php ob_end_flush(); ?>
       // -->
@@ -1951,7 +1949,7 @@ class Playlists extends MenuItem {
         echo "</TBODY></TABLE>\n";
 
         if($editMode)
-            UI::emitJS('js/trackeditor.js');
+            UI::emitJS('js/pled.track.js');
     }
 
 
