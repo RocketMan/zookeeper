@@ -514,9 +514,9 @@ class Playlists extends MenuItem {
                     // force browser nav to new playlist so subsequent
                     // reloads in the track editor work as expected
                     echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
-                         "function setFocus() {".
+                         "\$().ready(function(){".
                          "location.href='?action=newListEditor&playlist=".
-                         Engine::lastInsertId()."';}\n".
+                         Engine::lastInsertId()."';});\n".
                          "// -->\n</SCRIPT>\n";
                     return;
                 } else {
@@ -709,8 +709,6 @@ class Playlists extends MenuItem {
 
         <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     <?php ob_start([\JSMin::class, 'minify']); ?>
-            function setFocus(){}
-    
             $().ready(function(){
                 $("#list-type-picker").change(function() {
                     var $showType = $(this).val();
@@ -1301,10 +1299,10 @@ class Playlists extends MenuItem {
                     $("#csv-help").show();
                 }
             });
-            function setFocus() {
+            $().ready(function() {
                 $("input[name='format']:eq(0)").click();
                 $("select[name='playlist']").focus();
-            }
+            });
     <?php ob_end_flush(); ?>
       // -->
       </SCRIPT>

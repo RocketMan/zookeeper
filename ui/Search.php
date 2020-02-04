@@ -166,12 +166,12 @@ function processReqChange(req) {
   }
 }
 
-function setFocus() {
+$().ready(function() {
   document.forms[0].search.focus();
   var val = document.forms[0].search.value;
   if(val.length > 0) onSearchNow();
   document.forms[0].search.value = val;  // reset value to force cursor to end
-}
+});
     <?php
         ob_end_flush();
     ?>

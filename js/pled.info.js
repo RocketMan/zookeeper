@@ -88,5 +88,3 @@ $().ready(function(){
         return true;
     });
 });
-
-function setFocus() {}

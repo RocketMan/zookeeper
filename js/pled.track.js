@@ -377,5 +377,3 @@ $().ready(function(){
 
     $(".playlistTable .grab").mousedown(grabStart);
 });
-
-function setFocus() {}

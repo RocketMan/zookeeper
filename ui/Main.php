@@ -206,7 +206,7 @@ class Main implements IController {
     
     protected function emitBody($dispatcher) {
 ?>
-<BODY onLoad="setFocus()">
+<BODY>
 <DIV CLASS="box">
   <DIV CLASS="header">
 <?php
@@ -332,9 +332,9 @@ class Main implements IController {
         echo "<H2>$dn logged out</H2>\n";
         if($this->ssoUser) {
             echo "<SCRIPT TYPE=\"text/javascript\"><!--\n";
-            echo "function setFocus() {";
-            echo "window.location.replace(\"$logoutURI\");";    
-            echo "} // -->\n</SCRIPT>\n";
+            echo "\$().ready(function(){";
+            echo "window.location.replace(\"$logoutURI\");";
+            echo "}); // -->\n</SCRIPT>\n";
         } else
             UI::setFocus();
     }
@@ -464,12 +464,12 @@ class Main implements IController {
     function showNew() {
         document.getElementById("oldSect").style.display = "none";
         document.getElementById("newSect").style.display = "block"; }
-    function setFocus() {
 <?php if($_REQUEST["user"]) { ?>
+    $().ready(function() {
         document.getElementById("oldRadio").checked = true;
         showOld();
+    });
 <?php } ?>
-    }
     <?php ob_end_flush(); ?>
     // -->
     </SCRIPT>

@@ -110,5 +110,3 @@ $().ready(function() {
         $("#search").focus();
     }
 });
-
-function setFocus() {}
