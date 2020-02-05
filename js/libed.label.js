@@ -110,4 +110,8 @@ $().ready(function() {
         scrollUp();
         $("#search").focus();
     }
+
+    $("#bup").click(scrollUp);
+    $("#bdown").click(scrollDown);
+    $("#list").keydown(upDown).change(changeList);
 });

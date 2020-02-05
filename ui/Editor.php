@@ -861,40 +861,6 @@ class Editor extends MenuItem {
         }
         return $title;
     }
-
-    private function emitZkAlpha($moveThe = 0) {
-        echo "<SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\"><!--\n";
-        ob_start([\JSMin::class, 'minify']);
-    ?>
-nonalnum=/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/;
-stopwords=/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i;
-function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
-    var val=control.value;
-    var newVal=val.split(nonalnum).map(function(word, index, array) {
-        // words starting with caps are kept as-is
-        if(word.search(/^[A-Z]+/) > -1)
-            return word;
-
-        // stopwords are not capitalized, unless first or last
-        if(word.search(stopwords) > -1 &&
-                index !== 0 &&
-                index !== array.length - 1)
-            return word.toLowerCase();
-
-        // otherwise, capitalize the word
-        return word.charAt(0).toUpperCase() +
-               word.substr(1).toLowerCase();
-    }).join('');
-    if(<?php echo !$moveThe?"!track && ":"";?>newVal.substr(0, 4) == 'The ')
-        newVal=newVal.substr(4)+', The';
-    control.value=newVal;
-}
-    <?php 
-        ob_end_flush();
-        echo "// -->\n</SCRIPT>\n";
-    }
-    
-   
     
     private function emitAlbumSel() {
          UI::emitJS('js/libed.album.js');
@@ -945,6 +911,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     }
 
     private function albumForm() {
+        UI::emitJS('js/libed.common.js');
     ?>
     <TABLE>
     <?php 
@@ -1046,24 +1013,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
       <TR><TD ALIGN=RIGHT></TD><TD>&nbsp;</TD></TR>
       <TR><TD></TD><TD><?php if(!$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Change Label...  ">&nbsp;&nbsp;<?php }?><INPUT TYPE=SUBMIT NAME=<?php echo $_REQUEST["new"]?"edit":"next";?> CLASS=submit VALUE="  <?php echo $_REQUEST["new"]?"Next &gt;&gt;":"Tracks...";?>  ">&nbsp;&nbsp;<?php if(!$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=done CLASS=submit VALUE="  Done!  "><?php }?></TD></TR>
     </TABLE>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-    function setComp() {
-    disabled = document.forms[0].coll.checked;
-    document.forms[0].artist.style.visibility = disabled?'hidden':'visible';
-    document.getElementById("lartist").style.visibility = disabled?'hidden':'visible';
-    disabled?document.forms[0].album.focus():document.forms[0].artist.focus();
-    }
-    function setLocation() {
-    storage = document.forms[0].location.value == 'G';
-    document.forms[0].bin.style.visibility = storage?'visible':'hidden';
-    document.getElementById("lbin").style.visibility = storage?'visible':'hidden';
-    if(storage) document.forms[0].bin.focus();
-    }
     <?php 
-        ob_end_flush();
-        echo "    // -->\n    </SCRIPT>\n";
-        $this->emitZkAlpha(1);
         echo "  <INPUT TYPE=HIDDEN NAME=new VALUE=\"".$_REQUEST["new"]."\">\n";
         UI::setFocus($coll?"album":"artist");
     }
@@ -1076,10 +1026,10 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
         echo "  <INPUT TYPE=HIDDEN NAME=selpubkey id='selpubkey' VALUE=\"".$_REQUEST["selpubkey"]."\">\n";
         echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH=\"100%\">";
         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$osearch\" autocomplete=off onkeyup=\"onSearch(document.forms[0],event);\" onkeypress=\"return event.keyCode != 13;\"></TD></TR>\n";
-        echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorUp\"><BR><SELECT style=\"width:220px;\" class=\"select\" NAME=list id='list' SIZE=$this->limit>\n";
+        echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" id=\"bup\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorUp\"><BR><SELECT style=\"width:220px;\" class=\"select\" NAME=list id='list' SIZE=$this->limit>\n";
         for($i=0; $i<$this->limit; $i++)
             echo "  <OPTION VALUE=\"\">\n";
-        echo "</SELECT><BR><INPUT NAME=\"bdown\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorDown\"></TD>\n";
+        echo "</SELECT><BR><INPUT NAME=\"bdown\" id=\"bdown\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorDown\"></TD>\n";
         echo "</TR></TABLE>\n";
         echo "  <INPUT TYPE=HIDDEN NAME=up id='up' VALUE=\"\">\n";
         echo "  <INPUT TYPE=HIDDEN NAME=down id='down' VALUE=\"\">\n";
@@ -1119,6 +1069,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     }
     
     private function labelForm() {
+        UI::emitJS('js/libed.common.js');
         echo "<TABLE>\n";
     
         if($_REQUEST["lnew"]) {
@@ -1154,17 +1105,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
       <TR><TD ALIGN=RIGHT></TD><TD>&nbsp;</TD></TR>
       <TR><TD></TD><TD><INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  <?php echo ($this->subaction=="labels")?"Done!":($_REQUEST["seltag"]?"  OK  ":"Next &gt;&gt;");?>  ">&nbsp;</TD></TR>
     </TABLE>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-    function setForeign() {
-    foreign = document.forms[0].foreign.checked;
-    document.getElementById("lstate").style.visibility = foreign?'hidden':'visible';
-    document.getElementById("lzip").innerHTML = foreign?'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country:':'Postal Code:';
-    }
     <?php 
-        ob_end_flush();
-        echo "    // -->\n    </SCRIPT>\n";
-        $this->emitZkAlpha();
         UI::setFocus("name");
     }
     
@@ -1183,6 +1124,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     }
     
     private function trackForm() {
+        UI::emitJS('js/libed.common.js');
         if($_REQUEST["seltag"] && !$_REQUEST["tdb"]) {
             $tracks = Engine::api(IEditor::class)->getTracks($_REQUEST["seltag"], $_REQUEST["coll"]);
             while($row = $tracks->fetch()) {
@@ -1209,7 +1151,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
         } else $_REQUEST["nextTrack"] = 1;
     
         echo "<TABLE>\n";
-        echo "<TR><TD></TD><TD".($_REQUEST["coll"]?" COLSPAN=3":"")." ALIGN=RIGHT>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert CLASS=submit onClick='insertTrack();' VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete CLASS=submit onClick='deleteTrack();' VALUE='&minus;'></TD></TR>\n";
+        echo "<TR><TD></TD><TD".($_REQUEST["coll"]?" COLSPAN=3":"")." ALIGN=RIGHT>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert CLASS=submit onClick='insertTrack(".$_REQUEST["coll"].");' VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete CLASS=submit onClick='deleteTrack(".$_REQUEST["coll"].");' VALUE='&minus;'></TD></TR>\n";
         $size = $_REQUEST["coll"]?30:60;
         for($i=0; $i<$this->tracksPerPage; $i++) {
             $trackNum = $_REQUEST["nextTrack"] + $i;
@@ -1225,60 +1167,7 @@ function zkAlpha(control<?php echo !$moveThe?", track":"";?>) {
     ?>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=nextTrack VALUE=<?php echo (int)($_REQUEST["nextTrack"]+$this->tracksPerPage);?>>
-    <?php UI::emitJS('js/zooscript.js'); ?>
-    <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-    var focus;
-    function cf(f) { focus = f; }
-    function nextTrack() {
-        var form = document.forms[0];
-        for(var i=1; typeof(eval('form.track'+i)) != 'undefined'; i++);
-        return i;
-    }
-    function insertTrack() {
-        var form = document.forms[0];
-        var next = nextTrack();
-        var track = createNamedElement('INPUT', 'track'+next);
-        track.type = 'hidden';
-        form.appendChild(track);
-    <?php if($_REQUEST["coll"]){?>
-        var artist = createNamedElement('INPUT', 'artist'+next);
-        artist.type = 'hidden';
-        form.appendChild(artist);
-    <?php }?>
-        for(var j=next; j>focus; j--) {
-            eval('form.track' + j + '.value=form.track' + (j-1) + '.value;');
-    <?php if($_REQUEST["coll"]){?>
-            eval('form.artist' + j + '.value=form.artist' + (j-1) + '.value;');
-    <?php }?>
-        }
-        eval('form.track' + focus + '.value="";');
-    <?php if($_REQUEST["coll"]){?>
-        eval('form.artist' + focus + '.value="";');
-    <?php }?>
-        eval('form.track' + focus + '.focus();');
-    }
-    function deleteTrack() {
-        if(confirm('Delete track ' + focus + '?')) {
-            var form = document.forms[0];
-            var last = nextTrack()-1;
-            for(var j=focus; j<last; j++) {
-                eval('form.track' + j + '.value=form.track' + (j+1) + '.value;');
-    <?php if($_REQUEST["coll"]){?>
-                eval('form.artist' + j + '.value=form.artist' + (j+1) + '.value;');
-    <?php }?>
-            }
-            eval('form.track' + last + '.value="";');
-    <?php if($_REQUEST["coll"]){?>
-            eval('form.artist' + last + '.value="";');
-    <?php }?>
-            eval('form.track' + focus + '.focus();');
-        }
-    }
-    <?php 
-        ob_end_flush();
-        echo "    // -->\n    </SCRIPT>\n";
-        $this->emitZkAlpha();
+    <?php
         UI::setFocus("track" . ($focusTrack?$focusTrack:$_REQUEST["nextTrack"]));
     }
 
