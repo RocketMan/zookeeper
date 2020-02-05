@@ -473,6 +473,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
     }
 
     public function listLabels($op, $key, $limit) {
+        $cache = [];
         $reverse = 0;
         $parts = explode('|', $key);
         switch($op) {
@@ -592,7 +593,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
             } else if ($op < ILibrary::OP_BY_NAME) {
                 // Handle case of forward scroll on the last page
                 $parts = explode('|', $key);
-                $query = "SELECT * FROM publist WHERE name <> '' AND name > ? OR (name = ? AND pubkey > ?) ORDER BY name, pubkey LIMIT ?";
+                $query = "SELECT * FROM publist WHERE name <> '' AND name > ? OR (name = ? AND pubkey >= ?) ORDER BY name, pubkey LIMIT ?";
                 $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $parts[0]);
                 $stmt->bindValue(2, $parts[0]);
