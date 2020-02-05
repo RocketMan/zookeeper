@@ -257,6 +257,7 @@ class Editor extends MenuItem {
     }
     
     public function queueList($validate) {
+         UI::emitJS('js/libed.common.js');
          if($validate) {
               if($_REQUEST["printToPDF"]) {
                   $selTags = array();
@@ -314,48 +315,15 @@ class Editor extends MenuItem {
          if(in_array('lpr', $this->printConfig['print_methods']))
              echo "       <INPUT TYPE=submit CLASS=submit NAME=print onclick=\"return isLocal();\" VALUE=\" Print \">&nbsp;&nbsp;&nbsp;\n";
          if(in_array('pdf', $this->printConfig['print_methods']))
-             echo "       <INPUT TYPE=submit CLASS=submit NAME=printToPDF onclick=\"return validate();\" VALUE=\" Print To PDF &gt; \">\n";
+             echo "       <INPUT TYPE=submit CLASS=submit NAME=printToPDF onclick=\"return validateQueueList();\" VALUE=\" Print To PDF &gt; \">\n";
+             echo "       <INPUT TYPE=hidden id='local' VALUE='". ($this->session->isLocal()?"1":"0") ."'>\n";
          echo "    </P>\n"; ?>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-    function checkAll() {
-      form = document.forms[0];
-      all = form.all.checked;
-      for(var i=0; i<form.length; i++)
-         if(form[i].type == 'checkbox')
-             form[i].checked = all;
-    }
-    function isLocal() {
-<?php
-    if($this->session->isLocal())
-        echo "      return true;\n";
-    else
-        echo "      alert('tags can be printed to the label printer only at the station');\n      return false;\n";
-?>
-    }
-    function validate() {
-      form = document.forms[0];
-      selected = 0;
-      for(var i=0; i<form.length; i++)
-         if(form[i].type == 'checkbox')
-             selected |= form[i].checked;
-      if(selected)
-        return true;
-      else {
-        alert("Select at least one tag to proceed");
-        return false;
-      }
-    }
-    <?php
-        ob_end_flush();
-    ?>
-    // -->
-    </SCRIPT>
     <?php
         UI::setFocus();
     }
     
     public function queueForm($validate) {
+        UI::emitJS('js/libed.common.js');
         if($validate) {
             if($_REQUEST["back"]) {
                 $this->tagQPanels["form"][1] = "select";
@@ -380,25 +348,7 @@ class Editor extends MenuItem {
         foreach($this->printConfig['labels'] as $label)
             echo "  <TR><TD><INPUT NAME=form TYPE=radio VALUE=\"".$label["code"]."\"".($_POST["form"] == $label["code"]?" checked":"").">".$label["name"]."</TD></TR>\n";
         echo "</TABLE>\n";
-        echo "<P><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next onclick=\"return validate();\" VALUE=\" Next &gt; \"></P>\n";
-?>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-    function validate() {
-        var selected = false;
-        var forms = document.getElementsByName('form');
-        for(var i=0; i<forms.length; i++)
-            if(forms[i].checked)
-                return true;
-        alert("Select a label format");
-        return false;
-    }
-    <?php
-        ob_end_flush();
-    ?>
-    // -->
-    </SCRIPT>
-    <?php
+        echo "<P><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next onclick=\"return validateQueueForm();\" VALUE=\" Next &gt; \"></P>\n";
         $this->skipVar("form");
         $this->skipVar("back");
         $this->skipVar("next");
@@ -406,6 +356,7 @@ class Editor extends MenuItem {
     }
     
     public function queuePlace($validate) {
+        UI::emitJS('js/libed.common.js');
         $labels = $this->printConfig['labels'];
         $oneform = count($labels) == 1;
         if($validate) {
@@ -439,73 +390,15 @@ class Editor extends MenuItem {
             echo "    ";
             for($j=0; $j<$numCol; $j++) {
                 $index = $i*$numCol + $j;
-                echo "<A HREF=\"#\" onClick=\"c($index);\" id=\"label$index\">".($i + $j*$numRow + 1)."</A>&nbsp;";
+                echo "<A HREF=\"#\" onClick=\"placeLabel($index);\" id=\"label$index\">".($i + $j*$numRow + 1)."</A>&nbsp;";
             }
             echo "<BR>\n";
         }
         echo "    </TD></TR>\n    <TR><TD>&nbsp;</TD></TR>\n";
-        echo "    <TR><TD STYLE=\"text-align: right;\"><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next onclick=\"return validate();\" VALUE=\" Next &gt; \">\n";
+        echo "    <TR><TD STYLE=\"text-align: right;\"><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next onclick=\"return validateQueuePlace();\" VALUE=\" Next &gt; \">\n";
+        echo "    <INPUT TYPE=HIDDEN id='num-labels' VALUE=\"$numLabels\">\n";
+        echo "    <INPUT TYPE=HIDDEN id='max-count' VALUE=\"$count\">\n";
         echo "    <INPUT TYPE=HIDDEN NAME=sel ID=sel VALUE=\"\"></TD></TR></TABLE>\n";
-        echo "<SCRIPT LANGUAGE=\"JavaScript\" TYPE=\"text/javascript\"><!--\n";
-        ob_start([\JSMin::class, 'minify']);
-        // 2018-06-14 this does not work in some browsers;
-        // for now, we'll manually create an empty array
-        //echo "    var sel = [...Array($numLabels)].map(x=>0);\n";
-        // BEGIN WORKAROUND
-        echo "    var sel = [ ";
-        for($i=0; $i<$numLabels; $i++)
-            echo "0, ";
-        echo "];\n";
-        // END WORKAROUND
-?>
-    var count = 0, max=<?php echo $count; ?>;
-    function c(idx) {
-      if(sel[idx]) {
-        elt = document.getElementById('label'+idx);
-        elt.style.background="white";
-        elt.style.border="solid #696969 2px";
-        sel[idx] = 0;
-        if(count == max) {
-          for(i=0; i<<?php echo $numLabels; ?>; i++) {
-            if(!sel[i]) {
-              elt = document.getElementById('label'+i);
-              elt.style.background = "white";
-            }
-          }
-        }
-        count--;
-      } else {
-        if(count == max) return;
-        elt = document.getElementById('label'+idx);
-        elt.style.background="beige";
-        elt.style.border="solid green 2px";
-        sel[idx] = 1;
-        count++;
-        if(count == max) {
-          for(i=0; i<<?php echo $numLabels; ?>; i++) {
-            if(!sel[i]) {
-              elt = document.getElementById('label'+i);
-              elt.style.background = "#c3c3c3";
-            }
-          }
-        }
-      }
-    }
-    function validate() {
-      if(count == 0) {
-        alert("Select at least one label to print");
-        return false;
-      } else
-        document.getElementById('sel').value = sel.join();
-
-      return true;
-    }
-    <?php
-        ob_end_flush();
-    ?>
-    // -->
-    </SCRIPT>
-    <?php
         $this->skipVar("sel");
         $this->skipVar("back");
         $this->skipVar("next");

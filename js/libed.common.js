@@ -228,3 +228,93 @@ function deleteTrack(coll = false) {
         $("INPUT[name='track" + focus + "' i]").focus();
     }
 }
+
+function checkAll() {
+    form = document.forms[0];
+    all = form.all.checked;
+    for(var i=0; i<form.length; i++)
+        if(form[i].type == 'checkbox')
+            form[i].checked = all;
+}
+
+function isLocal() {
+    if($("#local").val() == 1)
+        return true;
+    else {
+        alert('tags can be printed to the label printer only at the station');
+        return false;
+    }
+}
+
+function validateQueueList() {
+    form = document.forms[0];
+    selected = 0;
+    for(var i=0; i<form.length; i++)
+        if(form[i].type == 'checkbox')
+            selected |= form[i].checked;
+    if(selected)
+        return true;
+    else {
+        alert("Select at least one tag to proceed");
+        return false;
+    }
+}
+
+function validateQueueForm() {
+    var selected = false;
+    var forms = document.getElementsByName('form');
+    for(var i=0; i<forms.length; i++)
+        if(forms[i].checked)
+            return true;
+    alert("Select a label format");
+    return false;
+}
+
+var sel, count = 0, max = -1;
+function placeLabel(idx) {
+    if(max == -1) {
+        max = $("#max-count").val();
+        sel = Array($("#num-labels").val()).fill(0);
+    }
+
+    if(sel[idx]) {
+        elt = document.getElementById('label'+idx);
+        elt.style.background="white";
+        elt.style.border="solid #696969 2px";
+        sel[idx] = 0;
+        if(count == max) {
+            for(i=0; i<$("#num-labels").val(); i++) {
+                if(!sel[i]) {
+                    elt = document.getElementById('label'+i);
+                    elt.style.background = "white";
+                }
+            }
+        }
+        count--;
+    } else {
+        if(count == max) return;
+        elt = document.getElementById('label'+idx);
+        elt.style.background="beige";
+        elt.style.border="solid green 2px";
+        sel[idx] = 1;
+        count++;
+        if(count == max) {
+            for(i=0; i<$("#num-labels").val(); i++) {
+                if(!sel[i]) {
+                    elt = document.getElementById('label'+i);
+                    elt.style.background = "#c3c3c3";
+                }
+            }
+        }
+    }
+}
+
+function validateQueuePlace() {
+    if(count == 0) {
+        alert("Select at least one label to print");
+        return false;
+    } else
+        document.getElementById('sel').value = sel.join();
+
+    return true;
+}
