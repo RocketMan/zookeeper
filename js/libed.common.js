@@ -23,7 +23,8 @@
 /*! Zookeeper Online (C) 1997-2020 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 /*
- * The following methods are expected externally:
+ * For the Albums and Labels tabs, implementations for the following
+ * are supplied by libed.album.js and libed.label.js, respectively:
  *
  *    * changeSel(index) - set ID of selected list item into form
  *    * scrollUp - page up
@@ -34,7 +35,7 @@
  *
  */
 
-var items, focus;
+var items;
 
 function urlEncode(url) {
     return encodeURI(url).replace(/\+/g, '%2B');
@@ -133,188 +134,189 @@ function onSearch(sync, e) {
     sync.Timer = setTimeout('onSearchNow()', 250);
 }
 
-const NONALNUM=/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/;
-const STOPWORDS=/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i;
-function zkAlpha(control, track = false) {
-    var val=control.value;
-    var newVal=val.split(NONALNUM).map(function(word, index, array) {
-        // words starting with caps are kept as-is
-        if(word.search(/^[A-Z]+/) > -1)
-            return word;
+$().ready(function() {
+    var focus, sel, count = 0, max = -1;
 
-        // stopwords are not capitalized, unless first or last
-        if(word.search(STOPWORDS) > -1 &&
-                index !== 0 &&
-                index !== array.length - 1)
-            return word.toLowerCase();
+    const NONALNUM=/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/;
+    const STOPWORDS=/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i;
+    function zkAlpha(control) {
+        var val=control.val();
+        var track=control.data("zkalpha") === true;
+        var newVal=val.split(NONALNUM).map(function(word, index, array) {
+            // words starting with caps are kept as-is
+            if(word.search(/^[A-Z]+/) > -1)
+                return word;
 
-        // otherwise, capitalize the word
-        return word.charAt(0).toUpperCase() +
-               word.substr(1).toLowerCase();
-    }).join('');
-    if(track != true && newVal.substr(0, 4) == 'The ')
-        newVal=newVal.substr(4)+', The';
-    control.value=newVal;
-}
+            // stopwords are not capitalized, unless first or last
+            if(word.search(STOPWORDS) > -1 &&
+                    index !== 0 &&
+                    index !== array.length - 1)
+                return word.toLowerCase();
 
-function setComp() {
-    var disabled = $("INPUT[name=coll]").is(":checked");
-    $("INPUT[name=artist]").css("visibility", disabled?'hidden':'visible');
-    $("#lartist").css("visibility", disabled?'hidden':'visible');
-    disabled?$("INPUT[name=album]").focus():$("INPUT[name=artist]").focus();
-}
+            // otherwise, capitalize the word
+            return word.charAt(0).toUpperCase() +
+                   word.substr(1).toLowerCase();
+        }).join('');
+        if(track != true && newVal.substr(0, 4) == 'The ')
+            newVal=newVal.substr(4)+', The';
+        control.val(newVal);
+    }
 
-function setLocation() {
-    var storage = $("SELECT[name=location]").val() == 'G';
-    $("INPUT[name=bin]").css("visibility", storage?'visible':'hidden');
-    $("#lbin").css("visibility", storage?'visible':'hidden');
-    if(storage)
-        $("INPUT[name=bin]").focus();
-}
+    $("INPUT[data-zkalpha]").change(function(e) {
+        zkAlpha($(this));
+    });
+    $("INPUT[data-zkfocus]").focus(function(e) {
+        focus = $(this).data("zkfocus");
+    });
+    $("INPUT[data-zkupper]").change(function(e) {
+        $(this).val($(this).val().toUpperCase());
+    });
 
-function setForeign() {
-    var foreign = $("INPUT[name=foreign]").is(":checked");
-    $("#lstate").css("visibility", foreign?'hidden':'visible');
-    $("#lzip").html(foreign?'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country:':'Postal Code:');
-}
+    function nextTrack() {
+        var form = document.forms[0];
+        for(var i=1; typeof(eval('form.track'+i)) != 'undefined'; i++);
+        return i;
+    }
 
-function cf(f) { focus = f; }
+    $("#comp").click(function(e) {
+        var disabled = $(this).is(":checked");
+        $("INPUT[name=artist]").css("visibility", disabled?'hidden':'visible');
+        $("#lartist").css("visibility", disabled?'hidden':'visible');
+        disabled?$("INPUT[name=album]").focus():$("INPUT[name=artist]").focus();
+    });
 
-function nextTrack() {
-    var form = document.forms[0];
-    for(var i=1; typeof(eval('form.track'+i)) != 'undefined'; i++);
-    return i;
-}
+    $("#location").change(function(e) {
+        var storage = $("SELECT[name=location]").val() == 'G';
+        $("INPUT[name=bin]").css("visibility", storage?'visible':'hidden');
+        $("#lbin").css("visibility", storage?'visible':'hidden');
+        if(storage)
+            $("INPUT[name=bin]").focus();
+    });
 
-function insertTrack(coll = false) {
-    var form = $('FORM');
-    var next = nextTrack();
-    $('<INPUT>').attr({
-        name: 'track' + next,
-        type: 'hidden'
-    }).appendTo(form);
-    if(coll) {
+    $("#foreign").click(function(e) {
+        var foreign = $("INPUT[name=foreign]").is(":checked");
+        $("#lstate").css("visibility", foreign?'hidden':'visible');
+        $("#lzip").html(foreign?'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country:':'Postal Code:');
+    });
+
+    $("#insert").click(function(e) {
+        var form = $('FORM');
+        var coll = $('INPUT[name=coll]').val() == "on";
+        var next = nextTrack();
         $('<INPUT>').attr({
-            name: 'artist' + next,
+            name: 'track' + next,
             type: 'hidden'
         }).appendTo(form);
-    }
-    for(var j=next; j>focus; j--) {
-        $("INPUT[name='track" + j + "' i]").val($("INPUT[name='track" + (j-1) + "' i]").val());
         if(coll) {
-            $("INPUT[name='artist" + j + "' i]").val($("INPUT[name='artist" + (j-1) + "' i]").val());
+            $('<INPUT>').attr({
+                name: 'artist' + next,
+                type: 'hidden'
+            }).appendTo(form);
         }
-    }
-    $("INPUT[name='track" + focus + "' i]").val("");
-    if(coll) {
-        $("INPUT[name='artist" + focus + "' i]").val("");
-    }
-    $("INPUT[name='track" + focus + "' i]").focus();
-}
-
-function deleteTrack(coll = false) {
-    if(confirm('Delete track ' + focus + '?')) {
-        var last = nextTrack()-1;
-        for(var j=focus; j<last; j++) {
-            $("INPUT[name='track" + j + "' i]").val($("INPUT[name='track" + (j+1) + "' i]").val());
+        for(var j=next; j>focus; j--) {
+            $("INPUT[name='track" + j + "' i]").val($("INPUT[name='track" + (j-1) + "' i]").val());
             if(coll) {
-                $("INPUT[name='artist" + j + "' i]").val($("INPUT[name='artist" + (j+1) + "' i]").val());
+                $("INPUT[name='artist" + j + "' i]").val($("INPUT[name='artist" + (j-1) + "' i]").val());
             }
         }
-        $("INPUT[name='track" + last + "' i]").val("");
+        $("INPUT[name='track" + focus + "' i]").val("");
         if(coll) {
-            $("INPUT[name='artist" + last + "' i]").val("");
+            $("INPUT[name='artist" + focus + "' i]").val("");
         }
         $("INPUT[name='track" + focus + "' i]").focus();
-    }
-}
+    });
 
-function checkAll() {
-    form = document.forms[0];
-    all = form.all.checked;
-    for(var i=0; i<form.length; i++)
-        if(form[i].type == 'checkbox')
-            form[i].checked = all;
-}
+    $("#delete").click(function(e) {
+        if(confirm('Delete track ' + focus + '?')) {
+            var coll = $('INPUT[name=coll]').val() == "on";
+            var last = nextTrack()-1;
+            for(var j=focus; j<last; j++) {
+                $("INPUT[name='track" + j + "' i]").val($("INPUT[name='track" + (j+1) + "' i]").val());
+                if(coll) {
+                    $("INPUT[name='artist" + j + "' i]").val($("INPUT[name='artist" + (j+1) + "' i]").val());
+                }
+            }
+            $("INPUT[name='track" + last + "' i]").val("");
+            if(coll) {
+                $("INPUT[name='artist" + last + "' i]").val("");
+            }
+            $("INPUT[name='track" + focus + "' i]").focus();
+        }
+    });
 
-function isLocal() {
-    if($("#local").val() == 1)
+    $("INPUT:checkbox#all").click(function() {
+        var all = $(this).is(":checked");
+        $("INPUT:checkbox").prop('checked', all);
+    });
+
+    $("#print").click(function() {
+        var local = $("#local").val() == 1;
+        if(!local)
+            alert('tags can be printed to the label printer only at the station');
+        return local;
+    });
+
+    $("#printToPDF").click(function() {
+        var selected = $("INPUT:checkbox:checked").length > 0;
+        if(!selected)
+            alert("Select at least one tag to proceed");
+        return selected;
+    });
+
+    $("#queueform-next").click(function() {
+        var selected = $("INPUT:radio:checked").length > 0;
+        if(!selected)
+            alert("Select a label format");
+        return selected;
+    });
+
+    $("#queueplace-next").click(function() {
+        if(count == 0) {
+            alert("Select at least one label to print");
+            return false;
+        } else
+            $("#sel").val(sel.join());
+
         return true;
-    else {
-        alert('tags can be printed to the label printer only at the station');
-        return false;
-    }
-}
+    });
 
-function validateQueueList() {
-    form = document.forms[0];
-    selected = 0;
-    for(var i=0; i<form.length; i++)
-        if(form[i].type == 'checkbox')
-            selected |= form[i].checked;
-    if(selected)
-        return true;
-    else {
-        alert("Select at least one tag to proceed");
-        return false;
-    }
-}
+    $("A[data-label]").click(function() {
+        var elt = $(this);
+        var idx = elt.data("label");
+        if(max == -1) {
+            max = $("#max-count").val();
+            sel = Array($("#num-labels").val()*1).fill(0);
+        }
 
-function validateQueueForm() {
-    var selected = false;
-    var forms = document.getElementsByName('form');
-    for(var i=0; i<forms.length; i++)
-        if(forms[i].checked)
-            return true;
-    alert("Select a label format");
-    return false;
-}
-
-var sel, count = 0, max = -1;
-function placeLabel(idx) {
-    if(max == -1) {
-        max = $("#max-count").val();
-        sel = Array($("#num-labels").val()).fill(0);
-    }
-
-    if(sel[idx]) {
-        elt = document.getElementById('label'+idx);
-        elt.style.background="white";
-        elt.style.border="solid #696969 2px";
-        sel[idx] = 0;
-        if(count == max) {
-            for(i=0; i<$("#num-labels").val(); i++) {
-                if(!sel[i]) {
-                    elt = document.getElementById('label'+i);
-                    elt.style.background = "white";
+        if(sel[idx]) {
+            elt.css({
+                background: 'white',
+                border: 'solid #696969 2px'
+            });
+            sel[idx] = 0;
+            if(count == max) {
+                for(i=0; i<sel.length; i++) {
+                    if(!sel[i]) {
+                        $("#label" + i).css('background', 'white');
+                    }
+                }
+            }
+            count--;
+        } else {
+            if(count == max) return;
+            elt.css({
+                background: 'beige',
+                border: 'solid green 2px'
+            });
+            sel[idx] = 1;
+            count++;
+            if(count == max) {
+                for(i=0; i<sel.length; i++) {
+                    if(!sel[i]) {
+                        $("#label" + i).css('background', '#c3c3c3');
+                    }
                 }
             }
         }
-        count--;
-    } else {
-        if(count == max) return;
-        elt = document.getElementById('label'+idx);
-        elt.style.background="beige";
-        elt.style.border="solid green 2px";
-        sel[idx] = 1;
-        count++;
-        if(count == max) {
-            for(i=0; i<$("#num-labels").val(); i++) {
-                if(!sel[i]) {
-                    elt = document.getElementById('label'+i);
-                    elt.style.background = "#c3c3c3";
-                }
-            }
-        }
-    }
-}
-
-function validateQueuePlace() {
-    if(count == 0) {
-        alert("Select at least one label to print");
-        return false;
-    } else
-        document.getElementById('sel').value = sel.join();
-
-    return true;
-}
+    });
+});

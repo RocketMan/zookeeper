@@ -161,6 +161,7 @@ class Editor extends MenuItem {
     }
     
     public function processLocal($action, $subaction) {
+        UI::emitJS('js/libed.common.js');
         $subactions = self::$subactions;
         if(Engine::api(ILibrary::class)->getNumQueuedTags($this->session->getUser()))
             $subactions = array_merge($subactions, self::$subactions_tagq);
@@ -257,7 +258,6 @@ class Editor extends MenuItem {
     }
     
     public function queueList($validate) {
-         UI::emitJS('js/libed.common.js');
          if($validate) {
               if($_REQUEST["printToPDF"]) {
                   $selTags = array();
@@ -298,7 +298,7 @@ class Editor extends MenuItem {
          }
          echo "<P><B>Tags queued for printing:</B>\n";
          echo "</P>\n";
-         echo "    <TABLE BORDER=0>\n      <TR><TH><INPUT NAME=all TYPE=checkbox onClick='checkAll()'></TH><TH ALIGN=RIGHT>Tag&nbsp;&nbsp;</TH><TH>Artist</TH><TH>&nbsp;</TH><TH>Album</TH></TR>\n";
+         echo "    <TABLE BORDER=0>\n      <TR><TH><INPUT NAME=all id='all' TYPE=checkbox></TH><TH ALIGN=RIGHT>Tag&nbsp;&nbsp;</TH><TH>Artist</TH><TH>&nbsp;</TH><TH>Album</TH></TR>\n";
          if($result = Engine::api(IEditor::class)->getQueuedTags($this->session->getUser())) {
               while($row = $result->fetch()) {
                    echo "      <TR><TD><INPUT NAME=tag".$row["tag"]." TYPE=checkbox".($_POST["tag".$row["tag"]] == "on"?" checked":"")."></TD>";
@@ -313,9 +313,9 @@ class Editor extends MenuItem {
          echo "    </TABLE>\n";
          echo "    <P><INPUT TYPE=submit CLASS=submit NAME=delete VALUE=\" Remove from Queue \">&nbsp;&nbsp;&nbsp;\n";
          if(in_array('lpr', $this->printConfig['print_methods']))
-             echo "       <INPUT TYPE=submit CLASS=submit NAME=print onclick=\"return isLocal();\" VALUE=\" Print \">&nbsp;&nbsp;&nbsp;\n";
+             echo "       <INPUT TYPE=submit CLASS=submit NAME=print id='print' VALUE=\" Print \">&nbsp;&nbsp;&nbsp;\n";
          if(in_array('pdf', $this->printConfig['print_methods']))
-             echo "       <INPUT TYPE=submit CLASS=submit NAME=printToPDF onclick=\"return validateQueueList();\" VALUE=\" Print To PDF &gt; \">\n";
+             echo "       <INPUT TYPE=submit CLASS=submit NAME=printToPDF id='printToPDF' VALUE=\" Print To PDF &gt; \">\n";
              echo "       <INPUT TYPE=hidden id='local' VALUE='". ($this->session->isLocal()?"1":"0") ."'>\n";
          echo "    </P>\n"; ?>
     <?php
@@ -323,7 +323,6 @@ class Editor extends MenuItem {
     }
     
     public function queueForm($validate) {
-        UI::emitJS('js/libed.common.js');
         if($validate) {
             if($_REQUEST["back"]) {
                 $this->tagQPanels["form"][1] = "select";
@@ -348,7 +347,7 @@ class Editor extends MenuItem {
         foreach($this->printConfig['labels'] as $label)
             echo "  <TR><TD><INPUT NAME=form TYPE=radio VALUE=\"".$label["code"]."\"".($_POST["form"] == $label["code"]?" checked":"").">".$label["name"]."</TD></TR>\n";
         echo "</TABLE>\n";
-        echo "<P><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next onclick=\"return validateQueueForm();\" VALUE=\" Next &gt; \"></P>\n";
+        echo "<P><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next id='queueform-next' VALUE=\" Next &gt; \"></P>\n";
         $this->skipVar("form");
         $this->skipVar("back");
         $this->skipVar("next");
@@ -356,7 +355,6 @@ class Editor extends MenuItem {
     }
     
     public function queuePlace($validate) {
-        UI::emitJS('js/libed.common.js');
         $labels = $this->printConfig['labels'];
         $oneform = count($labels) == 1;
         if($validate) {
@@ -390,12 +388,12 @@ class Editor extends MenuItem {
             echo "    ";
             for($j=0; $j<$numCol; $j++) {
                 $index = $i*$numCol + $j;
-                echo "<A HREF=\"#\" onClick=\"placeLabel($index);\" id=\"label$index\">".($i + $j*$numRow + 1)."</A>&nbsp;";
+                echo "<A HREF=\"#\" id=\"label$index\" data-label=\"$index\">".($i + $j*$numRow + 1)."</A>&nbsp;";
             }
             echo "<BR>\n";
         }
         echo "    </TD></TR>\n    <TR><TD>&nbsp;</TD></TR>\n";
-        echo "    <TR><TD STYLE=\"text-align: right;\"><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next onclick=\"return validateQueuePlace();\" VALUE=\" Next &gt; \">\n";
+        echo "    <TR><TD STYLE=\"text-align: right;\"><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next id='queueplace-next' VALUE=\" Next &gt; \">\n";
         echo "    <INPUT TYPE=HIDDEN id='num-labels' VALUE=\"$numLabels\">\n";
         echo "    <INPUT TYPE=HIDDEN id='max-count' VALUE=\"$count\">\n";
         echo "    <INPUT TYPE=HIDDEN NAME=sel ID=sel VALUE=\"\"></TD></TR></TABLE>\n";
@@ -757,7 +755,6 @@ class Editor extends MenuItem {
     
     private function emitAlbumSel() {
          UI::emitJS('js/libed.album.js');
-         UI::emitJS('js/libed.common.js');
     
          echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH=\"100%\"><TR><TD VALIGN=TOP WIDTH=220>\n";
          echo "  <INPUT TYPE=HIDDEN NAME=seltag id='seltag' VALUE=\"".$_REQUEST["seltag"]."\">\n";
@@ -804,7 +801,6 @@ class Editor extends MenuItem {
     }
 
     private function albumForm() {
-        UI::emitJS('js/libed.common.js');
     ?>
     <TABLE>
     <?php 
@@ -853,9 +849,9 @@ class Editor extends MenuItem {
             echo "  <TR><TD ALIGN=RIGHT>Album&nbsp;Tag:</TD><TH ALIGN=LEFT ID=\"tag\">".$_REQUEST["seltag"]."</TH></TR>\n";
         }
     ?>
-      <TR><TD ALIGN=RIGHT>Compilation:</TD><TD CLASS="header"><INPUT TYPE=CHECKBOX onClick="return setComp();" NAME=coll<?php echo $coll?" CHECKED":"";?>></TD></TR>
-      <TR><TD ID="lartist" ALIGN=RIGHT STYLE="visibility:<?php echo $coll?"hidden":"visible";?>">Artist:</TD><TD CLASS="header"><INPUT NAME=artist TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($artist));?>" STYLE="visibility:<?php echo $coll?"hidden":"visible";?>" onChange="zkAlpha(this)"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Album:</TD><TD CLASS="header"><INPUT NAME=album TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($album));?>" onChange="zkAlpha(this)"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Compilation:</TD><TD CLASS="header"><INPUT TYPE=CHECKBOX id='comp' NAME=coll<?php echo $coll?" CHECKED":"";?>></TD></TR>
+      <TR><TD ID="lartist" ALIGN=RIGHT STYLE="visibility:<?php echo $coll?"hidden":"visible";?>">Artist:</TD><TD CLASS="header"><INPUT NAME=artist TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($artist));?>" STYLE="visibility:<?php echo $coll?"hidden":"visible";?>" data-zkalpha></TD></TR>
+      <TR><TD ALIGN=RIGHT>Album:</TD><TD CLASS="header"><INPUT NAME=album TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($album));?>" data-zkalpha></TD></TR>
       <TR><TD ALIGN=RIGHT>Category:</TD><TD><SELECT NAME=category CLASS=textsp>
     <?php 
         foreach(Search::GENRES as $code => $genre) {
@@ -881,7 +877,7 @@ class Editor extends MenuItem {
     ?>
                     </SELECT></TD></TR>
     <?php 
-        echo "  <TR><TD ALIGN=RIGHT>Location:</TD><TD><SELECT NAME=location CLASS=textsp onChange=\"return setLocation();\">\n";
+        echo "  <TR><TD ALIGN=RIGHT>Location:</TD><TD><SELECT NAME=location id='location' CLASS=textsp>\n";
         foreach(Search::LOCATIONS as $code => $location) {
             $selected = ($alocation == $code)?" SELECTED":"";
             echo "             <OPTION VALUE=\"$code\"$selected>$location\n";
@@ -913,7 +909,6 @@ class Editor extends MenuItem {
     
     private function emitLabelSel() {
          UI::emitJS('js/libed.label.js');
-         UI::emitJS('js/libed.common.js');
     
         echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH=\"100%\"><TR><TD VALIGN=TOP WIDTH=230>\n";
         echo "  <INPUT TYPE=HIDDEN NAME=selpubkey id='selpubkey' VALUE=\"".$_REQUEST["selpubkey"]."\">\n";
@@ -962,7 +957,6 @@ class Editor extends MenuItem {
     }
     
     private function labelForm() {
-        UI::emitJS('js/libed.common.js');
         echo "<TABLE>\n";
     
         if($_REQUEST["lnew"]) {
@@ -975,17 +969,17 @@ class Editor extends MenuItem {
             echo "  <TR><TD ALIGN=RIGHT>Label&nbsp;ID:</TD><TH ALIGN=LEFT ID=\"pubkey\">".$row["pubkey"]."</TH></TR>\n";
         }
     ?>
-      <TR><TD ALIGN=RIGHT>Name:</TD><TD CLASS="header"><INPUT NAME=name TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["name"]));?>" onChange="zkAlpha(this,true)"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Attn:</TD><TD><INPUT NAME=attention TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["attention"]));?>" onChange="zkAlpha(this,true)"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Address:</TD><TD><INPUT NAME=address TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["address"]));?>" onChange="zkAlpha(this,true)"></TD></TR>
-      <TR><TD ALIGN=RIGHT>City:</TD><TD><INPUT NAME=city TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["city"]));?>" onChange="zkAlpha(this,true)"></TD></TR>
-      <TR><TD ALIGN=RIGHT ID=lstate STYLE="visibility:<?php echo $foreign?"hidden":"visible";?>">State:</TD><TD><INPUT NAME=state TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["state"]));?>" onChange="this.value=this.value.toUpperCase();"></TD></TR>
-      <TR><TD ALIGN=RIGHT ID=lzip><?php echo $foreign?"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country":"Postal Code";?>:</TD><TD><INPUT NAME=zip TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["zip"]));?>" onChange="this.value=this.value.toUpperCase();"><INPUT NAME=foreign TYPE=CHECKBOX onClick="return setForeign();"<?php echo $foreign?" CHECKED":"";?>><SPAN CLASS="sub">Foreign?</SPAN></TD></TR>
+      <TR><TD ALIGN=RIGHT>Name:</TD><TD CLASS="header"><INPUT NAME=name TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["name"]));?>" data-zkalpha="true"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Attn:</TD><TD><INPUT NAME=attention TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["attention"]));?>" data-zkalpha="true"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Address:</TD><TD><INPUT NAME=address TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["address"]));?>" data-zkalpha="true"></TD></TR>
+      <TR><TD ALIGN=RIGHT>City:</TD><TD><INPUT NAME=city TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["city"]));?>" data-zkalpha="true"></TD></TR>
+      <TR><TD ALIGN=RIGHT ID=lstate STYLE="visibility:<?php echo $foreign?"hidden":"visible";?>">State:</TD><TD><INPUT NAME=state TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["state"]));?>" data-zkupper></TD></TR>
+      <TR><TD ALIGN=RIGHT ID=lzip><?php echo $foreign?"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country":"Postal Code";?>:</TD><TD><INPUT NAME=zip id='zip' TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["zip"]));?>" data-zkupper><INPUT NAME=foreign id='foreign' TYPE=CHECKBOX<?php echo $foreign?" CHECKED":"";?>><SPAN CLASS="sub">Foreign?</SPAN></TD></TR>
       <TR><TD ALIGN=RIGHT>Phone:</TD><TD><INPUT NAME=phone TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["phone"]));?>"></TD></TR>
       <TR><TD ALIGN=RIGHT>Fax:</TD><TD><INPUT NAME=fax TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["fax"]));?>"></TD></TR>
       <TR><TD ALIGN=RIGHT>E-Mail:</TD><TD><INPUT NAME=email TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["email"]));?>"></TD></TR>
       <TR><TD ALIGN=RIGHT>URL:</TD><TD><INPUT NAME=url TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["url"]));?>"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Mail List:</TD><TD><INPUT NAME=maillist TYPE=TEXT CLASS=text SIZE=5 VALUE="<?php echo $row["maillist"];?>" onChange="zkAlpha(this,true)"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Mail List:</TD><TD><INPUT NAME=maillist TYPE=TEXT CLASS=text SIZE=5 VALUE="<?php echo $row["maillist"];?>" data-zkalpha="true"></TD></TR>
       <TR><TD ALIGN=RIGHT>Mail Count:</TD><TD><INPUT NAME=mailcount TYPE=TEXT CLASS=text SIZE=5 VALUE="<?php echo $row["mailcount"];?>"></TD></TR>
     <?php 
         if(!$_REQUEST["lnew"]) {
@@ -1017,7 +1011,6 @@ class Editor extends MenuItem {
     }
     
     private function trackForm() {
-        UI::emitJS('js/libed.common.js');
         if($_REQUEST["seltag"] && !$_REQUEST["tdb"]) {
             $tracks = Engine::api(IEditor::class)->getTracks($_REQUEST["seltag"], $_REQUEST["coll"]);
             while($row = $tracks->fetch()) {
@@ -1044,14 +1037,14 @@ class Editor extends MenuItem {
         } else $_REQUEST["nextTrack"] = 1;
     
         echo "<TABLE>\n";
-        echo "<TR><TD></TD><TD".($_REQUEST["coll"]?" COLSPAN=3":"")." ALIGN=RIGHT>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert CLASS=submit onClick='insertTrack(".$_REQUEST["coll"].");' VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete CLASS=submit onClick='deleteTrack(".$_REQUEST["coll"].");' VALUE='&minus;'></TD></TR>\n";
+        echo "<TR><TD></TD><TD".($_REQUEST["coll"]?" COLSPAN=3":"")." ALIGN=RIGHT>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='&minus;'></TD></TR>\n";
         $size = $_REQUEST["coll"]?30:60;
         for($i=0; $i<$this->tracksPerPage; $i++) {
             $trackNum = $_REQUEST["nextTrack"] + $i;
-            echo "  <TR><TD ALIGN=RIGHT>Track $trackNum:</TD><TD><INPUT NAME=track$trackNum VALUE=\"".htmlentities(stripslashes($_POST["track".$trackNum]))."\" TYPE=text CLASS=text SIZE=$size onChange=\"zkAlpha(this,true)\" onFocus=\"cf($trackNum);\">";
+            echo "  <TR><TD ALIGN=RIGHT>Track $trackNum:</TD><TD><INPUT NAME=track$trackNum VALUE=\"".htmlentities(stripslashes($_POST["track".$trackNum]))."\" TYPE=text CLASS=text SIZE=$size data-zkalpha='true' data-zkfocus=\"$trackNum\">";
             $this->skipVar("track".$trackNum);
             if($_REQUEST["coll"]) {
-                echo "</TD><TD ALIGN=RIGHT>Artist:</TD><TD><INPUT NAME=artist$trackNum VALUE=\"".htmlentities(stripslashes($_POST["artist".$trackNum]))."\" TYPE=text CLASS=text SIZE=$size onChange=\"zkAlpha(this,false)\" onFocus=\"cf($trackNum);\">";
+                echo "</TD><TD ALIGN=RIGHT>Artist:</TD><TD><INPUT NAME=artist$trackNum VALUE=\"".htmlentities(stripslashes($_POST["artist".$trackNum]))."\" TYPE=text CLASS=text SIZE=$size data-zkalpha='true' data-zkfocus=\"$trackNum\">";
                 $this->skipVar("artist".$trackNum);
             }
             echo "</TD></TR>\n";
