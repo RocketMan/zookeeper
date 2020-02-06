@@ -110,6 +110,9 @@ $().ready(function() {
         $("#search").focus();
     }
 
+    $("#search").keypress(function(e) { onSearch(document.forms[0], e); }).
+        keyup(function(e) { return e.keyCode != 13; });
+    $("#coll").click(function(e) { onSearch(document.forms[0], e); });
     $("#bup").click(scrollUp);
     $("#bdown").click(scrollDown);
     $("#list").keydown(upDown).change(changeList);
