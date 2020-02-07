@@ -871,17 +871,15 @@ class Playlists extends MenuItem {
     
     private function emitEditForm($playlistId, $id, $album, $track) {
       $entry = new PlaylistEntry($album);
-      $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
-      $showTimeAr = $this->zkTimeRangeToISODateTimeAr($playlist);
-      $startAMPM = self::timestampToAMPM($showTimeAr[0]);
-      $startTime = new \DateTime($showTimeAr[0]);
-      $endTime = new \DateTime($showTimeAr[1]);
+      $window = Engine::api(IPlaylist::class)->getLiveEntryWindow($playlistId);
+      $startTime = $window['start'];
+      $endTime = $window['end'];
       $nowTime = new \DateTime("now");
       $isLive = $nowTime >= $startTime && $nowTime <= $endTime;
       $endTime = $isLive ? $nowTime : $endTime;
-      $showTimeAr[0] = self::timestampToTime($showTimeAr[0]);
-      $showTimeAr[1] = $endTime->format('G:i:s');
+      $startAMPM = $startTime->format('g:i a');
       $endAMPM = $endTime->format('g:i a');
+      $edate = $startTime->format('Y-m-d');
       $showTimeRange = "$startAMPM - $endAMPM";
       $timepickerTime = $this->getTimepickerTime($entry->getCreated());
       $sep = $id && $entry->isType(PlaylistEntry::TYPE_SET_SEPARATOR);
@@ -970,8 +968,8 @@ class Playlists extends MenuItem {
       <TR>
           <TD ALIGN=RIGHT>Time:</TD>
           <TD ALIGN=LEFT>
-              <INPUT class='timepicker' NAME=etime step='60' type='time' value="<?php echo $timepickerTime ?>" min="<?php echo $showTimeAr[0] ?>" max="<?php echo $showTimeAr[1] ?>" /> <span style='font-size:8pt;'>(<?php echo $showTimeRange ?>)</span>
-              <INPUT type='hidden' NAME='edate' value="<?php echo $playlist['showdate'] ?>" />
+              <INPUT class='timepicker' NAME=etime step='60' type='time' value="<?php echo $timepickerTime ?>" data-date='<?php echo $edate;?>' data-start='<?php echo $startTime->format('H:i');?>' data-end='<?php echo $endTime->format('H:i');?>'/> <span style='font-size:8pt;'>(<?php echo $showTimeRange ?>)</span>
+              <INPUT type='hidden' NAME='edate' value="<?php echo $edate;?>" />
           </TD>
         </TR>
         <TR>

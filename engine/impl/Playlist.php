@@ -29,6 +29,10 @@ namespace ZK\Engine;
  * Playlist operations
  */
 class PlaylistImpl extends BaseImpl implements IPlaylist {
+    const TIME_FORMAT = "Y-m-d Gi"; // eg, 2019-01-01 1234
+    const GRACE_START = "-15 minutes";
+    const GRACE_END = "+30 minutes";
+
     public function getShowdates($year, $month) {
         $yearMonth = sprintf("%04d-%02d", $year, $month) . "-%";
     
@@ -324,52 +328,67 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $row?$row['count']:0;
     }
 
-   public function isNowWithinShow($listRow) {
-        $nowDateTime = new \DateTime("now");
-        return $this->isWithinShow($nowDateTime, $listRow);
-   }
-
-   public function isDateTimeWithinShow($timeStamp, $listRow) {
-        $dateTime = new \DateTime($timeStamp);
-        return $this->isWithinShow($dateTime, $listRow);
-   }
-
-    // return true if "now" is within the show start/end time & date.
     // NOTE: this routine must be tolerant of improperly formatted dates.
-    public function isWithinShow($dateTime, $listRow) {
-        $TIME_FORMAT = "Y-m-d Gi"; // eg, 2019-01-01 1234
-        $retVal = false;
-
-        try {
-            $timeAr = explode("-", $listRow[2]);
-            if (count($timeAr) == 2) {
-                $timeStr1 = $listRow[1] . " " . $timeAr[0];
-                $start = \DateTime::createFromFormat($TIME_FORMAT, $timeStr1);
-                $start->modify("-5 minutes");
-                // end time can be midnight or later
-                // in this case, adjust to the next day
+    public function getLiveEntryWindowInternal($playlist) {
+        $result = null;
+        if($playlist && ($showtime = $playlist['showtime'])) {
+            $timeAr = explode("-", $showtime);
+            if(count($timeAr) == 2) {
+                $timeStr = $playlist['showdate'] . " " . $timeAr[0];
+                $start = \DateTime::createFromFormat(self::TIME_FORMAT, $timeStr);
                 if($start) {
+                    $start->modify(self::GRACE_START);
                     $end = clone $start;
+
+                    // end time can be midnight or later
+                    // in this case, adjust to the next day
                     if($timeAr[1] < $timeAr[0])
                         $end->modify("+1 day");
+
                     $end->setTime(substr($timeAr[1], 0, 2),
                                   substr($timeAr[1], 2, 2));
-                    $end->modify("+15 minutes");
-                }
-                if ($start && $end) {
-                    $retVal = (($dateTime >= $start) && ($dateTime <= $end));
+                    $end->modify(self::GRACE_END);
+
+                    $result = [
+                        "start" => $start,
+                        "end" => $end
+                    ];
                 }
             }
-        } catch (Throwable $t) {
-            error_log("Error: invalid date $t");
+        }
+        return $result;
+    }
+
+    public function getLiveEntryWindow($playlistId) {
+        $playlist = $this->getPlaylist($playlistId);
+        return $this->getLiveEntryWindowInternal($playlist);
+    }
+
+    public function isWithinShow($dateTime, $listRow) {
+        $retVal = false;
+        $window = $this->getLiveEntryWindowInternal($listRow);
+        if($window) {
+            $retVal = $dateTime >= $window['start'] &&
+                      $dateTime <= $window['end'];
         }
         return $retVal;
+    }
+
+    // return true if "now" is within the show start/end time & date.
+    public function isNowWithinShow($listRow) {
+        $nowDateTime = new \DateTime("now");
+        return $this->isWithinShow($nowDateTime, $listRow);
+    }
+
+    public function isDateTimeWithinShow($timeStamp, $listRow) {
+        $dateTime = new \DateTime($timeStamp);
+        return $this->isWithinShow($dateTime, $listRow);
     }
 
     // insert playlist track. return following: 0 - fail, 1 - success no 
     // timestamp, 2 - sucess with timestamp.
     public function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $wantTimestamp, &$id = null) {
-        $row = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
+        $row = $this->getPlaylist($playlistId, 1);
 
         // log time iff 'now' is within playlist start/end time.
         $doTimestamp = $wantTimestamp && $this->isNowWithinShow($row);
@@ -424,8 +443,8 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     // of a track following a CSV import (unless dateTimeStr is within show bounds
     // then use it, eg time change to an NME.
     public function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label, $dateTime) {
-        $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
-        $trackRow  = Engine::api(IPlaylist::class)->getTrack($id);
+        $playlist = $this->getPlaylist($playlistId, 1);
+        $trackRow  = $this->getTrack($id);
         $timestamp = $trackRow['created'];
         $timeChanged = false;
 

@@ -198,6 +198,38 @@ $().ready(function(){
         setAddButtonState(haveAll);
     });
 
+    $("INPUT[data-date]").focusout(function() {
+        // if field is blank, apply no validation
+        var v = $(this).val();
+        if(v.length == 0)
+            return;
+
+        var d = $(this).data("date");
+        var s = $(this).data("start");
+        var e = $(this).data("end");
+
+        var start = new Date(d + "T" + s);
+        var end = new Date(d + "T" + e);
+        var val = new Date(d + "T" + v);
+
+        if(!isNaN(val)) {
+            // val or end time can be midnight or later
+            // in this case, adjust to the next day
+            if(e < s)
+                end.setTime(end.getTime() + 86400000);
+            if(v < s)
+                val.setTime(val.getTime() + 86400000);
+        }
+
+        if(isNaN(val) || val < start || val > end) {
+            alert('time is not valid');
+            $(this).val("").focus();
+        } else {
+            // if time is after midnight, set edate field to correct date
+            $("INPUT[name=edate]").val(val.toISOString().split('T')[0]);
+        }
+    });
+
     function moveTrack(list, fromId, toId, tr, si, rows) {
         var postData = {
             session: $("#track-session").val(),
