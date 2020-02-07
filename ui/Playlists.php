@@ -416,7 +416,7 @@ class Playlists extends MenuItem {
         <FORM id='new-show' class='pl-form-entry' ACTION="?" METHOD=POST>
             <div>
                 <label>Show Name:</label>
-                <input id='show-description' required name='description' size=30 value="<?php echo htmlentities(stripslashes($description));?>" />
+                <input id='show-description' required name='description' size=30 value="<?php echo htmlentities(stripslashes($description));?>" data-focus/>
             </div>
             <div>
                 <label>Show Date:</label>
@@ -654,6 +654,7 @@ class Playlists extends MenuItem {
 
     // emit form for selecting a playlist for editing, deletion or undelete.
     public function emitEditListPicker() {
+        UI::emitJS("js/pled.pick.js");
         $activePlaylists = Engine::api(IPlaylist::class)->getListsSelNormal($this->session->getUser());
         $playlists = "";
         $activeCount = 0;
@@ -696,7 +697,7 @@ class Playlists extends MenuItem {
       
         <form class='pl-form' id='active-form' ACTION="?" METHOD=POST>
             <B>Active Playlists (<?php echo $activeCount; ?>):</B><BR>
-            <select id='active-list-picker' style='width:400px' name=playlist SIZE=10>
+            <select id='active-list-picker' style='width:400px' name=playlist SIZE=10 data-focus>
                 <?php echo $playlists; ?>
             </select>
             <div style='margin-top:4px'>
@@ -706,35 +707,6 @@ class Playlists extends MenuItem {
             <input TYPE=hidden name=session VALUE="<?php echo $this->session->getSessionID();?>">
             <input id='action-type' TYPE=hidden name=action VALUE="editListDetails">
         </form>
-
-        <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-            $().ready(function(){
-                $("#list-type-picker").change(function() {
-                    var $showType = $(this).val();
-                    if ($showType == 'active-type') {
-                        $("#deleted-form").addClass('zk-hidden');
-                        $("#active-form").removeClass('zk-hidden');
-                    } else {
-                        $("#active-form").addClass('zk-hidden');
-                        $("#deleted-form").removeClass('zk-hidden');
-                    }
-                });
-
-                $("#active-list-picker").dblclick(function() {
-                    $("#active-form").submit();
-                });
-
-                $("#delete-list").click(function() {
-                    if (confirm("Are your sure?")) {
-                        $("#action-type").val('editListDelete');
-                        $("#active-form").submit();
-                    }
-                });
-            });
-    <?php ob_end_flush(); ?>
-        // -->
-        </SCRIPT>
         <?php
     }
     
@@ -805,7 +777,7 @@ class Playlists extends MenuItem {
                 <div id='tag-entry'>
                     <div>
                         <label>Tag:</label>
-                        <input id='track-tag' />
+                        <input id='track-tag' data-focus />
                         <span class='track-info' id='tag-status'>Enter tag ID followed by Tab or Enter</span>
                     </div>
                     <div>
@@ -822,7 +794,7 @@ class Playlists extends MenuItem {
                 <div id='manual-entry' class='zk-hidden' >
                     <div>
                         <label>Artist:</label>
-                        <input required id='track-artist' />
+                        <input required id='track-artist' data-focus />
                     </div>
                     <div>
                         <label>Track:</label>
@@ -840,7 +812,7 @@ class Playlists extends MenuItem {
                 <div id='comment-entry' class='zk-hidden' >
                     <div>
                         <label style='vertical-align: top'>Comment:</label>
-                        <textarea wrap=virtual id='comment-data' rows=4 maxlength=<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> required></textarea>
+                        <textarea wrap=virtual id='comment-data' rows=4 maxlength=<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> required data-focus></textarea>
                         <div style='display: inline-block;'>
                             <span class='remaining' id='remaining'>(0/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)</span><br/>
                             <a id='markdown-help-link' href='#'>formatting help</a>
@@ -853,7 +825,7 @@ class Playlists extends MenuItem {
                 <div id='nme-entry' class='zk-hidden' >
                     <div>
                         <label>Name/ID:</label>
-                        <input id='nme-id' />
+                        <input id='nme-id' data-focus/>
                     </div>
                 </div>
             </div> <!-- track-entry -->
@@ -880,7 +852,7 @@ class Playlists extends MenuItem {
                 echo "        <OPTION VALUE=\"".$track[$i]["seq"]."\"$selected>".$track[$i]["seq"].". ".htmlentities($track[$i]["artist"])." - ".htmlentities($track[$i]["track"])."\n";
             }
         } else {
-            echo "      <SELECT NAME=track>\n";
+            echo "      <SELECT NAME=track data-focus>\n";
             $track = Engine::api(ILibrary::class)->search(ILibrary::TRACK_KEY, 0, 100, $tag);
             for($i = 0; $i < sizeof($track); $i++) {
                 if($track[$i]["track"] == $seltrack) {
@@ -939,7 +911,7 @@ class Playlists extends MenuItem {
       <INPUT TYPE=HIDDEN NAME=comment VALUE="true">
         <TR>
           <TD ALIGN=RIGHT STYLE='vertical-align: top'>Comment:</TD>
-          <TD ALIGN=LEFT><TEXTAREA WRAP=VIRTUAL NAME=ctext id=ctext ROWS=4 MAXLENGTH=<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> STYLE='width: 280px !important' REQUIRED><?php
+          <TD ALIGN=LEFT><TEXTAREA WRAP=VIRTUAL NAME=ctext id=ctext ROWS=4 MAXLENGTH=<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> STYLE='width: 280px !important' REQUIRED data-focus><?php
               $comment = $entry->getComment();
               $len = mb_strlen(str_replace("\r\n", "\n", $comment));
               echo htmlentities($comment); ?></TEXTAREA><div style='display: inline-block;'><span class='remaining' id='remaining'>(<?php echo $len."/".PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)</span><br/><a id='markdown-help-link' href='#'>formatting help</a></div>
@@ -948,7 +920,7 @@ class Playlists extends MenuItem {
     <?php } else if($event) { ?>
       <INPUT TYPE=HIDDEN NAME=logevent VALUE="true">
         <TR>
-          <TD ALIGN=RIGHT>Type:</TD><TD ALIGN=LEFT><SELECT NAME=etype STYLE='width: 290px !important'>
+          <TD ALIGN=RIGHT>Type:</TD><TD ALIGN=LEFT><SELECT NAME=etype STYLE='width: 290px !important' data-focus>
 <?php
           $current = $entry->getLogEventType();
           $nmeAr = Engine::param('nme');
@@ -963,12 +935,12 @@ class Playlists extends MenuItem {
         </TR>
         <TR>
           <TD ALIGN=RIGHT>Name/ID:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=ecode MAXLENGTH=80 required VALUE="<?php echo htmlentities($entry->getLogEventCode());?>" CLASS=input STYLE='width: 280px !important'></TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=ecode MAXLENGTH=80 required VALUE="<?php echo htmlentities($entry->getLogEventCode());?>" CLASS=input STYLE='width: 280px !important' data-focus></TD>
         </TR>
     <?php } else if($album == "" || $album["tag"] == "") { ?>
         <TR>
           <TD ALIGN=RIGHT>Artist:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=artist MAXLENGTH=80 VALUE="<?php echo htmlentities($album?$album["artist"]:"");?>" CLASS=input SIZE=40 REQUIRED></TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=artist MAXLENGTH=80 VALUE="<?php echo htmlentities($album?$album["artist"]:"");?>" CLASS=input SIZE=40 REQUIRED data-focus></TD>
         </TR>
         <TR>
           <TD ALIGN=RIGHT>Track:</TD>
@@ -1036,14 +1008,6 @@ class Playlists extends MenuItem {
             $this->emitConfirm("Delete",
                         "Delete this entry?",
                         "button=+Delete+&session=".$this->session->getSessionID()."&action=$this->action&playlist=$playlistId&id=$id&seq=editForm");
-        if($sep)
-            UI::setFocus();
-        else if($event)
-            UI::setFocus("etype");
-        else if($comment)
-            UI::setFocus("ctext");
-        else
-            UI::setFocus(($album == "" || $album["tag"] == "")?"artist":"track");
     }
     
     private function emitTrackForm($playlist, $id, $album, $track) {
@@ -1059,7 +1023,7 @@ class Playlists extends MenuItem {
         <TR><TD ALIGN=RIGHT>Album:</TD>
             <TH ALIGN=LEFT><?php echo htmlentities($album["album"]); ?></TH></TR>
         <TR><TD ALIGN=RIGHT>Track:</TD>
-            <TD><INPUT TYPE=TEXT NAME=track MAXLENGTH=80 CLASS=input VALUE="<?php echo htmlentities($track);?>"></TD></TR>
+            <TD><INPUT TYPE=TEXT NAME=track MAXLENGTH=80 CLASS=input VALUE="<?php echo htmlentities($track);?>" data-focus></TD></TR>
         <TR><TD></TD><TD>
     <?php if($id) { ?>
           <INPUT TYPE=SUBMIT VALUE="  Save  ">
@@ -1076,7 +1040,6 @@ class Playlists extends MenuItem {
       </TABLE>
       </FORM>
     <?php 
-        UI::setFocus("track");
     }
     
     private function insertTrack($playlist, $tag, $artist, $track, $album, $label, $wantTimestamp) {
@@ -1378,7 +1341,7 @@ class Playlists extends MenuItem {
     <TABLE CELLPADDING=2 CELLSPACING=0>
       <TR>
         <TD ALIGN=RIGHT>Airname:</TD>
-        <TD><INPUT TYPE=TEXT NAME=djname SIZE=30></TD>
+        <TD><INPUT TYPE=TEXT NAME=djname SIZE=30 data-focus></TD>
       </TR>
       <TR>
         <TD>&nbsp;</TD>
@@ -1398,7 +1361,6 @@ class Playlists extends MenuItem {
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </FORM>
     <?php 
-                UI::setFocus("djname");
                 return;
             }
         }
@@ -1422,7 +1384,7 @@ class Playlists extends MenuItem {
         <TABLE CELLPADDING=2 CELLSPACING=0>
           <TR>
             <TD ALIGN=RIGHT>Show Name:</TD>
-            <TD><INPUT TYPE=TEXT NAME=description VALUE="<?php echo stripslashes($description);?>" SIZE=30></TD>
+            <TD><INPUT TYPE=TEXT NAME=description VALUE="<?php echo stripslashes($description);?>" SIZE=30 data-focus></TD>
           </TR><TR>
             <TD ALIGN=RIGHT>Date:</TD>
             <TD><INPUT TYPE=TEXT NAME=date VALUE="<?php echo stripslashes($date);?>" SIZE=15></TD>
@@ -1486,7 +1448,6 @@ class Playlists extends MenuItem {
         </TABLE>
       </FORM>
     <?php 
-            UI::setFocus("description");
         } else {
             // Create the playlist
             $success = Engine::api(IPlaylist::class)->insertPlaylist($this->session->getUser(), $date, $time, $description, $airname);
@@ -1627,7 +1588,7 @@ class Playlists extends MenuItem {
         <INPUT TYPE=HIDDEN NAME=MAX_FILE_SIZE VALUE=100000>
         <TABLE CELLPADDING=2 CELLSPACING=0>
           <TR>
-            <TD ALIGN=RIGHT>Import from file:</TD><TD><INPUT NAME=userfile TYPE=file></TD>
+            <TD ALIGN=RIGHT>Import from file:</TD><TD><INPUT NAME=userfile TYPE=file data-focus></TD>
           </TR><TR>
             <TD>&nbsp;</TD>
             <TD><INPUT TYPE=submit VALUE=" Import Playlist "></TD>
@@ -1640,11 +1601,12 @@ class Playlists extends MenuItem {
         </TABLE>
       </FORM>
     <?php
-            UI::setFocus("userfile");
         }
     }
 
     public function updateDJInfo() {
+        UI::emitJS("js/pled.pick.js");
+
         $validate = $_REQUEST["validate"];
         $multi = $_REQUEST["multi"];
         $url = $_REQUEST["url"];
@@ -1677,7 +1639,6 @@ class Playlists extends MenuItem {
     <P>Publish at least one playlist or music review to create
        an airname.</P>
     <?php 
-            UI::setFocus();
             break;
         case 1:
             // Only one airname; emit form
@@ -1686,9 +1647,9 @@ class Playlists extends MenuItem {
     <P><B>Update airname '<?php echo $airnames[0]['airname'];?>'</B></P>
     <TABLE CELLPADDING=2 BORDER=0>
       <TR><TD ALIGN=RIGHT>Airname:</TD>
-        <TD><INPUT id='name' TYPE=TEXT NAME=name required VALUE="<?php echo $name?$name:$airnames[0]['airname'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
+        <TD><INPUT id='name' TYPE=TEXT NAME=name required VALUE="<?php echo $name?$name:$airnames[0]['airname'];?>" CLASS=input SIZE=40 MAXLENGTH=80<?php echo $name?" data-focus":""; ?>></TD></TR>
       <TR><TD ALIGN=RIGHT>URL:</TD>
-        <TD><INPUT TYPE=TEXT NAME=url VALUE="<?php echo $url?$url:$airnames[0]['url'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
+        <TD><INPUT TYPE=TEXT NAME=url VALUE="<?php echo $url?$url:$airnames[0]['url'];?>" CLASS=input SIZE=40 MAXLENGTH=80<?php echo $name?"":" data-focus"; ?>></TD></TR>
       <TR><TD ALIGN=RIGHT>e-mail:</TD>
         <TD><INPUT TYPE=TEXT NAME=email VALUE="<?php echo $email?$email:$airnames[0]['email'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
     <?php 
@@ -1729,7 +1690,6 @@ class Playlists extends MenuItem {
         // -->
         </SCRIPT>
     <?php 
-            UI::setFocus($name?"name":"url");
             break;
         default:
             // Multiple airnames; emit airname selection form
@@ -1737,7 +1697,7 @@ class Playlists extends MenuItem {
     <FORM ACTION="?" METHOD=POST>
     <B>Select Airname:</B><BR>
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
-    <SELECT NAME=airname SIZE=10>
+    <SELECT NAME=airname SIZE=10 data-focus>
     <?php 
             foreach($airnames as $row) {
                  echo "  <OPTION VALUE=\"$row[0]\">$row[1]\n";
@@ -1752,11 +1712,12 @@ class Playlists extends MenuItem {
     </TD></TR></TABLE>
     </FORM>
     <?php 
-            UI::setFocus("airname");
             break;
         }
     }
     public function emitShowLink() {
+        UI::emitJS("js/pled.pick.js");
+
         $validate = $_REQUEST["validate"];
         $playlist = $_REQUEST["playlist"];
         $airname = $_REQUEST["airname"];
@@ -1782,7 +1743,7 @@ class Playlists extends MenuItem {
     <FORM ACTION="?" METHOD=POST>
     <B>Select Airname:</B><BR>
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
-    <SELECT NAME=airname SIZE=10>
+    <SELECT NAME=airname SIZE=10 data-focus>
     <?php 
                 foreach($airnames as $row) {
                     echo "  <OPTION VALUE=\"$row[0]\">$row[1]\n";
@@ -1798,7 +1759,6 @@ class Playlists extends MenuItem {
     </FORM>
     <?php 
            }
-           UI::setFocus("airname");
            return;
         } else if($validate && $playlist) {
     ?>
@@ -1817,14 +1777,13 @@ class Playlists extends MenuItem {
     </TD></TR>
     </TABLE>
     <?php 
-            UI::setFocus();
             return;
         }
     ?>
     <FORM ACTION="?" METHOD=POST>
     <B>Select Playlist:</B><BR>
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
-    <SELECT NAME=playlist SIZE=10>
+    <SELECT NAME=playlist SIZE=10 data-focus>
       <OPTION VALUE="all"> -- URL for all of my playlists --
     <?php 
         // Run the query
@@ -1841,7 +1800,6 @@ class Playlists extends MenuItem {
     </TD></TR></TABLE>
     </FORM>
     <?php 
-        UI::setFocus("playlist");
     }
     
     private function viewListGetAlbums(&$records, &$albums) {
@@ -2102,7 +2060,7 @@ class Playlists extends MenuItem {
     <TABLE WIDTH="100%">
       <TR><TH ALIGN=LEFT><?php echo $row['airname'];?>'s playlists:</TH></TR>
       <TR><TD>
-         <SELECT NAME=playlist SIZE=6>
+         <SELECT NAME=playlist SIZE=6 data-focus>
     <?php 
             // Run the query
             $records = Engine::api(IPlaylist::class)->getPlaylists(0, 0, 0, $viewuser);
@@ -2120,11 +2078,9 @@ class Playlists extends MenuItem {
     </TABLE>
     </FORM>
     <?php 
-            UI::setFocus("playlist");
             return;
         } else if(($seq == "selList") && $playlist) {
             $this->viewList($playlist);
-            UI::setFocus();
             return;
         }
     
@@ -2182,8 +2138,6 @@ class Playlists extends MenuItem {
             echo "$displayName</A>";
         }
         echo "</TD></TR>\n</TABLE>\n";
-    
-        UI::setFocus();
     }
     
     public function emitViewDate() {
@@ -2197,7 +2151,6 @@ class Playlists extends MenuItem {
     
         if(($seq == "selList") && $playlist) {
             $this->viewList($playlist);
-            UI::setFocus();
             return;
         }
     
@@ -2249,7 +2202,6 @@ class Playlists extends MenuItem {
     </TABLE>
     <?php 
         }
-        UI::setFocus();
     }
     
     public function viewLastPlays($tag, $count=0) {

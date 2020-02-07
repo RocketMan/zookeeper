@@ -148,6 +148,7 @@ $().ready(function(){
         clearUserInput(true);
         $("#track-entry > div").addClass("zk-hidden");
         $("#" + newType).removeClass("zk-hidden");
+        $("#" + newType + " *[data-focus]").focus();
         if (newType == NME_ENTRY) {
             var option = $("option:selected", this);
             var argCnt = $(option).data("args");
@@ -376,4 +377,6 @@ $().ready(function(){
     });
 
     $(".playlistTable .grab").mousedown(grabStart);
+
+    $("*[data-focus]").focus();
 });

@@ -87,4 +87,6 @@ $().ready(function(){
         $('#show-date').val(pickerDate);
         return true;
     });
+
+    $("*[data-focus]").focus();
 });
