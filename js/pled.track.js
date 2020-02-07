@@ -201,8 +201,10 @@ $().ready(function(){
     $("INPUT[data-date]").focusout(function() {
         // if field is blank, apply no validation
         var v = $(this).val();
-        if(v.length == 0)
+        if(v.length == 0) {
+            $(this).removeClass('invalid-input');
             return;
+        }
 
         var d = $(this).data("date");
         var s = $(this).data("start");
@@ -222,11 +224,12 @@ $().ready(function(){
         }
 
         if(isNaN(val) || val < start || val > end) {
-            alert('time is not valid');
+            $(this).addClass('invalid-input');
             $(this).val("").focus();
         } else {
             // if time is after midnight, set edate field to correct date
             $("INPUT[name=edate]").val(val.toISOString().split('T')[0]);
+            $(this).removeClass('invalid-input');
         }
     });
 
