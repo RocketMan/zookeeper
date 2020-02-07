@@ -165,10 +165,10 @@ $().ready(function() {
     $("INPUT[data-zkalpha]").change(function(e) {
         zkAlpha($(this));
     });
-    $("INPUT[data-zkfocus]").focus(function(e) {
-        focus = $(this).data("zkfocus");
+    $("INPUT[data-track]").focus(function(e) {
+        focus = $(this).data("track");
     });
-    $("INPUT[data-zkupper]").change(function(e) {
+    $("INPUT[data-upper]").change(function(e) {
         $(this).val($(this).val().toUpperCase());
     });
 
@@ -319,4 +319,6 @@ $().ready(function() {
             }
         }
     });
+
+    $("*[data-focus]").focus();
 });
