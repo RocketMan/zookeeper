@@ -292,10 +292,12 @@ class UICommon {
      * @param control input field to receive focus (or none)
      */
     public static function setFocus($control = "") {
-        echo "<SCRIPT TYPE=\"text/javascript\"><!--\n";
-        echo "function setFocus() {";
-        if($control)
-            echo "document.forms[0].$control.focus();";
-        echo "} // -->\n</SCRIPT>\n";
+        if($control) {
+            echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
+                 "$().ready(function(){".
+                 "document.forms[0].$control.focus();".
+                 "}); // -->\n</SCRIPT>\n";
+
+        }
     }
 }
