@@ -140,19 +140,6 @@ class Playlists extends MenuItem {
         return $retVal;
     }
 
-    // return array of timestamps that represent show start/end date & times
-    private function zkTimeRangeToISODateTimeAr($playlist) {
-        $retVal = ['', ''];
-        $date = $playlist['showdate'];
-        $zkTimeRange = $playlist['showtime'];
-        $timeAr = explode("-", $zkTimeRange);
-        if (count($timeAr) == 2) {
-            $retVal[0] = $date . ' ' . substr($timeAr[0], 0, 2) . ':' . substr($timeAr[0], 2,4) . ':00';
-            $retVal[1] = $date . ' ' . substr($timeAr[1], 0, 2) . ':' . substr($timeAr[1], 2,4) . ':00';
-        }
-        return $retVal;
-    }
-
     // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
     // returns empty string if invalid
     private function normalizeTime($t) {
@@ -346,14 +333,6 @@ class Playlists extends MenuItem {
             return self::hourToAMPM($fromtime) . " - " . self::hourToAMPM($totime);
         } else
             return strtolower(htmlentities($time));
-    }
-
-    public static function timestampToTime($time) {
-        if ($time == null || $time == '') {
-            return "";
-        } else {
-            return date('G:i:s', strtotime($time));
-        }
     }
 
     public static function timestampToDate($time) {
