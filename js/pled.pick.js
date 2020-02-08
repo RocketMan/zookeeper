@@ -32,7 +32,7 @@ $().ready(function(){
             $("#active-form").addClass('zk-hidden');
             $("#deleted-form").removeClass('zk-hidden');
         }
-        $("SELECT").focus();
+        $("SELECT:not(#list-type-picker)").focus();
     });
 
     $("#active-list-picker").dblclick(function() {

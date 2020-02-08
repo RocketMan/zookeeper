@@ -198,6 +198,95 @@ $().ready(function(){
         setAddButtonState(haveAll);
     });
 
+    $("INPUT[data-date]").focusout(function() {
+        // if field is blank, apply no validation
+        var v = $(this).val();
+        if(v.length == 0) {
+            $(this).removeClass('invalid-input');
+            return;
+        }
+
+        // no time picker in webkit; be flexible in accepting input...
+        // ...accept am/pm time
+        var offset = 0;
+        var vlc = v.toLowerCase();
+        var am = vlc.indexOf('am');
+        var pm = vlc.indexOf('pm');
+        if(am > 0)
+            v = v.substring(0, am);
+        else if(pm > 0) {
+            v = v.substring(0, pm);
+            offset = 12;
+        }
+
+        // ...accept time without separator (e.g., 1234)
+        if(v.length > 2 && v.indexOf(':') < 0)
+            v = v.substr(0, v.length-2) + ':' + v.substr(v.length-2);
+
+        // ...accept time without leading zero (e.g., 2:34)
+        if(v.length < 5)
+            v = '0' + v;
+        v = v.trim();
+
+        // ...coerce am/pm to 24 hour time
+        if(offset > 0)
+            v = (v.substr(0, 2)*1 + offset) + v.substr(2);
+
+        var d = $(this).data("date");
+        var s = $(this).data("start");
+        var e = $(this).data("end");
+
+        var start = new Date(d + "T" + s);
+        var end = new Date(d + "T" + e);
+        var val = new Date(d + "T" + v);
+
+        if(!isNaN(val)) {
+            // val or end time can be midnight or later
+            // in this case, adjust to the next day
+            if(e < s)
+                end.setTime(end.getTime() + 86400000);
+            if(v < s)
+                val.setTime(val.getTime() + 86400000);
+        }
+
+        if(isNaN(val) || val < start || val > end) {
+            $(this).addClass('invalid-input');
+            $(this).val("").focus();
+        } else {
+            // if we massaged time for webkit, set canonical value
+            if($(this).val() != v)
+                $(this).val(v);
+
+            // if time is after midnight, set edate field to correct date
+            $("INPUT[name=edate]").val(val.toISOString().split('T')[0]);
+            $(this).removeClass('invalid-input');
+        }
+    });
+
+    $("#edit-save").click(function(){
+        // submit form only if time field is valid/empty
+        if($("INPUT[data-date].invalid-input").length == 0)
+            $(this).closest("FORM").submit();
+    });
+
+    $("#edit-delete").click(function(){
+        if(confirm("Delete this entry?")) {
+            // we need to indicate that the ' Delete ' button was pressed
+            var input = $("<INPUT>").attr({
+                type: 'hidden',
+                name: 'button',
+                value: ' Delete '
+            });
+            $(this).closest("FORM").append(input).submit();
+        }
+    });
+
+    // display highlight on track edit
+    if($("FORM#edit").length > 0) {
+        var id = $("FORM#edit INPUT[name=id]").val();
+        $("DIV[data-id=" + id + "]").closest("TR").addClass("highlight");
+    }
+
     function moveTrack(list, fromId, toId, tr, si, rows) {
         var postData = {
             session: $("#track-session").val(),

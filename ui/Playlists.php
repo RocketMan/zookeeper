@@ -140,19 +140,6 @@ class Playlists extends MenuItem {
         return $retVal;
     }
 
-    // return array of timestamps that represent show start/end date & times
-    private function zkTimeRangeToISODateTimeAr($playlist) {
-        $retVal = ['', ''];
-        $date = $playlist['showdate'];
-        $zkTimeRange = $playlist['showtime'];
-        $timeAr = explode("-", $zkTimeRange);
-        if (count($timeAr) == 2) {
-            $retVal[0] = $date . ' ' . substr($timeAr[0], 0, 2) . ':' . substr($timeAr[0], 2,4) . ':00';
-            $retVal[1] = $date . ' ' . substr($timeAr[1], 0, 2) . ':' . substr($timeAr[1], 2,4) . ':00';
-        }
-        return $retVal;
-    }
-
     // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
     // returns empty string if invalid
     private function normalizeTime($t) {
@@ -346,14 +333,6 @@ class Playlists extends MenuItem {
             return self::hourToAMPM($fromtime) . " - " . self::hourToAMPM($totime);
         } else
             return strtolower(htmlentities($time));
-    }
-
-    public static function timestampToTime($time) {
-        if ($time == null || $time == '') {
-            return "";
-        } else {
-            return date('G:i:s', strtotime($time));
-        }
     }
 
     public static function timestampToDate($time) {
@@ -601,37 +580,6 @@ class Playlists extends MenuItem {
         $this->emitEditListForm($airName, $description, $time, $date, $playlistId, null);
     }
 
-    private function emitConfirm($name, $message, $action, $rtaction="") {
-    ?>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-    function Confirm<?php echo $name; ?>()
-    {
-    <?php if($rtaction) { ?>
-      if(document.forms[0].<?php echo $rtaction; ?>.selectedIndex >= 0) {
-        action = document.forms[0].<?php echo $rtaction; ?>.options[document.forms[0].<?php echo $rtaction; ?>.selectedIndex].value;
-      } else {
-        return;
-      }
-    <?php } ?>
-      answer = confirm("<?php echo $message; ?>");
-      if(answer != 0) {
-        location = "<?php 
-           echo "?$action";
-           if($rtaction)
-              echo "&$rtaction=\" + action";
-           else
-              echo "\""; ?>;
-      }
-    }
-    <?php
-        ob_end_flush();
-    ?>
-    // -->
-    </SCRIPT>
-    <?php 
-    }
-    
     private function restorePlaylist($playlist) {
         Engine::api(IPlaylist::class)->restorePlaylist($playlist);
     }
@@ -871,17 +819,15 @@ class Playlists extends MenuItem {
     
     private function emitEditForm($playlistId, $id, $album, $track) {
       $entry = new PlaylistEntry($album);
-      $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
-      $showTimeAr = $this->zkTimeRangeToISODateTimeAr($playlist);
-      $startAMPM = self::timestampToAMPM($showTimeAr[0]);
-      $startTime = new \DateTime($showTimeAr[0]);
-      $endTime = new \DateTime($showTimeAr[1]);
+      $window = Engine::api(IPlaylist::class)->getTimestampWindow($playlistId);
+      $startTime = $window['start'];
+      $endTime = $window['end'];
       $nowTime = new \DateTime("now");
       $isLive = $nowTime >= $startTime && $nowTime <= $endTime;
       $endTime = $isLive ? $nowTime : $endTime;
-      $showTimeAr[0] = self::timestampToTime($showTimeAr[0]);
-      $showTimeAr[1] = $endTime->format('G:i:s');
+      $startAMPM = $startTime->format('g:i a');
       $endAMPM = $endTime->format('g:i a');
+      $edate = $startTime->format('Y-m-d');
       $showTimeRange = "$startAMPM - $endAMPM";
       $timepickerTime = $this->getTimepickerTime($entry->getCreated());
       $sep = $id && $entry->isType(PlaylistEntry::TYPE_SET_SEPARATOR);
@@ -903,7 +849,9 @@ class Playlists extends MenuItem {
           echo "track";
           break;
       } ?>:</P>
-      <FORM ACTION="?" METHOD=POST>
+      <FORM ACTION="?" id='edit' METHOD=POST>
+      <input id='track-session' type='hidden' value='<?php echo $this->session->getSessionID(); ?>'>
+      <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
       <TABLE>
     <?php if($sep) { ?>
       <INPUT TYPE=HIDDEN NAME=separator VALUE="true">
@@ -970,16 +918,16 @@ class Playlists extends MenuItem {
       <TR>
           <TD ALIGN=RIGHT>Time:</TD>
           <TD ALIGN=LEFT>
-              <INPUT class='timepicker' NAME=etime step='60' type='time' value="<?php echo $timepickerTime ?>" min="<?php echo $showTimeAr[0] ?>" max="<?php echo $showTimeAr[1] ?>" /> <span style='font-size:8pt;'>(<?php echo $showTimeRange ?>)</span>
-              <INPUT type='hidden' NAME='edate' value="<?php echo $playlist['showdate'] ?>" />
+              <INPUT class='timepicker' NAME=etime step='60' type='time' value="<?php echo $timepickerTime ?>" data-date='<?php echo $edate;?>' data-start='<?php echo $startTime->format('H:i');?>' data-end='<?php echo $endTime->format('H:i');?>'/> <span style='font-size:8pt;'>(<?php echo $showTimeRange ?>)</span>
+              <INPUT type='hidden' NAME='edate' value="<?php echo $edate;?>" />
           </TD>
         </TR>
         <TR>
           <TD>&nbsp;</TD>
           <TD>
     <?php if($id) { ?>
-              <INPUT TYPE=SUBMIT NAME=button VALUE="  Save  ">&nbsp;&nbsp;&nbsp;
-              <INPUT TYPE=BUTTON NAME=button onClick="ConfirmDelete()" VALUE=" Delete ">
+              <INPUT TYPE=BUTTON NAME=button id='edit-save' VALUE="  Save  ">&nbsp;&nbsp;&nbsp;
+              <INPUT TYPE=BUTTON NAME=button id='edit-delete' VALUE=" Delete ">
               <INPUT TYPE=HIDDEN NAME=id VALUE="<?php echo $id;?>">
     <?php } else { ?>
               <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
@@ -992,6 +940,7 @@ class Playlists extends MenuItem {
           </TD>
       </TR>
       </TABLE>
+      <HR>
     <?php UI::markdownHelp(); ?>
       </FORM>
       <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
@@ -1004,10 +953,6 @@ class Playlists extends MenuItem {
       // -->
       </SCRIPT>
     <?php 
-        if($id)
-            $this->emitConfirm("Delete",
-                        "Delete this entry?",
-                        "button=+Delete+&session=".$this->session->getSessionID()."&action=$this->action&playlist=$playlistId&id=$id&seq=editForm");
     }
     
     private function emitTrackForm($playlist, $id, $album, $track) {

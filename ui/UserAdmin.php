@@ -331,7 +331,7 @@ class UserAdmin extends MenuItem {
     <INPUT TYPE=HIDDEN NAME=sortBy VALUE="<?php echo $this->sortBy;?>">
     </FORM>
     <?php
-            UI::setFocus("auName");
+            UI::setFocus("uid");
             return;
         }
     
