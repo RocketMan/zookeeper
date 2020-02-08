@@ -850,7 +850,7 @@ class Playlists extends MenuItem {
     
     private function emitEditForm($playlistId, $id, $album, $track) {
       $entry = new PlaylistEntry($album);
-      $window = Engine::api(IPlaylist::class)->getLiveEntryWindow($playlistId);
+      $window = Engine::api(IPlaylist::class)->getTimestampWindow($playlistId);
       $startTime = $window['start'];
       $endTime = $window['end'];
       $nowTime = new \DateTime("now");

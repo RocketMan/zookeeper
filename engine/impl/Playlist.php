@@ -329,7 +329,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
 
     // NOTE: this routine must be tolerant of improperly formatted dates.
-    public function getLiveEntryWindowInternal($playlist) {
+    public function getTimestampWindowInternal($playlist) {
         $result = null;
         if($playlist && ($showtime = $playlist['showtime'])) {
             $timeAr = explode("-", $showtime);
@@ -359,14 +359,14 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $result;
     }
 
-    public function getLiveEntryWindow($playlistId) {
+    public function getTimestampWindow($playlistId) {
         $playlist = $this->getPlaylist($playlistId);
-        return $this->getLiveEntryWindowInternal($playlist);
+        return $this->getTimestampWindowInternal($playlist);
     }
 
     public function isWithinShow($dateTime, $listRow) {
         $retVal = false;
-        $window = $this->getLiveEntryWindowInternal($listRow);
+        $window = $this->getTimestampWindowInternal($listRow);
         if($window) {
             $retVal = $dateTime >= $window['start'] &&
                       $dateTime <= $window['end'];
