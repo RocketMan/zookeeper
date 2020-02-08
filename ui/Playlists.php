@@ -580,37 +580,6 @@ class Playlists extends MenuItem {
         $this->emitEditListForm($airName, $description, $time, $date, $playlistId, null);
     }
 
-    private function emitConfirm($name, $message, $action, $rtaction="") {
-    ?>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-    function Confirm<?php echo $name; ?>()
-    {
-    <?php if($rtaction) { ?>
-      if(document.forms[0].<?php echo $rtaction; ?>.selectedIndex >= 0) {
-        action = document.forms[0].<?php echo $rtaction; ?>.options[document.forms[0].<?php echo $rtaction; ?>.selectedIndex].value;
-      } else {
-        return;
-      }
-    <?php } ?>
-      answer = confirm("<?php echo $message; ?>");
-      if(answer != 0) {
-        location = "<?php 
-           echo "?$action";
-           if($rtaction)
-              echo "&$rtaction=\" + action";
-           else
-              echo "\""; ?>;
-      }
-    }
-    <?php
-        ob_end_flush();
-    ?>
-    // -->
-    </SCRIPT>
-    <?php 
-    }
-    
     private function restorePlaylist($playlist) {
         Engine::api(IPlaylist::class)->restorePlaylist($playlist);
     }
@@ -880,7 +849,9 @@ class Playlists extends MenuItem {
           echo "track";
           break;
       } ?>:</P>
-      <FORM ACTION="?" METHOD=POST>
+      <FORM ACTION="?" id='edit' METHOD=POST>
+      <input id='track-session' type='hidden' value='<?php echo $this->session->getSessionID(); ?>'>
+      <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
       <TABLE>
     <?php if($sep) { ?>
       <INPUT TYPE=HIDDEN NAME=separator VALUE="true">
@@ -955,8 +926,8 @@ class Playlists extends MenuItem {
           <TD>&nbsp;</TD>
           <TD>
     <?php if($id) { ?>
-              <INPUT TYPE=SUBMIT NAME=button VALUE="  Save  ">&nbsp;&nbsp;&nbsp;
-              <INPUT TYPE=BUTTON NAME=button onClick="ConfirmDelete()" VALUE=" Delete ">
+              <INPUT TYPE=BUTTON NAME=button id='edit-save' VALUE="  Save  ">&nbsp;&nbsp;&nbsp;
+              <INPUT TYPE=BUTTON NAME=button id='edit-delete' VALUE=" Delete ">
               <INPUT TYPE=HIDDEN NAME=id VALUE="<?php echo $id;?>">
     <?php } else { ?>
               <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
@@ -969,6 +940,7 @@ class Playlists extends MenuItem {
           </TD>
       </TR>
       </TABLE>
+      <HR>
     <?php UI::markdownHelp(); ?>
       </FORM>
       <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
@@ -981,10 +953,6 @@ class Playlists extends MenuItem {
       // -->
       </SCRIPT>
     <?php 
-        if($id)
-            $this->emitConfirm("Delete",
-                        "Delete this entry?",
-                        "button=+Delete+&session=".$this->session->getSessionID()."&action=$this->action&playlist=$playlistId&id=$id&seq=editForm");
     }
     
     private function emitTrackForm($playlist, $id, $album, $track) {

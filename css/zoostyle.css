@@ -730,3 +730,7 @@ A.calLink {
     border-radius: 2px;
     box-shadow: 0px 0px 2px #f88, inset 0px 0px 2px #f88;
 }
+
+.highlight {
+    background-color: #ffff00;
+}

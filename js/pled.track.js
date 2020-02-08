@@ -263,6 +263,30 @@ $().ready(function(){
         }
     });
 
+    $("#edit-save").click(function(){
+        // submit form only if time field is valid/empty
+        if($("INPUT[data-date].invalid-input").length == 0)
+            $(this).closest("FORM").submit();
+    });
+
+    $("#edit-delete").click(function(){
+        if(confirm("Delete this entry?")) {
+            // we need to indicate that the ' Delete ' button was pressed
+            var input = $("<INPUT>").attr({
+                type: 'hidden',
+                name: 'button',
+                value: ' Delete '
+            });
+            $(this).closest("FORM").append(input).submit();
+        }
+    });
+
+    // display highlight on track edit
+    if($("FORM#edit").length > 0) {
+        var id = $("FORM#edit INPUT[name=id]").val();
+        $("DIV[data-id=" + id + "]").closest("TR").addClass("highlight");
+    }
+
     function moveTrack(list, fromId, toId, tr, si, rows) {
         var postData = {
             session: $("#track-session").val(),
