@@ -847,8 +847,8 @@ class Editor extends MenuItem {
         }
     ?>
       <TR><TD ALIGN=RIGHT>Compilation:</TD><TD CLASS="header"><INPUT TYPE=CHECKBOX id='comp' NAME=coll<?php echo $coll?" CHECKED":"";?>></TD></TR>
-      <TR><TD ID="lartist" ALIGN=RIGHT STYLE="visibility:<?php echo $coll?"hidden":"visible";?>">Artist:</TD><TD CLASS="header"><INPUT NAME=artist TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($artist));?>" STYLE="visibility:<?php echo $coll?"hidden":"visible";?>" data-zkalpha<?php echo $coll?"":" data-focus";?>></TD></TR>
-      <TR><TD ALIGN=RIGHT>Album:</TD><TD CLASS="header"><INPUT NAME=album TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($album));?>" data-zkalpha<?php echo $coll?" data-focus":"";?>></TD></TR>
+      <TR><TD ID="lartist" ALIGN=RIGHT STYLE="visibility:<?php echo $coll?"hidden":"visible";?>">Artist:</TD><TD CLASS="header"><INPUT NAME=artist TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($artist));?>" STYLE="visibility:<?php echo $coll?"hidden":"visible";?>" data-zkalpha<?php echo $coll?"":" data-focus";?>></TD></TR>
+      <TR><TD ALIGN=RIGHT>Album:</TD><TD CLASS="header"><INPUT NAME=album TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($album));?>" data-zkalpha<?php echo $coll?" data-focus":"";?>></TD></TR>
       <TR><TD ALIGN=RIGHT>Category:</TD><TD><SELECT NAME=category CLASS=textsp>
     <?php 
         foreach(Search::GENRES as $code => $genre) {
@@ -880,7 +880,7 @@ class Editor extends MenuItem {
             echo "             <OPTION VALUE=\"$code\"$selected>$location\n";
         }
     ?>
-                    </SELECT>&nbsp;&nbsp;<SPAN ID=lbin STYLE="visibility:<?php echo ($alocation == 'G')?"visible":"hidden";?>">Bin:&nbsp;</SPAN><INPUT NAME=bin TYPE=text CLASS=text SIZE=10 VALUE="<?php echo $bin;?>" STYLE="visibility:<?php echo ($alocation == 'G')?"visible":"hidden";?>"></TD></TR>
+                    </SELECT>&nbsp;&nbsp;<SPAN ID=lbin STYLE="visibility:<?php echo ($alocation == 'G')?"visible":"hidden";?>">Bin:&nbsp;</SPAN><INPUT NAME=bin TYPE=text CLASS=text SIZE=10 maxlength='8' VALUE="<?php echo $bin;?>" STYLE="visibility:<?php echo ($alocation == 'G')?"visible":"hidden";?>"></TD></TR>
     <?php 
         if(!$_REQUEST["new"]) {
     ?>
@@ -965,16 +965,16 @@ class Editor extends MenuItem {
             echo "  <TR><TD ALIGN=RIGHT>Label&nbsp;ID:</TD><TH ALIGN=LEFT ID=\"pubkey\">".$row["pubkey"]."</TH></TR>\n";
         }
     ?>
-      <TR><TD ALIGN=RIGHT>Name:</TD><TD CLASS="header"><INPUT NAME=name TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["name"]));?>" data-zkalpha="true" data-focus></TD></TR>
-      <TR><TD ALIGN=RIGHT>Attn:</TD><TD><INPUT NAME=attention TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["attention"]));?>" data-zkalpha="true"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Address:</TD><TD><INPUT NAME=address TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["address"]));?>" data-zkalpha="true"></TD></TR>
-      <TR><TD ALIGN=RIGHT>City:</TD><TD><INPUT NAME=city TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["city"]));?>" data-zkalpha="true"></TD></TR>
-      <TR><TD ALIGN=RIGHT ID=lstate STYLE="visibility:<?php echo $foreign?"hidden":"visible";?>">State:</TD><TD><INPUT NAME=state TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["state"]));?>" data-upper></TD></TR>
-      <TR><TD ALIGN=RIGHT ID=lzip><?php echo $foreign?"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country":"Postal Code";?>:</TD><TD><INPUT NAME=zip id='zip' TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["zip"]));?>" data-upper><INPUT NAME=foreign id='foreign' TYPE=CHECKBOX<?php echo $foreign?" CHECKED":"";?>><SPAN CLASS="sub">Foreign?</SPAN></TD></TR>
-      <TR><TD ALIGN=RIGHT>Phone:</TD><TD><INPUT NAME=phone TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["phone"]));?>"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Fax:</TD><TD><INPUT NAME=fax TYPE=TEXT CLASS=text SIZE=20 VALUE="<?php echo htmlentities(stripslashes($row["fax"]));?>"></TD></TR>
-      <TR><TD ALIGN=RIGHT>E-Mail:</TD><TD><INPUT NAME=email TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["email"]));?>"></TD></TR>
-      <TR><TD ALIGN=RIGHT>URL:</TD><TD><INPUT NAME=url TYPE=TEXT CLASS=text SIZE=60 VALUE="<?php echo htmlentities(stripslashes($row["url"]));?>"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Name:</TD><TD CLASS="header"><INPUT NAME=name TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["name"]));?>" data-zkalpha="true" data-focus></TD></TR>
+      <TR><TD ALIGN=RIGHT>Attn:</TD><TD><INPUT NAME=attention TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["attention"]));?>" data-zkalpha="true"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Address:</TD><TD><INPUT NAME=address TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["address"]));?>" data-zkalpha="true"></TD></TR>
+      <TR><TD ALIGN=RIGHT>City:</TD><TD><INPUT NAME=city TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["city"]));?>" data-zkalpha="true"></TD></TR>
+      <TR><TD ALIGN=RIGHT ID=lstate STYLE="visibility:<?php echo $foreign?"hidden":"visible";?>">State:</TD><TD><INPUT NAME=state TYPE=TEXT CLASS=text SIZE=20 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["state"]));?>" data-upper></TD></TR>
+      <TR><TD ALIGN=RIGHT ID=lzip><?php echo $foreign?"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country":"Postal Code";?>:</TD><TD><INPUT NAME=zip id='zip' TYPE=TEXT CLASS=text SIZE=20 maxlength='10' VALUE="<?php echo htmlentities(stripslashes($row["zip"]));?>" data-upper><INPUT NAME=foreign id='foreign' TYPE=CHECKBOX<?php echo $foreign?" CHECKED":"";?>><SPAN CLASS="sub">Foreign?</SPAN></TD></TR>
+      <TR><TD ALIGN=RIGHT>Phone:</TD><TD><INPUT NAME=phone TYPE=TEXT CLASS=text SIZE=20 maxlength='20' VALUE="<?php echo htmlentities(stripslashes($row["phone"]));?>"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Fax:</TD><TD><INPUT NAME=fax TYPE=TEXT CLASS=text SIZE=20 maxlength='20' VALUE="<?php echo htmlentities(stripslashes($row["fax"]));?>"></TD></TR>
+      <TR><TD ALIGN=RIGHT>E-Mail:</TD><TD><INPUT NAME=email TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["email"]));?>"></TD></TR>
+      <TR><TD ALIGN=RIGHT>URL:</TD><TD><INPUT NAME=url TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["url"]));?>"></TD></TR>
       <TR><TD ALIGN=RIGHT>Mail List:</TD><TD><INPUT NAME=maillist TYPE=TEXT CLASS=text SIZE=5 VALUE="<?php echo $row["maillist"];?>" data-zkalpha="true"></TD></TR>
       <TR><TD ALIGN=RIGHT>Mail Count:</TD><TD><INPUT NAME=mailcount TYPE=TEXT CLASS=text SIZE=5 VALUE="<?php echo $row["mailcount"];?>"></TD></TR>
     <?php 
@@ -1038,10 +1038,10 @@ class Editor extends MenuItem {
             $focusTrack = $_REQUEST["nextTrack"];
         for($i=0; $i<$this->tracksPerPage; $i++) {
             $trackNum = $_REQUEST["nextTrack"] + $i;
-            echo "  <TR><TD ALIGN=RIGHT>Track $trackNum:</TD><TD><INPUT NAME=track$trackNum VALUE=\"".htmlentities(stripslashes($_POST["track".$trackNum]))."\" TYPE=text CLASS=text SIZE=$size data-zkalpha='true' data-track=\"$trackNum\"".($focusTrack == $trackNum?" data-focus":"").">";
+            echo "  <TR><TD ALIGN=RIGHT>Track $trackNum:</TD><TD><INPUT NAME=track$trackNum VALUE=\"".htmlentities(stripslashes($_POST["track".$trackNum]))."\" TYPE=text CLASS=text SIZE=$size maxlength='80' data-zkalpha='true' data-track=\"$trackNum\"".($focusTrack == $trackNum?" data-focus":"").">";
             $this->skipVar("track".$trackNum);
             if($_REQUEST["coll"]) {
-                echo "</TD><TD ALIGN=RIGHT>Artist:</TD><TD><INPUT NAME=artist$trackNum VALUE=\"".htmlentities(stripslashes($_POST["artist".$trackNum]))."\" TYPE=text CLASS=text SIZE=$size data-zkalpha='true' data-track=\"$trackNum\">";
+                echo "</TD><TD ALIGN=RIGHT>Artist:</TD><TD><INPUT NAME=artist$trackNum VALUE=\"".htmlentities(stripslashes($_POST["artist".$trackNum]))."\" TYPE=text CLASS=text SIZE=$size maxlength='80' data-zkalpha='true' data-track=\"$trackNum\">";
                 $this->skipVar("artist".$trackNum);
             }
             echo "</TD></TR>\n";
