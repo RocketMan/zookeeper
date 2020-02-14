@@ -31,6 +31,7 @@ use ZK\UI\UICommon as UI;
 class OpenSearch implements IController {
     public function processRequest($dispatcher) {
         $baseURL = UI::getBaseURL();
+        $favicon = Engine::param('favicon', 'favicon.ico');
         $banner = Engine::param("station")." ".Engine::param("application");
         
         header("Content-type: text/xml; charset=UTF-8");
@@ -42,7 +43,7 @@ class OpenSearch implements IController {
         echo "  <Description>Search the $banner music database</Description>\n";
         echo "  <Tags>$banner</Tags>\n";
         echo "  <Image height=\"16\" width=\"16\"\n";
-        echo "         type=\"image/vnd.microsoft.icon\">${baseURL}favicon.ico</Image>\n";
+        echo "         type=\"image/vnd.microsoft.icon\">${baseURL}${favicon}</Image>\n";
         echo "  <Url type=\"text/html\"\n";
         echo "       template=\"$baseURL?session=&amp;action=find&amp;search={searchTerms}&amp;src=opensearch\"/>\n";
         echo "  <Query role=\"example\" searchTerms=\"outer space\"/>\n";
