@@ -149,7 +149,7 @@ function getTable(id) {
     if(savedTableID != id) {
         if(savedTableID) {
             var oldTable = $("#" + savedTableID);
-            savedTable.replaceWith(oldTable);
+            oldTable.replaceWith(savedTable);
         }
         savedTable = table.clone();
         savedTableID = id;
