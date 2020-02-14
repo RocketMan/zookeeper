@@ -161,7 +161,7 @@ class Editor extends MenuItem {
     }
     
     public function processLocal($action, $subaction) {
-        UI::emitJS('js/libed.common.js');
+        UI::emitJS('js/editor.common.js');
         $subactions = self::$subactions;
         if(Engine::api(ILibrary::class)->getNumQueuedTags($this->session->getUser()))
             $subactions = array_merge($subactions, self::$subactions_tagq);
@@ -751,7 +751,7 @@ class Editor extends MenuItem {
     }
     
     private function emitAlbumSel() {
-         UI::emitJS('js/libed.album.js');
+         UI::emitJS('js/editor.album.js');
     
          echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH=\"100%\"><TR><TD VALIGN=TOP WIDTH=220>\n";
          echo "  <INPUT TYPE=HIDDEN NAME=seltag id='seltag' VALUE=\"".$_REQUEST["seltag"]."\">\n";
@@ -904,7 +904,7 @@ class Editor extends MenuItem {
     }
     
     private function emitLabelSel() {
-         UI::emitJS('js/libed.label.js');
+         UI::emitJS('js/editor.label.js');
     
         echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH=\"100%\"><TR><TD VALIGN=TOP WIDTH=230>\n";
         echo "  <INPUT TYPE=HIDDEN NAME=selpubkey id='selpubkey' VALUE=\"".$_REQUEST["selpubkey"]."\">\n";

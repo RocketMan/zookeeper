@@ -433,7 +433,7 @@ class Playlists extends MenuItem {
         </FORM>
 
     <?php
-        UI::emitJS('js/pled.info.js');
+        UI::emitJS('js/playlists.info.js');
     }
     
     // handles post for playlist creation and edit
@@ -602,7 +602,7 @@ class Playlists extends MenuItem {
 
     // emit form for selecting a playlist for editing, deletion or undelete.
     public function emitEditListPicker() {
-        UI::emitJS("js/pled.pick.js");
+        UI::emitJS("js/playlists.pick.js");
         $activePlaylists = Engine::api(IPlaylist::class)->getListsSelNormal($this->session->getUser());
         $playlists = "";
         $activeCount = 0;
@@ -1550,7 +1550,7 @@ class Playlists extends MenuItem {
     }
 
     public function updateDJInfo() {
-        UI::emitJS("js/pled.pick.js");
+        UI::emitJS("js/playlists.pick.js");
 
         $validate = $_REQUEST["validate"];
         $multi = $_REQUEST["multi"];
@@ -1661,7 +1661,7 @@ class Playlists extends MenuItem {
         }
     }
     public function emitShowLink() {
-        UI::emitJS("js/pled.pick.js");
+        UI::emitJS("js/playlists.pick.js");
 
         $validate = $_REQUEST["validate"];
         $playlist = $_REQUEST["playlist"];
@@ -1850,7 +1850,7 @@ class Playlists extends MenuItem {
         echo "</TBODY></TABLE>\n";
 
         if($editMode)
-            UI::emitJS('js/pled.track.js');
+            UI::emitJS('js/playlists.track.js');
     }
 
 

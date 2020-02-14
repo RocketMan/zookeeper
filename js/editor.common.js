@@ -24,7 +24,7 @@
 
 /*
  * For the Albums and Labels tabs, implementations for the following
- * are supplied by libed.album.js and libed.label.js, respectively:
+ * are supplied by editor.album.js and editor.label.js, respectively:
  *
  *    * changeSel(index) - set ID of selected list item into form
  *    * scrollUp - page up
