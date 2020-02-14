@@ -58,6 +58,7 @@ function emitMore(table, data, type) {
                         href: '#'
                     }).append('<B>' + cur + '</B>').click(function() {
                         search(type, chunksize, low, $("#search").val());
+                        return false;
                     });
                     td.append(a).append('&nbsp;&nbsp;');
                 }
@@ -75,6 +76,7 @@ function emitMore(table, data, type) {
                 href: '#'
             }).append('<B>' + more + ' more...</B>').click(function() {
                 search(type, size, offset, $("#search").val());
+                return false;
             });
             td.append(a);
         }
