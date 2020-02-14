@@ -115,9 +115,8 @@ function emitAlbumsEx(table, data, header, tag) {
                             "&nbsp;&#8226;&nbsp;");
         var album = $("<I>").html('<A HREF="?session=' + session +
                                   '&action=findAlbum&n=' + entry.tag +
-                                  '" CLASS="nav">' + entry.album + '</A>' +
-                                  '&nbsp; (' + entry.name + ')');
-        td.append(album);
+                                  '" CLASS="nav">' + entry.album + '</A>');
+        td.append(album).append('&nbsp; (' + entry.name + ')');
         tr.append(td);
         table.append(tr);
     });
