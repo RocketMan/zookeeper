@@ -394,7 +394,7 @@ $().ready(function() {
 
     var field = $("#search");
     field.keyup(function() {
-        var sync = $("FORM").eq(0);
+        var sync = $("FORM").get(0); // access underlying DOM element
         if(sync.Timer) {
             clearTimeout(sync.Timer);
             sync.Timer = null;
