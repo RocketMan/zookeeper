@@ -57,7 +57,7 @@ function emitMore(table, data, type) {
                         class: 'nav',
                         href: '#'
                     }).append('<B>' + cur + '</B>').click(function() {
-                        search(type, chunksize, low, $("#search").val());
+                        search(type, chunksize, low);
                         return false;
                     });
                     td.append(a).append('&nbsp;&nbsp;');
@@ -75,7 +75,7 @@ function emitMore(table, data, type) {
                 class: 'nav',
                 href: '#'
             }).append('<B>' + more + ' more...</B>').click(function() {
-                search(type, size, offset, $("#search").val());
+                search(type, size, offset);
                 return false;
             });
             td.append(a);
@@ -340,10 +340,10 @@ var lists = {
     }
 };
 
-function search(type, size, offset, key) {
+function search(type, size, offset) {
     var url = "zkapi.php?method=searchRq" +
         "&type=" + type +
-        "&key=" + encodeURI(key);
+        "&key=" + encodeURI($("#key").val());
 
     if(size >= 0)
         url += "&size=" + size;
@@ -373,7 +373,7 @@ function search(type, size, offset, key) {
             });
 
             if(response.total == '0') {
-                var search = $("#search").val();
+                var search = $("#key").val();
                 if(search.length < 4 ||
                    search.match(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^_`{|}~]/g) != null) {
                     results.html('TIP: For short names or names with punctuation, try the <A HREF="?action=search&s=byArtist&n=' + encodeURI(search) + '&session=' + $("#session").val() + '">Classic Search</A>.');
@@ -388,7 +388,10 @@ function search(type, size, offset, key) {
 
 $().ready(function() {
     function onSearchNow() {
-        search('', 5, -1, $("#search").val());
+        // for the benefit of the pagination links, copy the search
+        // string to a hidden field so it is preserved on Back
+        $("#key").val($("#search").val());
+        search('', 5, -1);
     }
 
     var field = $("#search");

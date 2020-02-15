@@ -117,6 +117,7 @@ class Search extends MenuItem {
         echo "<P><B>Find It:</B>&nbsp;&nbsp;<INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$search\" autocomplete=off>&nbsp;&nbsp;<SPAN ID=\"total\"></SPAN></P>\n";
         echo "<INPUT TYPE=HIDDEN NAME=action VALUE=\"find\">\n";
         echo "<INPUT TYPE=HIDDEN NAME=session id='session' VALUE=\"".$this->session->getSessionID()."\">\n";
+        echo "<INPUT TYPE=HIDDEN NAME=key id='key' VALUE=''>\n";
         echo "</FORM>\n";
         echo "<SPAN ID=\"results\">Search the database for music, reviews, and playlists.";
         echo "</SPAN>\n";
