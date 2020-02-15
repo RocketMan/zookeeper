@@ -110,79 +110,14 @@ class Search extends MenuItem {
     }
 
     public function ftSearch() {
-        UI::emitJS('js/zooscript.js');
-        UI::emitJS('js/zootext.js');
-?>
-<SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"><!--
-<?php ob_start([\JSMin::class, 'minify']); ?>
-lists = [ <?php if($this->session->isAuth("u")) echo "\"Tags\", "; ?>"Albums", "Compilations", "Labels", "Playlists", "Reviews", "Tracks" ];
+        UI::emitJS('js/search.findit.js');
 
-function onSearch(sync,e) {
-   if(sync.Timer) {
-      clearTimeout(sync.Timer);
-      sync.Timer = null;
-   }
-   sync.Timer = setTimeout('onSearchNow()', 500);
-}
-
-function onSearchNow() {
-   loadXMLDoc("zkapi.php?method=searchRq&size=5&key=" + urlEncode(document.forms[0].search.value) + "&session=<?php echo $this->session->getSessionID();?>");
-}
-
-function processReqChange(req) {
-  if(req.readyState == 4) {
-    // document loaded
-    if (req.status == 200) {
-      // success!
-      var rs = req.responseXML.getElementsByTagName("searchRs")[0];
-      var type = rs.getAttribute("type");
-      if(type != '') {
-        var method = type.substr(0,1).toUpperCase() + type.substr(1).toLowerCase();
-        var items = req.responseXML.getElementsByTagName(type.toLowerCase());
-        if(items && items[0])
-          eval('emit' + method + '(getTable(type), items[0])');
-        return;
-      }
-      clearSavedTable();
-      document.getElementById("total").innerHTML = "(" + rs.getAttribute("total") + " total)";
-      var results = document.getElementById("results");
-      while(results.firstChild)
-        results.removeChild(results.firstChild);
-      for(var i=0; i<lists.length; i++) {
-        var items = req.responseXML.getElementsByTagName(lists[i].toLowerCase());
-        if(items && items[0])
-          eval('emit' + lists[i] + '(emitTable(results, lists[i]), items[0])');
-      }
-      if(rs.getAttribute("total") == '0') {
-        var search = document.forms[0].search.value;
-        if(search.length < 4 ||
-          search.match(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^_`{|}~]/g) != null) {
-          results.innerHTML = 'TIP: For short names or names with punctuation, try the <A HREF="?action=search&s=byArtist&n=' + urlEncode(search) + '&session=<?php echo $this->session->getSessionID();?>">Classic Search</A>.';
-        }
-      }
-    } else {
-      alert("There was a problem retrieving the XML data:\n" + req.statusText);
-    }
-  }
-}
-
-$().ready(function() {
-  document.forms[0].search.focus();
-  var val = document.forms[0].search.value;
-  if(val.length > 0) onSearchNow();
-  document.forms[0].search.value = val;  // reset value to force cursor to end
-});
-    <?php
-        ob_end_flush();
-    ?>
-// -->
-</SCRIPT>
-<?php
         $search = array_key_exists("search", $_REQUEST)?$_REQUEST["search"]:"";
         echo "<FORM ACTION=\"?\" METHOD=\"POST\">\n";
-        echo "<P><B>Find It:</B>&nbsp;&nbsp;<INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search VALUE=\"$search\" autocomplete=off onkeyup=\"onSearch(document.forms[0],event);\" onkeypress=\"return event.keyCode != 13;\">&nbsp;&nbsp;<SPAN ID=\"total\"></SPAN></P>\n";
+        echo "<P><B>Find It:</B>&nbsp;&nbsp;<INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$search\" autocomplete=off>&nbsp;&nbsp;<SPAN ID=\"total\"></SPAN></P>\n";
         echo "<INPUT TYPE=HIDDEN NAME=action VALUE=\"find\">\n";
-        echo "<INPUT TYPE=HIDDEN NAME=session VALUE=\"".$this->session->getSessionID()."\">\n";
+        echo "<INPUT TYPE=HIDDEN NAME=session id='session' VALUE=\"".$this->session->getSessionID()."\">\n";
+        echo "<INPUT TYPE=HIDDEN NAME=key id='key' VALUE=''>\n";
         echo "</FORM>\n";
         echo "<SPAN ID=\"results\">Search the database for music, reviews, and playlists.";
         echo "</SPAN>\n";
