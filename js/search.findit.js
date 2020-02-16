@@ -406,6 +406,16 @@ $().ready(function() {
         return e.keyCode != 13;
     });
 
+    $(window).on('pageshow', function(e) {
+        if(e.originalEvent.persisted) {
+            // restore search string on Back
+            // schedule for later to avoid webkit's autocomplete=off blanking
+            setTimeout(function() {
+                $("#search").val($("#key").val());
+            }, 10);
+        }
+    });
+
     field.focus();
     var val = field.val();
     if(val.length > 0)
