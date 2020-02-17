@@ -956,7 +956,7 @@ class Playlists extends MenuItem {
     private function emitTrackForm($playlist, $id, $album, $track) {
     ?>
       <DIV class='playlistBanner'><?php echo $id?"Editing highlighted":"Adding";?> track</DIV>
-      <FORM ACTION="?" METHOD=POST>
+      <FORM ACTION="?" id='edit' METHOD=POST>
       <INPUT TYPE=HIDDEN NAME=artist VALUE="<?php echo htmlentities($album["artist"]);?>">
       <INPUT TYPE=HIDDEN NAME=album VALUE="<?php echo htmlentities($album["album"]);?>">
       <INPUT TYPE=HIDDEN NAME=label VALUE="<?php echo htmlentities($album["label"]);?>">
