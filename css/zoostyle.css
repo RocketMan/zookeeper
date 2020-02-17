@@ -571,20 +571,6 @@ A.calLink {
 .searchTable > thead > tr {
     border-bottom: 1px solid gray;
 }
-.songUp, .sortUp {
-    top: 0px;
-    left: 12px;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: URL('../img/arrow_up.gif');
-}
-.songDown, .sortDown {
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: URL('../img/arrow_down.gif');
-    top: 8px;
-    left: 12px;
-}
 .albumReview {
     background-image: URL('../img/rinfo.gif');
     width:11px;

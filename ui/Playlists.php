@@ -666,9 +666,7 @@ class Playlists extends MenuItem {
         //NOTE: in edit mode the list is ordered new to old, so up makes it 
         //newer in time order & vice-versa.
         $dnd = "<DIV class='grab' data-id='".$entry->getId()."'>&#x2630;</DIV>";
-        $upLink = "<A CLASS='songUp' HREF='" . $href ."seq=upTrack' />";
-        $downLink = "<A CLASS='songDown' HREF='" . $href ."seq=downTrack' />";
-        $retVal = "<div class='songManager'>" . $dnd . /* $upLink . $downLink .*/ $editLink . "</div>";
+        $retVal = "<div class='songManager'>" . $dnd . $editLink . "</div>";
         return $retVal;
     }
 
@@ -834,7 +832,7 @@ class Playlists extends MenuItem {
       $event = $id && $entry->isType(PlaylistEntry::TYPE_LOG_EVENT);
       $comment = $id && $entry->isType(PlaylistEntry::TYPE_COMMENT);
     ?>
-      <P CLASS="header"><?php echo $id?"Editing highlighted":"Adding";?> <?php
+      <DIV class='playlistBanner'><?php echo $id?"Editing highlighted":"Adding";?> <?php
       switch($entry->getType()) {
       case PlaylistEntry::TYPE_SET_SEPARATOR:
           echo "set separator";
@@ -848,7 +846,7 @@ class Playlists extends MenuItem {
       default:
           echo "track";
           break;
-      } ?>:</P>
+      } ?></DIV>
       <FORM ACTION="?" id='edit' METHOD=POST>
       <input id='track-session' type='hidden' value='<?php echo $this->session->getSessionID(); ?>'>
       <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
@@ -957,7 +955,7 @@ class Playlists extends MenuItem {
     
     private function emitTrackForm($playlist, $id, $album, $track) {
     ?>
-      <P CLASS="header"><?php echo $id?"Editing highlighted":"Adding";?> track:</P>
+      <DIV class='playlistBanner'><?php echo $id?"Editing highlighted":"Adding";?> track</DIV>
       <FORM ACTION="?" METHOD=POST>
       <INPUT TYPE=HIDDEN NAME=artist VALUE="<?php echo htmlentities($album["artist"]);?>">
       <INPUT TYPE=HIDDEN NAME=album VALUE="<?php echo htmlentities($album["album"]);?>">
@@ -1116,14 +1114,6 @@ class Playlists extends MenuItem {
             if($albuminfo)
                 $track = $albuminfo['track'];
             $this->emitEditForm($playlist, $id, $albuminfo, $track);
-            break;
-        case "upTrack":
-            Engine::api(IPlaylist::class)->moveTrackUpDown($playlist, $id, 1);
-            $this->emitTagForm($playlist, "");
-            break;
-        case "downTrack":
-            Engine::api(IPlaylist::class)->moveTrackUpDown($playlist, $id, 0);
-            $this->emitTagForm($playlist, "");
             break;
         default:
             $this->emitTagForm($playlist, "");

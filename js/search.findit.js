@@ -394,6 +394,16 @@ $().ready(function() {
         search('', 5, -1);
     }
 
+    $(window).on('pageshow', function(e) {
+        if(e.originalEvent.persisted) {
+            // restore search string on Back
+            // schedule for later to avoid webkit's autocomplete=off blanking
+            setTimeout(function() {
+                $("#search").val($("#key").val());
+            }, 10);
+        }
+    });
+
     var field = $("#search");
     field.keyup(function() {
         var sync = $("FORM").get(0); // access underlying DOM element
@@ -404,16 +414,6 @@ $().ready(function() {
         sync.Timer = setTimeout(onSearchNow, 500);
     }).keypress(function(e) {
         return e.keyCode != 13;
-    });
-
-    $(window).on('pageshow', function(e) {
-        if(e.originalEvent.persisted) {
-            // restore search string on Back
-            // schedule for later to avoid webkit's autocomplete=off blanking
-            setTimeout(function() {
-                $("#search").val($("#key").val());
-            }, 10);
-        }
     });
 
     field.focus();

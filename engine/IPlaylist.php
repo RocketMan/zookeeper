@@ -63,5 +63,4 @@ interface IPlaylist {
     function getDeletedPlaylistCount($user);
     function getListsSelNormal($user);
     function getListsSelDeleted($user);
-    function moveTrackUpDown($playlist, &$id, $up);
 }
