@@ -108,7 +108,7 @@ function emitAlbumsEx(table, data, header, tag) {
         if(tag)
             tagId = "Tag #" + entry.tag + "&nbsp;&#8226;&nbsp;";
         td = $("<TD>").html(tagId + '<A HREF="?s=byArtist&n=' +
-                            encodeURI(entry.artist) +
+                            encodeURIComponent(entry.artist) +
                             '&q=10&action=search&session=' +
                             session + '" CLASS="nav">' +
                             getArtist(entry) + '</A>' +
@@ -187,7 +187,7 @@ var lists = {
         data.data.forEach(function(entry) {
             tr = $("<TR>").append(indent());
             var td = $("<TD>").html('<A HREF="?s=byArtist&n=' +
-                                    encodeURI(entry.artist) +
+                                    encodeURIComponent(entry.artist) +
                                     '&q=10&action=search&session=' + session +
                                     '" CLASS="nav">' + getArtist(entry) + '</A>' +
                                     "&nbsp;&#8226;&nbsp;");
@@ -292,7 +292,8 @@ var lists = {
         data.data.forEach(function(entry) {
             tr = $("<TR>").append(indent());
             var td = $("<TD>").html('<A HREF="?s=byArtist&n=' +
-                                    encodeURI(entry.artist) + '&q=10&action=search&session=' +
+                                    encodeURIComponent(entry.artist) +
+                                    '&q=10&action=search&session=' +
                                     session + '" CLASS="nav">' +
                                     getArtist(entry) + '</A>' +
                                     '&nbsp;&#8226;&nbsp;' +
@@ -322,7 +323,8 @@ var lists = {
             tr = $("<TR>").append(indent());
             var td = $("<TD>");
             td.html('<A HREF="?s=byArtist&n=' +
-                    encodeURI(entry.artist) + '&q=10&action=search&session=' +
+                    encodeURIComponent(entry.artist) +
+                    '&q=10&action=search&session=' +
                     session + '" CLASS="nav">' +
                     getArtist(entry) + '</A>' +
                     "&nbsp;&#8226;&nbsp;" +
@@ -343,7 +345,7 @@ var lists = {
 function search(type, size, offset) {
     var url = "zkapi.php?method=searchRq" +
         "&type=" + type +
-        "&key=" + encodeURI($("#key").val());
+        "&key=" + encodeURIComponent($("#key").val());
 
     if(size >= 0)
         url += "&size=" + size;
@@ -376,7 +378,7 @@ function search(type, size, offset) {
                 var search = $("#key").val();
                 if(search.length < 4 ||
                    search.match(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^_`{|}~]/g) != null) {
-                    results.html('TIP: For short names or names with punctuation, try the <A HREF="?action=search&s=byArtist&n=' + encodeURI(search) + '&session=' + $("#session").val() + '">Classic Search</A>.');
+                    results.html('TIP: For short names or names with punctuation, try the <A HREF="?action=search&s=byArtist&n=' + encodeURIComponent(search) + '&session=' + $("#session").val() + '">Classic Search</A>.');
                 }
             }
         },

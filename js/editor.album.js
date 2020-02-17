@@ -30,7 +30,7 @@ function getAlbums(op, key) {
     var url = "zkapi.php?method=getAlbumsRq" +
         "&operation=" + op +
         "&size=" + $("#list-size").val() +
-        "&key=" + urlEncode(key);
+        "&key=" + encodeURIComponent(key);
 
     $.ajax({
         dataType : 'json',
@@ -97,7 +97,7 @@ function lineUp() {
 }
 
 function lineDown() {
-    getAlbums('nextLine', $("#down").val()); // XXX ???
+    getAlbums('nextLine', $("#up").val());
 }
 
 $().ready(function() {

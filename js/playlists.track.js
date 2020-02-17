@@ -224,9 +224,9 @@ $().ready(function(){
             v = v.substr(0, v.length-2) + ':' + v.substr(v.length-2);
 
         // ...accept time without leading zero (e.g., 2:34)
+        v = v.trim();
         if(v.length < 5)
             v = '0' + v;
-        v = v.trim();
 
         // ...coerce am/pm to 24 hour time
         if(offset > 0)
