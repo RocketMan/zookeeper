@@ -38,7 +38,7 @@
 var items;
 
 function urlEncode(url) {
-    return encodeURI(url).replace(/\+/g, '%2B');
+    return encodeURIComponent(url).replace(/\+/g, '%2B');
 }
 
 function changeList() {
