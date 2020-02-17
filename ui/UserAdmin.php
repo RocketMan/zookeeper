@@ -37,73 +37,23 @@ class UserAdmin extends MenuItem {
         [ "x", "airnames", "Airnames", "adminAirnames" ],
     ];
 
-    private $sortBy;
-
     public function processLocal($action, $subaction) {
+        UI::emitJS("js/useradmin.js");
         return $this->dispatchSubAction($action, $subaction, self::$subactions);
     }
 
-    private function sortFn($a, $b) {
-        switch($this->sortBy) {
-        case "Name":
-        case "Name-":
-            // Field is formatted "FirstName [MI] LastName"; we want to flip it
-            // to "LastName FirstName" for the purposes of the sort comparison.
-            $name1=explode(" ", $a["realname"]);
-            $name2=explode(" ", $b["realname"]);
-            $name1c=$name1[sizeof($name1)-1] . " " . $name1[0];
-            $name2c=$name2[sizeof($name2)-1] . " " . $name2[0];
-            $retval = strcasecmp($name1c, $name2c);
-            break;
-        case "Groups":
-        case "Groups-":
-            $retval = strcmp($a["groups"], $b["groups"]);
-            break;
-        case "Expiration":
-        case "Expiration-":
-            $retval = strcmp($b["expires"], $a["expires"]);
-            break;
-        case "Last Login":
-        case "Last Login-":
-            $retval = strcmp($b["lastlogin"], $a["lastlogin"]);
-            break;
-        case "Airname":
-        case "Airname-":
-            $retval = strcasecmp($a["airname"], $b["airname"]);
-            break;
-        default:
-            $retval = strcasecmp($a["name"], $b["name"]);
-            break;
-        }
-        return (substr($this->sortBy, -1, 1) == "-")?-$retval:$retval;
-    }
-    
-    private function emitColumnHeader($header, $subaction="") {
-        $command = $header;
-        if(!strcmp($header, $this->sortBy)) {
-            $command .= "-";
-            $selected = 1;
-        } else if(!strcmp($header . "-", $this->sortBy))
-            $selected = 2;
-        echo "    <TH ALIGN=LEFT><A CLASS=\"nav\" HREF=\"?session=".$this->session->getSessionID()."&amp;action=adminUsers&amp;subaction=$subaction&amp;sortBy=$command\">$header</A>";
-        if($selected)
-            echo "&nbsp;<SPAN CLASS=\"sort" . (($selected==1)?"Down":"Up") . "\"><IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></SPAN>";
-        echo "</TH>\n";
+    private function emitColumnHeader($header, $selected = false) {
+        echo "    <TH" . ($selected?" class='initial-sort-col'":"").">$header</TH>\n";
     }
     
     public function adminUsers() {
-        $this->sortBy = $_REQUEST["sortBy"];
-    
         $seq = $_REQUEST["seq"];
         $uid = $_REQUEST["uid"];
         $auName = $_REQUEST["auName"];
         $auPass = $_REQUEST["auPass"];
         $auGroups = $_REQUEST["auGroups"];
         $auExpire = $_REQUEST["auExpire"];
-    
-        if(!strlen($this->sortBy))
-            $this->sortBy = "User";
-    
+
         if($seq == "editUser") {
             // Commit the changes
             $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $uid);
@@ -129,13 +79,13 @@ class UserAdmin extends MenuItem {
     <TABLE CELLPADDING=2 CELLSPACING=2">
       <TR>
         <TD ALIGN=RIGHT>Login:</TD>
-        <TD><INPUT TYPE=TEXT NAME=uid SIZE=32></TD>
+        <TD><INPUT TYPE=TEXT NAME=uid SIZE=32 data-focus autocomplete='new-password'></TD>
       </TR><TR>
         <TD ALIGN=RIGHT>Name:</TD>
-        <TD><INPUT TYPE=TEXT NAME=auName SIZE=32></TD>
+        <TD><INPUT TYPE=TEXT NAME=auName SIZE=32 autocomplete='new-password'></TD>
       </TR><TR>
         <TD ALIGN=RIGHT>Password:</TD>
-        <TD><INPUT TYPE=PASSWORD NAME=auPass SIZE=15></TD>
+        <TD><INPUT TYPE=PASSWORD NAME=auPass SIZE=15 autocomplete='new-password'></TD>
       </TR><TR>
         <TD ALIGN=RIGHT>Groups:</TD>
         <TD><INPUT TYPE=TEXT NAME=auGroups SIZE=15></TD>
@@ -162,9 +112,8 @@ class UserAdmin extends MenuItem {
     <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="addUser">
-    <INPUT TYPE=HIDDEN NAME=sortBy VALUE="<?php echo $this->sortBy;?>">
     </FORM>
-    <?php      UI::setFocus("uid");
+    <?php
             return;
         } else if($seq == "selUser") {
             $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $uid);
@@ -181,10 +130,10 @@ class UserAdmin extends MenuItem {
         <TD>&nbsp;</TD>
       </TR><TR>
         <TD ALIGN=RIGHT>Name:</TD>
-        <TD><INPUT TYPE=TEXT NAME=auName VALUE="<?php echo $user[0]["realname"];?>" SIZE=32></TD>
+        <TD><INPUT TYPE=TEXT NAME=auName VALUE="<?php echo $user[0]["realname"];?>" data-focus SIZE=32 autocomplete='new-password'></TD>
       </TR><TR>
         <TD ALIGN=RIGHT>Password:</TD>
-        <TD><INPUT TYPE=PASSWORD NAME=auPass SIZE=15></TD>
+        <TD><INPUT TYPE=PASSWORD NAME=auPass SIZE=15 autocomplete='new-password'></TD>
       </TR><TR>
         <TD ALIGN=RIGHT>Groups:</TD>
         <TD><INPUT TYPE=TEXT NAME=auGroups VALUE="<?php echo $user[0]["groups"];?>" SIZE=15></TD>
@@ -212,9 +161,8 @@ class UserAdmin extends MenuItem {
     <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="editUser">
-    <INPUT TYPE=HIDDEN NAME=sortBy VALUE="<?php echo $this->sortBy;?>">
     </FORM>
-    <?php          UI::setFocus("auName");
+    <?php
                 return;
             }
         }
@@ -225,18 +173,18 @@ class UserAdmin extends MenuItem {
     <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="newUser">
-    <INPUT TYPE=HIDDEN NAME=sortBy VALUE="<?php echo $this->sortBy;?>">
+    <INPUT TYPE=HIDDEN id='nameCol' VALUE='1'>
     </FORM>
     </P>
     <?php 
         // Emit the column headers
-        echo "<P><TABLE>\n  <TR>\n";
-        $this->emitColumnHeader("User");
+        echo "<P><TABLE class='sortable-table'>\n  <THEAD><TR>\n";
+        $this->emitColumnHeader("User", true);
         $this->emitColumnHeader("Name");
         $this->emitColumnHeader("Groups");
         $this->emitColumnHeader("Expiration");
         $this->emitColumnHeader("Last Login");
-        echo "  </TR>\n";
+        echo "  </TR></THEAD>\n";
     
         // Get and sort the user list
         $users = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 100000, "*");
@@ -250,19 +198,16 @@ class UserAdmin extends MenuItem {
                 $class = "noQuota";
             else
                 $class = "hborder"; 
-            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?session=".$this->session->getSessionID()."&amp;action=adminUsers&amp;seq=selUser&amp;sortBy=$this->sortBy&amp;uid=" . $users[$j]["name"] . "\">" . $users[$j]["name"] . "</A></TD><TD>" .
+            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?session=".$this->session->getSessionID()."&amp;action=adminUsers&amp;seq=selUser&amp;uid=" . $users[$j]["name"] . "\">" . $users[$j]["name"] . "</A></TD><TD>" .
                         $users[$j]["realname"] . "</TD><TD>" .
                         $users[$j]["groups"] . "&nbsp;</TD><TD>" .
-                        $users[$j]["expires"] . "&nbsp;</TD><TD ALIGN=RIGHT>" .
+                        $users[$j]["expires"] . "&nbsp;</TD><TD>" .
                         $users[$j]["lastlogin"] . "&nbsp;</TD></TR>\n";
         }
         echo "</TABLE>\n";
-        UI::setFocus();
     }
     
     public function adminAirnames() {
-        $this->sortBy = $_REQUEST["sortBy"];
-    
         $seq = $_REQUEST["seq"];
         $uid = $_REQUEST["uid"];
         $aid = $_REQUEST["aid"];
@@ -270,9 +215,6 @@ class UserAdmin extends MenuItem {
         $auPass = $_REQUEST["auPass"];
         $auGroups = $_REQUEST["auGroups"];
         $auExpire = $_REQUEST["auExpire"];
-    
-        if(!strlen($this->sortBy))
-            $this->sortBy = "Airname";
     
         if($seq == "editAirname") {
            if($uid) {
@@ -328,19 +270,17 @@ class UserAdmin extends MenuItem {
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=subaction VALUE="airnames">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="editAirname">
-    <INPUT TYPE=HIDDEN NAME=sortBy VALUE="<?php echo $this->sortBy;?>">
     </FORM>
     <?php
-            UI::setFocus("uid");
             return;
         }
     
         // Emit the column headers
-        echo "<P><TABLE>\n  <TR>\n";
-        $this->emitColumnHeader("Airname", "airnames");
-        $this->emitColumnHeader("User", "airnames");
-        $this->emitColumnHeader("Name", "airnames");
-        echo "  </TR>\n";
+        echo "<P><TABLE class='sortable-table'>\n  <THEAD><TR>\n";
+        $this->emitColumnHeader("Airname", true);
+        $this->emitColumnHeader("User");
+        $this->emitColumnHeader("Name");
+        echo "  </TR></THEAD>\n";
     
         // Get and sort the airname list
         $result = Engine::api(IDJ::class)->getAirnames();
@@ -357,11 +297,13 @@ class UserAdmin extends MenuItem {
                 $class = "noQuota";
             else
                 $class = "hborder"; 
-            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?session=".$this->session->getSessionID()."&amp;subaction=airnames&amp;action=adminUsers&amp;seq=selAirname&amp;sortBy=$this->sortBy&amp;aid=" . $users[$j]["id"] . "\">" . $users[$j]["airname"] . "</A></TD><TD>" .
+            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?session=".$this->session->getSessionID()."&amp;subaction=airnames&amp;action=adminUsers&amp;seq=selAirname&amp;aid=" . $users[$j]["id"] . "\">" . $users[$j]["airname"] . "</A></TD><TD>" .
                         $users[$j]["name"] . "</TD><TD>" .
                         $users[$j]["realname"] . "&nbsp;</TD></TR>\n";
         }
         echo "</TABLE>\n";
-        UI::setFocus();
+        echo "<FORM>\n";
+        echo "    <INPUT TYPE=HIDDEN id='nameCol' VALUE='2'>\n";
+        echo "</FORM>\n";
     }
 }
