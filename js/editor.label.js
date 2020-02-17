@@ -30,7 +30,7 @@ function getLabels(op, key) {
     var url = "zkapi.php?method=getLabelsRq" +
         "&operation=" + op +
         "&size=" + $("#list-size").val() +
-        "&key=" + urlEncode(key);
+        "&key=" + encodeURIComponent(key);
 
     $.ajax({
         dataType : 'json',

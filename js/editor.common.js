@@ -37,10 +37,6 @@
 
 var items;
 
-function urlEncode(url) {
-    return encodeURIComponent(url).replace(/\+/g, '%2B');
-}
-
 function changeList() {
     var list = $("#list");
     var index = list.prop('selectedIndex');
