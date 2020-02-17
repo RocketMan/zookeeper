@@ -97,7 +97,7 @@ function lineUp() {
 }
 
 function lineDown() {
-    getAlbums('nextLine', $("#down").val()); // XXX ???
+    getAlbums('nextLine', $("#up").val());
 }
 
 $().ready(function() {

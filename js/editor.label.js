@@ -94,7 +94,7 @@ function lineUp() {
 }
 
 function lineDown() {
-    getLabels('nextLine', $("#down").val()); // XXX ???
+    getLabels('nextLine', $("#up").val());
 }
 
 $().ready(function() {
