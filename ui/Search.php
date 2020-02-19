@@ -630,12 +630,14 @@ class Search extends MenuItem {
     
         if($static)
             echo "  <TH ALIGN=LEFT$width><U>$header</U>";
-        else
-            echo "  <TH ALIGN=LEFT$width><A CLASS=\"nav\" HREF=\"?s=byReviewer&amp;n=".UI::URLify($this->searchText)."&amp;p=0&amp;q=15&amp;action=viewDJReviews&amp;session=".$this->session->getSessionID()."&amp;sortBy=$command\">$header</A>";
-    
-        if($selected && !$static)
-            echo "&nbsp;<SPAN CLASS=\"sort" . (($selected==1)?"Down":"Up") . "\"><IMG SRC=\"img/blank.gif\" WIDTH=8 HEIGHT=4 ALT=\"\"></SPAN>";
-    
+        else {
+            echo "  <TH ALIGN=LEFT$width><A CLASS=\"nav\" HREF=\"?s=byReviewer&amp;n=".UI::URLify($this->searchText)."&amp;p=0&amp;q=15&amp;action=viewDJReviews&amp;session=".$this->session->getSessionID()."&amp;sortBy=$command\">$header";
+            if($selected)
+                echo "&nbsp;".
+                    ($selected==1?/*down*/"&#x25be;":/*up*/"&#x25b4;");
+            echo "</A>";
+        }
+
         echo "</TH>\n";
     }
     
