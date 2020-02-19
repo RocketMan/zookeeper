@@ -54,6 +54,8 @@ class DJImpl extends BaseImpl implements IDJ {
             $query .= "WHERE a.id = ?";
         else if($user)
             $query .= "WHERE dj = ? ORDER BY airname";
+        else
+            $query .= "ORDER BY airname";
         $stmt = $this->prepare($query);
         if($id)
             $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
