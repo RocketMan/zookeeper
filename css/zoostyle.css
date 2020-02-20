@@ -238,6 +238,26 @@ TD.label-form {
     margin: 0;
     box-shadow:5px 5px 8px #888888;
 }
+.editorUp {
+    top: 0px;
+    width: 220px;
+    height: 10px;
+    border: 0px;
+    background-image: URL('../img/list_up.gif');
+}
+.editorDown {
+    top: 0px;
+    width: 220px;
+    height: 10px;
+    border: 0px;
+    background-image: URL('../img/list_dn.gif');
+}
+.editorChooser {
+    width: 220px;
+    border-width: 1px;
+    overflow: hidden;
+    scrollbar-width: none;
+}
 
 /* layout */
 DIV.box {
@@ -408,11 +428,6 @@ TH.sec {
 .sel:link { color: #ff0000; }
 .sel:visited { color: #ff0000; }
 .sel:active { color: #ff0000; }
-.select {
-    width: 220px;
-    border-width: 1px;
-    overflow: hidden;
-}
 .sub {
     font-family: verdana, arial, helvetica, sans-serif;
     font-size: 8pt;
@@ -579,20 +594,6 @@ A.calLink {
 .albumNoReview {
     width:11px;
     height:11px;
-}
-.editorUp {
-    top: 0px;
-    width: 220px;
-    height: 10px;
-    border: 0px;
-    background-image: URL('../img/list_up.gif');
-}
-.editorDown {
-    top: 0px;
-    width: 220px;
-    height: 10px;
-    border: 0px;
-    background-image: URL('../img/list_dn.gif');
 }
 
 /* tighten up tablesorter's spacing */
