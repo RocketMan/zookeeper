@@ -46,5 +46,26 @@ $().ready(function(){
         }
     });
 
+    $("#name").blur(function() {
+        $(this).val($(this).val().trim());
+    });
+
+    $("#multi").click(function() {
+        if($(this).is(':checked')) {
+            $("#name").attr("disabled","disabled");
+            $("#name").val($("#oldname").val());
+        } else {
+            $("#name").removeAttr("disabled");
+        }
+    });
+
+    $("#update-airname").on("submit", function() {
+        var oldAirname = $("#oldname").val();
+        if($("#name").val() != oldAirname &&
+                !confirm('Change airname "' + oldAirname + '" to "' + $("#name").val() + '"?')) {
+            return false;
+        }
+    });
+
     $("*[data-focus]").focus();
 });

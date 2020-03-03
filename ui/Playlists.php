@@ -1599,33 +1599,11 @@ class Playlists extends MenuItem {
       <TR><TD>&nbsp;</TD><TD><INPUT TYPE=SUBMIT VALUE="  Update  ">
               <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
               <INPUT TYPE=HIDDEN NAME=airname VALUE="<?php echo $airnames[0]['id'];?>">
+              <INPUT TYPE=HIDDEN id='oldname' VALUE="<?php echo $airnames[0]['airname'];?>">
               <INPUT TYPE=HIDDEN NAME=action VALUE="updateDJInfo">
               <INPUT TYPE=HIDDEN NAME=validate VALUE="y"></TD></TR>
     </TABLE>
     </FORM>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-        var oldAirname = "<?php echo $airnames[0]['airname'];?>";
-        $("#name").blur(function(e) {
-            $(this).val($.trim($(this).val()));
-        });
-        $("#multi").click(function(e) {
-            if($(this).is(':checked')) {
-                $("#name").attr("disabled","disabled");
-                $("#name").val(oldAirname);
-            } else {
-                $("#name").removeAttr("disabled");
-            }
-        });
-        $("#update-airname").on("submit", function(e) {
-            if($("#name").val() != oldAirname &&
-                    !confirm('Change airname "' + oldAirname + '" to "' + $("#name").val() + '"?')) {
-                return false;
-            }
-        });
-    <?php ob_end_flush(); ?>
-        // -->
-        </SCRIPT>
     <?php 
             break;
         default:
