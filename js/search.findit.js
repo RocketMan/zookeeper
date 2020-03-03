@@ -402,7 +402,7 @@ $().ready(function() {
             // schedule for later to avoid webkit's autocomplete=off blanking
             setTimeout(function() {
                 $("#search").val($("#key").val());
-            }, 10);
+            }, 100);
         }
     });
 

@@ -208,6 +208,7 @@ $().ready(function(){
 
         // no time picker in webkit; be flexible in accepting input...
         // ...accept am/pm time
+        var ampm = true;
         var offset = 0;
         var vlc = v.toLowerCase();
         var am = vlc.indexOf('am');
@@ -217,20 +218,24 @@ $().ready(function(){
         else if(pm > 0) {
             v = v.substring(0, pm);
             offset = 12;
-        }
+        } else
+            ampm = false;
 
         // ...accept time without separator (e.g., 1234)
         if(v.length > 2 && v.indexOf(':') < 0)
             v = v.substr(0, v.length-2) + ':' + v.substr(v.length-2);
 
         // ...accept time without leading zero (e.g., 2:34)
-        v = v.trim();
-        if(v.length < 5)
-            v = '0' + v;
+        v = v.trim().padStart(5, '0');
+
+        // ...fix special case of 12am/pm
+        var hour = v.substr(0, 2)*1;
+        if(ampm && hour == 12)
+            offset -= 12;
 
         // ...coerce am/pm to 24 hour time
-        if(offset > 0)
-            v = (v.substr(0, 2)*1 + offset) + v.substr(2);
+        if(offset != 0)
+            v = (hour + offset).toString().padStart(2, '0') + v.substr(2);
 
         var d = $(this).data("date");
         var s = $(this).data("start");

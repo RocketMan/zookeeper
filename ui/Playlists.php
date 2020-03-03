@@ -960,6 +960,8 @@ class Playlists extends MenuItem {
       <INPUT TYPE=HIDDEN NAME=artist VALUE="<?php echo htmlentities($album["artist"]);?>">
       <INPUT TYPE=HIDDEN NAME=album VALUE="<?php echo htmlentities($album["album"]);?>">
       <INPUT TYPE=HIDDEN NAME=label VALUE="<?php echo htmlentities($album["label"]);?>">
+      <INPUT TYPE=HIDDEN NAME=etime VALUE="<?php echo $_REQUEST["etime"]; ?>">
+      <INPUT TYPE=HIDDEN NAME=edate VALUE="<?php echo $_REQUEST["edate"]; ?>">
       <TABLE>
         <TR><TD ALIGN=RIGHT>Artist:</TD>
             <TH ALIGN=LEFT><?php echo htmlentities($album["artist"]); ?></TH></TR>
