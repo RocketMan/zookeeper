@@ -46,7 +46,7 @@ function emitMore(table, data, type) {
             td.append('&nbsp;&nbsp;');
             for(var i=0; i<=numchunks+1; i++) {
                 var cur = (start + i);
-                let low = (cur - 1) * chunksize; // scope for closure
+                var low = (cur - 1) * chunksize; // scope for closure
                 var hi = cur * chunksize;
                 if(low >= more)
                     break;
@@ -56,17 +56,19 @@ function emitMore(table, data, type) {
                     var a = $("<A>", {
                         class: 'nav',
                         href: '#'
-                    }).append('<B>' + cur + '</B>').click(function() {
-                        search(type, chunksize, low);
-                        return false;
-                    });
+                    }).append('<B>' + cur + '</B>').click((function(low) {
+                        return function() {
+                            search(type, chunksize, low);
+                            return false;
+                        }
+                    })(low));
                     td.append(a).append('&nbsp;&nbsp;');
                 }
             }
             if((start + i - 1) * chunksize < more)
                 td.append("<B>...</B>");
         } else {
-            let offset = -1, size = -1; // scope for closure
+            var offset = -1, size = -1; // scope for closure
             if(more > 25) {
                 offset = 0;
                 size = 15;
@@ -74,10 +76,12 @@ function emitMore(table, data, type) {
             var a = $("<A>", {
                 class: 'nav',
                 href: '#'
-            }).append('<B>' + more + ' more...</B>').click(function() {
-                search(type, size, offset);
-                return false;
-            });
+            }).append('<B>' + more + ' more...</B>').click((function(size, offset) {
+                return function() {
+                    search(type, size, offset);
+                    return false;
+                }
+            })(size, offset));
             td.append(a);
         }
         tr.append(td);
