@@ -495,7 +495,8 @@ class Playlists extends MenuItem {
                     echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
                          "\$().ready(function(){".
                          "location.href='?action=newListEditor&playlist=".
-                         Engine::lastInsertId()."';});\n".
+                         Engine::lastInsertId()."&session=".
+                         $this->session->getSessionID()."';});\n".
                          "// -->\n</SCRIPT>\n";
                     return;
                 } else {
