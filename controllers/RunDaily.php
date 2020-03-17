@@ -50,6 +50,13 @@ class RunDaily implements IController {
         echo "Running charts: ";
         
         $today = date("Y-m-d");
+        $config = Engine::param('chart');
+        if(array_key_exists('suspend_until', $config) &&
+                strtotime($config['suspend_until']) > strtotime($today)) {
+            echo "No (charting suspended until ".$config['suspend_until'].")\n";
+            return;
+        }
+
         $date = self::weeklyChartDate($today);
         if($today == $date) {
             // don't run charts on charting day, so as to give
@@ -69,7 +76,6 @@ class RunDaily implements IController {
         }
 
         // run the chart
-        $config = Engine::param('chart');
         $ok = Engine::api(IChart::class)->doChart($date,
                                             $config['max_spins'],
                                             $config['apply_limit_per_dj']);
