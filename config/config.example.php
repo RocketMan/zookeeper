@@ -193,6 +193,16 @@ $config = [
      */
     'chart' => [
         /**
+          * suspend_until:
+          *
+          * suspend charting until the specified date (YYYY-mm-dd)
+          *
+          * specify the charting (end) date of the first chart to run.
+          * For example, suspend_until 2020-04-12 will chart commencing
+          * with the week 2020-04-05 - 2020-04-12.
+          */
+        /*'suspend_until' => '2020-04-12',*/
+        /**
           * max_spins:
           *
           * number of spins per show (or DJ) to count for the charts
