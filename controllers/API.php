@@ -590,8 +590,19 @@ class API extends CommandTarget implements IController {
     }
     
     private static function jsonspecialchars($str) {
-        return str_replace(["\\", "\"", "\n", "\r", "\t"],
-                           ["\\\\", "\\\"", "\\n", "\\r", "\\t"], $str);
+        // escape backslash, quote, LF, CR, and tab
+        $str1 = str_replace(["\\", "\"", "\n", "\r", "\t"],
+                            ["\\\\", "\\\"", "\\n", "\\r", "\\t"], $str);
+
+        // escape other control characters
+        $str2 = preg_replace_callback('/[\x00-\x1f]/', function($matches) {
+            return '\\u00' . bin2hex($matches[0]);
+        }, $str1);
+
+        if($str1 != $str2)
+            error_log("unexpected control character(s): '$str'");
+
+        return $str2;
     }
 }
 
