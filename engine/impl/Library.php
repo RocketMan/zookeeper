@@ -195,7 +195,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
                 $query .= "ORDER BY album$desc, artist$desc, a.tag ";
             else if($sb == "Label")
                 $query .= "ORDER BY p.name$desc, album$desc, artist$desc ";
-            else if($sb == "Date Reviewed")
+            else if($sb == "Date")
                 $query .= "ORDER BY r.created$desc ";
             else // "Artist"
                 $query .= "ORDER BY artist$desc, album$desc, a.tag ";
