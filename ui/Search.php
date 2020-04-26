@@ -93,7 +93,7 @@ class Search extends MenuItem {
 
     private $pos = 0;
 
-    private $maxresults = 10;
+    private $maxresults = 50; //NOTE: this value is typically overriden by the invoking request's 'q' attribute.
 
     private $noTables = false;
 
@@ -631,7 +631,7 @@ class Search extends MenuItem {
         if($static)
             echo "  <TH ALIGN=LEFT$width><U>$header</U>";
         else {
-            echo "  <TH ALIGN=LEFT$width><A CLASS=\"nav\" HREF=\"?s=byReviewer&amp;n=".UI::URLify($this->searchText)."&amp;p=0&amp;q=15&amp;action=viewDJReviews&amp;session=".$this->session->getSessionID()."&amp;sortBy=$command\">$header";
+            echo "  <TH ALIGN=LEFT$width><A CLASS=\"nav\" HREF=\"?s=byReviewer&amp;n=".UI::URLify($this->searchText)."&amp;p=0&amp;q=50&amp;action=viewDJReviews&amp;session=".$this->session->getSessionID()."&amp;sortBy=$command\">$header";
             if($selected)
                 echo "&nbsp;".
                     ($selected==1?/*down*/"&#x25be;":/*up*/"&#x25b4;");
@@ -646,14 +646,14 @@ class Search extends MenuItem {
         for($i = 0; $i < sizeof($albums); $i++){
             if (! $opened ) {
                 if($this->noTables)
-                    echo "<PRE><B>Artist               Album                Label                Date Reviewed</B>\n";
+                    echo "<PRE><B>Artist               Album                Label                Date</B>\n";
                 else {
                     echo "<TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>\n";
                     $static = 0;
                     $this->reviewerColHeader("Artist", $static);
                     $this->reviewerColHeader("Album", $static);
                     $this->reviewerColHeader("Label", $static);
-                    $this->reviewerColHeader("Date Reviewed", $static);
+                    $this->reviewerColHeader("Date", $static);
                 }
                 $opened = 1;
             }
@@ -752,7 +752,7 @@ class Search extends MenuItem {
         }
     
         if($name) {
-            echo "<TABLE WIDTH=\"100%\"><TR><TH ALIGN=LEFT CLASS=\"subhead\">$name's Album Reviews</TH></TR></TABLE>\n";
+            echo "<TABLE WIDTH=\"100%\"><TR><TH ALIGN=LEFT CLASS=\"subhead\">$name's Album Reviews</TH></TR></TABLE><hr/>\n";
             $albums = Engine::api(ILibrary::class)->searchPos(ILibrary::ALBUM_AIRNAME, $this->pos, $this->maxresults, $this->searchText, $this->sortBy);
             $this->reviewerAlbums($albums);
         }
