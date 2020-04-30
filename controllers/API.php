@@ -57,7 +57,7 @@ class API extends CommandTarget implements IController {
     ];
 
     const REVIEW_FIELDS = [
-        "tag", "artist", "album", "airname", "created",
+        "tag", "artist", "album", "airname", "reviewed",
         "pubkey", "name"
     ];
 
