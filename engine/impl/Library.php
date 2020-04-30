@@ -234,7 +234,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
             $query = "SELECT a.id, artist, album, category, medium, ".
                      "size, a.created, a.updated, a.pubkey, location, bin, a.tag, iscoll, ".
                      "p.name, r.created reviewed ".
-                     "FROM albumvol a JOIN reviews r ON a.tag = r.tag LEFT JOIN publist p ON p.pubkey = a.pubkey ";
+                     "FROM reviews r LEFT JOIN albumvol a ON a.tag = r.tag LEFT JOIN publist p ON p.pubkey = a.pubkey ";
             $query .= "WHERE r.airname = ? ";
             if(!Engine::session()->isAuth("u"))
                 $query .= "AND r.private = 0 ";
