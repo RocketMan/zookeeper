@@ -232,7 +232,7 @@ var lists = {
             })));
             var collection = entry.location;
             collection = (collection == "Library")?entry.category:
-                "<I>" + collection + "</I>&nbsp;" + entry.bin;
+                "<I>" + collection + "&nbsp;" + entry.bin + "</I>";
             tr.append($("<TD>").html(collection));
             tr.append($("<TD>").html(entry.medium));
             tr.append($("<TD>").html(entry.size));
