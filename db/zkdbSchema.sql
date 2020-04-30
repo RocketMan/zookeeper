@@ -262,6 +262,7 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   KEY `user` (`user`),
   KEY `tag` (`tag`),
   KEY `created` (`created`),
+  KEY `airname` (`airname`),
   FULLTEXT KEY `review` (`review`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
