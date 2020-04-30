@@ -64,7 +64,9 @@ class LibraryImpl extends BaseImpl implements ILibrary {
                   "MATCH (artist,album,track) AGAINST(? IN BOOLEAN MODE) " .
                   "ORDER BY showdate DESC, list DESC, t.id" ],
          [ "reviews", "reviewrec", "reviews", "review",
-                  "SELECT r.tag, av.artist, av.album, an.airname, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) created FROM reviews r " .
+                  "SELECT r.tag, av.artist, av.album, an.airname, " .
+                  "DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed " .
+                  "FROM reviews r " .
                   "LEFT JOIN albumvol av ON r.tag = av.tag " .
                   "LEFT JOIN airnames an ON r.airname = an.id " .
                   "WHERE private = 0 AND r.airname IS NOT NULL AND " .
@@ -233,9 +235,10 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         case ILibrary::ALBUM_AIRNAME:
             $query = "SELECT a.id, artist, album, category, medium, ".
                      "size, a.created, a.updated, a.pubkey, location, bin, a.tag, iscoll, ".
-                     "p.name, r.created reviewed ".
-                     "FROM reviews r LEFT JOIN albumvol a ON a.tag = r.tag LEFT JOIN publist p ON p.pubkey = a.pubkey ";
-            $query .= "WHERE r.airname = ? ";
+                     "p.name, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed ".
+                     "FROM reviews r LEFT JOIN albumvol a ON a.tag = r.tag ".
+                     "LEFT JOIN publist p ON p.pubkey = a.pubkey ".
+                     "WHERE r.airname = ? ";
             if(!Engine::session()->isAuth("u"))
                 $query .= "AND r.private = 0 ";
             $query .= self::orderBy($sortBy);

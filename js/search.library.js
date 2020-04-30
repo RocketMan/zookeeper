@@ -326,7 +326,7 @@ var lists = {
             } else {
                 tr.append($("<TD>").html("Unknown"));
             }
-            tr.append($("<TD>").html(entry.reviewed.substr(0, 10)));
+            tr.append($("<TD>").html(entry.reviewed));
             table.append(tr);
         });
 
