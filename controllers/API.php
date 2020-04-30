@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -40,7 +40,8 @@ class API extends CommandTarget implements IController {
     const ALBUM_FIELDS = [
         "tag", "artist", "album", "category", "medium",
         "size", "location", "bin", "created", "updated",
-        "name", "address", "city", "state", "zip"
+        "pubkey", "name", "address", "city", "state", "zip",
+        "reviewed"
     ];
 
     const LABEL_FIELDS = [
@@ -56,13 +57,14 @@ class API extends CommandTarget implements IController {
     ];
 
     const REVIEW_FIELDS = [
-        "tag", "artist", "album", "airname", "created"
+        "tag", "artist", "album", "airname", "created",
+        "pubkey", "name"
     ];
 
     const TRACK_FIELDS = [
         "tag", "artist", "album", "category", "medium",
         "size", "location", "bin", "created", "updated",
-        "name", "address", "city", "state", "zip",
+        "name", "address", "city", "state", "zip", "pubkey",
         "track"
     ];
 
@@ -84,11 +86,21 @@ class API extends CommandTarget implements IController {
         "tracks" => API::TRACK_FIELDS,
     ];
 
+    private static $libKeys = [
+        "albums" => [ ILibrary::ALBUM_NAME, "albumrec", API::ALBUM_FIELDS ],
+        "albumsByPubkey" => [ ILibrary::ALBUM_PUBKEY, "albumrec", API::ALBUM_FIELDS ],
+        "artists" => [ ILibrary::ALBUM_ARTIST, "albumrec", API::ALBUM_FIELDS ],
+        "labels" => [ ILibrary::LABEL_NAME, "labelrec", API::LABEL_FIELDS ],
+        "reviews" => [ ILibrary::ALBUM_AIRNAME, "reviewrec", API::REVIEW_FIELDS ],
+        "tracks" => [ ILibrary::TRACK_NAME, "albumrec", API::TRACK_FIELDS ],
+    ];
+
     private static $methods = [
         [ "", "unknownMethod" ],
         [ "getAlbumsRq", "albumPager" ],
         [ "getLabelsRq", "labelPager" ],
         [ "searchRq", "fullTextSearch" ],
+        [ "libLookupRq", "libraryLookup" ],
         [ "getCurrentsRq", "getCurrents" ],
         [ "getChartsRq", "getCharts" ],
         [ "getPlaylistsRq", "getPlaylists" ],
@@ -195,6 +207,42 @@ class API extends CommandTarget implements IController {
             $this->endResponse($result["type"]);
         }
         $this->endResponse("searchRs");
+    }
+
+    public function libraryLookup() {
+        $type = self::$libKeys[$_REQUEST["type"]];
+        if(!$type) {
+            $this->emitError("libLookupRs", 20, "Invalid type: ".$_REQUEST["type"]);
+            return;
+        }
+
+        $key = $_REQUEST["key"];
+        $offset = $_REQUEST["offset"];
+        $libraryAPI = Engine::api(ILibrary::class);
+        $total = $libraryAPI->searchPos($type[0], $offset, -1, $key);
+        $attrs = $this->addSuccess();
+        $attrs["total"] = $total;
+        $attrs[$this->json?"dataType":"type"] = $_REQUEST["type"];
+        $this->startResponse("libLookupRs", $attrs);
+
+        $results = $libraryAPI->searchPos($type[0], $offset, $this->limit, $key, $_REQUEST["sortBy"]);
+        switch($type[0]) {
+        case ILibrary::LABEL_NAME:
+        case ILibrary::ALBUM_AIRNAME:
+            break;
+        default:
+            $libraryAPI->markAlbumsReviewed($results, $this->session->isAuth("u"));
+            break;
+        }
+        $attrs = [];
+        // conform to the more/offset semantics of searchRq
+        if(!$offset) $offset = $total; // no more rows remaining
+        $attrs["more"] = $_REQUEST["offset"] == ""?($total - $offset):$total;
+        $attrs["offset"] = $_REQUEST["offset"];
+        $this->startResponse($_REQUEST["type"], $attrs);
+        $this->emitDataSetArray($type[1], $type[2], $results);
+        $this->endResponse($_REQUEST["type"]);
+        $this->endResponse("libLookupRs");
     }
 
     public function getCharts() {

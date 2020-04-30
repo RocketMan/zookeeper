@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -79,11 +79,39 @@ class LibraryImpl extends BaseImpl implements ILibrary {
                   "AND location != 'U' " .
                   "ORDER BY artist, album, t.tag" ]
     ];
+
+    private static function orderBy($sortBy) {
+        $query = $desc = "";
+        $sb = $sortBy;
+        if(substr($sb, -1) == "-") {
+            $sb = substr($sb, 0, -1);
+            $desc = " DESC" ;
+        }
+        switch($sb) {
+        case "Album":
+            $query .= "ORDER BY album$desc, artist$desc, tag ";
+            break;
+        case "Label":
+            $query .= "ORDER BY name$desc, album$desc, artist$desc ";
+            break;
+        case "Date":
+            $query .= "ORDER BY r.created$desc ";
+            break;
+        case "Track":
+            $query .= "ORDER BY track$desc, artist$dec, album$desc ";
+            break;
+        default:
+            // "Artist"
+            $query .= "ORDER BY artist$desc, album$desc, tag ";
+            break;
+        }
+        return $query;
+    }
     
     public function search($tableIndex, $pos, $count, $search, $sortBy = 0) {
         return $this->searchPos($tableIndex, $pos, $count, $search);
     }
-    
+
     public function searchPos($tableIndex, &$pos, $count, $search, $sortBy = 0) {
         $retVal = array();
       
@@ -118,13 +146,18 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         switch($tableIndex) {
         case ILibrary::ALBUM_ARTIST:
             $query = "SELECT tag, artist, album, category, medium, size, ".
-                     "created, updated, pubkey, location, bin, iscoll ".
-                     "FROM albumvol WHERE artist LIKE ? ".
+                     "created, updated, a.pubkey, location, bin, iscoll, ".
+                     "name, address, city, state, zip ".
+                     "FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey ".
+                     "WHERE artist LIKE ? ".
                      "UNION SELECT c.tag, c.artist, a.artist, category, medium, size, ".
-                     "created, updated, pubkey, location, bin, iscoll ".
-                     "FROM colltracknames c, albumvol a WHERE c.tag = a.tag ".
+                     "created, updated, a.pubkey, location, bin, iscoll, ".
+                     "name, address, city, state, zip ".
+                     "FROM colltracknames c, albumvol a LEFT JOIN publist p ".
+                     "ON a.pubkey = p.pubkey WHERE c.tag = a.tag ".
                      "AND c.artist LIKE ? ".
-                     "ORDER BY artist, album, tag LIMIT ?, ?";
+                     self::orderBy($sortBy).
+                     "LIMIT ?, ?";
             $bindType = 4;
             break;
         case ILibrary::ALBUM_KEY:
@@ -133,12 +166,24 @@ class LibraryImpl extends BaseImpl implements ILibrary {
             $bindType = 3;
             break;
         case ILibrary::ALBUM_NAME:
-            $query = "SELECT * FROM albumvol WHERE album LIKE ? ORDER BY album, artist, tag LIMIT ?, ?";
+            $query = "SELECT tag, artist, album, category, medium, size, ".
+                     "created, updated, a.pubkey, location, bin, iscoll, ".
+                     "name, address, city, state, zip ".
+                     "FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey ".
+                     "WHERE album LIKE ? ".
+                     self::orderBy($sortBy).
+                     "LIMIT ?, ?";
             $bindType = 3;
             break;
         case ILibrary::ALBUM_PUBKEY:
             settype($search, "integer");
-            $query = "SELECT * FROM albumvol WHERE pubkey=? ORDER BY artist, album, tag LIMIT ?, ?";
+            $query = "SELECT tag, artist, album, category, medium, size, ".
+                     "created, updated, a.pubkey, location, bin, iscoll, ".
+                     "name, address, city, state, zip ".
+                     "FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey ".
+                     "WHERE a.pubkey=? ".
+                     self::orderBy($sortBy).
+                     "LIMIT ?, ?";
             $bindType = 3;
             break;
         case ILibrary::COLL_KEY:
@@ -168,13 +213,21 @@ class LibraryImpl extends BaseImpl implements ILibrary {
             if($olen < 4 && substr($search, -1) == "%")
                 $search = substr($search, 0, -1);
       
-            $query = "SELECT a.tag, track, artist, album, seq ".
-                     "FROM tracknames t, albumvol a WHERE a.tag = t.tag AND ".
+            $query = "SELECT a.tag, track, artist, album, seq, ".
+                     "category, medium, size, location, bin, ".
+                     "a.pubkey, name, address, city, state, zip ".
+                     "FROM tracknames t, albumvol a ".
+                     "LEFT JOIN publist p ON a.pubkey = p.pubkey ".
+                     "WHERE a.tag = t.tag AND ".
                      "track LIKE ? ".
-                     "UNION SELECT a.tag, track, c.artist, a.artist, seq ".
+                     "UNION SELECT a.tag, track, c.artist, a.artist, seq, ".
+                     "category, medium, size, location, bin, ".
+                     "a.pubkey, name, address, city, state, zip ".
                      "FROM colltracknames c LEFT JOIN albumvol a ON a.tag = c.tag ".
+                     "LEFT JOIN publist p ON a.pubkey = p.pubkey ".
                      "WHERE track LIKE ? ".
-                     "ORDER BY track, artist, album LIMIT ?, ?";
+                     self::orderBy($sortBy).
+                     "LIMIT ?, ?";
             $bindType = 4;
             break;
         case ILibrary::ALBUM_AIRNAME:
@@ -185,20 +238,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
             $query .= "WHERE r.airname = ? ";
             if(!Engine::session()->isAuth("u"))
                 $query .= "AND r.private = 0 ";
-            $desc = "";
-            $sb = $sortBy;
-            if(substr($sb, -1) == "-") {
-                $sb = substr($sb, 0, -1);
-                $desc = " DESC" ;
-            }
-            if($sb == "Album")
-                $query .= "ORDER BY album$desc, artist$desc, a.tag ";
-            else if($sb == "Label")
-                $query .= "ORDER BY p.name$desc, album$desc, artist$desc ";
-            else if($sb == "Date")
-                $query .= "ORDER BY r.created$desc ";
-            else // "Artist"
-                $query .= "ORDER BY artist$desc, album$desc, a.tag ";
+            $query .= self::orderBy($sortBy);
             $query .= "LIMIT ?, ?";
             $bindType = 3;
             break;
@@ -207,7 +247,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
             return;
         }
       
-        if($query) {
+        if($count > 0) {
             $stmt = $mapper->prepare($query);
             switch($bindType) {
             case 1:
@@ -234,6 +274,40 @@ class LibraryImpl extends BaseImpl implements ILibrary {
 
             // adjust the pagination position if there are more rows
             $pos = (!$count && $stmt->fetch())?$pos + $askCount - 1:0;
+        } else {
+            // caller has requested total row count instead of data
+
+            // strip ORDER BY and/or LIMIT clauses
+            $ob = strpos($query, " ORDER BY");
+            if($ob)
+                $query = substr($query, 0, $ob);
+            else if($lim = strpos($query, " LIMIT"))
+                $query = substr($query, 0, $lim);
+
+            // For UNION queries, we must count number of aggregate rows.
+            //
+            // This will work also for simple queries, but in that
+            // case, we just do a count, as it's a tad more efficient.
+            if(strpos($query, " UNION SELECT ")) {
+                $query = "SELECT COUNT(*) FROM (" . $query . ") x";
+            } else {
+                $from = strpos($query, "FROM");
+                $query = "SELECT COUNT(*) " . substr($query, $from);
+            }
+
+            $stmt = $mapper->prepare($query);
+            switch($bindType) {
+            case 1:
+            case 3:
+                $stmt->bindValue(1, $search);
+                break;
+            case 4:
+                $stmt->bindValue(1, $search);
+                $stmt->bindValue(2, $search);
+                break;
+            }
+
+            $retVal = $stmt->execute() && ($row = $stmt->fetch())?$row[0]:-1;
         }
       
         return $retVal;
