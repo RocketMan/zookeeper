@@ -392,6 +392,7 @@ class Search extends MenuItem {
     }
     
     public function searchForm() {
+        UI::emitJS('js/jquery.bahashchange.min.js');
         UI::emitJS('js/search.library.js');
 
         switch($this->searchType){
@@ -487,6 +488,7 @@ class Search extends MenuItem {
         }
     
         if($name) {
+            UI::emitJS('js/jquery.bahashchange.min.js');
             UI::emitJS('js/search.library.js');
             echo "<FORM>\n<INPUT id='session' type='hidden' value='" . $this->session->getSessionID() . "'>\n";
             echo "<INPUT id='type' type='hidden' value='reviews'>\n";

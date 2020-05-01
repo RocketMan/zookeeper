@@ -126,13 +126,13 @@ function emitAlbumsEx(table, data) {
                     "&action=search&session=" + session
             }).html(getArtist(entry)));
         } else {
-            td.append($("<A href='#'>").append(getArtist(entry)).click(function() {
-                $("#n").val(entry.artist);
-                $("#sortBy").val("Artist");
-                $("INPUT[NAME=s][VALUE=artists]").prop('checked', true).change();
-                $("FORM#search").submit();
-                return false;
-            }));
+            td.append(
+                $("<A href='#" + encodeURIComponent(JSON.stringify({
+                    type: 'artists',
+                    key: entry.artist,
+                    sortBy: 'Artist',
+                    form: true
+                })) + "'>").append(getArtist(entry)));
         }
         tr.append(td);
         var reviewClass = entry.reviewed?"albumReview":"albumNoReview";
@@ -156,13 +156,12 @@ function emitAlbumsEx(table, data) {
             align: 'center'
         }).html(created[1] + '/' + created[0].substring(2)));
         if(entry.pubkey) {
-            tr.append($("<TD>").append($("<A href='#'>").append(entry.name).click(function() {
-                $("#type").val("albumsByPubkey");
-                $("#key").val(entry.pubkey);
-                $("#sortBy").val("");
-                search($("#maxresults").val(), 0);
-                return false;
-            })));
+            tr.append($("<TD>").append(
+                $("<A href='#" + encodeURIComponent(JSON.stringify({
+                    type: 'albumsByPubkey',
+                    key: entry.pubkey,
+                    sortBy: ''
+                })) + "'>").append(entry.name)));
         } else {
             tr.append($("<TD>").html("Unknown"));
         }
@@ -210,26 +209,26 @@ var lists = {
                         "&action=search&session=" + session
                 }).html(getArtist(entry)));
             } else {
-                td.append($("<A href='#'>").append(getArtist(entry)).click(function() {
-                    $("#n").val(entry.artist);
-                    $("#sortBy").val("Artist");
-                    $("INPUT[NAME=s][VALUE=artists]").prop('checked', true).change();
-                    $("FORM#search").submit();
-                    return false;
-                }));
+                td.append(
+                    $("<A href='#" + encodeURIComponent(JSON.stringify({
+                        type: 'artists',
+                        key: entry.artist,
+                        sortBy: 'Artist',
+                        form: true
+                    })) + "'>").append(getArtist(entry)));
             }
             tr.append(td);
             tr.append($("<TD>").html($("<A>", {
                 href: '?session=' + session +
                     '&action=findAlbum&n=' + entry.tag,
             }).html(entry.album)));
-            tr.append($("<TD>").append($("<A href='#'>").append(entry.track).click(function() {
-                $("#n").val(entry.track);
-                $("#sortBy").val("Track");
-                $("INPUT[NAME=s][VALUE=tracks]").prop('checked', true).change();
-                $("FORM#search").submit();
-                return false;
-            })));
+            tr.append($("<TD>").append(
+                $("<A href='#" + encodeURIComponent(JSON.stringify({
+                    type: 'tracks',
+                    key: entry.track,
+                    sortBy: 'Track',
+                    form: true
+                })) + "'>").append(entry.track)));
             var collection = entry.location;
             collection = (collection == "Library")?entry.category:
                 "<I>" + collection + "&nbsp;" + entry.bin + "</I>";
@@ -237,13 +236,12 @@ var lists = {
             tr.append($("<TD>").html(entry.medium));
             tr.append($("<TD>").html(entry.size));
             if(entry.pubkey) {
-                tr.append($("<TD>").append($("<A href='#'>").append(entry.name).click(function() {
-                    $("#type").val("albumsByPubkey");
-                    $("#key").val(entry.pubkey);
-                    $("#sortBy").val("");
-                    search($("#maxresults").val(), 0);
-                    return false;
-                })));
+                tr.append($("<TD>").append(
+                    $("<A href='#" + encodeURIComponent(JSON.stringify({
+                        type: 'albumsByPubkey',
+                        key: entry.pubkey,
+                        sortBy: ''
+                    })) + "'>").append(entry.name)));
             } else {
                 tr.append($("<TD>").html("Unknown"));
             }
@@ -263,14 +261,12 @@ var lists = {
 
         data.data.forEach(function(entry) {
             tr = $("<TR>");
-            tr.append($("<TD>").append($("<A href='#'>").append(entry.name).click(function() {
-                $("#type").val("albumsByPubkey");
-                $("#key").val(entry.pubkey);
-                $("#sortBy").val("");
-                search($("#maxresults").val(), 0);
-                return false;
-            })));
-
+            tr.append($("<TD>").append(
+                $("<A href='#" + encodeURIComponent(JSON.stringify({
+                    type: 'albumsByPubkey',
+                    key: entry.pubkey,
+                    sortBy: ''
+                })) + "'>").append(entry.name)));
             tr.append($("<TD>").html(entry.city));
             tr.append($("<TD>").html(entry.state));
             tr.append($("<TD>").html(entry.modified));
@@ -317,12 +313,12 @@ var lists = {
                                          " <FONT CLASS='sub'>(Tag&nbsp;#" +
                                          entry.tag + ")<FONT>":""));
             if(entry.pubkey) {
-                tr.append($("<TD>").html($("<A>", {
-                    href: "?s=byLabelKey&n=" +
-                        encodeURIComponent(entry.pubkey) +
-                        "&q=" + $("#maxresults").val() +
-                        "&action=search&session=" + session
-                }).html(entry.name)));
+                tr.append($("<TD>").append(
+                    $("<A href='#" + encodeURIComponent(JSON.stringify({
+                        type: 'albumsByPubkey',
+                        key: entry.pubkey,
+                        sortBy: ''
+                    })) + "'>").append(entry.name)));
             } else {
                 tr.append($("<TD>").html("Unknown"));
             }
@@ -400,15 +396,32 @@ $().ready(function() {
         }
     });
 
+    $(window).hashchange(function() {
+        var hash = location.hash;
+        if(hash.length > 0) {
+            var params = JSON.parse(decodeURIComponent(hash.substring(1)));
+            for(property in params)
+                $("#" + property).val(params[property]);
+
+            if(params.form) { 
+                $("#n").val(params.key);
+                $("INPUT[NAME=s][VALUE=" + params.type +"]").prop('checked', true);
+            }
+
+            search($("#maxresults").val(), 0);
+        }
+    });
+
     $("FORM#search").submit(function(e) {
         var n = $("#n").val();
         if(n.length > 0) {
             if($("#m").is(":not(:checked)"))
                 n += "*";
-            $("#key").val(n);
-            $("#type").val($('INPUT[NAME=s]:checked').val());
-            $("#sortBy").val("");
-            search($("#maxresults").val(), 0);
+            location.href='#' + encodeURIComponent(JSON.stringify({
+                type: $('INPUT[NAME=s]:checked').val(),
+                key: n,
+                sortBy: ''
+            }));
         }
         e.preventDefault();
     });
@@ -416,9 +429,13 @@ $().ready(function() {
     if($("#type").val().length == 0 && $('INPUT[NAME=s]').length > 0)
         $("#type").val($('INPUT[NAME=s]:checked').val());
 
-    if($("#key").val().length > 0)
-        search($("#maxresults").val(), 0);
-    else if($("#n").val().length > 0)
+    if($("#key").val().length > 0) {
+        location.href='#' + encodeURIComponent(JSON.stringify({
+            type: $("#type").val(),
+            key: $("#key").val(),
+            sortBy: $("#sortBy").val()
+        }));
+    } else if($("#n").val().length > 0)
         $("FORM#search").submit();
 
     $("#n").focus();
