@@ -127,12 +127,12 @@ function emitAlbumsEx(table, data) {
             }).html(getArtist(entry)));
         } else {
             td.append(
-                $("<A href='#" + encodeURIComponent(JSON.stringify({
+                $("<A href='#" + htmlentities(encodeURIComponent(JSON.stringify({
                     type: 'artists',
                     key: entry.artist,
                     sortBy: 'Artist',
                     form: true
-                })) + "'>").append(getArtist(entry)));
+                }))) + "'>").append(getArtist(entry)));
         }
         tr.append(td);
         var reviewClass = entry.reviewed?"albumReview":"albumNoReview";
@@ -157,11 +157,11 @@ function emitAlbumsEx(table, data) {
         }).html(created[1] + '/' + created[0].substring(2)));
         if(entry.pubkey) {
             tr.append($("<TD>").append(
-                $("<A href='#" + encodeURIComponent(JSON.stringify({
+                $("<A href='#" + htmlentities(encodeURIComponent(JSON.stringify({
                     type: 'albumsByPubkey',
                     key: entry.pubkey,
                     sortBy: ''
-                })) + "'>").append(entry.name)));
+                }))) + "'>").append(entry.name)));
         } else {
             tr.append($("<TD>").html("Unknown"));
         }
@@ -210,12 +210,12 @@ var lists = {
                 }).html(getArtist(entry)));
             } else {
                 td.append(
-                    $("<A href='#" + encodeURIComponent(JSON.stringify({
+                    $("<A href='#" + htmlentities(encodeURIComponent(JSON.stringify({
                         type: 'artists',
                         key: entry.artist,
                         sortBy: 'Artist',
                         form: true
-                    })) + "'>").append(getArtist(entry)));
+                    }))) + "'>").append(getArtist(entry)));
             }
             tr.append(td);
             tr.append($("<TD>").html($("<A>", {
@@ -223,12 +223,12 @@ var lists = {
                     '&action=findAlbum&n=' + entry.tag,
             }).html(entry.album)));
             tr.append($("<TD>").append(
-                $("<A href='#" + encodeURIComponent(JSON.stringify({
+                $("<A href='#" + htmlentities(encodeURIComponent(JSON.stringify({
                     type: 'tracks',
                     key: entry.track,
                     sortBy: 'Track',
                     form: true
-                })) + "'>").append(entry.track)));
+                }))) + "'>").append(entry.track)));
             var collection = entry.location;
             collection = (collection == "Library")?entry.category:
                 "<I>" + collection + "&nbsp;" + entry.bin + "</I>";
@@ -237,11 +237,11 @@ var lists = {
             tr.append($("<TD>").html(entry.size));
             if(entry.pubkey) {
                 tr.append($("<TD>").append(
-                    $("<A href='#" + encodeURIComponent(JSON.stringify({
+                    $("<A href='#" + htmlentities(encodeURIComponent(JSON.stringify({
                         type: 'albumsByPubkey',
                         key: entry.pubkey,
                         sortBy: ''
-                    })) + "'>").append(entry.name)));
+                    }))) + "'>").append(entry.name)));
             } else {
                 tr.append($("<TD>").html("Unknown"));
             }
@@ -262,11 +262,11 @@ var lists = {
         data.data.forEach(function(entry) {
             tr = $("<TR>");
             tr.append($("<TD>").append(
-                $("<A href='#" + encodeURIComponent(JSON.stringify({
+                $("<A href='#" + htmlentities(encodeURIComponent(JSON.stringify({
                     type: 'albumsByPubkey',
                     key: entry.pubkey,
                     sortBy: ''
-                })) + "'>").append(entry.name)));
+                }))) + "'>").append(entry.name)));
             tr.append($("<TD>").html(entry.city));
             tr.append($("<TD>").html(entry.state));
             tr.append($("<TD>").html(entry.modified));
