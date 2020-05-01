@@ -403,8 +403,11 @@ $().ready(function() {
             for(property in params)
                 $("#" + property).val(params[property]);
 
-            if(params.form) { 
-                $("#n").val(params.key);
+            if(params.form) {
+                var key = params.key;
+                if(key.slice(-1) == "*")
+                    key = key.substr(0, key.length-1);
+                $("#n").val(key);
                 $("INPUT[NAME=s][VALUE=" + params.type +"]").prop('checked', true);
             }
 
@@ -420,7 +423,8 @@ $().ready(function() {
             location.href='#' + encodeURIComponent(JSON.stringify({
                 type: $('INPUT[NAME=s]:checked').val(),
                 key: n,
-                sortBy: ''
+                sortBy: '',
+                form: true
             }));
         }
         e.preventDefault();
