@@ -313,12 +313,12 @@ var lists = {
                                          " <FONT CLASS='sub'>(Tag&nbsp;#" +
                                          entry.tag + ")<FONT>":""));
             if(entry.pubkey) {
-                tr.append($("<TD>").append(
-                    $("<A href='#" + encodeURIComponent(JSON.stringify({
-                        type: 'albumsByPubkey',
-                        key: entry.pubkey,
-                        sortBy: ''
-                    })) + "'>").append(entry.name)));
+                tr.append($("<TD>").html($("<A>", {
+                    href: "?s=byLabelKey&n=" +
+                        encodeURIComponent(entry.pubkey) +
+                        "&q=" + $("#maxresults").val() +
+                        "&action=search&session=" + session
+                }).html(entry.name)));
             } else {
                 tr.append($("<TD>").html("Unknown"));
             }
@@ -430,11 +430,7 @@ $().ready(function() {
         $("#type").val($('INPUT[NAME=s]:checked').val());
 
     if($("#key").val().length > 0) {
-        location.href='#' + encodeURIComponent(JSON.stringify({
-            type: $("#type").val(),
-            key: $("#key").val(),
-            sortBy: $("#sortBy").val()
-        }));
+        search($("#maxresults").val(), 0);
     } else if($("#n").val().length > 0)
         $("FORM#search").submit();
 
