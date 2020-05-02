@@ -391,28 +391,6 @@ function search(size, offset) {
 }
 
 $().ready(function() {
-    $(window).on('pageshow', function(e) {
-        if(e.originalEvent.persisted) {
-            // restore search string on Back
-            // schedule for later to avoid webkit's autocomplete=off blanking
-            setTimeout(function() {
-                var key = $("#key").val();
-                switch($("#type").val()) {
-                case "artists":
-                case "albums":
-                case "tracks":
-                case "labels":
-                    if(key.slice(-1) == "*")
-                        key = key.substr(0, key.length-1);
-                    $("#n").val(key);
-                    break;
-                default:
-                    break;
-                }
-            }, 100);
-        }
-    });
-
     $(window).hashchange(function() {
         var hash = location.hash;
         if(hash.length > 0) {

@@ -91,8 +91,6 @@ class Search extends MenuItem {
         [ "byReviewer", "searchByReviewer" ],
     ];
 
-    private $pos = 0;
-
     private $maxresults = 50; //NOTE: this value is typically overriden by the invoking request's 'q' attribute.
 
     private $noTables = false;
@@ -103,8 +101,6 @@ class Search extends MenuItem {
 
     private $searchType;
 
-    private $sortBy;
-    
     public function processLocal($action, $subaction) {
         return $this->dispatchAction($action, self::$actions);
     }
@@ -340,8 +336,6 @@ class Search extends MenuItem {
             }
             if($opened) echo $this->closeList();
         }
-    
-        UI::setFocus();
     }
     
     public function doSearch() {
@@ -372,13 +366,6 @@ class Search extends MenuItem {
             else
         $close = "</TABLE>\n";
         return $close;
-    }
-    
-    private function searchString() {
-        $searchString = $this->searchText;
-        if(!$this->exactMatch)
-            $searchString .= "*";
-        return $searchString;
     }
     
     // CheckBrowserCaps
@@ -478,8 +465,8 @@ class Search extends MenuItem {
     }
     
     public function searchByReviewer() {
-        $this->sortBy = array_key_exists("sortBy", $_REQUEST)?$_REQUEST["sortBy"]:"";
-        if(!$this->sortBy)$this->sortBy="Artist";
+        $sortBy = array_key_exists("sortBy", $_REQUEST)?$_REQUEST["sortBy"]:"";
+        if(!$sortBy)$sortBy="Artist";
     
         if($this->searchText) {
             $airnames = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), $this->searchText);
@@ -492,7 +479,7 @@ class Search extends MenuItem {
             UI::emitJS('js/search.library.js');
             echo "<FORM>\n<INPUT id='session' type='hidden' value='" . $this->session->getSessionID() . "'>\n";
             echo "<INPUT id='type' type='hidden' value='reviews'>\n";
-            echo "<INPUT id='sortBy' type='hidden' value='".$this->sortBy."'>\n";
+            echo "<INPUT id='sortBy' type='hidden' value='".$sortBy."'>\n";
             echo "<INPUT id='key' type='hidden' value='" . $this->searchText . "'>\n";
             echo "<INPUT id='maxresults' type='hidden' value='" . $this->maxresults . "'>\n";
             echo "</FORM>\n";
