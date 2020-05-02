@@ -23,7 +23,11 @@
 /*! Zookeeper Online (C) 1997-2020 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 function encobj(o, html) {
-    var e = encodeURIComponent(JSON.stringify(o));
+    // we're encoding for the URI fragment, which can contain ':' and ','
+    // so we pass those through unescaped for better readability
+    var e = encodeURIComponent(JSON.stringify(o)).
+        replace(/%3A/g, ':').replace(/%2C/g, ',');
+    // for inclusion in HTML, we need to escape ampersand and single quote
     return html?e.replace(/%26/g, '&amp;').replace(/\'/g, '%27'):e;
 }
 

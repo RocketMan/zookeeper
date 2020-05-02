@@ -118,13 +118,12 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         $retVal = array();
       
         // 2007-08-04 thwart injection attacks by aborting if we encounter
-        // a semicolon or 'union select'
+        // 'union select'
         $searchl = strtolower($search);
         $posUnion = strpos($searchl, "union");
         $posSelect = strpos($searchl, "select");
-        if($posUnion !== FALSE && $posSelect > $posUnion ||
-                strpos($searchl, ";") !== FALSE)
-            exit;
+        if($posUnion !== FALSE && $posSelect > $posUnion)
+            return $count >= 0?$retVal:0;
       
         // select one more than requested (for pagination)
         $count += 1;
@@ -133,6 +132,9 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         // JM 2006-11-28 escape '_', '%'
         $search = preg_replace('/([_%])/', '\\\\$1', $search);
       
+        // remove semicolons to thwart injection attacks
+        $search = preg_replace('/([;])/', '_', $search);
+
         if(substr($search, strlen($search)-1, 1) == "*")
             $search = substr($search, 0, strlen($search)-1)."%";
 
