@@ -28,6 +28,49 @@ namespace ZK\Engine;
  * Library operations
  */
 interface ILibrary {
+    const GENRES = [
+        "B"=>"Blues",
+        "C"=>"Country",
+        "G"=>"General",
+        "H"=>"Hip-hop",
+        "J"=>"Jazz",
+        "K"=>"Childrens",
+        "L"=>"Classical",
+        "N"=>"Novelty",
+        "O"=>"Comedy",
+        "P"=>"Spoken Word",
+        "R"=>"Reggae",
+        "S"=>"Soundtrack",
+        "W"=>"World",
+    ];
+
+    const MEDIA = [
+        "C"=>"CD",
+        "M"=>"Cassette",
+        "S"=>"7\"",
+        "T"=>"10\"",
+        "V"=>"12\"",
+    ];
+
+    const LENGTHS = [
+        "E"=>"EP",
+        "F"=>"Full",
+        "S"=>"Single",
+    ];
+
+    const LOCATIONS = [
+        "D"=>"Received",
+        "E"=>"Review Shelf",
+        "F"=>"Out for Review",
+        "H"=>"Pending Appr",
+        "C"=>"A-File",
+        "G"=>"Storage",
+        "L"=>"Library",
+        "M"=>"Missing",
+        "R"=>"Needs Repair",
+        "U"=>"Deaccessioned",
+    ];
+
     const ALBUM_AIRNAME = 0;
     const ALBUM_ARTIST = 1;
     const ALBUM_KEY = 2;

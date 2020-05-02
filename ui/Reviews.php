@@ -66,7 +66,7 @@ class Reviews extends MenuItem {
         echo "</TD><TD>";
     
         // Genre
-        echo htmlentities(Search::GENRES[$album[0]["category"]]);
+        echo htmlentities(ILibrary::GENRES[$album[0]["category"]]);
         echo "</TD><TD>";
     
         // Reviewer

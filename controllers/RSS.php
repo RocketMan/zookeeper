@@ -29,7 +29,6 @@ use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
 
-use ZK\UI\Search;
 use ZK\UI\UICommon as UI;
 
 class RSS extends CommandTarget implements IController {
@@ -220,7 +219,7 @@ class RSS extends CommandTarget implements IController {
           echo "<item>\n<description>&lt;p&gt;Review by ".self::xmlentities($djname)."&lt;/p&gt;&lt;p&gt;$review&lt;/p&gt;</description>\n";
           echo "<title>$name</title>\n";
           echo "<guid isPermaLink=\"false\">review-".$row[0]."-".substr($row[3],0,10)."</guid>\n";
-          echo "<category>".self::xmlentities(Search::GENRES[$album[0]["category"]])."</category>\n";
+          echo "<category>".self::xmlentities(ILibrary::GENRES[$album[0]["category"]])."</category>\n";
           echo "<link>$link</link>\n";
           //echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=reviews\">".self::xmlentities($djname)."</source>\n";
           echo "<dc:creator>".self::xmlentities($djname)."</dc:creator>\n";

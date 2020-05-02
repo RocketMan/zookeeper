@@ -31,49 +31,6 @@ use ZK\Engine\ILibrary;
 use ZK\UI\UICommon as UI;
 
 class Search extends MenuItem {
-    const GENRES = [
-        "B"=>"Blues",
-        "C"=>"Country",
-        "G"=>"General",
-        "H"=>"Hip-hop",
-        "J"=>"Jazz",
-        "K"=>"Childrens",
-        "L"=>"Classical",
-        "N"=>"Novelty",
-        "O"=>"Comedy",
-        "P"=>"Spoken Word",
-        "R"=>"Reggae",
-        "S"=>"Soundtrack",
-        "W"=>"World",
-    ];
-    
-    const MEDIA = [
-        "C"=>"CD",
-        "M"=>"Cassette",
-        "S"=>"7\"",
-        "T"=>"10\"",
-        "V"=>"12\"",
-    ];
-    
-    const LENGTHS = [
-        "E"=>"EP",
-        "F"=>"Full",
-        "S"=>"Single",
-    ];
-    
-    const LOCATIONS = [
-        "D"=>"Received",
-        "E"=>"Review Shelf",
-        "F"=>"Out for Review",
-        "H"=>"Pending Appr",
-        "C"=>"A-File",
-        "G"=>"Storage",
-        "L"=>"Library",
-        "M"=>"Missing",
-        "R"=>"Needs Repair",
-        "U"=>"Deaccessioned",
-    ];
-    
     private static $actions = [
         [ "find", "ftSearch" ],
         [ "findAlbum", "findAlbum" ],
@@ -153,7 +110,7 @@ class Search extends MenuItem {
                      "\" CLASS=\"nav\">";
         echo htmlentities($albums[0]["album"]) . "</A></B></TD>";
     
-        $medium = " " . Search::MEDIA[$albums[0]["medium"]];
+        $medium = " " . ILibrary::MEDIA[$albums[0]["medium"]];
         if($medium == " CD") $medium = "";
     
         $showMissing = "missing";
@@ -179,7 +136,7 @@ class Search extends MenuItem {
             $showMissing = 0;
             break;
         default:
-            echo Search::GENRES[$albums[0]["category"]] . $medium;
+            echo ILibrary::GENRES[$albums[0]["category"]] . $medium;
             break;
         }
         echo "</B>";

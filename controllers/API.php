@@ -31,7 +31,6 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\IReview;
 use ZK\Engine\PlaylistObserver;
 
-use ZK\UI\Search;
 use ZK\UI\UICommon as UI;
 
 class API extends CommandTarget implements IController {
@@ -425,8 +424,8 @@ class API extends CommandTarget implements IController {
         $attrs["artist"] =  UI::swapNames($artist);
         $attrs["album"] = $albums[0]["album"];
         $attrs["label"] = $label;
-        $attrs["collection"] = Search::GENRES[$albums[0]["category"]];
-        $attrs["medium"] = Search::MEDIA[$albums[0]["medium"]];
+        $attrs["collection"] = ILibrary::GENRES[$albums[0]["category"]];
+        $attrs["medium"] = ILibrary::MEDIA[$albums[0]["medium"]];
         $attrs["isCompilation"] = $albums[0]["iscoll"]?"true":"false";
         $this->startResponse("getTracksRs", $attrs);
         $this->emitDataSetArray("trackrec", $fields, $records);
@@ -551,16 +550,16 @@ class API extends CommandTarget implements IController {
                  if($name == "albumrec") {
                     switch($field) {
                     case "category":
-                        $val = Search::GENRES[$val];
+                        $val = ILibrary::GENRES[$val];
                         break;
                     case "medium":
-                        $val = Search::MEDIA[$val];
+                        $val = ILibrary::MEDIA[$val];
                         break;
                     case "size":
-                        $val = Search::LENGTHS[$val];
+                        $val = ILibrary::LENGTHS[$val];
                         break;
                     case "location":
-                        $val = Search::LOCATIONS[$val];
+                        $val = ILibrary::LOCATIONS[$val];
                         break;
                     case "afile_category":
                         $val = $this->getAFileCatList($val);
