@@ -392,6 +392,30 @@ function search(size, offset) {
 }
 
 $().ready(function() {
+    $(window).on('pageshow', function(e) {
+        if(e.originalEvent.persisted) {
+            // restore search fields from bfcache
+            // schedule for later to avoid webkit's autocomplete=off blanking
+            setTimeout(function() {
+                var key, type = $("#type").val();
+                switch(type) {
+                case "artists":
+                case "albums":
+                case "tracks":
+                case "labels":
+                    key = $("#key").val();
+                    if(key.slice(-1) == "*")
+                        key = key.substr(0, key.length-1);
+                    $("#n").val(key);
+                    $("INPUT[NAME=s][VALUE=" + type +"]").prop('checked', true);
+                    break;
+                default:
+                    break;
+                }
+            }, 100);
+        }
+    });
+
     $(window).hashchange(function() {
         var hash = location.hash;
         if(hash.length > 0) {
