@@ -48,7 +48,9 @@ class Search extends MenuItem {
         [ "byReviewer", "searchByReviewer" ],
     ];
 
-    private $maxresults = 50; //NOTE: this value is typically overriden by the invoking request's 'q' attribute.
+    // can be overridden by request params 'q' and 'chunksize', respectively
+    private $maxresults = 50;
+    private $chunksize = 15;
 
     private $noTables = false;
 
@@ -306,6 +308,10 @@ class Search extends MenuItem {
             $this->pos = (integer)$_REQUEST['p'];
         if(array_key_exists('q', $_REQUEST) && $_REQUEST['q'])
             $this->maxresults = (integer)$_REQUEST['q'];
+        if(array_key_exists('chunksize', $_REQUEST) && $_REQUEST['chunksize'])
+            $this->chunksize = (integer)$_REQUEST['chunksize'];
+        if($this->maxresults < $this->chunksize)
+            $this->maxresults = $this->chunksize;
 
         $this->searchType = $this->searchText &&
                 array_key_exists('s', $_REQUEST)?$_REQUEST['s']:"";
@@ -412,6 +418,7 @@ class Search extends MenuItem {
     <INPUT TYPE=HIDDEN id='sortBy' value=''>
     <INPUT TYPE=HIDDEN id='type' value='<?php echo $labelKey?"albumsByPubkey":""; ?>'>
     <INPUT TYPE=HIDDEN id='key' value='<?php echo $labelKey?htmlspecialchars($this->searchText):""; ?>'>
+    <INPUT TYPE=HIDDEN id='chunksize' value='<?php echo $this->chunksize; ?>'>
     </FORM>
     <BR>
     <TABLE class='searchTable' CELLPADDING=2 CELLSPACING=0 BORDER=0>
@@ -439,6 +446,7 @@ class Search extends MenuItem {
             echo "<INPUT id='sortBy' type='hidden' value='".$sortBy."'>\n";
             echo "<INPUT id='key' type='hidden' value='" . $this->searchText . "'>\n";
             echo "<INPUT id='maxresults' type='hidden' value='" . $this->maxresults . "'>\n";
+            echo "<INPUT id='chunksize' type='hidden' value='" . $this->chunksize . "'\n>";
             echo "</FORM>\n";
             echo "<TABLE WIDTH=\"100%\"><TR><TH ALIGN=LEFT CLASS=\"subhead\">$name's Album Reviews</TH></TR></TABLE><hr/>\n";
             echo "<TABLE CLASS=\"searchTable\" CELLPADDING=2 CELLSPACING=0 BORDER=0 id=\"results\"></TABLE>\n";

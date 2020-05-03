@@ -22,6 +22,9 @@
 
 /*! Zookeeper Online (C) 1997-2020 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
+// can be overridden by request params 'q' and 'chunksize', respectively
+var maxresults = 50, chunksize = 15;
+
 function encobj(o, html) {
     // we're encoding for the URI fragment, which can contain ':' and ','
     // so we pass those through unescaped for better readability
@@ -57,7 +60,7 @@ function header(title, sortable) {
             href: '#',
         }).append(title).click(function() {
             $("#sortBy").val(action);
-            search($("#maxresults").val(), 0);
+            search(maxresults, 0);
             return false;
         });
         th.html(a);
@@ -76,7 +79,7 @@ function emitMore(table, data) {
             colSpan: 4
         }).append("&nbsp;&nbsp;");
 
-        if(data.data.length < data.more) {
+        if(data.data.length < more) {
             var numchunks = 10;
             var page = (offset / chunksize) | 0;
             var start = ((page / numchunks) | 0) * numchunks;
@@ -139,7 +142,7 @@ function emitAlbumsEx(table, data) {
             td.html($("<A>", {
                 href: "?s=byAlbumKey&n=" +
                     encodeURIComponent(entry.tag) +
-                    "&q=" + $("#maxresults").val() +
+                    "&q=" + maxresults +
                     "&action=search&session=" + session
             }).html(getArtist(entry)));
         } else {
@@ -188,8 +191,6 @@ function emitAlbumsEx(table, data) {
     emitMore(table, data);
 }
 
-var chunksize = 15;
-
 var lists = {
     artists: function(table, data) {
         emitAlbumsEx(table, data);
@@ -222,7 +223,7 @@ var lists = {
                 td.html($("<A>", {
                     href: "?s=byAlbumKey&n=" +
                         encodeURIComponent(entry.tag) +
-                        "&q=" + $("#maxresults").val() +
+                        "&q=" + maxresults +
                         "&action=search&session=" + session
                 }).html(getArtist(entry)));
             } else {
@@ -310,21 +311,21 @@ var lists = {
                 td.html($("<A>", {
                     href: "?s=byAlbumKey&n=" +
                         encodeURIComponent(entry.tag) +
-                        "&q=" + $("#maxresults").val() +
+                        "&q=" + maxresults +
                         "&action=search&session=" + session
                 }).html(getArtist(entry)));
             } else {
                 td.html($("<A>", {
                     href: "?s=byArtist&n=" +
                         encodeURIComponent(entry.artist) +
-                        "&q=" + $("#maxresults").val() +
+                        "&q=" + maxresults +
                         "&action=search&session=" + session
                 }).html(getArtist(entry)));
             }
             tr.append(td);
             tr.append($("<TD>").html($("<A>", {
                 href: "?s=byAlbumKey&n=" + encodeURIComponent(entry.tag) +
-                    "&q=" + $("#maxresults").val() +
+                    "&q=" + maxresults +
                     "&action=search&session=" + session
             }).html(htmlify(entry.album))).append(session.length>0?
                                          " <FONT CLASS='sub'>(Tag&nbsp;#" +
@@ -333,7 +334,7 @@ var lists = {
                 tr.append($("<TD>").html($("<A>", {
                     href: "?s=byLabelKey&n=" +
                         encodeURIComponent(entry.pubkey) +
-                        "&q=" + $("#maxresults").val() +
+                        "&q=" + maxresults +
                         "&action=search&session=" + session
                 }).html(htmlify(entry.name))));
             } else {
@@ -378,7 +379,7 @@ function search(size, offset) {
                     $("#sortBy").val("Artist");
                 lists[response.dataType](results, data);
             } else {
-                results.append("<H2>No albums found</H2>");
+                results.append("<H2>No " + response.dataType + " found</H2>");
                 if($("#m").is(":checked"))
                     results.append('Hint: Uncheck "Exact match" box to broaden search.');
             }
@@ -406,7 +407,7 @@ $().ready(function() {
                 $("INPUT[NAME=s][VALUE=" + params.type +"]").prop('checked', true);
             }
 
-            search($("#maxresults").val(), 0);
+            search(maxresults, 0);
         }
     });
 
@@ -425,11 +426,13 @@ $().ready(function() {
         e.preventDefault();
     });
 
-    if($("#type").val().length == 0 && $('INPUT[NAME=s]').length > 0)
-        $("#type").val($('INPUT[NAME=s]:checked').val());
+    if($("#maxresults").length > 0)
+        maxresults = $("#maxresults").val();
+    if($("#chunksize").length > 0)
+        chunksize = $("#chunksize").val();
 
     if($("#key").val().length > 0) {
-        search($("#maxresults").val(), 0);
+        search(maxresults, 0);
     } else if($("#n").val().length > 0)
         $("FORM#search").submit();
 
