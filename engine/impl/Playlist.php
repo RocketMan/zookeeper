@@ -314,8 +314,10 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt);
     }
 
-    public function getTracksWithObserver($playlist, PlaylistObserver $observer, $desc = 0) {
+    public function getTracksWithObserver($playlist, PlaylistObserver $observer, $desc = 0, $filter = null) {
         $tracks = $this->getTracks($playlist, $desc);
+        if($filter)
+            $tracks = new $filter($tracks);
         while($tracks && ($track = $tracks->fetch()))
             $observer->observe(new PlaylistEntry($track));
     }

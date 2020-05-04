@@ -245,6 +245,7 @@ class API extends CommandTarget implements IController {
         $id = 0;
         $key = $_REQUEST["key"];
         $includeTracks = $_REQUEST["includeTracks"];
+        $filter = null;
 
         switch($_REQUEST["operation"]) {
         case "byID":
@@ -256,6 +257,7 @@ class API extends CommandTarget implements IController {
              break;
         case "onNow":
              $result = Engine::api(IPlaylist::class)->getWhatsOnNow();
+             $filter = OnNowFilter::class;
              break;
         default:
              $this->emitError("getPlaylistsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
@@ -290,7 +292,7 @@ class API extends CommandTarget implements IController {
                             $spin["type"] = "track";
                             $spin["artist"] = UI::swapNames($spin["artist"]);
                             $events[] = $spin;
-                        }));
+                        }), 0, $filter);
                     $this->emitDataSetArray("event", API::PLAYLIST_DETAIL_FIELDS, $events);
                 }
                 $this->endResponse("show");
@@ -340,7 +342,7 @@ class API extends CommandTarget implements IController {
 
                             echo "/>\n";
                             $break = false;
-                        }));
+                        }), 0, $filter);
                     echo "</show>\n";
                 } else
                     echo "/>\n";
@@ -603,6 +605,47 @@ class API extends CommandTarget implements IController {
             error_log("unexpected control character(s): '$str'");
 
         return $str2;
+    }
+}
+
+class OnNowFilter {
+    private $queue = [];
+    private $delegate;
+    private $now;
+
+    public function __construct($delegate) {
+        $this->delegate = $delegate;
+        $this->now = new \DateTime("now");
+    }
+
+    private static function getCreated($row) {
+        return $row['created']?
+            \DateTime::createFromFormat("Y-m-d H:i:s", $row['created']):null;
+    }
+
+    public function fetch() {
+        // return look ahead track, if any
+        if(sizeof($this->queue))
+            return array_shift($this->queue);
+
+        $row = $this->delegate->fetch();
+        if($row) {
+            $created = self::getCreated($row);
+            if($created && $created < $this->now) {
+                // timestamp before 'now'
+                return $row;
+            } else if(!$created) {
+                // look ahead to see if untimestamped track is
+                // followed by a timestamped track before 'now'
+                while($row2 = $this->delegate->fetch()) {
+                    array_push($this->queue, $row2);
+                    $created = self::getCreated($row2);
+                    if($created && $created < $this->now)
+                        return $row;
+                }
+            }
+        }
+        return false;
     }
 }
 
