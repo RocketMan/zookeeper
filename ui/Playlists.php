@@ -828,6 +828,12 @@ class Playlists extends MenuItem {
       $endAMPM = $endTime->format('g:i a');
       $edate = $startTime->format('Y-m-d');
       $showTimeRange = "$startAMPM - $endAMPM";
+      $timepickerClass = "timepicker";
+      if($isLive && !$entry->getCreated()) {
+          // pre-fill empty time in live playlist with 'now'
+          $entry->setCreated($nowTime->format("Y-m-d H:i:s"));
+          $timepickerClass .= " prefilled-input";
+      }
       $timepickerTime = $this->getTimepickerTime($entry->getCreated());
       $sep = $id && $entry->isType(PlaylistEntry::TYPE_SET_SEPARATOR);
       $event = $id && $entry->isType(PlaylistEntry::TYPE_LOG_EVENT);
@@ -917,7 +923,7 @@ class Playlists extends MenuItem {
       <TR>
           <TD ALIGN=RIGHT>Time:</TD>
           <TD ALIGN=LEFT>
-              <INPUT class='timepicker' NAME=etime step='60' type='time' value="<?php echo $timepickerTime ?>" data-date='<?php echo $edate;?>' data-start='<?php echo $startTime->format('H:i');?>' data-end='<?php echo $endTime->format('H:i');?>'/> <span style='font-size:8pt;'>(<?php echo $showTimeRange ?>)</span>
+              <INPUT class='<?php echo $timepickerClass; ?>' NAME=etime step='60' type='time' value="<?php echo $timepickerTime ?>" data-date='<?php echo $edate;?>' data-start='<?php echo $startTime->format('H:i');?>' data-end='<?php echo $endTime->format('H:i');?>'/> <span style='font-size:8pt;'>(<?php echo $showTimeRange ?>)</span>
               <INPUT type='hidden' NAME='edate' value="<?php echo $edate;?>" />
           </TD>
         </TR>

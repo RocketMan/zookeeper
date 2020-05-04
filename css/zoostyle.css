@@ -718,6 +718,13 @@ A.calLink {
     box-shadow: 0px 0px 2px #f88, inset 0px 0px 2px #f88;
 }
 
+.prefilled-input {
+    padding: 2px 3px 2px 3px ;
+    border: 2px solid #0c0;
+    border-radius: 2px;
+    box-shadow: 0px 0px 2px #f88, inset 0px 0px 2px #f88;
+}
+
 .highlight {
     background-color: #ff9;
 }
