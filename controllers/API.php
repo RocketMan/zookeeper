@@ -274,6 +274,7 @@ class API extends CommandTarget implements IController {
                 $attrs["id"] = $id?$id:$row["id"];
                 $this->startResponse("show", $attrs);
                 if($includeTracks && $includeTracks != "false") {
+                    $events = [];
                     Engine::api(IPlaylist::class)->getTracksWithObserver($id?$id:$row["id"],
                         (new PlaylistObserver())->onComment(function($entry) use(&$events) {
                             $events[] = ["type" => "comment",
