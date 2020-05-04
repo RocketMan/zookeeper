@@ -255,6 +255,7 @@ $().ready(function(){
         }
 
         if(isNaN(val) || val < start || val > end) {
+            $(this).removeClass('prefilled-input');
             $(this).addClass('invalid-input');
             $(this).val("").focus();
         } else {
