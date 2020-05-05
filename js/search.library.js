@@ -180,7 +180,8 @@ function emitAlbumsEx(table, data) {
                 $("<A href='#" + encobj({
                     type: 'albumsByPubkey',
                     key: entry.pubkey,
-                    sortBy: ''
+                    sortBy: '',
+                    n: ''
                 }, true) + "'>").append(htmlify(entry.name))));
         } else {
             tr.append($("<TD>").html("Unknown"));
@@ -258,7 +259,8 @@ var lists = {
                     $("<A href='#" + encobj({
                         type: 'albumsByPubkey',
                         key: entry.pubkey,
-                        sortBy: ''
+                        sortBy: '',
+                        n: ''
                     }, true) + "'>").append(htmlify(entry.name))));
             } else {
                 tr.append($("<TD>").html("Unknown"));
@@ -283,7 +285,8 @@ var lists = {
                 $("<A href='#" + encobj({
                     type: 'albumsByPubkey',
                     key: entry.pubkey,
-                    sortBy: ''
+                    sortBy: '',
+                    n: ''
                 }, true) + "'>").append(htmlify(entry.name))));
             tr.append($("<TD>").html(htmlify(entry.city)));
             tr.append($("<TD>").html(htmlify(entry.state)));
