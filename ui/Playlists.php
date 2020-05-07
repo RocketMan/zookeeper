@@ -230,6 +230,10 @@ class Playlists extends MenuItem {
             if (empty($playlist) || empty($artist) || empty($track)) {
                 $retMsg = "required field missing: -" . $playlist . "-, -" . $artist . "-, -" . $track . "-";
             } else {
+                // set the review flag for PlaylistObserver
+                if($_REQUEST["tag"])
+                    Engine::api(ILibrary::class)->markAlbumsReviewed($_=[&$_REQUEST]);
+
                 // Technically, we should call ->setTag()->setArtist()..etc
                 // on an empty PlaylistEntry, but since everyting is already
                 // in place in the request array for a spin, just use it.
