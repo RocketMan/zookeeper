@@ -851,7 +851,7 @@ class Editor extends MenuItem {
       <TR><TD ALIGN=RIGHT>Album:</TD><TD CLASS="header"><INPUT NAME=album TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($album));?>" data-zkalpha<?php echo $coll?" data-focus":"";?>></TD></TR>
       <TR><TD ALIGN=RIGHT>Category:</TD><TD><SELECT NAME=category CLASS=textsp>
     <?php 
-        foreach(Search::GENRES as $code => $genre) {
+        foreach(ILibrary::GENRES as $code => $genre) {
             $selected = ($agenre == $code)?" SELECTED":"";
             echo "             <OPTION VALUE=\"$code\"$selected>$genre\n";
         }
@@ -859,7 +859,7 @@ class Editor extends MenuItem {
                     </SELECT></TD></TR>
       <TR><TD ALIGN=RIGHT>Media:</TD><TD><SELECT NAME=medium CLASS=textsp>
     <?php 
-        foreach(Search::MEDIA as $code => $medium) {
+        foreach(ILibrary::MEDIA as $code => $medium) {
             $selected = ($amedium == $code)?" SELECTED":"";
             echo "             <OPTION VALUE=\"$code\"$selected>$medium\n";
         }
@@ -867,7 +867,7 @@ class Editor extends MenuItem {
                     </SELECT></TD></TR>
       <TR><TD ALIGN=RIGHT>Format:</TD><TD><SELECT NAME=format CLASS=textsp>
     <?php 
-        foreach(Search::LENGTHS as $code => $format) {
+        foreach(ILibrary::LENGTHS as $code => $format) {
             $selected = ($aformat == $code)?" SELECTED":"";
             echo "             <OPTION VALUE=\"$code\"$selected>$format\n";
         }
@@ -875,7 +875,7 @@ class Editor extends MenuItem {
                     </SELECT></TD></TR>
     <?php 
         echo "  <TR><TD ALIGN=RIGHT>Location:</TD><TD><SELECT NAME=location id='location' CLASS=textsp>\n";
-        foreach(Search::LOCATIONS as $code => $location) {
+        foreach(ILibrary::LOCATIONS as $code => $location) {
             $selected = ($alocation == $code)?" SELECTED":"";
             echo "             <OPTION VALUE=\"$code\"$selected>$location\n";
         }
@@ -1093,7 +1093,7 @@ class Editor extends MenuItem {
         $output .= "\n";
     
         $album = UI::deLatin1ify($al["album"], $charset);
-        $cat = " (" . Search::GENRES[$al["category"]] . ")";
+        $cat = " (" . ILibrary::GENRES[$al["category"]] . ")";
         $maxAlbumLen = 23 - mb_strlen($cat);
         if(mb_strlen($album) > $maxAlbumLen + 3)
             $album = mb_substr($album, 0, $maxAlbumLen) . "...";
