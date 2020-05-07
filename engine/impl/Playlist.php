@@ -314,8 +314,10 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->execute($stmt);
     }
 
-    public function getTracksWithObserver($playlist, PlaylistObserver $observer, $desc = 0) {
+    public function getTracksWithObserver($playlist, PlaylistObserver $observer, $desc = 0, $filter = null) {
         $tracks = $this->getTracks($playlist, $desc);
+        if($tracks && $filter)
+            $tracks = new $filter($tracks);
         while($tracks && ($track = $tracks->fetch()))
             $observer->observe(new PlaylistEntry($track));
     }
@@ -439,9 +441,6 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $updateStatus;
     }
     
-    // update track and set created if it is currently null, eg first edit
-    // of a track following a CSV import (unless dateTimeStr is within show bounds
-    // then use it, eg time change to an NME.
     public function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label, $dateTime) {
         $playlist = $this->getPlaylist($playlistId, 1);
         $trackRow  = $this->getTrack($id);
@@ -456,9 +455,6 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                 error_log("Error: ignoring time update for $id, $dateTime");
             }
         }
-
-        if ($timestamp == null && $this->isNowWithinShow($playlist))
-            $timestamp = date('Y-m-d G:i:s');
 
         $query = "UPDATE tracks SET ";
         $query .= "artist=?, " .
