@@ -382,7 +382,8 @@ function search(size, offset) {
                     $("#sortBy").val("Artist");
                 lists[response.dataType](results, data);
             } else {
-                results.append("<H2>No " + response.dataType + " found</H2>");
+                results.append("<H2>No " + response.dataType.replace(/[A-Z].*/, '') +
+                               " found</H2>");
                 if($("#m").is(":checked"))
                     results.append('Hint: Uncheck "Exact match" box to broaden search.');
             }
@@ -443,10 +444,11 @@ $().ready(function() {
         if(n.length > 0) {
             if($("#m").is(":not(:checked)"))
                 n += "*";
+            var sel = $('INPUT[NAME=s]:checked');
             location.href='#' + encobj({
-                type: $('INPUT[NAME=s]:checked').val(),
+                type: sel.val(),
                 key: n,
-                sortBy: '',
+                sortBy: sel.data('sort'),
                 form: true
             });
         }

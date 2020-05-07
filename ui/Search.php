@@ -395,10 +395,10 @@ class Search extends MenuItem {
         <TABLE CELLPADDING=2>
           <TR>
             <TD ALIGN=RIGHT><B>Search by:</B></TD>
-            <TD><INPUT TYPE=RADIO NAME=s VALUE="artists"<?php echo $chkArtist;?>>Artist</TD>
-            <TD><INPUT TYPE=RADIO NAME=s VALUE="albums"<?php echo $chkAlbum;?>>Album</TD>
-            <TD><INPUT TYPE=RADIO NAME=s VALUE="tracks"<?php echo $chkTrack;?>>Track</TD>
-            <TD><INPUT TYPE=RADIO NAME=s VALUE="labels"<?php echo $chkLabel;?>>Label</TD>
+            <TD><INPUT TYPE=RADIO NAME=s VALUE="artists" data-sort="Artist"<?php echo $chkArtist;?>>Artist</TD>
+            <TD><INPUT TYPE=RADIO NAME=s VALUE="albums" data-sort="Album"<?php echo $chkAlbum;?>>Album</TD>
+            <TD><INPUT TYPE=RADIO NAME=s VALUE="tracks" data-sort="Track"<?php echo $chkTrack;?>>Track</TD>
+            <TD><INPUT TYPE=RADIO NAME=s VALUE="labels" data-sort=""<?php echo $chkLabel;?>>Label</TD>
           </TR>
           <TR>
             <TD ALIGN=RIGHT><b>For:</b></TD>
