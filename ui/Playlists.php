@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -745,11 +745,15 @@ class Playlists extends MenuItem {
                 <div id='manual-entry' class='zk-hidden' >
                     <div>
                         <label>Artist:</label>
-                        <input required id='track-artist' data-focus />
+                        <input required id='track-artist' list='track-artists' autocomplete='off' data-focus />
+                        <datalist id='track-artists'>
+                        </datalist>
                     </div>
                     <div>
                         <label>Track:</label>
-                        <input required id='track-title' />
+                        <input required id='track-title' list='track-titles' autocomplete='off'/>
+                        <datalist id='track-titles'>
+                        </datalist>
                     </div>
                     <div>
                         <label>Album:</label>
