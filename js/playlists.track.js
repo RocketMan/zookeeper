@@ -31,6 +31,14 @@ $().ready(function(){
     $("#track-type-pick").val('tag-entry');
     $("#track-tag").focus();
 
+    function htmlify(s) {
+        return s?s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\'/g, '&#39;'):"";
+    }
+
+    function escQuote(s) {
+        return s.replace(/\'/g, '\\\'');
+    }
+
     function setAddButtonState(enableIt) {
         $("#track-submit").prop("disabled", !enableIt);
     }
@@ -105,7 +113,7 @@ $().ready(function(){
         $('#error-msg').text(msg);
     }
 
-    function getDiskInfo(id) {
+    function getDiskInfo(id, refArtist) {
         const INVALID_TAG = 100;
         $("#track-title-pick").find('option').remove();
         $("#track-title").attr('list',''); // webkit hack
@@ -147,6 +155,24 @@ $().ready(function(){
             $("#track-title").val("");
             $("#track-submit").attr("disabled");
             $("#track-submit").prop("disabled", true);
+            if(refArtist) {
+                var tracks = $("#track-titles option[data-artist='" +
+                               escQuote(refArtist) + "']");
+                // for a compilation...
+                if(tracks.length > 0) {
+                    // ...remove all artists but this one
+                    $("#track-titles option").not("[data-artist='" +
+                                                  escQuote(refArtist) +
+                                                  "']").remove();
+                    // ...prefill the artist
+                    $("#track-artist").val(refArtist);
+                    // ...if only one track by this artist, select it
+                    if(tracks.length == 1) {
+                        $("#track-title").val(tracks.first().data("track"));
+                        setAddButtonState(true);
+                    }
+                }
+            }
             $("#tag-artist").text(diskInfo.artist  + ' - ' + diskInfo.album);
 
         }).fail(function (jqXHR, textStatus, errorThrown) {
@@ -477,10 +503,6 @@ $().ready(function(){
         }
     });
 
-    function htmlify(s) {
-        return s?s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\'/g, '&#39;'):"";
-    }
-
     function getArtist(node) {
         var name = node.artist;
         if(name.substr(0, 8) == '[coll]: ')
@@ -509,6 +531,7 @@ $().ready(function(){
                             htmlify(entry.album) + " (#" +
                             entry.tag + ")";
                         results.append("<option data-tag='" + entry.tag +
+                                       "' data-artist='" + htmlify(entry.artist) +
                                        "' value='" + row + "'>");
                     });
                     $("#track-artist").attr('list','track-artists'); // webkit hack
@@ -527,11 +550,10 @@ $().ready(function(){
             searchLibrary(artist);
         }
     }).on('input', function() {
-        var artist = $(this).val().replace(/\'/g, '\\\'');
-        var opt = $("#track-artists option[value='" + artist + "']");
+        var artist = $(this).val();
+        var opt = $("#track-artists option[value='" + escQuote(artist) + "']");
         if(opt.length > 0) {
-            var tag = opt.data("tag");
-            getDiskInfo(tag);
+            getDiskInfo(opt.data("tag"), opt.data("artist"));
         } else {
             $("#track-tag").val("");
             $("#track-artists").empty();
@@ -542,8 +564,8 @@ $().ready(function(){
     $("#track-title").click(function() {
         $("#track-titles").show().hide();
     }).on('change textInput input', function() {
-        var title = $("#track-title").val().replace(/\'/g, '\\\'');
-        var opt = $("#track-titles option[value='" + title + "']");
+        var title = $("#track-title").val();
+        var opt = $("#track-titles option[value='" + escQuote(title) + "']");
         if(opt.length > 0) {
             var artist = opt.data("artist");
             if(artist)
