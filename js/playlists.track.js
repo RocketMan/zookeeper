@@ -514,7 +514,7 @@ $().ready(function(){
         var url = "zkapi.php?method=libLookupRq" +
             "&type=artists" +
             "&key=" + encodeURIComponent(key) + "*" +
-            "&size=15";
+            "&size=50";
         var results = $("#track-artists");
         $.ajax({
             dataType : 'json',
