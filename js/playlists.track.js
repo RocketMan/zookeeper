@@ -168,7 +168,7 @@ $().ready(function(){
                     $("#track-artist").val(refArtist);
                     // ...if only one track by this artist, select it
                     if(tracks.length == 1) {
-                        $("#track-title").val(tracks.first().data("track"));
+                        $("#track-title").val(tracks.data("track"));
                         setAddButtonState(true);
                     }
                 }

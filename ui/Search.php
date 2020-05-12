@@ -409,7 +409,7 @@ class Search extends MenuItem {
             <TD><INPUT TYPE=SUBMIT VALUE="Search"></TD>
             <TD COLSPAN=2><INPUT TYPE=CHECKBOX id='m' VALUE=1<?php echo $chkExact;?>>Exact match</TD>
             <!-- fix page size to maxresults -->
-            <TD><input type='hidden' id='maxresults' value='<?php echo $this->maxresults; ?>'></input></TD>
+            <TD><input type='hidden' id='maxresults' value='<?php echo $this->maxresults; ?>'></TD>
           </TR>
         </TABLE>
       </TD></TR>
