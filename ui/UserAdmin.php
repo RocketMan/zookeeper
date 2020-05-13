@@ -188,7 +188,6 @@ class UserAdmin extends MenuItem {
     
         // Get and sort the user list
         $users = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 100000, "*");
-        usort($users, array($this, "sortFn"));
     
         // Emit the user list
         for($j=0; $j < sizeof($users); $j++) {
@@ -286,8 +285,6 @@ class UserAdmin extends MenuItem {
         $result = Engine::api(IDJ::class)->getAirnames();
         while($result && ($row = $result->fetch()))
             $users[] = $row;
-        if(sizeof($users))
-            usort($users, array($this, "sortFn"));
     
         // Emit the airnames list
         for($j=0; $j < sizeof($users); $j++) {
