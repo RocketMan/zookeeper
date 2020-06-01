@@ -162,8 +162,10 @@ function emitAlbumsEx(table, data) {
             class: reviewClass
         })));
         tr.append($("<TD>").html($("<A>", {
-            href: '?session=' + session +
-                '&action=findAlbum&n=' + entry.tag,
+            href: "?s=byAlbumKey&n=" +
+                encodeURIComponent(entry.tag) +
+                "&q=" + maxresults +
+                "&action=search&session=" + session
         }).html(htmlify(entry.album))));
         var collection = entry.location;
         collection = (collection == "Library")?entry.category:
@@ -238,8 +240,10 @@ var lists = {
             }
             tr.append(td);
             tr.append($("<TD>").html($("<A>", {
-                href: '?session=' + session +
-                    '&action=findAlbum&n=' + entry.tag,
+                href: "?s=byAlbumKey&n=" +
+                    encodeURIComponent(entry.tag) +
+                    "&q=" + maxresults +
+                    "&action=search&session=" + session
             }).html(htmlify(entry.album))));
             tr.append($("<TD>").append(
                 $("<A href='#" + encobj({
