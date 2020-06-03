@@ -393,7 +393,7 @@ class Playlists extends MenuItem {
         $userAction = $playlistId ? "Edit " : "Create ";
         ?>
 
-        <DIV CLASS='playlistBanner'>&nbsp; <?php echo $userAction;?> Playlist</div>
+        <DIV CLASS='playlistBanner'>&nbsp; <?php echo $userAction;?> Playlist</DIV>
         <span class='error'><?php echo $errorMsg; ?></span>
 
         <FORM id='new-show' class='pl-form-entry' ACTION="?" METHOD=POST>
@@ -1820,7 +1820,7 @@ class Playlists extends MenuItem {
     private function emitPlaylistBody($playlist, $editMode) {
         $header = $this->makePlaylistHeader($editMode);
         $editCell = "";
-        echo "<TABLE class='playlistTable' CELLPADDING=1>";
+        echo "<TABLE class='playlistTable' CELLPADDING=1>\n";
         echo "<THEAD>" . $header . "</THEAD>";
 
         $result = Engine::api(IPlaylist::class)->getTracks($playlist, $editMode);
@@ -1828,7 +1828,7 @@ class Playlists extends MenuItem {
         Engine::api(ILibrary::class)->markAlbumsReviewed($entries);
 
         $observer = $this->makePlaylistObserver($playlist, $editMode);
-        echo "<TBODY>";
+        echo "<TBODY>\n";
         if($entries != null && sizeof($entries) > 0)
             foreach($entries as $entry)
                 $observer->observe(new PlaylistEntry($entry));
@@ -1853,11 +1853,11 @@ class Playlists extends MenuItem {
         $djName = $playlist['airname'];
         $showDateTime = self::makeShowDateAndTime($playlist);
 
-        $dateDiv = "<DIV>".$showDateTime."&nbsp;</div>";
+        $dateDiv = "<DIV>".$showDateTime."&nbsp;</DIV>";
         $djLink = "<A HREF='?action=viewDJ&amp;seq=selUser&amp;session=" . 
         $this->session->getSessionID() . "&amp;viewuser=$djId' CLASS='nav2'>$djName</A>";
 
-        echo "<DIV CLASS='playlistBanner'>&nbsp;" . $showName . " with " . $djLink.$dateDiv . "</div>";
+        echo "<DIV CLASS='playlistBanner'>&nbsp;" . $showName . " with " . $djLink.$dateDiv . "</DIV>\n";
     }
 
     private function viewList($playlistId) {

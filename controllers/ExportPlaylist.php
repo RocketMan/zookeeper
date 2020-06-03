@@ -225,7 +225,7 @@ class ExportPlaylist extends CommandTarget implements IController {
                 $break = true;
             }
         })->onSpin(function($entry) use(&$break) {
-            echo "    <TR><TD ALIGN=LEFT VALIGN=TOP>".htmlentities($entry->getArtist()) . "</TD><TD ALIGN=LEFT VALIGN=TOP>" .
+            echo "    <TR><TD ALIGN=LEFT VALIGN=TOP>".htmlentities(UI::swapNames($entry->getArtist())) . "</TD><TD ALIGN=LEFT VALIGN=TOP>" .
                  htmlentities($entry->getTrack()). "</TD><TD ALIGN=LEFT>" .
                  htmlentities($entry->getAlbum()). "<BR><FONT CLASS=\"sub\">" .
                  htmlentities($entry->getLabel()). "</FONT></TD><TD ALIGN=RIGHT VALIGN=TOP>";

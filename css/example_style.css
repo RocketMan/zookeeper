@@ -42,3 +42,16 @@ div.content {
 hr {
     color: #2d3bce;
 }
+a {
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+div.playlistBanner a {
+    color: #fff !important;
+    text-decoration: underline;
+}
+.nav:link { color: #2530a7; }
+.nav:visited { color: #2530a7; }
+.nav:active { color: #2530a7; }

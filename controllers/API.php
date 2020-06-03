@@ -424,7 +424,7 @@ class API extends CommandTarget implements IController {
 
         $attrs = $this->addSuccess();
         $attrs["tag"] = $key;
-        $attrs["artist"] =  UI::swapNames($artist);
+        $attrs["artist"] =  $artist;
         $attrs["album"] = $albums[0]["album"];
         $attrs["label"] = $label;
         $attrs["collection"] = ILibrary::GENRES[$albums[0]["category"]];
