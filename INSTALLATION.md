@@ -96,8 +96,6 @@ particulars, then read on.
     
     GRANT ALL PRIVILEGES ON example_db.* TO 'example_user'@'localhost';
 
-    GRANT ALL PRIVILEGES ON zookeeper.* TO 'zookeeper'@'localhost';
-
     where *example_db* is your database name.  *example_user*
     and *example_pass* are your choosen username and password,
     respectively. (*example_pass* is just an example; please use a
