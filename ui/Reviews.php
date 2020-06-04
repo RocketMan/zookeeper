@@ -79,6 +79,8 @@ class Reviews extends MenuItem {
         echo htmlentities($djname);
     
         // Date
+        echo "</TD><TD>";
+        echo $album[0]["created"];
         echo "</TD></TR>\n";
     }
     
@@ -87,7 +89,8 @@ class Reviews extends MenuItem {
              "<TH ALIGN=LEFT>Album</TH>" .
              "<TH ALIGN=LEFT>Artist</TH>" .
              "<TH ALIGN=LEFT>Collection</TH>" .
-             "<TH ALIGN=LEFT STYLE='width:120px'>Reviewer</TH>" .
+             "<TH ALIGN=LEFT>Reviewer</TH>" .
+             "<TH ALIGN=LEFT>Date</TH>" .
              "</TR></THEAD>";
     }
 
@@ -103,7 +106,7 @@ class Reviews extends MenuItem {
         echo $reviewsHeader;
         echo "<TBODY>";
 
-        $results = Engine::api(IReview::class)->getRecentReviews("", 2, 0, $this->session->isAuth("u"));
+        $results = Engine::api(IReview::class)->getRecentReviews("", 0, 50, $this->session->isAuth("u"));
         $libAPI = Engine::api(ILibrary::class);
         while($results && ($row = $results->fetch())) {
             $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
