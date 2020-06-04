@@ -85,16 +85,17 @@ particulars, then read on.
 
 2. Create a mysql user and database for zookeeper:
 
-    CREATE DATABASE example_db;
-    CREATE USER example_user;
+    `CREATE DATABASE example_db;`
+    `CREATE USER example_user;`
 
-    where example_db and example_user can be any names you choose for the database.
+    where *example_db* and *example_user* can be any names you choose
+    for the database.
 
 3. Setup credentials for the database you created above:
 
-    GRANT USAGE ON *.* TO 'example_user'@'localhost' IDENTIFIED BY 'example_pass';
+    `GRANT USAGE ON *.* TO 'example_user'@'localhost' IDENTIFIED BY 'example_pass';`
     
-    GRANT ALL PRIVILEGES ON example_db.* TO 'example_user'@'localhost';
+    `GRANT ALL PRIVILEGES ON example_db.* TO 'example_user'@'localhost';`
 
     where *example_db* is your database name.  *example_user*
     and *example_pass* are your choosen username and password,
@@ -123,11 +124,6 @@ particulars, then read on.
         mysql -u example_user -p example_db < db/chartemail.sql
         mysql -u example_user -p example_db < db/bootstrapUser.sql
 
-        mysql -u zookeeper -p zookeeper zookeeper < db/zkdbSchema.sql
-        mysql -u zookeeper -p zookeeper zookeeper < db/categories.sql
-        mysql -u zookeeper -p zookeeper zookeeper < db/chartemail.sql
-        mysql -u zookeeper -p zookeeper zookeeper < db/bootstrapUser.sql
-
     MySQL will prompt you for the password you setup above.
 
     The zkdbSchema.sql script sets up the schema, while the other
@@ -135,6 +131,25 @@ particulars, then read on.
     configures one administrative user, 'root', with initial password
     'password'.  You may use this login to add other Zookeeper Online
     users.  (Please change this password when you login.)
+
+**NOTE:**
+
+As of MySQL 5.7, the default validation rules were changed in order to
+be ANSI compliant.  If you get the following error you can work around
+it by disabling the ONLY_FULL_GROUP_BY rule using the statement shown
+below.
+
+Expression #&#x2060;1 of SELECT list is not in GROUP BY clause and
+contains nonaggregated column 'db.table.col' which is not functionally
+dependent on columns in GROUP BY clause; this is incompatible with
+sql_mode=only_full_group_by
+
+`SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));`
+
+Note that you must have admin rights in order to run this command.
+
+For more info see:
+https://tableplus.com/blog/2018/08/mysql-how-to-turn-off-only-full-group-by.html
 
 
 ### Setting up PHP
@@ -236,17 +251,3 @@ your Debian Apache 2.4 installation:
         </FilesMatch>
       </VirtualHost>
     </IfModule>
-
-NOTES:
-As of MySQL 5.7 the default validation rules were changed in order to be ANSI compliant.
-If you get the following error you can work around it by disabling the ONLY_FULL_GROUP_BY
-rule using the statement shown below.
-
-Expression #1 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'db.table.col' which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by
-
-SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
-
-Note that you must have admin rights in order to run this command.
-
-For more info see:
-https://tableplus.com/blog/2018/08/mysql-how-to-turn-off-only-full-group-by.html
