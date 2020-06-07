@@ -1882,7 +1882,7 @@ class Playlists extends MenuItem {
             if($count)
                 echo (string)($i + 1).".&nbsp;";
             else
-                echo "&nbsp;&#8226&nbsp;";
+                echo "&nbsp;&#8226;&nbsp;";
             echo "</TD><TD$class>";
     
             // Setup artist and label
