@@ -76,11 +76,12 @@ class Playlists extends MenuItem {
             for($i=0; $i<sizeof($words); $i++) {
                 $word = $words[$i];
                 $len = strlen($word);
-                if($word{0} == "(" && $word{$len-1} == ")" ||
-                         $word{0} == "\"" && $word{$len-1} == "\"" ||
-                         $word{0} == "'" && $word{$len-1} == "'" ||
-                         $word{0} == "{" && $word{$len-1} == "}" ||
-                         $word{0} == "[" && $word{$len-1} == "]") {
+                $last = $len - 1;
+                if($word[0] == "(" && $word[$last] == ")" ||
+                         $word[0] == "\"" && $word[$last] == "\"" ||
+                         $word[0] == "'" && $word[$last] == "'" ||
+                         $word[0] == "{" && $word[$last] == "}" ||
+                         $word[0] == "[" && $word[$last] == "]") {
                     $len -= 2;
                     $word = substr($word, 1, $len);
                 }
@@ -94,7 +95,7 @@ class Playlists extends MenuItem {
                     $dot = strrpos($word, ".");
                 $ipos = strtr($word, "'(){}|\\^~[]`", "            ") != $word;
                 if($ipos || $dot && ($dot >= $len - 2 || $dot < $len - 5) ||
-                        strpos($word, "..") !== false || is_numeric($word) || is_numeric($word{$len-1}) || is_numeric($word{$dot+1}))
+                        strpos($word, "..") !== false || is_numeric($word) || is_numeric($word[$len-1]) || is_numeric($word[$dot+1]))
                     $dot = false;
     
                 if($at && $dot)
