@@ -210,6 +210,10 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                 if($toStamp < $fromStamp)
                     $toStamp->modify("+1 day");
 
+                // allow spin timestamps within the grace period
+                $fromStamp->modify(self::GRACE_START);
+                $toStamp->modify(self::GRACE_END);
+
                 // clear spin timestamps outside new time range
                 $query = "UPDATE tracks SET created = NULL " .
                          "WHERE list = ? AND " .
