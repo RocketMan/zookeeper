@@ -29,7 +29,8 @@ namespace ZK\Engine;
  * Playlist operations
  */
 class PlaylistImpl extends BaseImpl implements IPlaylist {
-    const TIME_FORMAT = "Y-m-d Gi"; // eg, 2019-01-01 1234
+    const TIME_FORMAT = "Y-m-d Hi"; // eg, 2019-01-01 1234
+    const TIME_FORMAT_SQL = "Y-m-d H:i:s"; // 2019-01-01 12:34:56
     const GRACE_START = "-15 minutes";
     const GRACE_END = "+30 minutes";
 
@@ -174,7 +175,57 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     }
     
     public function updatePlaylist($playlist, $date, $time, $description, $airname) {
-        list($year, $month, $day) = explode("-", $date);
+        $query = "SELECT showdate, showtime FROM lists WHERE id = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $playlist);
+        $row = $this->executeAndFetch($stmt);
+
+        if($row) {
+            $oldDate = \DateTime::createFromFormat(self::TIME_FORMAT,
+                        $row['showdate'] . " 0000");
+            $newDate = \DateTime::createFromFormat(self::TIME_FORMAT,
+                        $date . " 0000");
+            $offset = $oldDate->diff($newDate)->format("%r%a");
+
+            if($offset) {
+                // fixup spin timestamps for playlist date change
+                $query = "UPDATE tracks " .
+                         "SET created = timestampadd(day, ?, created) " .
+                         "WHERE list = ? AND created IS NOT NULL";
+                $stmt = $this->prepare($query);
+                $stmt->bindValue(1, $offset);
+                $stmt->bindValue(2, $playlist);
+                $stmt->execute();
+            }
+
+            if($row['showtime'] != $time) {
+                // fixup spin timestamps for playlist time change
+                list($from, $to) = explode("-", $time);
+                $fromStamp = \DateTime::createFromFormat(self::TIME_FORMAT,
+                            $date . " " . $from);
+                $toStamp = \DateTime::createFromFormat(self::TIME_FORMAT,
+                            $date . " " . $to);
+
+                // if playlist spans midnight, end time is next day
+                if($toStamp < $fromStamp)
+                    $toStamp->modify("+1 day");
+
+                // allow spin timestamps within the grace period
+                $fromStamp->modify(self::GRACE_START);
+                $toStamp->modify(self::GRACE_END);
+
+                // clear spin timestamps outside new time range
+                $query = "UPDATE tracks SET created = NULL " .
+                         "WHERE list = ? AND " .
+                         "created NOT BETWEEN ? AND ?";
+                $stmt = $this->prepare($query);
+                $stmt->bindValue(1, $playlist);
+                $stmt->bindValue(2, $fromStamp->format(self::TIME_FORMAT_SQL));
+                $stmt->bindValue(3, $toStamp->format(self::TIME_FORMAT_SQL));
+                $stmt->execute();
+            }
+        }
+
         $query = "UPDATE lists SET showdate=?, " .
                  "showtime=?, " .
                  "description=?, " .
@@ -182,7 +233,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                            "airname=NULL ") .
                  "WHERE id=?";
         $stmt = $this->prepare($query);
-        $stmt->bindValue(1, "$year-$month-$day");
+        $stmt->bindValue(1, $date);
         $stmt->bindValue(2, $time);
         $stmt->bindValue(3, $description);
         if($airname) {
@@ -260,7 +311,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $query = "SELECT id, seq FROM tracks ".
                  "WHERE list = ? ".
                  "AND created < ? ".
-                 "ORDER BY created DESC ".
+                 "ORDER BY created DESC, seq DESC ".
                  "LIMIT 1";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $list);
@@ -278,7 +329,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $query = "SELECT id, seq FROM tracks ".
                  "WHERE list = ? ".
                  "AND created > ? ".
-                 "ORDER BY created ".
+                 "ORDER BY created, seq ".
                  "LIMIT 1";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $list);
@@ -433,7 +484,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             if($row && $row['id'] != $id) {
                 $updateStatus = $this->reorderForTime($playlistId,
                                                       $id,
-                                                      date('Y-m-d G:i:s'))?2:0;
+                                                      date(self::TIME_FORMAT_SQL))?2:0;
             } else
                 $updateStatus = 2;
         }
