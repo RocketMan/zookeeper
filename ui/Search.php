@@ -304,8 +304,6 @@ class Search extends MenuItem {
             $this->exactMatch = $_REQUEST['m'];
         if(array_key_exists('n', $_REQUEST))
             $this->searchText = stripslashes($_REQUEST['n']);
-        if(array_key_exists('p', $_REQUEST))
-            $this->pos = (integer)$_REQUEST['p'];
         if(array_key_exists('q', $_REQUEST) && $_REQUEST['q'])
             $this->maxresults = (integer)$_REQUEST['q'];
         if(array_key_exists('chunksize', $_REQUEST) && $_REQUEST['chunksize'])
