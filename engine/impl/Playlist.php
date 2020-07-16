@@ -312,7 +312,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $stmt->bindValue(1, $playlistId);
         $row = $this->executeAndFetch($stmt);
         $haveIt = $row != null &&  $row['created'] != null;
-        $latestSpin = $haveIt ? null : new \DateTime($row['created']);
+        $latestSpin = $haveIt ? new \DateTime($row['created']) : null;
         return $latestSpin;
     }
 
