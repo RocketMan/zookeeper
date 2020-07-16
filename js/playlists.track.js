@@ -45,6 +45,7 @@ $().ready(function(){
 
     function clearUserInput(clearTagInfo) {
         var mode = $("#track-type-pick").val();
+        $("#track-time").val('');
         $("#manual-entry input").val('');
         $("#comment-entry textarea").val('');
         $("#track-artists").empty();
@@ -302,7 +303,9 @@ $().ready(function(){
                 $(this).val(v);
 
             // if time is after midnight, set edate field to correct date
-            $("INPUT[name=edate]").val(val.toISOString().split('T')[0]);
+            // NOTE: commenting this out because it advances the edate when
+            // it shouldn't causing the time change to be ignored
+            //$("INPUT[name=edate]").val(val.toISOString().split('T')[0]);
             $(this).removeClass('invalid-input');
         }
     });
@@ -403,7 +406,8 @@ $().ready(function(){
     }
 
     function submitTrack(addSeparator) {
-        var artist, label, album, track, type, eventType, eventCode, comment;
+        console.log("enter submitTrack");
+        var showDate, spinTime, artist, label, album, track, type, eventType, eventCode, comment;
         var trackType =  $("#track-type-pick").val();
 
         if (addSeparator) {
@@ -422,6 +426,8 @@ $().ready(function(){
             album =  $("#track-album").val();
             track =  $("#track-title").val();
         }
+        showDate =  $("#show-date").val();
+        spinTime =  $("#track-time").val();
 
         var postData = {
             playlist: $("#track-playlist").val(),
@@ -430,6 +436,8 @@ $().ready(function(){
             tag: $("#track-tag").val(),
             artist: artist,
             label: label,
+            time: spinTime,
+            date: showDate,
             album: album,
             track: track,
             eventType: eventType,
@@ -477,7 +485,8 @@ $().ready(function(){
                 clearUserInput(true);
             },
             error: function (jqXHR, textStatus, errorThrown) {
-                showUserError("Your track was not saved: " + jqXHR.responseJSON.status);
+                const msg = jqXHR.responseJSON ? jqXHR.responseJSON.status : errorThrown;
+                showUserError("Your track was not saved: " + msg);
             }
         });
     }

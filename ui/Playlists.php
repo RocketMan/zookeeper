@@ -201,20 +201,32 @@ class Playlists extends MenuItem {
     // add track from an ajax post from client. return new track row
     // upon success else 400 response.
     public function handleAddTrack() {
+        $playlistId = trim($_REQUEST["playlist"]);
+        $playlistApi = Engine::api(IPlaylist::class);
+        $playlist = $playlistApi->getPlaylist($playlistId, 1);
+        $isLiveShow = $playlistApi->IsNowWithinShow($playlist);
+
         $retVal = [];
         $type = $_REQUEST["type"];
-        $playlist = trim($_REQUEST["playlist"]);
         $size = $_REQUEST["size"];
-        if(isset($size) && $playlist) {
-            $count = Engine::api(IPlaylist::class)->getTrackCount($playlist);
+        if(isset($size) && $playlistId) {
+            $count = $playlistApi->getTrackCount($playlistId);
             // if size matches count, set to 0 (in sync) else -1 (out of sync)
             $size = $count == $size?0:-1;
         }
 
+        $spinDateTime = null;
+        $spinTime = $_REQUEST["time"]; // optional paramter, may be empty
+        $spinDate = $_REQUEST["date"];
+        if ($spinTime != '')
+            $spinDateTime = new \DateTime("${spinDate} ${spinTime}");
+
         $entry = null;
+        $wantTimestamp = true;
         switch($type) {
         case PlaylistEntry::TYPE_SET_SEPARATOR:
             $entry = (new PlaylistEntry())->setSetSeparator();
+            $wantTimestamp = false; // only type that does not get a time val.
             break;
         case PlaylistEntry::TYPE_COMMENT:
             $entry = (new PlaylistEntry())->setComment(mb_substr(trim(str_replace("\r\n", "\n", $_REQUEST["comment"])), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
@@ -227,17 +239,12 @@ class Playlists extends MenuItem {
             // spin
             $artist = trim($_REQUEST["artist"]);
             $track = trim($_REQUEST["track"]);
-            if (empty($playlist) || empty($artist) || empty($track)) {
-                $retMsg = "required field missing: -" . $playlist . "-, -" . $artist . "-, -" . $track . "-";
+            if (empty($playlistId) || empty($artist) || empty($track)) {
+                $retMsg = "required field missing: -" . $playlistId . "-, -" . $artist . "-, -" . $track . "-";
             } else {
                 // set the review flag for PlaylistObserver
                 if($_REQUEST["tag"])
                     Engine::api(ILibrary::class)->markAlbumsReviewed($_=[&$_REQUEST]);
-
-                // Technically, we should call ->setTag()->setArtist()..etc
-                // on an empty PlaylistEntry, but since everyting is already
-                // in place in the request array for a spin, just use it.
-                // So simple is it.
                 $entry = new PlaylistEntry($_REQUEST);
             }
             break;
@@ -245,28 +252,34 @@ class Playlists extends MenuItem {
 
         if($entry) {
             $retMsg = 'success';
-            $updateStatus = Engine::api(IPlaylist::class)->insertTrackEntry($playlist, $entry, true);
+            $id = '';
+            $status = '';
+            if ($wantTimestamp && $isLiveShow) {
+                $spinDateTime = new \DateTime("now");
+            }
+            $updateStatus = $playlistApi->insertTrackEntry($playlistId, $entry, $spinDateTime, $status);
+
             if ($updateStatus === 0) {
-                $retMsg = 'DB update error';
+                $retMsg = $status == '' ? "DB update error" : $status;
              } else {
-                if ($updateStatus === 2) {
-                    $date = new \DateTime('now');
-                    $created = $date->format('D M d, Y G:i');
-                    $entry->setCreated($created);
+                if ($spinDateTime != null){
+                    $entry->setCreated($spinDateTime->format('D M d, Y G:i'));
                 }
+
                 // JM 2019-08-15 action and id need to be set
                 // for hyperlinks genereated by makePlaylistObserver (#54)
                 $this->action = $_REQUEST["oaction"];
                 ob_start();
-                $this->makePlaylistObserver($playlist, true)->observe($entry);
+                $this->makePlaylistObserver($playlistId, true)->observe($entry);
                 $newRow = ob_get_contents();
                 ob_end_clean();
+
                 $retVal['row'] = $newRow;
                 // seq is one of:
                 //   -1     client playlist is out of sync with the service
                 //   0      playlist is in natural order
                 //   > 0    ordinal of inserted entry
-                $retVal['seq'] = $size?$size:Engine::api(IPlaylist::class)->getSeq(0, $entry->getId());
+                $retVal['seq'] = $size ? $size : $playlistApi->getSeq(0, $entry->getId());
             }
         } else
             $updateStatus = 0; //failure
@@ -690,10 +703,11 @@ class Playlists extends MenuItem {
     private function emitTagForm($playlistId, $message) {
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
         $this->emitPlaylistBanner($playlistId, $playlist);
-        $this->emitTrackEditor($playlistId);
+        $this->emitTrackAdder($playlistId, $playlist);
     }
     
-    private function emitTrackEditor($playlistId) {
+    private function emitTrackAdder($playlistId, $playlist) {
+        $isLiveShow = Engine::api(IPlaylist::class)->IsNowWithinShow($playlist);
         $nmeAr = Engine::param('nme');
         $nmeOpts = '';
         $nmePrefix = self::NME_PREFIX;
@@ -704,6 +718,7 @@ class Playlists extends MenuItem {
 
     ?>
         <div class='pl-form-entry'>
+            <input id='show-date' type='hidden' value="<?php echo $playlist['showdate']; ?>" >
             <input id='track-session' type='hidden' value='<?php echo $this->session->getSessionID(); ?>'>
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <input id='track-action' type='hidden' value='<?php echo $this->action; ?>'>
@@ -735,10 +750,6 @@ class Playlists extends MenuItem {
                         <label>Track:</label>
                         <select id='track-title-pick'>
                         </select>
-                    </div>
-                    <div style='padding-bottom: 8px'>
-                        <label>&nbsp;</label>
-                        <span style='color:gray' id='tag-artist'></span>
                     </div>
                 </div>
  
@@ -784,6 +795,12 @@ class Playlists extends MenuItem {
                     </div>
                 </div>
             </div> <!-- track-entry -->
+            <?php if (!$isLiveShow) {
+                echo "<div>
+                    <label>Time:</label>
+                    <input id='track-time' class='timepicker' step='60' type='time' />
+                </div>";
+            }?>
             <div>
                 <label></label>
                 <button DISABLED id='track-submit' >Add Item</button>
@@ -1002,10 +1019,12 @@ class Playlists extends MenuItem {
     <?php 
     }
     
-    private function insertTrack($playlist, $tag, $artist, $track, $album, $label, $wantTimestamp) {
+    private function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTime) {
+        $id = 0;
+        $status = '';
         // Run the query
-        $success = Engine::api(IPlaylist::class)->insertTrack($playlist,
-                     $tag, $artist, $track, $album, $label, $wantTimestamp);    
+        $success = Engine::api(IPlaylist::class)->insertTrack($playlistId,
+                     $tag, $artist, $track, $album, $label, $spinTime, $id, $status);    
     }
     
     private function deleteTrack($id) {
@@ -1024,7 +1043,8 @@ class Playlists extends MenuItem {
     }
     
     private function insertSetSeparator($playlist) {
-        $this->insertTrackEntry($playlist, (new PlaylistEntry())->setSetSeparator(), true);
+        //WARNING: $this->insertTrackEntry() does not exist. is this dead code?
+        $this->insertTrackEntry($playlist, (new PlaylistEntry())->setSetSeparator(), null);
     }
     
     public function emitEditor() {
@@ -1070,6 +1090,7 @@ class Playlists extends MenuItem {
                 $this->emitEditForm($playlist, $id, "", "");
             break;
         case "editForm":
+            $status = '';
             $nme = $separator || $logevent || $comment;
             if(($button == " Delete ") && $id) {
                 $this->deleteTrack($id);
@@ -1121,7 +1142,7 @@ class Playlists extends MenuItem {
                     }
                     $id = "";
                 } else
-                    $this->insertTrack($playlist, $tag, $artist, $track, $album, $label, true);
+                    $this->insertTrack($playlist, $tag, $artist, $track, $album, $label, null);
                 $this->emitTagForm($playlist, "");
             }
             break;
@@ -1417,7 +1438,7 @@ class Playlists extends MenuItem {
                                      trim($line[0]),  // artist
                                      trim($line[1]),  // track
                                      trim($line[2]),  // album
-                                     trim($line[3]), false); // label
+                                     trim($line[3]), null); // label
                     $count++;
                 } else if(count($line) == 5) {
                     // artist track album tag label
@@ -1446,7 +1467,7 @@ class Playlists extends MenuItem {
                                      trim($line[0]),  // artist
                                      trim($line[1]),  // track
                                      trim($line[2]),  // album
-                                     trim($line[4]), false); // label
+                                     trim($line[4]), null); // label
                     $count++;
                 }
             }
@@ -1513,9 +1534,10 @@ class Playlists extends MenuItem {
                     $playlist = Engine::lastInsertId();
 
                     // insert the tracks
+                    $status = '';
                     foreach($json->data as $pentry) {
                         $entry = PlaylistEntry::fromJSON($pentry);
-                        $success = $papi->insertTrackEntry($playlist, $entry, false);
+                        $success = $papi->insertTrackEntry($playlist, $entry, null, $status);
                         // if there is a timestamp, set it via update
                         if($success && $pentry->created)
                             $papi->updateTrackEntry($playlist, $entry);

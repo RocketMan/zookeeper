@@ -305,6 +305,17 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return false;
     }
 
+    // return timestamp of the newest track or null if none
+    private function getLatestSpinTime($playlistId) {
+        $query = "SELECT created FROM tracks WHERE list = ? ORDER BY created DESC LIMIT 1";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $playlistId);
+        $row = $this->executeAndFetch($stmt);
+        $haveIt = $row != null &&  $row['created'] != null;
+        $latestSpin = $haveIt ? null : new \DateTime($row['created']);
+        return $latestSpin;
+    }
+
     private function reorderForTime($list, $id, $timestamp) {
         $curSeq = $this->getSeq($list, $id);
 
@@ -417,12 +428,15 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $this->getTimestampWindowInternal($playlist);
     }
 
+    // return true if dateTime is within the show time range or null.
     public function isWithinShow($dateTime, $listRow) {
-        $retVal = false;
-        $window = $this->getTimestampWindowInternal($listRow);
-        if($window) {
-            $retVal = $dateTime >= $window['start'] &&
-                      $dateTime <= $window['end'];
+        $retVal = $dateTime == null;
+        if ($dateTime != null) {
+            $window = $this->getTimestampWindowInternal($listRow);
+            if($window) {
+                $retVal = $dateTime >= $window['start'] &&
+                          $dateTime <= $window['end'];
+            }
         }
         return $retVal;
     }
@@ -440,23 +454,38 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
 
     // insert playlist track. return following: 0 - fail, 1 - success no 
     // timestamp, 2 - sucess with timestamp.
-    public function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $wantTimestamp, &$id = null) {
+    public function insertTrack($playlistId, $tag, $artist, $track, $album, $label,  $insertTime, &$id, &$status) {
         $row = $this->getPlaylist($playlistId, 1);
 
-        // log time iff 'now' is within playlist start/end time.
-        $doTimestamp = $wantTimestamp && $this->isNowWithinShow($row);
-        $timeName    = $doTimestamp ? "created, " : "";
-        $timeValue   = $doTimestamp ? "NOW(), "   : "";
+        $isWithinShow = $this->isWithinShow($insertTime, $row);
+        if (!$isWithinShow) {
+            $status = "Spin time is outside of show start/end times. ";
+            error_log($status);
+            return 0;
+        }
 
-        // Insert tag?
+        // abort if the insert time is not greater than the last entry time.
+        // this is needed because the sequence reorder does not work in this
+        // case. if this check is removed then this issue must be fixed.
+        if ($insertTime != null) {
+            $lastSpinTime = $this->getLatestSpinTime($playlistId);
+            if ($lastSpinTime != null && $insertTime < $lastSpinTime) {
+                $status = "Spin time must be greater than the current spin time";
+                error_log($status);
+                return 0;
+            }
+        }
+
+        $timeValue = $insertTime != null ? $insertTime->format("Y-m-d H:i:s") : null;
+
         $haveTag  = ($tag != 0) && ($tag != "");
         $tagName  = $haveTag ? ", tag" : "";
         $tagValue = $haveTag ? ", ?"   : "";
     
-        $names = "(" . $timeName . "list, artist, track, album, label, seq " . $tagName . ")";
-        $values = " VALUES (" . $timeValue . "?, ?, ?, ?, ?, ?" . $tagValue . ");";
+        $names = "(list, artist, track, album, label, seq, created ${tagName})";
+        $values = "VALUES (?, ?, ?, ?, ?, ?, ? ${tagValue});";
 
-        $query = "INSERT INTO tracks " . ($names) . ($values);
+        $query = "INSERT INTO tracks ${names} ${values}";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$playlistId, \PDO::PARAM_INT); 
         $stmt->bindValue(2, $artist);
@@ -464,8 +493,9 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $stmt->bindValue(4, $album);
         $stmt->bindValue(5, $label);
         $stmt->bindValue(6, $this->nextSeq($playlistId));
+        $stmt->bindValue(7, $timeValue);
         if($haveTag)
-            $stmt->bindValue(7, $tag);
+            $stmt->bindValue(8, $tag);
 
         $updateStatus = $stmt->execute();
         if(!$updateStatus)
@@ -473,7 +503,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
 
         $id = Engine::lastInsertId();
 
-        if ($updateStatus == 1 && $doTimestamp) {
+        if ($updateStatus == 1 && $insertTime != null) {
             // if inserted row is latest, then reordering is unnecessary
             $query = "SELECT id FROM tracks ".
                      "WHERE list = ? ".
@@ -538,16 +568,19 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $success;
     }
 
-    public function insertTrackEntry($playlist, PlaylistEntry $entry, $wantTimestamp) {
+    public function insertTrackEntry($playlist, PlaylistEntry $entry, $timeStamp, &$status) {
         $id = 0;
         $success = $this->insertTrack($playlist,
                                       $entry->getTag(), $entry->getArtist(),
                                       $entry->getTrack(), $entry->getAlbum(),
                                       $entry->getLabel(),
-                                      $wantTimestamp,
-                                      $id);
+                                      $timeStamp,
+                                      $id,
+                                      $status);
+  
         if($success)
             $entry->setId($id);
+
         return $success;
     }
 

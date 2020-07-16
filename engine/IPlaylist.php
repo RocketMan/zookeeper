@@ -49,9 +49,9 @@ interface IPlaylist {
     function getTracksWithObserver($playlist, PlaylistObserver $observer, $desc = 0, $filter = null);
     function getTrackCount($playlist);
     function getTimestampWindow($playlistId);
-    function insertTrack($playlist, $tag, $artist, $track, $album, $label, $wantTimestamp, &$id = null);
+    function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTimestamp, &$id, &$status);
     function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label, $dateTime);
-    function insertTrackEntry($playlist, PlaylistEntry $entry, $wantTimestamp);
+    function insertTrackEntry($playlistId, PlaylistEntry $entry, $spinTimestamp, &$status);
     function updateTrackEntry($playlist, PlaylistEntry $entry);
     function deleteTrack($id);
     function getTopPlays(&$result, $airname=0, $days=41, $count=10);
