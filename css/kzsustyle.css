@@ -208,24 +208,24 @@ P.zktitle A {
 .nav3s { color: #a3a3a3; font-size: 80%; }
 
 .linkrow {
-	background-color: #6b3333;
+	background-color: #980000;
 }
 
 .secdiv, .secdiv TH, TH.sec {
 	color: white;
-	background-color: #6b3333;
+	background-color: #980000;
 }
 .secNorm {
 	background-color: #980000;
 }
 .secSel {
-	background-color: #6b3333;
+	background-color: #980000;
 }
 .secSelSub {
-	background-color: #6b3333;
+	background-color: #980000;
 }
 .submit {
-	background-color: #6b3333;
+	background-color: #980000;
 }
 .albumReview {
 	background-image: URL('../img/kzsu/kzsu_rinfo.gif');
