@@ -280,9 +280,9 @@ $().ready(function(){
         var s = $(this).data("start");
         var e = $(this).data("end");
 
-        var start = new Date(d + "T" + s);
-        var end = new Date(d + "T" + e);
-        var val = new Date(d + "T" + v);
+        var start = new Date(d + "T" + s + "Z");
+        var end = new Date(d + "T" + e + "Z");
+        var val = new Date(d + "T" + v + "Z");
 
         if(!isNaN(val)) {
             // val or end time can be midnight or later
@@ -297,6 +297,7 @@ $().ready(function(){
             $(this).removeClass('prefilled-input');
             $(this).addClass('invalid-input');
             $(this).val("").focus();
+            showUserError('Spin time is outside of show start/end times.');
         } else {
             // if we massaged time for webkit, set canonical value
             if($(this).val() != v)
@@ -305,6 +306,7 @@ $().ready(function(){
             // if time is after midnight, set edate field to correct date
             $("INPUT[name=edate]").val(val.toISOString().split('T')[0]);
             $(this).removeClass('invalid-input');
+            showUserError('');
         }
     });
 
@@ -495,6 +497,9 @@ $().ready(function(){
             alert('A required field is missing');
             return;
         }
+        // check that the timestamp, if any, is valid
+        if($("INPUT[data-date].invalid-input").length > 0)
+            return;
         submitTrack(false);
     });
 

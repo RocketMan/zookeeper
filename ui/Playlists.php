@@ -719,7 +719,7 @@ class Playlists extends MenuItem {
 
     ?>
         <div class='pl-form-entry'>
-            <input id='show-date' type='hidden' value="<?php echo $playlist['showdate']; ?>" >
+            <input id='show-date' name='edate' type='hidden' value="<?php echo $playlist['showdate']; ?>" >
             <input id='track-session' type='hidden' value='<?php echo $this->session->getSessionID(); ?>'>
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <input id='track-action' type='hidden' value='<?php echo $this->action; ?>'>
@@ -797,9 +797,10 @@ class Playlists extends MenuItem {
                 </div>
             </div> <!-- track-entry -->
             <?php if (!$isLiveShow) {
+                $window = Engine::api(IPlaylist::class)->getTimestampWindow($playlistId);
                 echo "<div>
                     <label>Time:</label>
-                    <input id='track-time' class='timepicker' step='60' type='time' />
+                    <input id='track-time' class='timepicker' step='60' type='time' data-date='".$playlist['showdate']."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' />
                 </div>";
             }?>
             <div>
