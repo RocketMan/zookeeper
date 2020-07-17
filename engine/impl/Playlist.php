@@ -568,13 +568,19 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         return $success;
     }
 
-    public function insertTrackEntry($playlist, PlaylistEntry $entry, $timeStamp, &$status) {
+    public function insertTrackEntry($playlist, PlaylistEntry $entry, &$status) {
         $id = 0;
+        $spinDateTime = null;
+        $timeStr = $entry->getCreated();
+        if ($timeStr != null && $timeStr != '') {
+            $spinDateTime = new \DateTime($timeStr);
+        }
+
         $success = $this->insertTrack($playlist,
                                       $entry->getTag(), $entry->getArtist(),
                                       $entry->getTrack(), $entry->getAlbum(),
                                       $entry->getLabel(),
-                                      $timeStamp,
+                                      $spinDateTime,
                                       $id,
                                       $status);
   

@@ -303,9 +303,7 @@ $().ready(function(){
                 $(this).val(v);
 
             // if time is after midnight, set edate field to correct date
-            // NOTE: commenting this out because it advances the edate when
-            // it shouldn't causing the time change to be ignored
-            //$("INPUT[name=edate]").val(val.toISOString().split('T')[0]);
+            $("INPUT[name=edate]").val(val.toISOString().split('T')[0]);
             $(this).removeClass('invalid-input');
         }
     });

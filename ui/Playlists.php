@@ -257,15 +257,15 @@ class Playlists extends MenuItem {
             if ($wantTimestamp && $isLiveShow) {
                 $spinDateTime = new \DateTime("now");
             }
-            $updateStatus = $playlistApi->insertTrackEntry($playlistId, $entry, $spinDateTime, $status);
+
+            if ($spinDateTime != null)
+                $entry->setCreated($spinDateTime->format('D M d, Y G:i'));
+
+            $updateStatus = $playlistApi->insertTrackEntry($playlistId, $entry, $status);
 
             if ($updateStatus === 0) {
                 $retMsg = $status == '' ? "DB update error" : $status;
              } else {
-                if ($spinDateTime != null){
-                    $entry->setCreated($spinDateTime->format('D M d, Y G:i'));
-                }
-
                 // JM 2019-08-15 action and id need to be set
                 // for hyperlinks genereated by makePlaylistObserver (#54)
                 $this->action = $_REQUEST["oaction"];
@@ -1537,10 +1537,7 @@ class Playlists extends MenuItem {
                     $status = '';
                     foreach($json->data as $pentry) {
                         $entry = PlaylistEntry::fromJSON($pentry);
-                        $success = $papi->insertTrackEntry($playlist, $entry, null, $status);
-                        // if there is a timestamp, set it via update
-                        if($success && $pentry->created)
-                            $papi->updateTrackEntry($playlist, $entry);
+                        $success = $papi->insertTrackEntry($playlist, $entry, $status);
                     }
 
                     // display the editor
