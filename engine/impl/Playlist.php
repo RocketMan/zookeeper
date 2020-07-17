@@ -307,11 +307,13 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
 
     // return timestamp of the newest track or null if none
     private function getLatestSpinTime($playlistId) {
-        $query = "SELECT created FROM tracks WHERE list = ? ORDER BY created DESC LIMIT 1";
+        $query = "SELECT created FROM tracks ".
+                 "WHERE list = ? ".
+                 "ORDER BY created DESC LIMIT 1";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlistId);
         $row = $this->executeAndFetch($stmt);
-        $haveIt = $row != null &&  $row['created'] != null;
+        $haveIt = $row != null && $row['created'] != null;
         $latestSpin = $haveIt ? new \DateTime($row['created']) : null;
         return $latestSpin;
     }
@@ -464,19 +466,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
             return 0;
         }
 
-        // abort if the insert time is not greater than the last entry time.
-        // this is needed because the sequence reorder does not work in this
-        // case. if this check is removed then this issue must be fixed.
-        if ($insertTime != null) {
-            $lastSpinTime = $this->getLatestSpinTime($playlistId);
-            if ($lastSpinTime != null && $insertTime < $lastSpinTime) {
-                $status = "Spin time must be greater than the current spin time";
-                error_log($status);
-                return 0;
-            }
-        }
-
-        $timeValue = $insertTime != null ? $insertTime->format("Y-m-d H:i:s") : null;
+        $timeValue = $insertTime != null ? $insertTime->format(self::TIME_FORMAT_SQL) : null;
 
         $haveTag  = ($tag != 0) && ($tag != "");
         $tagName  = $haveTag ? ", tag" : "";
@@ -505,16 +495,11 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
 
         if ($updateStatus == 1 && $insertTime != null) {
             // if inserted row is latest, then reordering is unnecessary
-            $query = "SELECT id FROM tracks ".
-                     "WHERE list = ? ".
-                     "ORDER BY created DESC LIMIT 1";
-            $stmt = $this->prepare($query);
-            $stmt->bindValue(1, (int)$playlistId, \PDO::PARAM_INT);
-            $row = $this->executeAndFetch($stmt);
-            if($row && $row['id'] != $id) {
+            $latestTime = $this->getLatestSpinTime($playlistId);
+            if($latestTime != null && $latestTime > $insertTime) {
                 $updateStatus = $this->reorderForTime($playlistId,
                                                       $id,
-                                                      date(self::TIME_FORMAT_SQL))?2:0;
+                                                      $insertTime->format(self::TIME_FORMAT_SQL))?2:0;
             } else
                 $updateStatus = 2;
         }
