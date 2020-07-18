@@ -30,7 +30,7 @@ namespace ZK\Engine;
  */
 class ReviewImpl extends BaseImpl implements IReview {
     private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0) {
-        $query = "SELECT r.tag, a.airname, r.user, r.created FROM reviews r ";
+        $query = "SELECT r.tag, a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed FROM reviews r ";
         
         if($weeks < 0)
             $query .= "LEFT JOIN currents c ON c.tag = r.tag AND " .
@@ -62,7 +62,7 @@ class ReviewImpl extends BaseImpl implements IReview {
             // avoiding a table scan, which MySQL would do otherwise.
             //
             // See: https://www.techfounder.net/2008/10/15/optimizing-or-union-operations-in-mysql/
-            $query = "SELECT z.tag, z.airname, z.user, z.created FROM (";
+            $query = "SELECT z.tag, z.airname, z.user, z.reviewed FROM (";
             $query .= $this->getRecentSubquery($user, $weeks, $loggedIn);
             $query .= "UNION ";
             $query .= $this->getRecentSubquery($user, -1, $loggedIn);

@@ -80,7 +80,7 @@ class Reviews extends MenuItem {
     
         // Date
         echo "</TD><TD>";
-        echo $album[0]["created"];
+        echo $row["reviewed"];
         echo "</TD></TR>\n";
     }
     
