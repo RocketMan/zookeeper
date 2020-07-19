@@ -366,9 +366,11 @@ P.zktitle A {
     background-color: #2530a7;
 }
 .secNorm {
+    padding-top: 2px;
     background-color: #5863da;
 }
 .secSel {
+    padding-top: 2px;
     background-color: #2530a7;
     color: #ffffff;
 }
