@@ -106,7 +106,7 @@ class Reviews extends MenuItem {
         echo $reviewsHeader;
         echo "<TBODY>";
 
-        $results = Engine::api(IReview::class)->getRecentReviews("", 0, 50, $this->session->isAuth("u"));
+        $results = Engine::api(IReview::class)->getRecentReviews("", 0, 100, $this->session->isAuth("u"));
         $libAPI = Engine::api(ILibrary::class);
         while($results && ($row = $results->fetch())) {
             $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
