@@ -231,7 +231,7 @@ class Main implements IController {
       <P class="title">Zookeeper Online version <?php echo Engine::VERSION; ?></P>
       <P>Zookeeper Online &copy; 1997-2020 J Mason &lt;jmason@ibinx.com&gt;</P>
       <P>This program is free software; you are welcome to redistribute it
-      under certain conditions.  See the <A HREF="LICENSE.md" TARGET="_blank">LICENSE</A>
+      under certain conditions.  See the <A HREF="LICENSE" TARGET="_blank">LICENSE</A>
       for details.</P>
       <P><A HREF="https://zookeeper.ibinx.com/" TARGET="_blank">Zookeeper Online project homepage</A></P>
     </DIV>
