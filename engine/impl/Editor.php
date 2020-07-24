@@ -120,12 +120,13 @@ class EditorImpl extends BaseImpl implements IEditor {
         // Album
         $title = trim($album["album"]);
         $artist = trim($album["artist"]);
+        $iscoll = "0";
         if(!$album["location"])
             $album["location"] = "L";
         if(array_key_exists("coll", $album) && $album["coll"]) {
             $artist = "[coll]: $title";
             $iscoll = "1";
-        } else $iscoll = "0";
+        }
     
         $newAlbum = !$album["tag"];
     
@@ -175,33 +176,28 @@ class EditorImpl extends BaseImpl implements IEditor {
     
         // Tracks
         if($tracks || $newAlbum) {
-            $query = "DELETE FROM colltracknames WHERE tag=?";
+            $targetTable = $iscoll ? "colltracknames" : "tracknames"; 
+            $query = "DELETE FROM $targetTable WHERE tag=?";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $album["tag"]);
             $stmt->execute();
-            $query = "DELETE FROM tracknames WHERE tag=?";
-            $stmt = $this->prepare($query);
-            $stmt->bindValue(1, $album["tag"]);
-            $stmt->execute();
-            //echo "DEBUG: affected rows: ".$stmt->rowCount()."<BR>";
-            
-            //echo "DEBUG: query=$query<BR>";
+
             for($i=1; $tracks && array_key_exists($i, $tracks); $i++) {
-                if($iscoll) {
-                    $query = "INSERT INTO colltracknames (tag, seq, track, " .
-                            "artist) VALUES (?, ?, ?, ?)";
-                    $stmt = $this->prepare($query);
-                    $stmt->bindValue(3, trim($tracks[$i]["track"]));
-                    $stmt->bindValue(4, trim($tracks[$i]["artist"]));
-                } else {
-                    $query = "INSERT INTO tracknames (tag, seq, track) ".
-                        "VALUES (?, ?, ?)";
-                    $stmt = $this->prepare($query);
-                    $stmt->bindValue(3, trim($tracks[$i]));
-                }
+                $trackRow = $tracks[$i];
+                $trackName = trim($trackRow['track']);
+                $trackUrl = trim($trackRow['url']);
+                $query = "INSERT INTO tracknames (tag, seq, track, url) VALUES (?, ?, ?, ?)";
+                if ($iscoll)
+                    $query = "INSERT INTO colltracknames (tag, seq, track, url, artist) VALUES (?, ?, ?, ?, ?)";
+
+                $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $album["tag"]);
                 $stmt->bindValue(2, $i);
-                //echo "DEBUG: query=$query<BR>";
+                $stmt->bindValue(3, $trackName);
+                $stmt->bindValue(4, $trackUrl);
+                if ($iscoll)
+                    $stmt->bindValue(5, trim($trackRow["artist"]));
+
                 $stmt->execute();
             }
         }
@@ -302,7 +298,7 @@ class EditorImpl extends BaseImpl implements IEditor {
     }
 
     public function getTracks($tag, $isColl) {
-            $table = $isColl?"colltracknames":"tracknames";
+        $table = $isColl?"colltracknames":"tracknames";
         $query = "SELECT * FROM $table WHERE tag = ? ORDER BY seq";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);

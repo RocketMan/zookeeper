@@ -640,7 +640,8 @@ class Editor extends MenuItem {
 
     private function insertUpdateAlbum() {
         $album = $this->getAlbum();
-        $result = Engine::api(IEditor::class)->insertUpdateAlbum($album, $this->getTracks(), $this->getLabel());
+        $tracks = $this->getTracks();
+        $result = Engine::api(IEditor::class)->insertUpdateAlbum($album, $tracks, $this->getLabel());
 
         if($result) {
             if($_REQUEST["new"]) {
@@ -684,15 +685,22 @@ class Editor extends MenuItem {
          return $label;
     }
     
+    // returns list of tuples containing track, url and artist. note that
+    // artist will be empty for single artist disks.
     private function getTracks() {
          $tracks = array();
          $isColl = array_key_exists("coll", $_REQUEST) && $_REQUEST["coll"];
-         for($i=1;
-                   array_key_exists("track".$i, $_POST) &&
-                       !self::isEmpty($_POST["track". $i]); $i++)
-              $tracks[$i] = $isColl?[ "track" => $_POST["track".$i],
-                                            "artist" => $_POST["artist".$i] ]:
-                                    $_POST["track".$i];
+
+         for($i=1; array_key_exists("track".$i, $_POST); $i++) {
+             $track = $_POST["track". $i];
+             if ($track['track'] == '') {
+                 break;
+             } else {
+                 $url = $_POST["trackUrl". $i];
+                 $artist = $isColl ? $_POST["artist".$i] : "";
+                 $tracks[$i] = ["track" => $track, "url" => $url, "artist" => $artist];                 
+            }
+         }
          return $tracks;
     }
     
@@ -756,7 +764,7 @@ class Editor extends MenuItem {
          echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH=\"100%\"><TR><TD VALIGN=TOP WIDTH=220>\n";
          echo "  <INPUT TYPE=HIDDEN NAME=seltag id='seltag' VALUE=\"".$_REQUEST["seltag"]."\">\n";
          echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH=\"100%\">";
-         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$osearch\" autocomplete=off><BR>\n";
+         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search Albums:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$osearch\" autocomplete=off><BR>\n";
          echo "<SPAN CLASS=\"sub\">compilation?</SPAN><INPUT TYPE=CHECKBOX NAME=coll" . ($osearch&&$_REQUEST["coll"]?" CHECKED":"") . " id='coll'></TD><TD></TD></TR>\n";
          echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" id='bup' VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorUp\"><BR><SELECT class=\"editorChooser\" NAME=list id='list' SIZE=$this->limit>\n";
          for($i=0; $i<$this->limit; $i++)
@@ -909,7 +917,7 @@ class Editor extends MenuItem {
         echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH=\"100%\"><TR><TD VALIGN=TOP WIDTH=230>\n";
         echo "  <INPUT TYPE=HIDDEN NAME=selpubkey id='selpubkey' VALUE=\"".$_REQUEST["selpubkey"]."\">\n";
         echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH=\"100%\">";
-        echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$osearch\" autocomplete=off></TD></TR>\n";
+        echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search Labels:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$osearch\" autocomplete=off></TD></TR>\n";
         echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" id=\"bup\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorUp\"><BR><SELECT class=\"editorChooser\" NAME=list id='list' SIZE=$this->limit>\n";
         for($i=0; $i<$this->limit; $i++)
             echo "  <OPTION VALUE=\"\">\n";
@@ -993,8 +1001,9 @@ class Editor extends MenuItem {
     
     private function validateTracks() {
         $lowestBlank = $highestTrack = 0;
+        $trackPattern = "/track\d/";
         foreach($_POST as $key => $value) {
-            if(substr($key, 0, 5) == "track") {
+            if(preg_match_all($trackPattern, $key)) {
                 $i = substr($key, 5) * 1;
                 if(!self::isEmpty($value) && $i > $highestTrack)
                     $highestTrack = $i;
@@ -1005,51 +1014,83 @@ class Editor extends MenuItem {
         return !$lowestBlank || $lowestBlank >= $highestTrack;
     }
     
+    private function emitTrackList($focusTrack, $isCollection) {
+        $artistHdr = $isCollection ? "<TH>Artist</TH>" : "";
+        $cellWidth = "width:" . ($isCollection ? "220px" : "330px"); 
+
+        echo "<HR/>";
+        echo "<TABLE style='width:100%'>\n";
+        echo "<TR><TH></TH><TH>Title</TH>${artistHdr}<TH>URL</TH></TR>\n";
+
+        for($i=0; $i<$this->tracksPerPage; $i++) {
+            $trackNum = $_REQUEST["nextTrack"] + $i;
+            $this->skipVar("track".$trackNum);
+            $this->skipVar("trackUrl".$trackNum);
+            $title = htmlentities(stripslashes($_POST["track".$trackNum]));
+            $focus = $focusTrack == $trackNum ? " data-focus" : "";
+
+            echo "<TR>";
+            echo "<TD ALIGN='RIGHT' style='width:20px' ><b>$trackNum:</b></TD>";
+            echo "<TD><INPUT NAME='track$trackNum' style='$cellWidth' VALUE='$title' CLASS=text maxlength='80' data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
+
+            if($isCollection) {
+                $artist = htmlentities(stripslashes($_POST["artist".$trackNum]));
+                echo "<TD style='$cellWidth'><INPUT NAME=artist$trackNum style='$cellWidth' VALUE='$artist' TYPE=text CLASS=text maxlength='80' data-zkalpha='true' data-track='$trackNum'></TD>";
+                $this->skipVar("artist".$trackNum);
+            }
+
+            $url = $_POST["url$trackNum"];
+            echo "<TD><INPUT class='urlValue' style='$cellWidth' value='${url}' NAME='trackUrl$trackNum' maxlength='80' /></TD>";
+
+            echo "</TR>\n";
+        }
+        echo "</TABLE>";
+    }
+
     private function trackForm() {
+        $isCollection = $_REQUEST["coll"];
+
         if($_REQUEST["seltag"] && !$_REQUEST["tdb"]) {
-            $tracks = Engine::api(IEditor::class)->getTracks($_REQUEST["seltag"], $_REQUEST["coll"]);
+            $tracks = Engine::api(IEditor::class)->getTracks($_REQUEST["seltag"], $isCollection);
             while($row = $tracks->fetch()) {
                 $this->emitHidden("track".$row["seq"], $row["track"]);
+                $_POST["url".$row["seq"]] = $row["url"];
                 $_POST["track".$row["seq"]] = $row["track"];
-                if($_REQUEST["coll"]) {
+                if($isCollection) {
                     $this->emitHidden("artist" . $row["seq"], $row["artist"]);
                     $_POST["artist".$row["seq"]] = $row["artist"];
                 }
             }
             $this->emitHidden("tdb", "true");
         }
+
         if($_REQUEST["nextTrack"]) {
             // validate previous batch of tracks were entered
             $lastBatch = $_REQUEST["nextTrack"] - $this->tracksPerPage;
             for($i=0; $i<$this->tracksPerPage; $i++) {
                 if(self::isEmpty($_POST["track".(int)($lastBatch+$i)]) ||
-                        $_REQUEST["coll"] && self::isEmpty($_POST["artist".(int)($lastBatch+$i)])) {
+                        $isCollection && self::isEmpty($_POST["artist".(int)($lastBatch+$i)])) {
                     $_REQUEST["nextTrack"] -= $this->tracksPerPage;
                     $focusTrack = $lastBatch+$i;
                     break;
                 }
             }
-        } else $_REQUEST["nextTrack"] = 1;
-    
-        echo "<TABLE>\n";
-        echo "<TR><TD></TD><TD".($_REQUEST["coll"]?" COLSPAN=3":"")." ALIGN=RIGHT>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='&minus;'></TD></TR>\n";
-        $size = $_REQUEST["coll"]?30:60;
-        if(!$focusTrack)
-            $focusTrack = $_REQUEST["nextTrack"];
-        for($i=0; $i<$this->tracksPerPage; $i++) {
-            $trackNum = $_REQUEST["nextTrack"] + $i;
-            echo "  <TR><TD ALIGN=RIGHT>Track $trackNum:</TD><TD><INPUT NAME=track$trackNum VALUE=\"".htmlentities(stripslashes($_POST["track".$trackNum]))."\" TYPE=text CLASS=text SIZE=$size maxlength='80' data-zkalpha='true' data-track=\"$trackNum\"".($focusTrack == $trackNum?" data-focus":"").">";
-            $this->skipVar("track".$trackNum);
-            if($_REQUEST["coll"]) {
-                echo "</TD><TD ALIGN=RIGHT>Artist:</TD><TD><INPUT NAME=artist$trackNum VALUE=\"".htmlentities(stripslashes($_POST["artist".$trackNum]))."\" TYPE=text CLASS=text SIZE=$size maxlength='80' data-zkalpha='true' data-track=\"$trackNum\">";
-                $this->skipVar("artist".$trackNum);
-            }
-            echo "</TD></TR>\n";
+        } else {
+            $_REQUEST["nextTrack"] = 1;
         }
-        echo "  <TR><TD></TD><TD".($_REQUEST["coll"]?" COLSPAN=3":"")."><INPUT TYPE=SUBMIT NAME=more CLASS=submit VALUE='  More Tracks...  '>&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE='  Done!  '></TD></TR>\n";
+    
+        $focusTrack = $focusTrack ? $focusTrack : $_REQUEST["nextTrack"];
+        $this->emitTrackList($focusTrack, $isCollection);
     ?>
-    </TABLE>
-    <INPUT TYPE=HIDDEN NAME=nextTrack VALUE=<?php echo (int)($_REQUEST["nextTrack"]+$this->tracksPerPage);?>>
+
+    <div style="padding-top:8px; padding-left:25px;">
+        <INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE='  Done!  '>
+        <INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='Add Track'>
+        <INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='Delete Track'>
+        <INPUT TYPE=SUBMIT NAME=more CLASS=submit VALUE='  More Tracks...  '>
+        <INPUT TYPE=HIDDEN NAME=nextTrack VALUE=<?php echo (int)($_REQUEST["nextTrack"]+$this->tracksPerPage);?>>
+    </div>
+
     <?php
     }
 
