@@ -211,11 +211,13 @@ $().ready(function() {
         }
         for(var j=next; j>focus; j--) {
             $("INPUT[name='track" + j + "' i]").val($("INPUT[name='track" + (j-1) + "' i]").val());
+            $("INPUT[name='trackUrl" + j + "' i]").val($("INPUT[name='trackUrl" + (j-1) + "' i]").val());
             if(coll) {
                 $("INPUT[name='artist" + j + "' i]").val($("INPUT[name='artist" + (j-1) + "' i]").val());
             }
         }
         $("INPUT[name='track" + focus + "' i]").val("");
+        $("INPUT[name='trackUrl" + focus + "' i]").val("");
         if(coll) {
             $("INPUT[name='artist" + focus + "' i]").val("");
         }
@@ -228,11 +230,13 @@ $().ready(function() {
             var last = nextTrack()-1;
             for(var j=focus; j<last; j++) {
                 $("INPUT[name='track" + j + "' i]").val($("INPUT[name='track" + (j+1) + "' i]").val());
+                $("INPUT[name='trackUrl" + j + "' i]").val($("INPUT[name='trackUrl" + (j+1) + "' i]").val());
                 if(coll) {
                     $("INPUT[name='artist" + j + "' i]").val($("INPUT[name='artist" + (j+1) + "' i]").val());
                 }
             }
             $("INPUT[name='track" + last + "' i]").val("");
+            $("INPUT[name='trackUrl" + last + "' i]").val("");
             if(coll) {
                 $("INPUT[name='artist" + last + "' i]").val("");
             }
