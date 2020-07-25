@@ -1016,11 +1016,11 @@ class Editor extends MenuItem {
     
     private function emitTrackList($focusTrack, $isCollection) {
         $artistHdr = $isCollection ? "<TH>Artist</TH>" : "";
-        $cellWidth = "width:" . ($isCollection ? "220px" : "330px"); 
+        $cellWidth = "width:" . ($isCollection ? "220px" : "330px");
+        $idp = "padding-right:" . ($isCollection ? "3px" : "7px");
 
-        echo "<HR/>";
-        echo "<TABLE style='width:100%'>\n";
-        echo "<TR><TH></TH><TH>Title</TH>${artistHdr}<TH>URL</TH></TR>\n";
+        echo "<TABLE class='trackEditor'>\n";
+        echo "<TR><TH></TH><TH>Track Name</TH>${artistHdr}<TH>URL</TH><TD align=right style='$idp'>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='&minus;'></TD></TR>\n";
 
         for($i=0; $i<$this->tracksPerPage; $i++) {
             $trackNum = $_REQUEST["nextTrack"] + $i;
@@ -1040,7 +1040,7 @@ class Editor extends MenuItem {
             }
 
             $url = $_POST["url$trackNum"];
-            echo "<TD><INPUT class='urlValue' style='$cellWidth' value='${url}' NAME='trackUrl$trackNum' maxlength='80' /></TD>";
+            echo "<TD COLSPAN=2><INPUT class='urlValue' style='$cellWidth' value='${url}' NAME='trackUrl$trackNum' TYPE='url' data-track='$trackNum' /></TD>";
 
             echo "</TR>\n";
         }
@@ -1084,10 +1084,8 @@ class Editor extends MenuItem {
     ?>
 
     <div style="padding-top:8px; padding-left:25px;">
-        <INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE='  Done!  '>
-        <INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='Add Track'>
-        <INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='Delete Track'>
         <INPUT TYPE=SUBMIT NAME=more CLASS=submit VALUE='  More Tracks...  '>
+        <INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE='  Done!  '>
         <INPUT TYPE=HIDDEN NAME=nextTrack VALUE=<?php echo (int)($_REQUEST["nextTrack"]+$this->tracksPerPage);?>>
     </div>
 

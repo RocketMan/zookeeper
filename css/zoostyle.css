@@ -259,6 +259,34 @@ TD.label-form {
     scrollbar-width: none;
 }
 
+.trackEditor {
+    width: 100%;
+}
+
+.trackEditor TH {
+    font-size: 10pt;
+    text-align: left;
+    vertical-align: bottom;
+    line-height: 10px;
+}
+
+.playTrack {
+    vertical-align: middle;
+}
+
+.playTrack DIV {
+    filter: invert(0.3) sepia(1) saturate(5) hue-rotate(310deg);
+    width: 24px;
+    height: 24px;
+    background-size: 24px;
+    background-image: URL("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiB3aWR0aD0iNDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTAgMGg0OHY0OEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0yMCAzM2wxMi05LTEyLTl2MTh6bTQtMjlDMTIuOTUgNCA0IDEyLjk1IDQgMjRzOC45NSAyMCAyMCAyMCAyMC04Ljk1IDIwLTIwUzM1LjA1IDQgMjQgNHptMCAzNmMtOC44MiAwLTE2LTcuMTgtMTYtMTZTMTUuMTggOCAyNCA4czE2IDcuMTggMTYgMTYtNy4xOCAxNi0xNiAxNnoiLz48L3N2Zz4=");
+}
+
+.playTrack A:hover {
+    filter: saturate(10); /* doesn't work here in webkit */
+    text-decoration: none;
+}
+
 /* layout */
 DIV.box {
     width: 900px;
@@ -456,7 +484,7 @@ TH.sec {
 .success {
     color: #006600;
 }
-.text {
+.text, .urlValue {
     padding: 2px;
     border: 1px solid #3b0000;
 }
