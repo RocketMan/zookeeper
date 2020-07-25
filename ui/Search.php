@@ -86,7 +86,6 @@ class Search extends MenuItem {
 
     private function emitTrackUrl($trackInfo) {
         $url = $trackInfo["url"];
-//        $link = $url == '' ? '' : "<A target='_blank' href='$url' class='playTrack'>&#9654;</A>";
         $link = $url == '' ? '' : "<A target='_blank' href='$url'><DIV></DIV></A>";
         echo $link;
     }
@@ -202,7 +201,7 @@ class Search extends MenuItem {
         $this->newEntity(Reviews::class)->viewReview2($this->searchText);
     
         // Emit Tracks
-        echo "<TABLE WIDTH=\"100%\">\n  <TR><TH COLSPAN=6 ALIGN=LEFT CLASS=\"secdiv\">Track Listing</TH></TR></TABLE>\n";
+        echo "<TABLE WIDTH='100%'>\n  <TR><TH COLSPAN=6 ALIGN=LEFT CLASS='secdiv'>Track Listing</TH></TR></TABLE>\n";
     
         // Handle collection tracks
         $albums = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 200, $this->searchText);
@@ -215,7 +214,7 @@ class Search extends MenuItem {
             echo $this->emitTrackUrl($albums[$i]);
 
             // Number
-            echo "  </TD><TD ALIGN=RIGHT>".$albums[$i]["seq"].".</TD><TD>";
+            echo "</TD><TD ALIGN=RIGHT>".$albums[$i]["seq"].".</TD><TD>";
     
             // Artist Name
             echo "<A HREF=\"".
@@ -246,7 +245,6 @@ class Search extends MenuItem {
             for($i = 0; $i < $mid; $i++){
                 if(!$opened) {
                     echo "<TABLE>\n";
-    
                     $opened = 1;
                 }
                 // Number
@@ -254,9 +252,10 @@ class Search extends MenuItem {
                 if($mid - $i < 1)
                     echo "  <TR><TD COLSPAN=4>&nbsp;</TD>";
                 else {
+                    // left track column
                     echo "  <TR><TD class='playTrack'>";
                     echo $this->emitTrackUrl($tracks[$i]);
-                    echo "  </TD><TD ALIGN=RIGHT>".$tracks[$i]["seq"].".</TD><TD>";
+                    echo "</TD><TD ALIGN=RIGHT>".$tracks[$i]["seq"].".</TD><TD>";
                     // Name
                     echo "<A HREF=\"".
                                  "?s=byTrack&amp;n=". UI::URLify($tracks[$i]["track"]).
@@ -267,6 +266,7 @@ class Search extends MenuItem {
                     echo "</TD><TD>&nbsp;</TD>";
                 }
 
+                // right track column
                 echo "<TD CLASS='playTrack'>";
                 echo $this->emitTrackUrl($tracks[$mid + $i]);
                 echo "</TD><TD ALIGN=RIGHT>".$tracks[$mid + $i]["seq"].".</TD><TD>";
@@ -277,7 +277,6 @@ class Search extends MenuItem {
                                     "&amp;action=search&amp;session=".$this->session->getSessionID().
                                     "\">";
                 echo $this->HTMLify($tracks[$mid + $i]["track"], 32), "</A>";
-    
                 echo "</TD></TR>";
                 echo "\n";
     
