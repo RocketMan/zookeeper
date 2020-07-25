@@ -231,8 +231,8 @@ P.zktitle A {
 	background-image: URL('../img/kzsu/kzsu_rinfo.gif');
 }
 .editorUp {
-	background-image: URL('../img/kzsu/kzsu_list_up.gif');
+	background-color: #980000;
 }
 .editorDown {
-	background-image: URL('../img/kzsu/kzsu_list_dn.gif');
+	background-color: #980000;
 }

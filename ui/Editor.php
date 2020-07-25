@@ -761,19 +761,21 @@ class Editor extends MenuItem {
     private function emitAlbumSel() {
          UI::emitJS('js/editor.album.js');
     
-         echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH=\"100%\"><TR><TD VALIGN=TOP WIDTH=220>\n";
-         echo "  <INPUT TYPE=HIDDEN NAME=seltag id='seltag' VALUE=\"".$_REQUEST["seltag"]."\">\n";
-         echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH=\"100%\">";
-         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search Albums:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$osearch\" autocomplete=off><BR>\n";
-         echo "<SPAN CLASS=\"sub\">compilation?</SPAN><INPUT TYPE=CHECKBOX NAME=coll" . ($osearch&&$_REQUEST["coll"]?" CHECKED":"") . " id='coll'></TD><TD></TD></TR>\n";
-         echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" id='bup' VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorUp\"><BR><SELECT class=\"editorChooser\" NAME=list id='list' SIZE=$this->limit>\n";
+         echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH='100%'><TR><TD VALIGN=TOP WIDTH=220>\n";
+         echo "<INPUT TYPE=HIDDEN NAME=seltag id='seltag' VALUE='".$_REQUEST["seltag"]."'>\n";
+         echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH='100%'>";
+         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search Albums:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE='width:214px;' NAME=search id='search' VALUE='$osearch' autocomplete=off><BR>\n";
+         echo "<SPAN CLASS='sub'>compilation?</SPAN><INPUT TYPE=CHECKBOX NAME=coll" . ($osearch&&$_REQUEST["coll"]?" CHECKED":"") . " id='coll'></TD><TD></TD></TR>\n";
+         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME='bup' id='bup' VALUE='&and;' TYPE='submit' CLASS='editorUp'><BR><SELECT class='editorChooser' NAME=list id='list' SIZE=$this->limit>\n";
+
          for($i=0; $i<$this->limit; $i++)
-              echo "  <OPTION VALUE=\"\">\n";
-         echo "</SELECT><BR><INPUT NAME=\"bdown\" id='bdown' VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorDown\" ></TD>\n";
+              echo "  <OPTION VALUE=''>\n";
+
+         echo "</SELECT><BR><INPUT NAME='bdown' id='bdown' VALUE='&or;' TYPE='submit' CLASS='editorDown' ></TD>\n";
          echo "</TR></TABLE>\n";
-         echo "  <INPUT TYPE=HIDDEN NAME=up id='up' VALUE=\"\">\n";
-         echo "  <INPUT TYPE=HIDDEN NAME=down id='down' VALUE=\"\">\n";
-         echo "  <INPUT TYPE=HIDDEN id='list-size' VALUE=\"$this->limit\">\n";
+         echo "  <INPUT TYPE=HIDDEN NAME=up id='up' VALUE=''>\n";
+         echo "  <INPUT TYPE=HIDDEN NAME=down id='down' VALUE=''>\n";
+         echo "  <INPUT TYPE=HIDDEN id='list-size' VALUE='$this->limit'>\n";
     ?>
     </TD><TD>
     <TABLE>
@@ -914,20 +916,20 @@ class Editor extends MenuItem {
     private function emitLabelSel() {
          UI::emitJS('js/editor.label.js');
     
-        echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH=\"100%\"><TR><TD VALIGN=TOP WIDTH=230>\n";
-        echo "  <INPUT TYPE=HIDDEN NAME=selpubkey id='selpubkey' VALUE=\"".$_REQUEST["selpubkey"]."\">\n";
-        echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH=\"100%\">";
-        echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search Labels:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$osearch\" autocomplete=off></TD></TR>\n";
-        echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME=\"bup\" id=\"bup\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorUp\"><BR><SELECT class=\"editorChooser\" NAME=list id='list' SIZE=$this->limit>\n";
+        echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH='100%'><TR><TD VALIGN=TOP WIDTH=230>\n";
+        echo "  <INPUT TYPE=HIDDEN NAME=selpubkey id='selpubkey' VALUE='".$_REQUEST["selpubkey"]."'>\n";
+        echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH='100%'>";
+        echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search Labels:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE='width:214px;' NAME=search id='search' VALUE='$osearch' autocomplete=off></TD></TR>\n";
+        echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME='bup' id='bup' VALUE='&and;' TYPE='submit' CLASS='editorUp'><BR><SELECT class='editorChooser' NAME=list id='list' SIZE=$this->limit>\n";
         for($i=0; $i<$this->limit; $i++)
-            echo "  <OPTION VALUE=\"\">\n";
-        echo "</SELECT><BR><INPUT NAME=\"bdown\" id=\"bdown\" VALUE=\"&nbsp;\" TYPE=\"submit\" CLASS=\"editorDown\"></TD>\n";
+            echo "  <OPTION VALUE=''>\n";
+        echo "</SELECT><BR><INPUT NAME='bdown' id='bdown' VALUE='&or;' TYPE='submit' CLASS='editorDown'></TD>\n";
         echo "</TR></TABLE>\n";
-        echo "  <INPUT TYPE=HIDDEN NAME=up id='up' VALUE=\"\">\n";
-        echo "  <INPUT TYPE=HIDDEN NAME=down id='down' VALUE=\"\">\n";
-        echo "  <INPUT TYPE=HIDDEN id='list-size' VALUE=\"$this->limit\">\n";
-        echo "  <INPUT TYPE=HIDDEN id='seltag' VALUE=\"".$_REQUEST["seltag"]."\">\n";
-        echo "  <INPUT TYPE=HIDDEN id='req-name' VALUE=\"".$_REQUEST["name"]."\">\n";
+        echo "  <INPUT TYPE=HIDDEN NAME=up id='up' VALUE=''>\n";
+        echo "  <INPUT TYPE=HIDDEN NAME=down id='down' VALUE=''>\n";
+        echo "  <INPUT TYPE=HIDDEN id='list-size' VALUE='$this->limit'>\n";
+        echo "  <INPUT TYPE=HIDDEN id='seltag' VALUE='".$_REQUEST["seltag"]."'>\n";
+        echo "  <INPUT TYPE=HIDDEN id='req-name' VALUE='".$_REQUEST["name"]."'>\n";
     ?>
     </TD><TD>
     <TABLE>

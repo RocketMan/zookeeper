@@ -241,16 +241,22 @@ TD.label-form {
 .editorUp {
     top: 0px;
     width: 220px;
-    height: 10px;
+    height: 16px;
     border: 0px;
-    background-image: URL('../img/list_up.gif');
+    color: #ffffff;
+    font-family: courier;
+    font-weight: 900;
+    background-color: #2530a7;
 }
 .editorDown {
     top: 0px;
     width: 220px;
-    height: 10px;
+    height: 16px;
     border: 0px;
-    background-image: URL('../img/list_dn.gif');
+    font-family: courier;
+    font-weight: 900;
+    color: #ffffff;
+    background-color: #2530a7;
 }
 .editorChooser {
     width: 220px;

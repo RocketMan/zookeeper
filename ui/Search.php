@@ -88,7 +88,7 @@ class Search extends MenuItem {
     {
         $url = $trackInfo["url"];
         $name = $this->HTMLify($trackInfo["track"], 32);
-        $tag = $url == '' ? $name : "<a target='_blank' href='$url'>$name</a>";
+        $tag = $url == '' ? $name : "<a target='_blank' href='$url'>&#9658;$name</a>";
         echo $tag;
     }
     public function searchByAlbumKey($key=0) {
