@@ -929,7 +929,7 @@ class Editor extends MenuItem {
         echo "  <INPUT TYPE=HIDDEN NAME=down id='down' VALUE=''>\n";
         echo "  <INPUT TYPE=HIDDEN id='list-size' VALUE='$this->limit'>\n";
         echo "  <INPUT TYPE=HIDDEN id='seltag' VALUE='".$_REQUEST["seltag"]."'>\n";
-        echo "  <INPUT TYPE=HIDDEN id='req-name' VALUE='".$_REQUEST["name"]."'>\n";
+        echo "  <INPUT TYPE=HIDDEN id='req-name' VALUE=\"".$_REQUEST["name"]."\">\n";
     ?>
     </TD><TD>
     <TABLE>
