@@ -207,7 +207,7 @@ class Search extends MenuItem {
         $albums = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 200, $this->searchText);
         for($i = 0; $i < sizeof($albums); $i++) {
             if($i == 0) {
-                echo "<TABLE>\n  <TR><TH>&nbsp;</TH><TH></TH><TH ALIGN=LEFT style='min-width:200px'>Artist</TH><TH ALIGN=LEFT>Track Name</TH></TR>\n";
+                echo "<TABLE class='trackTable'>\n  <TR><TH>&nbsp;</TH><TH></TH><TH ALIGN=LEFT style='min-width:200px'>Artist</TH><TH ALIGN=LEFT>Track Name</TH></TR>\n";
             }
 
             echo "  <TR><TD class='playTrack'>";
@@ -244,7 +244,7 @@ class Search extends MenuItem {
             $mid = sizeof($tracks) / 2;
             for($i = 0; $i < $mid; $i++){
                 if(!$opened) {
-                    echo "<TABLE>\n";
+                    echo "<TABLE class='trackTable'>\n";
                     $opened = 1;
                 }
                 // Number
@@ -267,7 +267,7 @@ class Search extends MenuItem {
                 }
 
                 // right track column
-                echo "<TD CLASS='playTrack'>";
+                echo "<TD class='playTrack'>";
                 echo $this->emitTrackUrl($tracks[$mid + $i]);
                 echo "</TD><TD ALIGN=RIGHT>".$tracks[$mid + $i]["seq"].".</TD><TD>";
                 // Name

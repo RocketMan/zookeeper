@@ -176,8 +176,15 @@ class EditorImpl extends BaseImpl implements IEditor {
     
         // Tracks
         if($tracks || $newAlbum) {
-            $targetTable = $iscoll ? "colltracknames" : "tracknames"; 
-            $query = "DELETE FROM $targetTable WHERE tag=?";
+            // We delete from both tracknames and colltracknames
+            // because someone could have toggled the 'compilation'
+            // checkbox; this ensures no stale track names remain
+            // in the other table.
+            $query = "DELETE FROM colltracknames WHERE tag=?";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $album["tag"]);
+            $stmt->execute();
+            $query = "DELETE FROM tracknames WHERE tag=?";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $album["tag"]);
             $stmt->execute();
