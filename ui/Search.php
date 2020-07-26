@@ -52,8 +52,6 @@ class Search extends MenuItem {
     private $maxresults = 50;
     private $chunksize = 15;
 
-    private $noTables = false;
-
     private $exactMatch = false;
 
     private $searchText;
@@ -79,11 +77,17 @@ class Search extends MenuItem {
     }
 
     private function HTMLify($arg, $size) {
-        return UI::HTMLify($arg, $size, $this->noTables);
+        return UI::HTMLify($arg, $size, false);
     }
 
     public function findAlbum() {
         $this->searchByAlbumKey($_REQUEST["n"]);
+    }
+
+    private function emitTrackUrl($trackInfo) {
+        $url = $trackInfo["url"];
+        $link = $url == '' ? '' : "<A target='_blank' href='$url'><DIV></DIV></A>";
+        echo $link;
     }
 
     public function searchByAlbumKey($key=0) {
@@ -197,23 +201,20 @@ class Search extends MenuItem {
         $this->newEntity(Reviews::class)->viewReview2($this->searchText);
     
         // Emit Tracks
-        echo "<TABLE WIDTH=\"100%\">\n  <TR><TH COLSPAN=5 ALIGN=LEFT CLASS=\"secdiv\">Track Listing</TH></TR></TABLE>\n";
+        echo "<TABLE WIDTH='100%'>\n  <TR><TH COLSPAN=6 ALIGN=LEFT CLASS='secdiv'>Track Listing</TH></TR></TABLE>\n";
     
         // Handle collection tracks
         $albums = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 200, $this->searchText);
         for($i = 0; $i < sizeof($albums); $i++) {
             if($i == 0) {
-                if($this->noTables)
-                    // 3 20 32
-                    echo "<PRE><B>  # Artist               Track Name                      </B>\n";
-                else
-                    echo "<TABLE>\n  <TR><TH>&nbsp;</TH><TH ALIGN=LEFT>Artist</TH><TH ALIGN=LEFT>Track Name</TH></TR>\n";
+                echo "<TABLE class='trackTable'>\n  <TR><TH>&nbsp;</TH><TH></TH><TH ALIGN=LEFT style='min-width:200px'>Artist</TH><TH ALIGN=LEFT>Track Name</TH></TR>\n";
             }
-    
+
+            echo "  <TR><TD class='playTrack'>";
+            echo $this->emitTrackUrl($albums[$i]);
+
             // Number
-            if($this->noTables)
-                echo UI::HTMLifyNum($albums[$i]["seq"], 3, 1);
-            echo "  <TR><TD ALIGN=RIGHT>".$albums[$i]["seq"].".</TD><TD>";
+            echo "</TD><TD ALIGN=RIGHT>".$albums[$i]["seq"].".</TD><TD>";
     
             // Artist Name
             echo "<A HREF=\"".
@@ -222,8 +223,7 @@ class Search extends MenuItem {
                                "&amp;action=search&amp;session=".$this->session->getSessionID().
                                "\">";
             echo $this->HTMLify($albums[$i]["artist"], 20), "</A>";
-            if(!$this->noTables)
-                echo "</TD><TD>\n";
+            echo "</TD><TD style='min-width:200px'>\n";
     
             // Track Name
             echo "<A HREF=\"".
@@ -232,8 +232,7 @@ class Search extends MenuItem {
                                "&amp;action=search&amp;session=".$this->session->getSessionID().
                                "\">";
             echo $this->HTMLify($albums[$i]["track"], 32). "</A>";
-            if(!$this->noTables)
-                echo "</TD></TR>";
+            echo "</TD></TR>";
             echo "\n";
         }
         if($i)
@@ -245,26 +244,18 @@ class Search extends MenuItem {
             $mid = sizeof($tracks) / 2;
             for($i = 0; $i < $mid; $i++){
                 if(!$opened) {
-                    if($this->noTables)
-                        // 3 32
-                        echo "<PRE><B>  # Track Name                      </B>\n";
-                    else
-                        echo "<TABLE>\n";
-    
+                    echo "<TABLE class='trackTable'>\n";
                     $opened = 1;
                 }
                 // Number
     
                 if($mid - $i < 1)
-                    if($this->noTables)
-                        echo UI::HTMLify(" ", 36, 1);
-                    else
-                        echo "  <TR><TD COLSPAN=3>&nbsp;</TD>";
+                    echo "  <TR><TD COLSPAN=4>&nbsp;</TD>";
                 else {
-                    if($this->noTables)
-                        echo UI::HTMLifyNum($tracks[$i]["seq"], 3, 1);
-                    else
-                        echo "  <TR><TD ALIGN=RIGHT>".$tracks[$i]["seq"].".</TD><TD>";
+                    // left track column
+                    echo "  <TR><TD class='playTrack'>";
+                    echo $this->emitTrackUrl($tracks[$i]);
+                    echo "</TD><TD ALIGN=RIGHT>".$tracks[$i]["seq"].".</TD><TD>";
                     // Name
                     echo "<A HREF=\"".
                                  "?s=byTrack&amp;n=". UI::URLify($tracks[$i]["track"]).
@@ -272,14 +263,13 @@ class Search extends MenuItem {
                                  "&amp;action=search&amp;session=".$this->session->getSessionID().
                                  "\">";
                     echo $this->HTMLify($tracks[$i]["track"], 32), "</A>";
-                    if(!$this->noTables)
-                        echo "</TD><TD>&nbsp;</TD>";
+                    echo "</TD><TD>&nbsp;</TD>";
                 }
-    
-                if($this->noTables)
-                    echo UI::HTMLifyNum($tracks[$mid + $i]["seq"], 3, 1);
-                else
-                    echo "<TD ALIGN=RIGHT>".$tracks[$mid + $i]["seq"].".</TD><TD>";
+
+                // right track column
+                echo "<TD class='playTrack'>";
+                echo $this->emitTrackUrl($tracks[$mid + $i]);
+                echo "</TD><TD ALIGN=RIGHT>".$tracks[$mid + $i]["seq"].".</TD><TD>";
                 // Name
                 echo "<A HREF=\"".
                                     "?s=byTrack&amp;n=". UI::URLify($tracks[$mid + $i]["track"]).
@@ -287,9 +277,7 @@ class Search extends MenuItem {
                                     "&amp;action=search&amp;session=".$this->session->getSessionID().
                                     "\">";
                 echo $this->HTMLify($tracks[$mid + $i]["track"], 32), "</A>";
-    
-                if(!$this->noTables)
-                    echo "</TD></TR>";
+                echo "</TD></TR>";
                 echo "\n";
     
             }
@@ -298,8 +286,6 @@ class Search extends MenuItem {
     }
     
     public function doSearch() {
-        $this->checkBrowserCaps();
-    
         if(array_key_exists('m', $_REQUEST))
             $this->exactMatch = $_REQUEST['m'];
         if(array_key_exists('n', $_REQUEST))
@@ -322,21 +308,8 @@ class Search extends MenuItem {
     
     // returns closing tag for output
     private function closeList() {
-        if($this->noTables)
-        $close = "</PRE>\n";
-            else
         $close = "</TABLE>\n";
         return $close;
-    }
-    
-    // CheckBrowserCaps
-    //
-    // Check browser's capabilities:
-    //     noTables property set true if browser does not support tables
-    //
-    private function checkBrowserCaps() {
-        // For now, we naively assume all browsers support tables except Lynx.
-        $this->noTables = (substr($_SERVER["HTTP_USER_AGENT"], 0, 5) == "Lynx/");
     }
     
     public function searchForm() {

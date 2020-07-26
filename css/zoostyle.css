@@ -241,22 +241,56 @@ TD.label-form {
 .editorUp {
     top: 0px;
     width: 220px;
-    height: 10px;
+    height: 16px;
     border: 0px;
-    background-image: URL('../img/list_up.gif');
+    color: #ffffff;
+    font-family: courier;
+    font-weight: 900;
+    background-color: #2530a7;
 }
 .editorDown {
     top: 0px;
     width: 220px;
-    height: 10px;
+    height: 16px;
     border: 0px;
-    background-image: URL('../img/list_dn.gif');
+    font-family: courier;
+    font-weight: 900;
+    color: #ffffff;
+    background-color: #2530a7;
 }
 .editorChooser {
     width: 220px;
     border-width: 1px;
     overflow: hidden;
     scrollbar-width: none;
+}
+
+.trackEditor {
+    width: 100%;
+}
+
+.trackEditor TH {
+    font-size: 10pt;
+    text-align: left;
+    vertical-align: bottom;
+    line-height: 10px;
+}
+
+.trackTable TD.playTrack {
+    vertical-align: top;
+}
+
+.playTrack DIV {
+    filter: invert(59%) sepia(98%) saturate(1900%) hue-rotate(204deg) brightness(94%) contrast(88%); /* #828ae3 see https://codepen.io/sosuke/pen/Pjoqqp */
+    width: 18px;
+    height: 18px;
+    background-size: 18px;
+    background-image: URL("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiB3aWR0aD0iNDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTAgMGg0OHY0OEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0yMCAzM2wxMi05LTEyLTl2MTh6bTQtMjlDMTIuOTUgNCA0IDEyLjk1IDQgMjRzOC45NSAyMCAyMCAyMCAyMC04Ljk1IDIwLTIwUzM1LjA1IDQgMjQgNHptMCAzNmMtOC44MiAwLTE2LTcuMTgtMTYtMTZTMTUuMTggOCAyNCA4czE2IDcuMTggMTYgMTYtNy4xOCAxNi0xNiAxNnoiLz48L3N2Zz4=");
+}
+
+.playTrack A:hover {
+    filter: saturate(10); /* doesn't work here in webkit */
+    text-decoration: none;
 }
 
 /* layout */
@@ -456,7 +490,7 @@ TH.sec {
 .success {
     color: #006600;
 }
-.text {
+.text, .urlValue {
     padding: 2px;
     border: 1px solid #3b0000;
 }
