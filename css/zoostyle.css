@@ -276,6 +276,10 @@ TD.label-form {
     line-height: 10px;
 }
 
+.trackTable TD {
+    line-height: 18px;
+}
+
 .trackTable TD.playTrack {
     vertical-align: top;
 }
