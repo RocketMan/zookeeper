@@ -156,11 +156,17 @@ function emitAlbumsEx(table, data) {
         }
         tr.append(td);
         var reviewClass = entry.reviewed?"albumReview":"albumNoReview";
-        tr.append($("<TD>", {
+        var icons = $("<TD>", {
             style: 'padding: 0 0 0 6px'
-        }).append($("<DIV>", {
+        });
+        icons.append($("<DIV>", {
             class: reviewClass
-        })));
+        }));
+        if(entry.playable)
+            icons.append($("<DIV>", {
+                class: 'albumPlayable'
+            }));
+        tr.append(icons);
         tr.append($("<TD>").html($("<A>", {
             href: "?s=byAlbumKey&n=" +
                 encodeURIComponent(entry.tag) +
@@ -357,6 +363,7 @@ var lists = {
 
 function search(size, offset) {
     var url = "zkapi.php?method=libLookupRq" +
+        "&indicatePlayable=1" +
         "&type=" + $("#type").val() +
         "&sortBy=" + $("#sortBy").val() +
         "&key=" + encodeURIComponent($("#key").val());

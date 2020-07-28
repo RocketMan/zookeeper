@@ -356,6 +356,45 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         }
     }
 
+    // For a given $albums array, add a 'playable' column
+    // for each album which has at least one playable track.
+    //
+    public function markAlbumsPlayable(&$albums) {
+        $chain = [];
+        $tags = [];
+        $queryset = "";
+        $querysetcoll = "";
+        for($i = 0; $albums != null && $i < sizeof($albums); $i++) {
+            $tag = array_key_exists("tag", $albums[$i])?$albums[$i]["tag"]:0;
+            if($tag) {
+                if(array_key_exists($tag, $tags))
+                    $chain[$i] = $tags[$tag];
+                else {
+                    if(array_key_exists("iscoll", $albums[$i]) &&
+                            $albums[$i]["iscoll"])
+                        $querysetcoll .= ", $tag";
+                    else
+                        $queryset .= ", $tag";
+                }
+                $tags[$tag] = $i;
+            }
+        }
+        $query = "SELECT tag FROM tracknames WHERE ".
+                 "url <> '' AND tag IN (0${queryset}) ".
+                 "GROUP BY tag ";
+        if($querysetcoll)
+            $query .= "UNION SELECT tag FROM colltracknames WHERE ".
+                      "url <> '' AND tag IN (0${querysetcoll}) ".
+                      "GROUP BY tag";
+        $stmt = $this->prepare($query);
+        $stmt->execute();
+        while($row = $stmt->fetch()) {
+            for($next = $tags[$row[0]]; $next >= 0; $next = array_key_exists($next, $chain)?$chain[$next]:-1) {
+                $albums[$next]["playable"] = 1;
+            }
+        }
+    }
+
     public function getNumQueuedTags($user) {
         $count = 0;
         $query = "SELECT count(*) FROM tagqueue WHERE user=?";
