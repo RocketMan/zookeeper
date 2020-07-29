@@ -379,11 +379,12 @@ class LibraryImpl extends BaseImpl implements ILibrary {
                 $tags[$tag] = $i;
             }
         }
-        $query = "SELECT tag FROM tracknames WHERE ".
+        $query = "SELECT tag FROM tracknames FORCE INDEX(tag_3) WHERE ".
                  "url <> '' AND tag IN (0${queryset}) ".
                  "GROUP BY tag ";
         if($querysetcoll)
-            $query .= "UNION SELECT tag FROM colltracknames WHERE ".
+            $query .= "UNION SELECT tag FROM colltracknames ".
+                      "FORCE INDEX(tag_3) WHERE ".
                       "url <> '' AND tag IN (0${querysetcoll}) ".
                       "GROUP BY tag";
         $stmt = $this->prepare($query);
