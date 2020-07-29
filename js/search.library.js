@@ -367,7 +367,6 @@ var lists = {
 
 function search(size, offset) {
     var url = "zkapi.php?method=libLookupRq" +
-        "&indicatePlayable=1" +
         "&type=" + $("#type").val() +
         "&sortBy=" + $("#sortBy").val() +
         "&key=" + encodeURIComponent($("#key").val());

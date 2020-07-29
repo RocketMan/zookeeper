@@ -71,7 +71,6 @@ class Home extends MenuItem {
 
        $libraryAPI = Engine::api(ILibrary::class);
        $libraryAPI->markAlbumsReviewed($topPlays);
-       $libraryAPI->markAlbumsPlayable($topPlays);
        if(sizeof($topPlays)) {
          echo "<TABLE WIDTH=\"100%\">\n";
 
