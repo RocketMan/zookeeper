@@ -159,11 +159,15 @@ function emitAlbumsEx(table, data) {
         var icons = $("<TD>", {
             style: 'padding: 0 0 0 6px'
         });
-        icons.append($("<DIV>", {
+        var container = $("<DIV>", {
+            style: 'display: flex; flex-wrap: nowrap; flex-direction: row-reverse'
+        });
+        container.appendTo(icons);
+        container.append($("<DIV>", {
             class: reviewClass
         }));
         if(entry.playable)
-            icons.append($("<DIV>", {
+            container.append($("<DIV>", {
                 class: 'albumPlayable'
             }));
         tr.append(icons);
