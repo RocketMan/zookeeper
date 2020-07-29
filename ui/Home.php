@@ -68,9 +68,8 @@ class Home extends MenuItem {
     
           Engine::api(IChart::class)->getChart($topPlays, $startDate, "", $limit);
        }
-
-       $libraryAPI = Engine::api(ILibrary::class);
-       $libraryAPI->markAlbumsReviewed($topPlays);
+    
+       Engine::api(ILibrary::class)->markAlbumsReviewed($topPlays);
        if(sizeof($topPlays)) {
          echo "<TABLE WIDTH=\"100%\">\n";
 
@@ -86,7 +85,6 @@ class Home extends MenuItem {
              $tagId = $topPlays[$i]["tag"];
              $artist = $topPlays[$i]["artist"];
              $haveReview = $topPlays[$i]["reviewed"];
-             $isPlayable = $topPlays[$i]["playable"];
              $album = UI::HTMLify($topPlays[$i]["album"], 20);
              $label = UI::HTMLify($topPlays[$i]["label"], 20);
 
@@ -103,10 +101,7 @@ class Home extends MenuItem {
 
              $reviewClass = $haveReview ? "albumReview" : "albumNoReview";
 
-             echo "<td style='padding-right:4px'><div class='$reviewClass'></div>";
-             if($isPlayable)
-                 echo "<div class='albumPlayable'></div>";
-             echo "</td>";
+             echo "<td style='padding-right:4px'><div class='$reviewClass'></div></td>";
              // Album
              echo "<TD>" .
                   "<A CLASS='nav' HREF='?s=byAlbumKey&amp;n=" . UI::URLify($tagId).
