@@ -40,7 +40,7 @@ class API extends CommandTarget implements IController {
         "tag", "artist", "album", "category", "medium",
         "size", "location", "bin", "created", "updated",
         "pubkey", "name", "address", "city", "state", "zip",
-        "reviewed", "playable"
+        "reviewed"
     ];
 
     const LABEL_FIELDS = [
@@ -229,11 +229,6 @@ class API extends CommandTarget implements IController {
         case ILibrary::LABEL_NAME:
         case ILibrary::ALBUM_AIRNAME:
             break;
-        case ILibrary::ALBUM_ARTIST:
-        case ILibrary::ALBUM_NAME:
-            if($_REQUEST["indicatePlayable"])
-                $libraryAPI->markAlbumsPlayable($results);
-            // fall through...
         default:
             $libraryAPI->markAlbumsReviewed($results, $this->session->isAuth("u"));
             break;
