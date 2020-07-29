@@ -156,21 +156,11 @@ function emitAlbumsEx(table, data) {
         }
         tr.append(td);
         var reviewClass = entry.reviewed?"albumReview":"albumNoReview";
-        var icons = $("<TD>", {
+        tr.append($("<TD>", {
             style: 'padding: 0 0 0 6px'
-        });
-        var container = $("<DIV>", {
-            style: 'display: flex; flex-wrap: nowrap; flex-direction: row-reverse'
-        });
-        container.appendTo(icons);
-        container.append($("<DIV>", {
+        }).append($("<DIV>", {
             class: reviewClass
-        }));
-        if(entry.playable)
-            container.append($("<DIV>", {
-                class: 'albumPlayable'
-            }));
-        tr.append(icons);
+        })));
         tr.append($("<TD>").html($("<A>", {
             href: "?s=byAlbumKey&n=" +
                 encodeURIComponent(entry.tag) +
