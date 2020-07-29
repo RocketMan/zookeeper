@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS `colltracknames` (
   KEY `track` (`track`),
   KEY `artist` (`artist`),
   KEY `tag_2` (`tag`,`seq`),
+  KEY `tag_3` (`tag`,`url`(1)),
   FULLTEXT KEY `artist_2` (`artist`,`track`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
@@ -351,6 +352,7 @@ CREATE TABLE IF NOT EXISTS `tracknames` (
   KEY `tag` (`tag`),
   KEY `track` (`track`),
   KEY `tag_2` (`tag`,`seq`),
+  KEY `tag_3` (`tag`,`url`(1)),
   FULLTEXT KEY `track_2` (`track`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 

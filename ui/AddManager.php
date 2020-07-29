@@ -150,11 +150,12 @@ class AddManager extends MenuItem {
         $reviewCell = $showReview /* && $isAuthenticated */ ? "<TH style='width:120px'>Reviewer</TH>" : "";
         $legacyReviewCell = /* $showReview && !$isAuthenticated && !$static ?
                                "<TH class='sorter-false'></TH>" : */ "";
+        $playableCell = $showReview ? "<TH class='sorter-false'></TH>" : "";
 
         echo "<TABLE class='sortable-table' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
              "<TH class='initial-sort-col'>Cat</TH>" .  $reviewCell .
              "<TH>ID</TH>" .
-             "<TH>Artist</TH>" . $legacyReviewCell .
+             "<TH>Artist</TH>" . $legacyReviewCell . $playableCell .
              "<TH>Title</TH>" . $labelCell . $avgCell .
              "</TR></THEAD>\n";
     
@@ -162,8 +163,11 @@ class AddManager extends MenuItem {
         $this->addManagerGetAlbums($records, $albums, $sort);
     
         // Mark reviewed albums
+        $libraryAPI = Engine::api(ILibrary::class);
         if($showReview)
-            Engine::api(ILibrary::class)->markAlbumsReviewed($albums);
+            $libraryAPI->markAlbumsReviewed($albums);
+        if($playableCell)
+            $libraryAPI->markAlbumsPlayable($albums);
     
         echo "<TBODY>";
         if($albums) {
@@ -199,6 +203,13 @@ class AddManager extends MenuItem {
                              "&amp;action=search&amp;session=".$this->session->getSessionID().
                              "\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A>";
                     }
+                    echo "</TD>";
+                }
+
+                if($playableCell) {
+                    echo "<TD>";
+                    if($row["playable"])
+                        echo "<DIV style='margin-right: 4px' class='albumPlayable'></DIV>";
                     echo "</TD>";
                 }
         
