@@ -150,7 +150,7 @@ class AddManager extends MenuItem {
         $reviewCell = $showReview /* && $isAuthenticated */ ? "<TH style='width:120px'>Reviewer</TH>" : "";
         $legacyReviewCell = /* $showReview && !$isAuthenticated && !$static ?
                                "<TH class='sorter-false'></TH>" : */ "";
-        $playableCell = $showReview ? "<TH class='sorter-false'></TH>" : "";
+        $playableCell = $showReview && $isAuthenticated ? "<TH class='sorter-false'></TH>" : "";
 
         echo "<TABLE class='sortable-table' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
              "<TH class='initial-sort-col'>Cat</TH>" .  $reviewCell .
