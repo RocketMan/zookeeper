@@ -98,6 +98,12 @@ class Search extends MenuItem {
 
     private function emitTrackInfo($trackInfo, $showArtist) {
         $url = $trackInfo["url"];
+
+        // suppress google drive URLs for non-authenticated users
+        if(strpos($url, 'drive.google.com') !== false &&
+                !$this->session->isAuth("u"))
+            $url = '';
+
         $playLink = $url == '' ? '' : "<DIV class='playTrack'><A target='_blank' href='$url'></A></DIV>";
         echo "<TD>$playLink</TD>";
         echo "<TD>${trackInfo['seq']}.</TD>";
