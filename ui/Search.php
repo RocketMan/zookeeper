@@ -84,14 +84,43 @@ class Search extends MenuItem {
         $this->searchByAlbumKey($_REQUEST["n"]);
     }
 
-    private function emitTrackUrl($trackInfo) {
+
+    // return link to artist or track info.
+    private function makeTrackLink($name, $length) {
+        $linkUrl = UI::URLify($name);
+        $linkHtml = $this->HTMLify($name, $length);
+        $link = "<A HREF='?s=byTrack&amp;n=$linkUrl" .
+                      "&amp;q=". $this->maxresults.
+                      "&amp;action=search&amp;session=".$this->session->getSessionID().
+                      "'>$linkHtml</A>";
+        return $link;
+    }
+
+    private function emitTrackInfo($trackInfo, $showArtist, $isAuth, $internalLinks) {
         $url = $trackInfo["url"];
-        $link = $url == '' ? '' : "<A target='_blank' href='$url'><DIV></DIV></A>";
-        echo $link;
+
+        // suppress internal URLs for non-authenticated users
+        if($internalLinks && preg_match($internalLinks, $url) && !$isAuth)
+            $url = '';
+
+        $playLink = $url == '' ? '' : "<DIV class='playTrack'><A target='_blank' href='$url'></A></DIV>";
+        echo "<TD>$playLink</TD>";
+        echo "<TD>${trackInfo['seq']}.</TD>";
+
+        if ($showArtist) { // collection only
+            $artistLink = $this->makeTrackLink($trackInfo['artist'], 20);
+            echo "<TD>$artistLink</TD>";
+        }
+
+        $titleLink = $this->makeTrackLink($trackInfo['track'], 32);
+        echo "<TD>$titleLink</TD>";
     }
 
     public function searchByAlbumKey($key=0) {
         $opened = 0;
+
+        $isAuth = $this->session->isAuth('u');
+        $internalLinks = Engine::param('internal_links');
 
         if($key)
             $this->searchText = $key;
@@ -103,7 +132,7 @@ class Search extends MenuItem {
         echo "<TABLE WIDTH=\"100%\">\n  <TR><TH ALIGN=LEFT COLSPAN=5 CLASS=\"secdiv\">" .
                   $this->HTMLify($artist, 20) . " / " .
                   $this->HTMLify($albums[0]["album"], 20);
-        if($this->session->isAuth("u"))
+        if($isAuth)
             echo "&nbsp;&nbsp;(Tag #".$albums[0]["tag"].")";
         echo "</TH></TR>\n</TABLE>";
         echo "<TABLE>\n";
@@ -146,7 +175,7 @@ class Search extends MenuItem {
             break;
         }
         echo "</B>";
-        if($this->session->isAuth("u") && $showMissing) {
+        if($isAuth && $showMissing) {
             $urls = Engine::param('urls');
             if(array_key_exists('report_missing', $urls)) {
                 $url = str_replace('%USERNAME%', UI::URLify($this->session->getDN()), $urls['report_missing']);
@@ -201,40 +230,20 @@ class Search extends MenuItem {
         $this->newEntity(Reviews::class)->viewReview2($this->searchText);
     
         // Emit Tracks
-        echo "<TABLE WIDTH='100%'>\n  <TR><TH COLSPAN=6 ALIGN=LEFT CLASS='secdiv'>Track Listing</TH></TR></TABLE>\n";
+        echo "<TABLE style='margin-bottom:4px' WIDTH='100%'><TR><TH COLSPAN=6 ALIGN=LEFT CLASS='secdiv'>Track Listing</TH></TR></TABLE>\n";
     
         // Handle collection tracks
         $albums = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 200, $this->searchText);
         for($i = 0; $i < sizeof($albums); $i++) {
             if($i == 0) {
-                echo "<TABLE class='trackTable'>\n  <TR><TH>&nbsp;</TH><TH></TH><TH ALIGN=LEFT style='min-width:200px'>Artist</TH><TH ALIGN=LEFT>Track Name</TH></TR>\n";
+                echo "<TABLE class='trackTable'><TR><TH>&nbsp;</TH><TH></TH><TH ALIGN=LEFT style='min-width:200px'>Artist</TH><TH ALIGN=LEFT>Track Name</TH></TR>\n";
             }
 
-            echo "  <TR><TD class='playTrack'>";
-            echo $this->emitTrackUrl($albums[$i]);
-
-            // Number
-            echo "</TD><TD ALIGN=RIGHT>".$albums[$i]["seq"].".</TD><TD>";
-    
-            // Artist Name
-            echo "<A HREF=\"".
-                               "?s=byArtist&amp;n=". UI::URLify($albums[$i]["artist"]).
-                               "&amp;q=". $this->maxresults.
-                               "&amp;action=search&amp;session=".$this->session->getSessionID().
-                               "\">";
-            echo $this->HTMLify($albums[$i]["artist"], 20), "</A>";
-            echo "</TD><TD style='min-width:200px'>\n";
-    
-            // Track Name
-            echo "<A HREF=\"".
-                               "?s=byTrack&amp;n=". UI::URLify($albums[$i]["track"]).
-                               "&amp;q=". $this->maxresults.
-                               "&amp;action=search&amp;session=".$this->session->getSessionID().
-                               "\">";
-            echo $this->HTMLify($albums[$i]["track"], 32). "</A>";
-            echo "</TD></TR>";
-            echo "\n";
+            echo "<TR>";
+            echo $this->emitTrackInfo($albums[$i], true, $isAuth, $internalLinks);
+            echo "</TR>\n";
         }
+
         if($i)
             echo $this->closeList();
         else {
@@ -247,39 +256,17 @@ class Search extends MenuItem {
                     echo "<TABLE class='trackTable'>\n";
                     $opened = 1;
                 }
-                // Number
-    
+
                 if($mid - $i < 1)
-                    echo "  <TR><TD COLSPAN=4>&nbsp;</TD>";
+                    echo "<TR><TD COLSPAN=4>&nbsp;</TD>";
                 else {
-                    // left track column
-                    echo "  <TR><TD class='playTrack'>";
-                    echo $this->emitTrackUrl($tracks[$i]);
-                    echo "</TD><TD ALIGN=RIGHT>".$tracks[$i]["seq"].".</TD><TD>";
-                    // Name
-                    echo "<A HREF=\"".
-                                 "?s=byTrack&amp;n=". UI::URLify($tracks[$i]["track"]).
-                                 "&amp;q=". $this->maxresults.
-                                 "&amp;action=search&amp;session=".$this->session->getSessionID().
-                                 "\">";
-                    echo $this->HTMLify($tracks[$i]["track"], 32), "</A>";
-                    echo "</TD><TD>&nbsp;</TD>";
+                    echo "<TR>";
+                    $this->emitTrackInfo($tracks[$i], false, $isAuth, $internalLinks); // left side
+                    echo "<TD>&nbsp;</TD>"; // replace with a right pad
                 }
 
-                // right track column
-                echo "<TD class='playTrack'>";
-                echo $this->emitTrackUrl($tracks[$mid + $i]);
-                echo "</TD><TD ALIGN=RIGHT>".$tracks[$mid + $i]["seq"].".</TD><TD>";
-                // Name
-                echo "<A HREF=\"".
-                                    "?s=byTrack&amp;n=". UI::URLify($tracks[$mid + $i]["track"]).
-                                    "&amp;q=". $this->maxresults.
-                                    "&amp;action=search&amp;session=".$this->session->getSessionID().
-                                    "\">";
-                echo $this->HTMLify($tracks[$mid + $i]["track"], 32), "</A>";
-                echo "</TD></TR>";
-                echo "\n";
-    
+                $this->emitTrackInfo($tracks[$i + $mid], false, $isAuth, $internalLinks); // right side
+                echo "</TR>\n";
             }
             if($opened) echo $this->closeList();
         }

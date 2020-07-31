@@ -21,7 +21,7 @@ $config = [
 
     'station_freq' => '90.1FM',
 
-    'copyright' => '&copy; 2002-2019 Stanford University.  All rights reserved.  Please read the Stanford University <A HREF="http://www.stanford.edu/home/atoz/terms.html">acceptable use policy</A>',
+    'copyright' => '&copy; 2002-2020 Stanford University.  All rights reserved.  Please read the Stanford University <A HREF="https://www.stanford.edu/site/terms/">acceptable use policy</A>',
 
     'logo' => 'img/kzsu/kzsu_aharoni.png',
     'favicon' => 'img/kzsu/favicon.ico',
@@ -120,6 +120,12 @@ $config = [
     'custom_controllers' => [
         'main' => ZK\UI\KzsuUIController::class,
     ],
+
+    /**
+     * playable track URLs which should be suppressed for
+     * non-authenticated users
+     */
+    'internal_links' => '/^http(|s):\/\/(drive\.google\.com|.*\.stanford\.edu)\//',
 
     /**
      * define the non-music entries (NME) that can be

@@ -929,7 +929,7 @@ class Editor extends MenuItem {
         echo "  <INPUT TYPE=HIDDEN NAME=down id='down' VALUE=''>\n";
         echo "  <INPUT TYPE=HIDDEN id='list-size' VALUE='$this->limit'>\n";
         echo "  <INPUT TYPE=HIDDEN id='seltag' VALUE='".$_REQUEST["seltag"]."'>\n";
-        echo "  <INPUT TYPE=HIDDEN id='req-name' VALUE='".$_REQUEST["name"]."'>\n";
+        echo "  <INPUT TYPE=HIDDEN id='req-name' VALUE=\"".$_REQUEST["name"]."\">\n";
     ?>
     </TD><TD>
     <TABLE>
@@ -1033,11 +1033,11 @@ class Editor extends MenuItem {
 
             echo "<TR>";
             echo "<TD ALIGN='RIGHT' style='width:20px' ><b>$trackNum:</b></TD>";
-            echo "<TD><INPUT NAME='track$trackNum' style='$cellWidth' VALUE='$title' CLASS=text maxlength='80' data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
+            echo "<TD><INPUT NAME='track$trackNum' style='$cellWidth' VALUE=\"$title\" CLASS=text maxlength='80' data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
 
             if($isCollection) {
                 $artist = htmlentities(stripslashes($_POST["artist".$trackNum]));
-                echo "<TD style='$cellWidth'><INPUT NAME=artist$trackNum style='$cellWidth' VALUE='$artist' TYPE=text CLASS=text maxlength='80' data-zkalpha='true' data-track='$trackNum'></TD>";
+                echo "<TD style='$cellWidth'><INPUT NAME=artist$trackNum style='$cellWidth' VALUE=\"$artist\" TYPE=text CLASS=text maxlength='80' data-zkalpha='true' data-track='$trackNum'></TD>";
                 $this->skipVar("artist".$trackNum);
             }
 

@@ -95,7 +95,7 @@ class ChartImpl extends BaseImpl implements IChart {
     public function getAdd($date) {
         $query = "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
                  "c.category as afile_category, ".
-                 "a.artist, a.album, a.medium, a.size, ".
+                 "a.artist, a.album, a.medium, a.size, a.iscoll, ".
                  "a.created, a.updated, a.category, p.name label ".
                  "FROM currents c, albumvol a, publist p ".
                  "WHERE c.tag = a.tag AND a.pubkey = p.pubkey ".
@@ -108,7 +108,7 @@ class ChartImpl extends BaseImpl implements IChart {
     public function getCurrents($date, $sort=0) {
         $query = "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
                  "c.category as afile_category, ".
-                 "a.artist, a.album, a.medium, a.size, ".
+                 "a.artist, a.album, a.medium, a.size, a.iscoll, ".
                  "a.created, a.updated, a.category, p.name label ".
                  "FROM currents c, albumvol a, publist p ".
                  "WHERE c.tag = a.tag AND a.pubkey = p.pubkey ".
@@ -132,7 +132,7 @@ class ChartImpl extends BaseImpl implements IChart {
                  "c.category afile_category, ".
                  "IF(DATEDIFF(?, adddate) > 7, ".
                  "FLOOR(count(t.tag)/DATEDIFF(?, adddate)*100), null) sizzle, ".
-                 "a.artist, a.album, a.medium, a.size, ".
+                 "a.artist, a.album, a.medium, a.size, a.iscoll, ".
                  "a.created, a.updated, a.category, p.name label ".
                  "FROM tracks t ".
                  "JOIN lists l ON t.list = l.id ".
@@ -154,7 +154,7 @@ class ChartImpl extends BaseImpl implements IChart {
                  "ENGINE=MEMORY ".
                  "SELECT c.id, afile_number, c.tag, adddate, pulldate, ".
                  "c.category afile_category, IF(DATEDIFF(?, adddate) > 7, 0, null) sizzle, ".
-                 "a.artist, a.album, a.medium, a.size, ".
+                 "a.artist, a.album, a.medium, a.size, a.iscoll, ".
                  "a.created, a.updated, a.category, p.name label ".
                  "FROM currents c, albumvol a, publist p ".
                  "WHERE adddate <= ? AND pulldate > ? ".

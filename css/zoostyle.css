@@ -276,16 +276,28 @@ TD.label-form {
     line-height: 10px;
 }
 
-.trackTable TD.playTrack {
-    vertical-align: top;
+.trackTable TD {
+    line-height: 18px;
 }
 
-.playTrack DIV {
+.trackTable TD {
+    vertical-align: middle;
+}
+
+div.playTrack {
     filter: invert(59%) sepia(98%) saturate(1900%) hue-rotate(204deg) brightness(94%) contrast(88%); /* #828ae3 see https://codepen.io/sosuke/pen/Pjoqqp */
+    padding-right: 4px;
+}
+
+div.playTrack A {
+    padding-right: 2px;
+    padding-bottom: 2px;
+    display: inline-block;
     width: 18px;
     height: 18px;
     background-size: 18px;
-    background-image: URL("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiB3aWR0aD0iNDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTAgMGg0OHY0OEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0yMCAzM2wxMi05LTEyLTl2MTh6bTQtMjlDMTIuOTUgNCA0IDEyLjk1IDQgMjRzOC45NSAyMCAyMCAyMCAyMC04Ljk1IDIwLTIwUzM1LjA1IDQgMjQgNHptMCAzNmMtOC44MiAwLTE2LTcuMTgtMTYtMTZTMTUuMTggOCAyNCA4czE2IDcuMTggMTYgMTYtNy4xOCAxNi0xNiAxNnoiLz48L3N2Zz4=");
+    background-repeat: no-repeat;
+    background-image: URL("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgaGVpZ2h0PSI0MCIgdmlld0JveD0iNCA0IDQwIDQwIiB3aWR0aD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTIwIDMzbDEyLTktMTItOXYxOHptNC0yOUMxMi45NSA0IDQgMTIuOTUgNCAyNHM4Ljk1IDIwIDIwIDIwIDIwLTguOTUgMjAtMjBTMzUuMDUgNCAyNCA0em0wIDM2Yy04LjgyIDAtMTYtNy4xOC0xNi0xNlMxNS4xOCA4IDI0IDhzMTYgNy4xOCAxNiAxNi03LjE4IDE2LTE2IDE2eiIvPjwvc3ZnPgo=");
 }
 
 .playTrack A:hover {
@@ -453,6 +465,7 @@ TH.sec {
     text-align: left;
 }
 .secdiv, .secdiv TH, TH.sec {
+    padding-left: 4px;
     color: white;
     background-color: #2530a7;
 }
@@ -630,6 +643,14 @@ A.calLink {
 .albumNoReview {
     width:11px;
     height:11px;
+}
+.albumPlayable {
+    float: right;
+    width: 11px;
+    height: 11px;
+    background-size: 11px;
+    background-repeat: no-repeat;
+    background-image: URL('../img/discicon.svg');
 }
 
 /* tighten up tablesorter's spacing */
