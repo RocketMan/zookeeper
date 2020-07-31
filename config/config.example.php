@@ -125,6 +125,12 @@ $config = [
     ],
 
     /**
+     * playable track URLs which should be suppressed for
+     * non-authenticated users
+     */
+    'internal_links' => '/^http(|s):\/\/drive\.google\.com\//',
+
+    /**
      * define the non-music entries (NME) that can be
      * entered into the playlist via the playlist editor.
      * Note, that as 'special' tracks they are not shown when

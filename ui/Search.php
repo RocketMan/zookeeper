@@ -96,12 +96,11 @@ class Search extends MenuItem {
         return $link;
     }
 
-    private function emitTrackInfo($trackInfo, $showArtist) {
+    private function emitTrackInfo($trackInfo, $showArtist, $isAuth, $internalLinks) {
         $url = $trackInfo["url"];
 
-        // suppress google drive URLs for non-authenticated users
-        if(strpos($url, 'drive.google.com') !== false &&
-                !$this->session->isAuth("u"))
+        // suppress internal URLs for non-authenticated users
+        if($internalLinks && preg_match($internalLinks, $url) && !$isAuth)
             $url = '';
 
         $playLink = $url == '' ? '' : "<DIV class='playTrack'><A target='_blank' href='$url'></A></DIV>";
@@ -120,6 +119,9 @@ class Search extends MenuItem {
     public function searchByAlbumKey($key=0) {
         $opened = 0;
 
+        $isAuth = $this->session->isAuth('u');
+        $internalLinks = Engine::param('internal_links');
+
         if($key)
             $this->searchText = $key;
     
@@ -130,7 +132,7 @@ class Search extends MenuItem {
         echo "<TABLE WIDTH=\"100%\">\n  <TR><TH ALIGN=LEFT COLSPAN=5 CLASS=\"secdiv\">" .
                   $this->HTMLify($artist, 20) . " / " .
                   $this->HTMLify($albums[0]["album"], 20);
-        if($this->session->isAuth("u"))
+        if($isAuth)
             echo "&nbsp;&nbsp;(Tag #".$albums[0]["tag"].")";
         echo "</TH></TR>\n</TABLE>";
         echo "<TABLE>\n";
@@ -173,7 +175,7 @@ class Search extends MenuItem {
             break;
         }
         echo "</B>";
-        if($this->session->isAuth("u") && $showMissing) {
+        if($isAuth && $showMissing) {
             $urls = Engine::param('urls');
             if(array_key_exists('report_missing', $urls)) {
                 $url = str_replace('%USERNAME%', UI::URLify($this->session->getDN()), $urls['report_missing']);
@@ -238,7 +240,7 @@ class Search extends MenuItem {
             }
 
             echo "<TR>";
-            echo $this->emitTrackInfo($albums[$i], true);
+            echo $this->emitTrackInfo($albums[$i], true, $isAuth, $internalLinks);
             echo "</TR>\n";
         }
 
@@ -259,11 +261,11 @@ class Search extends MenuItem {
                     echo "<TR><TD COLSPAN=4>&nbsp;</TD>";
                 else {
                     echo "<TR>";
-                    $this->emitTrackInfo($tracks[$i], false); // left side
+                    $this->emitTrackInfo($tracks[$i], false, $isAuth, $internalLinks); // left side
                     echo "<TD>&nbsp;</TD>"; // replace with a right pad
                 }
 
-                $this->emitTrackInfo($tracks[$i + $mid], false); // right side
+                $this->emitTrackInfo($tracks[$i + $mid], false, $isAuth, $internalLinks); // right side
                 echo "</TR>\n";
             }
             if($opened) echo $this->closeList();
