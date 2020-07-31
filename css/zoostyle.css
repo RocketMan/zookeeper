@@ -280,15 +280,23 @@ TD.label-form {
     line-height: 18px;
 }
 
-.trackTable TD.playTrack {
-    vertical-align: top;
+.trackTable TD {
+    vertical-align: middle;
 }
 
-.playTrack DIV {
+div.playTrack {
     filter: invert(59%) sepia(98%) saturate(1900%) hue-rotate(204deg) brightness(94%) contrast(88%); /* #828ae3 see https://codepen.io/sosuke/pen/Pjoqqp */
+    padding-right: 4px;
+}
+
+div.playTrack A {
+    padding-right: 2px;
+    padding-bottom: 2px;
+    display: inline-block;
     width: 18px;
     height: 18px;
     background-size: 18px;
+    background-repeat: no-repeat;
     background-image: URL("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgaGVpZ2h0PSI0MCIgdmlld0JveD0iNCA0IDQwIDQwIiB3aWR0aD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTIwIDMzbDEyLTktMTItOXYxOHptNC0yOUMxMi45NSA0IDQgMTIuOTUgNCAyNHM4Ljk1IDIwIDIwIDIwIDIwLTguOTUgMjAtMjBTMzUuMDUgNCAyNCA0em0wIDM2Yy04LjgyIDAtMTYtNy4xOC0xNi0xNlMxNS4xOCA4IDI0IDhzMTYgNy4xOCAxNiAxNi03LjE4IDE2LTE2IDE2eiIvPjwvc3ZnPgo=");
 }
 
@@ -457,6 +465,7 @@ TH.sec {
     text-align: left;
 }
 .secdiv, .secdiv TH, TH.sec {
+    padding-left: 4px;
     color: white;
     background-color: #2530a7;
 }

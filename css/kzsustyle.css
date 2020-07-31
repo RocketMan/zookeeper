@@ -237,6 +237,6 @@ P.zktitle A {
 	background-color: #980000;
 }
 
-.playTrack DIV {
+DIV.playTrack {
     filter: invert(0.3) sepia(1) saturate(5) hue-rotate(310deg);
 }
