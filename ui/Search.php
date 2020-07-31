@@ -98,6 +98,7 @@ class Search extends MenuItem {
 
     private function emitTrackInfo($trackInfo, $showArtist) {
         $url = $trackInfo["url"];
+
         // suppress google drive URLs for non-authenticated users
         if(strpos($url, 'drive.google.com') !== false &&
                 !$this->session->isAuth("u"))
