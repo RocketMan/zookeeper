@@ -51,8 +51,7 @@ class SSOLogin implements IController {
             // setup redirection to the application
             $rq = [
                 "action" => $this->action,
-                "ssoOptions" => $this->ssoOptions,
-                "session" => Engine::session()->getSessionID()
+                "ssoOptions" => $this->ssoOptions
             ];
         
             if($location) {
