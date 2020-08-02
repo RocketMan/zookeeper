@@ -54,7 +54,7 @@ class UserAdmin extends MenuItem {
         $auGroups = $_REQUEST["auGroups"];
         $auExpire = $_REQUEST["auExpire"];
 
-        if($seq == "editUser") {
+        if($seq == "editUser" && $_SERVER['REQUEST_METHOD'] == 'POST') {
             // Commit the changes
             $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $uid);
             if(sizeof($user)) {
@@ -64,7 +64,7 @@ class UserAdmin extends MenuItem {
                     echo "<B><FONT COLOR=\"#ff0000\">Update user failed.  Try again later.</FONT></B>\n";
             } else
                 echo "<B><FONT COLOR=\"#ff0000\">Invalid user.  Update failed.</FONT></B>\n";
-        } else if($seq == "addUser") {
+        } else if($seq == "addUser" && $_SERVER['REQUEST_METHOD'] == 'POST') {
           if($uid) {
              if(Engine::api(IUser::class)->insertUser($uid, $auPass, $auName, $auGroups, $auExpire))
                echo "<B><FONT CLASS=\"subhead2\">$uid successfully added</FONT></B>\n";
@@ -212,7 +212,7 @@ class UserAdmin extends MenuItem {
         $auGroups = $_REQUEST["auGroups"];
         $auExpire = $_REQUEST["auExpire"];
     
-        if($seq == "editAirname") {
+        if($seq == "editAirname" && $_SERVER['REQUEST_METHOD'] == 'POST') {
            if($uid) {
               // Get the airname
               $result = Engine::api(IDJ::class)->getAirnames(0, $aid);

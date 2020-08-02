@@ -639,6 +639,9 @@ class Editor extends MenuItem {
     }
 
     private function insertUpdateAlbum() {
+        if($_SERVER['REQUEST_METHOD'] != 'POST')
+            return false;
+
         $album = $this->getAlbum();
         $tracks = $this->getTracks();
         $result = Engine::api(IEditor::class)->insertUpdateAlbum($album, $tracks, $this->getLabel());
@@ -658,6 +661,9 @@ class Editor extends MenuItem {
     }
 
     private function insertUpdateLabel() {
+        if($_SERVER['REQUEST_METHOD'] != 'POST')
+            return false;
+
         $label = $this->getLabel();
         $result = Engine::api(IEditor::class)->insertUpdateLabel($label);
         if($result) {

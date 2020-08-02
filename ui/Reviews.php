@@ -264,7 +264,7 @@ class Reviews extends MenuItem {
     public function editReview() {
         $airname = $_REQUEST["airname"];
     
-        if($_REQUEST["validate"]) {
+        if($_POST["validate"]) {
             switch($_REQUEST["button"]) {
             case " Setup New Airname... ":
                 $displayForm = 1;

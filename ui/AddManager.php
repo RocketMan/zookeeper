@@ -570,7 +570,7 @@ class AddManager extends MenuItem {
         $artist = $_REQUEST["artist"];
         $album = $_REQUEST["album"];
     
-        if($validate) {
+        if($validate && $_SERVER['REQUEST_METHOD'] == 'POST') {
             // Add the album
             $emitted = false;
             $catstr = "";
@@ -726,7 +726,7 @@ class AddManager extends MenuItem {
         $artist = $_REQUEST["artist"];
         $album = $_REQUEST["album"];
     
-        if($validate) {
+        if($validate && $_SERVER['REQUEST_METHOD'] == 'POST') {
             // Add the album
             $emitted = false;
             $catstr = "";
@@ -846,14 +846,15 @@ class AddManager extends MenuItem {
             $_REQUEST["date"] = $row["adddate"];
         }
     
-        Engine::api(IChart::class)->deleteAlbum($id);
+        if($_SERVER['REQUEST_METHOD'] == 'POST')
+            Engine::api(IChart::class)->deleteAlbum($id);
         $this->addManagerShowAdd();
     }
     
     public function addManagerCats() {
         $seq = $_REQUEST["seq"];
     
-        if($seq == "update") {
+        if($seq == "update" && $_SERVER['REQUEST_METHOD'] == 'POST') {
             $success = true;
             for($i=1; $success && $i<=16; $i++) {
                 $name = $_POST["name".$i];

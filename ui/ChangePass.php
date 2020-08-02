@@ -31,7 +31,7 @@ use ZK\UI\UICommon as UI;
 
 class ChangePass extends MenuItem {
     public function processLocal($action, $subaction) {
-        if(isset($_REQUEST["validate"])) {
+        if(isset($_POST["validate"])) {
             $userAPI = Engine::api(IUser::class);
             if($userAPI->validatePassword($this->session->getUser(), $_REQUEST["oldPass"], 0)) {
                 $newPass = $_REQUEST["newPass"];

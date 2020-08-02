@@ -202,7 +202,7 @@ class Playlists extends MenuItem {
     // add track from an ajax post from client. return new track row
     // upon success else 400 response.
     public function handleAddTrack() {
-        $playlistId = trim($_REQUEST["playlist"]);
+        $playlistId = trim($_POST["playlist"]);
         $playlistApi = Engine::api(IPlaylist::class);
         $playlist = $playlistApi->getPlaylist($playlistId, 1);
         $isLiveShow = $playlistApi->IsNowWithinShow($playlist);
@@ -266,7 +266,7 @@ class Playlists extends MenuItem {
 
             if ($updateStatus === 0) {
                 $retMsg = $status == '' ? "DB update error" : $status;
-             } else {
+            } else {
                 // JM 2019-08-15 action and id need to be set
                 // for hyperlinks genereated by makePlaylistObserver (#54)
                 $this->action = $_REQUEST["oaction"];
@@ -292,7 +292,7 @@ class Playlists extends MenuItem {
 
     public function handleMoveTrack() {
         $retVal = [];
-        $list = $_REQUEST["playlist"];
+        $list = $_POST["playlist"];
         $from = $_REQUEST["fromId"];
         $to = $_REQUEST["toId"];
 
@@ -455,7 +455,7 @@ class Playlists extends MenuItem {
     
     // handles post for playlist creation and edit
     public function handleListPost() {
-        $description = $_REQUEST["description"];
+        $description = $_POST["description"];
         $date = $_REQUEST["date"];
         $fromtime = substr($_REQUEST["fromtime"], 0, 5);
         $totime   = substr($_REQUEST["totime"], 0, 5);
@@ -606,13 +606,13 @@ class Playlists extends MenuItem {
     }
 
     public function handleDeleteListPost() {
-        $playlistId = $_REQUEST["playlist"];
+        $playlistId = $_POST["playlist"];
         Engine::api(IPlaylist::class)->deletePlaylist($playlistId);
         $this->emitEditListPicker();
     }
 
     public function handleRestoreListPost() {
-        $playlistId = $_REQUEST["playlist"];
+        $playlistId = $_POST["playlist"];
         $this->restorePlaylist($playlistId);
         $this->emitEditListPicker();
     }
@@ -1272,7 +1272,7 @@ class Playlists extends MenuItem {
     }
     
     public function emitImportList() {
-        $validate = $_REQUEST["validate"];
+        $validate = $_POST["validate"];
         $description = $_REQUEST["description"];
         $date = $_REQUEST["date"];
         $time = $_REQUEST["time"];
@@ -1463,7 +1463,7 @@ class Playlists extends MenuItem {
             }
             // echo "<B>Imported $count tracks.</B>\n";
             fclose($fd);
-            unset($_REQUEST["validate"]);
+            unset($_POST["validate"]);
 
             $_REQUEST["playlist"] = $playlist;
             $this->action = "newListEditor";
@@ -1567,7 +1567,7 @@ class Playlists extends MenuItem {
     public function updateDJInfo() {
         UI::emitJS("js/playlists.pick.js");
 
-        $validate = $_REQUEST["validate"];
+        $validate = $_POST["validate"];
         $multi = $_REQUEST["multi"];
         $url = $_REQUEST["url"];
         $email = $_REQUEST["email"];
@@ -1654,7 +1654,7 @@ class Playlists extends MenuItem {
     public function emitShowLink() {
         UI::emitJS("js/playlists.pick.js");
 
-        $validate = $_REQUEST["validate"];
+        $validate = $_POST["validate"];
         $playlist = $_REQUEST["playlist"];
         $airname = $_REQUEST["airname"];
     
