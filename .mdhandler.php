@@ -23,14 +23,14 @@
  */
 
 require('ui/3rdp/Parsedown.php');
- 
+
 $target = realpath(__DIR__.$_SERVER['PATH_INFO']);
 if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
         !file_exists($target)) {
     http_response_code(404);
     return;
 }
-    
+
 header("Content-Type: text/html");
 header("Last-Modified: ".gmdate('D, d M Y H:i:s', filemtime($target))." GMT");
 

@@ -66,7 +66,22 @@ class Session {
     public function getUser() { return $this->user; }
 
     private function setSessionCookie($session) {
-        setcookie($this->sessionCookieName, $session, 0, "/", $_SERVER['SERVER_NAME'], $this->secure, true);
+        // help prevent CSRF attacks with SameSite cookie flag
+        // 'SameSite=Lax' omits the cookie in cross-site POST requests
+        // see https://portswigger.net/web-security/csrf/samesite-cookies
+        if(PHP_VERSION_ID < 70300) {
+            // work-around for missing SameSite flag in php 7.2 and earlier
+            setcookie($this->sessionCookieName, $session, 0, "/; samesite=lax", $_SERVER['SERVER_NAME'], $this->secure, true);
+        } else {
+            setcookie($this->sessionCookieName, $session, [
+                'expires' => 0,
+                'path' => '/',
+                'domain' => $_SERVER['SERVER_NAME'],
+                'secure' => $this->secure,
+                'httponly' => true,
+                'samesite' => 'lax'
+            ]);
+        }
         setcookie("port", mt_rand(), 0, "/", $_SERVER['SERVER_NAME'], $this->secure, true);
     }
 
