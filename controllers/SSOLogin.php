@@ -62,21 +62,40 @@ class SSOLogin implements IController {
                 $target = UI::getBaseUrl();
         
         } else {
-            // generate the SSO state token
-            $token = Engine::api(IUser::class)->setupSsoRedirect($params["location"]);
+            // check that cookies are enabled
+            if($params["checkCookie"]) {
+                if(isset($_COOKIE["testcookie"])) {
+                    // the cookie test was successful!
+
+                    // clear the test cookie
+                    setcookie("testcookie", "", time() - 3600, "/", $_SERVER['SERVER_NAME']);
+
+                    // generate the SSO state token
+                    $token = Engine::api(IUser::class)->setupSsoRedirect($params["location"]);
         
-            // redirect to the Google auth page
-            $configParams = Engine::param('sso');
-            $rq = [
-                "client_id" => $configParams['client_id'],
-                "response_type" => "code",
-                "scope" => "openid email profile",
-                "redirect_uri" => $configParams['redirect_uri'],
-                "state" => $token,
-                "hd" => $configParams['domain'],
-            ];
+                    // redirect to the Google auth page
+                    $configParams = Engine::param('sso');
+                    $rq = [
+                        "client_id" => $configParams['client_id'],
+                        "response_type" => "code",
+                        "scope" => "openid email profile",
+                        "redirect_uri" => $configParams['redirect_uri'],
+                        "state" => $token,
+                        "hd" => $configParams['domain'],
+                    ];
         
-            $target = $configParams['oauth_auth_uri'];
+                    $target = $configParams['oauth_auth_uri'];
+                } else {
+                    // cookies are not enabled; alert user
+                    $rq = [ "action" => "cookiesDisabled" ];
+                    $target = UI::getBaseUrl();
+                }
+            } else {
+                // send a test cookie
+                setcookie("testcookie", "testcookie");
+                $rq = [ "checkCookie" => 1 ];
+                $target = $_SERVER['REQUEST_URI'];
+            }
         }
         
         // do the redirection

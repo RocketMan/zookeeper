@@ -71,6 +71,10 @@ class Main implements IController {
             if($this->doSSOOptions())
                 exit;
             break;
+        case "login":
+            if($this->checkCookiesEnabled())
+                exit;
+            break;
         case "logout":
             $this->doLogout();
             break;
@@ -165,6 +169,7 @@ class Main implements IController {
         case "ssoInvalidDomain":
         case "ssoInvalidAssertion":
         case "ssoError":
+        case "cookiesDisabled":
             $this->emitLogin($action);
             break;
         case "ssoOptions":
@@ -268,6 +273,14 @@ class Main implements IController {
         case "ssoError":
             echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">There was a problem accessing Google authentication.  Please try again later.</FONT></B></TD></TR>\n";
             break;
+        case "cookiesDisabled":
+            echo "  <TR><TD>&nbsp;</TD><TD><P><B><FONT CLASS=\"error\">You must enable cookies to login to ".Engine::param('application').".</FONT></B></P>".
+            "<P>Enable cookies in your browser for the website '".
+            $_SERVER['REQUEST_SCHEME']."://".$_SERVER['SERVER_NAME'].
+            "/' and try again.</P>".
+            "<P>For information on how we use cookies, see the ".
+            "<A HREF='PRIVACY.md'>Privacy Policy</A>.</TD></TR></TABLE>\n";
+            return;
         case "":
             echo "  <TR><TD></TD><TD CLASS=\"sub\">AUTHORIZED USE ONLY!<BR>\n";
             break;
@@ -337,6 +350,29 @@ class Main implements IController {
             echo "}); // -->\n</SCRIPT>\n";
         } else
             UI::setFocus();
+    }
+
+    protected function checkCookiesEnabled() {
+        if($_REQUEST["checkCookie"]) {
+            if(isset($_COOKIE["testcookie"])) {
+                // the cookie test was successful!
+
+                // clear the test cookie
+                setcookie("testcookie", "", time() - 3600, "/", $_SERVER['SERVER_NAME']);
+                return false;
+            } else {
+                // cookies are not enabled; alert user
+                $rq = [ "action" => "cookiesDisabled" ];
+            }
+        } else {
+            // send a test cookie
+            setcookie("testcookie", "testcookie");
+            $rq = [ "action" => "login", "checkCookie" => 1 ];
+        }
+
+        // do the redirection
+        SSOCommon::zkHttpRedirect(UI::getBaseURL(), $rq);
+        return true;
     }
 
     protected function doLogin($user, $password) {

@@ -30,12 +30,35 @@ class Session {
     private $displayName;
     private $access = null;
     private $sessionID = null;
+    private $sessionCookieName = "session";
+    private $secure = true;
     private $pdo;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
-        if(!empty($_REQUEST['session']))
-            $this->validate($_REQUEST['session']);
+
+        // Cookies are shared between all instances on the same server.
+        //
+        // As the state they represent may differ between instances,
+        // we must scope the session cookie to each instance.
+        $port = $_SERVER['SERVER_PORT'];
+        switch($port) {
+        case 80:
+           $this->secure = false;
+           // fall through...
+        case 443:
+           // standard port, no suffix
+           break;
+        default:
+           // non-standard port, apply suffix
+           $this->sessionCookieName .= "-" + $port;
+           break;
+        }
+
+        // we no longer accept the session ID as a request parameter;
+        // it must be delievered in the request header as a cookie.
+        if(!empty($_COOKIE[$this->sessionCookieName]))
+            $this->validate($_COOKIE[$this->sessionCookieName]);
     }
 
     public function getDN() { return $this->displayName; }
@@ -43,16 +66,19 @@ class Session {
     public function getUser() { return $this->user; }
 
     private function setSessionCookie($session) {
-        setcookie("session", $session, 0, "/", $_SERVER['SERVER_NAME']);
-        setcookie("port", mt_rand(), 0, "/", $_SERVER['SERVER_NAME']);
+        setcookie($this->sessionCookieName, $session, 0, "/", $_SERVER['SERVER_NAME'], $this->secure, true);
+        setcookie("port", mt_rand(), 0, "/", $_SERVER['SERVER_NAME'], $this->secure, true);
     }
 
     private function clearSessionCookie() {
         // Clear the session cookie, if any
-        if(isset($_COOKIE['session']))
-            setcookie("session", "", time() - 3600, "/", $_SERVER['SERVER_NAME']);
+        if(isset($_COOKIE[$this->sessionCookieName]))
+            setcookie($this->sessionCookieName, "",
+                      time() - 3600, "/", $_SERVER['SERVER_NAME'],
+                      $this->secure, true);
         if(isset($_COOKIE['port']))
-            setcookie("port", "", time() - 3600, "/", $_SERVER['SERVER_NAME']);
+            setcookie("port", "", time() - 3600, "/", $_SERVER['SERVER_NAME'],
+                      $this->secure, true);
     }
 
     private function validatePort($sessionID, $portID) {
