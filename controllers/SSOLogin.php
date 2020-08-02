@@ -68,7 +68,7 @@ class SSOLogin implements IController {
                     // the cookie test was successful!
 
                     // clear the test cookie
-                    setcookie("testcookie", "", time() - 3600, "/", $_SERVER['SERVER_NAME']);
+                    setcookie("testcookie", "", time() - 3600);
 
                     // generate the SSO state token
                     $token = Engine::api(IUser::class)->setupSsoRedirect($params["location"]);

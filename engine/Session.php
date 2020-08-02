@@ -51,7 +51,7 @@ class Session {
            break;
         default:
            // non-standard port, apply suffix
-           $this->sessionCookieName .= "-" + $port;
+           $this->sessionCookieName .= "-" . $port;
            break;
         }
 

@@ -357,7 +357,7 @@ class Main implements IController {
                 // the cookie test was successful!
 
                 // clear the test cookie
-                setcookie("testcookie", "", time() - 3600, "/", $_SERVER['SERVER_NAME']);
+                setcookie("testcookie", "", time() - 3600);
                 return false;
             } else {
                 // cookies are not enabled; alert user
