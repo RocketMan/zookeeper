@@ -119,7 +119,7 @@ class RSS extends CommandTarget implements IController {
                 $output .= "&lt;A HREF=\"".UI::getBaseUrl().
                              "?s=byAlbumKey&amp;n=".$chart[$i]["tag"].
                              "&amp;q=10".
-                             "&amp;action=search&amp;session=".$this->session->getSessionID().
+                             "&amp;action=search".
                              "\"&gt;". self::htmlnumericentities(self::xmlentities($album)) . "&lt;/A&gt;&lt;/I&gt;$medium (" .
                      self::htmlnumericentities(self::xmlentities($label)) . ")&lt;BR&gt;\n";
             }
@@ -287,7 +287,7 @@ class RSS extends CommandTarget implements IController {
                 $output .= "&lt;A HREF=\"".UI::getBaseUrl().
                              "?s=byAlbumKey&amp;n=".$row["tag"].
                              "&amp;q=10".
-                             "&amp;action=search&amp;session=".$this->session->getSessionID().
+                             "&amp;action=search".
                              "\"&gt;". self::htmlnumericentities(self::xmlentities($album)) . "&lt;/A&gt;&lt;/I&gt;$medium (" .
                      self::htmlnumericentities(self::xmlentities($label)) . ")&lt;BR&gt;\n";
             }
