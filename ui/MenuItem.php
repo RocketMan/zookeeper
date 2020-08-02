@@ -68,7 +68,7 @@ abstract class MenuItem extends CommandTarget {
         $selected = (($subActionLen?(substr($subAction, 0, $subActionLen) == $menuSubAction):($subAction == $menuSubAction))?" CLASS=\"secSel\"":" CLASS=\"secNorm\"");
         echo "      <TD ALIGN=CENTER$selected>&nbsp;&nbsp;&nbsp;" .
              "<A CLASS=\"linkhead\" HREF=\"" .
-             "?session=".$this->session->getSessionID()."&amp;action=$action&amp;subaction=$menuSubAction\">$description</A>&nbsp;&nbsp;&nbsp;</TD>\n";
+             "?action=$action&amp;subaction=$menuSubAction\">$description</A>&nbsp;&nbsp;&nbsp;</TD>\n";
         echo "      <TD WIDTH=1 BGCOLOR=\"#c0c0c0\"><IMG SRC=\"img/blank.gif\" WIDTH=1 HEIGHT=1 ALT=\"\"></TD>\n";
     }
 }

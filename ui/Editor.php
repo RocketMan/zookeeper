@@ -153,7 +153,7 @@ class Editor extends MenuItem {
 
     public static function emitQueueHook($session) {
         if(Engine::api(ILibrary::class)->getNumQueuedTags($session->getUser()))
-            echo "<P>You have <A HREF=\"?session=".$session->getSessionID()."&amp;action=editor&amp;subaction=tagq\" CLASS=\"nav\">tags queued for printing</A>.</P>";
+            echo "<P>You have <A HREF=\"?action=editor&amp;subaction=tagq\" CLASS=\"nav\">tags queued for printing</A>.</P>";
     }
 
     private static function isEmpty($var) {
@@ -449,7 +449,7 @@ class Editor extends MenuItem {
         $this->emitHidden("selcount", $selCount);
         $merged = implode(",", $selLabels);
         echo "        <SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\"><!--\n";
-        echo "        window.open('?target=print&session=".$this->session->getSessionID()."&form=".$form["code"]."&tags=$merged', '_blank', 'toolbar=no,location=no,width=800,height=800');\n";
+        echo "        window.open('?target=print&form=".$form["code"]."&tags=$merged', '_blank', 'toolbar=no,location=no,width=800,height=800');\n";
         echo "        // -->\n";
         echo "        </SCRIPT>\n";
     }

@@ -37,7 +37,6 @@ class DeepStorage extends MenuItem {
     ?>
       <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
         <INPUT TYPE=hidden name=action value="deepStorage">
-        <INPUT TYPE=hidden name=session value="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=hidden name=MAX_FILE_SIZE value=100000>
         <TABLE BORDER=0>
           <TR><TD ALIGN=RIGHT>Send this tab-delimited file:</TD><TD><INPUT NAME=userfile TYPE=file></TD></TR>

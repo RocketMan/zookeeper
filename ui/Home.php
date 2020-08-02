@@ -45,7 +45,7 @@ class Home extends MenuItem {
         $this->emitWhatsOnNow();
         $this->emitTopPlays();
         echo "<div style='border:0; position:absolute; bottom:0px' CLASS='subhead'>For complete album charting, see our ";
-        echo "<A CLASS='subhead' HREF='?session=".$this->session->getSessionID()."&amp;action=viewChart'><B>Airplay Charts</B></A></div>";
+        echo "<A CLASS='subhead' HREF='?action=viewChart'><B>Airplay Charts</B></A></div>";
     }
 
     private function emitTopPlays($numweeks=1, $limit=10) {
@@ -105,7 +105,7 @@ class Home extends MenuItem {
              // Album
              echo "<TD>" .
                   "<A CLASS='nav' HREF='?s=byAlbumKey&amp;n=" . UI::URLify($tagId).
-                  "&amp;action=search&amp;session=" . $this->session->getSessionID(). "'>".
+                  "&amp;action=search'>".
                   "$album</A> / $label </TD>";
              echo "</TR>\n";
           }
@@ -116,14 +116,13 @@ class Home extends MenuItem {
     private function emitWhatsOnNow() {
         echo "<div class='subhead'>On Now:<div class='home-onnow'>\n";
         $record = Engine::api(IPlaylist::class)->getWhatsOnNow();
-        $sessionId = $this->session->getSessionID();
         if($record && ($row = $record->fetch())) {
             $airId = $row["airid"];
             $airName = htmlentities($row["airname"]);
             $description = htmlentities($row["description"]);
             $showDateTime = Playlists::makeShowDateAndTime($row);
-            $hrefAirName =  "?action=viewDJ&amp;seq=selUser&amp;viewuser=$airId&amp;session=$sessionId";
-            $hrefPL = "?action=viewDate&amp;seq=selList&amp;playlist=$row[0]&amp;session=$sessionId";
+            $hrefAirName =  "?action=viewDJ&amp;seq=selUser&amp;viewuser=$airId";
+            $hrefPL = "?action=viewDate&amp;seq=selList&amp;playlist=$row[0]";
             echo "<A HREF='$hrefPL' CLASS='nav'>$description</A>&nbsp;with&nbsp;";
             echo "<A HREF='$hrefAirName' CLASS='calNav'>$airName</A>";
             echo "<div class='home-datetime'>$showDateTime</div>";

@@ -129,20 +129,19 @@ class Main implements IController {
     }
     
     protected function emitNavbar($dispatcher, $action) {
-        echo "    <P CLASS=\"zktitle\"><A HREF=\"?session=".$this->session->getSessionID()."\">".Engine::param('application')."</A></P>\n";
+        echo "    <P CLASS=\"zktitle\"><A HREF=\"?\">".Engine::param('application')."</A></P>\n";
         echo "    <TABLE CELLPADDING=0>\n";
         $menu = $dispatcher->composeMenu($action, $this->session);
         foreach($menu as $item) {
             echo  "      <TR><TD></TD>" .
                   "<TD><A CLASS=\"" . ($item['selected']?"nav2sel":"nav2") .
                   "\" HREF=\"" .
-                  "?session=".$this->session->getSessionID()."&amp;" .
-                  "action=".$item['action']."\"><B>".$item['label'] .
+                  "?action=".$item['action']."\"><B>".$item['label'] .
                   "</B></A></TD></TR>\n";
         }
         #echo "      <TR><TD COLSPAN=2>&nbsp;</TD></TR>\n";
         if($this->session->isAuth("u")) {
-            $logoutDiv = "<DIV style='margin-top:8px'><A CLASS='nav3' HREF='" .  "?session=".$this->session->getSessionID()."&amp;action=logout'><B>Logout</B></A></DIV>";
+            $logoutDiv = "<DIV style='margin-top:8px'><A CLASS='nav3' HREF='" .  "?action=logout'><B>Logout</B></A></DIV>";
             $userNameDiv = "<DIV class='nav3s'>(". $this->session->getDN() . ")</DIV>";
             echo "<TR><TD></TD><TD>" . $logoutDiv . $userNameDiv . "</TD></TR>\n";
         } else if(!empty(Engine::param('sso')['client_id'])) {
@@ -279,7 +278,7 @@ class Main implements IController {
             $_SERVER['REQUEST_SCHEME']."://".$_SERVER['SERVER_NAME'].
             "/' and try again.</P>".
             "<P>For information on how we use cookies, see the ".
-            "<A HREF='PRIVACY.md'>Privacy Policy</A>.</TD></TR></TABLE>\n";
+            "<A HREF='PRIVACY.md' TARGET='_blank'>Privacy Policy</A>.</TD></TR></TABLE>\n";
             return;
         case "":
             echo "  <TR><TD></TD><TD CLASS=\"sub\">AUTHORIZED USE ONLY!<BR>\n";
@@ -445,7 +444,6 @@ class Main implements IController {
             if($location) {
                 $rq = array(
                     "action" => $action,
-                    "session" => Engine::session()->getSessionID(),
                     "access" => $access
                 );
                 SSOCommon::zkHttpRedirect($location, $rq);
