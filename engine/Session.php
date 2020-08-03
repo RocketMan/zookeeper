@@ -82,7 +82,6 @@ class Session {
                 'samesite' => 'lax'
             ]);
         }
-        setcookie("port", mt_rand(), 0, "/", $_SERVER['SERVER_NAME'], $this->secure, true);
     }
 
     private function clearSessionCookie() {
@@ -104,27 +103,10 @@ class Session {
                 ]);
             }
         }
-        if(isset($_COOKIE['port']))
-            setcookie("port", "", time() - 3600, "/", $_SERVER['SERVER_NAME'],
-                      $this->secure, true);
-    }
-
-    private function validatePort($sessionID, $portID) {
-        // port id is the hashed UA, cookie (if any), and perturbation constant
-        $local = md5($_SERVER['HTTP_USER_AGENT'] . $_COOKIE['port'] . "uioer");
-        if($portID) {
-            // compare the calculated port id with the recorded one
-            $success = $portID == $local;
-        } else {
-            // first time through; setup the port id
-            $this->dbUpdate($local, $sessionID);
-            $success = true;
-        }
-        return $success;
     }
 
     private function dbQuery($session) {
-        $query = "SELECT user, access, realname, portid FROM sessions WHERE sessionkey=?";
+        $query = "SELECT user, access, realname FROM sessions WHERE sessionkey=?";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $session);
         $stmt->execute();
@@ -147,14 +129,6 @@ class Session {
         $query = "DELETE FROM sessions WHERE sessionkey= ?";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $session);
-        return $stmt->execute();
-    }
-
-    private function dbUpdate($portID, $sessionID) {
-        $query = "UPDATE sessions SET portid = ? WHERE sessionkey = ?";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->bindValue(1, $portID);
-        $stmt->bindValue(2, $sessionID);
         return $stmt->execute();
     }
 
@@ -183,8 +157,7 @@ class Session {
             $sessionID = "";
     
         $row = $this->dbQuery($sessionID);
-        if($row &&
-               $this->validatePort($sessionID, $row['portid'])) {
+        if($row) {
             // Session found
             $this->user = $row['user'];
             $this->access = $row['access'];
