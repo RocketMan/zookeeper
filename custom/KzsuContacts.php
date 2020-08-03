@@ -26,8 +26,6 @@ namespace ZK\UI;
 
 use ZK\Engine\Engine;
 
-use ZK\UI\UICommon as UI;
-
 class KzsuContacts extends MenuItem {
     private static $actions = [
         [ "contact", "emitContacts" ],
@@ -115,7 +113,6 @@ class KzsuContacts extends MenuItem {
     </TABLE>
     <P><A CLASS="nav" HREF="http://kzsu.stanford.edu/contact/"><B>Additional contact information</B></A> for KZSU radio is available here.</P>
     <?php 
-        UI::setFocus();
     }
     
     public function emitGuidelines() {
@@ -212,6 +209,5 @@ class KzsuContacts extends MenuItem {
     <A HREF="?action=contact"><I>The Music
     Department Staff of KZSU Stanford</I></A></P>
     <?php 
-        UI::setFocus();
     }
 }
