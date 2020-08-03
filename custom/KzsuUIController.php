@@ -51,7 +51,7 @@ class KzsuUIController extends Main {
     </DIV>
     <DIV CLASS="headerNavbar">
       <A HREF="<?php echo $urls['home'];?>schedule/">schedule</A> +
-      <A HREF="<?php echo "?session=".$this->session->getSessionID();?>">music</A> +
+      <A HREF="?">music</A> +
       <A HREF="<?php echo $urls['home'];?>sports/">sports</a> +
       <A HREF="<?php echo $urls['home'];?>concerts/">concerts</a> +
       <!--A HREF="<?php echo $urls['home'];?>news/" target="_blank">news</A> + -->
