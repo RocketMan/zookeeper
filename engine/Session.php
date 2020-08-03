@@ -31,7 +31,7 @@ class Session {
     private $access = null;
     private $sessionID = null;
     private $sessionCookieName = "session";
-    private $secure = true;
+    private $secure;
     private $pdo;
 
     public function __construct($pdo) {
@@ -44,8 +44,6 @@ class Session {
         $port = $_SERVER['SERVER_PORT'];
         switch($port) {
         case 80:
-           $this->secure = false;
-           // fall through...
         case 443:
            // standard port, no suffix
            break;
@@ -54,6 +52,8 @@ class Session {
            $this->sessionCookieName .= "-" . $port;
            break;
         }
+
+        $this->secure = $_SERVER['REQUEST_SCHEME'] == 'https';
 
         // we no longer accept the session ID as a request parameter;
         // it must be delievered in the request header as a cookie.
@@ -87,10 +87,23 @@ class Session {
 
     private function clearSessionCookie() {
         // Clear the session cookie, if any
-        if(isset($_COOKIE[$this->sessionCookieName]))
-            setcookie($this->sessionCookieName, "",
-                      time() - 3600, "/", $_SERVER['SERVER_NAME'],
-                      $this->secure, true);
+        if(isset($_COOKIE[$this->sessionCookieName])) {
+            if(PHP_VERSION_ID < 70300) {
+                // work-around for missing SameSite flag in php 7.2 and earlier
+                setcookie($this->sessionCookieName, "",
+                          time() - 3600, "/; samesite=lax",
+                          $_SERVER['SERVER_NAME'], $this->secure, true);
+            } else {
+                setcookie($this->sessionCookieName, "", [
+                    'expires' => time() - 3600,
+                    'path' => '/',
+                    'domain' => $_SERVER['SERVER_NAME'],
+                    'secure' => $this->secure,
+                    'httponly' => true,
+                    'samesite' => 'lax'
+                ]);
+            }
+        }
         if(isset($_COOKIE['port']))
             setcookie("port", "", time() - 3600, "/", $_SERVER['SERVER_NAME'],
                       $this->secure, true);
