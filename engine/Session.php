@@ -62,7 +62,6 @@ class Session {
     }
 
     public function getDN() { return $this->displayName; }
-    public function getSessionID() { return $this->sessionID; }
     public function getUser() { return $this->user; }
 
     private function setSessionCookie($session) {
@@ -186,7 +185,7 @@ class Session {
             $allow = true;
             break;
         case "u":    // authenticated users only
-            $allow = $this->sessionID;
+            $allow = !empty($this->sessionID);
             break;
         case "U":    // local (not SSO) user
             $allow = $this->sessionID &&
