@@ -45,8 +45,9 @@ if($_SERVER['REQUEST_METHOD'] == "HEAD")
 
 ob_start("ob_gzhandler");
 
-echo "<!DOCTYPE html>\n<HTML>\n<HEAD>\n";
+echo "<!DOCTYPE html>\n<HTML lang=\"en\">\n<HEAD>\n";
 UI::emitCSS($stylesheet);
+echo "<TITLE>".basename($_SERVER['REQUEST_URI'])."</TITLE>\n";
 echo "</HEAD>\n<BODY>\n<DIV class='box'>\n";
 
 ob_start("markdown");
