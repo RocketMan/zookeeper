@@ -32,7 +32,7 @@ class ExportAfile implements IController {
     public function processRequest($dispatcher) {
         $userAgent = $_SERVER["HTTP_USER_AGENT"];
         ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <HTML>
 <HEAD>
   <TITLE>KZSU Zookeeper Online</TITLE>

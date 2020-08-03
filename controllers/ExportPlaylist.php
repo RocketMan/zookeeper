@@ -173,7 +173,7 @@ class ExportPlaylist extends CommandTarget implements IController {
         list($y,$m,$d) = explode("-", $this->date);
         $displayDate = date("D, j M Y", mktime(0,0,0,$m,$d,$y));
     ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <HTML>
 <HEAD>
 <TITLE><?php echo "Zookeeper playlist for $this->show, $displayDate";?></TITLE>

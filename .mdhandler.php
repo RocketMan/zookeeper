@@ -23,6 +23,11 @@
  */
 
 require('ui/3rdp/Parsedown.php');
+require('ui/UICommon.php');
+
+use ZK\UI\UICommon as UI;
+
+$stylesheet = "css/zoostyle.css";
 
 $target = realpath(__DIR__.$_SERVER['PATH_INFO']);
 if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
@@ -39,6 +44,11 @@ if($_SERVER['REQUEST_METHOD'] == "HEAD")
     return;
 
 ob_start("ob_gzhandler");
+
+echo "<!DOCTYPE html>\n<HTML>\n<HEAD>\n";
+UI::emitCSS($stylesheet);
+echo "</HEAD>\n<BODY>\n<DIV class='box'>\n";
+
 ob_start("markdown");
 
 function markdown($buffer) {
@@ -48,4 +58,7 @@ function markdown($buffer) {
 require_once($target);
 
 ob_end_flush(); // markdown
+
+echo "\n</DIV>\n</BODY>\n</HTML>\n";
+
 ob_end_flush(); // ob_gzhandler
