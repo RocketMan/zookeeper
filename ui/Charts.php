@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -96,7 +96,7 @@ class Charts extends MenuItem {
             if($year[0] == $currentYear)
                 echo "<TH>$currentYear</TH>";
             else
-                echo "<TH><A CLASS=\"nav\" HREF=\"?action=viewChart&amp;subaction=weekly&amp;year=" . $year[0] . "&amp;session=".$this->session->getSessionID()."\">" . $year[0] . "</A></TH>";
+                echo "<TH><A CLASS=\"nav\" HREF=\"?action=viewChart&amp;subaction=weekly&amp;year=" . $year[0] . "\">" . $year[0] . "</A></TH>";
             echo "<TD>&nbsp;&nbsp;&nbsp;</TD>";
         }
         $urls = Engine::param('urls');
@@ -149,7 +149,7 @@ class Charts extends MenuItem {
                     echo "      </UL><UL>\n";
                     $month = $m;
                 }
-                echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=weekly&amp;year=$y&amp;month=$m&amp;day=$d&amp;session=".$this->session->getSessionID()."\">Week ending ".date("j F Y", mktime(0,0,0,$m,$d,$y))."</A>\n";
+                echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=weekly&amp;year=$y&amp;month=$m&amp;day=$d\">Week ending ".date("j F Y", mktime(0,0,0,$m,$d,$y))."</A>\n";
             }
             echo "      </UL>\n    </TD></TR>\n";
             echo "  </TABLE>\n";
@@ -181,7 +181,6 @@ class Charts extends MenuItem {
             <INPUT TYPE=HIDDEN NAME=year VALUE=<?php echo $year; ?>>
             <INPUT TYPE=HIDDEN NAME=month VALUE=<?php echo $month; ?>>
             <INPUT TYPE=HIDDEN NAME=day VALUE=<?php echo $day; ?>>
-            <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
           </FORM>
         </TD>
       </TR>
@@ -277,7 +276,7 @@ class Charts extends MenuItem {
                             if($y - $earliestYear < 10)
                                 $name .= " (based on available data)";
                             echo "    <TR><TH CLASS=\"header\" ALIGN=LEFT>Amalgamated charts $dstart - $y</TH></TR>\n    <TR><TD>\n      <UL>\n";
-                            echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=amalgamated&amp;dnum=$dnum&amp;session=".$this->session->getSessionID()."\">Top 100 for the decennium that was the $name</A>\n      </UL><UL>\n";
+                            echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=amalgamated&amp;dnum=$dnum\">Top 100 for the decennium that was the $name</A>\n      </UL><UL>\n";
                         }
                         echo "    <TR><TH CLASS=\"header\" ALIGN=LEFT>Amalgamated charts $y</TH></TR>\n    <TR><TD>\n      <UL>\n";
     
@@ -288,9 +287,9 @@ class Charts extends MenuItem {
                     }
     
                     if($genYearChart)
-                        echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=amalgamated&amp;cyear=$y&amp;session=".$this->session->getSessionID()."\">Top 100 for the year $y</A>\n      </UL><UL>\n";
+                        echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=amalgamated&amp;cyear=$y\">Top 100 for the year $y</A>\n      </UL><UL>\n";
     
-                     echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=amalgamated&amp;year=$y&amp;month=$m&amp;session=".$this->session->getSessionID()."\">".date("F Y", mktime(0,0,0,$m,1,$y))."</A>\n";
+                     echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=amalgamated&amp;year=$y&amp;month=$m\">".date("F Y", mktime(0,0,0,$m,1,$y))."</A>\n";
                 }
     
                 if($year)
@@ -414,8 +413,7 @@ class Charts extends MenuItem {
                 echo "<A CLASS=\"calNav\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($chart[$i]["tag"]).
                              "&amp;q=10".
-                             "&amp;action=search&amp;session=".$this->session->getSessionID().
-                             "\">". UI::HTMLify($album, 20) . "</A></I>$medium (" .
+                             "&amp;action=search\">". UI::HTMLify($album, 20) . "</A></I>$medium (" .
                      UI::HTMLify($label, 20) . ")\n";
             }
             echo "  </OL></TD></TR>\n</TABLE><BR>\n";
@@ -470,8 +468,7 @@ class Charts extends MenuItem {
                 echo "<A CLASS=\"calNav\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($chart[$i]["tag"]).
                              "&amp;q=10".
-                             "&amp;action=search&amp;session=".$this->session->getSessionID().
-                             "\">". UI::HTMLify($album, 20) . "</A></I>$medium (" .
+                             "&amp;action=search\">". UI::HTMLify($album, 20) . "</A></I>$medium (" .
                      UI::HTMLify($label, 20) . ")<BR>\n";
             }
             echo "          </TD></TR>\n";
@@ -580,7 +577,6 @@ class Charts extends MenuItem {
         }
     ?>
         </TABLE>
-        <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=HIDDEN NAME=action VALUE="viewChart">
         <INPUT TYPE=HIDDEN NAME=subaction VALUE="chartemail">
         <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
@@ -597,7 +593,7 @@ class Charts extends MenuItem {
         $startDate = "";
         $endDate = "$year-$month-$day";
         $displayDate = date("j F Y", mktime(0,0,0,$month,$day,$year));
-        echo "<TABLE WIDTH=\"100%\"><TR><TH ALIGN=LEFT>CMJ upload chart for the week ending $displayDate</TH><!--TH ALIGN=RIGHT><A HREF=\"?action=viewChart&amp;subaction=weekly&amp;year=$year&amp;month=$month&amp;day=$day&amp;session=".$this->session->getSessionID()."\" CLASS=\"nav\">[Back to Weekly]</A></TH--></TR></TABLE><BR>\n";
+        echo "<TABLE WIDTH=\"100%\"><TR><TH ALIGN=LEFT>CMJ upload chart for the week ending $displayDate</TH><!--TH ALIGN=RIGHT><A HREF=\"?action=viewChart&amp;subaction=weekly&amp;year=$year&amp;month=$month&amp;day=$day\" CLASS=\"nav\">[Back to Weekly]</A></TH--></TR></TABLE><BR>\n";
         ////echo "<P CLASS=\"header\">CMJ upload chart for the week ending $displayDate</P>\n";
     
     

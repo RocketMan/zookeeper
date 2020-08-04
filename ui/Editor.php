@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -153,7 +153,7 @@ class Editor extends MenuItem {
 
     public static function emitQueueHook($session) {
         if(Engine::api(ILibrary::class)->getNumQueuedTags($session->getUser()))
-            echo "<P>You have <A HREF=\"?session=".$session->getSessionID()."&amp;action=editor&amp;subaction=tagq\" CLASS=\"nav\">tags queued for printing</A>.</P>";
+            echo "<P>You have <A HREF=\"?action=editor&amp;subaction=tagq\" CLASS=\"nav\">tags queued for printing</A>.</P>";
     }
 
     private static function isEmpty($var) {
@@ -449,7 +449,7 @@ class Editor extends MenuItem {
         $this->emitHidden("selcount", $selCount);
         $merged = implode(",", $selLabels);
         echo "        <SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\"><!--\n";
-        echo "        window.open('?target=print&session=".$this->session->getSessionID()."&form=".$form["code"]."&tags=$merged', '_blank', 'toolbar=no,location=no,width=800,height=800');\n";
+        echo "        window.open('?target=print&form=".$form["code"]."&tags=$merged', '_blank', 'toolbar=no,location=no,width=800,height=800');\n";
         echo "        // -->\n";
         echo "        </SCRIPT>\n";
     }
@@ -639,6 +639,9 @@ class Editor extends MenuItem {
     }
 
     private function insertUpdateAlbum() {
+        if($_SERVER['REQUEST_METHOD'] != 'POST')
+            return false;
+
         $album = $this->getAlbum();
         $tracks = $this->getTracks();
         $result = Engine::api(IEditor::class)->insertUpdateAlbum($album, $tracks, $this->getLabel());
@@ -658,6 +661,9 @@ class Editor extends MenuItem {
     }
 
     private function insertUpdateLabel() {
+        if($_SERVER['REQUEST_METHOD'] != 'POST')
+            return false;
+
         $label = $this->getLabel();
         $result = Engine::api(IEditor::class)->insertUpdateLabel($label);
         if($result) {

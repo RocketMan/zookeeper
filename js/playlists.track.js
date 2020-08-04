@@ -336,7 +336,6 @@ $().ready(function(){
 
     function moveTrack(list, fromId, toId, tr, si, rows) {
         var postData = {
-            session: $("#track-session").val(),
             playlist: list,
             fromId: fromId,
             toId: toId
@@ -431,7 +430,6 @@ $().ready(function(){
 
         var postData = {
             playlist: $("#track-playlist").val(),
-            session: $("#track-session").val(),
             type: type,
             tag: $("#track-tag").val(),
             artist: artist,
@@ -458,8 +456,7 @@ $().ready(function(){
                 case -1:
                     // playlist is out of sync with table; reload
                     location.href = "?action=" + $("#track-action").val() +
-                        "&playlist=" + $("#track-playlist").val() +
-                        "&session=" + $("#track-session").val();
+                        "&playlist=" + $("#track-playlist").val();
                     break;
                 case 0:
                     // playlist is in natural order; prepend

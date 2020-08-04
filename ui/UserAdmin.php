@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -54,7 +54,7 @@ class UserAdmin extends MenuItem {
         $auGroups = $_REQUEST["auGroups"];
         $auExpire = $_REQUEST["auExpire"];
 
-        if($seq == "editUser") {
+        if($seq == "editUser" && $_SERVER['REQUEST_METHOD'] == 'POST') {
             // Commit the changes
             $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $uid);
             if(sizeof($user)) {
@@ -64,7 +64,7 @@ class UserAdmin extends MenuItem {
                     echo "<B><FONT COLOR=\"#ff0000\">Update user failed.  Try again later.</FONT></B>\n";
             } else
                 echo "<B><FONT COLOR=\"#ff0000\">Invalid user.  Update failed.</FONT></B>\n";
-        } else if($seq == "addUser") {
+        } else if($seq == "addUser" && $_SERVER['REQUEST_METHOD'] == 'POST') {
           if($uid) {
              if(Engine::api(IUser::class)->insertUser($uid, $auPass, $auName, $auGroups, $auExpire))
                echo "<B><FONT CLASS=\"subhead2\">$uid successfully added</FONT></B>\n";
@@ -109,7 +109,6 @@ class UserAdmin extends MenuItem {
            x = administrator</TD>
       </TR>
     </TABLE>
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="addUser">
     </FORM>
@@ -158,7 +157,6 @@ class UserAdmin extends MenuItem {
       </TR>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=uid VALUE="<?php echo $uid;?>">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="editUser">
     </FORM>
@@ -170,7 +168,6 @@ class UserAdmin extends MenuItem {
     <P>
     <FORM ACTION="?" METHOD=POST>
     <INPUT TYPE=SUBMIT CLASS=submit VALUE="  New User  ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="newUser">
     <INPUT TYPE=HIDDEN id='nameCol' VALUE='1'>
@@ -197,7 +194,7 @@ class UserAdmin extends MenuItem {
                 $class = "noQuota";
             else
                 $class = "hborder"; 
-            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?session=".$this->session->getSessionID()."&amp;action=adminUsers&amp;seq=selUser&amp;uid=" . $users[$j]["name"] . "\">" . $users[$j]["name"] . "</A></TD><TD>" .
+            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?action=adminUsers&amp;seq=selUser&amp;uid=" . $users[$j]["name"] . "\">" . $users[$j]["name"] . "</A></TD><TD>" .
                         $users[$j]["realname"] . "</TD><TD>" .
                         $users[$j]["groups"] . "&nbsp;</TD><TD>" .
                         $users[$j]["expires"] . "&nbsp;</TD><TD>" .
@@ -215,7 +212,7 @@ class UserAdmin extends MenuItem {
         $auGroups = $_REQUEST["auGroups"];
         $auExpire = $_REQUEST["auExpire"];
     
-        if($seq == "editAirname") {
+        if($seq == "editAirname" && $_SERVER['REQUEST_METHOD'] == 'POST') {
            if($uid) {
               // Get the airname
               $result = Engine::api(IDJ::class)->getAirnames(0, $aid);
@@ -265,7 +262,6 @@ class UserAdmin extends MenuItem {
       </TR>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=aid VALUE="<?php echo $aid;?>">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=subaction VALUE="airnames">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="editAirname">
@@ -294,7 +290,7 @@ class UserAdmin extends MenuItem {
                 $class = "noQuota";
             else
                 $class = "hborder"; 
-            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?session=".$this->session->getSessionID()."&amp;subaction=airnames&amp;action=adminUsers&amp;seq=selAirname&amp;aid=" . $users[$j]["id"] . "\">" . $users[$j]["airname"] . "</A></TD><TD>" .
+            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?subaction=airnames&amp;action=adminUsers&amp;seq=selAirname&amp;aid=" . $users[$j]["id"] . "\">" . $users[$j]["airname"] . "</A></TD><TD>" .
                         $users[$j]["name"] . "</TD><TD>" .
                         $users[$j]["realname"] . "&nbsp;</TD></TR>\n";
         }

@@ -123,7 +123,6 @@ function getArtist(node) {
 }
 
 function emitAlbumsEx(table, data) {
-    var session = $("#session").val();
     var tr = $("<TR>");
     tr.append(header("Artist", true));
     tr.append(header("", false));
@@ -143,7 +142,7 @@ function emitAlbumsEx(table, data) {
                 href: "?s=byAlbumKey&n=" +
                     encodeURIComponent(entry.tag) +
                     "&q=" + maxresults +
-                    "&action=search&session=" + session
+                    "&action=search"
             }).html(getArtist(entry)));
         } else {
             td.append(
@@ -165,7 +164,7 @@ function emitAlbumsEx(table, data) {
             href: "?s=byAlbumKey&n=" +
                 encodeURIComponent(entry.tag) +
                 "&q=" + maxresults +
-                "&action=search&session=" + session
+                "&action=search"
         }).html(htmlify(entry.album))));
         var collection = entry.location;
         collection = (collection == "Library")?entry.category:
@@ -208,7 +207,6 @@ var lists = {
     },
 
     tracks: function(table, data) {
-        var session = $("#session").val();
         var tr = $("<TR>");
         tr.append(header("Artist", true));
         tr.append(header("Album", true));
@@ -227,7 +225,7 @@ var lists = {
                     href: "?s=byAlbumKey&n=" +
                         encodeURIComponent(entry.tag) +
                         "&q=" + maxresults +
-                        "&action=search&session=" + session
+                        "&action=search"
                 }).html(getArtist(entry)));
             } else {
                 td.append(
@@ -243,7 +241,7 @@ var lists = {
                 href: "?s=byAlbumKey&n=" +
                     encodeURIComponent(entry.tag) +
                     "&q=" + maxresults +
-                    "&action=search&session=" + session
+                    "&action=search"
             }).html(htmlify(entry.album))));
             tr.append($("<TD>").append(
                 $("<A href='#" + encobj({
@@ -276,7 +274,6 @@ var lists = {
     },
 
     labels: function(table, data) {
-        var session = $("#session").val();
         var tr = $("<TR>");
         tr.append(header("Name", false));
         tr.append(header("Location", false).attr('colSpan', 2));
@@ -302,7 +299,7 @@ var lists = {
     },
 
     reviews: function(table, data) {
-        var session = $("#session").val();
+        var showTag = $("#showTag").val();
         var tr = $("<TR>");
         tr.append(header("Artist", true));
         tr.append(header("Album", true));
@@ -319,22 +316,22 @@ var lists = {
                     href: "?s=byAlbumKey&n=" +
                         encodeURIComponent(entry.tag) +
                         "&q=" + maxresults +
-                        "&action=search&session=" + session
+                        "&action=search"
                 }).html(getArtist(entry)));
             } else {
                 td.html($("<A>", {
                     href: "?s=byArtist&n=" +
                         encodeURIComponent(entry.artist) +
                         "&q=" + maxresults +
-                        "&action=search&session=" + session
+                        "&action=search"
                 }).html(getArtist(entry)));
             }
             tr.append(td);
             tr.append($("<TD>").html($("<A>", {
                 href: "?s=byAlbumKey&n=" + encodeURIComponent(entry.tag) +
                     "&q=" + maxresults +
-                    "&action=search&session=" + session
-            }).html(htmlify(entry.album))).append(session.length>0?
+                    "&action=search"
+            }).html(htmlify(entry.album))).append(showTag == 'true'?
                                          " <FONT CLASS='sub'>(Tag&nbsp;#" +
                                          entry.tag + ")<FONT>":""));
             if(entry.pubkey) {
@@ -342,7 +339,7 @@ var lists = {
                     href: "?s=byLabelKey&n=" +
                         encodeURIComponent(entry.pubkey) +
                         "&q=" + maxresults +
-                        "&action=search&session=" + session
+                        "&action=search"
                 }).html(htmlify(entry.name))));
             } else {
                 tr.append($("<TD>").html("Unknown"));

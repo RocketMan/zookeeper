@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -127,14 +127,13 @@ class AddManager extends MenuItem {
     private function getEditCell($row) {
        $requestId = $_REQUEST["id"];
        $albumId = $row["id"];
-       $sessionId="?session=".$this->session->getSessionID();
 
-       $hrefDate= $sessionId .  "&amp;action=addmgr&amp;subaction=adds&amp;date=$date ";
+       $hrefDate= "?action=addmgr&amp;subaction=adds&amp;date=$date ";
        $class = ($requestId && $requestId == $albumId) ? "sel" : "nav";
        $cellDate = "<A CLASS='nav' HREF='" . $hrefDate .
           "' onClick='ConfirmDelete(" . $albumId . "); return false;'>[x]</A>&nbsp;";
 
-       $hrefId =  $sessionId . "&amp;action=addmgr&amp;subaction=addsedit&amp;id=" . $albumId;
+       $hrefId = "?action=addmgr&amp;subaction=addsedit&amp;id=" . $albumId;
        $cellId = "<A CLASS='songEdit' HREF='" . $hrefId . "'>&#x270f;</A>";
 
        return "<TD>" . $cellDate . $cellId . "</TD>";
@@ -200,8 +199,7 @@ class AddManager extends MenuItem {
                     if($row["reviewed"]) {
                         echo "<A CLASS=\"albumReview\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
-                             "&amp;action=search&amp;session=".$this->session->getSessionID().
-                             "\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A>";
+                             "&amp;action=search\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A>";
                     }
                     echo "</TD>";
                 }
@@ -224,8 +222,7 @@ class AddManager extends MenuItem {
                 else
                     echo "<TD><A CLASS='nav' HREF='".
                          "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
-                         "&amp;action=search&amp;session=".$this->session->getSessionID().
-                         "'>" . $albumName . "</A>$tagNum&nbsp;&nbsp;</TD>";
+                         "&amp;action=search'>" . $albumName . "</A>$tagNum&nbsp;&nbsp;</TD>";
     
                 if(!$static)
                     echo "<TD>" . htmlentities($row["label"]) . "</TD>";
@@ -248,7 +245,7 @@ class AddManager extends MenuItem {
         if($showEdit) {
             $this->emitConfirmID("Delete",
                         "Delete this album from the add?",
-                        "session=".$this->session->getSessionID()."&action=addmgr&subaction=addsdel",
+                        "action=addmgr&subaction=addsdel",
                         "id");
         }
     ?>
@@ -303,7 +300,6 @@ class AddManager extends MenuItem {
             echo "            <OPTION VALUE=\"$row[0]\"$selected>$row[0]\n";
         }
     ?>          </SELECT>
-              <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
               <INPUT TYPE=HIDDEN NAME=action VALUE="addmgr">
               <INPUT TYPE=HIDDEN NAME=subaction VALUE="adds">
               <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
@@ -319,7 +315,6 @@ class AddManager extends MenuItem {
                   <OPTION VALUE="email">E-Mail
               </SELECT>
               <INPUT TYPE=BUTTON NAME=button onClick="onExport();" VALUE=" Export ">
-              <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
               <INPUT TYPE=HIDDEN NAME=date VALUE="">
               <INPUT TYPE=HIDDEN NAME=target VALUE="addexp">
             </FORM>
@@ -575,7 +570,7 @@ class AddManager extends MenuItem {
         $artist = $_REQUEST["artist"];
         $album = $_REQUEST["album"];
     
-        if($validate) {
+        if($validate && $_SERVER['REQUEST_METHOD'] == 'POST') {
             // Add the album
             $emitted = false;
             $catstr = "";
@@ -731,7 +726,7 @@ class AddManager extends MenuItem {
         $artist = $_REQUEST["artist"];
         $album = $_REQUEST["album"];
     
-        if($validate) {
+        if($validate && $_SERVER['REQUEST_METHOD'] == 'POST') {
             // Add the album
             $emitted = false;
             $catstr = "";
@@ -851,14 +846,15 @@ class AddManager extends MenuItem {
             $_REQUEST["date"] = $row["adddate"];
         }
     
-        Engine::api(IChart::class)->deleteAlbum($id);
+        if($_SERVER['REQUEST_METHOD'] == 'POST')
+            Engine::api(IChart::class)->deleteAlbum($id);
         $this->addManagerShowAdd();
     }
     
     public function addManagerCats() {
         $seq = $_REQUEST["seq"];
     
-        if($seq == "update") {
+        if($seq == "update" && $_SERVER['REQUEST_METHOD'] == 'POST') {
             $success = true;
             for($i=1; $success && $i<=16; $i++) {
                 $name = $_POST["name".$i];
@@ -893,7 +889,6 @@ class AddManager extends MenuItem {
         }
     ?>
         </TABLE>
-        <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=HIDDEN NAME=action VALUE="addmgr">
         <INPUT TYPE=HIDDEN NAME=subaction VALUE="categories">
         <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
@@ -1027,7 +1022,6 @@ class AddManager extends MenuItem {
           <TR><TD></TD><TD><INPUT TYPE=SUBMIT VALUE=" E-Mail Add "></TD></TR>
         </TABLE>
         <INPUT TYPE=HIDDEN NAME=date VALUE="<?php echo $date;?>">
-        <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=HIDDEN NAME=action VALUE="addmgr">
         <INPUT TYPE=HIDDEN NAME=subaction VALUE="addsemail">
       </FORM>
@@ -1190,7 +1184,7 @@ class AddManager extends MenuItem {
     
             echo "<TD><A CLASS=\"nav\" HREF=\"".
                   "?action=viewDJ&amp;playlist=".$row["id"].
-                  "&amp;seq=selList&amp;session=".$this->session->getSessionID()."\">".
+                  "&amp;seq=selList\">".
                   htmlentities($row["description"]) . "</A></TD>\n";
     
             // Totals
@@ -1237,7 +1231,6 @@ class AddManager extends MenuItem {
             echo "            <OPTION VALUE=\"$row[0]\"$selected>$row[0]\n";
         }
     ?>          </SELECT>
-              <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
               <INPUT TYPE=HIDDEN NAME=action VALUE="addmgr">
               <INPUT TYPE=HIDDEN NAME=subaction VALUE="activity">
               <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
