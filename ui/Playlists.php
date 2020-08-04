@@ -202,7 +202,7 @@ class Playlists extends MenuItem {
     // add track from an ajax post from client. return new track row
     // upon success else 400 response.
     public function handleAddTrack() {
-        $playlistId = trim($_REQUEST["playlist"]);
+        $playlistId = trim($_POST["playlist"]);
         $playlistApi = Engine::api(IPlaylist::class);
         $playlist = $playlistApi->getPlaylist($playlistId, 1);
         $isLiveShow = $playlistApi->IsNowWithinShow($playlist);
@@ -266,7 +266,7 @@ class Playlists extends MenuItem {
 
             if ($updateStatus === 0) {
                 $retMsg = $status == '' ? "DB update error" : $status;
-             } else {
+            } else {
                 // JM 2019-08-15 action and id need to be set
                 // for hyperlinks genereated by makePlaylistObserver (#54)
                 $this->action = $_REQUEST["oaction"];
@@ -292,7 +292,7 @@ class Playlists extends MenuItem {
 
     public function handleMoveTrack() {
         $retVal = [];
-        $list = $_REQUEST["playlist"];
+        $list = $_POST["playlist"];
         $from = $_REQUEST["fromId"];
         $to = $_REQUEST["toId"];
 
@@ -447,7 +447,6 @@ class Playlists extends MenuItem {
             <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action.$suffix; ?>">
             <INPUT id='playlist-id' TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
             <INPUT id='timezone-offset' type=hidden value='<?php echo round(date('Z')/-60, 2); /* server TZ equivalent of javascript now.getTimezoneOffset() */ ?>'>
-            <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         </FORM>
 
     <?php
@@ -456,7 +455,7 @@ class Playlists extends MenuItem {
     
     // handles post for playlist creation and edit
     public function handleListPost() {
-        $description = $_REQUEST["description"];
+        $description = $_POST["description"];
         $date = $_REQUEST["date"];
         $fromtime = substr($_REQUEST["fromtime"], 0, 5);
         $totime   = substr($_REQUEST["totime"], 0, 5);
@@ -513,8 +512,7 @@ class Playlists extends MenuItem {
                     echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
                          "\$().ready(function(){".
                          "location.href='?action=newListEditor&playlist=".
-                         Engine::lastInsertId()."&session=".
-                         $this->session->getSessionID()."';});\n".
+                         Engine::lastInsertId()."';});\n".
                          "// -->\n</SCRIPT>\n";
                     return;
                 } else {
@@ -608,13 +606,13 @@ class Playlists extends MenuItem {
     }
 
     public function handleDeleteListPost() {
-        $playlistId = $_REQUEST["playlist"];
+        $playlistId = $_POST["playlist"];
         Engine::api(IPlaylist::class)->deletePlaylist($playlistId);
         $this->emitEditListPicker();
     }
 
     public function handleRestoreListPost() {
-        $playlistId = $_REQUEST["playlist"];
+        $playlistId = $_POST["playlist"];
         $this->restorePlaylist($playlistId);
         $this->emitEditListPicker();
     }
@@ -659,7 +657,6 @@ class Playlists extends MenuItem {
             <input TYPE=SUBMIT VALUE=" Restore ">
         </div>
         <input TYPE=hidden name=action VALUE="editListRestore">
-        <input TYPE=hidden name=session VALUE="<?php echo $this->session->getSessionID();?>">
         </form>
       
         <form class='pl-form' id='active-form' ACTION="?" METHOD=POST>
@@ -671,15 +668,13 @@ class Playlists extends MenuItem {
                 <input TYPE=SUBMIT VALUE=" Edit ">&nbsp;&nbsp;&nbsp;
                 <input id='delete-list' TYPE=BUTTON VALUE="Delete">
             </div>
-            <input TYPE=hidden name=session VALUE="<?php echo $this->session->getSessionID();?>">
             <input id='action-type' TYPE=hidden name=action VALUE="editListDetails">
         </form>
         <?php
     }
     
     private function makeEditDiv($entry, $playlist) {
-        $sessionId = $this->session->getSessionID();
-        $href = "?session=" . $sessionId . "&amp;playlist=" . $playlist . "&amp;id=" . 
+        $href = "?playlist=" . $playlist . "&amp;id=" .
                 $entry->getId() . "&amp;action=" . $this->action . "&amp;";
         $editLink = "<A CLASS='songEdit' HREF='" . $href ."seq=editTrack'>&#x270f;</a>";
         //NOTE: in edit mode the list is ordered new to old, so up makes it 
@@ -720,7 +715,6 @@ class Playlists extends MenuItem {
     ?>
         <div class='pl-form-entry'>
             <input id='show-date' name='edate' type='hidden' value="<?php echo $playlist['showdate']; ?>" >
-            <input id='track-session' type='hidden' value='<?php echo $this->session->getSessionID(); ?>'>
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <input id='track-action' type='hidden' value='<?php echo $this->action; ?>'>
             <input id='const-prefix' type='hidden' value='<?php echo self::NME_PREFIX; ?>'>
@@ -882,7 +876,6 @@ class Playlists extends MenuItem {
           break;
       } ?></DIV>
       <FORM ACTION="?" id='edit' METHOD=POST>
-      <input id='track-session' type='hidden' value='<?php echo $this->session->getSessionID(); ?>'>
       <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
       <TABLE>
     <?php if($sep) { ?>
@@ -964,7 +957,6 @@ class Playlists extends MenuItem {
     <?php } else { ?>
               <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
     <?php } ?>
-              <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
               <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
               <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action;?>">
               <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $album["tag"];?>">
@@ -1011,7 +1003,6 @@ class Playlists extends MenuItem {
           <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
     <?php } ?>
           <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $album["tag"];?>">
-          <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
           <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action;?>">
           <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
           <INPUT TYPE=HIDDEN NAME=seq VALUE="editForm">
@@ -1041,7 +1032,7 @@ class Playlists extends MenuItem {
         $showDateTime = self::makeShowDateAndTime($row);
         echo "<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%\">\n    <TR>\n      <TH ALIGN=LEFT>";
         echo "$row[0]</TH>\n      <TH ALIGN=RIGHT>$showDateTime</TH>\n";
-        echo "      <TH ALIGN=RIGHT VALIGN=TOP><A CLASS=\"sub\" HREF=\"#top\" onClick='window.open(\"$script&amp;session=".$this->session->getSessionID()."&amp;playlist=$playlist&amp;format=html\")'>Print</A></TH>\n    </TR>\n  </TABLE>\n";
+        echo "      <TH ALIGN=RIGHT VALIGN=TOP><A CLASS=\"sub\" HREF=\"#top\" onClick='window.open(\"$script&amp;playlist=$playlist&amp;format=html\")'>Print</A></TH>\n    </TR>\n  </TABLE>\n";
     }
     
     private function insertSetSeparator($playlist) {
@@ -1199,7 +1190,6 @@ class Playlists extends MenuItem {
     </TD></TR>
     <TR><TD>
     <INPUT TYPE=SUBMIT VALUE=" Export Playlist ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=target VALUE="export">
     </TD></TR></TABLE>
     </FORM>
@@ -1282,7 +1272,7 @@ class Playlists extends MenuItem {
     }
     
     public function emitImportList() {
-        $validate = $_REQUEST["validate"];
+        $validate = $_POST["validate"];
         $description = $_REQUEST["description"];
         $date = $_REQUEST["date"];
         $time = $_REQUEST["time"];
@@ -1324,7 +1314,6 @@ class Playlists extends MenuItem {
       </TR>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=button VALUE=" Setup New Airname... ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
     <INPUT TYPE=HIDDEN NAME=subaction VALUE="importCSV">
     <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
@@ -1353,7 +1342,6 @@ class Playlists extends MenuItem {
       <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
         <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
         <INPUT TYPE=HIDDEN NAME=subaction VALUE="importCSV">
-        <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=HIDDEN NAME=validate VALUE="edit">
         <INPUT TYPE=HIDDEN NAME=MAX_FILE_SIZE VALUE=100000>
         <TABLE CELLPADDING=2 CELLSPACING=0>
@@ -1475,7 +1463,7 @@ class Playlists extends MenuItem {
             }
             // echo "<B>Imported $count tracks.</B>\n";
             fclose($fd);
-            unset($_REQUEST["validate"]);
+            unset($_POST["validate"]);
 
             $_REQUEST["playlist"] = $playlist;
             $this->action = "newListEditor";
@@ -1557,7 +1545,6 @@ class Playlists extends MenuItem {
       <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
         <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
         <INPUT TYPE=HIDDEN NAME=subaction VALUE="importJSON">
-        <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=HIDDEN NAME=MAX_FILE_SIZE VALUE=100000>
         <TABLE CELLPADDING=2 CELLSPACING=0>
           <TR>
@@ -1580,7 +1567,7 @@ class Playlists extends MenuItem {
     public function updateDJInfo() {
         UI::emitJS("js/playlists.pick.js");
 
-        $validate = $_REQUEST["validate"];
+        $validate = $_POST["validate"];
         $multi = $_REQUEST["multi"];
         $url = $_REQUEST["url"];
         $email = $_REQUEST["email"];
@@ -1633,7 +1620,6 @@ class Playlists extends MenuItem {
     ?>
       <TR><TD COLSPAN=2>&nbsp;</TD></TR>
       <TR><TD>&nbsp;</TD><TD><INPUT TYPE=SUBMIT VALUE="  Update  ">
-              <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
               <INPUT TYPE=HIDDEN NAME=airname VALUE="<?php echo $airnames[0]['id'];?>">
               <INPUT TYPE=HIDDEN id='oldname' VALUE="<?php echo $airnames[0]['airname'];?>">
               <INPUT TYPE=HIDDEN NAME=action VALUE="updateDJInfo">
@@ -1657,7 +1643,6 @@ class Playlists extends MenuItem {
     </SELECT></TD></TR>
     <TR><TD>
     <INPUT TYPE=SUBMIT VALUE=" Next &gt;&gt; ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="updateDJInfo">
     <INPUT TYPE=HIDDEN NAME=multi VALUE="y">
     </TD></TR></TABLE>
@@ -1669,7 +1654,7 @@ class Playlists extends MenuItem {
     public function emitShowLink() {
         UI::emitJS("js/playlists.pick.js");
 
-        $validate = $_REQUEST["validate"];
+        $validate = $_POST["validate"];
         $playlist = $_REQUEST["playlist"];
         $airname = $_REQUEST["airname"];
     
@@ -1703,7 +1688,6 @@ class Playlists extends MenuItem {
     </SELECT></TD></TR>
     <TR><TD>
     <INPUT TYPE=SUBMIT VALUE=" Show URL ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="showLink">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </TD></TR></TABLE>
@@ -1745,7 +1729,6 @@ class Playlists extends MenuItem {
     </SELECT></TD></TR>
     <TR><TD>
     <INPUT TYPE=SUBMIT VALUE=" Show URL ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="showLink">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </TD></TR></TABLE>
@@ -1768,8 +1751,7 @@ class Playlists extends MenuItem {
         $labelSpan = "<span class='songLabel'> / " . $this->smartURL($labelName) . "</span>";
         if($entry->getTag()) {
             $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($entry->getTag()) .
-                          "&amp;q=&amp;action=search&amp;session=" . $this->session->getSessionID() .
-                          "' CLASS='nav'>".$albumName ."</A>";
+                          "&amp;q=&amp;action=search' CLASS='nav'>".$albumName ."</A>";
 
             if ($includeLabel) {
                 $albumTitle = $albumTitle . $labelSpan;
@@ -1875,8 +1857,7 @@ class Playlists extends MenuItem {
         $showDateTime = self::makeShowDateAndTime($playlist);
 
         $dateDiv = "<DIV>".$showDateTime."&nbsp;</DIV>";
-        $djLink = "<A HREF='?action=viewDJ&amp;seq=selUser&amp;session=" . 
-        $this->session->getSessionID() . "&amp;viewuser=$djId' CLASS='nav2'>$djName</A>";
+        $djLink = "<A HREF='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' CLASS='nav2'>$djName</A>";
 
         echo "<DIV CLASS='playlistBanner'>&nbsp;" . $showName . " with " . $djLink.$dateDiv . "</DIV>\n";
     }
@@ -1917,8 +1898,7 @@ class Playlists extends MenuItem {
                  echo "<A CLASS=\"nav\" HREF=\"".
                       "?s=byAlbumKey&amp;n=". UI::URLify($result[$i]["tag"]).
                       "&amp;q=". $maxresults.
-                      "&amp;action=search&amp;session=".$this->session->getSessionID().
-                      "\">";
+                      "&amp;action=search\">";
     
             echo $this->smartURL($result[$i]["album"], !$result[$i]["tag"]);
             if($result[$i]["tag"])
@@ -2001,7 +1981,7 @@ class Playlists extends MenuItem {
             echo "      <TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;${blname}Recent reviews</TH></TR>\n";
             $this->emitViewDJAlbum($recentReviews, $block?" CLASS=\"sub\"":"");
             if(sizeof($recentReviews) == $count - 1)
-                echo "  <TR><TD></TD><TD ALIGN=LEFT CLASS=\"sub\"><A HREF=\"?s=byReviewer&amp;n=$viewuser&amp;p=0&amp;q=50&amp;action=viewDJReviews&amp;session=".$this->session->getSessionID()."\" CLASS=\"nav\">More reviews...</A></TD></TR>\n";
+                echo "  <TR><TD></TD><TD ALIGN=LEFT CLASS=\"sub\"><A HREF=\"?s=byReviewer&amp;n=$viewuser&amp;p=0&amp;q=50&amp;action=viewDJReviews\" CLASS=\"nav\">More reviews...</A></TD></TR>\n";
             echo "    </TABLE></TD>\n";
         }
     
@@ -2021,7 +2001,6 @@ class Playlists extends MenuItem {
         </SELECT></TD></TR>
       <TR><TD>
         <INPUT TYPE=SUBMIT VALUE=" View Playlist ">
-        <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
         <INPUT TYPE=HIDDEN NAME=viewuser VALUE="<?php echo $viewuser;?>">
         <INPUT TYPE=HIDDEN NAME=action VALUE="viewDJ">
         <INPUT TYPE=HIDDEN NAME=seq VALUE="selList">
@@ -2082,8 +2061,7 @@ class Playlists extends MenuItem {
                 $dot = 1;
             
             echo "<A CLASS=\"nav\" HREF=\"".
-                 "?action=viewDJ&amp;seq=selUser&amp;viewuser=$row[0]&amp;session=".$this->session->getSessionID().
-                 "\">";
+                 "?action=viewDJ&amp;seq=selUser&amp;viewuser=$row[0]\">";
     
             $displayName = str_replace(" ", "&nbsp;", htmlentities($row[1]));
             echo "$displayName</A>";
@@ -2144,8 +2122,8 @@ class Playlists extends MenuItem {
                     echo "<TR><TD ALIGN=\"RIGHT\" CLASS=\"sub\">" . self::timeToAMPM($row[2]) . "&nbsp;</TD>\n";
                     echo "    <TD><A HREF=\"".
                          "?action=viewDate&amp;seq=selList&amp;playlist=".$row[0].
-                         "&amp;session=".$this->session->getSessionID()."\" CLASS=\"nav\">" .
-                          htmlentities($row[3]) . "</A>&nbsp;&nbsp;";
+                         "\" CLASS=\"nav\">" .
+                         htmlentities($row[3]) . "</A>&nbsp;&nbsp;";
                     echo "(" . htmlentities($row[5]) . ")</TD></TR>\n";
                     $i += 1;
             }
@@ -2192,7 +2170,7 @@ class Playlists extends MenuItem {
                     echo "<TD ALIGN=LEFT VALIGN=TOP CLASS=\"sub\">".$plays[$idx]["airname"]."<BR>";
                     echo "<A HREF=\"".
                          "?action=viewDJ&amp;playlist=".$plays[$idx]["id"].
-                         "&amp;seq=selList&amp;session=".$this->session->getSessionID()."\">".$plays[$idx]["description"]."</A></TD>";
+                         "&amp;seq=selList\">".$plays[$idx]["description"]."</A></TD>";
                 } else
                     echo "<TD COLSPAN=3></TD>";
                 if($i%2)
@@ -2213,14 +2191,14 @@ class ZKCalendar extends \Calendar {
         $this->dates = $dates;
     }
     function getCalendarLink($month, $year) {
-        return "?session=".$this->session->getSessionID()."&amp;action=viewDate&amp;month=$month&amp;year=$year";
+        return "?action=viewDate&amp;month=$month&amp;year=$year";
     }
     function getDateLink($day, $month, $year) {
         $link = "";
         $testDate = date("Y-m-d", mktime(0,0,0,$month,$day,$year));
 
         if(strstr($this->dates, $testDate))
-            $link = "?session=".$this->session->getSessionID()."&amp;action=viewDate&amp;seq=selDate&amp;viewdate=$testDate&amp;month=$month&amp;year=$year";
+            $link = "?action=viewDate&amp;seq=selDate&amp;viewdate=$testDate&amp;month=$month&amp;year=$year";
 
         return $link;
     }

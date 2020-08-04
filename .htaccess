@@ -17,5 +17,7 @@ RewriteEngine on
 RewriteRule ^zkrss\.php$ index.php?target=rss [QSA,L]
 RewriteRule ^zkapi\.php$ index.php?target=api [QSA,L]
 RewriteRule ^ssoLogin\.php$ index.php?target=sso [QSA,L]
+RewriteCond $0 !^\.mdhandler.php/.*$
+RewriteRule ^(.+)\.md$ .mdhandler.php/$1.md [L]
 RewriteRule ^zk$ - [R=404,L]
 </IfModule>

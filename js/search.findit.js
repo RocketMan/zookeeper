@@ -97,7 +97,6 @@ function getArtist(node) {
 }
 
 function emitAlbumsEx(table, data, header, tag) {
-    var session = $("#session").val();
     var tr = $("<TR>");
     var th = $("<TH>", {
         class: 'sec',
@@ -113,12 +112,10 @@ function emitAlbumsEx(table, data, header, tag) {
             tagId = "Tag #" + entry.tag + "&nbsp;&#8226;&nbsp;";
         td = $("<TD>").html(tagId + '<A HREF="?s=byArtist&n=' +
                             encodeURIComponent(entry.artist) +
-                            '&q=10&action=search&session=' +
-                            session + '" CLASS="nav">' +
+                            '&q=10&action=search" CLASS="nav">' +
                             getArtist(entry) + '</A>' +
                             "&nbsp;&#8226;&nbsp;");
-        var album = $("<I>").html('<A HREF="?session=' + session +
-                                  '&action=findAlbum&n=' + entry.tag +
+        var album = $("<I>").html('<A HREF="?action=findAlbum&n=' + entry.tag +
                                   '" CLASS="nav">' + entry.album + '</A>');
         td.append(album).append('&nbsp; (' + entry.name + ')');
         tr.append(td);
@@ -179,7 +176,6 @@ var lists = {
     },
 
     compilations: function(table, data) {
-        var session = $("#session").val();
         var tr = $("<TR>");
         var th = $("<TH>", {
             class: 'sec',
@@ -192,11 +188,9 @@ var lists = {
             tr = $("<TR>").append(indent());
             var td = $("<TD>").html('<A HREF="?s=byArtist&n=' +
                                     encodeURIComponent(entry.artist) +
-                                    '&q=10&action=search&session=' + session +
-                                    '" CLASS="nav">' + getArtist(entry) + '</A>' +
+                                    '&q=10&action=search" CLASS="nav">' + getArtist(entry) + '</A>' +
                                     "&nbsp;&#8226;&nbsp;");
-            var album = $("<I>").html('<A HREF="?session=' + session +
-                                      '&action=findAlbum&n=' + entry.tag +
+            var album = $("<I>").html('<A HREF="?action=findAlbum&n=' + entry.tag +
                                       '" CLASS="nav">' + entry.album + '</A>');
             td.append(album);
             td.append('&nbsp;&#8226;&nbsp;"' + entry.track + '"');
@@ -208,7 +202,6 @@ var lists = {
     },
 
     labels: function(table, data) {
-        var session = $("#session").val();
         var tr = $("<TR>");
         var th = $("<TH>", {
             class: 'sec',
@@ -220,8 +213,7 @@ var lists = {
         data.data.forEach(function(entry) {
             tr = $("<TR>").append(indent());
             var td = $("<TD>").html('<A HREF="?s=byLabelKey&n=' +
-                                    entry.pubkey + '&q=10&action=search&session=' +
-                                    session + '" CLASS="nav">' +
+                                    entry.pubkey + '&q=10&action=search" CLASS="nav">' +
                                     entry.name + '</A>');
             if(entry.city)
                 td.append("&nbsp;&#8226; " + entry.city + "&nbsp;" +
@@ -234,7 +226,6 @@ var lists = {
     },
 
     playlists: function(table, data) {
-        var session = $("#session").val();
         var tr = $("<TR>");
         var th = $("<TH>", {
             class: 'sec',
@@ -257,8 +248,7 @@ var lists = {
                 td = $("<TD>", {
                     align: 'left'
                 }).html('<A HREF="?action=viewDJ&seq=selList&playlist=' +
-                        list + '&session=' +
-                        session + '" CLASS="nav">' +
+                        list + '" CLASS="nav">' +
                         entry.description + '</A>' +
                         '&nbsp;&#8226;&nbsp;' +
                         day + " " + months[month-1] + year + '&nbsp;&nbsp;(' +
@@ -284,7 +274,6 @@ var lists = {
     },
 
     reviews: function(table, data) {
-        var session = $("#session").val();
         var tr = $("<TR>");
         var th = $("<TH>", {
             class: 'sec',
@@ -297,11 +286,10 @@ var lists = {
             tr = $("<TR>").append(indent());
             var td = $("<TD>").html('<A HREF="?s=byArtist&n=' +
                                     encodeURIComponent(entry.artist) +
-                                    '&q=10&action=search&session=' +
-                                    session + '" CLASS="nav">' +
+                                    '&q=10&action=search" CLASS="nav">' +
                                     getArtist(entry) + '</A>' +
                                     '&nbsp;&#8226;&nbsp;' +
-                                    '<I><A HREF="?session=' + session + '&action=findAlbum&n=' +
+                                    '<I><A HREF="?action=findAlbum&n=' +
                                     entry.tag + '" CLASS="nav">' +
                                     entry.album + '</A></I>' +
                                     '&nbsp;&nbsp;(' +
@@ -314,7 +302,6 @@ var lists = {
     },
 
     tracks: function(table, data) {
-        var session = $("#session").val();
         var tr = $("<TR>");
         var th = $("<TH>", {
             class: 'sec',
@@ -328,13 +315,11 @@ var lists = {
             var td = $("<TD>");
             td.html('<A HREF="?s=byArtist&n=' +
                     encodeURIComponent(entry.artist) +
-                    '&q=10&action=search&session=' +
-                    session + '" CLASS="nav">' +
+                    '&q=10&action=search" CLASS="nav">' +
                     getArtist(entry) + '</A>' +
                     "&nbsp;&#8226;&nbsp;" +
                     "<I>" +
-                    '<A HREF="?session=' + session +
-                    '&action=findAlbum&n=' +
+                    '<A HREF="?action=findAlbum&n=' +
                     entry.tag + '" CLASS="nav">' +
                     entry.album + '</A></I>' +
                     '&nbsp;&#8226;&nbsp;"' + entry.track + '"');
@@ -382,7 +367,7 @@ function search(type, size, offset) {
                 var search = $("#key").val();
                 if(search.length < 4 ||
                    search.match(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^_`{|}~]/g) != null) {
-                    results.html('TIP: For short names or names with punctuation, try the <A HREF="?action=search&s=byArtist&n=' + encodeURIComponent(search) + '&session=' + $("#session").val() + '">Classic Search</A>.');
+                    results.html('TIP: For short names or names with punctuation, try the <A HREF="?action=search&s=byArtist&n=' + encodeURIComponent(search) + '">Classic Search</A>.');
                 }
             }
         },

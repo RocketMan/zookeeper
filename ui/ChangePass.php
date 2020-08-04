@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -31,7 +31,7 @@ use ZK\UI\UICommon as UI;
 
 class ChangePass extends MenuItem {
     public function processLocal($action, $subaction) {
-        if(isset($_REQUEST["validate"])) {
+        if(isset($_POST["validate"])) {
             $userAPI = Engine::api(IUser::class);
             if($userAPI->validatePassword($this->session->getUser(), $_REQUEST["oldPass"], 0)) {
                 $newPass = $_REQUEST["newPass"];
@@ -69,7 +69,6 @@ class ChangePass extends MenuItem {
         <TD><INPUT TYPE=SUBMIT VALUE=" Change Password "></TD>
       </TR>
     </TABLE>
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="changePass">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </FORM>

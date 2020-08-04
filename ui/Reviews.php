@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -47,14 +47,14 @@ class Reviews extends MenuItem {
         if(!$tag)
             $tag = $_REQUEST["n"];
         if($this->session->isAuth("u"))
-            echo "<A HREF=\"?session=".$this->session->getSessionID()."&amp;action=searchReviewEdit&amp;tag=$tag\" CLASS=\"nav\"><B>Write a review of this album</B></A>";
+            echo "<A HREF=\"?action=searchReviewEdit&amp;tag=$tag\" CLASS=\"nav\"><B>Write a review of this album</B></A>";
     }
     
     private function emitReviewRow($row, $album) {
         // Album
         echo "  <TR CLASS=\"hborder\"><TD>";
         echo "<A HREF=\"".
-                           "?session=".$this->session->getSessionID()."&amp;action=viewRecentReview&amp;tag=$row[0]\">";
+                           "?action=viewRecentReview&amp;tag=$row[0]\">";
         echo htmlentities($album[0]["album"]);
         echo "</A></TD><TD>";
     
@@ -181,7 +181,7 @@ class Reviews extends MenuItem {
                 echo "</SPAN></TD></TR>\n";
     
                 if($this->session->getUser() == $row[4])
-                    echo "  <TR COLSPAN=3><TD><FONT SIZE=-1><A HREF=\"?session=".$this->session->getSessionID()."&amp;action=searchReviewEdit&amp;tag=$tag\">[This is my review and I want to edit it]</A></FONT></TD></TR>\n";
+                    echo "  <TR COLSPAN=3><TD><FONT SIZE=-1><A HREF=\"?action=searchReviewEdit&amp;tag=$tag\">[This is my review and I want to edit it]</A></FONT></TD></TR>\n";
                 echo "  <TR><TD COLSPAN=3 CLASS=\"review\">\n";
                 echo nl2br(htmlentities($row[2]));
                 echo "\n  </TD></TR>\n";
@@ -264,7 +264,7 @@ class Reviews extends MenuItem {
     public function editReview() {
         $airname = $_REQUEST["airname"];
     
-        if($_REQUEST["validate"]) {
+        if($_POST["validate"]) {
             switch($_REQUEST["button"]) {
             case " Setup New Airname... ":
                 $displayForm = 1;
@@ -295,7 +295,6 @@ class Reviews extends MenuItem {
       </TR>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=button VALUE=" Setup New Airname... ">
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=created VALUE="<?php echo $_REQUEST["created"];?>">
     <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $_REQUEST["tag"];?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="searchReviewEdit">
@@ -395,7 +394,6 @@ class Reviews extends MenuItem {
         <INPUT TYPE=CHECKBOX NAME=noise<?php echo $email;?>>E-mail review to Noise
       </TD></TR>
     </TABLE>
-    <INPUT TYPE=HIDDEN NAME=session VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN NAME=created VALUE="<?php echo $_REQUEST["created"];?>">
     <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $_REQUEST["tag"];?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="searchReviewEdit">

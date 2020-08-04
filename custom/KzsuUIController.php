@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -51,7 +51,7 @@ class KzsuUIController extends Main {
     </DIV>
     <DIV CLASS="headerNavbar">
       <A HREF="<?php echo $urls['home'];?>schedule/">schedule</A> +
-      <A HREF="<?php echo "?session=".$this->session->getSessionID();?>">music</A> +
+      <A HREF="?">music</A> +
       <A HREF="<?php echo $urls['home'];?>sports/">sports</a> +
       <A HREF="<?php echo $urls['home'];?>concerts/">concerts</a> +
       <!--A HREF="<?php echo $urls['home'];?>news/" target="_blank">news</A> + -->

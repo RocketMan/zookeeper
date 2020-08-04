@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -30,47 +30,82 @@ class Session {
     private $displayName;
     private $access = null;
     private $sessionID = null;
+    private $sessionCookieName = "session";
+    private $secure;
     private $pdo;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
-        if(!empty($_REQUEST['session']))
-            $this->validate($_REQUEST['session']);
+
+        // Cookies are shared between all instances on the same server.
+        //
+        // As the state they represent may differ between instances,
+        // we must scope the session cookie to each instance.
+        $port = $_SERVER['SERVER_PORT'];
+        switch($port) {
+        case 80:
+        case 443:
+           // standard port, no suffix
+           break;
+        default:
+           // non-standard port, apply suffix
+           $this->sessionCookieName .= "-" . $port;
+           break;
+        }
+
+        $this->secure = $_SERVER['REQUEST_SCHEME'] == 'https';
+
+        // we no longer accept the session ID as a request parameter;
+        // it must be delievered in the request header as a cookie.
+        if(!empty($_COOKIE[$this->sessionCookieName]))
+            $this->validate($_COOKIE[$this->sessionCookieName]);
     }
 
     public function getDN() { return $this->displayName; }
-    public function getSessionID() { return $this->sessionID; }
     public function getUser() { return $this->user; }
 
     private function setSessionCookie($session) {
-        setcookie("session", $session, 0, "/", $_SERVER['SERVER_NAME']);
-        setcookie("port", mt_rand(), 0, "/", $_SERVER['SERVER_NAME']);
+        // help prevent CSRF attacks with SameSite cookie flag
+        // 'SameSite=Lax' omits the cookie in cross-site POST requests
+        // see https://portswigger.net/web-security/csrf/samesite-cookies
+        if(PHP_VERSION_ID < 70300) {
+            // work-around for missing SameSite flag in php 7.2 and earlier
+            setcookie($this->sessionCookieName, $session, 0, "/; samesite=lax", $_SERVER['SERVER_NAME'], $this->secure, true);
+        } else {
+            setcookie($this->sessionCookieName, $session, [
+                'expires' => 0,
+                'path' => '/',
+                'domain' => $_SERVER['SERVER_NAME'],
+                'secure' => $this->secure,
+                'httponly' => true,
+                'samesite' => 'lax'
+            ]);
+        }
     }
 
     private function clearSessionCookie() {
         // Clear the session cookie, if any
-        if(isset($_COOKIE['session']))
-            setcookie("session", "", time() - 3600, "/", $_SERVER['SERVER_NAME']);
-        if(isset($_COOKIE['port']))
-            setcookie("port", "", time() - 3600, "/", $_SERVER['SERVER_NAME']);
-    }
-
-    private function validatePort($sessionID, $portID) {
-        // port id is the hashed UA, cookie (if any), and perturbation constant
-        $local = md5($_SERVER['HTTP_USER_AGENT'] . $_COOKIE['port'] . "uioer");
-        if($portID) {
-            // compare the calculated port id with the recorded one
-            $success = $portID == $local;
-        } else {
-            // first time through; setup the port id
-            $this->dbUpdate($local, $sessionID);
-            $success = true;
+        if(isset($_COOKIE[$this->sessionCookieName])) {
+            if(PHP_VERSION_ID < 70300) {
+                // work-around for missing SameSite flag in php 7.2 and earlier
+                setcookie($this->sessionCookieName, "",
+                          time() - 3600, "/; samesite=lax",
+                          $_SERVER['SERVER_NAME'], $this->secure, true);
+            } else {
+                setcookie($this->sessionCookieName, "", [
+                    'expires' => time() - 3600,
+                    'path' => '/',
+                    'domain' => $_SERVER['SERVER_NAME'],
+                    'secure' => $this->secure,
+                    'httponly' => true,
+                    'samesite' => 'lax'
+                ]);
+            }
         }
-        return $success;
     }
 
     private function dbQuery($session) {
-        $query = "SELECT user, access, realname, portid FROM sessions WHERE sessionkey=?";
+        $query = "SELECT user, access, realname FROM sessions WHERE sessionkey=?";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $session);
         $stmt->execute();
@@ -93,14 +128,6 @@ class Session {
         $query = "DELETE FROM sessions WHERE sessionkey= ?";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $session);
-        return $stmt->execute();
-    }
-
-    private function dbUpdate($portID, $sessionID) {
-        $query = "UPDATE sessions SET portid = ? WHERE sessionkey = ?";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->bindValue(1, $portID);
-        $stmt->bindValue(2, $sessionID);
         return $stmt->execute();
     }
 
@@ -129,8 +156,7 @@ class Session {
             $sessionID = "";
     
         $row = $this->dbQuery($sessionID);
-        if($row &&
-               $this->validatePort($sessionID, $row['portid'])) {
+        if($row) {
             // Session found
             $this->user = $row['user'];
             $this->access = $row['access'];
@@ -159,7 +185,7 @@ class Session {
             $allow = true;
             break;
         case "u":    // authenticated users only
-            $allow = $this->sessionID;
+            $allow = !empty($this->sessionID);
             break;
         case "U":    // local (not SSO) user
             $allow = $this->sessionID &&

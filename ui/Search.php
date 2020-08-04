@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -69,7 +69,6 @@ class Search extends MenuItem {
         echo "<FORM ACTION=\"?\" METHOD=\"POST\">\n";
         echo "<P><B>Find It:</B>&nbsp;&nbsp;<INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$search\" autocomplete=off>&nbsp;&nbsp;<SPAN ID=\"total\"></SPAN></P>\n";
         echo "<INPUT TYPE=HIDDEN NAME=action VALUE=\"find\">\n";
-        echo "<INPUT TYPE=HIDDEN NAME=session id='session' VALUE=\"".$this->session->getSessionID()."\">\n";
         echo "<INPUT TYPE=HIDDEN NAME=key id='key' VALUE=''>\n";
         echo "</FORM>\n";
         echo "<SPAN ID=\"results\">Search the database for music, reviews, and playlists.";
@@ -91,8 +90,7 @@ class Search extends MenuItem {
         $linkHtml = $this->HTMLify($name, $length);
         $link = "<A HREF='?s=${searchBy}&amp;n=$linkUrl" .
                       "&amp;q=". $this->maxresults.
-                      "&amp;action=search&amp;session=".$this->session->getSessionID().
-                      "'>$linkHtml</A>";
+                      "&amp;action=search'>$linkHtml</A>";
         return $link;
     }
 
@@ -141,8 +139,7 @@ class Search extends MenuItem {
         echo "<A HREF=\"".
                      "?s=byAlbum&amp;n=". UI::URLify($albums[0]["album"]).
                      "&amp;q=". $this->maxresults.
-                     "&amp;action=search&amp;session=".$this->session->getSessionID().
-                     "\" CLASS=\"nav\">";
+                     "&amp;action=search\" CLASS=\"nav\">";
         echo htmlentities($albums[0]["album"]) . "</A></B></TD>";
     
         $medium = " " . ILibrary::MEDIA[$albums[0]["medium"]];
@@ -190,8 +187,7 @@ class Search extends MenuItem {
             echo "<A HREF=\"".
                          "?s=byArtist&amp;n=". UI::URLify($artist).
                          "&amp;q=". $this->maxresults.
-                         "&amp;action=search&amp;session=".$this->session->getSessionID().
-                         "\" CLASS=\"nav\">";
+                         "&amp;action=search\" CLASS=\"nav\">";
             echo htmlentities($artist) . "</A></B></TD>";
         } else
             echo htmlentities($artist) . "</B></TD>";
@@ -207,8 +203,7 @@ class Search extends MenuItem {
                 echo "<A HREF=\"".
                                "?s=byLabelKey&amp;n=". UI::URLify($albums[0]["pubkey"]).
                                "&amp;q=". $this->maxresults.
-                               "&amp;action=search&amp;session=".$this->session->getSessionID().
-                               "\" CLASS=\"nav\">";
+                               "&amp;action=search\" CLASS=\"nav\">";
                 echo htmlentities($label[0]["name"]) . "</A>";
             } else
                 echo "(Unknown)";
@@ -372,7 +367,6 @@ class Search extends MenuItem {
         </TABLE>
       </TD></TR>
     </TABLE>
-    <INPUT TYPE=HIDDEN id='session' VALUE="<?php echo $this->session->getSessionID();?>">
     <INPUT TYPE=HIDDEN id='sortBy' value=''>
     <INPUT TYPE=HIDDEN id='type' value='<?php echo $labelKey?"albumsByPubkey":""; ?>'>
     <INPUT TYPE=HIDDEN id='key' value='<?php echo $labelKey?htmlspecialchars($this->searchText):""; ?>'>
@@ -381,7 +375,7 @@ class Search extends MenuItem {
     <BR>
     <TABLE class='searchTable' CELLPADDING=2 CELLSPACING=0 BORDER=0>
     <TR><TD><B>Tip:  For a more extensive search,
-               try <A HREF="?session=<?php echo $this->session->getSessionID(); ?>&amp;action=find" CLASS="nav">Find It!</A></B></TD></TR>
+               try <A HREF="?action=find" CLASS="nav">Find It!</A></B></TD></TR>
     </TABLE>
     <?php 
     }
@@ -399,7 +393,7 @@ class Search extends MenuItem {
         if($name) {
             UI::emitJS('js/jquery.bahashchange.min.js');
             UI::emitJS('js/search.library.js');
-            echo "<FORM>\n<INPUT id='session' type='hidden' value='" . $this->session->getSessionID() . "'>\n";
+            echo "<FORM>\n<INPUT id='showTag' type='hidden' value='" . ($this->session->isAuth('u')?'true':'false') . "'>\n";
             echo "<INPUT id='type' type='hidden' value='reviews'>\n";
             echo "<INPUT id='sortBy' type='hidden' value='".$sortBy."'>\n";
             echo "<INPUT id='key' type='hidden' value='" . $this->searchText . "'>\n";
