@@ -86,10 +86,10 @@ class Search extends MenuItem {
 
 
     // return link to artist or track info.
-    private function makeTrackLink($name, $length) {
+    private function makeTrackLink($searchBy, $name, $length) {
         $linkUrl = UI::URLify($name);
         $linkHtml = $this->HTMLify($name, $length);
-        $link = "<A HREF='?s=byTrack&amp;n=$linkUrl" .
+        $link = "<A HREF='?s=${searchBy}&amp;n=$linkUrl" .
                       "&amp;q=". $this->maxresults.
                       "&amp;action=search&amp;session=".$this->session->getSessionID().
                       "'>$linkHtml</A>";
@@ -108,11 +108,11 @@ class Search extends MenuItem {
         echo "<TD>${trackInfo['seq']}.</TD>";
 
         if ($showArtist) { // collection only
-            $artistLink = $this->makeTrackLink($trackInfo['artist'], 20);
+            $artistLink = $this->makeTrackLink('byArtist', $trackInfo['artist'], 20);
             echo "<TD>$artistLink</TD>";
         }
 
-        $titleLink = $this->makeTrackLink($trackInfo['track'], 32);
+        $titleLink = $this->makeTrackLink('byTrack', $trackInfo['track'], 32);
         echo "<TD>$titleLink</TD>";
     }
 
