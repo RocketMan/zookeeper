@@ -649,7 +649,10 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
     public function getLastPlays($tag, $count=0) {
         settype($tag, "integer");
         $query = "SELECT l.id, l.showdate, l.description, a.airname," .
-                 "        count(*) plays" .
+                 "  count(*) plays," .
+                 "  substring_index(" .
+                 "    group_concat(t.track ORDER BY t.seq DESC, t.id DESC)," .
+                 "    ',', 1) lasttrack" .
                  " FROM tracks t" .
                  " JOIN lists l ON t.list = l.id " .
                  " LEFT JOIN airnames a ON l.airname = a.id" .
