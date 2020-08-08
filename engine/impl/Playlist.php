@@ -650,9 +650,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         settype($tag, "integer");
         $query = "SELECT l.id, l.showdate, l.description, a.airname," .
                  "  count(*) plays," .
-                 "  substring_index(" .
-                 "    group_concat(t.track ORDER BY t.seq DESC, t.id DESC)," .
-                 "    ',', 1) lasttrack" .
+                 "  group_concat(t.track ORDER BY t.seq DESC, t.id DESC SEPARATOR 0x1e) tracks" .
                  " FROM tracks t" .
                  " JOIN lists l ON t.list = l.id " .
                  " LEFT JOIN airnames a ON l.airname = a.id" .
@@ -665,7 +663,12 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         if($count)
             $stmt->bindValue(2, (int)$count, \PDO::PARAM_INT);
     
-        return $this->executeAndFetchAll($stmt);
+        $spins = $this->executeAndFetchAll($stmt);
+        foreach($spins as &$spin) {
+            $spin['tracks'] = explode("\x1e", $spin['tracks']);
+            $spin['lasttrack'] = $spin['tracks'][0];
+        }
+        return $spins;
     }
     
     public function getRecentPlays(&$result, $airname, $count) {
