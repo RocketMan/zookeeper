@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -92,7 +92,7 @@ class ReviewImpl extends BaseImpl implements IReview {
         }
         if($limit)
             $stmt->bindValue($p++, (int)$limit, \PDO::PARAM_INT);
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
+        return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
     public function getReviews($tag, $byName=1, $user = "", $loggedIn = 0) {
@@ -115,7 +115,7 @@ class ReviewImpl extends BaseImpl implements IReview {
         $stmt->bindValue(1, $tag);
         if($user)
             $stmt->bindValue(2, $user);
-        return $this->executeAndFetchAll($stmt, \PDO::FETCH_BOTH);
+        return $stmt->executeAndFetchAll(\PDO::FETCH_BOTH);
     }
     
     public function insertReview($tag, $private, $airname, $review, $user) {

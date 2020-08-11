@@ -41,19 +41,22 @@ class Session {
         //
         // As the state they represent may differ between instances,
         // we must scope the session cookie to each instance.
-        $port = $_SERVER['SERVER_PORT'];
-        switch($port) {
-        case 80:
-        case 443:
-           // standard port, no suffix
-           break;
-        default:
-           // non-standard port, apply suffix
-           $this->sessionCookieName .= "-" . $port;
-           break;
+        if(!empty($_SERVER['SERVER_PORT'])) {
+            $port = $_SERVER['SERVER_PORT'];
+            switch($port) {
+            case 80:
+            case 443:
+               // standard port, no suffix
+               break;
+            default:
+               // non-standard port, apply suffix
+               $this->sessionCookieName .= "-" . $port;
+               break;
+            }
         }
 
-        $this->secure = $_SERVER['REQUEST_SCHEME'] == 'https';
+        $this->secure = empty($_SERVER['REQUEST_SCHEME'])?false:
+            $_SERVER['REQUEST_SCHEME'] == 'https';
 
         // we no longer accept the session ID as a request parameter;
         // it must be delievered in the request header as a cookie.

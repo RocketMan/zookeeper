@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -33,7 +33,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $query = "SELECT id, name, code, director, email " .
                  "FROM categories ORDER BY id";
         $stmt = $this->prepare($query);
-        return $this->executeAndFetchAll($stmt);
+        return $stmt->executeAndFetchAll();
     }
     
     public function updateCategory($i, $name, $code, $dir, $email) {
@@ -61,7 +61,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $query = "SELECT afile_number, adddate FROM currents " .
                  "ORDER BY adddate DESC, afile_number DESC LIMIT 1";
         $stmt = $this->prepare($query);
-        $row = $this->executeAndFetch($stmt, \PDO::FETCH_BOTH);
+        $row = $stmt->executeAndFetch(\PDO::FETCH_BOTH);
         $aid = (int)$row[0] + 1;
         $adate = $row[1];
         if($aid > 999) {
@@ -89,7 +89,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $stmt = $this->prepare($query);
         if($limit)
             $stmt->bindValue(1, (int)$limit, \PDO::PARAM_INT);
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
+        return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
     public function getAdd($date) {
@@ -102,7 +102,7 @@ class ChartImpl extends BaseImpl implements IChart {
                  "AND adddate = ? ORDER BY id";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $date);
-        return $this->execute($stmt);
+        return $stmt->iterate();
     }
     
     public function getCurrents($date, $sort=0) {
@@ -118,7 +118,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $date);
         $stmt->bindValue(2, $date);
-        return $this->execute($stmt);
+        return $stmt->iterate();
     }
     
     public function getCurrentsWithPlays($date=0) {
@@ -170,7 +170,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $query = "SELECT * FROM tmp_current_plays ".
                  "UNION SELECT * FROM tmp_current_no_plays";
         $stmt = $this->prepare($query);
-        $result = $this->execute($stmt, \PDO::FETCH_BOTH);
+        $result = $stmt->iterate(\PDO::FETCH_BOTH);
     
         // Clean up
         $stmt = $this->prepare("DROP TABLE tmp_current_plays");
@@ -226,7 +226,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $query = "SELECT * FROM currents WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $id);
-        return $this->executeAndFetch($stmt, \PDO::FETCH_BOTH);
+        return $stmt->executeAndFetch(\PDO::FETCH_BOTH);
     }
     
     public function getAlbumByTag($tag) {
@@ -234,7 +234,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $query = "SELECT * FROM currents WHERE tag = ? ORDER BY adddate DESC";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
-        return $this->executeAndFetch($stmt, \PDO::FETCH_BOTH);
+        return $stmt->executeAndFetch(\PDO::FETCH_BOTH);
     }
     
     public function getAlbumPlays($tag, $startDate="", $endDate="", $limit="") {
@@ -264,7 +264,7 @@ class ChartImpl extends BaseImpl implements IChart {
         }
         if($limit)
             $stmt->bindValue($p++, (int)$limit, \PDO::PARAM_INT);
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
+        return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
     public function getChartDates($limit=0) {
@@ -275,7 +275,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $stmt = $this->prepare($query);
         if($limit)
             $stmt->bindValue(1, (int)$limit, \PDO::PARAM_INT);
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
+        return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
     public function getChartDatesByYear($year, $limit=0) {
@@ -289,7 +289,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $stmt->bindValue(2, "$year-12-31");
         if($limit)
             $stmt->bindValue(3, (int)$limit, \PDO::PARAM_INT);
-        return $this->execute($stmt);
+        return $stmt->iterate();
     }
     
     public function getChartYears($limit=0) {
@@ -300,7 +300,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $stmt = $this->prepare($query);
         if($limit)
             $stmt->bindValue(1, (int)$limit, \PDO::PARAM_INT);
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
+        return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
     public function getChartMonths($limit=0) {
@@ -312,7 +312,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $stmt = $this->prepare($query);
         if($limit)
             $stmt->bindValue(1, (int)$limit, \PDO::PARAM_INT);
-        return $this->execute($stmt);
+        return $stmt->iterate();
     }
     
     private function getChartAlbumInfo(&$albums) {
@@ -502,7 +502,7 @@ class ChartImpl extends BaseImpl implements IChart {
     public function getChartEMail() {
         $query = "SELECT id, chart, address FROM chartemail ORDER BY id";
         $stmt = $this->prepare($query);
-        return $this->execute($stmt);
+        return $stmt->iterate();
     }
     
     public function updateChartEMail($i, $address) {
@@ -542,7 +542,7 @@ class ChartImpl extends BaseImpl implements IChart {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $startDate);
         $stmt->bindValue(2, $endDate);
-        return $this->execute($stmt);
+        return $stmt->iterate();
     }
 
     public function doChart($chartDate, $maxSpins, $limitPerDJ=0) {
