@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -33,29 +33,27 @@ class UserImpl extends BaseImpl implements IUser {
         $query = "SELECT * FROM users WHERE name = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
-        return $this->executeAndFetch($stmt);
+        return $stmt->executeAndFetch();
     }
 
     public function getUsers() {
         $query = "SELECT name, realname FROM users u ORDER BY name";
         $stmt = $this->prepare($query);
-        return $this->execute($stmt);
+        return $stmt->iterate();
     }
     
     public function getUserByAccount($account) {
         $query = "SELECT * FROM users WHERE ssoaccount = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $account);
-        $stmt->execute();
-        return $this->executeAndFetch($stmt);
+        return $stmt->executeAndFetch();
     }
     
     public function getUserByFullname($fullname) {
         $query = "SELECT * FROM users WHERE realname = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $fullname);
-        $stmt->execute();
-        return $this->executeAndFetch($stmt);
+        return $stmt->executeAndFetch();
     }
     
     public function assignAccount($user, $account) {
@@ -93,7 +91,7 @@ class UserImpl extends BaseImpl implements IUser {
         $query = "SELECT * FROM ssosetup WHERE sessionkey=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $ssoSession);
-        return $this->executeAndFetch($stmt);
+        return $stmt->executeAndFetch();
     }
     
     public function teardownSsoOptions($ssoSession) {
@@ -124,7 +122,7 @@ class UserImpl extends BaseImpl implements IUser {
         $query = "SELECT * FROM ssoredirect WHERE sessionkey=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $ssoSession);
-        $row = $this->executeAndFetch($stmt);
+        $row = $stmt->executeAndFetch();
         if($row)
             $url = $row["url"];
         if($url !== false) {
@@ -172,7 +170,7 @@ class UserImpl extends BaseImpl implements IUser {
         $query = "SELECT * FROM users WHERE name=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
-        $result = $this->executeAndFetch($stmt);
+        $result = $stmt->executeAndFetch();
         if($result) {
             /*
             if(!$result["password"]) {

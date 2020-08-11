@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -43,7 +43,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                  "GROUP BY showdate ORDER BY showdate DESC";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $yearMonth);
-        return $this->execute($stmt);
+        return $stmt->iterate();
     }
     
     public function getPlaylist($playlist, $withAirname=0) {
@@ -58,7 +58,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                      "FROM lists WHERE id=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
-        return $this->executeAndFetch($stmt, \PDO::FETCH_BOTH);
+        return $stmt->executeAndFetch(\PDO::FETCH_BOTH);
     }
     
     public function getPlaylists($onlyPublished=0, $withAirname=0,
@@ -93,7 +93,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         else if($showDate)
             $stmt->bindValue($p++, $showDate);
 
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
+        return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
     public function getPlaylistsByAirname($airname) {
@@ -129,7 +129,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $stmt->bindValue(1, date("Y-m-d"));
         $stmt->bindValue(2, $hour);
         $stmt->bindValue(3, $hour);
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
+        return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
     private function purgeEmptyPlaylist($user, $date) {
@@ -141,7 +141,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
         $stmt->bindValue(2, $date);
-        $result = $this->executeAndFetch($stmt);
+        $result = $stmt->executeAndFetch();
         if($result && !$result['tid']) {
             // DJ's last entered playlist on this date has no tracks; delete it
             //
@@ -178,7 +178,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $query = "SELECT showdate, showtime FROM lists WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlist);
-        $row = $this->executeAndFetch($stmt);
+        $row = $stmt->executeAndFetch();
 
         if($row) {
             $oldDate = \DateTime::createFromFormat(self::TIME_FORMAT,
@@ -257,10 +257,10 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $query = "SELECT seq FROM tracks WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
-        $row = $this->executeAndFetch($stmt);
+        $row = $stmt->executeAndFetch();
         if(!$row || !$row['seq']) {
             if($list && $this->populateSeq($list))
-                $row = $this->executeAndFetch($stmt);
+                $row = $stmt->executeAndFetch();
         }
         return $row?$row['seq']:false;
     }
@@ -269,7 +269,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $query = "SELECT MAX(seq) max FROM tracks WHERE list = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $list);
-        $row = $this->executeAndFetch($stmt);
+        $row = $stmt->executeAndFetch();
         return $row && $row['max']?$row['max'] + 1:0;
     }
 
@@ -312,7 +312,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                  "ORDER BY created DESC LIMIT 1";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlistId);
-        $row = $this->executeAndFetch($stmt);
+        $row = $stmt->executeAndFetch();
         $haveIt = $row != null && $row['created'] != null;
         $latestSpin = $haveIt ? new \DateTime($row['created']) : null;
         return $latestSpin;
@@ -329,7 +329,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $list);
         $stmt->bindValue(2, $timestamp);
-        $row = $this->executeAndFetch($stmt);
+        $row = $stmt->executeAndFetch();
         $lowid = $row?$row['id']:0;
 
         if($lowid) {
@@ -347,7 +347,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $list);
         $stmt->bindValue(2, $timestamp);
-        $row = $this->executeAndFetch($stmt);
+        $row = $stmt->executeAndFetch();
         $highid = $row?$row['id']:0;
 
         if($highid) {
@@ -366,7 +366,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                  "WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
-        return $this->executeAndFetch($stmt);
+        return $stmt->executeAndFetch();
     }
     
     public function getTracks($playlist, $desc = 0) {
@@ -375,7 +375,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                  "WHERE list = ? ORDER BY seq $desc, id $desc";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
-        return $this->execute($stmt);
+        return $stmt->iterate();
     }
 
     public function getTracksWithObserver($playlist, PlaylistObserver $observer, $desc = 0, $filter = null) {
@@ -390,7 +390,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $query = "SELECT COUNT(*) AS count FROM tracks WHERE list = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
-        $row = $this->executeAndFetch($stmt);
+        $row = $stmt->executeAndFetch();
         return $row?$row['count']:0;
     }
 
@@ -589,7 +589,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         $query = "SELECT list, seq FROM tracks WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
-        $row = $this->executeAndFetch($stmt);
+        $row = $stmt->executeAndFetch();
 
         $query = "DELETE FROM tracks WHERE id = ?";
         $stmt = $this->prepare($query);
@@ -663,7 +663,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         if($count)
             $stmt->bindValue(2, (int)$count, \PDO::PARAM_INT);
     
-        $spins = $this->executeAndFetchAll($stmt);
+        $spins = $stmt->executeAndFetchAll();
         foreach($spins as &$spin) {
             $spin['tracks'] = explode("\x1e", $spin['tracks']);
             $spin['lasttrack'] = $spin['tracks'][0];
@@ -724,7 +724,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                  "WHERE listid = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlist);
-        $row = $this->executeAndFetch($stmt);
+        $row = $stmt->executeAndFetch();
         $airname = $row?$row[0]:null;
        
         // update the playlist
@@ -770,7 +770,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                  "ORDER BY showdate DESC, showtime DESC";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
+        return $stmt->iterate(\PDO::FETCH_BOTH);
     }
 
     public function getListsSelDeleted($user) {
@@ -780,6 +780,6 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
                  "ORDER BY showdate DESC, showtime DESC";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
+        return $stmt->iterate(\PDO::FETCH_BOTH);
     }
 }

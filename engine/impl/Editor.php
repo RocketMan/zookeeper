@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -294,14 +294,14 @@ class EditorImpl extends BaseImpl implements IEditor {
                  "WHERE user=? ORDER BY keyed";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
-        return $this->execute($stmt);
+        return $stmt->iterate();
     }
 
     public function getAlbum($tag) {
         $query = "SELECT * FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey WHERE tag = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
-        return $this->executeAndFetch($stmt);
+        return $stmt->executeAndFetch();
     }
 
     public function getTracks($tag, $isColl) {
@@ -309,14 +309,14 @@ class EditorImpl extends BaseImpl implements IEditor {
         $query = "SELECT * FROM $table WHERE tag = ? ORDER BY seq";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
-        return $this->execute($stmt);
+        return $stmt->iterate();
     }
 
     public function getLabel($key) {
         $query = "SELECT * FROM publist WHERE pubkey = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $key);
-        return $this->executeAndFetch($stmt);
+        return $stmt->executeAndFetch();
     }
 
     public function setLocation($tag, $location, $bin=null) {

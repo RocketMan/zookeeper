@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -61,7 +61,7 @@ class DJImpl extends BaseImpl implements IDJ {
             $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
         else if($user)
             $stmt->bindValue(1, $user);
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
+        return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
     public function getActiveAirnames($viewAll=0) {
@@ -71,7 +71,7 @@ class DJImpl extends BaseImpl implements IDJ {
             $query .= "AND ADDDATE(l.showdate, 12*7) > NOW() ";
         $query .=  "GROUP BY a.airname ORDER BY a.airname";
         $stmt = $this->prepare($query);
-        return $this->execute($stmt, \PDO::FETCH_BOTH);
+        return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
     public function getAirname($djname, $user="") {
@@ -82,7 +82,7 @@ class DJImpl extends BaseImpl implements IDJ {
         $stmt->bindValue(1, $djname);
         if($user)
             $stmt->bindValue(2, $user);
-        $result = $this->executeAndFetch($stmt);
+        $result = $stmt->executeAndFetch();
         return $result?$result['id']:0;
     }
     
