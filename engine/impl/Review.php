@@ -66,10 +66,10 @@ class ReviewImpl extends BaseImpl implements IReview {
             $query .= $this->getRecentSubquery($user, $weeks, $loggedIn);
             $query .= "UNION ";
             $query .= $this->getRecentSubquery($user, -1, $loggedIn);
-            $query .= ") AS z GROUP BY z.tag ORDER BY z.created DESC";
+            $query .= ") AS z GROUP BY z.tag ORDER BY z.reviewed DESC";
         } else {
             $query = $this->getRecentSubquery($user, 0, $loggedIn);
-            $query .= "GROUP BY r.tag ORDER BY r.created DESC";
+            $query .= "GROUP BY r.tag ORDER BY reviewed DESC";
         }
             
         if($limit)
