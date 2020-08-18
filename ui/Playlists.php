@@ -2136,11 +2136,9 @@ class Playlists extends MenuItem {
     public function viewLastPlays($tag, $count=0) {
         $plays = Engine::api(IPlaylist::class)->getLastPlays($tag, $count);
         if($plays) {
-            echo "<TABLE WIDTH=\"100%\">\n";
-            echo "  <TR><TH ALIGN=LEFT CLASS=\"secdiv\">Recent Airplay</TH>";
-            echo "</TR>\n</TABLE>\n";
+            echo "<DIV class='playlistBanner'>&nbsp;Recent Airplay</DIV>";
     
-            echo "<TABLE CELLPADDING=4 CELLSPACING=0 BORDER=0>\n";
+            echo "<TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>\n";
     
             // Setup date format differently if plays extend into another year
             $now = getdate(time());
@@ -2152,25 +2150,27 @@ class Playlists extends MenuItem {
                 $plays[] = array("airname"=>"");
      
             $mid = sizeof($plays)/2;
-            for($i=0; $i<sizeof($plays); $i++) {
+            for($i=0; $i < sizeof($plays); $i++) {
+                $play = $plays[$i];
                 if($i%2 == 0) {
-                    echo "  <TR>";
+                    echo "<TR>";
                     $idx = ($i+2)/2 - 1;
                 } else {
-                    echo "      ";
                     $idx = $mid + ($i+1)/2 - 1;
                 }
     
-                if($plays[$idx]["airname"]) {
-                    list($y,$m,$d) = explode("-", $plays[$idx]["showdate"]);
-                    $formatDate = preg_replace("/ /", "&nbsp;", date($dateSpec, mktime(0,0,0,$m,$d,$y)));
-                      
-                    echo "<TD ALIGN=RIGHT VALIGN=TOP CLASS=\"sub\">".($idx+1).".</TD>";
-                    echo "<TD ALIGN=RIGHT VALIGN=TOP CLASS=\"sub\">$formatDate:</TD>";
-                    echo "<TD ALIGN=LEFT VALIGN=TOP CLASS=\"sub\">".$plays[$idx]["airname"]."<BR>";
-                    echo "<A HREF=\"".
-                         "?action=viewDJ&amp;playlist=".$plays[$idx]["id"].
-                         "&amp;seq=selList\">".$plays[$idx]["description"]."</A></TD>";
+                if($play["description"]) {
+                    list($y,$m,$d) = explode("-", $play["showdate"]);
+                    $formatDate = "$m/$d/$y";
+                    $showLink = "<A HREF='".
+                         "?action=viewDJ&amp;playlist=".$play["id"].
+                         "&amp;seq=selList'>".$play["description"]."</A>";
+
+                    $trackList = implode(", ", $play["tracks"]);    
+                    $playNum = $idx + 1;
+                    echo "<TD CLASS='sub'>$playNum.</TD>";
+                    echo "<TD CLASS='sub'>$formatDate:</TD>";
+                    echo "<TD CLASS='sub'>$showLink  <BR> $trackList";
                 } else
                     echo "<TD COLSPAN=3></TD>";
                 if($i%2)
