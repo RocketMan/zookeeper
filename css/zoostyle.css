@@ -476,7 +476,7 @@ TH.sec {
 .sel:link { color: #ff0000; }
 .sel:visited { color: #ff0000; }
 .sel:active { color: #ff0000; }
-.sub {
+table.recentAirplay td, .sub {
     font-family: verdana, arial, helvetica, sans-serif;
     font-size: 8pt;
     color: #000000;

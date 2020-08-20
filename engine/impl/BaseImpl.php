@@ -68,14 +68,13 @@ class BaseStatement {
     }
 
     /**
-     * execute statement and result iterable result set
+     * execute statement and return iterable result set
      *
      * result is an iterator
      *
      * call 'fetch' on the iterator to get each row; fetch
      * returns false after the last row
      *
-     * @param stmt statement to execute
      * @param style result set style
      * @return iterable result set (empty if none or error)
      */
@@ -86,7 +85,6 @@ class BaseStatement {
     /**
      * execute statement and return single row result
      *
-     * @param stmt statement to execute
      * @param style result set style
      * @return single row result or false if none or error
      */
@@ -97,7 +95,6 @@ class BaseStatement {
     /**
      * execute statement and return multiple row result as array
      *
-     * @param stmt statement to execute
      * @param style result set style
      * @return result set array or empty array if none or error
      */
