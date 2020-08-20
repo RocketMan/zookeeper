@@ -2138,7 +2138,7 @@ class Playlists extends MenuItem {
         if($plays) {
             echo "<DIV class='playlistBanner'>&nbsp;Recent Airplay</DIV>";
     
-            echo "<TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>\n";
+            echo "<TABLE class='recentAirplay' CELLPADDING=2 CELLSPACING=0 BORDER=0>\n";
     
             // Setup date format differently if plays extend into another year
             $now = getdate(time());
@@ -2160,17 +2160,16 @@ class Playlists extends MenuItem {
                 }
     
                 if($play["description"]) {
-                    list($y,$m,$d) = explode("-", $play["showdate"]);
-                    $formatDate = "$m/$d/$y";
+                    $showDate = date('M d, Y', strtotime($play["showdate"]));
                     $showLink = "<A HREF='".
                          "?action=viewDJ&amp;playlist=".$play["id"].
                          "&amp;seq=selList'>".$play["description"]."</A>";
 
                     $trackList = implode(", ", $play["tracks"]);    
                     $playNum = $idx + 1;
-                    echo "<TD CLASS='sub'>$playNum.</TD>";
-                    echo "<TD CLASS='sub'>$formatDate:</TD>";
-                    echo "<TD CLASS='sub'>$showLink  <BR> $trackList";
+                    echo "<TD>$playNum.</TD>";
+                    echo "<TD style='min-width:80px'>$showDate:</TD>";
+                    echo "<TD>$showLink  <BR> $trackList";
                 } else
                     echo "<TD COLSPAN=3></TD>";
                 if($i%2)
