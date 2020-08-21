@@ -2147,17 +2147,17 @@ class Playlists extends MenuItem {
     
             // Ensure we have an even number of plays
             if(sizeof($plays)%2)
-                $plays[] = array("airname"=>"");
+                $plays[] = ["description" => ""];
      
             $mid = sizeof($plays)/2;
             for($i=0; $i < sizeof($plays); $i++) {
-                $play = $plays[$i];
                 if($i%2 == 0) {
                     echo "<TR>";
                     $idx = ($i+2)/2 - 1;
                 } else {
                     $idx = $mid + ($i+1)/2 - 1;
                 }
+                $play = $plays[$idx];
     
                 if($play["description"]) {
                     $showDate = preg_replace("/ /", "&nbsp;", date('M d, Y', strtotime($play["showdate"])));
