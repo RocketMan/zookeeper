@@ -2160,7 +2160,7 @@ class Playlists extends MenuItem {
                 }
     
                 if($play["description"]) {
-                    $showDate = date('M d, Y', strtotime($play["showdate"]));
+                    $showDate = preg_replace("/ /", "&nbsp;", date('M d, Y', strtotime($play["showdate"])));
                     $showLink = "<A HREF='".
                          "?action=viewDJ&amp;playlist=".$play["id"].
                          "&amp;seq=selList'>".$play["description"]."</A>";
