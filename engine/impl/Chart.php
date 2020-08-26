@@ -597,6 +597,7 @@ class ChartImpl extends BaseImpl implements IChart {
             return true;
         } catch(Exception $e) {
             $pdo->rollBack();
+            error_log("doChart: " . $e->getMessage());
             return false;
         }
     }
