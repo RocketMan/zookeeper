@@ -79,7 +79,7 @@ class Reviews extends MenuItem {
         echo htmlentities($djname);
     
         // Date
-        echo "</TD><TD>";
+        echo "</TD><TD CLASS='date'>";
         echo $row["reviewed"];
         echo "</TD></TR>\n";
     }

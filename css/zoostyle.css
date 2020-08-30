@@ -784,3 +784,7 @@ A.calLink {
 .highlight {
     background-color: #ff9;
 }
+
+.date {
+    white-space: nowrap;
+}

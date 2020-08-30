@@ -196,8 +196,8 @@ class UserAdmin extends MenuItem {
                 $class = "hborder"; 
             echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?action=adminUsers&amp;seq=selUser&amp;uid=" . $users[$j]["name"] . "\">" . $users[$j]["name"] . "</A></TD><TD>" .
                         $users[$j]["realname"] . "</TD><TD>" .
-                        $users[$j]["groups"] . "&nbsp;</TD><TD>" .
-                        $users[$j]["expires"] . "&nbsp;</TD><TD>" .
+                        $users[$j]["groups"] . "&nbsp;</TD><TD CLASS='date'>" .
+                        $users[$j]["expires"] . "&nbsp;</TD><TD CLASS='date'>" .
                         $users[$j]["lastlogin"] . "&nbsp;</TD></TR>\n";
         }
         echo "</TABLE>\n";

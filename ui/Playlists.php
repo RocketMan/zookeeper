@@ -2160,7 +2160,7 @@ class Playlists extends MenuItem {
                 $play = $plays[$idx];
     
                 if($play["description"]) {
-                    $showDate = preg_replace("/ /", "&nbsp;", date('M d, Y', strtotime($play["showdate"])));
+                    $showDate = date('M d, Y', strtotime($play["showdate"]));
                     $showLink = "<A HREF='".
                          "?action=viewDJ&amp;playlist=".$play["id"].
                          "&amp;seq=selList'>".$play["description"]."</A>";
@@ -2168,7 +2168,7 @@ class Playlists extends MenuItem {
                     $trackList = implode(", ", $play["tracks"]);    
                     $playNum = $idx + 1;
                     echo "<TD>$playNum.</TD>";
-                    echo "<TD style='min-width:80px'>$showDate:</TD>";
+                    echo "<TD class='date' style='min-width:80px'>$showDate:</TD>";
                     echo "<TD>$showLink  <BR> $trackList";
                 } else
                     echo "<TD COLSPAN=3></TD>";
