@@ -553,12 +553,7 @@ $().ready(function(){
         });
     }
 
-    $("#track-artist").on('keyup', function() {
-        var artist = $(this).val();
-        if(artist.length > 3) {
-            searchLibrary(artist);
-        }
-    }).on('input', function() {
+    $("#track-artist").on('input', function() {
         var artist = $(this).val();
         var opt = $("#track-artists option[value='" + escQuote(artist) + "']");
         if(opt.length > 0) {
@@ -567,6 +562,9 @@ $().ready(function(){
             $("#track-tag").val("");
             $("#track-artists").empty();
             $("#track-titles").empty();
+            if(artist.length > 3) {
+                searchLibrary(artist);
+            }
         }
     });
 

@@ -291,7 +291,7 @@ var lists = {
                 }, true) + "'>").append(htmlify(entry.name))));
             tr.append($("<TD>").html(htmlify(entry.city)));
             tr.append($("<TD>").html(htmlify(entry.state)));
-            tr.append($("<TD>").html(entry.modified));
+            tr.append($("<TD>", { class: 'date' }).html(entry.modified));
             table.append(tr);
         });
 
@@ -344,7 +344,7 @@ var lists = {
             } else {
                 tr.append($("<TD>").html("Unknown"));
             }
-            tr.append($("<TD>").html(entry.reviewed));
+            tr.append($("<TD>", { class: 'date' }).html(entry.reviewed));
             table.append(tr);
         });
 
