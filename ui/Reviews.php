@@ -52,9 +52,9 @@ class Reviews extends MenuItem {
     
     private function emitReviewRow($row, $album) {
         // Album
-        echo "  <TR CLASS=\"hborder\"><TD>";
-        echo "<A HREF=\"".
-                           "?action=viewRecentReview&amp;tag=$row[0]\">";
+        $genre = ILibrary::GENRES[$album[0]["category"]];
+        echo "<TR CLASS='hborder ${genre}' data-genre='${genre}'>";
+        echo "<TD><A HREF='?action=viewRecentReview&amp;tag=$row[0]'>";
         echo htmlentities($album[0]["album"]);
         echo "</A></TD><TD>";
     
@@ -66,7 +66,7 @@ class Reviews extends MenuItem {
         echo "</TD><TD>";
     
         // Genre
-        echo htmlentities(ILibrary::GENRES[$album[0]["category"]]);
+        echo htmlentities($genre);
         echo "</TD><TD>";
     
         // Reviewer
@@ -93,20 +93,45 @@ class Reviews extends MenuItem {
              "<TH ALIGN=LEFT>Date</TH>" .
              "</TR></THEAD>";
     }
-
+    
     public function viewRecentReviews() {
-        echo "<DIV CLASS='subhead'>Recent Reviews by " .
-             Engine::param('station')." DJs " .
-             "<div style='float:right' CLASS='sub'><B>Review Feed:</B> " .
-             "<A TYPE='application/rss+xml' HREF='zkrss.php?feed=reviews'>" .
-             "<IMG SRC='img/rss.gif' ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT='rss'></A></DIV></DIV>";
+        $isAuthorized = $this->session->isAuth("u");
+        $author = $isAuthorized && trim($_GET["dj"]) == 'Me' ? $this->session->getUser() : '';        
+
+        echo "<DIV class='categoryPicker form-entry'>";
+        echo "<A style='float:right' TYPE='application/rss+xml' HREF='zkrss.php?feed=reviews'>" .
+             "<IMG SRC='img/rss.png' ALT='rss'></A>";
+
+        echo "<label class='reviewLabel'>Categories:&nbsp;</label>";
+        echo "<span class='review-categories zk-hidden'>";
+        // NOTE: final visibility is set via javascript upon page load.
+        foreach (ILibrary::GENRES as $genre) {
+            echo "<span class='${genre} zk-hidden'>";
+            echo "<input style='margin-right: 2px' type='checkbox' id='${genre}' name='genre' value='${genre}'>";
+            echo "<span for='${genre}'>$genre</span></span>";
+        }
+        echo "</span>";
+        echo "</DIV>";
+
+        if ($isAuthorized) {
+            echo "<div style='display:inline-block' class='form-entry' >";
+            echo "<label class='reviewLabel'>Reviewer:</label>";
+            echo "<select id='djPicker' name='dj'>";
+            $selectedOpt = empty($author) ? ' selected ' : '';
+            echo "<option ${selectedOpt}>All</option>";
+            $selectedOpt = empty($selectedOpt) ? ' selected ' : '';
+            echo "<option ${selectedOpt}>Me</option>";
+            echo "</select>";
+            echo "</div>";
+        }
+        echo "<span id='review-count'></span>";
 
         $reviewsHeader = $this->makeRecentReviewsHeader();
         echo "<TABLE class='sortable-table' WIDTH='100%'>";
         echo $reviewsHeader;
         echo "<TBODY>";
 
-        $results = Engine::api(IReview::class)->getRecentReviews("", 0, 100, $this->session->isAuth("u"));
+        $results = Engine::api(IReview::class)->getRecentReviews($author, 0, 200, $isAuthorized);
         $libAPI = Engine::api(ILibrary::class);
         while($results && ($row = $results->fetch())) {
             $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
@@ -115,20 +140,6 @@ class Reviews extends MenuItem {
         echo "</TBODY>";
         echo "</TABLE>";
 
-        if($this->session->isAuth("u")) {
-            echo "<div CLASS='subhead'>Your Most Recent Reviews</div>";
-            $results = Engine::api(IReview::class)->getRecentReviews($this->session->getUser(), 0, 15, 1);
-
-            echo "<TABLE class='sortable-table' WIDTH='100%'>";
-            echo $reviewsHeader;
-            echo "<TBODY>";
-            while($results && ($row = $results->fetch())) {
-                $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
-                $this->emitReviewRow($row, $albums);
-            }
-            echo "</TBODY>";
-            echo "</TABLE>\n";
-        }
         UI::setFocus();
       ?>
 
@@ -139,6 +150,55 @@ class Reviews extends MenuItem {
             $('.sortable-table').tablesorter({
                 sortList: [[INITIAL_SORT_COL, 0]],
             });
+
+            function setGenreVisibility(genre, showIt) {
+                let genreClass = 'tr.' + genre;
+                showIt ?  $(genreClass).show() : $(genreClass).hide();
+            }
+
+            let genreMap = {};
+            let reviewCnt = 0;
+            $('.sortable-table > tbody > tr').each(function(e) {
+                reviewCnt++;
+                let genre = $(this).data('genre');
+                if (genreMap[genre] === undefined) {
+                    genreMap[genre] = 0;
+                    $(".review-categories span." + genre).removeClass('zk-hidden');
+                }
+                genreMap[genre]++;
+            });
+            $("span.review-categories").removeClass('zk-hidden');
+            $("#review-count").text(' Found ' + reviewCnt + ' reviews.');
+
+            for (let [genre, count] of Object.entries(genreMap)) {
+                $(`span.${genre} > span`).text(`${genre} (${count})`);
+            }
+
+            let selectedDj = $('#djPicker').children("option:selected").val();
+            let storageKey = 'ReviewCategories-' + selectedDj;
+            let categoryStr = localStorage.getItem(storageKey);
+            let categories = categoryStr ? JSON.parse(categoryStr) : {};
+                
+            $(".categoryPicker input").each(function(e) {
+                let genre  = $(this).val();
+                let isChecked = !(categories[genre] === false);
+                setGenreVisibility(genre, isChecked)
+                $(this).prop('checked', isChecked);
+            });
+
+            $("#djPicker").on('change', function(e) {
+                let selectedDj = $(this).children("option:selected").val();
+                window.location.assign('/?action=viewRecent&dj=' + selectedDj);
+            });
+            
+            $(".categoryPicker input").on('change', function(e) {
+                let genre = $(this).val();
+                let isChecked = $(this).prop('checked');
+                let rowClass = "tr." + genre;
+                setGenreVisibility(genre, isChecked);
+                categories[genre] = isChecked;
+                localStorage.setItem(storageKey, JSON.stringify(categories));
+            });
         });
     <?php ob_end_flush(); ?>
         // -->
@@ -146,7 +206,7 @@ class Reviews extends MenuItem {
 
     <?php
     }
-    
+
     public function viewReview() {
         $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
     }
