@@ -188,7 +188,7 @@ class Reviews extends MenuItem {
 
             $("#djPicker").on('change', function(e) {
                 let selectedDj = $(this).children("option:selected").val();
-                window.location.assign('/?action=viewRecent&dj=' + selectedDj);
+                window.location.assign('?action=viewRecent&dj=' + selectedDj);
             });
             
             $(".categoryPicker input").on('change', function(e) {
