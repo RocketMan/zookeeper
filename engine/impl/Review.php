@@ -72,7 +72,7 @@ class ReviewImpl extends BaseImpl implements IReview {
             $query .= "GROUP BY r.tag ORDER BY reviewed DESC";
         }
             
-        if($limit)
+        if($limit && $limit > 0)
             $query .= " LIMIT ?";
 
         $stmt = $this->prepare($query);

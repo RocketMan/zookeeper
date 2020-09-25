@@ -147,6 +147,28 @@ TD.ind {
     width: 15px;
 }
 
+/* recent reivews page */
+label.reviewLabel {
+       width: 80px;
+}
+
+#review-count {
+	color: #3e873b;
+}
+span.review-categories > span {
+        display: inline-block;
+        padding-right: 8px;
+}
+
+span.review-count {
+	display:inline-block;
+	margin-left: 8px;
+}
+
+span.review-categories > span.zk-hidden {
+	display:none;
+}
+
 /* home page */
 .top-albums {
     margin-top: 4px;
