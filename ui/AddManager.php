@@ -83,7 +83,7 @@ class AddManager extends MenuItem {
         if(!$subaction &&
                  ($this->session->isAuth("n") || $this->session->isAuth("o")))
             $extra .= "<A CLASS='nav' HREF='#top' onClick=window.open('?target=afile')>Print View</A>&nbsp;&nbsp;";
-        $extra .= "<SPAN CLASS=\"sub\"><B>Adds Feed:</B></SPAN> <A TYPE=\"application/rss+xml\" HREF=\"zkrss.php?feed=adds\"><IMG SRC=\"img/rss.gif\" ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT=\"rss\"></A><BR><IMG SRC=\"img/blank.gif\" WIDTH=1 HEIGHT=2 BORDER=0 ALT=\"\">";
+        $extra .= "<SPAN CLASS='sub'><B>Adds Feed:</B></SPAN> <A TYPE='application/rss+xml' HREF='zkrss.php?feed=adds'><IMG SRC='img/rss.png' BORDER=0 ALT='rss'></A><BR><IMG SRC='img/blank.gif' WIDTH=1 HEIGHT=2 BORDER=0 ALT=''>";
 
         return $this->dispatchSubAction($action, $subaction, self::$subactions, $extra);
     }

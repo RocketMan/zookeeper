@@ -50,7 +50,7 @@ class Charts extends MenuItem {
     ];
 
     public function processLocal($action, $subaction) {
-        $extra = "<SPAN CLASS=\"sub\"><B>Chart Feed:</B></SPAN> <A TYPE=\"application/rss+xml\" HREF=\"zkrss.php?feed=charts\"><IMG SRC=\"img/rss.gif\" ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT=\"rss\"></A><BR><IMG SRC=\"img/blank.gif\" WIDTH=1 HEIGHT=2 BORDER=0 ALT=\"\">";
+        $extra = "<SPAN CLASS='sub'><B>Chart Feed:</B></SPAN> <A TYPE='application/rss+xml' HREF='zkrss.php?feed=charts'><IMG SRC='img/rss.png' ALIGN=MIDDLE WIDTH=36 HEIGHT=14 BORDER=0 ALT='rss'></A><BR><IMG SRC='img/blank.gif' WIDTH=1 HEIGHT=2 BORDER=0 ALT=''>";
         return $this->dispatchSubAction($action, $subaction,
                                             self::$subactions, $extra);
     }
