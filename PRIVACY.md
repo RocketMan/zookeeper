@@ -34,7 +34,7 @@ We collect your data so that we can authenticate your access to our
 service and manage your account.  We do not share your data with any
 third-parties.
 
-### Cookies and web beacons
+### Cookies, web beacons, and local storage
 
 For visitors who access Zookeeper Online without logging in, no
 cookies are created during the visit.  Zookeeper Online uses transient
@@ -45,6 +45,12 @@ The cookies are deleted automatically when the user logs out or closes
 the browser window.
 
 Zookeeper Online does not use third-party cookies nor web beacons.
+
+Zookeeper Online may use local storage to remember settings to improve
+your visit.  We do not store any information in local storage that is
+personally identifiable, nor do we use local storage for tracking or
+analyitics.  You may permanently delete all data in local storage at
+any time by using browser functions for this purpose.
 
 ### Log files
 
@@ -59,7 +65,7 @@ issues that may arise.
 
 ### Changes to our Privacy Policy
 
-This Privacy Policy was last updated on 23 June 2019.
+This Privacy Policy was last updated on 25 September 2020.
 
 ### How to contact us
 
