@@ -109,6 +109,7 @@ class BaseStatement {
  */
 class BaseImpl {
     private $pdo;
+    private $fullGroupBy = true;
 
     public function init($pdo) {
         $this->pdo = $pdo;
@@ -119,9 +120,19 @@ class BaseImpl {
     }
 
     protected function prepare($arg) {
+        // disable ONLY_FULL_GROUP_BY for pre-MySQL 5.7.5 legacy behaviour
+        // see https://dev.mysql.com/doc/refman/5.7/en/group-by-handling.html
+        if($this->fullGroupBy && stripos($arg, "GROUP BY") !== false) {
+            $stmt = "SET SESSION sql_mode=" .
+                "(SELECT REPLACE(@@SESSION.sql_mode,'ONLY_FULL_GROUP_BY',''))";
+            $this->pdo->exec($stmt);
+            $this->fullGroupBy = false;
+        }
+
         $stmt = $this->pdo->prepare($arg);
         if(!$stmt)
             error_log("PDO::prepare: " . $this->pdo->errorInfo()[2]);
+
         return $stmt?new BaseStatement($stmt):false;
     }
 }
