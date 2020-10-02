@@ -235,10 +235,12 @@ class LibraryImpl extends BaseImpl implements ILibrary {
             $bindType = 4;
             break;
         case ILibrary::ALBUM_AIRNAME:
+            // this query potentially spans databases
+            $main = $db['database'];
             $query = "SELECT a.id, artist, album, category, medium, ".
                      "size, a.created, a.updated, a.pubkey, location, bin, a.tag, iscoll, ".
                      "p.name, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed ".
-                     "FROM reviews r LEFT JOIN albumvol a ON a.tag = r.tag ".
+                     "FROM $main.reviews r LEFT JOIN albumvol a ON a.tag = r.tag ".
                      "LEFT JOIN publist p ON p.pubkey = a.pubkey ".
                      "WHERE r.airname = ? ";
             if(!Engine::session()->isAuth("u"))
