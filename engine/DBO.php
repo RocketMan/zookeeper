@@ -171,6 +171,10 @@ abstract class DBO {
     const DATABASE_MAIN = 'database';
     const DATABASE_LIBRARY = 'library';
 
+    const LIBRARY_TABLES = [
+        "albumvol", "colltracknames", "publist", "tagqueue", "tracknames"
+    ];
+
     static private $pdoCache = [];
     static private $dbConfig;
 
@@ -183,15 +187,6 @@ abstract class DBO {
     }
 
     /**
-     * return the default database key for this DBO instance
-     *
-     * subclass can override this to change the default as desired
-     *
-     * @return database key of the default database
-     */
-    protected function getDefaultDatabase() { return DBO::DATABASE_MAIN; }
-
-    /**
      * instantiate a new PDO object from the config file db parameters
      *
      * instead of this method, use 'prepare' or 'getPDO' if possible.
@@ -199,10 +194,10 @@ abstract class DBO {
      * @param name config file database name key (optional)
      * @return PDO
      */
-    protected function newPDO($name = null) {
+    protected function newPDO($name = DBO::DATABASE_MAIN) {
         $dsn = $this->dbConfig('driver') .
                 ':host=' . $this->dbConfig('host') .
-                ';dbname=' . $this->getDatabase($name) .
+                ';dbname=' . $this->dbConfig($name) .
                 ';charset=utf8mb4';
         return new BasePDO($dsn, $this->dbConfig('user'), $this->dbConfig('pass'));
     }
@@ -236,50 +231,48 @@ abstract class DBO {
      * if the key does not exist in the configuration, it is mapped
      * to DBO::DATABASE_MAIN.
      *
-     * @param key target key (optional)
-     * @return key or default if key is null or does not exist
+     * @param key target database key (optional)
+     * @return key or DBO::DATABASE_MAIN if key does not exist
      */
-    protected function mapDatabaseKey($key = null) {
-        if(!$key)
-            $key = $this->getDefaultDatabase();
-        if(!$this->dbConfig($key))
-            $key = DBO::DATABASE_MAIN;
-        return $key;
+    protected function mapDatabaseKey($key = DBO::DATABASE_MAIN) {
+        return $this->dbConfig($key)?$key:DBO::DATABASE_MAIN;
     }
 
     /**
      * get database name for the specified configuration key
      *
-     * @param key target database (optional)
+     * @param key target database key
      * @return database name
      */
-    protected function getDatabase($key = null) {
+    protected function getDatabase($key) {
         return $this->dbConfig($this->mapDatabaseKey($key));
     }
 
     /**
      * preproces a statement before it is handed to PDO::prepare
      *
-     * the default implementation performs macro expansion
+     * default implementation qualifies library tables if they
+     * live in a different database
      *
      * @param stmt the statement
      * @return statement ready for PDO::prepare
      */
     protected function preprocess($stmt) {
-        // expand macros
-        return (strpos($stmt, '@') !== false)?
-            strtr($stmt, [
-                "@MAIN" => $this->getDatabase(DBO::DATABASE_MAIN),
-                "@LIBRARY" => $this->getDatabase(DBO::DATABASE_LIBRARY)
-            ]):$stmt;
+        $main = $this->getDatabase(DBO::DATABASE_MAIN);
+        $library = $this->getDatabase(DBO::DATABASE_LIBRARY);
+        if($main != $library) {
+            // library database is different to the main database; qualify
+            // all library table references with the library database name
+            $replace = [];
+            foreach(DBO::LIBRARY_TABLES as $table)
+                $replace[" $table"] = " $library.$table";
+            $stmt = strtr($stmt, $replace);
+        }
+        return $stmt;
     }
 
     /**
      * prepare a statement for execution
-     *
-     * Statement may contain the pseudo-database identifiers @MAIN
-     * and @LIBRARY to refer to the main database or the library database,
-     * respectively.
      *
      * @param stmt SQL statement
      * @param options driver options (optional)

@@ -97,7 +97,7 @@ class ChartImpl extends DBO implements IChart {
                  "c.category as afile_category, ".
                  "a.artist, a.album, a.medium, a.size, a.iscoll, ".
                  "a.created, a.updated, a.category, p.name label ".
-                 "FROM currents c, @LIBRARY.albumvol a, @LIBRARY.publist p ".
+                 "FROM currents c, albumvol a, publist p ".
                  "WHERE c.tag = a.tag AND a.pubkey = p.pubkey ".
                  "AND adddate = ? ORDER BY id";
         $stmt = $this->prepare($query);
@@ -110,7 +110,7 @@ class ChartImpl extends DBO implements IChart {
                  "c.category as afile_category, ".
                  "a.artist, a.album, a.medium, a.size, a.iscoll, ".
                  "a.created, a.updated, a.category, p.name label ".
-                 "FROM currents c, @LIBRARY.albumvol a, @LIBRARY.publist p ".
+                 "FROM currents c, albumvol a, publist p ".
                  "WHERE c.tag = a.tag AND a.pubkey = p.pubkey ".
                  "AND adddate <= ? AND pulldate > ?";
         if($sort)
@@ -136,8 +136,8 @@ class ChartImpl extends DBO implements IChart {
                  "a.created, a.updated, a.category, p.name label ".
                  "FROM tracks t ".
                  "JOIN lists l ON t.list = l.id ".
-                 "JOIN @LIBRARY.albumvol a ON t.tag = a.tag ".
-                 "JOIN @LIBRARY.publist p ON a.pubkey = p.pubkey ".
+                 "JOIN albumvol a ON t.tag = a.tag ".
+                 "JOIN publist p ON a.pubkey = p.pubkey ".
                  "RIGHT JOIN currents c ON c.tag = t.tag ".
                  "WHERE l.showdate BETWEEN c.adddate AND c.pulldate ".
                  "AND adddate <=? AND pulldate > ? ".
@@ -156,7 +156,7 @@ class ChartImpl extends DBO implements IChart {
                  "c.category afile_category, IF(DATEDIFF(?, adddate) > 7, 0, null) sizzle, ".
                  "a.artist, a.album, a.medium, a.size, a.iscoll, ".
                  "a.created, a.updated, a.category, p.name label ".
-                 "FROM currents c, @LIBRARY.albumvol a, @LIBRARY.publist p ".
+                 "FROM currents c, albumvol a, publist p ".
                  "WHERE adddate <= ? AND pulldate > ? ".
                  "AND c.tag = a.tag AND a.pubkey = p.pubkey ".
                  "AND c.tag NOT IN (SELECT tag FROM tmp_current_plays)";
@@ -324,7 +324,7 @@ class ChartImpl extends DBO implements IChart {
             $tags[$tag] = &$album;
         }
         $query = "SELECT tag, artist, album, category, medium, size, name " .
-                 "FROM @LIBRARY.albumvol a LEFT JOIN @LIBRARY.publist p ON a.pubkey = p.pubkey " .
+                 "FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey " .
                  "WHERE tag IN (0" . $queryset . ")";
         $stmt = $this->prepare($query);
         $stmt->execute();

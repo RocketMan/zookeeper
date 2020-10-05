@@ -56,9 +56,9 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY name" ],
          [ "playlists", "playlistrec", "tracks", "artist,album,track",
                   "SELECT list, description, a.airname, showdate, " .
-                  "artist, album, track FROM @MAIN.tracks t " .
-                  "LEFT JOIN @MAIN.lists l ON t.list = l.id " .
-                  "LEFT JOIN @MAIN.airnames a ON l.airname = a.id " .
+                  "artist, album, track FROM tracks t " .
+                  "LEFT JOIN lists l ON t.list = l.id " .
+                  "LEFT JOIN airnames a ON l.airname = a.id " .
                   "WHERE l.airname IS NOT NULL AND " .
                   "t.artist NOT LIKE '" . IPlaylist::SPECIAL_TRACK . "%' AND " .
                   "MATCH (artist,album,track) AGAINST(? IN BOOLEAN MODE) " .
@@ -66,9 +66,9 @@ class LibraryImpl extends DBO implements ILibrary {
          [ "reviews", "reviewrec", "reviews", "review",
                   "SELECT r.tag, av.artist, av.album, an.airname, " .
                   "DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed " .
-                  "FROM @MAIN.reviews r " .
+                  "FROM reviews r " .
                   "LEFT JOIN albumvol av ON r.tag = av.tag " .
-                  "LEFT JOIN @MAIN.airnames an ON r.airname = an.id " .
+                  "LEFT JOIN airnames an ON r.airname = an.id " .
                   "WHERE private = 0 AND r.airname IS NOT NULL AND " .
                   "MATCH (review) AGAINST(? IN BOOLEAN MODE) " .
                   "ORDER BY r.created DESC" ],
@@ -110,8 +110,6 @@ class LibraryImpl extends DBO implements ILibrary {
         return $query;
     }
 
-    protected function getDefaultDatabase() { return DBO::DATABASE_LIBRARY; }
-    
     public function search($tableIndex, $pos, $count, $search, $sortBy = 0) {
         return $this->searchPos($tableIndex, $pos, $count, $search);
     }
@@ -201,7 +199,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $bindType = 3;
             break;
         case ILibrary::PASSWD_NAME:
-            $query = "SELECT * FROM @MAIN.users WHERE name LIKE ? ORDER BY name LIMIT ?, ?";
+            $query = "SELECT * FROM users WHERE name LIKE ? ORDER BY name LIMIT ?, ?";
             $bindType = 3;
             break;
         case ILibrary::TRACK_NAME:
@@ -231,7 +229,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $query = "SELECT a.id, artist, album, category, medium, ".
                      "size, a.created, a.updated, a.pubkey, location, bin, a.tag, iscoll, ".
                      "p.name, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed ".
-                     "FROM @MAIN.reviews r LEFT JOIN albumvol a ON a.tag = r.tag ".
+                     "FROM reviews r LEFT JOIN albumvol a ON a.tag = r.tag ".
                      "LEFT JOIN publist p ON p.pubkey = a.pubkey ".
                      "WHERE r.airname = ? ";
             if(!Engine::session()->isAuth("u"))
@@ -332,9 +330,9 @@ class LibraryImpl extends DBO implements ILibrary {
                 $tags[$tag] = $i;
             }
         }
-        $query = "SELECT tag, a.airname, realname FROM @MAIN.reviews r " .
-                 "LEFT JOIN @MAIN.users u ON r.user = u.name " .
-                 "LEFT JOIN @MAIN.airnames a ON r.airname = a.id WHERE " .
+        $query = "SELECT tag, a.airname, realname FROM reviews r " .
+                 "LEFT JOIN users u ON r.user = u.name " .
+                 "LEFT JOIN airnames a ON r.airname = a.id WHERE " .
                  "tag IN (0" . $queryset . ")";
         if(!$loggedIn)
             $query .= " AND private = 0";
