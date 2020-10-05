@@ -175,9 +175,16 @@ abstract class DBO {
         "albumvol", "colltracknames", "publist", "tagqueue", "tracknames"
     ];
 
-    static private $pdo;
+    // we store these statically, as they are shared across all instances
     static private $dbConfig;
+    static private $pdo;
 
+    /**
+     * convenience method to retrieve a database configuration parameter
+     *
+     * @param name parameter
+     * @return configuration value or null if does not exist
+     */
     private function dbConfig($name) {
         if(!self::$dbConfig)
             self::$dbConfig = Engine::param('db');
@@ -235,7 +242,7 @@ abstract class DBO {
     }
 
     /**
-     * preproces a statement before it is handed to PDO::prepare
+     * preprocess a statement before it is handed to PDO::prepare
      *
      * default implementation qualifies library tables if they
      * live in a different database
