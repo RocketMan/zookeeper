@@ -332,8 +332,8 @@ class LibraryImpl extends DBO implements ILibrary {
                 $tags[$tag] = $i;
             }
         }
-        $query = "SELECT tag, a.airname, realname FROM reviews r " .
-                 "LEFT JOIN users u ON r.user = u.name " .
+        $query = "SELECT tag, a.airname, realname FROM @MAIN.reviews r " .
+                 "LEFT JOIN @MAIN.users u ON r.user = u.name " .
                  "LEFT JOIN airnames a ON r.airname = a.id WHERE " .
                  "tag IN (0" . $queryset . ")";
         if(!$loggedIn)
