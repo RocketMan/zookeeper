@@ -28,7 +28,7 @@ namespace ZK\Engine;
 /**
  * Playlist operations
  */
-class PlaylistImpl extends BaseImpl implements IPlaylist {
+class PlaylistImpl extends DBO implements IPlaylist {
     const TIME_FORMAT = "Y-m-d Hi"; // eg, 2019-01-01 1234
     const TIME_FORMAT_SQL = "Y-m-d H:i:s"; // 2019-01-01 12:34:56
     const GRACE_START = "-15 minutes";
@@ -491,7 +491,7 @@ class PlaylistImpl extends BaseImpl implements IPlaylist {
         if(!$updateStatus)
             error_log("insertTrack: " . print_r($stmt->errorInfo(), true));
 
-        $id = Engine::lastInsertId();
+        $id = $this->lastInsertId();
 
         if ($updateStatus == 1 && $insertTime != null) {
             // if inserted row is latest, then reordering is unnecessary

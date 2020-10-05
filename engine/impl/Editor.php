@@ -28,7 +28,9 @@ namespace ZK\Engine;
 /**
  * Library Editor operations
  */
-class EditorImpl extends BaseImpl implements IEditor {
+class EditorImpl extends DBO implements IEditor {
+    protected function getDefaultDatabase() { return DBO::DATABASE_LIBRARY; }
+
     private function getNextTag() {
         $query = "SELECT MAX(tag) FROM albumvol";
         $stmt = $this->prepare($query);

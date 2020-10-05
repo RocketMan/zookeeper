@@ -30,7 +30,6 @@ class Engine {
     private static $apis;
     private static $config;
     private static $session;
-    private static $pdo;
 
     /**
      * start of day initialization
@@ -67,10 +66,7 @@ class Engine {
         self::$apis = new Config();
         self::$apis->init(__DIR__.'/../config/engine_config.php');
 
-        // default PDO
-        self::$pdo = self::newPDO();
-
-        self::$session = new Session(self::$pdo);
+        self::$session = new Session();
     }
 
     /**
@@ -100,20 +96,6 @@ class Engine {
     }
 
     /**
-     * instantiate a new PDO object from the config file db parameters
-     * @param databaseName name of database (optional)
-     * @return PDO
-     */
-    public static function newPDO($databaseName = 'database') {
-        $db = self::config()->getParam('db');
-        $dns = $db['driver'] .
-                ':host=' . $db['host'] .
-                ';dbname=' . $db[$databaseName] .
-                ';charset=utf8mb4';
-        return new \PDO($dns, $db['user'], $db['pass']);
-    }
-
-    /**
      * instantiate an API
      * @param intf interface
      * @return implementation
@@ -123,17 +105,9 @@ class Engine {
         $impl = self::$apis->getParam($intf);
         if($impl) {
             $api = new $impl();
-            $api->init(self::$pdo);
             return $api;
         } else
             throw new \Exception("Unknown API '$intf'");
-    }
-
-    /**
-     * return the ID of the last inserted row
-     */
-    public static function lastInsertId() {
-        return self::$pdo->lastInsertId();
     }
 }
 

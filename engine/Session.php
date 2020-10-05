@@ -25,18 +25,15 @@
 namespace ZK\Engine;
 
 
-class Session {
+class Session extends DBO {
     private $user;
     private $displayName;
     private $access = null;
     private $sessionID = null;
     private $sessionCookieName = "session";
     private $secure;
-    private $pdo;
 
-    public function __construct($pdo) {
-        $this->pdo = $pdo;
-
+    public function __construct() {
         // Cookies are shared between all instances on the same server.
         //
         // As the state they represent may differ between instances,
@@ -109,7 +106,7 @@ class Session {
 
     private function dbQuery($session) {
         $query = "SELECT user, access, realname FROM sessions WHERE sessionkey=?";
-        $stmt = $this->pdo->prepare($query);
+        $stmt = $this->prepare($query);
         $stmt->bindValue(1, $session);
         $stmt->execute();
         return $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -119,7 +116,7 @@ class Session {
         $query = "INSERT INTO sessions " .
                      "(sessionkey, user, access, realname, logon) " .
                      "VALUES (?, ?, ?, ?, now())";
-        $stmt = $this->pdo->prepare($query);
+        $stmt = $this->prepare($query);
         $stmt->bindValue(1, $sessionID);
         $stmt->bindValue(2, $user);
         $stmt->bindValue(3, $access);
@@ -129,7 +126,7 @@ class Session {
 
     private function dbDelete($session) {
         $query = "DELETE FROM sessions WHERE sessionkey= ?";
-        $stmt = $this->pdo->prepare($query);
+        $stmt = $this->prepare($query);
         $stmt->bindValue(1, $session);
         return $stmt->execute();
     }
@@ -137,7 +134,7 @@ class Session {
     public function purgeOldSessions() {
         $query = "DELETE FROM sessions WHERE ".
                  "DATE_ADD(logon, INTERVAL 2 DAY) < NOW()";
-        $stmt = $this->pdo->prepare($query);
+        $stmt = $this->prepare($query);
         return $stmt->execute();
     }
 
