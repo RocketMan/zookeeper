@@ -114,8 +114,18 @@ class BaseStatement {
  * semantics for GROUP BY queries
  */
 class BasePDO {
+    const LIBRARY_TABLES = [
+        "albumvol", "colltracknames", "publist", "tagqueue", "tracknames"
+    ];
+
+    private static $library;
+
     private $delegate;
     private $legacyGroupBy;
+
+    public static function setLibrary($library) {
+        self::$library = $library;
+    }
 
     /**
      * ctor has the same signature as PDO:
@@ -156,6 +166,16 @@ class BasePDO {
             $this->legacyGroupBy = true;
         }
 
+        if(self::$library) {
+            // library database is different to the main database; qualify
+            // all library table references with the library database name
+            $library = self::$library;
+            $replace = [];
+            foreach(BasePDO::LIBRARY_TABLES as $table)
+                $replace[" $table"] = " $library.$table";
+            $stmt = strtr($stmt, $replace);
+        }
+
         $ret = $this->__call("prepare", [$stmt, $options]);
         return $ret?new BaseStatement($ret):false;
     }
@@ -171,13 +191,9 @@ abstract class DBO {
     const DATABASE_MAIN = 'database';
     const DATABASE_LIBRARY = 'library';
 
-    const LIBRARY_TABLES = [
-        "albumvol", "colltracknames", "publist", "tagqueue", "tracknames"
-    ];
-
     // we store these statically, as they are shared across all instances
-    static private $dbConfig;
-    static private $pdo;
+    private static $dbConfig;
+    private static $pdo;
 
     /**
      * convenience method to retrieve a database configuration parameter
@@ -186,8 +202,15 @@ abstract class DBO {
      * @return configuration value or null if does not exist
      */
     private function dbConfig($name) {
-        if(!self::$dbConfig)
+        if(!self::$dbConfig) {
             self::$dbConfig = Engine::param('db');
+
+            // setup translation if library database is different to main
+            if(array_key_exists(DBO::DATABASE_LIBRARY, self::$dbConfig) &&
+                    ($library = self::$dbConfig[DBO::DATABASE_LIBRARY]) !=
+                    self::$dbConfig[DBO::DATABASE_MAIN])
+                BasePDO::setLibrary($library);
+        }
 
         return array_key_exists($name, self::$dbConfig)?
                 self::$dbConfig[$name]:null;
@@ -228,43 +251,6 @@ abstract class DBO {
     }
 
     /**
-     * get database name for the specified configuration key
-     *
-     * if the key does not exist in the configuration, it is mapped
-     * to DBO::DATABASE_MAIN.
-     *
-     * @param key target database key
-     * @return database name
-     */
-    protected function getDatabase($key) {
-        $db = $this->dbConfig($key);
-        return $db?$db:$this->dbConfig(DBO::DATABASE_MAIN);
-    }
-
-    /**
-     * preprocess a statement before it is handed to PDO::prepare
-     *
-     * default implementation qualifies library tables if they
-     * live in a different database
-     *
-     * @param stmt the statement
-     * @return statement ready for PDO::prepare
-     */
-    protected function preprocess($stmt) {
-        $main = $this->getDatabase(DBO::DATABASE_MAIN);
-        $library = $this->getDatabase(DBO::DATABASE_LIBRARY);
-        if($main != $library) {
-            // library database is different to the main database; qualify
-            // all library table references with the library database name
-            $replace = [];
-            foreach(DBO::LIBRARY_TABLES as $table)
-                $replace[" $table"] = " $library.$table";
-            $stmt = strtr($stmt, $replace);
-        }
-        return $stmt;
-    }
-
-    /**
      * prepare a statement for execution
      *
      * @param stmt SQL statement
@@ -272,7 +258,7 @@ abstract class DBO {
      * @return PDOStatement
      */
     protected function prepare($stmt, $options = []) {
-        return $this->getPDO()->prepare($this->preprocess($stmt), $options);
+        return $this->getPDO()->prepare($stmt, $options);
     }
 
     /**
