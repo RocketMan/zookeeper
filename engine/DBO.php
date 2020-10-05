@@ -175,7 +175,7 @@ abstract class DBO {
         "albumvol", "colltracknames", "publist", "tagqueue", "tracknames"
     ];
 
-    static private $pdoCache = [];
+    static private $pdo;
     static private $dbConfig;
 
     private function dbConfig($name) {
@@ -214,38 +214,24 @@ abstract class DBO {
      * @return PDO
      */
     protected function getPDO() {
-        $name = $this->mapDatabaseKey();
-        if(array_key_exists($name, self::$pdoCache)) {
-            $pdo = self::$pdoCache[$name];
-        } else {
-            $pdo = $this->newPDO($name);
-            self::$pdoCache[$name] = $pdo;
-        }
+        if(!self::$pdo)
+            self::$pdo = $this->newPDO();
 
-        return $pdo;
-    }
-
-    /**
-     * map the specified database key
-     *
-     * if the key does not exist in the configuration, it is mapped
-     * to DBO::DATABASE_MAIN.
-     *
-     * @param key target database key (optional)
-     * @return key or DBO::DATABASE_MAIN if key does not exist
-     */
-    protected function mapDatabaseKey($key = DBO::DATABASE_MAIN) {
-        return $this->dbConfig($key)?$key:DBO::DATABASE_MAIN;
+        return self::$pdo;
     }
 
     /**
      * get database name for the specified configuration key
      *
+     * if the key does not exist in the configuration, it is mapped
+     * to DBO::DATABASE_MAIN.
+     *
      * @param key target database key
      * @return database name
      */
     protected function getDatabase($key) {
-        return $this->dbConfig($this->mapDatabaseKey($key));
+        $db = $this->dbConfig($key);
+        return $db?$db:$this->dbConfig(DBO::DATABASE_MAIN);
     }
 
     /**
