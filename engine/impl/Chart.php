@@ -28,7 +28,7 @@ namespace ZK\Engine;
 /**
  * Chart operations
  */
-class ChartImpl extends BaseImpl implements IChart {
+class ChartImpl extends DBO implements IChart {
     public function getCategories() {
         $query = "SELECT id, name, code, director, email " .
                  "FROM categories ORDER BY id";
@@ -559,8 +559,6 @@ class ChartImpl extends BaseImpl implements IChart {
         // use a fresh connection so we don't adversely affect
         // anything else by changing the attributes, etc.
         $pdo = Engine::newPDO();
-        $pdo->exec("SET SESSION sql_mode=" .
-            "(SELECT REPLACE(@@SESSION.sql_mode,'ONLY_FULL_GROUP_BY',''))");
         $pdo->setAttribute(\PDO::ATTR_ERRMODE,
                                         \PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES,

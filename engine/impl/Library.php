@@ -28,7 +28,7 @@ namespace ZK\Engine;
 /**
  * Library operations
  */
-class LibraryImpl extends BaseImpl implements ILibrary {
+class LibraryImpl extends DBO implements ILibrary {
     const MAX_FT_LIMIT = 35;
 
     private static $ftSearch = [
@@ -109,7 +109,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         }
         return $query;
     }
-    
+
     public function search($tableIndex, $pos, $count, $search, $sortBy = 0) {
         return $this->searchPos($tableIndex, $pos, $count, $search);
     }
@@ -138,15 +138,6 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         if(substr($search, strlen($search)-1, 1) == "*")
             $search = substr($search, 0, strlen($search)-1)."%";
 
-        $db = Engine::param('db');
-        if(array_key_exists('library', $db) &&
-                $db['library'] != $db['database'] &&
-                $tableIndex != ILibrary::PASSWD_NAME) {                
-            $mapper = clone $this;
-            $mapper->init(Engine::newPDO('library'));
-        } else
-            $mapper = $this;
-        
         switch($tableIndex) {
         case ILibrary::ALBUM_ARTIST:
             $query = "SELECT tag, artist, album, category, medium, size, ".
@@ -235,12 +226,10 @@ class LibraryImpl extends BaseImpl implements ILibrary {
             $bindType = 4;
             break;
         case ILibrary::ALBUM_AIRNAME:
-            // this query potentially spans databases
-            $main = $db['database'];
             $query = "SELECT a.id, artist, album, category, medium, ".
                      "size, a.created, a.updated, a.pubkey, location, bin, a.tag, iscoll, ".
                      "p.name, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed ".
-                     "FROM $main.reviews r LEFT JOIN albumvol a ON a.tag = r.tag ".
+                     "FROM reviews r LEFT JOIN albumvol a ON a.tag = r.tag ".
                      "LEFT JOIN publist p ON p.pubkey = a.pubkey ".
                      "WHERE r.airname = ? ";
             if(!Engine::session()->isAuth("u"))
@@ -255,7 +244,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
         }
       
         if($count > 0) {
-            $stmt = $mapper->prepare($query);
+            $stmt = $this->prepare($query);
             switch($bindType) {
             case 1:
                 $stmt->bindValue(1, $search);
@@ -302,7 +291,7 @@ class LibraryImpl extends BaseImpl implements ILibrary {
                 $query = "SELECT COUNT(*) " . substr($query, $from);
             }
 
-            $stmt = $mapper->prepare($query);
+            $stmt = $this->prepare($query);
             switch($bindType) {
             case 1:
             case 3:
@@ -769,7 +758,6 @@ class LibraryImpl extends BaseImpl implements ILibrary {
             if($type && self::$ftSearch[$i][0] != $type)
                 continue;
             $query = self::$ftSearch[$i][4];
-
             $from = strpos($query, "FROM");
             $query = "SELECT COUNT(*) " . substr($query, $from);
             $ob = strpos($query, " ORDER BY");

@@ -331,9 +331,10 @@ class Reviews extends MenuItem {
                 $djname = trim($_REQUEST["djname"]);
                 if($_REQUEST["newairname"] == " Add Airname " && $djname) {
                     // Insert new airname
-                    $success = Engine::api(IDJ::class)->insertAirname($djname, $this->session->getUser());
+                    $api = Engine::api(IDJ::class);
+                    $success = $api->insertAirname($djname, $this->session->getUser());
                     if($success > 0) {
-                        $airname = Engine::lastInsertId();
+                        $airname = $api->lastInsertId();
                         $_REQUEST["button"] = "";
                         $displayForm = 0;
                     } else

@@ -28,7 +28,7 @@ namespace ZK\Engine;
 /**
  * User operations
  */
-class UserImpl extends BaseImpl implements IUser {
+class UserImpl extends DBO implements IUser {
     public function getUser($user) {
         $query = "SELECT * FROM users WHERE name = ?";
         $stmt = $this->prepare($query);

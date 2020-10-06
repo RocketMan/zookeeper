@@ -28,7 +28,7 @@ namespace ZK\Engine;
 /**
  * Music review operations
  */
-class ReviewImpl extends BaseImpl implements IReview {
+class ReviewImpl extends DBO implements IReview {
     private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0) {
         $query = "SELECT r.tag, a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed FROM reviews r ";
         

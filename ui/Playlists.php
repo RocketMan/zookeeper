@@ -476,13 +476,14 @@ class Playlists extends MenuItem {
                 $aid = 0;
             } else {
                 // lookup airname for this DJ
-                $aid = Engine::api(IDJ::class)->getAirname($airname, $this->session->getUser());
+                $api = Engine::api(IDJ::class);
+                $aid = $api->getAirname($airname, $this->session->getUser());
                 if(!$aid) {
                     // airname does not exist; try to create it
-                    $success = Engine::api(IDJ::class)->insertAirname($airname, $this->session->getUser());
+                    $success = $api->insertAirname($airname, $this->session->getUser());
                     if($success > 0) {
                         // success!
-                        $aid = Engine::lastInsertId();
+                        $aid = $api->lastInsertId();
                     } else {
                         // airname creation failed
                         // alert the user and re-display the form
@@ -502,7 +503,8 @@ class Playlists extends MenuItem {
                 $this->emitEditor();
             } else {
                 // create new playlist
-                $success = Engine::api(IPlaylist::class)->insertPlaylist(
+                $api = Engine::api(IPlaylist::class);
+                $success = $api->insertPlaylist(
                          $this->session->getUser(),
                          $date, $showTime, $description, $aid);
 
@@ -512,7 +514,7 @@ class Playlists extends MenuItem {
                     echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
                          "\$().ready(function(){".
                          "location.href='?action=newListEditor&playlist=".
-                         Engine::lastInsertId()."';});\n".
+                         $api->lastInsertId()."';});\n".
                          "// -->\n</SCRIPT>\n";
                     return;
                 } else {
@@ -1290,9 +1292,10 @@ class Playlists extends MenuItem {
             $djname = trim($djname);
             if($newairname == " Add Airname " && $djname) {
                 // Insert new airname
-                $success = Engine::api(IDJ::class)->insertAirname($djname, $this->session->getUser());
+                $api = Engine::api(IDJ::class);
+                $success = $api->insertAirname($djname, $this->session->getUser());
                 if($success > 0) {
-                    $airname = Engine::lastInsertId();
+                    $airname = $api->lastInsertId();
                     $button = "";
                     $displayForm = 0;
                 } else
@@ -1413,8 +1416,9 @@ class Playlists extends MenuItem {
     <?php 
         } else {
             // Create the playlist
-            $success = Engine::api(IPlaylist::class)->insertPlaylist($this->session->getUser(), $date, $time, $description, $airname);
-            $playlist = Engine::lastInsertId();
+            $api = Engine::api(IPlaylist::class);
+            $success = $api->insertPlaylist($this->session->getUser(), $date, $time, $description, $airname);
+            $playlist = $api->lastInsertId();
     
             // Insert the tracks
             $count = 0;
@@ -1511,7 +1515,7 @@ class Playlists extends MenuItem {
                         $success = $djapi->insertAirname($json->airname, $this->session->getUser());
                         if($success > 0) {
                             // success!
-                            $airname = Engine::lastInsertId();
+                            $airname = $djapi->lastInsertId();
                         } else
                             $valid = false;
                     }
@@ -1521,7 +1525,7 @@ class Playlists extends MenuItem {
                 if($valid) {
                     $papi = Engine::api(IPlaylist::class);
                     $papi->insertPlaylist($this->session->getUser(), $json->date, $json->time, $json->name, $airname);
-                    $playlist = Engine::lastInsertId();
+                    $playlist = $papi->lastInsertId();
 
                     // insert the tracks
                     $status = '';

@@ -27,7 +27,7 @@ namespace ZK\Engine;
 /**
  * DJ operations
  */
-class DJImpl extends BaseImpl implements IDJ {
+class DJImpl extends DBO implements IDJ {
     /*
      * remove airnames which are not linked to a playlist or a music review
      */
