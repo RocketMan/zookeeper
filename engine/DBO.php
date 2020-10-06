@@ -118,13 +118,17 @@ class BasePDO {
         "albumvol", "colltracknames", "publist", "tagqueue", "tracknames"
     ];
 
-    private static $library;
+    private static $replace;
 
     private $delegate;
     private $legacyGroupBy;
 
     public static function setLibrary($library) {
-        self::$library = $library;
+        // setup translations for the library table names
+        $replace = [];
+        foreach(BasePDO::LIBRARY_TABLES as $table)
+            $replace[" $table"] = " $library.$table";
+        self::$replace = $replace;
     }
 
     /**
@@ -166,15 +170,10 @@ class BasePDO {
             $this->legacyGroupBy = true;
         }
 
-        if(self::$library) {
-            // library database is different to the main database; qualify
-            // all library table references with the library database name
-            $library = self::$library;
-            $replace = [];
-            foreach(BasePDO::LIBRARY_TABLES as $table)
-                $replace[" $table"] = " $library.$table";
-            $stmt = strtr($stmt, $replace);
-        }
+        // if library database is different to the main database, qualify
+        // library table references with the library database name
+        if(self::$replace)
+            $stmt = strtr($stmt, self::$replace);
 
         $ret = $this->__call("prepare", [$stmt, $options]);
         return $ret?new BaseStatement($ret):false;
