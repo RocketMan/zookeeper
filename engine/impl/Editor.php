@@ -287,7 +287,19 @@ class EditorImpl extends DBO implements IEditor {
         $stmt->bindValue(2, $tag);
         return $stmt->execute();
     }
-    
+
+    public function getNumQueuedTags($user) {
+        $count = 0;
+        $query = "SELECT count(*) FROM tagqueue WHERE user=?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        if($stmt->execute()) {
+            $row = $stmt->fetch();
+            $count = $row[0];
+        }
+        return $count;
+    }
+
     public function getQueuedTags($user) {
         $query = "SELECT * FROM tagqueue t " .
                  "LEFT JOIN albumvol a ON t.tag = a.tag " .

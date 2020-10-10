@@ -152,7 +152,7 @@ class Editor extends MenuItem {
     private $printConfig;
 
     public static function emitQueueHook($session) {
-        if(Engine::api(ILibrary::class)->getNumQueuedTags($session->getUser()))
+        if(Engine::api(IEditor::class)->getNumQueuedTags($session->getUser()))
             echo "<P>You have <A HREF=\"?action=editor&amp;subaction=tagq\" CLASS=\"nav\">tags queued for printing</A>.</P>";
     }
 
@@ -163,7 +163,7 @@ class Editor extends MenuItem {
     public function processLocal($action, $subaction) {
         UI::emitJS('js/editor.common.js');
         $subactions = self::$subactions;
-        if(Engine::api(ILibrary::class)->getNumQueuedTags($this->session->getUser()))
+        if(Engine::api(IEditor::class)->getNumQueuedTags($this->session->getUser()))
             $subactions = array_merge($subactions, self::$subactions_tagq);
         $this->subaction = $subaction;
         $this->printConfig = Engine::param('label_printer');
@@ -292,7 +292,7 @@ class Editor extends MenuItem {
               }
               return true;
          }
-         if(!Engine::api(ILibrary::class)->getNumQueuedTags($this->session->getUser())) {
+         if(!Engine::api(IEditor::class)->getNumQueuedTags($this->session->getUser())) {
               echo "  <P>There are no queued tags.</P>\n";
               return;
          }

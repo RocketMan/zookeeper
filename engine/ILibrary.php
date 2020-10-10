@@ -94,7 +94,6 @@ interface ILibrary {
     function searchPos($tableIndex, &$pos, $count, $search, $sortBy = 0);
     function markAlbumsReviewed(&$albums, $loggedIn = 0);
     function markAlbumsPlayable(&$albums);
-    function getNumQueuedTags($user);
     function listAlbums($op, $key, $limit);
     function listLabels($op, $key, $limit);
     function searchFullText($type, $key, $size, $offset);
