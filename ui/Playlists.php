@@ -1881,7 +1881,7 @@ class Playlists extends MenuItem {
         return strcasecmp($a["sort"], $b["sort"]);
     }
     
-    private function emitViewDJAlbum(&$result, $class="", $count=0) {
+    private function emitViewDJAlbum(&$result, $class="", $count=0, $labelField="label") {
         for($i=0; $i < sizeof($result); $i++) {
             echo "  <TR><TD VALIGN=TOP ALIGN=\"right\"$class>";
             if($count)
@@ -1891,8 +1891,8 @@ class Playlists extends MenuItem {
             echo "</TD><TD$class>";
     
             // Setup artist and label
-            $artist = preg_match("/^COLL$/i", $result[$i]["artist"])?"Various Artists":$result[$i]["artist"];
-            $label = str_replace(" Records", "", $result[$i]["label"]);
+            $artist = preg_match("/^(\[)?COLL(?(1)\]|$)/i", $result[$i]["artist"])?"Various Artists":$result[$i]["artist"];
+            $label = str_replace(" Records", "", $result[$i][$labelField]);
             $label = str_replace(" Recordings", "", $label);
     
             echo $this->smartURL($artist) . "&nbsp;&#8226; <I>";
@@ -1964,8 +1964,8 @@ class Playlists extends MenuItem {
     <?php 
             $count = 10;
             Engine::api(IPlaylist::class)->getRecentPlays($recentPlays, $viewuser, $count);
-            Engine::api(IReview::class)->getRecentReviewsByAirname($recentReviews, $viewuser, $count-1);
-    
+            $recentReviews = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_AIRNAME, 0, $count - 1, $viewuser, "Date-");
+
             $block = sizeof($recentReviews);
             $blname = sizeof($topPlays)?"":$row['airname'] . "'s ";
             echo "    <TABLE WIDTH=\"100%\" CELLSPACING=0 BORDER=0>\n";
@@ -1983,7 +1983,7 @@ class Playlists extends MenuItem {
             echo "    <TABLE WIDTH=\"100%\" BORDER=0 CELLSPACING=0>\n";
     
             echo "      <TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;${blname}Recent reviews</TH></TR>\n";
-            $this->emitViewDJAlbum($recentReviews, $block?" CLASS=\"sub\"":"");
+            $this->emitViewDJAlbum($recentReviews, $block?" CLASS=\"sub\"":"", 0, "name");
             if(sizeof($recentReviews) == $count - 1)
                 echo "  <TR><TD></TD><TD ALIGN=LEFT CLASS=\"sub\"><A HREF=\"?s=byReviewer&amp;n=$viewuser&amp;p=0&amp;q=50&amp;action=viewDJReviews\" CLASS=\"nav\">More reviews...</A></TD></TR>\n";
             echo "    </TABLE></TD>\n";

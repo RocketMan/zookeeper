@@ -111,7 +111,7 @@ class LibraryImpl extends DBO implements ILibrary {
     }
 
     public function search($tableIndex, $pos, $count, $search, $sortBy = 0) {
-        return $this->searchPos($tableIndex, $pos, $count, $search);
+        return $this->searchPos($tableIndex, $pos, $count, $search, $sortBy);
     }
 
     public function searchPos($tableIndex, &$pos, $count, $search, $sortBy = 0) {
