@@ -613,7 +613,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $query = "SELECT t.tag, count($over) plays, l.showdate, t.artist, t.album, t.label, count(*)" .
                  " FROM tracks t, lists l" .
                  " WHERE t.list = l.id AND".
-                 " t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' AND";
+                 " t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' AND".
+                 " t.album <> '' AND t.label <> '' AND".
         if($airname)
             $query .= "    l.airname = ? AND";
         if($days)
