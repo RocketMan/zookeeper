@@ -1918,9 +1918,6 @@ class Playlists extends MenuItem {
         $seq = $_REQUEST["seq"];
         $viewuser = $_REQUEST["viewuser"];
         $playlist = $_REQUEST["playlist"];
-        $recentReviews = [];
-        $recentPlays = [];
-        $topPlays = [];
     
         settype($playlist, "integer");
         settype($viewuser, "integer");
@@ -1951,7 +1948,7 @@ class Playlists extends MenuItem {
             $limit = 10;
             $formatEndDate = date("l, j F Y");
     
-            Engine::api(IPlaylist::class)->getTopPlays($topPlays, $viewuser, $weeks * 7, $limit);
+            $topPlays = Engine::api(IPlaylist::class)->getTopPlays($viewuser, $weeks * 7, $limit);
             if(sizeof($topPlays)) {
                 echo "<TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;".$row['airname']."'s top $limit<BR>&nbsp;<FONT CLASS=\"subhead2\">for the $weeks week period ending $formatEndDate</FONT></TH></TR>\n";
                 $this->emitViewDJAlbum($topPlays, "", 1);
@@ -1963,7 +1960,7 @@ class Playlists extends MenuItem {
       <TR><TD CLASS="recentPlays" VALIGN=TOP>
     <?php 
             $count = 10;
-            Engine::api(IPlaylist::class)->getRecentPlays($recentPlays, $viewuser, $count);
+            $recentPlays = Engine::api(IPlaylist::class)->getRecentPlays($viewuser, $count);
             $recentReviews = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_AIRNAME, 0, $count - 1, $viewuser, "Date-");
 
             $block = sizeof($recentReviews);
