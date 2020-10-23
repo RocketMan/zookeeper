@@ -54,9 +54,9 @@ interface IPlaylist {
     function insertTrackEntry($playlistId, PlaylistEntry $entry, &$status);
     function updateTrackEntry($playlist, PlaylistEntry $entry);
     function deleteTrack($id);
-    function getTopPlays(&$result, $airname=0, $days=41, $count=10);
+    function getTopPlays($airname=0, $days=41, $count=10);
     function getLastPlays($tag, $count=0);
-    function getRecentPlays(&$result, $airname, $count);
+    function getRecentPlays($airname, $count);
     function deletePlaylist($playlist);
     function restorePlaylist($playlist);
     function purgeDeletedPlaylists();

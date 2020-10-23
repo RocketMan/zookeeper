@@ -160,40 +160,4 @@ class ReviewImpl extends DBO implements IReview {
         $stmt->bindValue(2, $user);
         return $stmt->execute()?$stmt->rowCount():0;
     }
-    
-    public function getRecentReviewsByAirname(&$result, $airname, $count, $loggedIn = 0) {
-        $query = "SELECT r.tag, a.airname, r.user, r.created FROM reviews r, airnames a ";
-        $query .= "WHERE r.airname=a.id AND a.id=? ";
-        if(!$loggedIn)
-            $query .= "AND r.private=0 ";
-        $query .= "GROUP BY r.tag ORDER BY r.created DESC LIMIT ?";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $airname);
-        $stmt->bindValue(2, (int)$count, \PDO::PARAM_INT);
-            $stmt->execute();
-        $i = 0;
-        $libapi = Engine::api(ILibrary::class);
-        while($row = $stmt->fetch()) {
-            $album = $libapi->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
-            $result[$i]["tag"] = $row[0];
-    
-            // Setup artist correctly for collections
-            $albums = $libapi->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
-            if (preg_match("/^\[coll\]/i", $albums[0]["artist"]))
-                $result[$i]["artist"] = "Various Artists";
-            else
-                $result[$i]["artist"] = $albums[0]["artist"];
-    
-            $result[$i]["album"] = $album[0]["album"];
-    
-            // Get the label name
-            $labelKey = $albums[0]["pubkey"];
-            if(!$labelCache[$labelKey]) {
-                $label = $libapi->search(ILibrary::LABEL_PUBKEY, 0, 1, $labelKey);
-                $labelCache[$labelKey] = sizeof($label) ?
-                                           $label[0]["name"] : "(Unknown)";
-            }
-            $result[$i++]["label"] = $labelCache[$labelKey];
-        } 
-    }
 }

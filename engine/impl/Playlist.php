@@ -608,42 +608,24 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $success;
     }
     
-    public function getTopPlays(&$result, $airname=0, $days=41, $count=10) {
+    public function getTopPlays($airname=0, $days=41, $count=10) {
         $over = $airname?"distinct t.list":"*";
-        $query = "SELECT t.tag, count($over), l.showdate, t.artist, t.album, t.label, count(*)" .
-                 " FROM tracks t, lists l" .
-                 " WHERE t.list = l.id AND".
-                 " t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' AND";
+        $query = "SELECT t.tag, count($over) plays, l.showdate, IFNULL(a.artist, t.artist) artist, t.album, t.label, count(*)" .
+                 " FROM tracks t JOIN lists l ON t.list = l.id " .
+                 " LEFT JOIN albumvol a ON a.tag = t.tag " .
+                 " WHERE t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' AND".
+                 " t.album <> '' AND t.label <> '' AND";
         if($airname)
             $query .= "    l.airname = ? AND";
         if($days)
             $query .= "    date_add(l.showdate, interval $days day) > now() ";
-        $query .= " GROUP BY t.album, t.label ORDER BY 2 DESC, 7 DESC, 3 DESC, 1 DESC LIMIT ?";
+        $query .= " GROUP BY t.album, t.label ORDER BY 2 DESC, 7 DESC, t.artist LIMIT ?";
         $stmt = $this->prepare($query);
         $p = 1;
         if($airname)
             $stmt->bindValue($p++, (int)$airname, \PDO::PARAM_INT);
         $stmt->bindValue($p++, (int)$count, \PDO::PARAM_INT);
-        $stmt->execute();
-        $i = 0;
-        while($row = $stmt->fetch(\PDO::FETCH_BOTH)) {
-            $result[$i]["tag"] = $row[0];
-            $result[$i]["PLAYS"] = $row[1];
-    
-            // Setup artist correctly for collections
-            $result[$i]["artist"] = $row["artist"];
-            if($row[0]) {
-                $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
-                if (preg_match("/^\[coll\]/i", $albums[0]["artist"]))
-                    $result[$i]["artist"] = "Various Artists";
-            }
-    
-            // Get album name
-            $result[$i]["album"] = $row["album"];
-    
-            // Get the label name
-            $result[$i++]["label"] = $row["label"];
-        }
+        return $stmt->executeAndFetchAll(\PDO::FETCH_BOTH);
     }
     
     public function getLastPlays($tag, $count=0) {
@@ -671,7 +653,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $spins;
     }
     
-    public function getRecentPlays(&$result, $airname, $count) {
+    public function getRecentPlays($airname, $count) {
         $query = "SELECT t.tag, t.artist, t.album, t.label, t.track FROM tracks t, lists l ";
         $query .= "WHERE t.list = l.id AND ";
         $query .= "l.airname = ? AND t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' ";
@@ -679,22 +661,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $query .= "ORDER BY l.showdate DESC, t.id DESC LIMIT $count";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$airname, \PDO::PARAM_INT);
-        $stmt->execute();
-        $i = 0;
-    
-        while($row = $stmt->fetch(\PDO::FETCH_BOTH)) {
-            $result[$i]["tag"] = $row["tag"];
-    
-            // Setup artist correctly for collections
-            $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $row["tag"]);
-            if (preg_match("/^\[coll\]/i", $row["artist"]))
-                $result[$i]["artist"] = "Various Artists";
-            else
-                $result[$i]["artist"] = $row["artist"];
-    
-            $result[$i]["album"] = $row["album"];
-            $result[$i++]["label"] = $row["label"];
-        }
+        return $stmt->executeAndFetchAll(\PDO::FETCH_BOTH);
     }
 
     public function deletePlaylist($playlist) {

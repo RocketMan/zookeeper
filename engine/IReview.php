@@ -33,5 +33,4 @@ interface IReview {
     function insertReview($tag, $private, $airname, $review, $user);
     function updateReview($tag, $private, $airname, $review, $user);
     function deleteReview($tag, $user);
-    function getRecentReviewsByAirname(&$result, $airname, $count, $loggedIn = 0);
 }
