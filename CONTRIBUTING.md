@@ -42,8 +42,10 @@ The following is an overview of the source code directory structure:
                  onto the concrete implementations.
                  
             ui_config.php
-                 Controller configuration.  Maps request targets
-                 onto the controllers and handles menu items.
+                 Controller and navigation configuration.  Controller
+                 configuration maps request targets onto controllers;
+                 navigation configuration defines menu items, access
+                 controls, and implementations.
                  
         controllers/
             Controllers are responsible for processing requests
@@ -73,7 +75,15 @@ The following is an overview of the source code directory structure:
             then invoke the methods on the object instance returned
             by Engine::api.  The interface to concrete implementation
             bindings are metadata driven, via config/engine_config.php.
-            
+
+            The Engine::api interfaces are:
+              • IChart - rotation and charting
+              • IDJ - DJ airname management
+              • IEditor - music library management
+              • ILibrary - music library search
+              • IPlaylist - DJ playlist operations
+              • IUser - user management
+
             Session state is application-managed; access the
             current session state through the singleton
             Engine::session.
