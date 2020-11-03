@@ -625,7 +625,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         if($airname)
             $stmt->bindValue($p++, (int)$airname, \PDO::PARAM_INT);
         $stmt->bindValue($p++, (int)$count, \PDO::PARAM_INT);
-        return $stmt->executeAndFetchAll(\PDO::FETCH_BOTH);
+        return $stmt->executeAndFetchAll();
     }
     
     public function getLastPlays($tag, $count=0) {
@@ -661,7 +661,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $query .= "ORDER BY l.showdate DESC, t.id DESC LIMIT $count";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$airname, \PDO::PARAM_INT);
-        return $stmt->executeAndFetchAll(\PDO::FETCH_BOTH);
+        return $stmt->executeAndFetchAll();
     }
 
     public function deletePlaylist($playlist) {
