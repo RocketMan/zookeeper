@@ -33,6 +33,234 @@ use ZK\Engine\PlaylistObserver;
 
 use ZK\UI\UICommon as UI;
 
+abstract class Serializer {
+    private $catCodes;
+
+    public abstract function getContentType();
+    public abstract function startDocument();
+    public abstract function endDocument();
+    public abstract function startResponse($name, $attrs=null);
+    public abstract function endResponse($name);
+    public abstract function emitDataSetArray($name, $fields, &$data);
+
+    protected function getCatCodes() {
+        if(!isset($this->catCodes))
+            $this->catCodes = Engine::api(IChart::class)->getCategories();
+
+        return $this->catCodes;
+    }
+
+    protected function addStatus($code, $message) {
+        $attrs = [];
+        $attrs["code"] = $code;
+        $attrs["message"] = $message;
+        return $attrs;
+    }
+
+    public function addSuccess() {
+        return $this->addStatus(0, "Success");
+    }
+
+    public function emitError($request, $code, $message, $opts = null) {
+        $attrs = $this->addStatus($code, $message);
+        if($opts)
+            $attrs += $opts;
+        $this->startResponse($request, $attrs);
+        $this->endResponse($request);
+    }
+
+    public function emitDataSet($name, $fields, $rows) {
+        $data = array();
+        while($row = $rows->fetch())
+             $data[] = $row;
+        $this->emitDataSetArray($name, $fields, $data);
+    }
+}
+
+class JSONSerializer extends Serializer {
+    const CONTENT_TYPE = "application/vnd.api+json; charset=UTF-8";
+
+    private $nextToken = "";
+
+    public function getContentType() { return JSONSerializer::CONTENT_TYPE; }
+
+    public function startDocument() {}
+    public function endDocument() {}
+
+    public function startResponse($name, $attrs=null) {
+        if(!$attrs)
+            $attrs = $this->addSuccess();
+
+        echo $this->nextToken;
+        $this->nextToken = "";
+
+        echo "{\"type\":\"$name\",";
+        foreach($attrs as $key => $value)
+            echo "\"$key\":\"".self::jsonspecialchars($value)."\",";
+        echo "\"data\":[";
+    }
+
+    public function endResponse($name) {
+        $this->nextToken = ",";
+        echo "]}";
+    }
+
+    private function getAFileCatList($cats) {
+        $result = "";
+
+        if($cats) {
+            $catCodes = $this->getCatCodes();
+
+            $cats = explode(",", $cats);
+            foreach($cats as $cat)
+                if(substr($catCodes[$cat-1]["name"], 0, 1) != "(")
+                    $result .= ',"' . $catCodes[$cat-1]["name"] . '"';
+        }
+
+        $result = "[" . substr($result, 1) . "]";
+
+        return $result;
+    }
+
+    public function emitDataSetArray($name, $fields, &$data) {
+        $nextToken = "";
+        foreach($data as $row) {
+            echo "$nextToken{";
+            $nextProp = "";
+            foreach($fields as $field) {
+                $val = $row[$field];
+                if($name == "albumrec") {
+                    switch($field) {
+                    case "category":
+                        $val = ILibrary::GENRES[$val];
+                        break;
+                    case "medium":
+                        $val = ILibrary::MEDIA[$val];
+                        break;
+                    case "size":
+                        $val = ILibrary::LENGTHS[$val];
+                        break;
+                    case "location":
+                        $val = ILibrary::LOCATIONS[$val];
+                        break;
+                    case "afile_category":
+                        $val = $this->getAFileCatList($val);
+                        echo "$nextProp\"charts\": $val";
+                        $nextProp = ",";
+                        continue 2;
+                    }
+                }
+                echo "$nextProp\"$field\":\"".
+                     self::jsonspecialchars(stripslashes($val)).
+                     "\"";
+                $nextProp = ",";
+            }
+
+            $nextToken = ",";
+            echo "}";
+        }
+    }
+
+    private static function jsonspecialchars($str) {
+        // escape backslash, quote, LF, CR, and tab
+        $str1 = str_replace(["\\", "\"", "\n", "\r", "\t"],
+                            ["\\\\", "\\\"", "\\n", "\\r", "\\t"], $str);
+
+        // escape other control characters
+        $str2 = preg_replace_callback('/[\x00-\x1f]/', function($matches) {
+            return '\\u00' . bin2hex($matches[0]);
+        }, $str1);
+
+        if($str1 != $str2)
+            error_log("unexpected control character(s): '$str'");
+
+        return $str2;
+    }
+}
+
+class XMLSerializer extends Serializer {
+    const CONTENT_TYPE = "text/xml";
+
+    public function getContentType() { return XMLSerializer::CONTENT_TYPE; }
+
+    public function startDocument() {
+        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xml>\n";
+    }
+
+    public function endDocument() {
+        echo "</xml>\n";
+    }
+
+    public function startResponse($name, $attrs=null) {
+        if(!$attrs)
+            $attrs = $this->addSuccess();
+        echo "<$name";
+        foreach($attrs as $key => $value)
+            echo " $key=\"".self::spec2hexAttr($value)."\"";
+        echo ">\n";
+    }
+
+    public function endResponse($name) {
+        echo "</$name>\n";
+    }
+
+    private function getAFileCatList($cats) {
+        $result = "";
+
+        if($cats) {
+            $catCodes = $this->getCatCodes();
+
+            $cats = explode(",", $cats);
+            foreach($cats as $cat)
+                if(substr($catCodes[$cat-1]["name"], 0, 1) != "(")
+                    $result .= "<chart>".$catCodes[$cat-1]["name"]."</chart>";
+        }
+
+        return $result;
+    }
+
+    public function emitDataSetArray($name, $fields, &$data) {
+        foreach($data as $row) {
+            echo "<$name>\n";
+            foreach($fields as $field) {
+                $val = $row[$field];
+                if($name == "albumrec") {
+                    switch($field) {
+                    case "category":
+                        $val = ILibrary::GENRES[$val];
+                        break;
+                    case "medium":
+                        $val = ILibrary::MEDIA[$val];
+                        break;
+                    case "size":
+                        $val = ILibrary::LENGTHS[$val];
+                        break;
+                    case "location":
+                        $val = ILibrary::LOCATIONS[$val];
+                        break;
+                    case "afile_category":
+                        $val = $this->getAFileCatList($val);
+                        echo "<charts>$val</charts>\n";
+                        continue 2;
+                    }
+                }
+                echo "<$field>".
+                     self::spec2hex(stripslashes($val)).
+                     "</$field>\n";
+            }
+            echo "</$name>\n";
+        }
+    }
+
+    private static function spec2hex($str) {
+        return preg_replace("/[[:cntrl:]]/", "", htmlspecialchars($str, ENT_XML1, 'UTF-8'));
+    }
+
+    private static function spec2hexAttr($str) {
+        return str_replace("\"", "&quot;", self::spec2hex($str));
+    }
+}
+
 class API extends CommandTarget implements IController {
     const MAX_LIMIT = 35;
 
@@ -131,25 +359,23 @@ class API extends CommandTarget implements IController {
     ];
 
     private $limit;
-    private $catCodes;
-    private $json;
-    private $indent = 0;
-    private $nextToken = "";
+    private $serializer;
 
     public function processRequest($dispatcher) {
-        $this->json = $_REQUEST["json"] ||
-            substr($_SERVER["HTTP_ACCEPT"], 0, 16) == "application/json";
+        $wantXml = $_REQUEST["xml"] || 
+                substr($_SERVER["HTTP_ACCEPT"], 0, 8) == "text/xml";
+        $this->serializer = $wantXml?new XMLSerializer():new JSONSerializer();
+
         if($this->emitHeader($_REQUEST["method"]))
             return;
-        if(!$this->json)
-            echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xml>\n";
+
         $this->session = Engine::session();
         $this->limit = $_REQUEST["size"];
         if(!$this->limit || $this->limit > API::MAX_LIMIT)
             $this->limit = API::MAX_LIMIT;
+        $this->serializer->startDocument();
         $this->processLocal($_REQUEST["method"], null);
-        if(!$this->json)
-            echo "</xml>\n";
+        $this->serializer->endDocument();
     }
 
     public function processLocal($action, $subaction) {
@@ -158,9 +384,9 @@ class API extends CommandTarget implements IController {
 
     public function unknownMethod() {
         $method = $_REQUEST["method"];
-        $this->emitError($method?$method:"status", 10, "Invalid method: $method");
+        $this->serializer->emitError($method?$method:"status", 10, "Invalid method: $method");
     }
-    
+
     public function albumPager() {
         $op = self::$pager_operations[$_REQUEST["operation"]];
         if(isset($op)) {
@@ -168,11 +394,11 @@ class API extends CommandTarget implements IController {
                      $op,
                      $_REQUEST["key"],
                      $this->limit);
-            $this->startResponse("getAlbumsRs");
-            $this->emitDataSetArray("albumrec", API::ALBUM_FIELDS, $records);
-            $this->endResponse("getAlbumsRs");
+            $this->serializer->startResponse("getAlbumsRs");
+            $this->serializer->emitDataSetArray("albumrec", API::ALBUM_FIELDS, $records);
+            $this->serializer->endResponse("getAlbumsRs");
         } else
-            $this->emitError("getAlbumsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
+            $this->serializer->emitError("getAlbumsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
     }
 
     public function labelPager() {
@@ -182,36 +408,36 @@ class API extends CommandTarget implements IController {
                      $op,
                      $_REQUEST["key"],
                      $this->limit);
-            $this->startResponse("getLabelsRs");
-            $this->emitDataSetArray("labelrec", API::LABEL_FIELDS, $records);
-            $this->endResponse("getLabelsRs");
+            $this->serializer->startResponse("getLabelsRs");
+            $this->serializer->emitDataSetArray("labelrec", API::LABEL_FIELDS, $records);
+            $this->serializer->endResponse("getLabelsRs");
         } else
-            $this->emitError("getLabelsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
+            $this->serializer->emitError("getLabelsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
     }
 
     public function fullTextSearch() {
         $results = Engine::api(ILibrary::class)->searchFullText(
             $_REQUEST["type"], $_REQUEST["key"], $this->limit,
             $_REQUEST["offset"]);
-        $attrs = $this->addSuccess();
+        $attrs = $this->serializer->addSuccess();
         $attrs["total"] = $results[0];
-        $attrs[$this->json?"dataType":"type"] = $_REQUEST["type"];
-        $this->startResponse("searchRs", $attrs);
+        $attrs["dataType"] = $_REQUEST["type"];
+        $this->serializer->startResponse("searchRs", $attrs);
         foreach ($results[1] as $result) {
             $attrs = [];
             $attrs["more"] = $result["more"];
             $attrs["offset"] = $result["offset"];
-            $this->startResponse($result["type"], $attrs);
-            $this->emitDataSetArray($result["recordName"], self::$ftFields[$result["type"]], $result["result"]);
-            $this->endResponse($result["type"]);
+            $this->serializer->startResponse($result["type"], $attrs);
+            $this->serializer->emitDataSetArray($result["recordName"], self::$ftFields[$result["type"]], $result["result"]);
+            $this->serializer->endResponse($result["type"]);
         }
-        $this->endResponse("searchRs");
+        $this->serializer->endResponse("searchRs");
     }
 
     public function libraryLookup() {
         $type = self::$libKeys[$_REQUEST["type"]];
         if(!$type) {
-            $this->emitError("libLookupRs", 20, "Invalid type: ".$_REQUEST["type"]);
+            $this->serializer->emitError("libLookupRs", 20, "Invalid type: ".$_REQUEST["type"]);
             return;
         }
 
@@ -219,10 +445,10 @@ class API extends CommandTarget implements IController {
         $offset = $_REQUEST["offset"];
         $libraryAPI = Engine::api(ILibrary::class);
         $total = $libraryAPI->searchPos($type[0], $offset, -1, $key);
-        $attrs = $this->addSuccess();
+        $attrs = $this->serializer->addSuccess();
         $attrs["total"] = $total;
-        $attrs[$this->json?"dataType":"type"] = $_REQUEST["type"];
-        $this->startResponse("libLookupRs", $attrs);
+        $attrs["dataType"] = $_REQUEST["type"];
+        $this->serializer->startResponse("libLookupRs", $attrs);
 
         $results = $libraryAPI->searchPos($type[0], $offset, $this->limit, $key, $_REQUEST["sortBy"]);
         switch($type[0]) {
@@ -238,16 +464,13 @@ class API extends CommandTarget implements IController {
         if(!$offset) $offset = $total; // no more rows remaining
         $attrs["more"] = $_REQUEST["offset"] == ""?($total - $offset):$total;
         $attrs["offset"] = $_REQUEST["offset"];
-        $this->startResponse($_REQUEST["type"], $attrs);
-        $this->emitDataSetArray($type[1], $type[2], $results);
-        $this->endResponse($_REQUEST["type"]);
-        $this->endResponse("libLookupRs");
+        $this->serializer->startResponse($_REQUEST["type"], $attrs);
+        $this->serializer->emitDataSetArray($type[1], $type[2], $results);
+        $this->serializer->endResponse($_REQUEST["type"]);
+        $this->serializer->endResponse("libLookupRs");
     }
 
     public function getCharts() {
-        if(!isset($this->catCodes))
-            $this->catCodes = $this->getAFileCats();
-
         $date = $_REQUEST["date"];
 
         $chartfields = API::ALBUM_FIELDS;
@@ -260,7 +483,7 @@ class API extends CommandTarget implements IController {
              $date = $week["week"];
         }
     
-        $this->startResponse("getChartsRs");
+        $this->serializer->startResponse("getChartsRs");
         
         // main chart
         Engine::api(IChart::class)->getChart($records, 0, $date, 30);
@@ -268,24 +491,26 @@ class API extends CommandTarget implements IController {
         $attrs = [];
         $attrs["chart"] = "General";
         $attrs["week-ending"] = $date;
-        $this->startResponse("chart", $attrs);
-        $this->emitDataSetArray("albumrec", $chartfields, $records, 0);
-        $this->endResponse("chart");
+        $this->serializer->startResponse("chart", $attrs);
+        $this->serializer->emitDataSetArray("albumrec", $chartfields, $records, 0);
+        $this->serializer->endResponse("chart");
     
         // genre charts
+        $catCodes = Engine::api(IChart::class)->getCategories();
+
         $genres = [5, 7, 6, 1, 2, 4, 3, 8];
         for($i=0; $i<sizeof($genres); $i++) {
              unset($records);
              Engine::api(IChart::class)->getChart($records, 0, $date, 10, $genres[$i]);
              $attrs = [];
-             $attrs["chart"] = $this->catCodes[$genres[$i]-1]["name"];
+             $attrs["chart"] = $catCodes[$genres[$i]-1]["name"];
              $attrs["week-ending"] = $date;
-             $this->startResponse("chart", $attrs);
-             $this->emitDataSetArray("albumrec", $chartfields, $records, 0);
-             $this->endResponse("chart");
+             $this->serializer->startResponse("chart", $attrs);
+             $this->serializer->emitDataSetArray("albumrec", $chartfields, $records, 0);
+             $this->serializer->endResponse("chart");
         }
         
-        $this->endResponse("getChartsRs");
+        $this->serializer->endResponse("getChartsRs");
     }
     
     public function getPlaylists() {
@@ -307,96 +532,44 @@ class API extends CommandTarget implements IController {
              $filter = OnNowFilter::class;
              break;
         default:
-             $this->emitError("getPlaylistsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
+             $this->serializer->emitError("getPlaylistsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
              return;
         }
-        $this->startResponse("getPlaylistsRs");
-        if($this->json) {
-            while($row = $result->fetch()) {
-                $attrs = [];
-                $attrs["name"] = $row["description"];
-                $attrs["date"] = $row["showdate"];
-                $attrs["time"] = $row["showtime"];
-                $attrs["airname"] = $row["airname"];
-                $attrs["id"] = $id?$id:$row["id"];
-                $this->startResponse("show", $attrs);
-                if($includeTracks && $includeTracks != "false") {
-                    $events = [];
-                    Engine::api(IPlaylist::class)->getTracksWithObserver($id?$id:$row["id"],
-                        (new PlaylistObserver())->onComment(function($entry) use(&$events) {
-                            $events[] = ["type" => "comment",
-                                         "comment" => $entry->getComment(),
-                                         "created" => $entry->getCreated()];
-                        })->onLogEvent(function($entry) use(&$events) {
-                            $events[] = ["type" => "logEvent",
-                                         "event" => $entry->getLogEventType(),
-                                         "code" => $entry->getLogEventCode(),
-                                         "created" => $entry->getCreated()];
-                        })->onSetSeparator(function($entry) use(&$events) {
-                            $events[] = ["type" => "break",
-                                         "created" => $entry->getCreated()];
-                        })->onSpin(function($entry) use(&$events) {
-                            $spin = $entry->asArray();
-                            $spin["type"] = "track";
-                            $spin["artist"] = UI::swapNames($spin["artist"]);
-                            $events[] = $spin;
-                        }), 0, $filter);
-                    $this->emitDataSetArray("event", API::PLAYLIST_DETAIL_FIELDS, $events);
-                }
-                $this->endResponse("show");
+        $this->serializer->startResponse("getPlaylistsRs");
+        while($row = $result->fetch()) {
+            $attrs = [];
+            $attrs["name"] = $row["description"];
+            $attrs["date"] = $row["showdate"];
+            $attrs["time"] = $row["showtime"];
+            $attrs["airname"] = $row["airname"];
+            $attrs["id"] = $id?$id:$row["id"];
+            $this->serializer->startResponse("show", $attrs);
+            if($includeTracks && $includeTracks != "false") {
+                $events = [];
+                Engine::api(IPlaylist::class)->getTracksWithObserver($id?$id:$row["id"],
+                    (new PlaylistObserver())->onComment(function($entry) use(&$events) {
+                        $events[] = ["type" => "comment",
+                                     "comment" => $entry->getComment(),
+                                     "created" => $entry->getCreated()];
+                    })->onLogEvent(function($entry) use(&$events) {
+                        $events[] = ["type" => "logEvent",
+                                     "event" => $entry->getLogEventType(),
+                                     "code" => $entry->getLogEventCode(),
+                                     "created" => $entry->getCreated()];
+                    })->onSetSeparator(function($entry) use(&$events) {
+                        $events[] = ["type" => "break",
+                                     "created" => $entry->getCreated()];
+                    })->onSpin(function($entry) use(&$events) {
+                        $spin = $entry->asArray();
+                        $spin["type"] = "track";
+                        $spin["artist"] = UI::swapNames($spin["artist"]);
+                        $events[] = $spin;
+                    }), 0, $filter);
+                $this->serializer->emitDataSetArray("event", API::PLAYLIST_DETAIL_FIELDS, $events);
             }
-        } else {
-            while($row = $result->fetch()) {
-                echo "<show name=\"".self::spec2hexAttr(stripslashes($row["description"]))."\" ".
-                     "date=\"".$row["showdate"]."\" ".
-                     "time=\"".$row["showtime"]."\" ".
-                     "airname=\"".self::spec2hexAttr(stripslashes($row["airname"]))."\" ".
-                     "id=\"".($id?$id:$row["id"])."\"";
-                if($includeTracks && $includeTracks != "false") {
-                    $break = false;
-                    echo ">\n";
-
-                    Engine::api(IPlaylist::class)->getTracksWithObserver($id?$id:$row["id"],
-                        (new PlaylistObserver())->onComment(function($entry) use(&$break) {
-                            echo "<comment>".self::spec2hex(stripslashes($entry->getComment()))."</comment>\n";
-                            $break = false;
-                        })->onLogEvent(function($entry) use(&$break) {
-                            if(!$break) {
-                                echo "<break/>\n";
-                                $break = true;
-                            }
-                        })->onSetSeparator(function($entry) use(&$break) {
-                            if(!$break) {
-                                echo "<break/>\n";
-                                $break = true;
-                            }
-                        })->onSpin(function($entry) use(&$break) {
-                            echo "<track";
-                            $artist = UI::swapNames($entry->getArtist());
-                            if($artist)
-                                echo " artist=\"".self::spec2hexAttr(stripslashes($artist))."\"";
-                            $track = $entry->getTrack();
-                            if($track)
-                                echo " track=\"".self::spec2hexAttr(stripslashes($track))."\"";
-                            $album = $entry->getAlbum();
-                            if($album)
-                                echo " album=\"".self::spec2hexAttr(stripslashes($album))."\"";
-                            $label = $entry->getLabel();
-                            if($label)
-                                echo " label=\"".self::spec2hexAttr(stripslashes($label))."\"";
-                            $tag = $entry->getTag();
-                            if($tag)
-                                echo " tag=\"$tag\"";
-
-                            echo "/>\n";
-                            $break = false;
-                        }), 0, $filter);
-                    echo "</show>\n";
-                } else
-                    echo "/>\n";
-            }
+            $this->serializer->endResponse("show");
         }
-        $this->endResponse("getPlaylistsRs");
+        $this->serializer->endResponse("getPlaylistsRs");
     }
 
     public function getTracks() {
@@ -405,7 +578,7 @@ class API extends CommandTarget implements IController {
 
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $key);
         if(!$key || !sizeof($albums)) {
-            $this->emitError("getTracksRs", 100, "Unknown tag", ["tag" => $key]);
+            $this->serializer->emitError("getTracksRs", 100, "Unknown tag", ["tag" => $key]);
             return;
         }
         
@@ -422,7 +595,7 @@ class API extends CommandTarget implements IController {
             self::array_remove($fields, "artist");
         }
 
-        $attrs = $this->addSuccess();
+        $attrs = $this->serializer->addSuccess();
         $attrs["tag"] = $key;
         $attrs["artist"] =  $artist;
         $attrs["album"] = $albums[0]["album"];
@@ -430,9 +603,9 @@ class API extends CommandTarget implements IController {
         $attrs["collection"] = ILibrary::GENRES[$albums[0]["category"]];
         $attrs["medium"] = ILibrary::MEDIA[$albums[0]["medium"]];
         $attrs["isCompilation"] = $albums[0]["iscoll"]?"true":"false";
-        $this->startResponse("getTracksRs", $attrs);
-        $this->emitDataSetArray("trackrec", $fields, $records);
-        $this->endResponse("getTracksRs");
+        $this->serializer->startResponse("getTracksRs", $attrs);
+        $this->serializer->emitDataSetArray("trackrec", $fields, $records);
+        $this->serializer->endResponse("getTracksRs");
     }
     
     public function getCurrents() {
@@ -443,62 +616,11 @@ class API extends CommandTarget implements IController {
                     "city", "state", "zip");
     
         $records = Engine::api(IChart::class)->getCurrentsWithPlays();
-        $this->startResponse("getCurrentsRs");
-        $this->emitDataSet("albumrec", $currentfields, $records);
-        $this->endResponse("getCurrentsRs");
+        $this->serializer->startResponse("getCurrentsRs");
+        $this->serializer->emitDataSet("albumrec", $currentfields, $records);
+        $this->serializer->endResponse("getCurrentsRs");
     }
 
-    private function startResponse($name, $attrs=null) {
-        if(!$attrs)
-            $attrs = $this->addSuccess();
-            
-        if($this->json) {
-            echo $this->nextToken;
-            $this->nextToken = "";
-            $this->indent += 1;
-            $i = $this->indent > 1?$this->indent+1:$this->indent;
-            $indent = str_repeat("  ", $i);
-            echo "{\n$indent\"type\": \"$name\",\n";
-            foreach($attrs as $key => $value)
-                echo "$indent\"$key\": \"".self::jsonspecialchars($value)."\",\n";
-            echo "$indent\"data\": [";
-        } else {
-            echo "<$name";
-            foreach($attrs as $key => $value)
-                echo " $key=\"".self::spec2hexAttr($value)."\"";
-            echo ">\n";
-        }
-    }
-
-    private function endResponse($name) {
-        if($this->json) {
-            $this->nextToken = ",\n".str_repeat("  ", $this->indent);
-            $this->indent -= 1;
-            $i = $this->indent?$this->indent+1:$this->indent;
-            echo "\n".str_repeat("  ", $i+1)."]\n".str_repeat("  ", $i)."}";
-        } else
-            echo "</$name>\n";
-    }
-
-    private function addStatus($code, $message) {
-        $attrs = [];
-        $attrs["code"] = $code;
-        $attrs["message"] = $message;
-        return $attrs;
-    }
-    
-    private function addSuccess() {
-        return $this->addStatus(0, "Success");
-    }
-    
-    private function emitError($request, $code, $message, $opts = null) {
-        $attrs = $this->addStatus($code, $message);
-        if($opts)
-            $attrs += $opts;
-        $this->startResponse($request, $attrs);
-        $this->endResponse($request);
-    }
-    
     private function emitHeader($method) {
         $preflight = $_SERVER['REQUEST_METHOD'] == "OPTIONS";
         if($preflight)
@@ -507,9 +629,7 @@ class API extends CommandTarget implements IController {
         // Even if we return 204 above, PHP is going to include
         // a default Content-type anyway, if we do not supply one.
         // Go ahead and give the Content-type in all cases.
-        header("Content-type: ".
-            ($this->json?"application/vnd.api+json":"text/xml").
-            "; charset=UTF-8");
+        header("Content-type: ". $this->serializer->getContentType());
 
         $origin = $_SERVER['HTTP_ORIGIN'];
         if($origin) {
@@ -535,92 +655,6 @@ class API extends CommandTarget implements IController {
         return $preflight;
     }
     
-    private function emitDataSet($name, $fields, $rows) {
-        $data = array();
-        while($row = $rows->fetch())
-             $data[] = $row;
-        $this->emitDataSetArray($name, $fields, $data);
-    }
-
-    private function emitDataSetArray($name, $fields, &$data) {
-        $indent = str_repeat("  ", $this->indent*2);
-        $nextToken = "";
-        foreach($data as $row) {
-             echo $this->json?"$nextToken{\n":"<$name>\n";
-             $nextProp = "";
-             foreach($fields as $field) {
-                 $val = $row[$field];
-                 if($name == "albumrec") {
-                    switch($field) {
-                    case "category":
-                        $val = ILibrary::GENRES[$val];
-                        break;
-                    case "medium":
-                        $val = ILibrary::MEDIA[$val];
-                        break;
-                    case "size":
-                        $val = ILibrary::LENGTHS[$val];
-                        break;
-                    case "location":
-                        $val = ILibrary::LOCATIONS[$val];
-                        break;
-                    case "afile_category":
-                        $val = $this->getAFileCatList($val);
-                        if($this->json)
-                            echo "$nextProp$indent  \"charts\": $val";
-                        else
-                            echo "<charts>$val</charts>\n";
-                        $nextProp = ",\n";
-                        continue 2;
-                    }
-                 }
-                 if($this->json)
-                     echo "$nextProp$indent  \"$field\": \"".
-                          self::jsonspecialchars(stripslashes($val)).
-                          "\"";
-                 else
-                     echo "<$field>".
-                          self::spec2hex(stripslashes($val)).
-                          "</$field>\n";
-                 $nextProp = ",\n";
-             }
-
-             $nextToken = ",\n$indent";
-             echo $this->json?"\n$indent}":"</$name>\n";
-        }
-    }
-
-    private function getAFileCats() {
-        return Engine::api(IChart::class)->getCategories();
-    }
-
-    private function getAFileCatList($cats) {
-        $result = "";
-        
-        if(!isset($this->catCodes))
-            $this->catCodes = $this->getAFileCats();
-
-        if($this->json) {
-            $pre = ", \"";
-            $post = "\"";
-        } else {
-            $pre = "<chart>";
-            $post = "</chart>\n";
-        }
-        
-        if($cats) {
-             $cats = explode(",", $cats);
-             foreach($cats as $cat)
-                 if(substr($this->catCodes[$cat-1]["name"], 0, 1) != "(")
-                    $result .= $pre.$this->catCodes[$cat-1]["name"].$post;
-        }
-
-        if($this->json)
-            $result = "[" . substr($result, 2) . "]";
-
-        return $result;
-    }
-    
     private static function array_remove(&$array) {
         $args = func_get_args();
         array_shift($args);
@@ -629,30 +663,6 @@ class API extends CommandTarget implements IController {
              if(in_array($array[$i], $args))
                  unset($array[$i]);
         $array = array_merge($array);
-    }
-    
-    private static function spec2hex($str) {
-        return preg_replace("/[[:cntrl:]]/", "", htmlspecialchars($str, ENT_XML1, 'UTF-8'));
-    }
-
-    private static function spec2hexAttr($str) {
-        return str_replace("\"", "&quot;", self::spec2hex($str));
-    }
-    
-    private static function jsonspecialchars($str) {
-        // escape backslash, quote, LF, CR, and tab
-        $str1 = str_replace(["\\", "\"", "\n", "\r", "\t"],
-                            ["\\\\", "\\\"", "\\n", "\\r", "\\t"], $str);
-
-        // escape other control characters
-        $str2 = preg_replace_callback('/[\x00-\x1f]/', function($matches) {
-            return '\\u00' . bin2hex($matches[0]);
-        }, $str1);
-
-        if($str1 != $str2)
-            error_log("unexpected control character(s): '$str'");
-
-        return $str2;
     }
 }
 
