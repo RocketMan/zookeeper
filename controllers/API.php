@@ -50,19 +50,15 @@ abstract class Serializer {
         return $this->catCodes;
     }
 
-    protected function addStatus($code, $message) {
+    public function newAttrs($code = 0, $message = "Success") {
         $attrs = [];
         $attrs["code"] = $code;
         $attrs["message"] = $message;
         return $attrs;
     }
 
-    public function addSuccess() {
-        return $this->addStatus(0, "Success");
-    }
-
     public function emitError($request, $code, $message, $opts = null) {
-        $attrs = $this->addStatus($code, $message);
+        $attrs = $this->newAttrs($code, $message);
         if($opts)
             $attrs += $opts;
         $this->startResponse($request, $attrs);
@@ -70,7 +66,7 @@ abstract class Serializer {
     }
 
     public function emitDataSet($name, $fields, $rows) {
-        $data = array();
+        $data = [];
         while($row = $rows->fetch())
              $data[] = $row;
         $this->emitDataSetArray($name, $fields, $data);
@@ -89,7 +85,7 @@ class JSONSerializer extends Serializer {
 
     public function startResponse($name, $attrs=null) {
         if(!$attrs)
-            $attrs = $this->addSuccess();
+            $attrs = $this->newAttrs();
 
         echo $this->nextToken;
         $this->nextToken = "";
@@ -193,7 +189,7 @@ class XMLSerializer extends Serializer {
 
     public function startResponse($name, $attrs=null) {
         if(!$attrs)
-            $attrs = $this->addSuccess();
+            $attrs = $this->newAttrs();
         echo "<$name";
         foreach($attrs as $key => $value)
             echo " $key=\"".self::spec2hexAttr($value)."\"";
@@ -419,7 +415,7 @@ class API extends CommandTarget implements IController {
         $results = Engine::api(ILibrary::class)->searchFullText(
             $_REQUEST["type"], $_REQUEST["key"], $this->limit,
             $_REQUEST["offset"]);
-        $attrs = $this->serializer->addSuccess();
+        $attrs = $this->serializer->newAttrs();
         $attrs["total"] = $results[0];
         $attrs["dataType"] = $_REQUEST["type"];
         $this->serializer->startResponse("searchRs", $attrs);
@@ -445,7 +441,7 @@ class API extends CommandTarget implements IController {
         $offset = $_REQUEST["offset"];
         $libraryAPI = Engine::api(ILibrary::class);
         $total = $libraryAPI->searchPos($type[0], $offset, -1, $key);
-        $attrs = $this->serializer->addSuccess();
+        $attrs = $this->serializer->newAttrs();
         $attrs["total"] = $total;
         $attrs["dataType"] = $_REQUEST["type"];
         $this->serializer->startResponse("libLookupRs", $attrs);
@@ -595,7 +591,7 @@ class API extends CommandTarget implements IController {
             self::array_remove($fields, "artist");
         }
 
-        $attrs = $this->serializer->addSuccess();
+        $attrs = $this->serializer->newAttrs();
         $attrs["tag"] = $key;
         $attrs["artist"] =  $artist;
         $attrs["album"] = $albums[0]["album"];
