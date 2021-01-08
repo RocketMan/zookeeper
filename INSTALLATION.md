@@ -9,7 +9,7 @@ may use another distro or OS; in this case, the exact steps may vary.
 
 If you are using shared hosting, follow the instructions of your
 hosting provider to activate and configure Apache 2.4, MySQL 5.6, and
-PHP 7.2.
+PHP 7.4.
 
 The remaining instructions in this section assume you are
 administering your own server instance.  If you are using shared
@@ -152,8 +152,9 @@ b. If you are using shared hosting and do not have permission to edit
 
         php_value date.timezone "Asia/Kolkata"
 
-   within the &lt;IfModule mod_php7.c> stanza, or within &lt;IfModule mod_php5.c>
-   if you are using PHP 5.6.
+   within the &lt;IfModule mod_php7.c> stanza if you are using PHP
+   7.4, within &lt;IfModule mod_php.c> if you are using PHP 8.0, or
+   within &lt;IfModule mod_php5.c> if you are using PHP 5.6.
 
    Alternatively, if you are using fastCGI, edit the `.user.ini`
    file in the `zookeeper` directory and add this setting:

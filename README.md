@@ -13,7 +13,7 @@ https://zookeeper.ibinx.com/master/
 * PHP 5.6 or later with MySQL PDO driver
 * MySQL/MariaDB
 
-It is recommended to use PHP 7.2, as older versions have reached EOL
+It is recommended to use PHP 7.4, as older versions have reached EOL
 and may be deprecated for use with Zookeeper Online in the future.
 
 
@@ -39,4 +39,4 @@ for more information.
 **Zookeeper Online** is released under the
 [**GNU GENERAL PUBLIC LICENSE Version 3 (GPL)**](http://www.gnu.org/licenses/gpl-3.0.html).
 
-Copyright &copy; 1997-2020 Jim Mason.
+Copyright &copy; 1997-2021 Jim Mason.
