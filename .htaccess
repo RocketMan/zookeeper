@@ -1,12 +1,20 @@
 AddDefaultCharset UTF-8
 
 # set php error reporting to E_ALL & ~E_NOTICE (=32759)
+# for PHP 5:
 <IfModule mod_php5.c>
     php_value error_reporting 32759
     php_value default_charset UTF-8
     php_value request_order GPC
 </IfModule>
+# for PHP 7:
 <IfModule mod_php7.c>
+    php_value error_reporting 32759
+    php_value default_charset UTF-8
+    php_value request_order GPC
+</IfModule>
+# for PHP 8 and later:
+<IfModule mod_php.c>
     php_value error_reporting 32759
     php_value default_charset UTF-8
     php_value request_order GPC
