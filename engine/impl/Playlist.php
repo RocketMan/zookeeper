@@ -206,6 +206,28 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 $toStamp = \DateTime::createFromFormat(self::TIME_FORMAT,
                             $date . " " . $to);
 
+                // rebase timestamps if both start and end times have changed
+                list($wasFrom, $wasTo) = explode("-", $row['showtime']);
+                if($from != $wasFrom && $to != $wasTo) {
+                    $wasFromStamp = \DateTime::createFromFormat(self::TIME_FORMAT,
+                                    $date . " " . $wasFrom);
+                    $fromMinute = $wasFromStamp->format("G") * 60 +
+                                $wasFromStamp->format("i");
+                    $toMinute = $fromStamp->format("G") * 60 +
+                                $fromStamp->format("i");
+                    $offset = $toMinute - $fromMinute;
+
+                    if($offset) {
+                        $query = "UPDATE tracks " .
+                                 "SET created = timestampadd(minute, ?, created) " .
+                                 "WHERE list = ? AND created IS NOT NULL";
+                        $stmt = $this->prepare($query);
+                        $stmt->bindValue(1, $offset);
+                        $stmt->bindValue(2, $playlist);
+                        $stmt->execute();
+                    }
+                }
+
                 // if playlist spans midnight, end time is next day
                 if($toStamp < $fromStamp)
                     $toStamp->modify("+1 day");
