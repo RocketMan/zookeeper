@@ -211,11 +211,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 if($from != $wasFrom && $to != $wasTo) {
                     $wasFromStamp = \DateTime::createFromFormat(self::TIME_FORMAT,
                                     $date . " " . $wasFrom);
-                    $fromMinute = $wasFromStamp->format("G") * 60 +
-                                $wasFromStamp->format("i");
-                    $toMinute = $fromStamp->format("G") * 60 +
-                                $fromStamp->format("i");
-                    $offset = $toMinute - $fromMinute;
+                    $diff = $wasFromStamp->diff($fromStamp);
+                    $offset = $diff->h * 60 + $diff->i;
+                    $offset *= $diff->invert?-1:1;
 
                     if($offset) {
                         $query = "UPDATE tracks " .
