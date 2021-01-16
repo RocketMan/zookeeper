@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -262,6 +262,32 @@ class PlaylistImpl extends DBO implements IPlaylist {
         } else
             $stmt->bindValue(4, $playlist);
         return $stmt->execute();
+    }
+
+    public function duplicatePlaylist($playlist) {
+        $query = "SELECT dj, showdate, showtime, description, airname " .
+                 "FROM lists WHERE id = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $playlist);
+        $from = $stmt->executeAndFetch();
+
+        $success = $from?$this->insertPlaylist($from['dj'],
+                                     $from['showdate'], $from['showtime'],
+                                     "Rebroadcast: " . $from['description'],
+                                     $from['airname']):false;
+        if($success) {
+            $newListId = $this->lastInsertId();
+            $query = "INSERT INTO tracks " .
+                     "(list, tag, artist, track, album, label, created, seq) ".
+                     "SELECT ?, tag, artist, track, album, label, created, seq ".
+                     "FROM tracks WHERE list = ?";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $newListId);
+            $stmt->bindValue(2, $playlist);
+            $success = $stmt->execute();
+        }
+
+        return $success?$newListId:false;
     }
 
     private function populateSeq($list) {
