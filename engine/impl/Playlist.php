@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -206,6 +206,26 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 $toStamp = \DateTime::createFromFormat(self::TIME_FORMAT,
                             $date . " " . $to);
 
+                // rebase timestamps if both start and end times have changed
+                list($wasFrom, $wasTo) = explode("-", $row['showtime']);
+                if($from != $wasFrom && $to != $wasTo) {
+                    $wasFromStamp = \DateTime::createFromFormat(self::TIME_FORMAT,
+                                    $date . " " . $wasFrom);
+                    $diff = $wasFromStamp->diff($fromStamp);
+                    $offset = $diff->h * 60 + $diff->i;
+                    $offset *= $diff->invert?-1:1;
+
+                    if($offset) {
+                        $query = "UPDATE tracks " .
+                                 "SET created = timestampadd(minute, ?, created) " .
+                                 "WHERE list = ? AND created IS NOT NULL";
+                        $stmt = $this->prepare($query);
+                        $stmt->bindValue(1, $offset);
+                        $stmt->bindValue(2, $playlist);
+                        $stmt->execute();
+                    }
+                }
+
                 // if playlist spans midnight, end time is next day
                 if($toStamp < $fromStamp)
                     $toStamp->modify("+1 day");
@@ -242,6 +262,32 @@ class PlaylistImpl extends DBO implements IPlaylist {
         } else
             $stmt->bindValue(4, $playlist);
         return $stmt->execute();
+    }
+
+    public function duplicatePlaylist($playlist) {
+        $query = "SELECT dj, showdate, showtime, description, airname " .
+                 "FROM lists WHERE id = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $playlist);
+        $from = $stmt->executeAndFetch();
+
+        $success = $from?$this->insertPlaylist($from['dj'],
+                                     $from['showdate'], $from['showtime'],
+                                     "Rebroadcast: " . $from['description'],
+                                     $from['airname']):false;
+        if($success) {
+            $newListId = $this->lastInsertId();
+            $query = "INSERT INTO tracks " .
+                     "(list, tag, artist, track, album, label, created, seq) ".
+                     "SELECT ?, tag, artist, track, album, label, created, seq ".
+                     "FROM tracks WHERE list = ?";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $newListId);
+            $stmt->bindValue(2, $playlist);
+            $success = $stmt->execute();
+        }
+
+        return $success?$newListId:false;
     }
 
     private function populateSeq($list) {

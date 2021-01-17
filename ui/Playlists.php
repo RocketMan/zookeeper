@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -570,15 +570,19 @@ class Playlists extends MenuItem {
         $airName = '';
 
         $sourcePlaylist = null;
+        $api = Engine::api(IPlaylist::class);
         if(isset($playlistId) && $playlistId > 0) {
-            $sourcePlaylist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
+            if($_POST["duplicate"])
+                $playlistId = $api->duplicatePlaylist($playlistId);
+            if($playlistId)
+                $sourcePlaylist = $api->getPlaylist($playlistId, 1);
         } else {
             $WEEK_SECONDS = 60 *60 * 24 * 7;
             $nowDateStr =  (new \DateTime())->format("Y-m-d");
             $nowDateTimestamp =  (new \DateTime($nowDateStr))->getTimestamp();
 
             // see if there is a PL on this day last week. if so use it.
-            $playlists = Engine::api(IPlaylist::class)->getPlaylists(1, 1, "", 1, $this->session->getUser(), 1, 10);
+            $playlists = $api->getPlaylists(1, 1, "", 1, $this->session->getUser(), 1, 10);
             while ($playlists && ($playlist = $playlists->fetch())) {
                 $showDate = new \DateTime($playlist['showdate']);
                 $dateInterval = $nowDateTimestamp - $showDate->getTimestamp();
@@ -668,6 +672,7 @@ class Playlists extends MenuItem {
             </select>
             <div style='margin-top:4px'>
                 <input TYPE=SUBMIT VALUE=" Edit ">&nbsp;&nbsp;&nbsp;
+                <input TYPE=SUBMIT NAME="duplicate" VALUE="Duplicate">&nbsp;&nbsp;&nbsp;
                 <input id='delete-list' TYPE=BUTTON VALUE="Delete">
             </div>
             <input id='action-type' TYPE=hidden name=action VALUE="editListDetails">
