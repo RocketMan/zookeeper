@@ -196,6 +196,53 @@ branding (station name, style sheets and logo), contact information,
 optional SSO login setup, and charting configuration.  Please see the
 config.php file for more information.
 
+### Push Notification (optional)
+
+Zookeeper can send push notifications via websockets.  If you
+want to support the optional push notification service, you will need to:
+
+1. Setup apache
+
+   In your Apache configuration file, enable mod_proxy and mod_proxy_wstunnel
+   modules, if they are not already enabled:
+
+      LoadModule proxy_module modules/mod_proxy.so
+      LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
+
+2. Install PHP composer
+
+   If you don't have PHP composer installed somewhere on your system, you
+   will need it for the remaining steps.  Install it as follows:
+
+      cd <directory where you want to install composer>
+      php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+      php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+      php composer-setup.php
+      php -r "unlink('composer-setup.php');"
+
+3. Install Ratchet (includes React)
+
+      cd /example/path/to/zookeeper
+      php <composer directory>/composer.phar require cboden/ratchet react/datagram:^1.5
+
+4. Update your system to run the push notification server
+
+   On most Linux distributions, you can use systemd to start the push
+   notification server and to ensure that it is running.  To do this,
+   create a file `/etc/systemd/system/zkpush.service` using the example
+   file below.
+
+### Example systemd file for push notification service
+
+On many Linux systems, you can use systemd to manage system (daemon)
+processes.  If you have systemd, you can use it to run the zookeeper
+push notification service.
+
+To use systemd for push notification, create a file
+`/etc/systemd/system/zkpush.service` with the following:
+
+    [TBD]
+
 ___
 
 

@@ -28,4 +28,7 @@ RewriteRule ^ssoLogin\.php$ index.php?target=sso [QSA,L]
 RewriteCond $0 !^\.mdhandler.php/.*$
 RewriteRule ^(.+)\.md$ .mdhandler.php/$1.md [L]
 RewriteRule ^zk$ - [R=404,L]
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^/?(.*) "ws://127.0.0.1:32080/$1" [P,L]
 </IfModule>
