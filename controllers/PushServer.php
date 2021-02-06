@@ -231,7 +231,7 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
      * PushServer stub for push disabled or dependencies missing
      */
     class PushServer implements IController {
-        public static function sendAsyncNotification($show, $spin) {}
+        public static function sendAsyncNotification($show = null, $spin = null) {}
 
         public function processRequest($dispatcher) {
             if(php_sapi_name() != "cli") {
