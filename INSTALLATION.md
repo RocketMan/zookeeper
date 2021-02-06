@@ -222,8 +222,8 @@ want to support the optional push notification service, you will need to:
 
 3. Install Ratchet (includes React)
 
-        cd */example/path/to/zookeeper*
-        php *<composer directory>*/composer.phar require cboden/ratchet react/datagram:^1.5
+        cd /example/path/to/zookeeper
+        php <composer directory>/composer.phar require cboden/ratchet react/datagram:^1.5
 
 4. Update your system to run the push notification server
 
@@ -246,7 +246,7 @@ This file goes into the /etc/systemd/system directory of Debian:
     Type=simple
     TimeoutSec=0
     PIDFile=/var/run/zkpush.pid
-    ExecStart=*/example/path/to/zookeeper*/zk push
+    ExecStart=/example/path/to/zookeeper/zk push
     KillMode=process
 
     Restart=on-failure
