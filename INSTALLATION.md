@@ -206,24 +206,24 @@ want to support the optional push notification service, you will need to:
    In your Apache configuration file, enable mod_proxy and mod_proxy_wstunnel
    modules, if they are not already enabled:
 
-      LoadModule proxy_module modules/mod_proxy.so
-      LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
+        LoadModule proxy_module modules/mod_proxy.so
+        LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
 
 2. Install PHP composer
 
    If you don't have PHP composer installed somewhere on your system, you
    will need it for the remaining steps.  Install it as follows:
 
-      cd <directory where you want to install composer>
-      php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-      php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-      php composer-setup.php
-      php -r "unlink('composer-setup.php');"
+        cd <directory where you want to install composer>
+        php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+        php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+        php composer-setup.php
+        php -r "unlink('composer-setup.php');"
 
 3. Install Ratchet (includes React)
 
-      cd /example/path/to/zookeeper
-      php <composer directory>/composer.phar require cboden/ratchet react/datagram:^1.5
+    cd /example/path/to/zookeeper
+    php <composer directory>/composer.phar require cboden/ratchet react/datagram:^1.5
 
 4. Update your system to run the push notification server
 
