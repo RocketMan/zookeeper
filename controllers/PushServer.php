@@ -107,9 +107,14 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
             return $changed;
         }
 
-        public function worker() {
+        protected function worker() {
             echo "worker awake\n";
             if($this->loadOnNow())
+                $this->sendNotification();
+        }
+
+        public function refreshOnNow() {
+            if($this->clients->count() > 0 && $this->loadOnNow())
                 $this->sendNotification();
         }
 
@@ -216,7 +221,7 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
                             if($message)
                                 $nas->sendNotification($message);
                             else
-                                $nas->worker();
+                                $nas->refreshOnNow();
                     });
                 });
 
