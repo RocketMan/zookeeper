@@ -201,13 +201,17 @@ config.php file for more information.
 Zookeeper can send push notifications via websockets.  If you
 want to support the optional push notification service, you will need to:
 
-1. Setup apache
+1. Setup Apache
 
-   In your Apache configuration file, enable mod_proxy and mod_proxy_wstunnel
-   modules, if they are not already enabled:
+   In your Apache configuration, enable the 'proxy' and 'proxy_wstunnel'
+   modules.  With Apache on Debian, run:
 
-        LoadModule proxy_module modules/mod_proxy.so
-        LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
+        sudo a2enmod proxy_wstunnel
+
+   The above will enable proxy_wstunnel and also module proxy (if it
+   is not already enabled), then automatically restart Apache.  If you
+   are on another OS, update your configuration to enable both modules,
+   then restart Apache to pick up the change.
 
 2. Install PHP composer
 
@@ -227,10 +231,21 @@ want to support the optional push notification service, you will need to:
 
 4. Update your system to run the push notification server
 
-   On most Linux distributions, you can use systemd to start the push
+   As a first step, ensure you can run the notification server manually
+   from a shell:
+
+       sudo -u www-data /example/path/to/zookeeper/zk push
+
+   where *www-data* is your Apache user and */example/path...* is the
+   path to your zookeeper installation.  If successful, the above
+   command will display no messages.  You can cancel it with Ctrl-C.
+
+   Once you have confirmed that the notification server starts without
+   issue, you can configure your system to run it automatically.  On
+   most Linux distributions, you can use systemd(1) to start the push
    notification server and to ensure that it is running.  To do this,
-   create a file `/etc/systemd/system/zkpush.service` using the example
-   file below.
+   create a file `/etc/systemd/system/zkpush.service` using the
+   example file below.
 
 #### Example systemd file for push notification service
 
@@ -255,7 +270,7 @@ This file goes into the /etc/systemd/system directory of Debian:
     [Install]
     WantedBy=default.target
 
-See `systemctl(1)` for information on how to control the service.
+See systemctl(1) for information on how to control the service.
 
 ___
 
