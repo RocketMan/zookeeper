@@ -285,9 +285,10 @@ class Playlists extends MenuItem {
 
                 if($isLiveShow && $type == PlaylistEntry::TYPE_SPIN) {
                     $playlist['id'] = $playlistId;
-                    PushServer::sendAsyncNotification($playlist, $entry->asArray());
+                    $spin = $entry->asArray();
+                    $spin['artist'] = UI::swapNames($spin['artist']);
+                    PushServer::sendAsyncNotification($playlist, $spin);
                 }
-
             }
         } else
             $updateStatus = 0; //failure
