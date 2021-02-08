@@ -24,6 +24,7 @@
 
 namespace ZK\Controllers;
 
+use ZK\Engine\DBO;
 use ZK\Engine\Engine;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistObserver;
@@ -104,6 +105,7 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
                 $this->spin = null;
                 $changed = true;
             }
+            DBO::release();
             return $changed;
         }
 

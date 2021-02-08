@@ -138,6 +138,9 @@ class BasePDO {
     public function __construct() {
         $args = func_get_args();
         $this->delegate = new \PDO(...$args);
+
+        // we do our own exception handling and logging
+        $this->delegate->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT);
     }
 
     public function __call($method, $args) {
@@ -247,6 +250,16 @@ abstract class DBO {
             self::$pdo = $this->newPDO();
 
         return self::$pdo;
+    }
+
+    /**
+     * release the default database singleton
+     *
+     * this is a work-around for long-running processes
+     * until automatic database reconnection gets implemented
+     */
+    public static function release() {
+        self::$pdo = null;
     }
 
     /**
