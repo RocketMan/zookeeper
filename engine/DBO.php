@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -254,6 +254,9 @@ abstract class DBO {
 
     /**
      * release the default database singleton
+     *
+     * this method has the effect of closing the underlying
+     * database connection, if any.
      *
      * this is a work-around for long-running processes
      * until automatic database reconnection gets implemented

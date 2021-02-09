@@ -180,6 +180,11 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
     }
 
     class PushServer implements IController {
+        /**
+         * This is an endpoint for internal use only.  There should be
+         * no need to change it, but if you do, you must also update the
+         * corresponding URI in .htaccess in the project root directory.
+         */
         const WSSERVER_HOST = "127.0.0.1";
         const WSSERVER_PORT = 32080;
 
