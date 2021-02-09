@@ -110,7 +110,7 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
         }
 
         protected function worker() {
-            echo "worker awake\n";
+            // echo "worker awake\n";
             if($this->loadOnNow())
                 $this->sendNotification();
         }
