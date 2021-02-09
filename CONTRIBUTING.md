@@ -31,6 +31,9 @@ and the presentation, which is contained in `ui` and `controllers`.
 The following is an overview of the source code directory structure:
 
     project-root/
+        build/
+            files for continuous integration
+
         config/
             config.php
                  This is the main configuration file.  It includes
@@ -82,6 +85,7 @@ The following is an overview of the source code directory structure:
               • IEditor - music library management
               • ILibrary - music library search
               • IPlaylist - DJ playlist operations
+              • IReview - music review operations
               • IUser - user management
 
             Session state is application-managed; access the
@@ -109,7 +113,11 @@ The following is an overview of the source code directory structure:
             in metadata, via config/ui_config.php.
 
         ui/3rdp
-            Third-party dependencies.
+            Third-party dependencies
+
+        vendor/
+            PHP Composer dependencies (not delivered from the repo)
+            See INSTALLATION.md for more information.
             
         index.php
             main endpoint for the application

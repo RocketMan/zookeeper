@@ -201,7 +201,7 @@ config.php file for more information.
 Zookeeper can send push notifications via websockets.  If you
 want to support the optional push notification service, you will need to:
 
-1. Setup Apache
+1. Update the webserver's configuration
 
    In your Apache configuration, enable the 'proxy' and 'proxy_wstunnel'
    modules.  With Apache on Debian, run:
@@ -213,12 +213,12 @@ want to support the optional push notification service, you will need to:
    are on another OS, update your configuration to enable both modules,
    then restart Apache to pick up the change.
 
-2. Install PHP composer
+2. Install PHP Composer
 
-   If you don't have PHP composer installed somewhere on your system, you
+   If you don't have PHP Composer installed somewhere on your system, you
    will need it for the remaining steps.  Install it as follows:
 
-        cd *<directory where you want to install composer>*
+        cd <directory where you want to install Composer>
         php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
         php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
         php composer-setup.php
@@ -227,7 +227,7 @@ want to support the optional push notification service, you will need to:
 3. Install Ratchet (includes React)
 
         cd /example/path/to/zookeeper
-        php <composer directory>/composer.phar require cboden/ratchet react/datagram:^1.5
+        php <Composer directory>/composer.phar require cboden/ratchet react/datagram:^1.5
 
 4. Update your system to run the push notification server
 
