@@ -232,6 +232,14 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
                     });
                 });
 
+                // push proxy server, if configured
+                $config = Engine::param('push_proxy');
+                if($config) {
+                    $app = new $config['proxy']($loop);
+                    $app->connect($config['ws_endpoint'],
+                                    $config['http_endpoint']);
+                }
+
                 $loop->run();
             } catch(\Exception $e) {
                 error_log("PushServer: " . $e->getMessage());

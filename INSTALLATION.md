@@ -229,6 +229,11 @@ want to support the optional push notification service, you will need to:
         cd /example/path/to/zookeeper
         php <Composer directory>/composer.phar require cboden/ratchet react/datagram:^1.5
 
+   (Optional) If you are using the push notification HTTP proxy:
+
+        php <Composer directory>/composer.phar require ratchet/pawl react/http:^1.2
+
+
 4. Update your system to run the push notification server
 
    As a first step, ensure you can run the notification server manually
@@ -246,6 +251,27 @@ want to support the optional push notification service, you will need to:
    notification server and to ensure that it is running.  To do this,
    create a file `/etc/systemd/system/zkpush.service` using the
    example file below.
+
+5. (Optional) Configure the HTTP push notification proxy
+
+   If you want to send push notifications via HTTP, add the following
+   stanza to the `config/config.php` file:
+
+       'push_proxy' => [
+           'proxy' => ZK\PushNotification\PushHttpProxy::class,
+           'ws_endpoint' => 'wss://example/source/endpoint',
+           'http_endpoint' => 'https://example/target/endpoint'
+       ],
+
+   where:
+
+   * 'proxy' specifies the proxy implementation.  To send raw json
+     data, use 'ZK\PushNotification\PushHttpProxy::class`.  To send
+     a FORM POST, use 'ZK\Push\Notification\PushFormPostProxy::class`.
+   * 'ws_endpoint' is the ws push event stream to subscribe to.
+     Generally, this will be your Zookeeper Online ws endpoint
+     (e.g., wss://example.org/push/onair);
+   * 'http_endpoint' is the target to receive the HTTP requests
 
 #### Example systemd file for push notification service
 
