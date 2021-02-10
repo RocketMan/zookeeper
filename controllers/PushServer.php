@@ -223,7 +223,7 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
                                       PushServer::WSSERVER_PORT)->then(
                     function(\React\Datagram\Socket $client) use($nas) {
                         $client->on('message', function($message, $addr, $client) use($nas) {
-                            echo "received $message from $addr\n";
+                            // echo "received $message from $addr\n";
                             // empty message means poll database
                             if($message)
                                 $nas->sendNotification($message);
