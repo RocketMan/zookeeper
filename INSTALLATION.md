@@ -266,7 +266,7 @@ want to support the optional push notification service, you will need to:
 
    * 'proxy' specifies the proxy implementation.  To send raw json
      data, use `ZK\PushNotification\PushHttpProxy::class`.  To send
-     a FORM POST, use `ZK\Push\Notification\PushFormPostProxy::class`.
+     a FORM POST, use `ZK\PushNotification\PushFormPostProxy::class`.
    * 'ws_endpoint' is the ws push event stream to subscribe to.
      Generally, this will be your Zookeeper Online ws endpoint
      (e.g., wss://example.org/push/onair);
