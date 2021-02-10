@@ -257,9 +257,12 @@ want to support the optional push notification service, you will need to:
    stanza to the `config/config.php` file:
 
        'push_proxy' => [
-           'proxy' => ZK\PushNotification\PushHttpProxy::class,
-           'ws_endpoint' => 'wss://example/source/endpoint',
-           'http_endpoint' => 'https://example/target/endpoint'
+           [
+               'proxy' => ZK\PushNotification\PushHttpProxy::class,
+               'ws_endpoint' => 'wss://example/source/endpoint',
+               'http_endpoints' => [ 'https://example/target/endpoint' ]
+           ],
+           ...repeat for additional proxies...
        ],
 
    where:
@@ -270,7 +273,7 @@ want to support the optional push notification service, you will need to:
    * 'ws_endpoint' is the ws push event stream to subscribe to.
      Generally, this will be your Zookeeper Online ws endpoint
      (e.g., wss://example.org/push/onair);
-   * 'http_endpoint' is the target to receive the HTTP requests
+   * 'http_endpoints' is an array of targets to receive the HTTP requests
 
 #### Example systemd file for push notification service
 

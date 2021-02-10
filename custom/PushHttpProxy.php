@@ -31,9 +31,12 @@ namespace ZK\PushNotification;
  * To use, in the `config.php` configuration file, include the stanza:
  *
  *    'push_proxy' => [
- *        'proxy' => ZK\PushNotification\PushHttpProxy::class,
- *        'ws_endpoint' => 'wss://example/source/endpoint',
- *        'http_endpoint' => 'https://example/target/endpoint'
+ *        [
+ *            'proxy' => ZK\PushNotification\PushHttpProxy::class,
+ *            'ws_endpoint' => 'wss://example/source/endpoint',
+ *            'http_endpoints' => [ 'https://example/target/endpoint' ]
+ *        ],
+ *        ...repeat for additional proxies...
  *    ],
  *
  * where:
@@ -41,7 +44,7 @@ namespace ZK\PushNotification;
  *    'ws_endpoint' is the ws push event stream to subscribe to
  *        generally, this will be your Zookeeper Online ws endpoint
  *        (e.g., wss://example.org/push/onair);
- *    'http_endpoint' is the target to receive the HTTP requests
+ *    'http_endpoints' is an array of targets to receive the HTTP requests
  *
  * This class POSTs the raw json data to the HTTP endpoint.  If you
  * want a conventional FORM POST, use the subclass PushFormPostProxy.
@@ -54,7 +57,7 @@ class PushHttpProxy {
     protected $subscriber;
     protected $httpClient;
     protected $wsEndpoint;
-    protected $httpEndpoint;
+    protected $httpEndpoints;
 
     public function __construct(\React\EventLoop\LoopInterface $loop) {
         $this->loop = $loop;
@@ -74,14 +77,15 @@ class PushHttpProxy {
         });
     }
 
-    public function connect(string $wsEndpoint, string $httpEndpoint) {
+    public function connect(string $wsEndpoint, array $httpEndpoints) {
         $this->wsEndpoint = $wsEndpoint;
-        $this->httpEndpoint = $httpEndpoint;
+        $this->httpEndpoints = $httpEndpoints;
         $this->reconnect();
     }
 
     public function message(\Ratchet\RFC6455\Messaging\Message $msg) {
-        $this->httpClient->post($this->httpEndpoint,
+        foreach($this->httpEndpoints as $endpoint)
+            $this->httpClient->post($endpoint,
                         ['Content-Type' => 'application/json'], $msg);
     }
 
@@ -89,7 +93,7 @@ class PushHttpProxy {
         $conn->on('message', [$this, 'message']);
 
         $conn->on('close', function ($code = null, $reason = null) {
-            echo "Connection closed: {$reason} ({$code}), reconnecting\n";
+            echo "Connection closed: $reason ($code), reconnecting\n";
 
             // try to reconnect in 10 seconds
             $this->loop->addTimer(10, function () {
