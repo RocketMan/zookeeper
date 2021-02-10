@@ -233,7 +233,6 @@ want to support the optional push notification service, you will need to:
 
         php <Composer directory>/composer.phar require ratchet/pawl react/http:^1.2
 
-
 4. Update your system to run the push notification server
 
    As a first step, ensure you can run the notification server manually
@@ -266,8 +265,8 @@ want to support the optional push notification service, you will need to:
    where:
 
    * 'proxy' specifies the proxy implementation.  To send raw json
-     data, use 'ZK\PushNotification\PushHttpProxy::class`.  To send
-     a FORM POST, use 'ZK\Push\Notification\PushFormPostProxy::class`.
+     data, use `ZK\PushNotification\PushHttpProxy::class`.  To send
+     a FORM POST, use `ZK\Push\Notification\PushFormPostProxy::class`.
    * 'ws_endpoint' is the ws push event stream to subscribe to.
      Generally, this will be your Zookeeper Online ws endpoint
      (e.g., wss://example.org/push/onair);
