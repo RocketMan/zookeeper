@@ -31,6 +31,7 @@ namespace ZK\Engine;
 class PlaylistImpl extends DBO implements IPlaylist {
     const TIME_FORMAT = "Y-m-d Hi"; // eg, 2019-01-01 1234
     const TIME_FORMAT_SQL = "Y-m-d H:i:s"; // 2019-01-01 12:34:56
+    const DUPLICATE_PREFIX = "Rebroadcast: ";
     const DUPLICATE_COMMENT =
         "Rebroadcast of an episode originally aired on %F j, Y%.";
     const GRACE_START = "-15 minutes";
@@ -275,7 +276,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
 
         $success = $from?$this->insertPlaylist($from['dj'],
                                      $from['showdate'], $from['showtime'],
-                                     "Rebroadcast: " . $from['description'],
+                                     self::DUPLICATE_PREFIX . $from['description'],
                                      $from['airname']):false;
         if($success) {
             $newListId = $this->lastInsertId();
