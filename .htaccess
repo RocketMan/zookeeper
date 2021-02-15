@@ -28,4 +28,11 @@ RewriteRule ^ssoLogin\.php$ index.php?target=sso [QSA,L]
 RewriteCond $0 !^\.mdhandler.php/.*$
 RewriteRule ^(.+)\.md$ .mdhandler.php/$1.md [L]
 RewriteRule ^zk$ - [R=404,L]
+# The URI below is an arbitrary endpoint for internal use.
+# It can be any available localhost port.  There should be
+# no need to change it, but if you do, you must also update
+# the WSSERVER_PORT constant in the PushServer controller.
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^/?(.*) "ws://127.0.0.1:32080/$1" [P,L]
 </IfModule>

@@ -24,6 +24,7 @@
 
 namespace ZK\UI;
 
+use ZK\Controllers\PushServer;
 use ZK\Engine\Engine;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
@@ -205,7 +206,7 @@ class Playlists extends MenuItem {
         $playlistId = trim($_POST["playlist"]);
         $playlistApi = Engine::api(IPlaylist::class);
         $playlist = $playlistApi->getPlaylist($playlistId, 1);
-        $isLiveShow = $playlistApi->IsNowWithinShow($playlist);
+        $isLiveShow = $playlistApi->isNowWithinShow($playlist);
 
         $retVal = [];
         $type = $_REQUEST["type"];
@@ -281,6 +282,13 @@ class Playlists extends MenuItem {
                 //   0      playlist is in natural order
                 //   > 0    ordinal of inserted entry
                 $retVal['seq'] = $size ? $size : $playlistApi->getSeq(0, $entry->getId());
+
+                if($isLiveShow && $type == PlaylistEntry::TYPE_SPIN) {
+                    $playlist['id'] = $playlistId;
+                    $spin = $entry->asArray();
+                    $spin['artist'] = UI::swapNames($spin['artist']);
+                    PushServer::sendAsyncNotification($playlist, $spin);
+                }
             }
         } else
             $updateStatus = 0; //failure
@@ -710,7 +718,7 @@ class Playlists extends MenuItem {
     }
     
     private function emitTrackAdder($playlistId, $playlist) {
-        $isLiveShow = Engine::api(IPlaylist::class)->IsNowWithinShow($playlist);
+        $isLiveShow = Engine::api(IPlaylist::class)->isNowWithinShow($playlist);
         $nmeAr = Engine::param('nme');
         $nmeOpts = '';
         $nmePrefix = self::NME_PREFIX;
@@ -1138,7 +1146,11 @@ class Playlists extends MenuItem {
                         Engine::api(IPlaylist::class)->updateTrackEntry($playlist,
                                 $entry);
                     } else {
-                        Engine::api(IPlaylist::class)->updateTrack($playlist, $id, $tag, $artist, $track, $album, $label, $timestamp);
+                        $playlistApi = Engine::api(IPlaylist::class);
+                        $playlistApi->updateTrack($playlist, $id, $tag, $artist, $track, $album, $label, $timestamp);
+                        if($playlistApi->isNowWithinShow(
+                                $playlistApi->getPlaylist($playlist)))
+                            PushServer::sendAsyncNotification();
                     }
                     $id = "";
                 } else

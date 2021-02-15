@@ -140,6 +140,19 @@ $config = [
      ],
 
     /**
+     * push notification proxy
+     *
+     * see INSTALLATION.md for details
+     */
+    'push_proxy' => [
+        [
+             'proxy' => ZK\PushNotification\PushHttpProxy::class,
+             'ws_endpoint' => 'ws://127.0.0.1:32080/push/onair',
+             'http_endpoints' => [ ]
+        ]
+    ],
+
+    /**
      * label printer
      */
     'label_printer' => [

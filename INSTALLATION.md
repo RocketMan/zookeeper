@@ -196,6 +196,110 @@ branding (station name, style sheets and logo), contact information,
 optional SSO login setup, and charting configuration.  Please see the
 config.php file for more information.
 
+### Push Notification (optional)
+
+Zookeeper can send push notifications via websockets.  If you
+want to support the optional push notification service, you will need to:
+
+1. Update the webserver's configuration
+
+   In your Apache configuration, enable the 'proxy' and 'proxy_wstunnel'
+   modules.  With Apache on Debian, run:
+
+        sudo a2enmod proxy_wstunnel
+
+   The above will enable proxy_wstunnel and also module proxy (if it
+   is not already enabled), then automatically restart Apache.  If you
+   are on another OS, update your configuration to enable both modules,
+   then restart Apache to pick up the change.
+
+2. Install PHP Composer
+
+   If you don't have PHP Composer installed somewhere on your system, you
+   will need it for the remaining steps.  Install it as follows:
+
+        cd <directory where you want to install Composer>
+        php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+        php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+        php composer-setup.php
+        php -r "unlink('composer-setup.php');"
+
+3. Install Ratchet (includes React)
+
+        cd /example/path/to/zookeeper
+        php <Composer directory>/composer.phar require cboden/ratchet react/datagram:^1.5
+
+   (Optional) If you are using the push notification HTTP proxy:
+
+        php <Composer directory>/composer.phar require ratchet/pawl react/http:^1.2
+
+4. Update your system to run the push notification server
+
+   As a first step, ensure you can run the notification server manually
+   from a shell:
+
+       sudo -u www-data /example/path/to/zookeeper/zk push
+
+   where *www-data* is your Apache user and */example/path...* is the
+   path to your zookeeper installation.  If successful, the above
+   command will display no messages.  You can cancel it with Ctrl-C.
+
+   Once you have confirmed that the notification server starts without
+   issue, you can configure your system to run it automatically.  On
+   most Linux distributions, you can use systemd(1) to start the push
+   notification server and to ensure that it is running.  To do this,
+   create a file `/etc/systemd/system/zkpush.service` using the
+   example file below.
+
+5. (Optional) Configure the HTTP push notification proxy
+
+   If you want to send push notifications via HTTP, add the following
+   stanza to the `config/config.php` file:
+
+       'push_proxy' => [
+           [
+               'proxy' => ZK\PushNotification\PushHttpProxy::class,
+               'ws_endpoint' => 'wss://example/source/endpoint',
+               'http_endpoints' => [ 'https://example/target/endpoint' ]
+           ],
+           ...repeat for additional proxies...
+       ],
+
+   where:
+
+   * 'proxy' specifies the proxy implementation.  To send raw json
+     data, use `ZK\PushNotification\PushHttpProxy::class`.  To send
+     a FORM POST, use `ZK\PushNotification\PushFormPostProxy::class`.
+   * 'ws_endpoint' is the ws push event stream to subscribe to.
+     Generally, this will be your Zookeeper Online ws endpoint
+     (e.g., wss://example.org/push/onair);
+   * 'http_endpoints' is an array of targets to receive the HTTP requests
+
+#### Example systemd file for push notification service
+
+This file goes into the /etc/systemd/system directory of Debian:
+
+    [Unit]
+    Description=Zookeeper Push Notification
+    Requires=mysql.service
+    After=mysql.service
+
+    [Service]
+    User=www-data
+    Type=simple
+    TimeoutSec=0
+    PIDFile=/var/run/zkpush.pid
+    ExecStart=/example/path/to/zookeeper/zk push
+    KillMode=process
+
+    Restart=on-failure
+    RestartSec=42s
+
+    [Install]
+    WantedBy=default.target
+
+See systemctl(1) for information on how to control the service.
+
 ___
 
 

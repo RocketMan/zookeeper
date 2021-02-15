@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -659,47 +659,6 @@ class API extends CommandTarget implements IController {
              if(in_array($array[$i], $args))
                  unset($array[$i]);
         $array = array_merge($array);
-    }
-}
-
-class OnNowFilter {
-    private $queue = [];
-    private $delegate;
-    private $now;
-
-    public function __construct($delegate) {
-        $this->delegate = $delegate;
-        $this->now = new \DateTime("now");
-    }
-
-    private static function getCreated($row) {
-        return $row['created']?
-            \DateTime::createFromFormat("Y-m-d H:i:s", $row['created']):null;
-    }
-
-    public function fetch() {
-        // return look ahead track, if any
-        if(sizeof($this->queue))
-            return array_shift($this->queue);
-
-        $row = $this->delegate->fetch();
-        if($row) {
-            $created = self::getCreated($row);
-            if($created && $created < $this->now) {
-                // timestamp before 'now'
-                return $row;
-            } else if(!$created) {
-                // look ahead to see if untimestamped track is
-                // followed by a timestamped track before 'now'
-                while($row2 = $this->delegate->fetch()) {
-                    array_push($this->queue, $row2);
-                    $created = self::getCreated($row2);
-                    if($created && $created < $this->now)
-                        return $row;
-                }
-            }
-        }
-        return false;
     }
 }
 
