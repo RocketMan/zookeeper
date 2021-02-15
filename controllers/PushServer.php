@@ -42,6 +42,8 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
     include(__DIR__."/../vendor/autoload.php");
 
     class NowAiringServer implements MessageComponentInterface {
+        const TIME_FORMAT_INTERNAL = "Y-m-d Hi"; // eg, 2019-01-01 1234
+
         protected $clients;
         protected $loop;
         protected $timer;
@@ -53,6 +55,24 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
             $val['name'] = $show?$show['description']:'';
             $val['airname'] = $show?$show['airname']:'';
             $val['show_id'] = $show?(int)$show['id']:0;
+            if($show && isset($show['showdate']) && isset($show['showtime'])) {
+                $date = $show['showdate'];
+                list($from, $to) = explode("-", $show['showtime']);
+                $fromStamp = \DateTime::createFromFormat(self::TIME_FORMAT_INTERNAL,
+                            $date . " " . $from);
+                $toStamp = \DateTime::createFromFormat(self::TIME_FORMAT_INTERNAL,
+                            $date . " " . $to);
+
+                // if playlist spans midnight, end time is next day
+                if($toStamp < $fromStamp)
+                    $toStamp->modify("+1 day");
+
+                $val['show_start'] = $fromStamp->format(DATE_RFC3339);
+                $val['show_end'] = $toStamp->format(DATE_RFC3339);
+            } else {
+                $val['show_start'] = '';
+                $val['show_end'] = '';
+            }
             $val['id'] = $spin?(int)$spin['id']:0;
             $val['track_title'] = $spin?$spin['track']:'';
             $val['track_artist'] = $spin?$spin['artist']:'';
