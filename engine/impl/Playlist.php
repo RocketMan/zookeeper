@@ -33,6 +33,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
     const TIME_FORMAT_SQL = "Y-m-d H:i:s"; // 2019-01-01 12:34:56
     const GRACE_START = "-15 minutes";
     const GRACE_END = "+30 minutes";
+    const DUPLICATE_PREFIX = "Rebroadcast: ";
+    const DUPLICATE_COMMENT =
+        "Rebroadcast of an episode originally aired on %F j, Y%.";
 
     public function getShowdates($year, $month) {
         $yearMonth = sprintf("%04d-%02d", $year, $month) . "-%";
@@ -273,7 +276,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
 
         $success = $from?$this->insertPlaylist($from['dj'],
                                      $from['showdate'], $from['showtime'],
-                                     "Rebroadcast: " . $from['description'],
+                                     self::DUPLICATE_PREFIX . $from['description'],
                                      $from['airname']):false;
         if($success) {
             $newListId = $this->lastInsertId();
@@ -285,6 +288,28 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue(1, $newListId);
             $stmt->bindValue(2, $playlist);
             $success = $stmt->execute();
+
+            if($success) {
+                // insert comment at beginning of playlist
+                $comment = preg_replace_callback("/%([^%]*)%/",
+                    function($matches) use ($from) {
+                        return \DateTime::createFromFormat(
+                            self::TIME_FORMAT,
+                            $from['showdate'] . " 0000")->format($matches[1]);
+                    }, self::DUPLICATE_COMMENT);
+                $entry = new PlaylistEntry();
+                $entry->setComment($comment);
+                $success = $this->insertTrackEntry($newListId, $entry, $status);
+                if($success) {
+                    $query = "SELECT id FROM tracks WHERE list = ? ".
+                             "ORDER BY seq, id LIMIT 1";
+                    $stmt = $this->prepare($query);
+                    $stmt->bindValue(1, $newListId);
+                    if(($first = $stmt->executeAndFetch()) &&
+                            $first['id'] != $entry->getId())
+                        $this->moveTrack($newListId, $entry->getId(), $first['id']);
+                }
+            }
         }
 
         return $success?$newListId:false;
