@@ -143,6 +143,13 @@ class ExportPlaylist extends CommandTarget implements IController {
         echo "</playlist>\n";
     }
     
+    public static function extractTime($datetime) {
+        // yyyy-mm-dd hh:mm:ss
+        if(strlen($datetime) == 19)
+            $datetime = substr($datetime, 11, 5);
+        return $datetime;
+    }
+
     public function emitCSV() {
         header("Content-type: application/csv");
         header("Content-disposition: attachment; filename=playlist.csv");
@@ -156,13 +163,14 @@ class ExportPlaylist extends CommandTarget implements IController {
         echo "Date\n$this->date\n\n";
     
         // emit the tracks
-        echo "Artist\tTrack\tAlbum\tTag\tLabel\n";
+        echo "Artist\tTrack\tAlbum\tTag\tLabel\tTimestamp\n";
         $observer = (new PlaylistObserver())->onSpin(function($entry) {
             echo $entry->getArtist()."\t".
                  $entry->getTrack()."\t".
                  $entry->getAlbum()."\t".
                  $entry->getTag()."\t".
-                 $entry->getLabel()."\n";
+                 $entry->getLabel()."\t".
+                 self::extractTime($entry->getCreated())."\n";
         });
         while($row = $this->records->fetch()) {
             $observer->observe(new PlaylistEntry($row));

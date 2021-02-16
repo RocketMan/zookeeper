@@ -145,6 +145,8 @@ class JSONSerializer extends Serializer {
                         $nextProp = ",";
                         continue 2;
                     }
+                } else if($field == "created") {
+                    $val = ExportPlaylist::extractTime($val);
                 }
                 echo "$nextProp\"$field\":\"".
                      self::jsonspecialchars(stripslashes($val)).
@@ -239,6 +241,8 @@ class XMLSerializer extends Serializer {
                         echo "<charts>$val</charts>\n";
                         continue 2;
                     }
+                } else if($field == "created") {
+                    $val = ExportPlaylist::extractTime($val);
                 }
                 echo "<$field>".
                      self::spec2hex(stripslashes($val)).
