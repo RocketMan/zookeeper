@@ -1178,9 +1178,16 @@ class Playlists extends MenuItem {
     <?php 
     }
 
-    private static function fixupTimestamp($timestamp, $window) {
+    /**
+     * scrub imported timestamp
+     *
+     * @param timestamp target
+     * @param window DateTime array from IPlaylist::getTimestampWindow
+     * @return scrubbed timestamp or null if not in show window
+     */
+    private static function fixupTimestamp(\DateTime $timestamp, array $window) {
         // normalize for non-local timezone
-        $timestamp->setTimezone((new \DateTime())->getTimezone());
+        $timestamp->setTimezone($window['start']->getTimezone());
 
         // transpose timestamp to show date
         $showDate = $window['start']->format("Y-m-d");

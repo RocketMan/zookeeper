@@ -142,7 +142,13 @@ class ExportPlaylist extends CommandTarget implements IController {
         }
         echo "</playlist>\n";
     }
-    
+
+    /**
+     * extract the time component of a datetime string
+     *
+     * @param datetime string in IPlaylist::TIME_FORMAT_SQL format
+     * @return time component on success; original input value otherwise
+     */
     public static function extractTime($datetime) {
         // yyyy-mm-dd hh:mm:ss
         if(strlen($datetime) == 19)
