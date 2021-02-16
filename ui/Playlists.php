@@ -1317,7 +1317,7 @@ class Playlists extends MenuItem {
             // We hit either CR or LF alone, or neither
             $pos = $posn + $posr;
     
-        if(strlen($tempbuf)) {
+        if(is_int($posn) || is_int($posr)) {
             // We hit a CR or LF; return the line
             $out = substr($tempbuf, 0, $pos);
     
