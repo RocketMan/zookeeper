@@ -1524,11 +1524,7 @@ class Playlists extends MenuItem {
         $userfile = $_FILES['userfile']['tmp_name'];
         if($userfile) {
             // read the JSON file
-            $file = "";
-            $fd = new \SplFileObject($userfile, "r");
-            while($fd->valid())
-                $file .= $fd->fgets();
-            $fd = null; // close
+            $file = file_get_contents($userfile);
 
             // parse the file
             $json = json_decode($file);
