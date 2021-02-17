@@ -1298,41 +1298,7 @@ class Playlists extends MenuItem {
       </SCRIPT>
     <?php 
     }
-    
-    private static function zkfeof(&$fd, &$tempbuf) {
-        return feof($fd) && !strlen($tempbuf);
-    }
-    
-    private static function zkfgets(&$fd, $buflen, &$tempbuf) {
-        // Continue reading until we hit a CR or LF
-        for($posn = strpos($tempbuf, "\n"), $posr = strpos($tempbuf, "\r");
-                !is_int($posn) && !is_int($posr) && !feof($fd);
-                $posn = strpos($tempbuf, "\n"), $posr = strpos($tempbuf, "\r"))
-            $tempbuf .= fread($fd, $buflen);
-    
-        if(is_int($posn) && is_int($posr))
-            // We hit both a CR and LF; use the first one 
-            $pos = min($posn, $posr);
-        else
-            // We hit either CR or LF alone, or neither
-            $pos = $posn + $posr;
-    
-        if(is_int($posn) || is_int($posr)) {
-            // We hit a CR or LF; return the line
-            $out = substr($tempbuf, 0, $pos);
-    
-            // Advance buf past CR, LF, or CRLF to next line
-            $tempbuf = substr($tempbuf,
-                          ($posr && substr($tempbuf, $pos+1, 1) == "\n")?($pos+2):($pos+1));
-            return $out;
-        } else {
-            // EOF; return buffer remains, if any
-            $out = $tempbuf;
-            $tempbuf = "";
-            return $out;
-        }
-    }
-    
+
     public function emitImportList() {
         $validate = $_POST["validate"];
         $description = $_REQUEST["description"];
@@ -1483,10 +1449,10 @@ class Playlists extends MenuItem {
     
             // Insert the tracks
             $count = 0;
-            $fd = fopen($userfile, "r");
+            $fd = new \SplFileObject($userfile, "r");
             $window = $api->getTimestampWindow($playlist);
-            while(!self::zkfeof($fd, $tempbuf)) {
-                $line = explode("\t", self::zkfgets($fd, 1024, $tempbuf));
+            while($fd->valid()) {
+                $line = $fd->fgetcsv("\t");
                 switch(count($line)) {
                 case 4:
                     // artist track album label
@@ -1544,7 +1510,7 @@ class Playlists extends MenuItem {
                 }
             }
             // echo "<B>Imported $count tracks.</B>\n";
-            fclose($fd);
+            $fd = null; // close
             unset($_POST["validate"]);
 
             $_REQUEST["playlist"] = $playlist;
@@ -1559,10 +1525,10 @@ class Playlists extends MenuItem {
         if($userfile) {
             // read the JSON file
             $file = "";
-            $fd = fopen($userfile, "r");
-            while(!self::zkfeof($fd, $tempbuf))
-                $file .= self::zkfgets($fd, 1024, $tempbuf);
-            fclose($fd);
+            $fd = new \SplFileObject($userfile, "r");
+            while($fd->valid())
+                $file .= $fd->fgets();
+            $fd = null; // close
 
             // parse the file
             $json = json_decode($file);
