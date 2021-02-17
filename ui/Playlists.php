@@ -317,25 +317,11 @@ class Playlists extends MenuItem {
         echo json_encode($retVal);
     }
 
-    public static function showStartTime($timeRange) {
-        $retVal = "??";
-        $timeAr = explode("-", $timeRange);
-        if (count($timeAr) == 2)
-           $retVal = self::hourToAMPM($timeAr[0]);
-
-        return $retVal;
-    }
-
-    public static function showEndTime($timeRange) {
-        $retVal = "??";
-        $timeAr = explode("-", $timeRange);
-        if (count($timeAr) == 2)
-           $retVal = self::hourToAMPM($timeAr[1]);
-
-        return $retVal;
-    }
-    
     public static function hourToAMPM($hour, $full=0) {
+        // account for legacy, free-format time encoding
+        if(!is_numeric($hour))
+            return $hour;
+
         $h = (int)floor($hour/100);
         $m = (int)$hour % 100;
         $min = $m || $full?(":" . sprintf("%02d", $m)):"";
@@ -1862,13 +1848,9 @@ class Playlists extends MenuItem {
             UI::emitJS('js/playlists.track.js');
     }
 
-
     public static function makeShowDateAndTime($row) {
-        $showStart = self::showStartTime($row[2]);
-        $showEnd = self::showEndTime($row[2]);
-        $showDate = self::timestampToDate($row[1]);
-        $showDateTime = $showDate . " " . $showStart . "-" . $showEnd;
-        return $showDateTime;
+        return self::timestampToDate($row['showdate']) . " " .
+               self::timeToAMPM($row['showtime']);
     }
 
     private function emitPlaylistBanner($playlistId, $playlist) {
