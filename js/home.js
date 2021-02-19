@@ -33,6 +33,15 @@ $().ready(function(){
         return hour + min + ampm;
     }
 
+    $.fn.extend({
+        fadeout: function() {
+            return this.removeClass("visible").addClass("hidden");
+        },
+        fadein: function() {
+            return this.removeClass("hidden").addClass("visible");
+        }
+    });
+
     var last = { show_id: 0, id: 0 };
     var socket = new WebSocket($("#push-subscribe").val());
     socket.onmessage = function(message) {
@@ -41,35 +50,35 @@ $().ready(function(){
             clearInterval(last.flip);
             if(onnow.show_id == 0) {
                 $(".home-show").html("");
-                $(".home-currenttrack").hide();
-                $(".home-datetime").html("[No playlist available]").show();
+                $(".home-currenttrack").fadeout();
+                $(".home-datetime").html("[No playlist available]").fadein();
             } else {
                 var start = new Date(onnow.show_start);
                 var end = new Date(onnow.show_end);
                 $(".home-show").html("<A HREF='?action=viewDate&amp;seq=selList&amp;playlist=" + onnow.show_id + "' CLASS='nav'>" + onnow.name + "</A>&nbsp;with&nbsp;" + onnow.airname);
                 $(".home-datetime").html(start.toDateString() + " " + localTime(start) + " - " + localTime(end));
                 if(onnow.id == 0) {
-                    $(".home-currenttrack").hide();
-                    $(".home-datetime").show();
+                    $(".home-currenttrack").fadeout();
+                    $(".home-datetime").fadein();
                 } else {
-                    $(".home-datetime").hide();
-                    $(".home-currenttrack").html(onnow.track_artist + " &#8211; <I>" + onnow.track_title + "</I> (" + onnow.track_album + ")").show();
+                    $(".home-datetime").fadeout();
+                    $(".home-currenttrack").html(onnow.track_artist + " &#8211; <I>" + onnow.track_title + "</I> (" + onnow.track_album + ")").fadein();
                     onnow.current = 0;
                     onnow.flip = setInterval(function() {
                         switch(last.current++) {
                         case 0:
                             break;
                         case 1:
-                            $(".home-currenttrack").hide();
-                            $(".home-datetime").show();
+                            $(".home-currenttrack").fadeout();
+                            $(".home-datetime").fadein();
                             break;
                         case 2:
-                            $(".home-datetime").hide();
-                            $(".home-currenttrack").show();
+                            $(".home-datetime").fadeout();
+                            $(".home-currenttrack").fadein();
                             last.current = 0;
                             break;
                         }
-                    }, 4000);
+                    }, 5000);
                 }
             }
             last = onnow;
