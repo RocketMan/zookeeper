@@ -127,11 +127,11 @@ class Home extends MenuItem {
             $hrefPL = "?action=viewDate&amp;seq=selList&amp;playlist=$row[0]";
             echo "<A HREF='$hrefPL' CLASS='nav'>$description</A>&nbsp;with&nbsp;";
             echo "<A HREF='$hrefAirName' CLASS='calNav'>$airName</A></div>";
-	    echo "<div class='home-showbox'>";
+            echo "<div class='home-showbox'>";
             echo "<div class='home-datetime'>$showDateTime</div>";
         } else {
             echo "</div><div class='home-showbox'>";
-	    echo "<div class='home-datetime'>[No playlist available]</div>";
+            echo "<div class='home-datetime'>[No playlist available]</div>";
         }
         echo "<div class='home-currenttrack'></div></div>";
         echo "</div></div>\n";
