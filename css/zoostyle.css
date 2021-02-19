@@ -174,8 +174,17 @@ span.review-categories > span.zk-hidden {
     margin-top: 4px;
 }
 
+.home-showbox {
+    height: 25px;
+}
 .home-datetime {
     font-size: 10pt;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+.home-currenttrack {
+    display: none;
+    font-weight: normal;
     padding-top: 4px;
     padding-bottom: 4px;
 }
