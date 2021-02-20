@@ -174,7 +174,7 @@ span.review-categories > span.zk-hidden {
     margin-top: 4px;
 }
 
-.visible {
+.zk-fade-visible {
     visibility: visible;
     opacity: 1;
     -webkit-transition: opacity 2s linear;
@@ -182,7 +182,7 @@ span.review-categories > span.zk-hidden {
     -o-transition: opacity 2s linear;
     transition: opacity 2s linear;
 }
-.hidden {
+.zk-fade-hidden {
     visibility: hidden;
     opacity: 0;
     -webkit-transition: visibility 0s 2s, opacity 2s linear;
@@ -191,8 +191,8 @@ span.review-categories > span.zk-hidden {
     transition: visibility 0s 2s, opacity 2s linear;
 }
 .home-showbox {
-    height: 25px;
     position: relative;
+    height: 25px;
 }
 .home-datetime {
     position: absolute;

@@ -133,7 +133,7 @@ class Home extends MenuItem {
             echo "</div><div class='home-showbox'>";
             echo "<div class='home-datetime'>[No playlist available]</div>";
         }
-        echo "<div class='home-currenttrack hidden'></div></div>";
+        echo "<div class='home-currenttrack zk-fade-hidden'></div></div>";
         echo "</div></div>\n";
         echo "<form><input type=hidden id='push-subscribe' value='" .
             preg_replace("/^(http)/", "ws", UI::getBaseUrl()) . "push/onair'></form>\n";

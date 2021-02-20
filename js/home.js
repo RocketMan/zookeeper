@@ -35,10 +35,10 @@ $().ready(function(){
 
     $.fn.extend({
         fadeout: function() {
-            return this.removeClass("visible").addClass("hidden");
+            return this.removeClass("zk-fade-visible").addClass("zk-fade-hidden");
         },
         fadein: function() {
-            return this.removeClass("hidden").addClass("visible");
+            return this.removeClass("zk-fade-hidden").addClass("zk-fade-visible");
         }
     });
 
