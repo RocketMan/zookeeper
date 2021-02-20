@@ -42,9 +42,9 @@ $().ready(function(){
         }
     });
 
-    function connect(open = false) {
+    function connect(last) {
         var socket = new WebSocket($("#push-subscribe").val());
-        socket.last = { fader: null, open: open };
+        socket.last = last;
         socket.onmessage = function(message) {
             if(this.last.fader != null) {
                 clearInterval(this.last.fader);
@@ -102,13 +102,11 @@ $().ready(function(){
              */
             if(this.last.open) {
                 setTimeout(function() {
-                    if(socket.last.fader != null)
-                        clearInterval(socket.last.fader);
-                    connect(true);
+                    connect(socket.last);
                 }, 30000);
             }
         };
     };
 
-    connect();
+    connect({ fader: null, open: false });
 });
