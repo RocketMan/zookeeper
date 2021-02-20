@@ -46,7 +46,8 @@ $().ready(function(){
         var roundedDateTime = getRoundedDateTime(15);
         // returns <YYYY-MM-DD>T<HH:MM:SS.MMM>Z
         var dateTimeAr = roundedDateTime.toISOString().split('T');
-        $("#show-date-picker").val(dateTimeAr[0]);
+        if($("#show-date-picker").val() == '')
+            $("#show-date-picker").val(dateTimeAr[0]);
 
         // set to quarter hour if empty
         if ($("#show-start").val() == '') {
