@@ -42,12 +42,16 @@ $().ready(function(){
         }
     });
 
-    var last = { show_id: 0, id: 0 };
-    var socket = new WebSocket($("#push-subscribe").val());
-    socket.onmessage = function(message) {
-        var onnow = JSON.parse(message.data);
-        if(onnow.show_id != last.show_id || onnow.id != last.id) {
-            clearInterval(last.flip);
+    function connect(open = false) {
+        var socket = new WebSocket($("#push-subscribe").val());
+        socket.last = { fader: null, open: open };
+        socket.onmessage = function(message) {
+            if(this.last.fader != null) {
+                clearInterval(this.last.fader);
+                this.last.fader = null;
+            }
+
+            var onnow = JSON.parse(message.data);
             if(onnow.show_id == 0) {
                 $(".home-show").html("");
                 $(".home-currenttrack").fadeout();
@@ -63,9 +67,9 @@ $().ready(function(){
                 } else {
                     $(".home-datetime").fadeout();
                     $(".home-currenttrack").html(onnow.track_artist + " &#8211; <I>" + onnow.track_title + "</I> (" + onnow.track_album + ")").fadein();
-                    onnow.current = 0;
-                    onnow.flip = setInterval(function() {
-                        switch(last.current++) {
+                    this.last.current = 0;
+                    this.last.fader = setInterval(function() {
+                        switch(socket.last.current++) {
                         case 0:
                             break;
                         case 1:
@@ -75,13 +79,36 @@ $().ready(function(){
                         case 2:
                             $(".home-datetime").fadeout();
                             $(".home-currenttrack").fadein();
-                            last.current = 0;
+                            socket.last.current = 0;
                             break;
                         }
                     }, 5000);
                 }
             }
-            last = onnow;
         }
+
+        socket.onopen = function(event) {
+            this.last.open = true;
+        };
+
+        socket.onclose = function(event) {
+            /*
+             * if we've lost the connection, retry in 30 seconds.
+             *
+             * note we only reconnect if we've been successfully
+             * connected previously.  otherwise, we assume zookeeper
+             * is not running the optional push notification service,
+             * so we do not try again.
+             */
+            if(this.last.open) {
+                setTimeout(function() {
+                    if(socket.last.fader != null)
+                        clearInterval(socket.last.fader);
+                    connect(true);
+                }, 30000);
+            }
+        };
     };
+
+    connect();
 });
