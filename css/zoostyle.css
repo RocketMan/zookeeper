@@ -196,7 +196,7 @@ span.review-categories > span.zk-hidden {
 }
 .home-datetime {
     position: absolute;
-    top: 0;
+    bottom: 0;
     left: 0;
     font-size: 10pt;
     padding-top: 4px;
@@ -204,11 +204,11 @@ span.review-categories > span.zk-hidden {
 }
 .home-currenttrack {
     position: absolute;
-    top: 0;
+    bottom: 0;
     left: 0;
     font-weight: normal;
-    padding-top: 3px;
-    padding-bottom: 3px;
+    padding-top: 4px;
+    padding-bottom: 4px;
 }
 .home-onnow > label {
     font-weight: bold;
