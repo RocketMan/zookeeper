@@ -70,10 +70,11 @@ class OnNowFilter {
     /**
      * look ahead to the next timestamped entry of the specified type
      *
-     * this method does not advance the result set cursor
+     * the general use case is to call this method after fetch() returns
+     * null, to get the next future entry following now ('next on').
      *
      * @param type one of PlaylistEntry::TYPE_* or null for any type
-     * @return PlaylistEntry for next entry of null if none
+     * @return PlaylistEntry for next entry or null if none
      */
     public function peek($type = null) {
         $next = null;

@@ -126,6 +126,7 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
             } else if($this->show) {
                 $this->show = null;
                 $this->spin = null;
+                $this->nextSpin = null;
                 $changed = true;
             }
             DBO::release();
