@@ -455,6 +455,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $tracks = new $filter($tracks);
         while($tracks && ($track = $tracks->fetch()))
             $observer->observe(new PlaylistEntry($track));
+        return $tracks;
     }
 
     public function getTrackCount($playlist) {
