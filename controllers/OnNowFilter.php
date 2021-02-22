@@ -82,7 +82,7 @@ class OnNowFilter {
         foreach($this->queue as $row) {
             $entry = new PlaylistEntry($row);
             if($entry->getCreated() &&
-                    (!$type || $entry->isType($type))) {
+                    ($type === null || $entry->isType($type))) {
                 $next = $entry;
                 break;
             }
@@ -92,7 +92,7 @@ class OnNowFilter {
             array_push($this->queue, $row);
             $entry = new PlaylistEntry($row);
             if($entry->getCreated() &&
-                    (!$type || $entry->isType($type)))
+                    ($type === null || $entry->isType($type)))
                 $next = $entry;
         }
 
