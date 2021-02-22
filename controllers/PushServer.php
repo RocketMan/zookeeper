@@ -239,9 +239,11 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
                 // websocket server for subscribers
                 $loop = \React\EventLoop\Factory::create();
                 $nas = new NowAiringServer($loop);
+                $wsserver = new \Ratchet\WebSocket\WsServer($nas);
+                $wsserver->enableKeepAlive($loop, 30);
                 $routes = new RouteCollection();
                 $routes->add('/push/onair', new Route('/push/onair', [
-                    '_controller' => new \Ratchet\WebSocket\WsServer($nas)
+                    '_controller' => $wsserver
                 ]));
                 $router = new \Ratchet\Http\Router(
                     new UrlMatcher($routes, new RequestContext()));
