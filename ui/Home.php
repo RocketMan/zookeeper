@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -33,6 +33,7 @@ use ZK\UI\UICommon as UI;
 
 class Home extends MenuItem {
     public function processLocal($action, $subaction) {
+        UI::emitJS('js/home.js');
         echo "<H1>". Engine::param('station'). " Music :: " . Engine::param('application') . "</H1>\n";
         $requestLine = Engine::param('contact')['request'];
         if ($requestLine)
@@ -115,6 +116,7 @@ class Home extends MenuItem {
     
     private function emitWhatsOnNow() {
         echo "<div class='subhead'>On Now:<div class='home-onnow'>\n";
+        echo "<div class='home-show'>";
         $record = Engine::api(IPlaylist::class)->getWhatsOnNow();
         if($record && ($row = $record->fetch())) {
             $airId = $row["airid"];
@@ -124,11 +126,16 @@ class Home extends MenuItem {
             $hrefAirName =  "?action=viewDJ&amp;seq=selUser&amp;viewuser=$airId";
             $hrefPL = "?action=viewDate&amp;seq=selList&amp;playlist=$row[0]";
             echo "<A HREF='$hrefPL' CLASS='nav'>$description</A>&nbsp;with&nbsp;";
-            echo "<A HREF='$hrefAirName' CLASS='calNav'>$airName</A>";
+            echo "<A HREF='$hrefAirName' CLASS='calNav'>$airName</A></div>";
+            echo "<div class='home-showbox'>";
             echo "<div class='home-datetime'>$showDateTime</div>";
         } else {
+            echo "</div><div class='home-showbox'>";
             echo "<div class='home-datetime'>[No playlist available]</div>";
         }
+        echo "<div class='home-currenttrack zk-fade-hidden'></div></div>";
         echo "</div></div>\n";
+        echo "<form><input type=hidden id='push-subscribe' value='" .
+            preg_replace("/^(http)/", "ws", UI::getBaseUrl()) . "push/onair'></form>\n";
     }
 }

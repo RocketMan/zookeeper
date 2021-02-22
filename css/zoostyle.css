@@ -174,8 +174,39 @@ span.review-categories > span.zk-hidden {
     margin-top: 4px;
 }
 
+.zk-fade-visible {
+    visibility: visible;
+    opacity: 1;
+    -webkit-transition: opacity 2s linear;
+    -moz-transition: opacity 2s linear;
+    -o-transition: opacity 2s linear;
+    transition: opacity 2s linear;
+}
+.zk-fade-hidden {
+    visibility: hidden;
+    opacity: 0;
+    -webkit-transition: visibility 0s 2s, opacity 2s linear;
+    -moz-transition: visibility 0s 2s, opacity 2s linear;
+    -o-transition: visibility 0s 2s, opacity 2s linear;
+    transition: visibility 0s 2s, opacity 2s linear;
+}
+.home-showbox {
+    position: relative;
+    height: 25px;
+}
 .home-datetime {
+    position: absolute;
+    bottom: 0;
+    left: 0;
     font-size: 10pt;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+.home-currenttrack {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    font-weight: normal;
     padding-top: 4px;
     padding-bottom: 4px;
 }
