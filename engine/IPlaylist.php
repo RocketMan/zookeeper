@@ -28,6 +28,9 @@ namespace ZK\Engine;
  * Playlist operations
  */
 interface IPlaylist {
+    const TIME_FORMAT = "Y-m-d Hi"; // eg, 2019-01-01 1234
+    const TIME_FORMAT_SQL = "Y-m-d H:i:s"; // 2019-01-01 12:34:56
+
     const SPECIAL_TRACK = "~~~~~~~~";
     const COMMENT_FLAG = "C";
     const LOG_FLAG = "L";

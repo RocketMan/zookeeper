@@ -1163,6 +1163,49 @@ class Playlists extends MenuItem {
     </TABLE>
     <?php 
     }
+
+    /**
+     * scrub imported timestamp
+     *
+     * @param timestamp target
+     * @param window DateTime array from IPlaylist::getTimestampWindow
+     * @return scrubbed timestamp or null if not in show window
+     */
+    private static function fixupTimestamp(\DateTime $timestamp, array $window) {
+        // normalize for non-local timezone
+        $timestamp->setTimezone($window['start']->getTimezone());
+
+        // transpose timestamp to show date
+        $showDate = $window['start']->format("Y-m-d");
+        if($timestamp->format("Y-m-d") != $showDate) {
+            list($h, $m, $s) = explode(":", $timestamp->format("H:i:s"));
+            $timestamp = new \DateTime($showDate);
+            $timestamp->setTime($h, $m, $s);
+        }
+
+        // if playlist spans midnight, adjust post-midnight timestamp date
+        if($window['end']->format("G") < $window['start']->format("G") &&
+                $timestamp < $window['start'])
+            $timestamp->modify("+1 day");
+
+        // validate timestamp is within the show time range
+        $valid = false;
+        for($i=2; $i>0; $i--) {
+            if($timestamp >= $window['start'] &&
+                    $timestamp <= $window['end']) {
+                $valid = true;
+                break;
+            }
+
+            // try again on 12-hour clock (e.g., treat 03:30 as 15:30)
+            $timestamp->modify("+12 hour");
+        }
+
+        if(!$valid)
+            error_log("Spin time is outside of show start/end times.");
+
+        return $valid?$timestamp:null;
+    }
     
     public function emitImportExportList() {
        $menu[] = [ "u", "", "Export Playlist", "emitExportList" ];
@@ -1241,41 +1284,7 @@ class Playlists extends MenuItem {
       </SCRIPT>
     <?php 
     }
-    
-    private static function zkfeof(&$fd, &$tempbuf) {
-        return feof($fd) && !strlen($tempbuf);
-    }
-    
-    private static function zkfgets(&$fd, $buflen, &$tempbuf) {
-        // Continue reading until we hit a CR or LF
-        for($posn = strpos($tempbuf, "\n"), $posr = strpos($tempbuf, "\r");
-                !is_int($posn) && !is_int($posr) && !feof($fd);
-                $posn = strpos($tempbuf, "\n"), $posr = strpos($tempbuf, "\r"))
-            $tempbuf .= fread($fd, $buflen);
-    
-        if(is_int($posn) && is_int($posr))
-            // We hit both a CR and LF; use the first one 
-            $pos = min($posn, $posr);
-        else
-            // We hit either CR or LF alone, or neither
-            $pos = $posn + $posr;
-    
-        if($pos) {
-            // We hit a CR or LF; return the line
-            $out = substr($tempbuf, 0, $pos);
-    
-            // Advance buf past CR, LF, or CRLF to next line
-            $tempbuf = substr($tempbuf,
-                          ($posr && substr($tempbuf, $pos+1, 1) == "\n")?($pos+2):($pos+1));
-            return $out;
-        } else {
-            // EOF; return buffer remains, if any
-            $out = $tempbuf;
-            $tempbuf = "";
-            return $out;
-        }
-    }
-    
+
     public function emitImportList() {
         $validate = $_POST["validate"];
         $description = $_REQUEST["description"];
@@ -1408,9 +1417,10 @@ class Playlists extends MenuItem {
             <TD CLASS="sub"><div class='user-tip' style='display: block; max-width: 550px;'>
                 <h3>CSV Format</h3>
                 <p>File must be UTF-8 encoded and tab delimited, with one
-                track per line.  Each line may contain either 4 or 5 columns:</p>
+                track per line.  Each line may contain 4, 5, or 6 columns:</p>
                 <p>&nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; label</B> &nbsp;or<BR><BR>
-                &nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label</B>,</p>
+                &nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label</B> &nbsp;or<BR><BR>
+                &nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label&nbsp; timestamp</B>,</p>
                 <p>where each column is separated by a tab character.</p>
                 <p>Any file data not in this format will be ignored.</p></div></TD>
           </TR>
@@ -1425,10 +1435,12 @@ class Playlists extends MenuItem {
     
             // Insert the tracks
             $count = 0;
-            $fd = fopen($userfile, "r");
-            while(!self::zkfeof($fd, $tempbuf)) {
-                $line = explode("\t", self::zkfgets($fd, 1024, $tempbuf));
-                if(count($line) == 4) {
+            $fd = new \SplFileObject($userfile, "r");
+            $window = $api->getTimestampWindow($playlist);
+            while($fd->valid()) {
+                $line = $fd->fgetcsv("\t");
+                switch(count($line)) {
+                case 4:
                     // artist track album label
                     $this->insertTrack($playlist,
                                      0,               // tag
@@ -1437,7 +1449,9 @@ class Playlists extends MenuItem {
                                      trim($line[2]),  // album
                                      trim($line[3]), null); // label
                     $count++;
-                } else if(count($line) == 5) {
+                    break;
+                case 5:
+                case 6:
                     // artist track album tag label
                     if($line[3]) {
                         // Lookup tag
@@ -1458,18 +1472,31 @@ class Playlists extends MenuItem {
                                 $line[4] = "(Unknown)";
                         }
                     }
-    
+
+                    if(count($line) == 6 && $line[5]) {
+                        try {
+                            $timestamp = self::fixupTimestamp(
+                                            new \DateTime($line[5]), $window);
+                        } catch(\Exception $e) {
+                            error_log("failed to parse timestamp: {$line[5]}");
+                            $timestamp = null;
+                        }
+                    } else
+                        $timestamp = null;
+
                     $this->insertTrack($playlist,
                                      trim($line[3]),  // tag
                                      trim($line[0]),  // artist
                                      trim($line[1]),  // track
                                      trim($line[2]),  // album
-                                     trim($line[4]), null); // label
+                                     trim($line[4]),  // label
+                                     $timestamp);     // timestamp
                     $count++;
+                    break;
                 }
             }
             // echo "<B>Imported $count tracks.</B>\n";
-            fclose($fd);
+            $fd = null; // close
             unset($_POST["validate"]);
 
             $_REQUEST["playlist"] = $playlist;
@@ -1483,11 +1510,7 @@ class Playlists extends MenuItem {
         $userfile = $_FILES['userfile']['tmp_name'];
         if($userfile) {
             // read the JSON file
-            $file = "";
-            $fd = fopen($userfile, "r");
-            while(!self::zkfeof($fd, $tempbuf))
-                $file .= self::zkfgets($fd, 1024, $tempbuf);
-            fclose($fd);
+            $file = file_get_contents($userfile);
 
             // parse the file
             $json = json_decode($file);
@@ -1532,8 +1555,20 @@ class Playlists extends MenuItem {
 
                     // insert the tracks
                     $status = '';
+                    $window = $papi->getTimestampWindow($playlist);
                     foreach($json->data as $pentry) {
                         $entry = PlaylistEntry::fromJSON($pentry);
+                        $created = $entry->getCreated();
+                        if($created) {
+                            try {
+                                $stamp = self::fixupTimestamp(
+                                            new \DateTime($created), $window);
+                                $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
+                            } catch(\Exception $e) {
+                                error_log("failed to parse timestamp: $created");
+                                $entry->setCreated(null);
+                            }
+                        }
                         $success = $papi->insertTrackEntry($playlist, $entry, $status);
                     }
 
