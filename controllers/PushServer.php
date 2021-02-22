@@ -150,8 +150,8 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
                 } else
                     $timeToNext = 0;
 
-                $delta = $timeToNext?($timeToNext + 1):
-                                        (61 - (int)$now->format("s"));
+                $delta = $timeToNext?($timeToNext + 3):
+                                        (63 - (int)$now->format("s"));
 
                 $this->timer = $this->loop->addTimer($delta, function() {
                     $this->worker();
