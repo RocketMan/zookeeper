@@ -42,9 +42,8 @@ $().ready(function(){
         }
     });
 
-    var socket;
     function connect(last) {
-        socket = new WebSocket($("#push-subscribe").val());
+        var socket = new WebSocket($("#push-subscribe").val());
         socket.last = last;
         socket.onmessage = function(message) {
             if(this.last.fader != null) {
