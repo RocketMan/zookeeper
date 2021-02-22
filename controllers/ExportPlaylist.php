@@ -152,7 +152,7 @@ class ExportPlaylist extends CommandTarget implements IController {
     public static function extractTime($datetime) {
         // yyyy-mm-dd hh:mm:ss
         if(strlen($datetime) == 19)
-            $datetime = substr($datetime, 11, 5);
+            $datetime = substr($datetime, 11, 8);
         return $datetime;
     }
 
