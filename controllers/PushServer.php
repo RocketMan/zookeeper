@@ -27,6 +27,7 @@ namespace ZK\Controllers;
 use ZK\Engine\DBO;
 use ZK\Engine\Engine;
 use ZK\Engine\IPlaylist;
+use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
 use ZK\UI\UICommon as UI;
 
@@ -50,6 +51,7 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
 
         protected $show;
         protected $spin;
+        protected $nextSpin;
 
         public static function toJson($show, $spin) {
             $val['name'] = $show?$show['description']:'';
@@ -109,7 +111,7 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
                     $changed = true;
                 $this->show = $show;
                 $event = null;
-                Engine::api(IPlaylist::class)->getTracksWithObserver($show['id'],
+                $filter = Engine::api(IPlaylist::class)->getTracksWithObserver($show['id'],
                     (new PlaylistObserver())->onSpin(function($entry) use(&$event) {
                         $spin = $entry->asArray();
                         $spin['artist'] = UI::swapNames($spin['artist']);
@@ -118,11 +120,13 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
                 if($event && $this->spin && $event['id'] != $this->spin['id'] ||
                         ($event xor $this->spin)) {
                     $this->spin = $event;
+                    $this->nextSpin = $filter->peek(PlaylistEntry::TYPE_SPIN);
                     $changed = true;
                 }
             } else if($this->show) {
                 $this->show = null;
                 $this->spin = null;
+                $this->nextSpin = null;
                 $changed = true;
             }
             DBO::release();
@@ -133,6 +137,27 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
             // echo "worker awake\n";
             if($this->loadOnNow())
                 $this->sendNotification();
+        }
+
+        protected function scheduleWorker() {
+            if($this->clients->count() > 0) {
+                $now = new \DateTime();
+                if($this->nextSpin) {
+                    $next = new \DateTime($this->nextSpin->getCreated());
+                    $timeToNext = $next->getTimestamp() - $now->getTimestamp();
+                    if($timeToNext < 0 || $timeToNext > 60)
+                        $timeToNext = 0;
+                } else
+                    $timeToNext = 0;
+
+                $delta = $timeToNext?($timeToNext + 1):
+                                        (61 - (int)$now->format("s"));
+
+                $this->timer = $this->loop->addTimer($delta, function() {
+                    $this->worker();
+                    $this->scheduleWorker();
+                });
+            }
         }
 
         public function refreshOnNow() {
@@ -146,20 +171,7 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
                 $this->loadOnNow();
 
                 // start worker
-                $now = new \DateTime();
-                $sec = $now->format("s");
-                $delta = 62 - (int)$sec;
-                $this->timer = $this->loop->addTimer($delta, function() {
-                    // last client disconnected before the initial timeout?
-                    if($this->clients->count() > 0) {
-                        $this->timer = $this->loop->addPeriodicTimer(60, function() {
-                            $this->worker();
-                        });
-                        echo "New periodic timer ".spl_object_hash($this->timer)."\n";
-                        $this->worker();
-                    }
-                });
-                echo "New one-shot timer ".spl_object_hash($this->timer)."\n";
+                $this->scheduleWorker();
             }
             $this->sendNotification(null, $conn);
             echo "New connection {$conn->resourceId}\n";

@@ -24,6 +24,8 @@
 
 namespace ZK\Controllers;
 
+use ZK\Engine\PlaylistEntry;
+
 class OnNowFilter {
     private $queue = [];
     private $delegate;
@@ -59,8 +61,41 @@ class OnNowFilter {
                     if($created && $created < $this->now)
                         return $row;
                 }
-            }
+            } else
+                array_push($this->queue, $row);
         }
         return false;
+    }
+
+    /**
+     * look ahead to the next timestamped entry of the specified type
+     *
+     * the general use case is to call this method after fetch() returns
+     * null, to get the next future entry following now ('next on').
+     *
+     * @param type one of PlaylistEntry::TYPE_* or null for any type
+     * @return PlaylistEntry for next entry or null if none
+     */
+    public function peek($type = null) {
+        $next = null;
+
+        foreach($this->queue as $row) {
+            $entry = new PlaylistEntry($row);
+            if($entry->getCreated() &&
+                    (!$type || $entry->isType($type))) {
+                $next = $entry;
+                break;
+            }
+        }
+
+        while(!$next && ($row = $this->delegate->fetch())) {
+            array_push($this->queue, $row);
+            $entry = new PlaylistEntry($row);
+            if($entry->getCreated() &&
+                    (!$type || $entry->isType($type)))
+                $next = $entry;
+        }
+
+        return $next;
     }
 }
