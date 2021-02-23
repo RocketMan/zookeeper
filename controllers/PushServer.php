@@ -116,11 +116,17 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
                         $spin = $entry->asArray();
                         $spin['artist'] = UI::swapNames($spin['artist']);
                         $event = $spin;
+                    })->onComment(function($entry) use(&$event) {
+                        $event = null;
+                    })->onLogEvent(function($entry) use(&$event) {
+                        $event = null;
+                    })->onSetSeparator(function($entry) use(&$event) {
+                        $event = null;
                     }), 0, OnNowFilter::class);
                 if($event && $this->spin && $event['id'] != $this->spin['id'] ||
                         ($event xor $this->spin)) {
                     $this->spin = $event;
-                    $this->nextSpin = $filter->peek(PlaylistEntry::TYPE_SPIN);
+                    $this->nextSpin = $filter->peek();
                     $changed = true;
                 }
             } else if($this->show) {
@@ -221,8 +227,7 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
         const WSSERVER_PORT = 32080;
 
         public static function sendAsyncNotification($show = null, $spin = null) {
-            $data = ($show != null && $spin != null)?
-                    NowAiringServer::toJson($show, $spin):"";
+            $data = ($show != null)?NowAiringServer::toJson($show, $spin):"";
             $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
             socket_sendto($socket, $data, strlen($data), 0,
                             PushServer::WSSERVER_HOST, PushServer::WSSERVER_PORT);
