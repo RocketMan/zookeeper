@@ -259,7 +259,7 @@ class Playlists extends MenuItem {
             }
 
             if ($spinDateTime != null)
-                $entry->setCreated($spinDateTime->format('D M d, Y G:i'));
+                $entry->setCreated($spinDateTime->format(IPlaylist::TIME_FORMAT_SQL));
 
             $updateStatus = $playlistApi->insertTrackEntry($playlistId, $entry, $status);
 
@@ -854,7 +854,7 @@ class Playlists extends MenuItem {
       $timepickerClass = "timepicker";
       if($isLive && !$entry->getCreated()) {
           // pre-fill empty time in live playlist with 'now'
-          $entry->setCreated($nowTime->format("Y-m-d H:i:s"));
+          $entry->setCreated($nowTime->format(IPlaylist::TIME_FORMAT_SQL));
           $timepickerClass .= " prefilled-input";
       }
       $timepickerTime = $this->getTimepickerTime($entry->getCreated());
