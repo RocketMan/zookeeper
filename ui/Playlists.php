@@ -224,11 +224,9 @@ class Playlists extends MenuItem {
             $spinDateTime = new \DateTime("${spinDate} ${spinTime}");
 
         $entry = null;
-        $wantTimestamp = true;
         switch($type) {
         case PlaylistEntry::TYPE_SET_SEPARATOR:
             $entry = (new PlaylistEntry())->setSetSeparator();
-            $wantTimestamp = false; // only type that does not get a time val.
             break;
         case PlaylistEntry::TYPE_COMMENT:
             $entry = (new PlaylistEntry())->setComment(mb_substr(trim(str_replace("\r\n", "\n", $_REQUEST["comment"])), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
@@ -256,12 +254,12 @@ class Playlists extends MenuItem {
             $retMsg = 'success';
             $id = '';
             $status = '';
-            if ($wantTimestamp && $isLiveShow) {
+            if ($isLiveShow) {
                 $spinDateTime = new \DateTime("now");
             }
 
             if ($spinDateTime != null)
-                $entry->setCreated($spinDateTime->format('D M d, Y G:i'));
+                $entry->setCreated($spinDateTime->format(IPlaylist::TIME_FORMAT_SQL));
 
             $updateStatus = $playlistApi->insertTrackEntry($playlistId, $entry, $status);
 
@@ -283,10 +281,13 @@ class Playlists extends MenuItem {
                 //   > 0    ordinal of inserted entry
                 $retVal['seq'] = $size ? $size : $playlistApi->getSeq(0, $entry->getId());
 
-                if($isLiveShow && $type == PlaylistEntry::TYPE_SPIN) {
+                if($isLiveShow) {
                     $playlist['id'] = $playlistId;
-                    $spin = $entry->asArray();
-                    $spin['artist'] = UI::swapNames($spin['artist']);
+                    if($type == PlaylistEntry::TYPE_SPIN) {
+                        $spin = $entry->asArray();
+                        $spin['artist'] = UI::swapNames($spin['artist']);
+                    } else
+                        $spin = null;
                     PushServer::sendAsyncNotification($playlist, $spin);
                 }
             }
@@ -853,7 +854,7 @@ class Playlists extends MenuItem {
       $timepickerClass = "timepicker";
       if($isLive && !$entry->getCreated()) {
           // pre-fill empty time in live playlist with 'now'
-          $entry->setCreated($nowTime->format("Y-m-d H:i:s"));
+          $entry->setCreated($nowTime->format(IPlaylist::TIME_FORMAT_SQL));
           $timepickerClass .= " prefilled-input";
       }
       $timepickerTime = $this->getTimepickerTime($entry->getCreated());

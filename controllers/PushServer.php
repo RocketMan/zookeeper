@@ -49,8 +49,7 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
         protected $loop;
         protected $timer;
 
-        protected $show;
-        protected $spin;
+        protected $current;
         protected $nextSpin;
 
         public static function toJson($show, $spin) {
@@ -82,17 +81,6 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
             return json_encode($val);
         }
 
-        public static function fromJson($msg, &$show, &$spin) {
-            $val = json_decode($msg, true);
-            $show['description'] = $val['name'];
-            $show['airname'] = $val['airname'];
-            $show['id'] = $val['show_id'];
-            $spin['id'] = $val['id'];
-            $spin['track'] = $val['track_title'];
-            $spin['artist'] = $val['track_artist'];
-            $spin['album'] = $val['track_album'];
-        }
-
         public function __construct($loop) {
             $this->clients = new \SplObjectStorage;
             $this->loop = $loop;
@@ -105,31 +93,29 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
          */
         protected function loadOnNow() {
             $changed = false;
+            $event = null;
             $result = Engine::api(IPlaylist::class)->getWhatsOnNow();
             if($show = $result->fetch()) {
-                if(!$this->show || $this->show['id'] != $show['id'])
-                    $changed = true;
-                $this->show = $show;
-                $event = null;
                 $filter = Engine::api(IPlaylist::class)->getTracksWithObserver($show['id'],
                     (new PlaylistObserver())->onSpin(function($entry) use(&$event) {
                         $spin = $entry->asArray();
                         $spin['artist'] = UI::swapNames($spin['artist']);
                         $event = $spin;
+                    })->onComment(function($entry) use(&$event) {
+                        $event = null;
+                    })->onLogEvent(function($entry) use(&$event) {
+                        $event = null;
+                    })->onSetSeparator(function($entry) use(&$event) {
+                        $event = null;
                     }), 0, OnNowFilter::class);
-                if($event && $this->spin && $event['id'] != $this->spin['id'] ||
-                        ($event xor $this->spin)) {
-                    $this->spin = $event;
-                    $this->nextSpin = $filter->peek(PlaylistEntry::TYPE_SPIN);
-                    $changed = true;
-                }
-            } else if($this->show) {
-                $this->show = null;
-                $this->spin = null;
-                $this->nextSpin = null;
-                $changed = true;
             }
             DBO::release();
+            $current = self::toJSON($show, $event);
+            if($this->current != $current) {
+                $this->current = $current;
+                $changed = true;
+            }
+            $this->nextSpin = $show?$filter->peek():null;
             return $changed;
         }
 
@@ -178,10 +164,13 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
         }
 
         public function sendNotification($msg = null, $client = null) {
-            if($msg)
-                self::fromJson($msg, $this->show, $this->spin);
-            else
-                $msg = self::toJson($this->show, $this->spin);
+            if($msg) {
+                if($this->current != $msg)
+                    $this->current = $msg;
+                else
+                    return;
+            } else
+                $msg = $this->current;
 
             if($client)
                 $client->send($msg);
@@ -221,8 +210,7 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
         const WSSERVER_PORT = 32080;
 
         public static function sendAsyncNotification($show = null, $spin = null) {
-            $data = ($show != null && $spin != null)?
-                    NowAiringServer::toJson($show, $spin):"";
+            $data = ($show != null)?NowAiringServer::toJson($show, $spin):"";
             $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
             socket_sendto($socket, $data, strlen($data), 0,
                             PushServer::WSSERVER_HOST, PushServer::WSSERVER_PORT);
