@@ -224,11 +224,9 @@ class Playlists extends MenuItem {
             $spinDateTime = new \DateTime("${spinDate} ${spinTime}");
 
         $entry = null;
-        $wantTimestamp = true;
         switch($type) {
         case PlaylistEntry::TYPE_SET_SEPARATOR:
             $entry = (new PlaylistEntry())->setSetSeparator();
-            $wantTimestamp = false; // only type that does not get a time val.
             break;
         case PlaylistEntry::TYPE_COMMENT:
             $entry = (new PlaylistEntry())->setComment(mb_substr(trim(str_replace("\r\n", "\n", $_REQUEST["comment"])), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
@@ -256,7 +254,7 @@ class Playlists extends MenuItem {
             $retMsg = 'success';
             $id = '';
             $status = '';
-            if ($wantTimestamp && $isLiveShow) {
+            if ($isLiveShow) {
                 $spinDateTime = new \DateTime("now");
             }
 

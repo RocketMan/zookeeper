@@ -87,10 +87,13 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
             $show['description'] = $val['name'];
             $show['airname'] = $val['airname'];
             $show['id'] = $val['show_id'];
-            $spin['id'] = $val['id'];
-            $spin['track'] = $val['track_title'];
-            $spin['artist'] = $val['track_artist'];
-            $spin['album'] = $val['track_album'];
+            if($val['id']) {
+                $spin['id'] = $val['id'];
+                $spin['track'] = $val['track_title'];
+                $spin['artist'] = $val['track_artist'];
+                $spin['album'] = $val['track_album'];
+            } else
+                $spin = null;
         }
 
         public function __construct($loop) {
@@ -184,9 +187,16 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
         }
 
         public function sendNotification($msg = null, $client = null) {
-            if($msg)
-                self::fromJson($msg, $this->show, $this->spin);
-            else
+            if($msg) {
+                self::fromJson($msg, $show, $spin);
+                if(!$this->show || $this->show['id'] != $show['id'] ||
+                        $this->spin && $spin && $this->spin['id'] != $spin['id'] ||
+                        ($spin xor $this->spin)) {
+                    $this->show = $show;
+                    $this->spin = $spin;
+                } else
+                    return;
+            } else
                 $msg = self::toJson($this->show, $this->spin);
 
             if($client)
