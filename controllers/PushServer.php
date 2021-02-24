@@ -49,8 +49,7 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
         protected $loop;
         protected $timer;
 
-        protected $show;
-        protected $spin;
+        protected $current;
         protected $nextSpin;
 
         public static function toJson($show, $spin) {
@@ -82,20 +81,6 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
             return json_encode($val);
         }
 
-        public static function fromJson($msg, &$show, &$spin) {
-            $val = json_decode($msg, true);
-            $show['description'] = $val['name'];
-            $show['airname'] = $val['airname'];
-            $show['id'] = $val['show_id'];
-            if($val['id']) {
-                $spin['id'] = $val['id'];
-                $spin['track'] = $val['track_title'];
-                $spin['artist'] = $val['track_artist'];
-                $spin['album'] = $val['track_album'];
-            } else
-                $spin = null;
-        }
-
         public function __construct($loop) {
             $this->clients = new \SplObjectStorage;
             $this->loop = $loop;
@@ -108,12 +93,9 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
          */
         protected function loadOnNow() {
             $changed = false;
+            $event = null;
             $result = Engine::api(IPlaylist::class)->getWhatsOnNow();
             if($show = $result->fetch()) {
-                if(!$this->show || $this->show['id'] != $show['id'])
-                    $changed = true;
-                $this->show = $show;
-                $event = null;
                 $filter = Engine::api(IPlaylist::class)->getTracksWithObserver($show['id'],
                     (new PlaylistObserver())->onSpin(function($entry) use(&$event) {
                         $spin = $entry->asArray();
@@ -126,19 +108,14 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
                     })->onSetSeparator(function($entry) use(&$event) {
                         $event = null;
                     }), 0, OnNowFilter::class);
-                if($event && $this->spin && $event['id'] != $this->spin['id'] ||
-                        ($event xor $this->spin)) {
-                    $this->spin = $event;
-                    $this->nextSpin = $filter->peek();
-                    $changed = true;
-                }
-            } else if($this->show) {
-                $this->show = null;
-                $this->spin = null;
-                $this->nextSpin = null;
-                $changed = true;
             }
             DBO::release();
+            $current = self::toJSON($show, $event);
+            if($this->current != $current) {
+                $this->current = $current;
+                $changed = true;
+            }
+            $this->nextSpin = $show?$filter->peek():null;
             return $changed;
         }
 
@@ -188,16 +165,12 @@ if(file_exists(__DIR__."/../vendor/autoload.php")) {
 
         public function sendNotification($msg = null, $client = null) {
             if($msg) {
-                self::fromJson($msg, $show, $spin);
-                if(!$this->show || $this->show['id'] != $show['id'] ||
-                        $this->spin && $spin && $this->spin['id'] != $spin['id'] ||
-                        ($spin xor $this->spin)) {
-                    $this->show = $show;
-                    $this->spin = $spin;
-                } else
+                if($this->current != $msg)
+                    $this->current = $msg;
+                else
                     return;
             } else
-                $msg = self::toJson($this->show, $this->spin);
+                $msg = $this->current;
 
             if($client)
                 $client->send($msg);
