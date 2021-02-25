@@ -281,7 +281,7 @@ class Playlists extends MenuItem {
                 //   > 0    ordinal of inserted entry
                 $retVal['seq'] = $size ? $size : $playlistApi->getSeq(0, $entry->getId());
 
-                if($isLiveShow) {
+                if($isLiveShow && $playlist['airname']) {
                     $playlist['id'] = $playlistId;
                     if($type == PlaylistEntry::TYPE_SPIN) {
                         $spin = $entry->asArray();
@@ -1135,8 +1135,9 @@ class Playlists extends MenuItem {
                     } else {
                         $playlistApi = Engine::api(IPlaylist::class);
                         $playlistApi->updateTrack($playlist, $id, $tag, $artist, $track, $album, $label, $timestamp);
-                        if($playlistApi->isNowWithinShow(
-                                $playlistApi->getPlaylist($playlist)))
+                        $list = $playlistApi->getPlaylist($playlist);
+                        if($list['airname'] &&
+                                $playlistApi->isNowWithinShow($list))
                             PushServer::sendAsyncNotification();
                     }
                     $id = "";
