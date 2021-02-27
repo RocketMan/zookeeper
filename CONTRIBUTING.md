@@ -25,8 +25,9 @@
 ### Tour
 
 Zookeeper follows the MVC (Model-View-Controller) pattern.  There are
-clear architectural boundaries between the busienss logic (in `engine`)
-and the presentation, which is contained in `ui` and `controllers`.
+clear architectural boundaries between the busienss logic / model
+(in `engine`), the presentation, which is contained in `js` and `ui`,
+and the controllers, which are in `controllers`.
 
 The following is an overview of the source code directory structure:
 
@@ -58,7 +59,8 @@ The following is an overview of the source code directory structure:
             config/ui_config.php.
             
         css/
-            CSS files
+            CSS assets.  These files are automatically whitespace
+            compressed upon delivery.
 
         custom/
             Instance-specific customizations that you wish to keep
@@ -106,11 +108,13 @@ The following is an overview of the source code directory structure:
             image files
             
         js/
-            JavaScript files
+            JavaScript assets.  These are the client (browser) resident
+            components of the UI.  The files are automatically minified
+            and source maps generated upon delivery.
             
         ui/
-            UI rendering.  Menu items and their mappings are specified
-            in metadata, via config/ui_config.php.
+            Server-generated UI.  Menu items are specified in metadata,
+            via config/ui_config.php.
 
         ui/3rdp
             Third-party dependencies
