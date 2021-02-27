@@ -2136,7 +2136,6 @@ class Playlists extends MenuItem {
     
         // Display the calendar
         $cal = new ZKCalendar;
-        $cal->setSession($this->session);
         $cal->setDates($dates);
         echo $cal->getMonthView($month, $year);
     
@@ -2219,9 +2218,6 @@ class Playlists extends MenuItem {
 }
 
 class ZKCalendar extends \Calendar {
-    function setSession($session) {
-        $this->session = $session;
-    }
     function setDates($dates) {
         $this->dates = $dates;
     }
