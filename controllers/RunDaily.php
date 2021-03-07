@@ -35,6 +35,11 @@ class RunDaily implements IController {
     private $catCodes;
     
     public function processRequest($dispatcher) {
+        if(php_sapi_name() != "cli") {
+            http_response_code(400);
+            return;
+        }
+
         header("Content-type: text/plain");
 
         echo "Starting ".date("Y-m-d H:i:s")."\n";
