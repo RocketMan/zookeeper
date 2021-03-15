@@ -753,23 +753,23 @@ class Playlists extends MenuItem {
                 <div id='manual-entry' class='zk-hidden' >
                     <div>
                         <label>Artist:</label>
-                        <input required id='track-artist' list='track-artists' autocomplete='off' data-focus />
+                        <input required id='track-artist' list='track-artists' autocomplete='off' maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> data-focus />
                         <datalist id='track-artists'>
                         </datalist>
                     </div>
                     <div>
                         <label>Track:</label>
-                        <input required id='track-title' list='track-titles' autocomplete='off'/>
+                        <input required id='track-title' list='track-titles' maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> autocomplete='off'/>
                         <datalist id='track-titles'>
                         </datalist>
                     </div>
                     <div>
                         <label>Album:</label>
-                        <input id='track-album' />
+                        <input id='track-album' maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> />
                     </div>
                     <div>
                         <label>Label:</label>
-                        <input id='track-label' />
+                        <input id='track-label' maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> />
                     </div>
                 </div>
                 <div id='comment-entry' class='zk-hidden' >
@@ -788,7 +788,7 @@ class Playlists extends MenuItem {
                 <div id='nme-entry' class='zk-hidden' >
                     <div>
                         <label>Name/ID:</label>
-                        <input id='nme-id' data-focus/>
+                        <input id='nme-id' maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> data-focus/>
                     </div>
                 </div>
             </div> <!-- track-entry -->
@@ -910,24 +910,24 @@ class Playlists extends MenuItem {
         </TR>
         <TR>
           <TD ALIGN=RIGHT>Name/ID:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=ecode MAXLENGTH=80 required VALUE="<?php echo htmlentities($entry->getLogEventCode());?>" CLASS=input STYLE='width: 280px !important' data-focus></TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=ecode MAXLENGTH=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> required VALUE="<?php echo htmlentities($entry->getLogEventCode());?>" CLASS=input STYLE='width: 280px !important' data-focus></TD>
         </TR>
     <?php } else if($album == "" || $album["tag"] == "") { ?>
         <TR>
           <TD ALIGN=RIGHT>Artist:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=artist MAXLENGTH=80 VALUE="<?php echo htmlentities($album?$album["artist"]:"");?>" CLASS=input SIZE=40 REQUIRED data-focus></TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=artist MAXLENGTH=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> VALUE="<?php echo htmlentities($album?$album["artist"]:"");?>" CLASS=input SIZE=40 REQUIRED data-focus></TD>
         </TR>
         <TR>
           <TD ALIGN=RIGHT>Track:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=track MAXLENGTH=80 VALUE="<?php echo htmlentities($track);?>" CLASS=input SIZE=40 REQUIRED></TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=track MAXLENGTH=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> VALUE="<?php echo htmlentities($track);?>" CLASS=input SIZE=40 REQUIRED></TD>
         </TR>
         <TR>
           <TD ALIGN=RIGHT>Album:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=album MAXLENGTH=80 VALUE="<?php echo htmlentities($album?$album["album"]:"");?>" CLASS=input SIZE=40></TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=album MAXLENGTH=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> VALUE="<?php echo htmlentities($album?$album["album"]:"");?>" CLASS=input SIZE=40></TD>
         </TR>
         <TR>
           <TD ALIGN=RIGHT>Label:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=label MAXLENGTH=80 VALUE="<?php echo htmlentities($album?$album["label"]:"");?>" CLASS=input SIZE=40></TD>
+          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=label MAXLENGTH=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> VALUE="<?php echo htmlentities($album?$album["label"]:"");?>" CLASS=input SIZE=40></TD>
         </TR>
     <?php } else { ?>
       <INPUT TYPE=HIDDEN NAME=artist VALUE="<?php echo htmlentities($album["artist"]);?>">
@@ -996,7 +996,7 @@ class Playlists extends MenuItem {
         <TR><TD ALIGN=RIGHT>Album:</TD>
             <TH ALIGN=LEFT><?php echo htmlentities($album["album"]); ?></TH></TR>
         <TR><TD ALIGN=RIGHT>Track:</TD>
-            <TD><INPUT TYPE=TEXT NAME=track MAXLENGTH=80 CLASS=input VALUE="<?php echo htmlentities($track);?>" data-focus></TD></TR>
+            <TD><INPUT TYPE=TEXT NAME=track MAXLENGTH=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> CLASS=input VALUE="<?php echo htmlentities($track);?>" data-focus></TD></TR>
         <TR><TD></TD><TD>
     <?php if($id) { ?>
           <INPUT TYPE=SUBMIT VALUE="  Save  ">
@@ -1208,7 +1208,7 @@ class Playlists extends MenuItem {
 
         return $valid?$timestamp:null;
     }
-    
+
     public function emitImportExportList() {
        $menu[] = [ "u", "", "Export Playlist", "emitExportList" ];
        $menu[] = [ "u", "importJSON", "Import Playlist (JSON)", "emitImportJSON" ];
@@ -1445,11 +1445,11 @@ class Playlists extends MenuItem {
                 case 4:
                     // artist track album label
                     $this->insertTrack($playlist,
-                                     0,               // tag
-                                     trim($line[0]),  // artist
-                                     trim($line[1]),  // track
-                                     trim($line[2]),  // album
-                                     trim($line[3]), null); // label
+                             0,               // tag
+                             PlaylistEntry::scrubField($line[0]),  // artist
+                             PlaylistEntry::scrubField($line[1]),  // track
+                             PlaylistEntry::scrubField($line[2]),  // album
+                             PlaylistEntry::scrubField($line[3]), null); // label
                     $count++;
                     break;
                 case 5:
@@ -1487,12 +1487,12 @@ class Playlists extends MenuItem {
                         $timestamp = null;
 
                     $this->insertTrack($playlist,
-                                     trim($line[3]),  // tag
-                                     trim($line[0]),  // artist
-                                     trim($line[1]),  // track
-                                     trim($line[2]),  // album
-                                     trim($line[4]),  // label
-                                     $timestamp);     // timestamp
+                             trim($line[3]),  // tag
+                             PlaylistEntry::scrubField($line[0]),  // artist
+                             PlaylistEntry::scrubField($line[1]),  // track
+                             PlaylistEntry::scrubField($line[2]),  // album
+                             PlaylistEntry::scrubField($line[4]),  // label
+                             $timestamp);     // timestamp
                     $count++;
                     break;
                 }

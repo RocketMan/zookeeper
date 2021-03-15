@@ -50,6 +50,7 @@ class PlaylistEntry {
     const TYPE_SET_SEPARATOR = 3;
 
     const MAX_COMMENT_LENGTH = 240;
+    const MAX_FIELD_LENGTH = 80;
 
 
     protected $entry = [];
@@ -81,6 +82,11 @@ class PlaylistEntry {
         }
     }
 
+    public static function scrubField($field, $length = PlaylistEntry::MAX_FIELD_LENGTH) {
+        $field = trim($field);
+        return mb_strlen($field) <= $length?$field:mb_substr($field, 0, $length);
+    }
+
     public static function fromJSON($json) {
         $entry = new PlaylistEntry();
         switch($json->type) {
@@ -88,16 +94,16 @@ class PlaylistEntry {
             $entry->setSetSeparator();
             break;
         case "comment":
-            $entry->setComment($json->comment);
+            $entry->setComment(self::scrubField($json->comment, PlaylistEntry::MAX_COMMENT_LENGTH));
             break;
         case "logEvent":
-            $entry->setLogEvent($json->event, $json->code);
+            $entry->setLogEvent(self::scrubField($json->event), self::scrubField($json->code));
             break;
         case "track":
-            $entry->setArtist($json->artist);
-            $entry->setTrack($json->track);
-            $entry->setAlbum($json->album);
-            $entry->setLabel($json->label);
+            $entry->setArtist(self::scrubField($json->artist));
+            $entry->setTrack(self::scrubField($json->track));
+            $entry->setAlbum(self::scrubField($json->album));
+            $entry->setLabel(self::scrubField($json->label));
             $entry->setTag($json->tag);
             break;
         }
