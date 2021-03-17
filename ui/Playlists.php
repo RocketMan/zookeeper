@@ -263,7 +263,7 @@ class Playlists extends MenuItem {
 
             $updateStatus = $playlistApi->insertTrackEntry($playlistId, $entry, $status);
 
-            if ($updateStatus === 0) {
+            if (!$updateStatus) {
                 $retMsg = $status == '' ? "DB update error" : $status;
             } else {
                 // JM 2019-08-15 action and id need to be set

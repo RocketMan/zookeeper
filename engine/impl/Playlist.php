@@ -557,7 +557,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         if($haveTag)
             $stmt->bindValue(8, $tag);
 
-        $updateStatus = $stmt->execute();
+        $updateStatus = $stmt->execute()?1:0;
         if(!$updateStatus)
             error_log("insertTrack: " . print_r($stmt->errorInfo(), true));
 
