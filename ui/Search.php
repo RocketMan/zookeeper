@@ -197,16 +197,12 @@ class Search extends MenuItem {
     
         echo "$month/$year</B></TD></TR>\n";
         echo "  <TR><TD ALIGN=RIGHT>Label:</TD><TD><B>";
-        if($albums[0]["pubkey"] != 0) {
-            $label = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $albums[0]["pubkey"]);
-            if(sizeof($label)) {
-                echo "<A HREF=\"".
-                               "?s=byLabelKey&amp;n=". UI::URLify($albums[0]["pubkey"]).
-                               "&amp;q=". $this->maxresults.
-                               "&amp;action=search\" CLASS=\"nav\">";
-                echo htmlentities($label[0]["name"]) . "</A>";
-            } else
-                echo "(Unknown)";
+        if(isset($albums[0]["name"])) {
+            echo "<A HREF=\"".
+                           "?s=byLabelKey&amp;n=". UI::URLify($albums[0]["pubkey"]).
+                           "&amp;q=". $this->maxresults.
+                           "&amp;action=search\" CLASS=\"nav\">";
+            echo htmlentities($albums[0]["name"]) . "</A>";
         } else
             echo "(Unknown)";
         echo "</B></TD><TD COLSPAN=2>&nbsp;</TD><TD>";

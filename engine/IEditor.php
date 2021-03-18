@@ -38,8 +38,5 @@ interface IEditor {
     function dequeueTag($tag, $user);
     function getNumQueuedTags($user);
     function getQueuedTags($user);
-    function getAlbum($tag);
-    function getTracks($tag, $isColl);
-    function getLabel($key);
     function setLocation($tag, $location, $bin=null);
 }

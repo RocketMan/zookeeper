@@ -157,7 +157,7 @@ class LibraryImpl extends DBO implements ILibrary {
             break;
         case ILibrary::ALBUM_KEY:
             settype($search, "integer");
-            $query = "SELECT * FROM albumvol WHERE tag=? LIMIT ?, ?";
+            $query = "SELECT * FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey WHERE tag=? LIMIT ?, ?";
             $bindType = 3;
             break;
         case ILibrary::ALBUM_NAME:

@@ -827,7 +827,7 @@ class Editor extends MenuItem {
             $this->skipVar("seltag");
             $this->skipVar("selpubkey");
         } else {
-            $row = Engine::api(IEditor::class)->getAlbum($_REQUEST["seltag"]);
+            $row = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["seltag"])[0];
             $artist = stripslashes($row["artist"]);
             $album = stripslashes($row["album"]);
             $agenre = $row["category"];
@@ -839,7 +839,7 @@ class Editor extends MenuItem {
             $name = $_REQUEST["name"];
             if(!$name) {
                 if($_REQUEST["selpubkey"]) {
-                    $row = Engine::api(IEditor::class)->getLabel($_REQUEST["selpubkey"]);
+                    $row = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $_REQUEST["selpubkey"])[0];
                     $name = $row["name"];
                     $address = $row["address"];
                     $city = $row["city"];
@@ -975,7 +975,7 @@ class Editor extends MenuItem {
             echo "  <TR><TD></TD><TD>&nbsp;</TD></TR>\n";
             $this->skipVar("selpubkey");
         } else {
-            $row = Engine::api(IEditor::class)->getLabel($_REQUEST["selpubkey"]);
+            $row = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $_REQUEST["selpubkey"])[0];
             $foreign = $row["international"] == "T";
             echo "  <TR><TD></TD><TD>&nbsp;</TD></TR>\n";
             echo "  <TR><TD ALIGN=RIGHT>Label&nbsp;ID:</TD><TH ALIGN=LEFT ID=\"pubkey\">".$row["pubkey"]."</TH></TR>\n";
@@ -1059,8 +1059,8 @@ class Editor extends MenuItem {
         $isCollection = $_REQUEST["coll"];
 
         if($_REQUEST["seltag"] && !$_REQUEST["tdb"]) {
-            $tracks = Engine::api(IEditor::class)->getTracks($_REQUEST["seltag"], $isCollection);
-            while($row = $tracks->fetch()) {
+            $tracks = Engine::api(ILibrary::class)->search($isCollection?ILibrary::COLL_KEY:ILibrary::TRACK_KEY, 0, 2000, $_REQUEST["seltag"]);
+            foreach($tracks as $row) {
                 $this->emitHidden("track".$row["seq"], $row["track"]);
                 $_POST["url".$row["seq"]] = $row["url"];
                 $_POST["track".$row["seq"]] = $row["track"];
@@ -1102,7 +1102,7 @@ class Editor extends MenuItem {
 
     public static function makeLabel($tag, $charset, $dark=1,
                                         $boxEscape="", $textEscape="") {
-        $al = Engine::api(IEditor::class)->getAlbum($tag);
+        $al = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)[0];
       
         while($tag) {
            $digits[] = $tag % 10;

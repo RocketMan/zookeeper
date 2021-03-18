@@ -1073,12 +1073,8 @@ class Playlists extends MenuItem {
                     // invalid tag
                     $this->emitTagForm($playlist, "Invalid Tag");
                 } else {
-                    // Secondary search for label name
-                    $lab = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $albumrec[0]["pubkey"]);
-                    if(sizeof($lab)){
-                        $albumrec[0]["label"] = $lab[0]["name"];
-                    } else
-                        $albumrec[0]["label"] = "(Unknown)";
+                    $albumrec[0]["label"] = isset($albumrec[0]["name"])?
+                          $albumrec[0]["name"]:"(Unknown)";
                     $this->emitEditForm($playlist, $id, $albumrec[0], $track);
                 }
             } else
@@ -1466,12 +1462,9 @@ class Playlists extends MenuItem {
                             $line[0] = $albumrec[0]["artist"];
                             $line[2] = $albumrec[0]["album"];
     
-                            // Secondary search for label name
-                            $lab = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $albumrec[0]["pubkey"]);
-                            if(sizeof($lab))
-                                $line[4] = $lab[0]["name"];
-                            else
-                                $line[4] = "(Unknown)";
+                            // update label name
+                            $line[4] = isset($albumrec[0]["name"])?
+                                $albumrec[0]["name"]:"(Unknown)";
                         }
                     }
 
