@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -38,8 +38,5 @@ interface IEditor {
     function dequeueTag($tag, $user);
     function getNumQueuedTags($user);
     function getQueuedTags($user);
-    function getAlbum($tag);
-    function getTracks($tag, $isColl);
-    function getLabel($key);
     function setLocation($tag, $location, $bin=null);
 }

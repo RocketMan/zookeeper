@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -285,10 +285,8 @@ class Reviews extends MenuItem {
             // Emit the review
             $body = "$artist / $album\r\n";
     
-            $label = $libAPI->search(ILibrary::LABEL_PUBKEY, 0, 1, $albums[0]["pubkey"]);
-    
-            if(sizeof($label)) {
-                $labeln = str_replace(" Records", "", $label[0]["name"]);
+            if(isset($albums[0]["name"])) {
+                $labeln = str_replace(" Records", "", $albums[0]["name"]);
                 $labeln = str_replace(" Recordings", "", $labeln);
                 $body .= "Label: " . UI::deLatin1ify($labeln) . "\r\n";
             } else

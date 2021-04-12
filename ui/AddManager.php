@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -412,16 +412,8 @@ class AddManager extends MenuItem {
         if(sizeof($albumrec) > 0) {
             echo "          <TR><TD ALIGN=RIGHT>Artist:</TD><TH>" . htmlentities($albumrec[0]["artist"]) . "&nbsp;&nbsp;</TH></TR>\n";
             echo "          <TR><TD ALIGN=RIGHT>Album:</TD><TH>" . htmlentities($albumrec[0]["album"]) . "&nbsp;&nbsp;</TH></TR>\n";
-            $labelKey = $albumrec[0]["pubkey"];
-            if(!$labelCache[$labelKey]) {
-                // Secondary search for label name
-                $label = $libraryAPI->search(ILibrary::LABEL_PUBKEY, 0, 1, $labelKey);
-                if(sizeof($label)){
-                    $labelCache[$labelKey] = $label[0]["name"];
-                } else
-                    $labelCache[$labelKey] = "(Unknown)";
-            }
-            echo "          <TR><TD ALIGN=RIGHT>Label:</TD><TH>" . htmlentities($labelCache[$labelKey]) . "</TH></TR>\n";
+            $name = isset($albumrec[0]["name"])?$albumrec[0]["name"]:"(Unknown)";
+            echo "          <TR><TD ALIGN=RIGHT>Label:</TD><TH>" . htmlentities($name) . "</TH></TR>\n";
             $this->emitHidden("artist", $artist = $albumrec[0]["artist"]);
             $this->emitHidden("album", $album = $albumrec[0]["album"]);
         }

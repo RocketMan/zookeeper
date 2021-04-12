@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -157,7 +157,7 @@ class LibraryImpl extends DBO implements ILibrary {
             break;
         case ILibrary::ALBUM_KEY:
             settype($search, "integer");
-            $query = "SELECT * FROM albumvol WHERE tag=? LIMIT ?, ?";
+            $query = "SELECT * FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey WHERE tag=? LIMIT ?, ?";
             $bindType = 3;
             break;
         case ILibrary::ALBUM_NAME:
