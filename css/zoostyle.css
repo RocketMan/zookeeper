@@ -1,3 +1,8 @@
+/*
+ * IMPORTANT:  As this file is referenced from XHTML (the RSS viewer),
+ * element names should be lower case only!
+ */
+
 /* Use a CSS reset to smooth out browser incongruities. */
 /* CSS Reset from meyerweb.com v1.0 | 20080212 */
 
@@ -60,20 +65,20 @@ html {
 /* ZK styles */
 
 /* restore defaults */
-BODY {
+body {
     margin: 0;
     padding: 10px 0px 30px 0px;
     font-size: 10pt;
     font-family: Helvetica, Verdana, Arial, sans-serif;
     line-height: 1.2;
 }
-H1 {
+h1 {
     font-size: 16pt;
     margin-top: 0px;
     padding-top: 0px;
     margin-bottom: 10px;
 }
-H2, .subhead  {
+h2, .subhead  {
     color: #d83d04;
     font-size: 14pt;
     font-weight: bold;
@@ -91,28 +96,28 @@ div.subhead {
     border-bottom: 1px solid gray;
 }
    
-LI {
+li {
     display: list-item;
 }
-OL {
+ol {
     list-style-type: decimal;
 }
-OL, UL {
+ol, ul {
     display: block;
     margin: 1.12em 0;
     margin-left: 30px;
     padding-left: 0px;
 }
-OL UL, UL OL, UL UL, OL OL {
+ol ul, ul ol, ul ul, ol ol {
     margin-top: 0;
     margin-bottom: 0;
 }
 
 /* afile activity page */
-TABLE.afileactivity {
+table.afileactivity {
     font-size: 10pt;
 }
-.hborder, .hborder TD {
+.hborder, .hborder td {
     border-style: solid;
     border-width: 1px 0px 0px 0px;
     border-color: #cccccc;
@@ -122,14 +127,14 @@ TABLE.afileactivity {
     float: right;
 }
 
-.noPlaylist, .noPlaylist TD {
+.noPlaylist, .noPlaylist td {
     background-color: #000000;
     color: #ffffff;
     border-style: solid;
     border-width: 1px 0px 0px 0px;
     border-color: #cccccc;
 }
-.noQuota, .noQuota TD {
+.noQuota, .noQuota td {
     background-color: #ffff00;
     border-style: solid;
     border-width: 1px 0px 0px 0px;
@@ -143,7 +148,7 @@ TABLE.afileactivity {
 }
 
 /* Find It! */
-TD.ind {
+td.ind {
     width: 15px;
 }
 
@@ -257,12 +262,12 @@ span.review-categories > span.zk-hidden {
 .recentPlays, .recentReviews {
     vertical-align: top;
 }
-TABLE.djzone TD:last-child {
+table.djzone td:last-child {
     width: 100%;
 }
 
 /* library editor */
-TD.label-form A {
+td.label-form a {
     transition: all 0.2s ease-in-out;
     text-decoration: none;
     color: #000;
@@ -276,17 +281,17 @@ TD.label-form A {
     text-align: center;
     z-index: 100;
 }
-TD.label-form A:FOCUS {
+td.label-form a:focus {
     outline:0;
 }
-TD.label-form SPAN.form-name {
+td.label-form span.form-name {
     display: inline-block;
     clear: both;
     float: right;
     font: bold 10px sans-serif;
     color: #cc0000;
 }
-TD.label-form {
+td.label-form {
     border-style: solid;
     border-width: 1px;
     padding: 8px 10px;
@@ -326,18 +331,18 @@ TD.label-form {
     width: 100%;
 }
 
-.trackEditor TH {
+.trackEditor th {
     font-size: 10pt;
     text-align: left;
     vertical-align: bottom;
     line-height: 10px;
 }
 
-.trackTable TD {
+.trackTable td {
     line-height: 18px;
 }
 
-.trackTable TD {
+.trackTable td {
     vertical-align: middle;
 }
 
@@ -345,7 +350,7 @@ div.playTrack {
     padding-right: 4px;
 }
 
-div.playTrack A {
+div.playTrack a {
     filter: invert(59%) sepia(98%) saturate(1900%) hue-rotate(204deg) brightness(94%) contrast(88%); /* #828ae3 see https://codepen.io/sosuke/pen/Pjoqqp */
     padding-right: 2px;
     padding-bottom: 2px;
@@ -362,42 +367,42 @@ div.playTrack:hover {
 }
 
 /* layout */
-DIV.box {
+div.box {
     width: 900px;
     margin-left: auto;
     margin-right: auto;
 }
-DIV.leftNav {
+div.leftNav {
     float: left;
     margin-top: 0px;
     margin-left: 2px;
     text-align: left;
     width: 165px;
 }
-DIV.leftNav A {
+div.leftNav a {
     color: #000000;
     text-decoration: none;
     font-size: 12pt;
 }
-DIV.leftNav TD A:hover {
+div.leftNav td a:hover {
     color: #91a3ce;
     text-decoration: underline;
 }
-DIV.headerListen P A {
+div.headerListen p a {
     text-align: right;
     font-size: 14px;
     line-height: 14px;
 }
-DIV.headerLogo {
+div.headerLogo {
     float: left;
     width: 200px;
     line-height: 1.1;
 }
-DIV.headerLogo IMG {
+div.headerLogo img {
     padding-top: 8px;
     width: 200px;
 }
-DIV.content {
+div.content {
     position: relative;
     float: right;
     width: 710px;
@@ -407,17 +412,17 @@ DIV.content {
     margin-right: auto;
     overflow: auto;
 }
-DIV.footer {
+div.footer {
     width: auto;
     clear: both;
     text-align: right;
     padding-top: 15px;
     padding-bottom: 10px;
 }
-DIV.footer A:hover {
+div.footer a:hover {
     text-decoration: underline;
 }
-P.zktitle A {
+p.zktitle a {
     color: #000000;
     font-size: 18px;
     font-weight: bold;
@@ -510,17 +515,17 @@ P.zktitle A {
     width: 100%;
 }
 
-.home-onnow, TH {
+.home-onnow, th {
     font-size: 11pt;
     font-weight: bold;
     color: #000000;
 }
-TH.sec {
+th.sec {
     color: white;
     background-color: #2530a7;
     text-align: left;
 }
-.secdiv, .secdiv TH, TH.sec {
+.secdiv, .secdiv th, th.sec {
     padding-left: 4px;
     color: white;
     background-color: #2530a7;
@@ -613,8 +618,8 @@ table.recentAirplay td, .sub {
     width: 84px;
 }
 
-INPUT[type="radio"], 
-INPUT[type="checkbox"] {
+input[type="radio"], 
+input[type="checkbox"] {
     height: 15px;
     width: 15px;
     vertical-align: middle;
@@ -626,43 +631,43 @@ INPUT[type="checkbox"] {
     -webkit-appearance: none;
     -webkit-transition: box-shadow 200ms;
 }
-INPUT[type="checkbox"] {
+input[type="checkbox"] {
     -webkit-border-radius:2px;
     border-radius:2px;
 }
-INPUT[type="radio"]:not(:disabled), 
-INPUT[type="checkbox"]:not(:disabled) {
+input[type="radio"]:not(:disabled), 
+input[type="checkbox"]:not(:disabled) {
     box-shadow:inset 1px 1px 0 #fff, 0 1px 1px rgba(0,0,0,0.1);
 }
-INPUT[type="radio"]:not(:disabled):hover,
-INPUT[type="checkbox"]:not(:disabled):hover {
+input[type="radio"]:not(:disabled):hover,
+input[type="checkbox"]:not(:disabled):hover {
     border-color:rgba(0,0,0,0.4);
     box-shadow:inset 1px 1px 0 #fff, 0 0 4px rgba(0,0,0,0.2);
 }
-INPUT[type="radio"]:active:not(:disabled),
-INPUT[type="checkbox"]:active:not(:disabled) {
+input[type="radio"]:active:not(:disabled),
+input[type="checkbox"]:active:not(:disabled) {
     background-image: -webkit-linear-gradient(#C2C2C2, #EFEFEF);
     box-shadow:inset 1px 1px 0 rgba(0,0,0,0.2), inset -1px -1px 0 rgba(255,255,255,0.6);
     border-color:#707070;
 }
-INPUT[type="radio"]:checked,
-INPUT[type="radio"]:checked:active {
+input[type="radio"]:checked,
+input[type="radio"]:checked:active {
     background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAMAAADXT/YiAAAAVFBMVEX///9eXl5RUVEzMzMbGxszMzNRUVEiIiJRUVFFRUUzMzMiIiJFRUUzMzNRUVFRUVE6OjorKysiIiJRUVFFRUU6OjozMzMrKytRUVFFRUUzMzMrKyvGHNe0AAAAHHRSTlMAERERESJmZnd3d3eIiJmqqqqqzMzMzMzd3d3dIlELBQAAAEFJREFUCNdjYEACLOxC3CwgBrOgtLi4ICuQxSUlBgS8QJaAKAgIAFmckiIiIpI8QBYTn4SwBD8TSAsjGz8HI7JhAH1fArjBaKLrAAAAAElFTkSuQmCC") center no-repeat, -webkit-linear-gradient(#FCFCFC, #DFDFDF);
 }
-INPUT[type="checkbox"]:checked,
-INPUT[type="checkbox"]:checked:active {
+input[type="checkbox"]:checked,
+input[type="checkbox"]:checked:active {
     background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAMAAADXT/YiAAAAOVBMVEX///8zMzMqKipCQkI8PDwzMzNISEhISEhISEhCQkIqKio8PDwzMzMqKipISEhCQkI8PDwzMzMqKipFad0NAAAAE3RSTlMAIiIzMzNEZnd3qru7u8zMzMzMuKlnZwAAADhJREFUCNdjYIACJhjNJQRl8ApBWIw8goKsDDw8UAaDgAA3t4AAC1CGkx8ImMGKOPj42KAmsEMYAEUyAa2GdxXhAAAAAElFTkSuQmCC") center no-repeat, -webkit-linear-gradient(#FCFCFC, #DFDFDF);
 }
 
 /* calendar */
-A.calNav {
+a.calNav {
     color: #990010;
     text-decoration: none;
 }
-A.calNav:hover {
+a.calNav:hover {
     text-decoration: underline;
 }
-A.calLink {
+a.calLink {
     color: #cc0000;
     text-decoration: none;
 }
@@ -752,30 +757,30 @@ A.calLink {
     background-color: gray;
 }
 
-.logEntry, .logEntry TD,
-.logEntryEdit, .logEntryEdit TD {
+.logEntry, .logEntry td,
+.logEntryEdit, .logEntryEdit td {
     /* entire log entry row */
 }
 
-.logEntry TD:not(:nth-of-type(1)) {
+.logEntry td:not(:nth-of-type(1)) {
     /* log entry details in view playlist (not editor) */
 }
 
-.logEntryEdit TD:nth-of-type(n+3) {
+.logEntryEdit td:nth-of-type(n+3) {
     /* log entry details in playlist editor */
 }
 
-.commentRow, .commentRow TD,
-.commentRowEdit, .commentRowEdit TD {
+.commentRow, .commentRow td,
+.commentRowEdit, .commentRowEdit td {
     /* entire comment row */
 }
 
-.commentRow TD:not(:nth-of-type(1)) {
+.commentRow td:not(:nth-of-type(1)) {
     /* comment details in view playlist (not editor) */
     font-size: small;
 }
 
-.commentRowEdit TD:nth-of-type(n+3) {
+.commentRowEdit td:nth-of-type(n+3) {
     /* comment details in playlist editor */
 }
 

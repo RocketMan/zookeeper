@@ -56,8 +56,14 @@ class RSS extends CommandTarget implements IController {
     public function processRequest($dispatcher) {
         $this->session = Engine::session();
 
+        if(isset($_REQUEST["xslt"])) {
+            $this->emitXSLT();
+            return;
+        }
+
         header("Content-type: text/xml");
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        echo "<?xml-stylesheet type=\"text/xsl\" href=\"".UI::getBaseUrl()."zkrss.php?xslt=true\"?>\n";
         echo "<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n";
         
         $feeds = explode(',', $_REQUEST["feed"]);
@@ -71,7 +77,7 @@ class RSS extends CommandTarget implements IController {
         $this->dispatchAction($action, self::$actions);
     }
 
-    public function emitChartRSS($endDate, &$title, $limit="", $category="") {
+    public function composeChartRSS($endDate, &$title, $limit="", $category="") {
         Engine::api(IChart::class)->getChart($chart, "", $endDate, $limit, $category);
         if(sizeof($chart)) {
             $title = Engine::param('station'). " ";
@@ -86,8 +92,8 @@ class RSS extends CommandTarget implements IController {
             $formatDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
             $title .= "for the week ending $formatDate";
     
-            $output = "&lt;p&gt;Rank. ARTIST &lt;I&gt;ALBUM&lt;/I&gt; (LABEL)&lt;/p&gt;\n";
-            $output .= "&lt;p&gt;";
+            $output = "<p>Rank. ARTIST <i>ALBUM</i> (LABEL)</p>\n";
+            $output .= "<p>";
     
             for($i=0; $i < sizeof($chart); $i++) {
                 // Fixup the artist, album, and label names
@@ -114,19 +120,19 @@ class RSS extends CommandTarget implements IController {
     
                 $output .= (string)($i + 1).". ";
                 // Artist
-                $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " &lt;I&gt;";
+                $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " <i>";
                 // Album & Label
-                $output .= "&lt;A HREF=\"".UI::getBaseUrl().
+                $output .= "<a href=\"".UI::getBaseUrl().
                              "?s=byAlbumKey&amp;n=".$chart[$i]["tag"].
                              "&amp;q=10".
                              "&amp;action=search".
-                             "\"&gt;". self::htmlnumericentities(self::xmlentities($album)) . "&lt;/A&gt;&lt;/I&gt;$medium (" .
-                     self::htmlnumericentities(self::xmlentities($label)) . ")&lt;BR&gt;\n";
+                             "\">". self::htmlnumericentities(self::xmlentities($album)) . "</a></i>$medium (" .
+                     self::htmlnumericentities(self::xmlentities($label)) . ")<br/>\n";
             }
     
-            $output .= "&lt;/p&gt;";
+            $output .= "</p>";
         }
-        return $output;
+        return self::xmlentities($output);
     }
     
     public function recentCharts() {
@@ -150,7 +156,7 @@ class RSS extends CommandTarget implements IController {
        $weeks = Engine::api(IChart::class)->getChartDates($weeks);
        while($weeks && ($week = $weeks->fetch())) {
           $endDate = $week["week"];
-          $output = $this->emitChartRSS($endDate, $name, $top);
+          $output = $this->composeChartRSS($endDate, $name, $top);
           $link = UI::getBaseUrl()."?action=viewChart&amp;subaction=weekly&amp;year=".substr($endDate,0,4)."&amp;month=".substr($endDate,5,2)."&amp;day=".substr($endDate,8,2);
           echo "<item>\n<title>$name</title>\n";
           echo "<guid>$link</guid>\n";
@@ -206,13 +212,12 @@ class RSS extends CommandTarget implements IController {
                 //if(strlen($review) > 500)
                 //   $review = substr($review, 0, 497) . "...";
                 $review = nl2br(self::xmlentities($review, ENT_QUOTES));
-                $review = self::xmlentities($review);
                 break;
              }
           }
     
-          //echo "<item>\n<description>&lt;p&gt;&lt;a href=\"$link\"&gt;$name&lt;/a&gt; review by ".self::xmlentities($djname)."&lt;/p&gt;$review</description>\n";
-          echo "<item>\n<description>&lt;p&gt;Review by ".self::xmlentities($djname)."&lt;/p&gt;&lt;p&gt;$review&lt;/p&gt;</description>\n";
+          $output = self::xmlentities("<p>Review by ".self::xmlentities($djname)."</p><p>$review</p>");
+          echo "<item>\n<description>$output</description>\n";
           echo "<title>$name</title>\n";
           echo "<guid isPermaLink=\"false\">review-".$row[0]."-".substr($row[3],0,10)."</guid>\n";
           echo "<category>".self::xmlentities(ILibrary::GENRES[$album[0]["category"]])."</category>\n";
@@ -225,7 +230,7 @@ class RSS extends CommandTarget implements IController {
        echo "</channel>\n";
     }
     
-    public function emitAddRSS($addDate, &$title) {
+    public function composeAddRSS($addDate, &$title) {
         $station = Engine::param('station');
         $results = Engine::api(IChart::class)->getAdd($addDate);
         if($results) {
@@ -235,8 +240,8 @@ class RSS extends CommandTarget implements IController {
             $formatDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
             $title .= "for $formatDate";
     
-            $output = "&lt;p&gt;Num (Charts) ARTIST &lt;I&gt;Album&lt;/I&gt; (Label)&lt;/p&gt;\n";
-            $output .= "&lt;p&gt;";
+            $output = "<p>Num (Charts) ARTIST <i>Album</i> (Label)</p>\n";
+            $output .= "<p>";
     
             // Get the chart categories
             $cats = Engine::api(IChart::class)->getCategories();
@@ -278,19 +283,19 @@ class RSS extends CommandTarget implements IController {
                 $output .= "(".$codes.") ";
     
                 // Artist
-                $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " &lt;I&gt;";
+                $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " <i>";
                 // Album & Label
-                $output .= "&lt;A HREF=\"".UI::getBaseUrl().
+                $output .= "<a href=\"".UI::getBaseUrl().
                              "?s=byAlbumKey&amp;n=".$row["tag"].
                              "&amp;q=10".
                              "&amp;action=search".
-                             "\"&gt;". self::htmlnumericentities(self::xmlentities($album)) . "&lt;/A&gt;&lt;/I&gt;$medium (" .
-                     self::htmlnumericentities(self::xmlentities($label)) . ")&lt;BR&gt;\n";
+                             "\">". self::htmlnumericentities(self::xmlentities($album)) . "</a></i>$medium (" .
+                     self::htmlnumericentities(self::xmlentities($label)) . ")<br/>\n";
             }
     
-            $output .= "&lt;/p&gt;";
+            $output .= "</p>";
         }
-        return $output;
+        return self::xmlentities($output);
     }
     
     public function recentAdds() {
@@ -311,7 +316,7 @@ class RSS extends CommandTarget implements IController {
        $weeks = Engine::api(IChart::class)->getAddDates($weeks);
        while($weeks && ($week = $weeks->fetch())) {
           $addDate = $week["adddate"];
-          $output = $this->emitAddRSS($addDate, $name);
+          $output = $this->composeAddRSS($addDate, $name);
           $link = UI::getBaseUrl()."?action=addmgr&amp;subaction=adds&amp;date=$addDate";
           echo "<item>\n<title>$name</title>\n";
           echo "<guid>$link</guid>\n";
@@ -326,5 +331,75 @@ class RSS extends CommandTarget implements IController {
     public function emitError() {
        $message = "Invalid feed: ".$_REQUEST["feed"];
        echo "<channel>\n<title>$message</title>\n<link>".UI::getBaseUrl()."</link>\n<description>$message</description>\n</channel>\n";
+    }
+
+    private function emitXSLT() {
+        header("Content-type: application/xslt+xml");
+        ob_start("ob_gzhandler"); ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Zookeeper Online (C) 1997-2021 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 -->
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.0">
+<xsl:output method="xml"/>
+<xsl:template match="/">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title><xsl:value-of select="rss/channel/title"/></title>
+<link rel="stylesheet" href="<?php echo UI::decorate("css/zoostyle.css")?>"/>
+<script type="text/javascript"><?php
+  /*
+   * RSS feeds contain HTML markup which the browser will escape;
+   * that is, it will display HTML tags as literal text.  The
+   * disable-output-escaping attribute is not supported on all
+   * browsers (FX, for example).  We work around these limitations
+   * by storing HTML content in a data attribute and then setting
+   * the content into the document via innerHTML.
+   */ ?>
+<xsl:text><![CDATA[
+function fixup() {
+   var nodes = document.getElementsByClassName("description");
+   Array.prototype.slice.call(nodes).forEach(function(node) {
+      node.innerHTML = node.dataset.description;
+   });
+}
+]]>
+</xsl:text>
+</script>
+</head>
+<body onload="fixup()"><div class="box">
+<div class="user-tip" style="display: block">
+<p>This is a Really Simple Syndication (RSS) feed.  RSS is a family of
+web feed formats used to publish frequently updated content.</p>
+<p>To subscribe to this feed, copy the address and paste it into your
+RSS feed reader.  New to RSS?
+<a href="https://www.google.com/search?q=how+to+get+started+with+rss+feeds"
+title="Getting started with RSS" target="_blank">Learn more</a>.</p>
+</div>
+<h2><xsl:value-of select="rss/channel/title"/></h2>
+<xsl:for-each select="rss/channel/item">
+  <div style="padding: 2px 0px">
+    <h3>
+      <a class="nav">
+        <xsl:attribute name="href">
+            <xsl:value-of select="link"/>
+        </xsl:attribute>
+        <xsl:value-of select="title"/>
+      </a><br/>
+      <xsl:value-of select="pubDate"/>
+    </h3>
+    <p class="description">
+      <xsl:attribute name="data-description">
+          <xsl:value-of select="description"/>
+      </xsl:attribute>
+    </p>
+  </div>
+</xsl:for-each>
+</div></body>
+</html>
+</xsl:template>
+</xsl:stylesheet>
+<?php
+        ob_end_flush(); // ob_gzhandler
     }
 }
