@@ -61,7 +61,7 @@ class RSS extends CommandTarget implements IController {
             return;
         }
 
-        header("Content-type: text/xml");
+        header("Content-type: application/xhtml+xml");
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         echo "<?xml-stylesheet type=\"text/xsl\" href=\"".UI::getBaseUrl()."zkrss.php?xslt=true\"?>\n";
         echo "<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n";
