@@ -407,7 +407,7 @@ title="Getting started with RSS" target="_blank">Learn more</a>.</p>
         </xsl:attribute>
         <xsl:value-of select="title"/>
       </a><br/>
-      <span style="font-size: 10pt">
+      <span class="sub">
         <xsl:value-of select="zk:subtitle"/>
       </span>
     </h3>
