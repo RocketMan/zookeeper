@@ -351,7 +351,7 @@ class RSS extends CommandTarget implements IController {
 <!-- Zookeeper Online (C) 1997-2021 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:dc="http://purl.org/dc/elements/1.1/"
-    xmlns:zk="http://zookeeper.ibinx.com/zkrss" version="1.0">
+    xmlns:zk="http://zookeeper.ibinx.com/zkns" version="1.0">
 <xsl:output method="xml"/>
 <xsl:template match="/">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
