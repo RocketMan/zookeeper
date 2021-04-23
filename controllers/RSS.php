@@ -411,21 +411,14 @@ function fixup() {
 <xsl:template match="item">
   <div class="item">
     <h3>
-      <a class="nav">
-        <xsl:attribute name="href">
-            <xsl:value-of select="link"/>
-        </xsl:attribute>
+      <a class="nav" href="{link}">
         <xsl:value-of select="title"/>
       </a><br/>
       <span class="sub">
         <xsl:value-of select="zk:subtitle"/>
       </span>
     </h3>
-    <p class="description">
-      <xsl:attribute name="data-description">
-          <xsl:value-of select="description"/>
-      </xsl:attribute>
-    </p>
+    <p class="description" data-description="{description}"/>
   </div>
 </xsl:template>
 </xsl:stylesheet>
