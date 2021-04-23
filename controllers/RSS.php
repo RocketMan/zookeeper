@@ -177,11 +177,8 @@ class RSS extends CommandTarget implements IController {
     
     public function recentReviews() {
        $station = Engine::param('station');
-       $limit = $_REQUEST["limit"];
+       $limit = isset($_REQUEST["limit"])?$_REQUEST["limit"]:50;
 
-       if(!$limit)
-          $limit = 100;
-    
        $title = "$station Radio Music Reviews";
     
        echo "<channel>\n<title>$title</title>\n";
