@@ -66,6 +66,7 @@ class RSS extends CommandTarget implements IController {
         }
 
         header("Content-type: text/xml");
+        ob_start("ob_gzhandler");
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         echo "<?xml-stylesheet type=\"text/xsl\" href=\"".UI::getBaseUrl()."zkrss.php?xslt=true\"?>\n";
         echo "<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n";
@@ -76,6 +77,7 @@ class RSS extends CommandTarget implements IController {
             $this->processLocal($feed, null);
 
         echo "</rss>\n";
+        ob_end_flush(); // ob_gzhandler
     }
 
     public function processLocal($action, $subaction) {
@@ -348,10 +350,11 @@ class RSS extends CommandTarget implements IController {
 <!-- Zookeeper Online (C) 1997-2021 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:dc="http://purl.org/dc/elements/1.1/"
-    xmlns:zk="http://zookeeper.ibinx.com/zkns" version="1.0">
+    xmlns:zk="http://zookeeper.ibinx.com/zkns"
+    xmlns="http://www.w3.org/1999/xhtml" version="1.0">
 <xsl:output method="xml"/>
 <xsl:template match="/">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <title><xsl:value-of select="rss/channel/title"/></title>
@@ -384,18 +387,28 @@ function fixup() {
 </xsl:text>
 </script>
 </head>
-<body onload="fixup()"><div class="box">
-<div class="user-tip" style="display: block">
-<p>This is a Really Simple Syndication (RSS) feed.  RSS is a family of
-web feed formats used to publish frequently updated content.</p>
-<p>To subscribe to this feed, drag or copy the address into your
-RSS feed reader.  New to RSS?
-<a href="https://www.google.com/search?q=how+to+get+started+with+rss+feeds"
-title="Getting started with RSS" target="_blank">Learn more</a>.</p>
-</div>
-<h2><xsl:value-of select="rss/channel/title"/></h2>
-<div class="feed">
-<xsl:for-each select="rss/channel/item">
+<body onload="fixup()">
+  <div class="box">
+    <div class="user-tip" style="display: block">
+      <p>This is a Really Simple Syndication (RSS) feed.  RSS is a family of
+      web feed formats used to publish frequently updated content.</p>
+      <p>To subscribe to this feed, drag or copy the address into your
+      RSS feed reader.  New to RSS?
+      <a href="https://www.google.com/search?q=how+to+get+started+with+rss+feeds"
+      title="Getting started with RSS" target="_blank">Learn more</a>.</p>
+    </div>
+    <xsl:apply-templates select="rss/channel"/>
+  </div>
+</body>
+</html>
+</xsl:template>
+<xsl:template match="channel">
+  <h2><xsl:value-of select="title"/></h2>
+  <div class="feed">
+    <xsl:apply-templates select="item"/>
+  </div>
+</xsl:template>
+<xsl:template match="item">
   <div class="item">
     <h3>
       <a class="nav">
@@ -414,10 +427,6 @@ title="Getting started with RSS" target="_blank">Learn more</a>.</p>
       </xsl:attribute>
     </p>
   </div>
-</xsl:for-each>
-</div>
-</div></body>
-</html>
 </xsl:template>
 </xsl:stylesheet>
 <?php
