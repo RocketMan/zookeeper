@@ -218,7 +218,7 @@ class RSS extends CommandTarget implements IController {
                 $review = $review[2];
                 //if(strlen($review) > 500)
                 //   $review = substr($review, 0, 497) . "...";
-                $review = nl2br(self::xmlentities($review, ENT_QUOTES));
+                $review = nl2br(self::xmlentities(trim($review), ENT_QUOTES));
                 break;
              }
           }
