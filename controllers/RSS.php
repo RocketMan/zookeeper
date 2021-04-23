@@ -43,6 +43,10 @@ class RSS extends CommandTarget implements IController {
        return str_replace(['&', '"', "'", '<', '>', '`'],
            ['&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'], $str);
     }
+
+    private static function xmlcdata($str) {
+       return "<![CDATA[${str}]]>";
+    }
     
     private static function htmlnumericentities($str) {
        // for UTF-8, this is a no-op.  xmlentities has already taken
@@ -132,7 +136,7 @@ class RSS extends CommandTarget implements IController {
     
             $output .= "</p>";
         }
-        return self::xmlentities($output);
+        return self::xmlcdata($output);
     }
     
     public function recentCharts() {
@@ -216,7 +220,7 @@ class RSS extends CommandTarget implements IController {
              }
           }
     
-          $output = self::xmlentities("<p>Review by ".self::xmlentities($djname)."</p><p>$review</p>");
+          $output = self::xmlcdata("<p>Review by ".self::xmlentities($djname)."</p><p>$review</p>");
           echo "<item>\n<description>$output</description>\n";
           echo "<title>$name</title>\n";
           echo "<guid isPermaLink=\"false\">review-".$row[0]."-".substr($row[3],0,10)."</guid>\n";
@@ -295,7 +299,7 @@ class RSS extends CommandTarget implements IController {
     
             $output .= "</p>";
         }
-        return self::xmlentities($output);
+        return self::xmlcdata($output);
     }
     
     public function recentAdds() {
@@ -346,7 +350,7 @@ class RSS extends CommandTarget implements IController {
 <head>
 <meta charset="UTF-8"/>
 <title><xsl:value-of select="rss/channel/title"/></title>
-<link rel="stylesheet" href="<?php echo UI::decorate("css/zoostyle.css")?>"/>
+<link rel="stylesheet" href="<?php echo UI::decorate("css/zoostyle.css"); ?>"/>
 <script type="text/javascript"><?php
   /*
    * RSS feeds contain HTML markup which the browser will escape;
