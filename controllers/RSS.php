@@ -383,9 +383,8 @@ function fixup() {
 <div class="user-tip" style="display: block">
 <p>This is a Really Simple Syndication (RSS) feed.  RSS is a family of
 web feed formats used to publish frequently updated content.</p>
-<p>To subscribe to this feed, copy the address and paste it into your
-RSS feed reader, or drag the orange feed button into your feed reader.</p>
-<p>New to RSS?
+<p>To subscribe to this feed, drag or copy the address into your
+RSS feed reader.  New to RSS?
 <a href="https://www.google.com/search?q=how+to+get+started+with+rss+feeds"
 title="Getting started with RSS" target="_blank">Learn more</a>.</p>
 </div>
