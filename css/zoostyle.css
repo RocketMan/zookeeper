@@ -86,6 +86,12 @@ h2, .subhead  {
     margin-bottom: 5px;
     text-align: left;
 }
+h3  {
+    font-size: 12pt;
+    font-weight: bold;
+    line-height: 1.0;
+    margin-bottom: 2px;
+}
 th.subhead {
     padding-top: 0px;
 }

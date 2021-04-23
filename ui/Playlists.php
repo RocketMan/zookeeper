@@ -1241,7 +1241,7 @@ class Playlists extends MenuItem {
     </FORM>
     <div id='json-help' class='user-tip'>
 
-    <h3>About JSON</h3>
+    <h4>About JSON</h4>
 
     <p>The JSON format preserves all playlist details, including log
     entries, comments, and time marks.  It is the more modern,
@@ -1253,7 +1253,7 @@ class Playlists extends MenuItem {
     </div>
     <div id='csv-help' class='user-tip'>
 
-    <h3>About CSV</h3>
+    <h4>About CSV</h4>
 
     <p>CSV is a simple, tab-delimited format that preserves track
     details only.</p>
@@ -1413,7 +1413,7 @@ class Playlists extends MenuItem {
           </TR><TR>
             <TD>&nbsp;</TD>
             <TD CLASS="sub"><div class='user-tip' style='display: block; max-width: 550px;'>
-                <h3>CSV Format</h3>
+                <h4>CSV Format</h4>
                 <p>File must be UTF-8 encoded and tab delimited, with one
                 track per line.  Each line may contain 4, 5, or 6 columns:</p>
                 <p>&nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; label</B> &nbsp;or<BR><BR>

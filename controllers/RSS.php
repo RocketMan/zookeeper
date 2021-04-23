@@ -68,7 +68,8 @@ class RSS extends CommandTarget implements IController {
         header("Content-type: text/xml");
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         echo "<?xml-stylesheet type=\"text/xsl\" href=\"".UI::getBaseUrl()."zkrss.php?xslt=true\"?>\n";
-        echo "<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n";
+        echo "<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n";
+        echo "    xmlns:zk=\"http://zookeeper.ibinx.com/zkrss\">";
         
         $feeds = explode(',', $_REQUEST["feed"]);
         foreach($feeds as $feed)
@@ -167,6 +168,8 @@ class RSS extends CommandTarget implements IController {
           echo "<link>$link</link>\n";
           echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=charts\">$title</source>\n";
           echo "<pubDate>".date("r", strtotime($endDate))."</pubDate>\n";
+          // zk:subtitle is blank as title already contains the date
+          echo "<zk:subtitle></zk:subtitle>\n";
           echo "<description>$output</description>\n</item>\n";
        }
        echo "</channel>\n";
@@ -229,7 +232,9 @@ class RSS extends CommandTarget implements IController {
           //echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=reviews\">".self::xmlentities($djname)."</source>\n";
           echo "<dc:creator>".self::xmlentities($djname)."</dc:creator>\n";
           echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=reviews\">$title</source>\n";
-          echo "<pubDate>".date("r",strtotime($row[3]))."</pubDate>\n</item>\n";
+          $time = strtotime($row[3]);
+          echo "<pubDate>".date("r", $time)."</pubDate>\n";
+          echo "<zk:subtitle>Reviewed ".date("F j, Y", $time)."</zk:subtitle>\n</item>\n";
        }
        echo "</channel>\n";
     }
@@ -327,6 +332,8 @@ class RSS extends CommandTarget implements IController {
           echo "<link>$link</link>\n";
           echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=adds\">$title</source>\n";
           echo "<pubDate>".date("r", strtotime($addDate))."</pubDate>\n";
+          // zk:subtitle is blank as title already contains the date
+          echo "<zk:subtitle></zk:subtitle>\n";
           echo "<description>$output</description>\n</item>\n";
        }
        echo "</channel>\n";
@@ -343,7 +350,8 @@ class RSS extends CommandTarget implements IController {
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Zookeeper Online (C) 1997-2021 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-    xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.0">
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:zk="http://zookeeper.ibinx.com/zkrss" version="1.0">
 <xsl:output method="xml"/>
 <xsl:template match="/">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
@@ -399,7 +407,9 @@ title="Getting started with RSS" target="_blank">Learn more</a>.</p>
         </xsl:attribute>
         <xsl:value-of select="title"/>
       </a><br/>
-      <xsl:value-of select="pubDate"/>
+      <span style="font-size: 10pt">
+        <xsl:value-of select="zk:subtitle"/>
+      </span>
     </h3>
     <p class="description">
       <xsl:attribute name="data-description">
