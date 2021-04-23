@@ -351,6 +351,14 @@ class RSS extends CommandTarget implements IController {
 <meta charset="UTF-8"/>
 <title><xsl:value-of select="rss/channel/title"/></title>
 <link rel="stylesheet" href="<?php echo UI::decorate("css/zoostyle.css"); ?>"/>
+<style type="text/css">
+<xsl:text><![CDATA[
+.feed > .item {
+  padding: 2px 0px;
+}
+]]>
+</xsl:text>
+</style>
 <script type="text/javascript"><?php
   /*
    * RSS feeds contain HTML markup which the browser will escape;
@@ -376,13 +384,15 @@ function fixup() {
 <p>This is a Really Simple Syndication (RSS) feed.  RSS is a family of
 web feed formats used to publish frequently updated content.</p>
 <p>To subscribe to this feed, copy the address and paste it into your
-RSS feed reader.  New to RSS?
+RSS feed reader, or drag the orange feed button into your feed reader.</p>
+<p>New to RSS?
 <a href="https://www.google.com/search?q=how+to+get+started+with+rss+feeds"
 title="Getting started with RSS" target="_blank">Learn more</a>.</p>
 </div>
 <h2><xsl:value-of select="rss/channel/title"/></h2>
+<div class="feed">
 <xsl:for-each select="rss/channel/item">
-  <div style="padding: 2px 0px">
+  <div class="item">
     <h3>
       <a class="nav">
         <xsl:attribute name="href">
@@ -399,6 +409,7 @@ title="Getting started with RSS" target="_blank">Learn more</a>.</p>
     </p>
   </div>
 </xsl:for-each>
+</div>
 </div></body>
 </html>
 </xsl:template>
