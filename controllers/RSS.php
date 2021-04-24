@@ -370,6 +370,7 @@ class RSS extends CommandTarget implements IController {
 <meta charset="UTF-8"/>
 <title><xsl:value-of select="rss/channel/title"/></title>
 <link rel="stylesheet" href="<?php echo UI::decorate("css/zoostyle.css"); ?>"/>
+<link rel="icon" href="<?php echo Engine::param("favicon"); ?>"/>
 <style type="text/css">
 <xsl:text><![CDATA[
 .rss-channel > .rss-item {
