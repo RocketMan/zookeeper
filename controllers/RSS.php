@@ -361,7 +361,7 @@ class RSS extends CommandTarget implements IController {
 <link rel="stylesheet" href="<?php echo UI::decorate("css/zoostyle.css"); ?>"/>
 <style type="text/css">
 <xsl:text><![CDATA[
-.feed > .item {
+.rss-channel > .rss-item {
   padding: 2px 0px;
 }
 ]]>
@@ -404,12 +404,12 @@ function fixup() {
 </xsl:template>
 <xsl:template match="channel">
   <h2><xsl:value-of select="title"/></h2>
-  <div class="feed">
+  <div class="rss-channel">
     <xsl:apply-templates select="item"/>
   </div>
 </xsl:template>
 <xsl:template match="item">
-  <div class="item">
+  <div class="rss-item">
     <h3>
       <a class="nav" href="{link}">
         <xsl:value-of select="title"/>
