@@ -68,7 +68,7 @@ class RSS extends CommandTarget implements IController {
         header("Content-type: text/xml");
         ob_start("ob_gzhandler");
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        echo "<?xml-stylesheet type=\"text/xsl\" href=\"".UI::getBaseUrl()."zkrss.php?xslt=true\"?>\n";
+        echo "<?xml-stylesheet type=\"text/xsl\" href=\"zkrss.xslt\"?>\n";
         echo "<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n";
         echo "    xmlns:zk=\"http://zookeeper.ibinx.com/zkns\">";
         
@@ -344,7 +344,15 @@ class RSS extends CommandTarget implements IController {
     }
 
     private function emitXSLT() {
+        $mtime = max(filemtime(realpath(__FILE__)),
+                     filemtime(realpath(__DIR__."/../css/zoostyle.css")));
+        if(isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
+                strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $mtime) {
+            http_response_code(304); // Not Modified
+            return;
+        }
         header("Content-type: application/xslt+xml");
+        header("Last-Modified: ".gmdate('D, d M Y H:i:s', $mtime)." GMT");
         ob_start("ob_gzhandler"); ?>
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Zookeeper Online (C) 1997-2021 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 -->

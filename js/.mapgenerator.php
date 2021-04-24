@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -32,9 +32,16 @@ if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
     http_response_code(404);
     return;
 }
-    
+
+$mtime = filemtime($target);
+if(isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
+        strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $mtime) {
+    http_response_code(304); // Not Modified
+    return;
+}
+
 header("Content-Type: application/json");
-header("Last-Modified: ".gmdate('D, d M Y H:i:s', filemtime($target))." GMT");
+header("Last-Modified: ".gmdate('D, d M Y H:i:s', $mtime)." GMT");
 
 // for HEAD requests, there is nothing more to do
 if($_SERVER['REQUEST_METHOD'] == "HEAD")
