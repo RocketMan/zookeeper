@@ -68,7 +68,7 @@ class RSS extends CommandTarget implements IController {
         header("Content-type: text/xml");
         ob_start("ob_gzhandler");
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        echo "<?xml-stylesheet type=\"text/xsl\" href=\"zkrss.xslt\"?>\n";
+        echo "<?xml-stylesheet type=\"text/xsl\" href=\"zk-feed-reader.xslt\"?>\n";
         echo "<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n";
         echo "    xmlns:zk=\"http://zookeeper.ibinx.com/zkns\">";
         
