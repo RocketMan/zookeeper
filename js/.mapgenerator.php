@@ -34,7 +34,10 @@ if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
 }
 
 $mtime = filemtime($target);
-if(isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
+header("ETag: \"${mtime}\""); // RFC 2616 requires ETag in 304 response
+if(isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
+        strstr($_SERVER['HTTP_IF_NONE_MATCH'], "\"${mtime}\"") !== false ||
+        isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
         strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $mtime) {
     http_response_code(304); // Not Modified
     return;
