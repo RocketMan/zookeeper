@@ -366,7 +366,7 @@ class Reviews extends MenuItem {
                 break;
             case " Post Review! ":
                 Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
-                $review = substr($_REQUEST["review"], 0, 64000);
+                $review = substr(trim($_REQUEST["review"]), 0, 64000);
                 $success = Engine::api(IReview::class)->insertReview($_REQUEST["tag"], $_REQUEST["private"], $airname, $review, $this->session->getUser());
                 if($success >= 1) {
                     if($_REQUEST["noise"])
@@ -378,7 +378,7 @@ class Reviews extends MenuItem {
                 echo "<B><FONT COLOR=\"#cc0000\">Review not posted.  Try again later.</FONT></B>\n";
                 break;
             case " Update Review ":
-                $review = substr($_REQUEST["review"], 0, 64000);
+                $review = substr(trim($_REQUEST["review"]), 0, 64000);
                 $success = Engine::api(IReview::class)->updateReview($_REQUEST["tag"], $_REQUEST["private"], $airname, $review, $this->session->getUser());
                 if($success >= 0) {
                     if($_REQUEST["noise"])

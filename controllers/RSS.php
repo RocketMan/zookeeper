@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -43,6 +43,10 @@ class RSS extends CommandTarget implements IController {
        return str_replace(['&', '"', "'", '<', '>', '`'],
            ['&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'], $str);
     }
+
+    private static function xmlcdata($str) {
+       return "<![CDATA[${str}]]>";
+    }
     
     private static function htmlnumericentities($str) {
        // for UTF-8, this is a no-op.  xmlentities has already taken
@@ -56,22 +60,31 @@ class RSS extends CommandTarget implements IController {
     public function processRequest($dispatcher) {
         $this->session = Engine::session();
 
+        if(isset($_REQUEST["xslt"])) {
+            $this->emitXSLT();
+            return;
+        }
+
         header("Content-type: text/xml");
+        ob_start("ob_gzhandler");
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        echo "<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n";
+        echo "<?xml-stylesheet type=\"text/xsl\" href=\"zk-feed-reader.xslt\"?>\n";
+        echo "<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n";
+        echo "    xmlns:zk=\"http://zookeeper.ibinx.com/zkns\">";
         
         $feeds = explode(',', $_REQUEST["feed"]);
         foreach($feeds as $feed)
             $this->processLocal($feed, null);
 
         echo "</rss>\n";
+        ob_end_flush(); // ob_gzhandler
     }
 
     public function processLocal($action, $subaction) {
         $this->dispatchAction($action, self::$actions);
     }
 
-    public function emitChartRSS($endDate, &$title, $limit="", $category="") {
+    public function composeChartRSS($endDate, &$title, $limit="", $category="") {
         Engine::api(IChart::class)->getChart($chart, "", $endDate, $limit, $category);
         if(sizeof($chart)) {
             $title = Engine::param('station'). " ";
@@ -86,8 +99,8 @@ class RSS extends CommandTarget implements IController {
             $formatDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
             $title .= "for the week ending $formatDate";
     
-            $output = "&lt;p&gt;Rank. ARTIST &lt;I&gt;ALBUM&lt;/I&gt; (LABEL)&lt;/p&gt;\n";
-            $output .= "&lt;p&gt;";
+            $output = "<p>Rank. ARTIST <i>ALBUM</i> (LABEL)</p>\n";
+            $output .= "<p>";
     
             for($i=0; $i < sizeof($chart); $i++) {
                 // Fixup the artist, album, and label names
@@ -114,19 +127,19 @@ class RSS extends CommandTarget implements IController {
     
                 $output .= (string)($i + 1).". ";
                 // Artist
-                $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " &lt;I&gt;";
+                $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " <i>";
                 // Album & Label
-                $output .= "&lt;A HREF=\"".UI::getBaseUrl().
+                $output .= "<a href=\"".UI::getBaseUrl().
                              "?s=byAlbumKey&amp;n=".$chart[$i]["tag"].
                              "&amp;q=10".
                              "&amp;action=search".
-                             "\"&gt;". self::htmlnumericentities(self::xmlentities($album)) . "&lt;/A&gt;&lt;/I&gt;$medium (" .
-                     self::htmlnumericentities(self::xmlentities($label)) . ")&lt;BR&gt;\n";
+                             "\">". self::htmlnumericentities(self::xmlentities($album)) . "</a></i>$medium (" .
+                     self::htmlnumericentities(self::xmlentities($label)) . ")<br/>\n";
             }
     
-            $output .= "&lt;/p&gt;";
+            $output .= "</p>";
         }
-        return $output;
+        return self::xmlcdata($output);
     }
     
     public function recentCharts() {
@@ -150,13 +163,15 @@ class RSS extends CommandTarget implements IController {
        $weeks = Engine::api(IChart::class)->getChartDates($weeks);
        while($weeks && ($week = $weeks->fetch())) {
           $endDate = $week["week"];
-          $output = $this->emitChartRSS($endDate, $name, $top);
+          $output = $this->composeChartRSS($endDate, $name, $top);
           $link = UI::getBaseUrl()."?action=viewChart&amp;subaction=weekly&amp;year=".substr($endDate,0,4)."&amp;month=".substr($endDate,5,2)."&amp;day=".substr($endDate,8,2);
           echo "<item>\n<title>$name</title>\n";
           echo "<guid>$link</guid>\n";
           echo "<link>$link</link>\n";
           echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=charts\">$title</source>\n";
           echo "<pubDate>".date("r", strtotime($endDate))."</pubDate>\n";
+          // zk:subtitle is blank as title already contains the date
+          echo "<zk:subtitle></zk:subtitle>\n";
           echo "<description>$output</description>\n</item>\n";
        }
        echo "</channel>\n";
@@ -164,11 +179,8 @@ class RSS extends CommandTarget implements IController {
     
     public function recentReviews() {
        $station = Engine::param('station');
-       $limit = $_REQUEST["limit"];
+       $limit = isset($_REQUEST["limit"])?$_REQUEST["limit"]:50;
 
-       if(!$limit)
-          $limit = 100;
-    
        $title = "$station Radio Music Reviews";
     
        echo "<channel>\n<title>$title</title>\n";
@@ -205,14 +217,13 @@ class RSS extends CommandTarget implements IController {
                 $review = $review[2];
                 //if(strlen($review) > 500)
                 //   $review = substr($review, 0, 497) . "...";
-                $review = nl2br(self::xmlentities($review, ENT_QUOTES));
-                $review = self::xmlentities($review);
+                $review = nl2br(self::xmlentities(trim($review), ENT_QUOTES));
                 break;
              }
           }
     
-          //echo "<item>\n<description>&lt;p&gt;&lt;a href=\"$link\"&gt;$name&lt;/a&gt; review by ".self::xmlentities($djname)."&lt;/p&gt;$review</description>\n";
-          echo "<item>\n<description>&lt;p&gt;Review by ".self::xmlentities($djname)."&lt;/p&gt;&lt;p&gt;$review&lt;/p&gt;</description>\n";
+          $output = self::xmlcdata("<p>Review by ".self::xmlentities($djname)."</p><p>$review</p>");
+          echo "<item>\n<description>$output</description>\n";
           echo "<title>$name</title>\n";
           echo "<guid isPermaLink=\"false\">review-".$row[0]."-".substr($row[3],0,10)."</guid>\n";
           echo "<category>".self::xmlentities(ILibrary::GENRES[$album[0]["category"]])."</category>\n";
@@ -220,12 +231,14 @@ class RSS extends CommandTarget implements IController {
           //echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=reviews\">".self::xmlentities($djname)."</source>\n";
           echo "<dc:creator>".self::xmlentities($djname)."</dc:creator>\n";
           echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=reviews\">$title</source>\n";
-          echo "<pubDate>".date("r",strtotime($row[3]))."</pubDate>\n</item>\n";
+          $time = strtotime($row[3]);
+          echo "<pubDate>".date("r", $time)."</pubDate>\n";
+          echo "<zk:subtitle>Reviewed ".date("F j, Y", $time)."</zk:subtitle>\n</item>\n";
        }
        echo "</channel>\n";
     }
     
-    public function emitAddRSS($addDate, &$title) {
+    public function composeAddRSS($addDate, &$title) {
         $station = Engine::param('station');
         $results = Engine::api(IChart::class)->getAdd($addDate);
         if($results) {
@@ -235,8 +248,8 @@ class RSS extends CommandTarget implements IController {
             $formatDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
             $title .= "for $formatDate";
     
-            $output = "&lt;p&gt;Num (Charts) ARTIST &lt;I&gt;Album&lt;/I&gt; (Label)&lt;/p&gt;\n";
-            $output .= "&lt;p&gt;";
+            $output = "<p>Num (Charts) ARTIST <i>Album</i> (Label)</p>\n";
+            $output .= "<p>";
     
             // Get the chart categories
             $cats = Engine::api(IChart::class)->getCategories();
@@ -278,19 +291,19 @@ class RSS extends CommandTarget implements IController {
                 $output .= "(".$codes.") ";
     
                 // Artist
-                $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " &lt;I&gt;";
+                $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " <i>";
                 // Album & Label
-                $output .= "&lt;A HREF=\"".UI::getBaseUrl().
+                $output .= "<a href=\"".UI::getBaseUrl().
                              "?s=byAlbumKey&amp;n=".$row["tag"].
                              "&amp;q=10".
                              "&amp;action=search".
-                             "\"&gt;". self::htmlnumericentities(self::xmlentities($album)) . "&lt;/A&gt;&lt;/I&gt;$medium (" .
-                     self::htmlnumericentities(self::xmlentities($label)) . ")&lt;BR&gt;\n";
+                             "\">". self::htmlnumericentities(self::xmlentities($album)) . "</a></i>$medium (" .
+                     self::htmlnumericentities(self::xmlentities($label)) . ")<br/>\n";
             }
     
-            $output .= "&lt;/p&gt;";
+            $output .= "</p>";
         }
-        return $output;
+        return self::xmlcdata($output);
     }
     
     public function recentAdds() {
@@ -311,13 +324,15 @@ class RSS extends CommandTarget implements IController {
        $weeks = Engine::api(IChart::class)->getAddDates($weeks);
        while($weeks && ($week = $weeks->fetch())) {
           $addDate = $week["adddate"];
-          $output = $this->emitAddRSS($addDate, $name);
+          $output = $this->composeAddRSS($addDate, $name);
           $link = UI::getBaseUrl()."?action=addmgr&amp;subaction=adds&amp;date=$addDate";
           echo "<item>\n<title>$name</title>\n";
           echo "<guid>$link</guid>\n";
           echo "<link>$link</link>\n";
           echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=adds\">$title</source>\n";
           echo "<pubDate>".date("r", strtotime($addDate))."</pubDate>\n";
+          // zk:subtitle is blank as title already contains the date
+          echo "<zk:subtitle></zk:subtitle>\n";
           echo "<description>$output</description>\n</item>\n";
        }
        echo "</channel>\n";
@@ -326,5 +341,89 @@ class RSS extends CommandTarget implements IController {
     public function emitError() {
        $message = "Invalid feed: ".$_REQUEST["feed"];
        echo "<channel>\n<title>$message</title>\n<link>".UI::getBaseUrl()."</link>\n<description>$message</description>\n</channel>\n";
+    }
+
+    private function emitXSLT() {
+        header("Content-type: application/xslt+xml");
+        ob_start("ob_gzhandler"); ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Zookeeper Online (C) 1997-2021 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 -->
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:zk="http://zookeeper.ibinx.com/zkns"
+    xmlns="http://www.w3.org/1999/xhtml" version="1.0">
+<xsl:output method="xml"/>
+<xsl:template match="/">
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title><xsl:value-of select="rss/channel/title"/></title>
+<link rel="stylesheet" href="<?php echo UI::decorate("css/zoostyle.css"); ?>"/>
+<link rel="icon" href="<?php echo Engine::param("favicon"); ?>"/>
+<style type="text/css">
+<xsl:text><![CDATA[
+.rss-channel > .rss-item {
+  padding: 2px 0px;
+}
+]]>
+</xsl:text>
+</style>
+<script type="text/javascript"><?php
+  /*
+   * RSS feeds contain HTML markup which the browser will escape;
+   * that is, it will display HTML tags as literal text.  The
+   * disable-output-escaping attribute is not supported on all
+   * browsers (FX, for example).  We work around these limitations
+   * by storing HTML content in a data attribute and then setting
+   * the content into the document via innerHTML.
+   */ ?>
+<xsl:text><![CDATA[
+function fixup() {
+   var nodes = document.getElementsByClassName("description");
+   Array.prototype.slice.call(nodes).forEach(function(node) {
+      node.innerHTML = node.dataset.description;
+   });
+}
+]]>
+</xsl:text>
+</script>
+</head>
+<body onload="fixup()">
+  <div class="box">
+    <div class="user-tip" style="display: block">
+      <p>This is a Really Simple Syndication (RSS) feed.  RSS is a family of
+      web feed formats used to publish frequently updated content.</p>
+      <p>To subscribe to this feed, drag or copy the address into your
+      RSS feed reader.  New to RSS?
+      <a href="https://www.google.com/search?q=how+to+get+started+with+rss+feeds"
+      title="Getting started with RSS" target="_blank">Learn more</a>.</p>
+    </div>
+    <xsl:apply-templates select="rss/channel"/>
+  </div>
+</body>
+</html>
+</xsl:template>
+<xsl:template match="channel">
+  <h2><xsl:value-of select="title"/></h2>
+  <div class="rss-channel">
+    <xsl:apply-templates select="item"/>
+  </div>
+</xsl:template>
+<xsl:template match="item">
+  <div class="rss-item">
+    <h3>
+      <a class="nav" href="{link}">
+        <xsl:value-of select="title"/>
+      </a><br/>
+      <span class="sub">
+        <xsl:value-of select="zk:subtitle"/>
+      </span>
+    </h3>
+    <p class="description" data-description="{description}"/>
+  </div>
+</xsl:template>
+</xsl:stylesheet>
+<?php
+        ob_end_flush(); // ob_gzhandler
     }
 }
