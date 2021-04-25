@@ -344,18 +344,7 @@ class RSS extends CommandTarget implements IController {
     }
 
     private function emitXSLT() {
-        $mtime = max(filemtime(realpath(__FILE__)),
-                     filemtime(realpath(__DIR__."/../css/zoostyle.css")));
-        header("ETag: \"${mtime}\""); // RFC 2616 requires ETag in 304 response
-        if(isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
-                strstr($_SERVER['HTTP_IF_NONE_MATCH'], "\"${mtime}\"") !== false ||
-                isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
-                strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $mtime) {
-            http_response_code(304); // Not Modified
-            return;
-        }
         header("Content-type: application/xslt+xml");
-        header("Last-Modified: ".gmdate('D, d M Y H:i:s', $mtime)." GMT");
         ob_start("ob_gzhandler"); ?>
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Zookeeper Online (C) 1997-2021 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 -->
