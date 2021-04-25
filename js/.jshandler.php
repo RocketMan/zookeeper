@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -30,9 +30,19 @@ if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
     http_response_code(404);
     return;
 }
-    
+
+$mtime = filemtime($target);
+header("ETag: \"${mtime}\""); // RFC 2616 requires ETag in 304 response
+if(isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
+        strstr($_SERVER['HTTP_IF_NONE_MATCH'], "\"${mtime}\"") !== false ||
+        isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
+        strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $mtime) {
+    http_response_code(304); // Not Modified
+    return;
+}
+
 header("Content-Type: application/javascript");
-header("Last-Modified: ".gmdate('D, d M Y H:i:s', filemtime($target))." GMT");
+header("Last-Modified: ".gmdate('D, d M Y H:i:s', $mtime)." GMT");
 
 // only announce source maps on files which are not already minified
 if(substr_compare($target, ".min.js", -7)) {
