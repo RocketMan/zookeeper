@@ -356,8 +356,8 @@ class RSS extends CommandTarget implements IController {
         }
         header("Content-type: application/xslt+xml");
         header("Last-Modified: ".gmdate('D, d M Y H:i:s', $mtime)." GMT");
-        ob_start("ob_gzhandler"); ?>
-<?xml version="1.0" encoding="UTF-8"?>
+        ob_start("ob_gzhandler");
+        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"; ?>
 <!-- Zookeeper Online (C) 1997-2021 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:dc="http://purl.org/dc/elements/1.1/"
