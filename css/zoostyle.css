@@ -437,6 +437,15 @@ p.zktitle a {
     text-decoration: none;
 }
 
+#playlist-calendar {
+    position: relative;
+    top: 4px;
+}
+
+#playlist-list {
+    margin-top: 10px;
+}
+
 /* primary navigation */
 .nav:link { color: #990010; }
 .nav:visited { color: #990010; }

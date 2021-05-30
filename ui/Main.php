@@ -38,6 +38,7 @@ class Main implements IController {
     protected $session;
 
     public function processRequest($dispatcher) {
+
         $this->session = Engine::session();
         $this->preProcessRequest($dispatcher);
 
@@ -110,12 +111,13 @@ class Main implements IController {
     var datefield=document.createElement("input");
     datefield.setAttribute("type", "date");
     if (datefield.type!="date") {
-        document.write('<link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/base/jquery-ui.css" rel="stylesheet" type="text/css" />');
-        document.write('<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js"><\/script>') 
-
         document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css" />');
         document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"><\/script>');
     }
+
+    document.write('<link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/base/jquery-ui.css" rel="stylesheet" type="text/css" />');
+    document.write('<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js"><\/script>') 
+
     <?php ob_end_flush(); ?>
   // -->
   </SCRIPT>

@@ -153,6 +153,12 @@ $config = [
     ],
 
     /**
+     * ISO Date of oldest playlist in the sytem. Used to control
+     * how far back the year picker goes in the view plists page.
+     */
+    'playlist_start_date' => '2000-07-21',
+
+    /**
      * label printer
      */
     'label_printer' => [

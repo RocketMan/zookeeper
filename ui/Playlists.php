@@ -53,7 +53,10 @@ class Playlists extends MenuItem {
         [ "showLink", "emitShowLink" ],
         [ "viewDJ", "emitViewDJ" ],
         [ "viewDJReviews", "viewDJReviews" ],
-        [ "viewDate", "emitViewDate" ],
+        [ "viewList", "emitViewPlaylist" ],
+        [ "playlistPicker", "emitPlaylistPicker" ],
+        [ "playlistDaysByDate", "handlePlaylistDaysByDate" ],
+        [ "playlistsByDate", "handlePlaylistsByDate" ],
         [ "updateDJInfo", "updateDJInfo" ],
         [ "addTrack", "handleAddTrack" ],
         [ "moveTrack", "handleMoveTrack" ],
@@ -1895,6 +1898,11 @@ class Playlists extends MenuItem {
         echo "<DIV CLASS='playlistBanner'>&nbsp;" . $showName . " with " . $djLink.$dateDiv . "</DIV>\n";
     }
 
+    public  function emitViewPlayList() {
+        $playlistId = $_REQUEST["playlist"];
+        $this->viewList($playlistId);
+    }
+
     private function viewList($playlistId) {
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
         if( !$row) {
@@ -2099,69 +2107,53 @@ class Playlists extends MenuItem {
         echo "</TD></TR>\n</TABLE>\n";
     }
     
-    public function emitViewDate() {
-        $seq = $_REQUEST["seq"];
-        $viewdate = $_REQUEST["viewdate"];
-        $playlist = $_REQUEST["playlist"];
-        $month = $_REQUEST["month"];
-        $year = $_REQUEST["year"];
-    
-        settype($playlist, "integer");
-    
-        if(($seq == "selList") && $playlist) {
-            $this->viewList($playlist);
-            return;
+    // return list of days in month that have at least 1 playlist.
+    public function handlePlaylistDaysByDate() {
+        $date = $_REQUEST["viewdate"];
+        $dateAr = explode('-', $date);
+        $records = Engine::api(IPlaylist::class)->getShowdates($dateAr[0], $dateAr[1]);
+        $showdates = array();
+        while ($records && ($row = $records->fetch())) {
+            $showdates[] = explode('-', $row['showdate'])[2];
         }
-    
-        echo "<P><B>Select Date:</B></P>\n";
-    
-        if(!$month || !$year) {
-            // Set default calendar display to current month
-            $d = getdate(time());
-            $month = $d["mon"];
-            $year = $d["year"];
-        }
-    
-        // Run the query
-        $records = Engine::api(IPlaylist::class)->getShowdates($year, $month);
-        unset($dates);
-        while($records && ($row = $records->fetch()))
-            $dates .= $row['showdate'] . "|";
-    
-        // Display the calendar
-        $cal = new ZKCalendar;
-        $cal->setDates($dates);
-        echo $cal->getMonthView($month, $year);
-    
-        if(((($seq == "selDate") && $viewdate)) ||
-            (($seq == "selList") && !$playlist)) {
-            list($y,$m,$d) = explode("-", $viewdate);
-            $displayDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
-    ?>
-    <BR>
-    <TABLE WIDTH="100%">
-    <TR><TH COLSPAN=3 ALIGN=LEFT CLASS="subhead">Playlists for <?php echo $displayDate;?>:</TH></TR>
-    </TABLE>
-    <TABLE CELLPADDING=2 CELLSPACING=2>
-    <?php 
-            // Run the query
-            $records = Engine::api(IPlaylist::class)->getPlaylists(1, 1, $viewdate, 0, 0, 0);
-            $i=0;
-            while($records && ($row = $records->fetch())) {
-                    echo "<TR><TD ALIGN=\"RIGHT\" CLASS=\"sub\">" . self::timeToAMPM($row[2]) . "&nbsp;</TD>\n";
-                    echo "    <TD><A HREF=\"".
-                         "?action=viewDate&amp;seq=selList&amp;playlist=".$row[0].
-                         "\" CLASS=\"nav\">" .
-                         htmlentities($row[3]) . "</A>&nbsp;&nbsp;";
-                    echo "(" . htmlentities($row[5]) . ")</TD></TR>\n";
-                    $i += 1;
-            }
-    ?>
-    </TABLE>
-    <?php 
-        }
+
+        $length = count($showdates);
+        echo json_encode($showdates);
     }
-    
+
+    // emit page for picking playlists for a given month.
+    public function emitPlaylistPicker() {
+        $startDate = Engine::param('playlist_start_date');
+        echo "<b>Playlist Date:&nbsp;</b>";
+        echo "<input id='playlist-start-date' type='hidden' value='${startDate}' />";
+        echo "<input id='playlist-date'/>";
+        echo "<input id='playlist-datepicker' readonly='true' type='hidden' autocomplete='off' />";
+        echo "<img id='playlist-calendar' src='/img/calendar-icon.png'></img>";
+        echo "<table id='playlist-list'>";
+        echo "<thead><tr><th textalign='left' colspan='2' class='subhead'></th></tr></thead>";
+        echo "<tbody></tbody></table>";
+        UI::emitJS('js/playlists.view.js');
+    }
+
+    public function handlePlaylistsByDate() {
+        $viewdate = $_REQUEST["viewdate"];
+        $records = Engine::api(IPlaylist::class)->getPlaylists(1, 1, $viewdate, 0, 0, 0, 20);
+        $tbody = '';
+        $count = 0;
+        $href = '?action=viewList&playlist';
+        while($records && ($row = $records->fetch())) {
+            $timeRange = self::timeToAMPM($row[2]);
+            $title = htmlentities($row[3]);
+            $djs = htmlentities($row[5]);
+            $tbody .= "<TR>" .
+                 "<TD ALIGN='RIGHT' CLASS='sub'>$timeRange&nbsp;</TD>" .
+                 "<TD><A CLASS='nav' HREF='$href=$row[0]'>$title</A>&nbsp;&nbsp;($djs)</TD>" .
+                 "</TR>\n";
+            $count = $count + 1;
+        }
+        echo json_encode(["count" => $count, "tbody" => $tbody]);
+    }
+
     public function viewLastPlays($tag, $count=0) {
         $plays = Engine::api(IPlaylist::class)->getLastPlays($tag, $count);
         if($plays) {
@@ -2211,20 +2203,3 @@ class Playlists extends MenuItem {
     }
 }
 
-class ZKCalendar extends \Calendar {
-    function setDates($dates) {
-        $this->dates = $dates;
-    }
-    function getCalendarLink($month, $year) {
-        return "?action=viewDate&amp;month=$month&amp;year=$year";
-    }
-    function getDateLink($day, $month, $year) {
-        $link = "";
-        $testDate = date("Y-m-d", mktime(0,0,0,$month,$day,$year));
-
-        if(strstr($this->dates, $testDate))
-            $link = "?action=viewDate&amp;seq=selDate&amp;viewdate=$testDate&amp;month=$month&amp;year=$year";
-
-        return $link;
-    }
-}
