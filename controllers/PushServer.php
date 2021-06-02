@@ -39,9 +39,7 @@ use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
-if(file_exists(__DIR__."/../vendor/autoload.php")) {
-    include(__DIR__."/../vendor/autoload.php");
-
+if(interface_exists(MessageComponentInterface::class)) {
     class NowAiringServer implements MessageComponentInterface {
         const TIME_FORMAT_INTERNAL = "Y-m-d Hi"; // eg, 2019-01-01 1234
 
