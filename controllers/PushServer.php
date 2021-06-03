@@ -39,7 +39,8 @@ use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
-if(interface_exists(MessageComponentInterface::class)) {
+if(interface_exists(MessageComponentInterface::class) &&
+        Engine::param('push_enabled', true)) {
     class NowAiringServer implements MessageComponentInterface {
         const TIME_FORMAT_INTERNAL = "Y-m-d Hi"; // eg, 2019-01-01 1234
 
@@ -281,7 +282,7 @@ if(interface_exists(MessageComponentInterface::class)) {
                 return;
             }
 
-            echo "Push notification dependencies are missing.\n\n";
+            echo "Push notification is disabled or dependencies are missing.\n\n";
             echo "See INSTALLATION.md for more information.\n";
         }
     }
