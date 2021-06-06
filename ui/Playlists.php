@@ -40,6 +40,10 @@ class Playlists extends MenuItem {
 
     //NOTE: update ui_config.php when changing the actions.
     private static $actions = [
+        [ "viewList", "emitPlaylistPicker" ],
+        [ "viewListById", "emitViewPlaylist" ],
+        [ "viewListDaysByDate", "handlePlaylistDaysByDate" ],
+        [ "viewListsByDate", "handlePlaylistsByDate" ],
         [ "newList", "emitEditList" ],
         [ "newListEditor", "emitEditor" ],
         [ "newListPost", "handleListPost" ],
@@ -53,10 +57,6 @@ class Playlists extends MenuItem {
         [ "showLink", "emitShowLink" ],
         [ "viewDJ", "emitViewDJ" ],
         [ "viewDJReviews", "viewDJReviews" ],
-        [ "viewList", "emitViewPlaylist" ],
-        [ "playlistPicker", "emitPlaylistPicker" ],
-        [ "playlistDaysByDate", "handlePlaylistDaysByDate" ],
-        [ "playlistsByDate", "handlePlaylistsByDate" ],
         [ "updateDJInfo", "updateDJInfo" ],
         [ "addTrack", "handleAddTrack" ],
         [ "moveTrack", "handleMoveTrack" ],
@@ -2140,7 +2140,7 @@ class Playlists extends MenuItem {
         $records = Engine::api(IPlaylist::class)->getPlaylists(1, 1, $viewdate, 0, 0, 0, 20);
         $tbody = '';
         $count = 0;
-        $href = '?action=viewList&playlist';
+        $href = '?action=viewListById&playlist';
         while($records && ($row = $records->fetch())) {
             $timeRange = self::timeToAMPM($row[2]);
             $title = htmlentities($row[3]);
