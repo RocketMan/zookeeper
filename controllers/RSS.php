@@ -60,17 +60,14 @@ class RSS extends CommandTarget implements IController {
     public function processRequest($dispatcher) {
         $this->session = Engine::session();
 
-        if(isset($_REQUEST["xslt"])) {
-            $this->emitXSLT();
-            return;
-        }
-
         header("Content-type: text/xml");
         ob_start("ob_gzhandler");
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         echo "<?xml-stylesheet type=\"text/xsl\" href=\"zk-feed-reader.xslt\"?>\n";
         echo "<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n";
-        echo "    xmlns:zk=\"http://zookeeper.ibinx.com/zkns\">";
+        echo "    xmlns:zk=\"http://zookeeper.ibinx.com/zkns\"\n";
+        echo "    zk:stylesheet=\"".UI::decorate("css/zoostyle.css")."\"\n";
+        echo "    zk:favicon=\"".Engine::param("favicon")."\">\n";
         
         $feeds = explode(',', $_REQUEST["feed"]);
         foreach($feeds as $feed)
@@ -341,100 +338,5 @@ class RSS extends CommandTarget implements IController {
     public function emitError() {
        $message = "Invalid feed: ".$_REQUEST["feed"];
        echo "<channel>\n<title>$message</title>\n<link>".UI::getBaseUrl()."</link>\n<description>$message</description>\n</channel>\n";
-    }
-
-    private function emitXSLT() {
-        $mtime = max(filemtime(realpath(__FILE__)),
-                     filemtime(realpath(__DIR__."/../css/zoostyle.css")));
-        header("ETag: \"${mtime}\""); // RFC 2616 requires ETag in 304 response
-        if(isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
-                strstr($_SERVER['HTTP_IF_NONE_MATCH'], "\"${mtime}\"") !== false ||
-                isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
-                strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $mtime) {
-            http_response_code(304); // Not Modified
-            return;
-        }
-        header("Content-type: application/xslt+xml");
-        header("Last-Modified: ".gmdate('D, d M Y H:i:s', $mtime)." GMT");
-        ob_start("ob_gzhandler");
-        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"; ?>
-<!-- Zookeeper Online (C) 1997-2021 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 -->
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-    xmlns:dc="http://purl.org/dc/elements/1.1/"
-    xmlns:zk="http://zookeeper.ibinx.com/zkns"
-    xmlns="http://www.w3.org/1999/xhtml" version="1.0">
-<xsl:output method="xml"/>
-<xsl:template match="/">
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<title><xsl:value-of select="rss/channel/title"/></title>
-<link rel="stylesheet" href="<?php echo UI::decorate("css/zoostyle.css"); ?>"/>
-<link rel="icon" href="<?php echo Engine::param("favicon"); ?>"/>
-<style type="text/css">
-<xsl:text><![CDATA[
-.rss-channel > .rss-item {
-  padding: 2px 0px;
-}
-]]>
-</xsl:text>
-</style>
-<script type="text/javascript"><?php
-  /*
-   * RSS feeds contain HTML markup which the browser will escape;
-   * that is, it will display HTML tags as literal text.  The
-   * disable-output-escaping attribute is not supported on all
-   * browsers (FX, for example).  We work around these limitations
-   * by storing HTML content in a data attribute and then setting
-   * the content into the document via innerHTML.
-   */ ?>
-<xsl:text><![CDATA[
-function fixup() {
-   var nodes = document.getElementsByClassName("description");
-   Array.prototype.slice.call(nodes).forEach(function(node) {
-      node.innerHTML = node.dataset.description;
-   });
-}
-]]>
-</xsl:text>
-</script>
-</head>
-<body onload="fixup()">
-  <div class="box">
-    <div class="user-tip" style="display: block">
-      <p>This is a Really Simple Syndication (RSS) feed.  RSS is a family of
-      web feed formats used to publish frequently updated content.</p>
-      <p>To subscribe to this feed, drag or copy the address into your
-      RSS feed reader.  New to RSS?
-      <a href="https://www.google.com/search?q=how+to+get+started+with+rss+feeds"
-      title="Getting started with RSS" target="_blank">Learn more</a>.</p>
-    </div>
-    <xsl:apply-templates select="rss/channel"/>
-  </div>
-</body>
-</html>
-</xsl:template>
-<xsl:template match="channel">
-  <h2><xsl:value-of select="title"/></h2>
-  <div class="rss-channel">
-    <xsl:apply-templates select="item"/>
-  </div>
-</xsl:template>
-<xsl:template match="item">
-  <div class="rss-item">
-    <h3>
-      <a class="nav" href="{link}">
-        <xsl:value-of select="title"/>
-      </a><br/>
-      <span class="sub">
-        <xsl:value-of select="zk:subtitle"/>
-      </span>
-    </h3>
-    <p class="description" data-description="{description}"/>
-  </div>
-</xsl:template>
-</xsl:stylesheet>
-<?php
-        ob_end_flush(); // ob_gzhandler
     }
 }
