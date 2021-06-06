@@ -2128,7 +2128,7 @@ class Playlists extends MenuItem {
         echo "<input id='playlist-start-date' type='hidden' value='${startDate}' />";
         echo "<input id='playlist-date'/>";
         echo "<input id='playlist-datepicker' readonly='true' type='hidden' autocomplete='off' />";
-        echo "<img id='playlist-calendar' src='/img/calendar-icon.png'></img>";
+        echo "<img id='playlist-calendar' src='img/calendar-icon.png'></img>";
         echo "<table id='playlist-list'>";
         echo "<thead><tr><th textalign='left' colspan='2' class='subhead'></th></tr></thead>";
         echo "<tbody></tbody></table>";
