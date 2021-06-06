@@ -73,7 +73,7 @@ $().ready(function(){
 
     function setDateDisplay(isoDate) {
         let dateAr = isoDate.split('-');
-        let localDate = `${dateAr[1]}-${dateAr[2]}-${dateAr[0]}`;
+        let localDate = `${dateAr[2]}-${dateAr[1]}-${dateAr[0]}`;
         if (isUSLocale) 
             localDate = `${dateAr[1]}/${dateAr[2]}/${dateAr[0]}`;
             
