@@ -25,7 +25,7 @@
 $().ready(function(){
     // fetch the days with playlists for the selected month and enable the on the calendar.
     function setAvailableDays(showDate) {
-        let url = '/index.php?action=playlistDaysByDate&viewdate=' + showDate;
+        let url = 'index.php?action=playlistDaysByDate&viewdate=' + showDate;
         $.ajax({
             dataType : 'json',
             type: 'GET',
@@ -33,7 +33,11 @@ $().ready(function(){
             url: url,
         }).done(function (goodDays) {
             let excludeDays = $('td[data-handler="selectDay"]').filter(function(){
-                let excludeDay = !goodDays.includes($(this).text());
+                let day = $(this).text(); 
+                if (day.length == 1)
+                    day = '0' + day;
+
+                let excludeDay = !goodDays.includes(day);
                 return excludeDay;
             });
             excludeDays.unbind('click').addClass(['ui-datepicker-unselectable', 'ui-state-disabled']);
@@ -44,14 +48,14 @@ $().ready(function(){
     function getPlaylists(isoDate) {
         let timestamp = Date.parse(isoDate + 'T00:00:00');
         if (!timestamp)
-            errMsg = 'Date entry ' + dateStr + ' is not a valid date.';
+            errMsg = 'Date entry ' + isoDate + ' is not a valid date.';
         else if (playlistStartTimestamp && timestamp < playlistStartTimestamp) {
             alert("Sorry, the earliest playlist date is " + playlistStartIso);
             return;
         }
         
         setDateDisplay(isoDate);
-        let url = '/index.php?action=playlistsByDate&viewdate=' + isoDate;
+        let url = 'index.php?action=playlistsByDate&viewdate=' + isoDate;
         $('#playlist-list tbody').html('');
         $.ajax({
             dataType : 'json',
@@ -89,12 +93,13 @@ $().ready(function(){
         startYear = isoStartAr[0];
     }
  
+    let nowDate = new Date();
     $("#playlist-datepicker").datepicker({
         changeYear: true, 
         changeMonth: true,
         setDate: new Date(),
-        dateFormat: 'yyyy-mm-dd',
-        yearRange: startYear + ':c+0',
+        dateFormat: 'yy-mm-dd',
+        yearRange: startYear + ':' + nowDate.getFullYear(),
         onChangeMonthYear: function(year, month) {
             setAvailableDays(`${year}-${month}-1`);
         },
@@ -154,12 +159,9 @@ $().ready(function(){
     $("#playlist-datepicker").on('change', function(event) {
         event.preventDefault();
         let isoDate = $("#playlist-datepicker").datepicker().val();
-
-        // datepicker includes the 4 digit year twice for some reason so strip in necessary.
-        if (isoDate.length == 14)
-            isoDate = isoDate.substr(4);
-
-        console.log("iso date: " + isoDate);
         getPlaylists(isoDate);
     });
+
+    nowIso = `${nowDate.getFullYear()}-${("0" + (nowDate.getMonth()+1)).slice(-2)}-${("0" + nowDate.getDate()).slice(-2)}`;
+    getPlaylists(nowIso);
 });
