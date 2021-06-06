@@ -79,6 +79,11 @@ class Main implements IController {
         case "logout":
             $this->doLogout();
             break;
+        case "viewDate":
+            // redirect playlist URLs from the legacy date picker
+            $qs = isset($_REQUEST["playlist"])?"?action=viewListById&playlist=".urlencode($_REQUEST["playlist"]):"?action=viewList";
+            header("Location: ".UI::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            exit;
         }
     }
 
