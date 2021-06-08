@@ -437,6 +437,10 @@ p.zktitle a {
     text-decoration: none;
 }
 
+#playlist-date {
+    width: 200px;
+}
+
 #playlist-calendar {
     position: relative;
     top: 4px;
