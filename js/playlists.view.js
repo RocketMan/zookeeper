@@ -97,11 +97,24 @@ $().ready(function(){
     $("#playlist-datepicker").datepicker({
         changeYear: true, 
         changeMonth: true,
+        showButtonPanel: true,
         setDate: new Date(),
         dateFormat: 'yy-mm-dd',
         yearRange: startYear + ':' + nowDate.getFullYear(),
         onChangeMonthYear: function(year, month) {
             setAvailableDays(`${year}-${month}-1`);
+        },
+        onSelect: function(isoDate, datePicker) {
+            getPlaylists(isoDate);
+
+            let dayOrd = parseInt(isoDate.substr(isoDate.length - 2) - 1);
+            let days = $('td[data-handler="selectDay"] > a').removeClass('ui-state-active');
+            $(days[dayOrd]).addClass('ui-state-active');
+
+            // prevent return code from closing the calendar. surprisingly there
+            // is no supported mechanism for doing this and this is the least invasive
+            // way to get the desired behavior.
+            throw "Prevent calendar from closing.";
         },
         beforeShow: function(elem, datePicker) {
             // set days available for the current date.
@@ -152,14 +165,9 @@ $().ready(function(){
        if (errMsg) {
            alert(errMsg);
        } else {
+           $("#playlist-datepicker").datepicker('setDate', isoDate);
            getPlaylists(isoDate);
        }
-    });
-
-    $("#playlist-datepicker").on('change', function(event) {
-        event.preventDefault();
-        let isoDate = $("#playlist-datepicker").datepicker().val();
-        getPlaylists(isoDate);
     });
 
     nowIso = `${nowDate.getFullYear()}-${("0" + (nowDate.getMonth()+1)).slice(-2)}-${("0" + nowDate.getDate()).slice(-2)}`;
