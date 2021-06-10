@@ -35,6 +35,9 @@ use ZK\Engine\PlaylistObserver;
 
 use ZK\UI\UICommon as UI;
 
+use VStelmakh\UrlHighlight\UrlHighlight;
+
+
 class Playlists extends MenuItem {
     /* private */ const NME_PREFIX = "nme-";
 
@@ -64,6 +67,7 @@ class Playlists extends MenuItem {
 
     private $action;
     private $subaction;
+    private $urlHighlighter;
 
     public function processLocal($action, $subaction) {
         $this->action = $action;
@@ -73,9 +77,14 @@ class Playlists extends MenuItem {
     
     private function smartURL($name, $detect=true) {
         if($detect) {
-            //$name = UI::HTMLify($name, 20);
+            if(!isset($this->urlHighlighter))
+                $this->urlHighlighter = class_exists(UrlHighlight::class)?new UrlHighlight():false;
+
             $name = htmlentities($name);
-    
+
+            if($this->urlHighlighter)
+                return $this->urlHighlighter->highlightUrls($name);
+
             $words = explode(" ", $name);
             for($i=0; $i<sizeof($words); $i++) {
                 $word = $words[$i];
