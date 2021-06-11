@@ -313,6 +313,14 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $success?$newListId:false;
     }
 
+    public function reparentPlaylist($playlist, $user) {
+        $query = "UPDATE lists SET dj=? WHERE id=?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        $stmt->bindValue(2, $playlist);
+        return $stmt->execute();
+    }
+
     private function populateSeq($list) {
         $query = "SET @seq = 0; ".
                  "UPDATE tracks SET seq = (@seq := @seq + 1) ".

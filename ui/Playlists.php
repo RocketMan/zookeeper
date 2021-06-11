@@ -438,7 +438,12 @@ class Playlists extends MenuItem {
                 <label>Air Name:</label>
                 <INPUT id='show-airname' TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php echo !is_null($airName)?$airName:($description?"None":""); ?>'/>
                 <DATALIST id='airnames'>
-                  <?php echo $airNames; ?>
+                  <?php
+                      // if an administrator has reparented a playlist,
+                      // allow it to keep the existing airname
+                      if($this->session->isAuth("x") && !is_null($airName) && !preg_match("/\'$airName\'/", $airNames))
+                          echo "<OPTION VALUE='$airName'>";
+                      echo $airNames; ?>
                 </DATALIST>
             </div>
             <div>
@@ -477,14 +482,27 @@ class Playlists extends MenuItem {
         $goodAirname = $airname !== '';
 
         if($goodDate && $goodTime && $goodDescription && $goodAirname) {
+            $playlistId = $_REQUEST["playlist"];
+
             // process the airname
             if(!strcasecmp($airname, "None")) {
                 // unpublished playlist
                 $aid = 0;
             } else {
+                // if airname is unchanged, use it as-is
+                //
+                // this allows an administrator who has reparented another
+                // user's playlist to keep the existing airname on the list
+                if(isset($playlistId) && $playlistId > 0) {
+                    $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
+                    if($playlist["airname"] == $airname)
+                        $aid = $playlist["id"];
+                }
+
                 // lookup airname for this DJ
                 $api = Engine::api(IDJ::class);
-                $aid = $api->getAirname($airname, $this->session->getUser());
+                if(!isset($aid))
+                    $aid = $api->getAirname($airname, $this->session->getUser());
                 if(!$aid) {
                     // airname does not exist; try to create it
                     $success = $api->insertAirname($airname, $this->session->getUser());
@@ -501,7 +519,6 @@ class Playlists extends MenuItem {
                 }
             }
 
-            $playlistId = $_REQUEST["playlist"];
             if(isset($playlistId) && $playlistId > 0) {
                 // update existing playlist
                 $success = Engine::api(IPlaylist::class)->updatePlaylist(
@@ -581,8 +598,11 @@ class Playlists extends MenuItem {
         if(isset($playlistId) && $playlistId > 0) {
             if($_POST["duplicate"])
                 $playlistId = $api->duplicatePlaylist($playlistId);
-            if($playlistId)
+            if($playlistId) {
                 $sourcePlaylist = $api->getPlaylist($playlistId, 1);
+                if($this->session->isAuth("x") && $this->session->getUser() != $sourcePlaylist["dj"])
+                    $api->reparentPlaylist($playlistId, $this->session->getUser());
+            }
         } else {
             $WEEK_SECONDS = 60 *60 * 24 * 7;
             $nowDateStr =  (new \DateTime())->format("Y-m-d");
@@ -712,7 +732,7 @@ class Playlists extends MenuItem {
 
     private function emitTagForm($playlistId, $message) {
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
-        $this->emitPlaylistBanner($playlistId, $playlist);
+        $this->emitPlaylistBanner($playlistId, $playlist, true);
         $this->emitTrackAdder($playlistId, $playlist);
     }
     
@@ -1895,11 +1915,14 @@ class Playlists extends MenuItem {
                self::timeToAMPM($row['showtime']);
     }
 
-    private function emitPlaylistBanner($playlistId, $playlist) {
+    private function emitPlaylistBanner($playlistId, $playlist, $editMode) {
         $showName = $playlist['description'];
         $djId = $playlist['id'];
         $djName = $playlist['airname'];
         $showDateTime = self::makeShowDateAndTime($playlist);
+
+        if(!$editMode && $this->session->isAuth("x"))
+            $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='action' VALUE='editListDetails'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
 
         $dateDiv = "<DIV>".$showDateTime."&nbsp;</DIV>";
         $djLink = "<A HREF='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' CLASS='nav2'>$djName</A>";
@@ -1919,7 +1942,7 @@ class Playlists extends MenuItem {
             return;
         }
 
-        $this->emitPlaylistBanner($playlistId, $row);
+        $this->emitPlaylistBanner($playlistId, $row, false);
         $this->emitPlaylistBody($playlistId, false);
     }
     
