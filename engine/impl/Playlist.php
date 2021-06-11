@@ -31,7 +31,7 @@ namespace ZK\Engine;
 class PlaylistImpl extends DBO implements IPlaylist {
     const GRACE_START = "-15 minutes";
     const GRACE_END = "+30 minutes";
-    const DUPLICATE_PREFIX = "Rebroadcast: ";
+    const DUPLICATE_SUFFIX = " (rebroadcast from %F j, Y%)";
     const DUPLICATE_COMMENT =
         "Rebroadcast of an episode originally aired on %F j, Y%.";
 
@@ -272,9 +272,17 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $stmt->bindValue(1, $playlist);
         $from = $stmt->executeAndFetch();
 
+        $description = $from['description'] .
+            preg_replace_callback("/%([^%]*)%/",
+                function($matches) use ($from) {
+                    return \DateTime::createFromFormat(
+                        self::TIME_FORMAT,
+                        $from['showdate'] . " 0000")->format($matches[1]);
+                }, self::DUPLICATE_SUFFIX);
+
         $success = $from?$this->insertPlaylist($from['dj'],
                                      $from['showdate'], $from['showtime'],
-                                     self::DUPLICATE_PREFIX . $from['description'],
+                                     $description,
                                      $from['airname']):false;
         if($success) {
             $newListId = $this->lastInsertId();
