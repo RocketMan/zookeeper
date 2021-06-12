@@ -106,6 +106,7 @@ class UserAdmin extends MenuItem {
            g = station-only login<BR>
            m = music library editor<BR>
            n = a-file add manager<BR>
+           v = vaultkeeper (duplicate any playlist)<BR>
            x = administrator</TD>
       </TR>
     </TABLE>
@@ -153,6 +154,7 @@ class UserAdmin extends MenuItem {
            g = station-only login<BR>
            m = music library editor<BR>
            n = a-file add manager<BR>
+           v = vaultkeeper (duplicate any playlist)<BR>
            x = administrator</TD>
       </TR>
     </TABLE>

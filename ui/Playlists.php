@@ -439,9 +439,9 @@ class Playlists extends MenuItem {
                 <INPUT id='show-airname' TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php echo !is_null($airName)?$airName:($description?"None":""); ?>'/>
                 <DATALIST id='airnames'>
                   <?php
-                      // if an administrator has reparented a playlist,
+                      // if a vaultkeeper has reparented a playlist,
                       // allow it to keep the existing airname
-                      if($this->session->isAuth("x") && !is_null($airName) && !preg_match("/\'$airName\'/", $airNames))
+                      if($this->session->isAuth("v") && !is_null($airName) && !preg_match("/\'$airName\'/", $airNames))
                           echo "<OPTION VALUE='$airName'>";
                       echo $airNames; ?>
                 </DATALIST>
@@ -600,7 +600,7 @@ class Playlists extends MenuItem {
                 $playlistId = $api->duplicatePlaylist($playlistId);
             if($playlistId) {
                 $sourcePlaylist = $api->getPlaylist($playlistId, 1);
-                if($this->session->isAuth("x") && $this->session->getUser() != $sourcePlaylist["dj"])
+                if($this->session->isAuth("v") && $this->session->getUser() != $sourcePlaylist["dj"])
                     $api->reparentPlaylist($playlistId, $this->session->getUser());
             }
         } else {
@@ -1921,7 +1921,7 @@ class Playlists extends MenuItem {
         $djName = $playlist['airname'];
         $showDateTime = self::makeShowDateAndTime($playlist);
 
-        if(!$editMode && $this->session->isAuth("x"))
+        if(!$editMode && $this->session->isAuth("v"))
             $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='action' VALUE='editListDetails'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
 
         $dateDiv = "<DIV>".$showDateTime."&nbsp;</DIV>";
