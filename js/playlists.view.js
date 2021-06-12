@@ -170,6 +170,11 @@ $().ready(function(){
        }
     });
 
+    // make 'Today' button load today's playlists
+    $(document).on('click', "button.ui-datepicker-current", function(event) {
+        $(".ui-datepicker-today").click();
+    });
+
     nowIso = `${nowDate.getFullYear()}-${("0" + (nowDate.getMonth()+1)).slice(-2)}-${("0" + nowDate.getDate()).slice(-2)}`;
     getPlaylists(nowIso);
 });
