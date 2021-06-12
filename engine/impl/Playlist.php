@@ -31,7 +31,7 @@ namespace ZK\Engine;
 class PlaylistImpl extends DBO implements IPlaylist {
     const GRACE_START = "-15 minutes";
     const GRACE_END = "+30 minutes";
-    const DUPLICATE_SUFFIX = " (rebroadcast from %F j, Y%)";
+    const DUPLICATE_SUFFIX = " (rebroadcast from %M j, Y%)";
     const DUPLICATE_COMMENT =
         "Rebroadcast of an episode originally aired on %F j, Y%.";
 
