@@ -491,7 +491,7 @@ class Playlists extends MenuItem {
             } else {
                 // if airname is unchanged, use it as-is
                 //
-                // this allows an administrator who has reparented another
+                // this allows a vaultkeeper who has reparented another
                 // user's playlist to keep the existing airname on the list
                 if(isset($playlistId) && $playlistId > 0) {
                     $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
