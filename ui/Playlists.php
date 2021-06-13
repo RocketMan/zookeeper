@@ -412,6 +412,7 @@ class Playlists extends MenuItem {
         $isoDate = $date ? str_replace("/", "-", $date) : '';
         $isoTimeAr = $this->zkTimeRangeToISOTimeAr($zkTimeRange);
         $airNames = $this->getDJAirNames();
+        $foreignAirname = !empty($airName) && !preg_match("/\'$airName\'/", $airNames);
         $duplicate = isset($_POST["duplicate"]) && $_POST["duplicate"];
         $userAction = $duplicate ? "Create Duplicate " : ($playlistId ? "Edit " : "Create ");
         ?>
@@ -438,12 +439,12 @@ class Playlists extends MenuItem {
             </div>
             <div>
                 <label>Air Name:</label>
-                <INPUT id='show-airname' TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php echo !is_null($airName)?$airName:($description?"None":""); ?>'/>
+                <INPUT id='show-airname' TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php echo (!empty($airName)?$airName:($description?"None":""))."'"; /*if($foreignAirname) echo " readonly";*/ ?> />
                 <DATALIST id='airnames'>
                   <?php
                       // if a vaultkeeper has reparented a playlist,
                       // allow it to keep the existing airname
-                      if($this->session->isAuth("v") && !is_null($airName) && !preg_match("/\'$airName\'/", $airNames))
+                      if($foreignAirname)
                           echo "<OPTION VALUE='$airName'>";
                       echo $airNames; ?>
                 </DATALIST>
