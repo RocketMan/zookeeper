@@ -471,7 +471,6 @@ class Playlists extends MenuItem {
     
     // handles post for playlist creation and edit
     public function handleListPost() {
-        $duplicate = isset($_POST["duplicate"]) && $_POST["duplicate"];
         $description = $_POST["description"];
         $date = $_REQUEST["date"];
         $fromtime = substr($_REQUEST["fromtime"], 0, 5);
@@ -490,12 +489,6 @@ class Playlists extends MenuItem {
             $playlistId = $_REQUEST["playlist"];
 
             $api = Engine::api(IPlaylist::class);
-            if(isset($playlistId) && $playlistId > 0 && $duplicate) {
-                $playlistId = $_REQUEST["playlist"] = $api->duplicatePlaylist($playlistId);
-                $playlist = $api->getPlaylist($playlistId, 1);
-                if($this->session->isAuth("v") && $this->session->getUser() != $playlist["dj"])
-                    $api->reparentPlaylist($playlistId, $this->session->getUser());
-            }
 
             // process the airname
             if(!strcasecmp($airname, "None")) {
@@ -507,8 +500,7 @@ class Playlists extends MenuItem {
                 // this allows a vaultkeeper who has reparented another
                 // user's playlist to keep the existing airname on the list
                 if(isset($playlistId) && $playlistId > 0) {
-                    if(!isset($playlist))
-                        $playlist = $api->getPlaylist($playlistId, 1);
+                    $playlist = $api->getPlaylist($playlistId, 1);
                     if($playlist["airname"] == $airname)
                         $aid = $playlist["id"];
                 }
@@ -534,6 +526,13 @@ class Playlists extends MenuItem {
             }
 
             if(isset($playlistId) && $playlistId > 0) {
+                if(isset($_POST["duplicate"]) && $_POST["duplicate"]) {
+                    $playlistId = $_REQUEST["playlist"] = $api->duplicatePlaylist($playlistId);
+                    $playlist = $api->getPlaylist($playlistId, 1);
+                    if($this->session->isAuth("v") && $this->session->getUser() != $playlist["dj"])
+                        $api->reparentPlaylist($playlistId, $this->session->getUser());
+                }
+
                 // update existing playlist
                 $success = $api->updatePlaylist(
                         $playlistId, $date, $showTime, $description, $aid);
