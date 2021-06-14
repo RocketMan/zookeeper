@@ -439,7 +439,18 @@ class Playlists extends MenuItem {
             </div>
             <div>
                 <label>Air Name:</label>
-                <INPUT id='show-airname' TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php echo (!empty($airName)?$airName:($description?"None":""))."'"; /*if($foreignAirname) echo " readonly";*/ ?> />
+                <INPUT id='show-airname' TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php
+                      echo (!is_null($airName)?
+                              $airName:($description?"None":"")) . "'";
+
+                      // disable airname field when reparenting
+                      //
+                      // we could use 'readonly', but it doesn't grey out
+                      // and is still focusable.  'disabled' gives what
+                      // we want, but as it does not submit its value, we
+                      // include the airname in an extra hidden field.
+                      if($foreignAirname)
+                          echo " disabled /><INPUT name='airname' type='hidden' value='$airName'"; ?> />
                 <DATALIST id='airnames'>
                   <?php
                       // if a vaultkeeper has reparented a playlist,
