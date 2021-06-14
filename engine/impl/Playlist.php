@@ -31,7 +31,6 @@ namespace ZK\Engine;
 class PlaylistImpl extends DBO implements IPlaylist {
     const GRACE_START = "-15 minutes";
     const GRACE_END = "+30 minutes";
-    const DUPLICATE_PREFIX = "Rebroadcast: ";
     const DUPLICATE_COMMENT =
         "Rebroadcast of an episode originally aired on %F j, Y%.";
 
@@ -274,7 +273,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
 
         $success = $from?$this->insertPlaylist($from['dj'],
                                      $from['showdate'], $from['showtime'],
-                                     self::DUPLICATE_PREFIX . $from['description'],
+                                     $from['description'],
                                      $from['airname']):false;
         if($success) {
             $newListId = $this->lastInsertId();
@@ -311,6 +310,14 @@ class PlaylistImpl extends DBO implements IPlaylist {
         }
 
         return $success?$newListId:false;
+    }
+
+    public function reparentPlaylist($playlist, $user) {
+        $query = "UPDATE lists SET dj=? WHERE id=?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        $stmt->bindValue(2, $playlist);
+        return $stmt->execute();
     }
 
     private function populateSeq($list) {

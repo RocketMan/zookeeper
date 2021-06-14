@@ -40,6 +40,7 @@ use VStelmakh\UrlHighlight\UrlHighlight;
 
 class Playlists extends MenuItem {
     /* private */ const NME_PREFIX = "nme-";
+    /* private */ const DUPLICATE_SUFFIX = " (rebroadcast from %M j, Y%)";
 
     //NOTE: update ui_config.php when changing the actions.
     private static $actions = [
@@ -411,7 +412,9 @@ class Playlists extends MenuItem {
         $isoDate = $date ? str_replace("/", "-", $date) : '';
         $isoTimeAr = $this->zkTimeRangeToISOTimeAr($zkTimeRange);
         $airNames = $this->getDJAirNames();
-        $userAction = $playlistId ? "Edit " : "Create ";
+        $foreignAirname = !empty($airName) && !preg_match("/\'$airName\'/", $airNames);
+        $duplicate = isset($_POST["duplicate"]) && $_POST["duplicate"];
+        $userAction = $duplicate ? "Create Duplicate " : ($playlistId ? "Edit " : "Create ");
         ?>
 
         <DIV CLASS='playlistBanner'>&nbsp; <?php echo $userAction;?> Playlist</DIV>
@@ -424,21 +427,37 @@ class Playlists extends MenuItem {
             </div>
             <div>
                 <label>Show Date:</label>
-                <INPUT id='show-date-picker' required type='date' value="<?php echo $isoDate;?>" />
+                <INPUT id='show-date-picker' required type='date' value="<?php echo $duplicate?"":$isoDate;?>" />
             </div>
             <div>
                 <label>Start Time:</label>
-                <INPUT id='show-start' class='timepicker' step='60' required type='time' value="<?php echo $isoTimeAr[0]; ?>" NAME='fromtime' />
+                <INPUT id='show-start' class='timepicker' step='60' required type='time' value="<?php echo $duplicate?"":$isoTimeAr[0]; ?>" NAME='fromtime' />
             </div>
             <div>
                 <label>End Time:</label>
-                <INPUT id='show-end' step='60' class='timepicker' required type='time' value="<?php echo $isoTimeAr[1]; ?>" NAME='totime' />
+                <INPUT id='show-end' step='60' class='timepicker' required type='time' value="<?php echo $duplicate?"":$isoTimeAr[1]; ?>" NAME='totime' />
             </div>
             <div>
                 <label>Air Name:</label>
-                <INPUT id='show-airname' TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php echo !is_null($airName)?$airName:($description?"None":""); ?>'/>
+                <INPUT id='show-airname' TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php
+                      echo (!is_null($airName)?
+                              $airName:($description?"None":"")) . "'";
+
+                      // disable airname field when reparenting
+                      //
+                      // we could use 'readonly', but it doesn't grey out
+                      // and is still focusable.  'disabled' gives what
+                      // we want, but as it does not submit its value, we
+                      // include the airname in an extra hidden field.
+                      if($foreignAirname)
+                          echo " disabled /><INPUT name='airname' type='hidden' value='$airName'"; ?> />
                 <DATALIST id='airnames'>
-                  <?php echo $airNames; ?>
+                  <?php
+                      // if a vaultkeeper has reparented a playlist,
+                      // allow it to keep the existing airname
+                      if($foreignAirname)
+                          echo "<OPTION VALUE='$airName'>";
+                      echo $airNames; ?>
                 </DATALIST>
             </div>
             <div>
@@ -448,6 +467,8 @@ class Playlists extends MenuItem {
 
             <INPUT id='show-date' TYPE=HIDDEN NAME='date' VALUE="">
             <?php
+                if($duplicate)
+                    echo "<INPUT TYPE=HIDDEN NAME=duplicate id='duplicate' VALUE=1>\n";
                 // if action does not already end in 'Post', append it
                 $suffix = substr_compare($this->action, "Post", -4)?"Post":"";
             ?>
@@ -477,20 +498,35 @@ class Playlists extends MenuItem {
         $goodAirname = $airname !== '';
 
         if($goodDate && $goodTime && $goodDescription && $goodAirname) {
+            $playlistId = $_REQUEST["playlist"];
+
+            $api = Engine::api(IPlaylist::class);
+
             // process the airname
             if(!strcasecmp($airname, "None")) {
                 // unpublished playlist
                 $aid = 0;
             } else {
+                // if airname is unchanged, use it as-is
+                //
+                // this allows a vaultkeeper who has reparented another
+                // user's playlist to keep the existing airname on the list
+                if(isset($playlistId) && $playlistId > 0) {
+                    $playlist = $api->getPlaylist($playlistId, 1);
+                    if($playlist["airname"] == $airname)
+                        $aid = $playlist["id"];
+                }
+
                 // lookup airname for this DJ
-                $api = Engine::api(IDJ::class);
-                $aid = $api->getAirname($airname, $this->session->getUser());
+                $djapi = Engine::api(IDJ::class);
+                if(!isset($aid))
+                    $aid = $djapi->getAirname($airname, $this->session->getUser());
                 if(!$aid) {
                     // airname does not exist; try to create it
-                    $success = $api->insertAirname($airname, $this->session->getUser());
+                    $success = $djapi->insertAirname($airname, $this->session->getUser());
                     if($success > 0) {
                         // success!
-                        $aid = $api->lastInsertId();
+                        $aid = $djapi->lastInsertId();
                     } else {
                         // airname creation failed
                         // alert the user and re-display the form
@@ -501,16 +537,21 @@ class Playlists extends MenuItem {
                 }
             }
 
-            $playlistId = $_REQUEST["playlist"];
             if(isset($playlistId) && $playlistId > 0) {
+                if(isset($_POST["duplicate"]) && $_POST["duplicate"]) {
+                    $playlistId = $_REQUEST["playlist"] = $api->duplicatePlaylist($playlistId);
+                    $playlist = $api->getPlaylist($playlistId, 1);
+                    if($this->session->isAuth("v") && $this->session->getUser() != $playlist["dj"])
+                        $api->reparentPlaylist($playlistId, $this->session->getUser());
+                }
+
                 // update existing playlist
-                $success = Engine::api(IPlaylist::class)->updatePlaylist(
+                $success = $api->updatePlaylist(
                         $playlistId, $date, $showTime, $description, $aid);
                 $this->action = "editListEditor";
                 $this->emitEditor();
             } else {
                 // create new playlist
-                $api = Engine::api(IPlaylist::class);
                 $success = $api->insertPlaylist(
                          $this->session->getUser(),
                          $date, $showTime, $description, $aid);
@@ -579,10 +620,7 @@ class Playlists extends MenuItem {
         $sourcePlaylist = null;
         $api = Engine::api(IPlaylist::class);
         if(isset($playlistId) && $playlistId > 0) {
-            if($_POST["duplicate"])
-                $playlistId = $api->duplicatePlaylist($playlistId);
-            if($playlistId)
-                $sourcePlaylist = $api->getPlaylist($playlistId, 1);
+            $sourcePlaylist = $api->getPlaylist($playlistId, 1);
         } else {
             $WEEK_SECONDS = 60 *60 * 24 * 7;
             $nowDateStr =  (new \DateTime())->format("Y-m-d");
@@ -605,6 +643,15 @@ class Playlists extends MenuItem {
             $date = $sourcePlaylist['showdate'];
             $time = $sourcePlaylist['showtime'];
             $airName = $sourcePlaylist['airname'];
+
+            if(isset($_POST["duplicate"]) && $_POST["duplicate"]) {
+                $description .= preg_replace_callback("/%([^%]*)%/",
+                    function($matches) use ($date) {
+                        return \DateTime::createFromFormat(
+                            IPlaylist::TIME_FORMAT,
+                            $date . " 0000")->format($matches[1]);
+                    }, self::DUPLICATE_SUFFIX);
+            }
         }
 
         $this->emitEditListForm($airName, $description, $time, $date, $playlistId, null);
@@ -712,7 +759,7 @@ class Playlists extends MenuItem {
 
     private function emitTagForm($playlistId, $message) {
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
-        $this->emitPlaylistBanner($playlistId, $playlist);
+        $this->emitPlaylistBanner($playlistId, $playlist, true);
         $this->emitTrackAdder($playlistId, $playlist);
     }
     
@@ -1895,11 +1942,14 @@ class Playlists extends MenuItem {
                self::timeToAMPM($row['showtime']);
     }
 
-    private function emitPlaylistBanner($playlistId, $playlist) {
+    private function emitPlaylistBanner($playlistId, $playlist, $editMode) {
         $showName = $playlist['description'];
         $djId = $playlist['id'];
         $djName = $playlist['airname'];
         $showDateTime = self::makeShowDateAndTime($playlist);
+
+        if(!$editMode && $this->session->isAuth("v"))
+            $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='action' VALUE='editListDetails'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
 
         $dateDiv = "<DIV>".$showDateTime."&nbsp;</DIV>";
         $djLink = "<A HREF='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' CLASS='nav2'>$djName</A>";
@@ -1919,7 +1969,7 @@ class Playlists extends MenuItem {
             return;
         }
 
-        $this->emitPlaylistBanner($playlistId, $row);
+        $this->emitPlaylistBanner($playlistId, $row, false);
         $this->emitPlaylistBody($playlistId, false);
     }
     

@@ -40,7 +40,7 @@ $().ready(function(){
     }
 
     var isUpdate = $("#playlist-id").val().length > 0;
-    if (isUpdate) {
+    if (isUpdate && $("#duplicate").val() != 1) {
         $('#edit-submit-but').prop('value' ,'Next >');
     } else {
         var roundedDateTime = getRoundedDateTime(15);

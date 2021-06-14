@@ -46,6 +46,7 @@ interface IPlaylist {
     function insertPlaylist($user, $date, $time, $description, $airname);
     function updatePlaylist($playlist, $date, $time, $description, $airname);
     function duplicatePlaylist($playlist);
+    function reparentPlaylist($playlist, $user);
     function getSeq($list, $id);
     function moveTrack($list, $id, $toId, $clearTimestamp=true);
     function getTrack($id);
