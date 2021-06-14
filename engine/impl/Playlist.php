@@ -769,8 +769,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlist);
         $row = $stmt->executeAndFetch();
-        $airname = $row?$row[0]:null;
-       
+        $airname = $row?$row['airname']:null;
+
         // update the playlist
         $query = "UPDATE lists SET airname = ? WHERE id = ?";
         $stmt = $this->prepare($query);
