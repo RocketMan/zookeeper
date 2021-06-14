@@ -37,16 +37,6 @@ class Charts extends MenuItem {
         [ "a", "amalgamated", "Amalgamated", "chartMonthly" ],
         [ "a", "subscribe", "Subscribe", "emitSubscribe" ],
         [ "n", "chartemail", "E-Mail", "chartEMail" ],
-        [ "c", "weeklyCMJ", "", "chartCMJ" ],
-    ];
-
-    // ZK chart -> CMJ charttype mapping
-    private static $charttype = [
-        "5"=>"5",   // hip-hop
-        "7"=>"6",   // reggae/world
-        "6"=>"7",   // jazz
-        "4"=>"4",   // heavy shit
-        "3"=>"9",   // dance
     ];
 
     public function processLocal($action, $subaction) {
@@ -168,26 +158,7 @@ class Charts extends MenuItem {
             $startDate = "";
             $endDate = "$year-$month-$day";
             $displayDate = date("j F Y", mktime(0,0,0,$month,$day,$year));
-            if($this->session->isAuth("c")) {
-    ?>
-    <TABLE WIDTH="100%">
-      <TR>
-        <TH ALIGN=LEFT><?php echo $station; ?> chart for the week ending <?php echo $displayDate; ?></TH>
-        <TH ALIGN=RIGHT>
-          <FORM ACTION="" METHOD=POST>
-            <INPUT TYPE=SUBMIT VALUE=" CMJ Export ">
-            <INPUT TYPE=HIDDEN NAME=action VALUE=viewChart>
-            <INPUT TYPE=HIDDEN NAME=subaction VALUE=weeklyCMJ>
-            <INPUT TYPE=HIDDEN NAME=year VALUE=<?php echo $year; ?>>
-            <INPUT TYPE=HIDDEN NAME=month VALUE=<?php echo $month; ?>>
-            <INPUT TYPE=HIDDEN NAME=day VALUE=<?php echo $day; ?>>
-          </FORM>
-        </TD>
-      </TR>
-    </TABLE><BR>
-    <?php 
-            } else
-                echo "<P CLASS=\"header\">$station chart for the week ending $displayDate</P>\n";
+            echo "<P CLASS=\"header\">$station chart for the week ending $displayDate</P>\n";
         }
     
     // weekly = hip hop, reggae/world, jazz, heavy shit, dance, classical/exp
@@ -475,76 +446,6 @@ class Charts extends MenuItem {
         }
     }
     
-    public function emitChartCMJ($startDate, $endDate, $limit="", $category="") {
-        $chartAPI = Engine::api(IChart::class);
-        $chartAPI->getChart($chart, $startDate, $endDate, $limit, $category);
-        if(sizeof($chart)) {
-            if($category) {
-                // Get the chart categories
-                $cats = $chartAPI->getCategories();
-    
-                echo "<Playlist charttype_id:" . self::$charttype[$category] . ">\n";
-                echo "## " . $cats[$category-1]["name"] . " playlist\n\n";
-            } else {
-                echo "<Playlist charttype_id:1>\n";
-                echo "## Top 200 playlist\n\n";
-            }
-    
-            for($i=0; $i < sizeof($chart); $i++) {
-                // Fixup the artist, album, and label names
-                $artist = preg_replace("/, [Tt]he$/", "", $chart[$i]["artist"]);
-                $album = preg_replace("/, [Tt]he$/", "", $chart[$i]["album"]);
-                $label = str_replace(" Records", "", $chart[$i]["label"]);
-                $label = str_replace(" Recordings", "", $label);
-    
-                // Quote singles in the hip hop chart only
-                if($category == "5") {
-                    switch($chart[$i]["medium"]) {
-                    case "S":
-                        $medium = " 7\"";
-                        break;
-                    case "T":
-                        $medium = " 10\"";
-                        break;
-                    case "V":
-                        $medium = " 12\"";
-                        break;
-                    default:
-                        $medium = "";
-                        break;
-                    }
-                }
-    
-                if($artist == "COLL") {
-                    $artist = "VARIOUS ARTISTS";
-                }
-    
-                // Rank
-                echo ($i+1) . "\t";
-    
-                // Setup medium
-                // Artist
-                echo UI::HTMLify(strtoupper($artist), 20) . "\t";
-                // Album
-                echo ($medium?"\"":"") . UI::HTMLify($album, 20) . ($medium?"\"\t":"\t");
-                // Label
-                echo UI::HTMLify($label, 20) . "\t";
-                // Spins
-                echo $chart[$i]["PLAYS"] . "\n";
-            }
-    
-            // Fill out chart to required number of entries
-            for($i=sizeof($chart); $i<$limit; $i++) {
-                $dummy = md5(uniqid(rand()));
-                echo substr($dummy, 0, 5) . "\t" .
-                     substr($dummy, 5, 5) . "\t" .
-                     substr($dummy, 10, 0) . "\t0\n";
-            }
-    
-            echo "\n</Playlist>\n\n";
-        }
-    }
-    
     public function chartEMail() {
         $chartAPI = Engine::api(IChart::class);
         if($_REQUEST["seq"] == "update") {
@@ -583,71 +484,6 @@ class Charts extends MenuItem {
       </FORM>
     <?php 
         UI::setFocus("email1");
-    }
-    
-    public function chartCMJ() {
-        $year = $_REQUEST["year"];
-        $month = $_REQUEST["month"];
-        $day = $_REQUEST["day"];
-    
-        $startDate = "";
-        $endDate = "$year-$month-$day";
-        $displayDate = date("j F Y", mktime(0,0,0,$month,$day,$year));
-        echo "<TABLE WIDTH=\"100%\"><TR><TH ALIGN=LEFT>CMJ upload chart for the week ending $displayDate</TH><!--TH ALIGN=RIGHT><A HREF=\"?action=viewChart&amp;subaction=weekly&amp;year=$year&amp;month=$month&amp;day=$day\" CLASS=\"nav\">[Back to Weekly]</A></TH--></TR></TABLE><BR>\n";
-        ////echo "<P CLASS=\"header\">CMJ upload chart for the week ending $displayDate</P>\n";
-    
-    
-    // weekly = hip hop, reggae/world, jazz, heavy shit, dance, classical/exp
-    //     no limits
-    // monthly = hip hop, reggae/world, jazz, blues, country, heavy shit, dance
-    //     limit to 60 main, 10/cat
-    
-    ?>
-    <FORM NAME="textform">
-      <TEXTAREA NAME="textfield" cols="72" rows="10">
-    <?php 
-        $mainLimit = "30";
-        $catLimit = "10";
-    
-        // JHM FIXME TBD - hardcoded for now
-        $this->emitChartCMJ($startDate, $endDate, $mainLimit);
-        $this->emitChartCMJ($startDate, $endDate, $catLimit, "5"); // hip-hop
-        $this->emitChartCMJ($startDate, $endDate, $catLimit, "7"); // reggae/world
-        $this->emitChartCMJ($startDate, $endDate, $catLimit, "6"); // jazz
-        $this->emitChartCMJ($startDate, $endDate, $catLimit, "4"); // heavy shit
-        $this->emitChartCMJ($startDate, $endDate, $catLimit, "3"); // dance
-        ////$this->emitChartCMJ($startDate, $endDate, $catLimit, "8"); // C/X
-    
-    ?>
-    </TEXTAREA><BR><BR>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
-    function highlightmetasearch() {
-      document.textform.textfield.select(); document.textform.textfield.focus();
-    }
-    function copymetasearch() {
-      highlightmetasearch();
-      textRange = document.textform.textfield.createTextRange();
-      textRange.execCommand("RemoveFormat");
-      textRange.execCommand("Copy");
-      alert("The chart has been copied to your clipboard.\n\nUse CTRL V to paste the chart into the upload form on the CMJ website.");
-      }
-    
-    if ((navigator.appName == "Microsoft Internet Explorer") && (parseInt(navigator.appVersion) >= 4)) {
-        document.write('<INPUT type="button" value="  Copy to Clipboard  " onClick="copymetasearch();">');
-        document.write('<P><B>Instructions:</B><OL><LI>Open the CMJ website import chart page in another browser window and clear the textbox;<LI>Press Copy to Clipboard in this window;<LI>Use CTRL V to paste the chart into the upload form on the CMJ website.</OL></P>\n');
-      } else {
-        highlightmetasearch();
-        document.write('<P><B>Instructions:</B><OL><LI>Open the CMJ website import chart page in another browser window and clear the textbox;<LI>Press CTRL C in this window to copy chart to clipboard;<LI>Use CTRL V to paste the chart into the upload form on the CMJ website.</OL></P>\n');
-      }
-    <?php
-        ob_end_flush();
-    ?>
-    // -->
-    </SCRIPT>
-    </FORM>
-    <?php 
-        UI::setFocus("textfield");
     }
     
     public function emitSubscribe() {

@@ -101,7 +101,6 @@ class UserAdmin extends MenuItem {
       </TR><TR>
         <TD>&nbsp;</TD>
         <TD>Groups:<BR>
-           c = CMJ chart builder<BR>
            d = disabled account<BR>
            g = station-only login<BR>
            m = music library editor<BR>
@@ -148,7 +147,6 @@ class UserAdmin extends MenuItem {
       </TR><TR>
         <TD>&nbsp;</TD>
         <TD>Groups:<BR>
-           c = CMJ chart builder<BR>
            d = disabled account<BR>
            g = station-only login<BR>
            m = music library editor<BR>
