@@ -548,26 +548,29 @@ class Playlists extends MenuItem {
                 // update existing playlist
                 $success = $api->updatePlaylist(
                         $playlistId, $date, $showTime, $description, $aid);
-                $this->action = "editListEditor";
-                $this->emitEditor();
+
+                $action = "editListEditor";
             } else {
                 // create new playlist
                 $success = $api->insertPlaylist(
                          $this->session->getUser(),
                          $date, $showTime, $description, $aid);
 
-                if($success) {
-                    // force browser nav to new playlist so subsequent
-                    // reloads in the track editor work as expected
-                    echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
-                         "\$().ready(function(){".
-                         "location.href='?action=newListEditor&playlist=".
-                         $api->lastInsertId()."';});\n".
-                         "// -->\n</SCRIPT>\n";
-                    return;
-                } else {
-                    $this->emitEditListError("Internal error.  Try again.");
-                }
+                $playlistId = $success?$api->lastInsertId():0;
+                $action = "newListEditor";
+            }
+
+            if($success) {
+                // force browser nav to new/edit playlist so subsequent
+                // reloads in the track editor work as expected
+                echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
+                     "\$().ready(function(){".
+                     "location.href='?action=$action&playlist=".
+                     $playlistId."';});\n".
+                     "// -->\n</SCRIPT>\n";
+                return;
+            } else {
+                $this->emitEditListError("Internal error.  Try again.");
             }
         } else {
             $errMsg = "Missing field";
