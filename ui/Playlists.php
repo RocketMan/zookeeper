@@ -1967,8 +1967,9 @@ class Playlists extends MenuItem {
 
     private function viewList($playlistId) {
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
-        if( !$row) {
-            echo "<B>Sorry, playlist does not exist " . $playlistId . "</B>";
+        if(!$row ||
+                !$row['airname'] && $this->session->getUser() != $row['dj']) {
+            echo "<B>Sorry, the playlist you have requested does not exist.</B>";
             return;
         }
 

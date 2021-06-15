@@ -41,6 +41,8 @@ class ExportPlaylist extends CommandTarget implements IController {
     ];
 
     private $dj;
+    private $airname;
+    private $user;
     private $show;
     private $date;
     private $time;
@@ -59,6 +61,8 @@ class ExportPlaylist extends CommandTarget implements IController {
         // Get the show and DJ information
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlist, 1);
         if($row) {
+            $this->airname = $row[4];
+            $this->user = $row[5];
             if($row[4]) {
                 $this->dj = $row[4];
             } else {
@@ -93,7 +97,8 @@ class ExportPlaylist extends CommandTarget implements IController {
         header("Content-disposition: attachment; filename=playlist.xml");
     
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        if(!$this->records)
+        if(!$this->records ||
+                !$this->airname && $this->user != $this->session->getUser())
             return;
         echo "<playlist>\n";
         echo "  <show name=\"$this->show\"\n";
@@ -160,7 +165,8 @@ class ExportPlaylist extends CommandTarget implements IController {
         header("Content-type: application/csv");
         header("Content-disposition: attachment; filename=playlist.csv");
     
-        if(!$this->records)
+        if(!$this->records ||
+                !$this->airname && $this->user != $this->session->getUser())
             return;
     
         // emit the show info
@@ -204,7 +210,8 @@ class ExportPlaylist extends CommandTarget implements IController {
 </HEAD>
 <BODY BGCOLOR="#ffffff">
 <?php 
-        if(!$this->records) {
+        if(!$this->records ||
+                !$this->airname && $this->user != $this->session->getUser()) {
             echo "<B>Sorry, the playlist you have requested does not exist.</B>\n";
             echo "</BODY>\n</HTML>\n";
             return;
