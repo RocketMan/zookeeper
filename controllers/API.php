@@ -521,7 +521,9 @@ class API extends CommandTarget implements IController {
 
         switch($_REQUEST["operation"]) {
         case "byID":
-             $result = new SingleRowIterator(Engine::api(IPlaylist::class)->getPlaylist($key, 1));
+             $row = Engine::api(IPlaylist::class)->getPlaylist($key, 1);
+             $published = !$row || $row['airname'] || $row['dj'] == $this->session->getUser();
+             $result = new SingleRowIterator($published?$row:false);
              $id = $key;
              break;
         case "byDate":
