@@ -212,16 +212,29 @@ class Playlists extends MenuItem {
 
         return $retVal;
     }
+
+    private function isOwner($playlistId) {
+        $p = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 0);
+        return $p && $p['dj'] == $this->session->getUser();
+    }
     
     // add track from an ajax post from client. return new track row
     // upon success else 400 response.
     public function handleAddTrack() {
+        $retVal = [];
         $playlistId = trim($_POST["playlist"]);
         $playlistApi = Engine::api(IPlaylist::class);
         $playlist = $playlistApi->getPlaylist($playlistId, 1);
+
+        if(!$playlist || $playlist['dj'] != $this->session->getUser()) {
+            $retVal['status'] = 'access error';
+            http_response_code(400);
+            echo json_encode($retVal);
+            return;
+        }
+
         $isLiveShow = $playlistApi->isNowWithinShow($playlist);
 
-        $retVal = [];
         $type = $_REQUEST["type"];
         $size = $_REQUEST["size"];
         if(isset($size) && $playlistId) {
@@ -317,6 +330,13 @@ class Playlists extends MenuItem {
         $list = $_POST["playlist"];
         $from = $_REQUEST["fromId"];
         $to = $_REQUEST["toId"];
+
+        if(!isset($list) || !$this->isOwner($list)) {
+            $retVal['status'] = 'access error';
+            http_response_code(400);
+            echo json_encode($retVal);
+            return;
+        }
 
         if($list && $from && $to && $from != $to) {
             $success = Engine::api(IPlaylist::class)->moveTrack($list, $from, $to);
@@ -499,6 +519,14 @@ class Playlists extends MenuItem {
 
         if($goodDate && $goodTime && $goodDescription && $goodAirname) {
             $playlistId = $_REQUEST["playlist"];
+            $update = isset($playlistId) && $playlistId > 0;
+            $duplicate = isset($_POST["duplicate"]) && $_POST["duplicate"];
+            if($update &&
+                    !($duplicate && $this->session->isAuth("v")) &&
+                    !$this->isOwner($playlistId)) {
+                $this->emitEditListError('access error');
+                return;
+            }
 
             $api = Engine::api(IPlaylist::class);
 
@@ -511,7 +539,7 @@ class Playlists extends MenuItem {
                 //
                 // this allows a vaultkeeper who has reparented another
                 // user's playlist to keep the existing airname on the list
-                if(isset($playlistId) && $playlistId > 0) {
+                if($update) {
                     $playlist = $api->getPlaylist($playlistId, 1);
                     if($playlist["airname"] == $airname)
                         $aid = $playlist["id"];
@@ -537,8 +565,8 @@ class Playlists extends MenuItem {
                 }
             }
 
-            if(isset($playlistId) && $playlistId > 0) {
-                if(isset($_POST["duplicate"]) && $_POST["duplicate"]) {
+            if($update) {
+                if($duplicate) {
                     $playlistId = $_REQUEST["playlist"] = $api->duplicatePlaylist($playlistId);
                     $playlist = $api->getPlaylist($playlistId, 1);
                     if($this->session->isAuth("v") && $this->session->getUser() != $playlist["dj"])
@@ -548,26 +576,29 @@ class Playlists extends MenuItem {
                 // update existing playlist
                 $success = $api->updatePlaylist(
                         $playlistId, $date, $showTime, $description, $aid);
-                $this->action = "editListEditor";
-                $this->emitEditor();
+
+                $action = "editListEditor";
             } else {
                 // create new playlist
                 $success = $api->insertPlaylist(
                          $this->session->getUser(),
                          $date, $showTime, $description, $aid);
 
-                if($success) {
-                    // force browser nav to new playlist so subsequent
-                    // reloads in the track editor work as expected
-                    echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
-                         "\$().ready(function(){".
-                         "location.href='?action=newListEditor&playlist=".
-                         $api->lastInsertId()."';});\n".
-                         "// -->\n</SCRIPT>\n";
-                    return;
-                } else {
-                    $this->emitEditListError("Internal error.  Try again.");
-                }
+                $playlistId = $success?$api->lastInsertId():0;
+                $action = "newListEditor";
+            }
+
+            if($success) {
+                // force browser nav to new/edit playlist so subsequent
+                // reloads in the track editor work as expected
+                echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
+                     "\$().ready(function(){".
+                     "location.href='?action=$action&playlist=".
+                     $playlistId."';});\n".
+                     "// -->\n</SCRIPT>\n";
+                return;
+            } else {
+                $this->emitEditListError("Internal error.  Try again.");
             }
         } else {
             $errMsg = "Missing field";
@@ -667,13 +698,15 @@ class Playlists extends MenuItem {
 
     public function handleDeleteListPost() {
         $playlistId = $_POST["playlist"];
-        Engine::api(IPlaylist::class)->deletePlaylist($playlistId);
+        if(isset($playlistId) && $this->isOwner($playlistId))
+            Engine::api(IPlaylist::class)->deletePlaylist($playlistId);
         $this->emitEditListPicker();
     }
 
     public function handleRestoreListPost() {
         $playlistId = $_POST["playlist"];
-        $this->restorePlaylist($playlistId);
+        if(isset($playlistId) && $this->isOwner($playlistId))
+            $this->restorePlaylist($playlistId);
         $this->emitEditListPicker();
     }
 
@@ -1119,7 +1152,12 @@ class Playlists extends MenuItem {
     ?>
     <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
     <TR><TD>
-    <?php 
+    <?php
+        $message = "";
+        if(!isset($playlist) || !$this->isOwner($playlist)) {
+            $seq = "error";
+            $message = "access error";
+        }
         switch ($seq) {
         case "tagForm":
             if($separator) {
@@ -1209,7 +1247,7 @@ class Playlists extends MenuItem {
             $this->emitEditForm($playlist, $id, $albuminfo, $track);
             break;
         default:
-            $this->emitTagForm($playlist, "");
+            $this->emitTagForm($playlist, $message);
             break;
         }
     ?>
@@ -1964,8 +2002,9 @@ class Playlists extends MenuItem {
 
     private function viewList($playlistId) {
         $row = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
-        if( !$row) {
-            echo "<B>Sorry, playlist does not exist " . $playlistId . "</B>";
+        if(!$row ||
+                !$row['airname'] && $this->session->getUser() != $row['dj']) {
+            echo "<B>Sorry, the playlist you have requested does not exist.</B>";
             return;
         }
 

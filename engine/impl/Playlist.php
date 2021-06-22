@@ -280,7 +280,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $query = "INSERT INTO tracks " .
                      "(list, tag, artist, track, album, label, created, seq) ".
                      "SELECT ?, tag, artist, track, album, label, created, seq ".
-                     "FROM tracks WHERE list = ?";
+                     "FROM tracks WHERE list = ? ".
+                     "ORDER BY seq, id";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $newListId);
             $stmt->bindValue(2, $playlist);
@@ -769,8 +770,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlist);
         $row = $stmt->executeAndFetch();
-        $airname = $row?$row[0]:null;
-       
+        $airname = $row?$row['airname']:null;
+
         // update the playlist
         $query = "UPDATE lists SET airname = ? WHERE id = ?";
         $stmt = $this->prepare($query);
