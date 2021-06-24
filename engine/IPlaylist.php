@@ -44,7 +44,8 @@ interface IPlaylist {
     function getPlaylistsByDate($date);
     function getWhatsOnNow();
     function insertPlaylist($user, $date, $time, $description, $airname);
-    function updatePlaylist($playlist, $date, $time, $description, $airname);
+    function updatePlaylist($playlist, $date, $time, $description, $airname,
+                               $deleteTracksOutsideRange=0);
     function duplicatePlaylist($playlist);
     function reparentPlaylist($playlist, $user);
     function getSeq($list, $id);

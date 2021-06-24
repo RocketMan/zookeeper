@@ -575,7 +575,7 @@ class Playlists extends MenuItem {
 
                 // update existing playlist
                 $success = $api->updatePlaylist(
-                        $playlistId, $date, $showTime, $description, $aid);
+                        $playlistId, $date, $showTime, $description, $aid, $duplicate);
 
                 $action = "editListEditor";
             } else {

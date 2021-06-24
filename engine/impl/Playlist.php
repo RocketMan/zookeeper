@@ -174,7 +174,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $stmt->execute();
     }
     
-    public function updatePlaylist($playlist, $date, $time, $description, $airname) {
+    public function updatePlaylist($playlist, $date, $time, $description, $airname, $deleteTracksOutsideRange=0) {
         $query = "SELECT showdate, showtime FROM lists WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlist);
@@ -230,14 +230,21 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 if($toStamp < $fromStamp)
                     $toStamp->modify("+1 day");
 
-                // allow spin timestamps within the grace period
-                $fromStamp->modify(self::GRACE_START);
-                $toStamp->modify(self::GRACE_END);
+                if($deleteTracksOutsideRange) {
+                    // delete tracks outside new time range
+                    $query = "DELETE FROM tracks " .
+                             "WHERE list = ? AND " .
+                             "created NOT BETWEEN ? AND ?";
+                } else {
+                    // allow spin timestamps within the grace period
+                    $fromStamp->modify(self::GRACE_START);
+                    $toStamp->modify(self::GRACE_END);
 
-                // clear spin timestamps outside new time range
-                $query = "UPDATE tracks SET created = NULL " .
-                         "WHERE list = ? AND " .
-                         "created NOT BETWEEN ? AND ?";
+                    // clear spin timestamps outside new time range
+                    $query = "UPDATE tracks SET created = NULL " .
+                             "WHERE list = ? AND " .
+                             "created NOT BETWEEN ? AND ?";
+                }
                 $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $playlist);
                 $stmt->bindValue(2, $fromStamp->format(self::TIME_FORMAT_SQL));
