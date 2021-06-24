@@ -659,7 +659,12 @@ class Playlists extends MenuItem {
 
             // see if there is a PL on this day last week. if so use it.
             $playlists = $api->getPlaylists(1, 1, "", 1, $this->session->getUser(), 1, 10);
+            $djapi = Engine::api(IDJ::class);
             while ($playlists && ($playlist = $playlists->fetch())) {
+                // skip duplicated lists with foreign airnames
+                $aid = $djapi->getAirname($playlist['airname'], $this->session->getUser());
+                if(!$aid)
+                    continue;
                 $showDate = new \DateTime($playlist['showdate']);
                 $dateInterval = $nowDateTimestamp - $showDate->getTimestamp();
                 if ($dateInterval == $WEEK_SECONDS) {
