@@ -66,9 +66,7 @@ abstract class Serializer {
     }
 
     public function emitDataSet($name, $fields, $rows) {
-        $data = [];
-        while($row = $rows->fetch())
-             $data[] = $row;
+        $data = $rows->asArray();
         $this->emitDataSetArray($name, $fields, $data);
     }
 }

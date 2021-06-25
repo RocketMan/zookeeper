@@ -101,16 +101,7 @@ class AddManager extends MenuItem {
         }
         return $cmp;
     }
-    
-    public function addManagerGetAlbums(&$records, &$albums, $sort=0) {
-        while($records && ($row = $records->fetch())) {
-            $albums[] = $row;
-        }
-        
-        if($sort)
-            usort($albums, [__CLASS__, 'afileDefaultSort']);
-    }
-    
+
     private function makeCategoryString($categories) {
        $category = '';
        $acats = explode(",", $categories);
@@ -158,9 +149,11 @@ class AddManager extends MenuItem {
              "<TH>Title</TH>" . $labelCell . $avgCell .
              "</TR></THEAD>\n";
     
-        // Get albums into array
-        $this->addManagerGetAlbums($records, $albums, $sort);
-    
+        // Get albums into an array
+        $albums = $records->asArray();
+        if($sort)
+            usort($albums, [AddManager::class, 'afileDefaultSort']);
+
         // Mark reviewed albums
         $libraryAPI = Engine::api(ILibrary::class);
         if($showReview)
@@ -912,8 +905,7 @@ class AddManager extends MenuItem {
                 echo "  <P CLASS=\"header\">E-Mail address is invalid.</P>\n";
             } else {
                 // Fetch the add        
-                $records = Engine::api(IChart::class)->getAdd($date);
-                $this->addManagerGetAlbums($records, $albums);
+                $albums = Engine::api(IChart::class)->getAdd($date)->asArray();
     
                 $from = Engine::param('application')." <$instance_chartman>";
                 $subject = Engine::param('station').": Adds for $date";

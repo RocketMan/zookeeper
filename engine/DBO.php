@@ -38,6 +38,11 @@ class RowIterator {
         $this->style = $style;
     }
 
+    /**
+     * return one row from the result set
+     *
+     * @return row or false if none or error
+     */
     public function fetch() {
         if($this->stmt) {
             $result = $this->stmt->fetch($this->style);
@@ -46,6 +51,16 @@ class RowIterator {
             return $result;
         } else
             return false;
+    }
+
+    /**
+     * return remaining result set rows as an array
+     *
+     * @return result set array or empty array if none or error
+     */
+    public function asArray() {
+        $result = $this->stmt?$this->stmt->fetchAll($this->style):false;
+        return $result?$result:[];
     }
 }
 
