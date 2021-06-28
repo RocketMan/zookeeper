@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -26,7 +26,6 @@ namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
 use ZK\Engine\IChart;
-use ZK\UI\AddManager;
 
 class ExportAdd implements IController {
     public function processRequest($dispatcher) {
@@ -57,10 +56,7 @@ class ExportAdd implements IController {
         $cats = Engine::api(IChart::class)->getCategories();
         
         // Get the add records
-        $records = Engine::api(IChart::class)->getAdd($date);
-        
-        // Retrieve the albums into an array
-        (new AddManager())->addManagerGetAlbums($records, $albums);
+        $albums = Engine::api(IChart::class)->getAdd($date)->asArray();
         
         // Emit the albums
         foreach($albums as $index => $row) {

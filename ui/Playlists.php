@@ -1715,8 +1715,9 @@ class Playlists extends MenuItem {
     
         if($validate && $airname) {
             // Update DJ info
-            $success = Engine::api(IDJ::class)->updateAirname($name, $url,
-                     $email, $multi?0:$airname, $this->session->getUser());
+            $success = Engine::api(IDJ::class)->updateAirname($name,
+                     $this->session->getUser(), $url, $email,
+                     $multi?0:$airname);
             if($success) {
                 echo "<B>Your airname has been updated.</B>\n";
                 return;
@@ -1724,12 +1725,9 @@ class Playlists extends MenuItem {
                 echo "<B><FONT CLASS=\"error\">'$name' is invalid or already exists.</FONT></B>";
             // fall through...
         }
-        $results = Engine::api(IDJ::class)->getAirnames(
-                     $this->session->getUser(), $airname);
-        $airnames = array();
-        while($results && ($row = $results->fetch()))
-            $airnames[] = $row;
-    
+        $airnames = Engine::api(IDJ::class)->getAirnames(
+                     $this->session->getUser(), $airname)->asArray();
+
         switch(sizeof($airnames)) {
         case 0:
             // No airnames
@@ -1798,10 +1796,7 @@ class Playlists extends MenuItem {
         $airname = $_REQUEST["airname"];
     
         if($validate && ($playlist == "all" || $airname)) {
-            $results = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), $airname);
-            $airnames = array();
-            while($results && ($row = $results->fetch()))
-                $airnames[] = $row;
+            $airnames = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), $airname)->asArray();
             if(sizeof($airnames) == 1) {
                 // User has only one airname; show the link now
                 $row = $airnames[0];
@@ -1873,12 +1868,6 @@ class Playlists extends MenuItem {
     </TD></TR></TABLE>
     </FORM>
     <?php 
-    }
-    
-    private function viewListGetAlbums(&$records, &$albums) {
-        while($row = $records->fetch()) {
-            $albums[] = $row;
-        }
     }
     
     private function makeAlbumLink($entry, $includeLabel) {
@@ -1965,8 +1954,7 @@ class Playlists extends MenuItem {
         echo "<TABLE class='playlistTable' CELLPADDING=1>\n";
         echo "<THEAD>" . $header . "</THEAD>";
 
-        $result = Engine::api(IPlaylist::class)->getTracks($playlist, $editMode);
-        $this->viewListGetAlbums($result, $entries);
+        $entries = Engine::api(IPlaylist::class)->getTracks($playlist, $editMode)->asArray();
         Engine::api(ILibrary::class)->markAlbumsReviewed($entries);
 
         $observer = $this->makePlaylistObserver($playlist, $editMode);
