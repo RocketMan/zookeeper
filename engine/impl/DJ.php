@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -86,19 +86,20 @@ class DJImpl extends DBO implements IDJ {
         return $result?$result['id']:0;
     }
     
-    public function updateAirname($djname, $url, $email, $id=0, $user="") {
+    public function updateAirname($djname, $user, $url, $email, $id=0) {
         $query = "UPDATE airnames " .
                  "SET url=?, email=?";
         if($id)
-            $query .= ", airname=? WHERE id=?";
+            $query .= ", airname=? WHERE id=? AND dj=?";
         else
             $query .= " WHERE dj=?";
-            $stmt = $this->prepare($query);
+        $stmt = $this->prepare($query);
         $stmt->bindValue(1, $url);
         $stmt->bindValue(2, $email);
         if($id) {
             $stmt->bindValue(3, $djname);
             $stmt->bindValue(4, $id);
+            $stmt->bindValue(5, $user);
         } else
             $stmt->bindValue(3, $user);
         return $stmt->execute();

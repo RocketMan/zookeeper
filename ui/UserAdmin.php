@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -187,18 +187,18 @@ class UserAdmin extends MenuItem {
         $users = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 100000, "*");
     
         // Emit the user list
-        for($j=0; $j < sizeof($users); $j++) {
-            if(!strlen($users[$j]["name"]))
+        foreach($users as $user) {
+            if(!strlen($user["name"]))
                 continue;
-            if($users[$j]["name"] == $uid)
+            if($user["name"] == $uid)
                 $class = "noQuota";
             else
                 $class = "hborder"; 
-            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?action=adminUsers&amp;seq=selUser&amp;uid=" . $users[$j]["name"] . "\">" . $users[$j]["name"] . "</A></TD><TD>" .
-                        $users[$j]["realname"] . "</TD><TD>" .
-                        $users[$j]["groups"] . "&nbsp;</TD><TD CLASS='date'>" .
-                        $users[$j]["expires"] . "&nbsp;</TD><TD CLASS='date'>" .
-                        $users[$j]["lastlogin"] . "&nbsp;</TD></TR>\n";
+            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?action=adminUsers&amp;seq=selUser&amp;uid=" . $user["name"] . "\">" . $user["name"] . "</A></TD><TD>" .
+                        $user["realname"] . "</TD><TD>" .
+                        $user["groups"] . "&nbsp;</TD><TD CLASS='date'>" .
+                        $user["expires"] . "&nbsp;</TD><TD CLASS='date'>" .
+                        $user["lastlogin"] . "&nbsp;</TD></TR>\n";
         }
         echo "</TABLE>\n";
     }
@@ -278,21 +278,19 @@ class UserAdmin extends MenuItem {
         echo "  </TR></THEAD>\n";
     
         // Get and sort the airname list
-        $result = Engine::api(IDJ::class)->getAirnames();
-        while($result && ($row = $result->fetch()))
-            $users[] = $row;
+        $users = Engine::api(IDJ::class)->getAirnames()->asArray();
     
         // Emit the airnames list
-        for($j=0; $j < sizeof($users); $j++) {
-            if(!strlen($users[$j]["name"]))
+        foreach($users as $user) {
+            if(!strlen($user["name"]))
                 continue;
-            if($users[$j]["id"] == $aid)
+            if($user["id"] == $aid)
                 $class = "noQuota";
             else
                 $class = "hborder"; 
-            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?subaction=airnames&amp;action=adminUsers&amp;seq=selAirname&amp;aid=" . $users[$j]["id"] . "\">" . $users[$j]["airname"] . "</A></TD><TD>" .
-                        $users[$j]["name"] . "</TD><TD>" .
-                        $users[$j]["realname"] . "&nbsp;</TD></TR>\n";
+            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?subaction=airnames&amp;action=adminUsers&amp;seq=selAirname&amp;aid=" . $user["id"] . "\">" . $user["airname"] . "</A></TD><TD>" .
+                        $user["name"] . "</TD><TD>" .
+                        $user["realname"] . "&nbsp;</TD></TR>\n";
         }
         echo "</TABLE>\n";
         echo "<FORM>\n";
