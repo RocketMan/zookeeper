@@ -27,11 +27,12 @@ namespace ZK\Engine;
 /**
  * OnNowFilter
  *
- * This class is a RowIterator decorator for playlist tracks whose `fetch`
- * method returns the currently on-air track in the playlist.
+ * This class is a RowIterator decorator for playlist tracks.  Its `fetch`
+ * method returns tracks up to but not beyond the currently on-air track
+ * in the playlist.
  *
- * In addition, the class provides an additional method `peek` that
- * returns the next track to air.
+ * As well, the class provides an additional method `peek` that returns
+ * the next track to air.
  *
  */
 class OnNowFilter {
