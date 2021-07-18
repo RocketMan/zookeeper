@@ -27,6 +27,7 @@ namespace ZK\Controllers;
 use ZK\Engine\DBO;
 use ZK\Engine\Engine;
 use ZK\Engine\IPlaylist;
+use ZK\Engine\OnNowFilter;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
 use ZK\UI\UICommon as UI;

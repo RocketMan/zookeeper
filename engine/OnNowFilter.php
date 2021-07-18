@@ -22,10 +22,18 @@
  *
  */
 
-namespace ZK\Controllers;
+namespace ZK\Engine;
 
-use ZK\Engine\PlaylistEntry;
-
+/**
+ * OnNowFilter
+ *
+ * This class is a RowIterator decorator for playlist tracks whose `fetch`
+ * method returns the currently on-air track in the playlist.
+ *
+ * In addition, the class provides an additional method `peek` that
+ * returns the next track to air.
+ *
+ */
 class OnNowFilter {
     private $queue = [];
     private $delegate;
