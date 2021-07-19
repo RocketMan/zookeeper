@@ -47,7 +47,7 @@ class OnNowFilter {
 
     private static function getCreated($row) {
         return $row['created']?
-            \DateTime::createFromFormat("Y-m-d H:i:s", $row['created']):null;
+            \DateTime::createFromFormat(IPlaylist::TIME_FORMAT_SQL, $row['created']):null;
     }
 
     public function fetch() {
