@@ -688,7 +688,7 @@ class Playlists extends MenuItem {
                             $date . " 0000")->format($matches[1]);
                     }, self::DUPLICATE_SUFFIX);
                 if(mb_strlen($description) + mb_strlen($suffix) > IPlaylist::MAX_DESCRIPTION_LENGTH)
-                    $description = mb_substr($description, 0, IPlaylist::MAX_DESCRIPTION_LENGTH - mb_strlen($suffix));
+                    $description = mb_substr($description, 0, IPlaylist::MAX_DESCRIPTION_LENGTH - mb_strlen($suffix) - 3) . "...";
                 $description .= $suffix;
             }
         }
