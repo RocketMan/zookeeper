@@ -443,7 +443,7 @@ class Playlists extends MenuItem {
         <FORM id='new-show' class='pl-form-entry' ACTION="?" METHOD=POST>
             <div>
                 <label>Show Name:</label>
-                <input id='show-description' required name='description' size=30 value="<?php echo htmlentities(stripslashes($description));?>" data-focus/>
+                <input id='show-description' required name='description' size=30 maxlength=<?php echo IPlaylist::MAX_DESCRIPTION_LENGTH;?> value="<?php echo htmlentities(stripslashes($description));?>" data-focus/>
             </div>
             <div>
                 <label>Show Date:</label>
@@ -459,7 +459,7 @@ class Playlists extends MenuItem {
             </div>
             <div>
                 <label>Air Name:</label>
-                <INPUT id='show-airname' TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" VALUE='<?php
+                <INPUT id='show-airname' TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" maxlength=<?php echo IDJ::MAX_AIRNAME_LENGTH;?> VALUE='<?php
                       echo (!is_null($airName)?
                               $airName:($description?"None":"")) . "'";
 
@@ -514,7 +514,7 @@ class Playlists extends MenuItem {
         $goodTime = $showTime !== '';
         $goodDescription = $description !== '';
 
-        $airname = trim($_REQUEST["airname"]);
+        $airname = mb_substr(trim($_REQUEST["airname"]), 0, IDJ::MAX_AIRNAME_LENGTH);
         $goodAirname = $airname !== '';
 
         if($goodDate && $goodTime && $goodDescription && $goodAirname) {
@@ -1424,7 +1424,7 @@ class Playlists extends MenuItem {
     <TABLE CELLPADDING=2 CELLSPACING=0>
       <TR>
         <TD ALIGN=RIGHT>Airname:</TD>
-        <TD><INPUT TYPE=TEXT NAME=djname SIZE=30 data-focus></TD>
+        <TD><INPUT TYPE=TEXT NAME=djname SIZE=30 maxlength=<?php echo IDJ::MAX_AIRNAME_LENGTH;?> data-focus></TD>
       </TR>
       <TR>
         <TD>&nbsp;</TD>
@@ -1465,7 +1465,7 @@ class Playlists extends MenuItem {
         <TABLE CELLPADDING=2 CELLSPACING=0>
           <TR>
             <TD ALIGN=RIGHT>Show Name:</TD>
-            <TD><INPUT TYPE=TEXT NAME=description VALUE="<?php echo stripslashes($description);?>" SIZE=30 data-focus></TD>
+            <TD><INPUT TYPE=TEXT NAME=description VALUE="<?php echo stripslashes($description);?>" SIZE=30 maxlength=<?php echo IPlaylist::MAX_DESCRIPTION_LENGTH;?> data-focus></TD>
           </TR><TR>
             <TD ALIGN=RIGHT>Date:</TD>
             <TD><INPUT TYPE=TEXT NAME=date VALUE="<?php echo stripslashes($date);?>" SIZE=15></TD>
@@ -1747,7 +1747,7 @@ class Playlists extends MenuItem {
     <P><B>Update airname '<?php echo $airnames[0]['airname'];?>'</B></P>
     <TABLE CELLPADDING=2 BORDER=0>
       <TR><TD ALIGN=RIGHT>Airname:</TD>
-        <TD><INPUT id='name' TYPE=TEXT NAME=name required VALUE="<?php echo $name?$name:$airnames[0]['airname'];?>" CLASS=input SIZE=40 MAXLENGTH=80<?php echo $name?" data-focus":""; ?>></TD></TR>
+        <TD><INPUT id='name' TYPE=TEXT NAME=name required VALUE="<?php echo $name?$name:$airnames[0]['airname'];?>" CLASS=input MAXLENGTH=<?php echo IDJ::MAX_AIRNAME_LENGTH . ($name?" data-focus":"");?> SIZE=40></TD></TR>
       <TR><TD ALIGN=RIGHT>URL:</TD>
         <TD><INPUT TYPE=TEXT NAME=url VALUE="<?php echo $url?$url:$airnames[0]['url'];?>" CLASS=input SIZE=40 MAXLENGTH=80<?php echo $name?"":" data-focus"; ?>></TD></TR>
       <TR><TD ALIGN=RIGHT>e-mail:</TD>

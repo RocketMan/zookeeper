@@ -28,6 +28,8 @@ namespace ZK\Engine;
  * DJ operations
  */
 interface IDJ {
+    const MAX_AIRNAME_LENGTH = 30;
+
     function getAirnames($user=0, $id=0, $noPrune=0);
     function getActiveAirnames($viewAll=0);
     function getAirname($djname, $user="");

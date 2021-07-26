@@ -29,6 +29,7 @@ use ZK\Controllers\API;
 use ZK\Engine\Engine;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
+use ZK\Engine\PlaylistEntry;
 
 use ZK\UI\UICommon as UI;
 
@@ -863,8 +864,8 @@ class Editor extends MenuItem {
         }
     ?>
       <TR><TD ALIGN=RIGHT>Compilation:</TD><TD CLASS="header"><INPUT TYPE=CHECKBOX id='comp' NAME=coll<?php echo $coll?" CHECKED":"";?>></TD></TR>
-      <TR><TD ID="lartist" ALIGN=RIGHT STYLE="visibility:<?php echo $coll?"hidden":"visible";?>">Artist:</TD><TD CLASS="header"><INPUT NAME=artist TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($artist));?>" STYLE="visibility:<?php echo $coll?"hidden":"visible";?>" data-zkalpha<?php echo $coll?"":" data-focus";?>></TD></TR>
-      <TR><TD ALIGN=RIGHT>Album:</TD><TD CLASS="header"><INPUT NAME=album TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($album));?>" data-zkalpha<?php echo $coll?" data-focus":"";?>></TD></TR>
+      <TR><TD ID="lartist" ALIGN=RIGHT STYLE="visibility:<?php echo $coll?"hidden":"visible";?>">Artist:</TD><TD CLASS="header"><INPUT NAME=artist TYPE=TEXT CLASS=text SIZE=60 maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> VALUE="<?php echo htmlentities(stripslashes($artist));?>" STYLE="visibility:<?php echo $coll?"hidden":"visible";?>" data-zkalpha<?php echo $coll?"":" data-focus";?>></TD></TR>
+      <TR><TD ALIGN=RIGHT>Album:</TD><TD CLASS="header"><INPUT NAME=album TYPE=TEXT CLASS=text SIZE=60 maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> VALUE="<?php echo htmlentities(stripslashes($album));?>" data-zkalpha<?php echo $coll?" data-focus":"";?>></TD></TR>
       <TR><TD ALIGN=RIGHT>Category:</TD><TD><SELECT NAME=category CLASS=textsp>
     <?php 
         foreach(ILibrary::GENRES as $code => $genre) {
@@ -1039,16 +1040,16 @@ class Editor extends MenuItem {
 
             echo "<TR>";
             echo "<TD ALIGN='RIGHT' style='width:20px' ><b>$trackNum:</b></TD>";
-            echo "<TD><INPUT NAME='track$trackNum' style='$cellWidth' VALUE=\"$title\" CLASS=text maxlength='80' data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
+            echo "<TD><INPUT NAME='track$trackNum' style='$cellWidth' VALUE=\"$title\" CLASS=text maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
 
             if($isCollection) {
                 $artist = htmlentities(stripslashes($_POST["artist".$trackNum]));
-                echo "<TD style='$cellWidth'><INPUT NAME=artist$trackNum style='$cellWidth' VALUE=\"$artist\" TYPE=text CLASS=text maxlength='80' data-zkalpha='true' data-track='$trackNum'></TD>";
+                echo "<TD style='$cellWidth'><INPUT NAME=artist$trackNum style='$cellWidth' VALUE=\"$artist\" TYPE=text CLASS=text maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> data-zkalpha='true' data-track='$trackNum'></TD>";
                 $this->skipVar("artist".$trackNum);
             }
 
             $url = $_POST["url$trackNum"];
-            echo "<TD COLSPAN=2><INPUT class='urlValue' style='$cellWidth' value='${url}' NAME='trackUrl$trackNum' TYPE='url' data-track='$trackNum' /></TD>";
+            echo "<TD COLSPAN=2><INPUT class='urlValue' style='$cellWidth' value='${url}' NAME='trackUrl$trackNum' TYPE='url' maxlength=<?php echo IEditor::MAX_PLAYABLE_URL_LENGTH;?> data-track='$trackNum' /></TD>";
 
             echo "</TR>\n";
         }

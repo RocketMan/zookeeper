@@ -32,6 +32,8 @@ interface IEditor {
     const LOCATION_DEEP_STORAGE = 'G';
     const LOCATION_MISSING = 'M';
 
+    const MAX_PLAYABLE_URL_LENGTH = 2083;
+
     function insertUpdateAlbum(&$album, $tracks, $label);
     function insertUpdateLabel(&$label);
     function enqueueTag($tag, $user);
