@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -28,6 +28,22 @@ namespace ZK\Engine;
  * Music review operations
  */
 interface IReview {
+    /*
+     * MAX_REVIEW_LENGTH is the maximum length of the music review in
+     * characters.  This is an administrative limit, as the underlying
+     * database column can contain significantly more data.
+     *
+     * Note:  The review is stored in a MEDIUMTEXT, whose limit is, unlike
+     * VARCHAR columns, specified in bytes as opposed to characters; thus,
+     * you have to account for variable, multi-byte character encodings,
+     * which can be 2, 3, or even 4 bytes per character.
+     *
+     * This value may be safely increased to 4194303, which is the
+     * MEDIUMTEXT limit of 16,777,215 bytes divided by 4, the maximum
+     * size of a utf8 encoding.
+     */
+    const MAX_REVIEW_LENGTH = 64000;
+
     function getRecentReviews($user = "", $weeks = 0, $limit = 0, $loggedIn = 0);
     function getReviews($tag, $byName=1, $user = "", $loggedIn = 0);
     function insertReview($tag, $private, $airname, $review, $user);
