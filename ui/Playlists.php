@@ -1387,13 +1387,13 @@ class Playlists extends MenuItem {
 
     public function emitImportList() {
         $validate = $_POST["validate"];
-        $description = $_REQUEST["description"];
+        $description = mb_substr(trim($_REQUEST["description"]), 0, IPlaylist::MAX_DESCRIPTION_LENGTH);
         $date = $_REQUEST["date"];
         $time = $_REQUEST["time"];
         $airname = $_REQUEST["airname"];
         $playlist = $_REQUEST["playlist"];
         $button = $_REQUEST["button"];
-        $djname = $_REQUEST["djname"];
+        $djname = mb_substr(trim($_REQUEST["djname"]), 0, IDJ::MAX_AIRNAME_LENGTH);
         $newairname = $_REQUEST["newairname"];
         $userfile = $_FILES['userfile']['tmp_name'];
         $fromtime = $_REQUEST["fromtime"];
@@ -1635,7 +1635,7 @@ class Playlists extends MenuItem {
                     $airname = $djapi->getAirname($json->airname, $this->session->getUser());
                     if(!$airname) {
                         // airname does not exist; try to create it
-                        $success = $djapi->insertAirname($json->airname, $this->session->getUser());
+                        $success = $djapi->insertAirname(mb_substr($json->airname, 0, IDJ::MAX_AIRNAME_LENGTH), $this->session->getUser());
                         if($success > 0) {
                             // success!
                             $airname = $djapi->lastInsertId();
@@ -1647,7 +1647,7 @@ class Playlists extends MenuItem {
                 // create the playlist
                 if($valid) {
                     $papi = Engine::api(IPlaylist::class);
-                    $papi->insertPlaylist($this->session->getUser(), $json->date, $json->time, $json->name, $airname);
+                    $papi->insertPlaylist($this->session->getUser(), $json->date, $json->time, mb_substr($json->name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $airname);
                     $playlist = $papi->lastInsertId();
 
                     // insert the tracks
