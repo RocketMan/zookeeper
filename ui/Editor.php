@@ -1040,16 +1040,16 @@ class Editor extends MenuItem {
 
             echo "<TR>";
             echo "<TD ALIGN='RIGHT' style='width:20px' ><b>$trackNum:</b></TD>";
-            echo "<TD><INPUT NAME='track$trackNum' style='$cellWidth' VALUE=\"$title\" CLASS=text maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
+            echo "<TD><INPUT NAME='track$trackNum' style='$cellWidth' VALUE=\"$title\" CLASS=text maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
 
             if($isCollection) {
                 $artist = htmlentities(stripslashes($_POST["artist".$trackNum]));
-                echo "<TD style='$cellWidth'><INPUT NAME=artist$trackNum style='$cellWidth' VALUE=\"$artist\" TYPE=text CLASS=text maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> data-zkalpha='true' data-track='$trackNum'></TD>";
+                echo "<TD style='$cellWidth'><INPUT NAME=artist$trackNum style='$cellWidth' VALUE=\"$artist\" TYPE=text CLASS=text maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum'></TD>";
                 $this->skipVar("artist".$trackNum);
             }
 
             $url = $_POST["url$trackNum"];
-            echo "<TD COLSPAN=2><INPUT class='urlValue' style='$cellWidth' value='${url}' NAME='trackUrl$trackNum' TYPE='url' maxlength=<?php echo IEditor::MAX_PLAYABLE_URL_LENGTH;?> data-track='$trackNum' /></TD>";
+            echo "<TD COLSPAN=2><INPUT class='urlValue' style='$cellWidth' value='${url}' NAME='trackUrl$trackNum' TYPE='url' maxlength=" . IEditor::MAX_PLAYABLE_URL_LENGTH . " data-track='$trackNum' /></TD>";
 
             echo "</TR>\n";
         }
