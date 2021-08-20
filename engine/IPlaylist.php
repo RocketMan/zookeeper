@@ -35,6 +35,8 @@ interface IPlaylist {
     const COMMENT_FLAG = "C";
     const LOG_FLAG = "L";
 
+    const MAX_DESCRIPTION_LENGTH = 80;
+
     function getShowdates($year, $month);
     function getPlaylist($playlist, $withAirname=0);
     function getPlaylists($onlyPublished=0, $withAirname=0,

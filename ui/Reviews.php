@@ -320,7 +320,7 @@ class Reviews extends MenuItem {
     }
     
     public function editReview() {
-        $airname = $_REQUEST["airname"];
+        $airname = mb_substr(trim($_REQUEST["airname"]), 0, IDJ::MAX_AIRNAME_LENGTH);
     
         if($_POST["validate"]) {
             switch($_REQUEST["button"]) {
@@ -346,7 +346,7 @@ class Reviews extends MenuItem {
     <TABLE CELLPADDING=0 CELLSPACING=0>
       <TR>
         <TD ALIGN=RIGHT>Airname:</TD>
-        <TD><INPUT TYPE=TEXT NAME=djname CLASS=input SIZE=30></TD>
+        <TD><INPUT TYPE=TEXT NAME=djname CLASS=input maxlength=<?php echo IDJ::MAX_AIRNAME_LENGTH;?> SIZE=30></TD>
       </TR>
       <TR>
         <TD>&nbsp;</TD>
@@ -366,7 +366,7 @@ class Reviews extends MenuItem {
                 break;
             case " Post Review! ":
                 Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
-                $review = substr(trim($_REQUEST["review"]), 0, 64000);
+                $review = mb_substr(trim($_REQUEST["review"]), 0, IReview::MAX_REVIEW_LENGTH);
                 $success = Engine::api(IReview::class)->insertReview($_REQUEST["tag"], $_REQUEST["private"], $airname, $review, $this->session->getUser());
                 if($success >= 1) {
                     if($_REQUEST["noise"])
@@ -435,7 +435,7 @@ class Reviews extends MenuItem {
           <TD ALIGN=RIGHT><INPUT TYPE=RADIO NAME=private VALUE=0<?php if(!$_REQUEST["private"])echo " CHECKED";?>>Public&nbsp;&nbsp;
                           <INPUT TYPE=RADIO NAME=private VALUE=1<?php if($_REQUEST["private"])echo " CHECKED";?>>Private</TD></TR>
       <TR><TD COLSPAN=2>
-        <SPAN CLASS=input><TEXTAREA WRAP=VIRTUAL NAME=review COLS=50 ROWS=20>
+        <SPAN CLASS=input><TEXTAREA WRAP=VIRTUAL NAME=review maxlength=<?php echo IReview::MAX_REVIEW_LENGTH;?> COLS=50 ROWS=20>
 <?php echo htmlentities($review);?></TEXTAREA></SPAN><BR>
       </TD></TR>
       <TR><TD ALIGN=LEFT COLSPAN=2>

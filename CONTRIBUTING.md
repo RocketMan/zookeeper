@@ -141,7 +141,10 @@ As you contribute code, please observe the following guidelines:
 * Code in `engine` may never reference other parts of the application;
 * All access to the engine is mediated via the Engine::api pattern (see
   above for a discussion);
-* Code outside the engine must delegate all database access to the engine.
+* Code outside the engine must delegate all database access to the engine;
+* User inputs (UI elements as well as imports) must be scrubbed for validity,
+  which includes limiting the input to the size of the respective database
+  columns.  Size consts should be declared in the engine interfaces.
 
 Questions, comments, queries, or suggestions are welcome.
 
