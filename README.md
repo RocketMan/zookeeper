@@ -1,6 +1,6 @@
 ## Zookeeper Online
 [![last commit](https://badgen.net/github/last-commit/RocketMan/zookeeper)](https://github.com/RocketMan/zookeeper/commits/master)
-[![Build Status](https://travis-ci.com/rocketman/zookeeper.svg?branch=master)](https://travis-ci.com/rocketman/zookeeper)
+[![Build Status](https://travis-ci.com/RocketMan/zookeeper.svg?branch=master)](https://travis-ci.com/github/RocketMan/zookeeper)
 
 [![license](https://badgen.net/github/license/RocketMan/zookeeper)](https://github.com/RocketMan/zookeeper/blob/master/LICENSE)
 [![latest version](https://badgen.net/github/release/RocketMan/zookeeper?label=latest)](https://github.com/RocketMan/zookeeper/releases)
