@@ -503,7 +503,7 @@ class Playlists extends MenuItem {
     
     // handles post for playlist creation and edit
     public function handleListPost() {
-        $description = $_POST["description"];
+        $description = mb_substr(trim($_POST["description"]), 0, IPlaylist::MAX_DESCRIPTION_LENGTH);
         $date = $_REQUEST["date"];
         $fromtime = substr($_REQUEST["fromtime"], 0, 5);
         $totime   = substr($_REQUEST["totime"], 0, 5);
@@ -681,12 +681,15 @@ class Playlists extends MenuItem {
             $airName = $sourcePlaylist['airname'];
 
             if(isset($_POST["duplicate"]) && $_POST["duplicate"]) {
-                $description .= preg_replace_callback("/%([^%]*)%/",
+                $suffix = preg_replace_callback("/%([^%]*)%/",
                     function($matches) use ($date) {
                         return \DateTime::createFromFormat(
                             IPlaylist::TIME_FORMAT,
                             $date . " 0000")->format($matches[1]);
                     }, self::DUPLICATE_SUFFIX);
+                if(mb_strlen($description) + mb_strlen($suffix) > IPlaylist::MAX_DESCRIPTION_LENGTH)
+                    $description = mb_substr($description, 0, IPlaylist::MAX_DESCRIPTION_LENGTH - mb_strlen($suffix) - 3) . "...";
+                $description .= $suffix;
             }
         }
 

@@ -206,9 +206,10 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 $toStamp = \DateTime::createFromFormat(self::TIME_FORMAT,
                             $date . " " . $to);
 
-                // rebase timestamps if both start and end times have changed
+                // rebase timestamps if both start and end times have changed,
+                // or if the show date and start time have changed
                 list($wasFrom, $wasTo) = explode("-", $row['showtime']);
-                if($from != $wasFrom && $to != $wasTo) {
+                if($from != $wasFrom && ($offset || $to != $wasTo)) {
                     $wasFromStamp = \DateTime::createFromFormat(self::TIME_FORMAT,
                                     $date . " " . $wasFrom);
                     $diff = $wasFromStamp->diff($fromStamp);
