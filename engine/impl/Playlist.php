@@ -794,6 +794,16 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $row = $stmt->executeAndFetch();
         $airname = $row?$row['airname']:null;
 
+        // validate airname still exists
+        if($airname) {
+            $query = "SELECT COUNT(*) FROM airnames WHERE id = ?";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $airname);
+            $row = $stmt->executeAndFetch(\PDO::FETCH_BOTH);
+            if($row && !$row[0])
+                $airname = null;
+        }
+
         // update the playlist
         $query = "UPDATE lists SET airname = ? WHERE id = ?";
         $stmt = $this->prepare($query);
