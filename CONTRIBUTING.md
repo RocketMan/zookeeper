@@ -66,6 +66,10 @@ The following is an overview of the source code directory structure:
             Instance-specific customizations that you wish to keep
             separate from the standard installation.  For example,
             if you have custom controllers, you can put them here.
+
+            TIP: If you add classes to this directory after installation,
+            run `composer dump-autoload` to regenerate the classmap.
+            See INSTALLATION.md for more information about Composer.
             
         engine/
             Business operations, configuration, and session
@@ -103,6 +107,9 @@ The following is an overview of the source code directory structure:
             nor accessed directly; all access should be mediated
             through the respective interfaces.  See 'engine',
             above, for a discussion of the Engine::api pattern.
+
+        fonts/
+            TrueType fonts for label printing
             
         img/
             image files
@@ -116,12 +123,15 @@ The following is an overview of the source code directory structure:
             Server-generated UI.  Menu items are specified in metadata,
             via config/ui_config.php.
 
-        ui/3rdp
-            Third-party dependencies
-
         vendor/
             PHP Composer dependencies (not delivered from the repo)
             See INSTALLATION.md for more information.
+
+        composer.json
+            Composer manifest
+
+        composer.lock
+            Composer dependency version lock
             
         index.php
             main endpoint for the application

@@ -196,6 +196,34 @@ branding (station name, style sheets and logo), contact information,
 optional SSO login setup, and charting configuration.  Please see the
 config.php file for more information.
 
+### Install Composer dependencies [initial installation AND every release]
+
+PHP Composer is a dependency management tool which Zookeeper uses to manage
+third-party dependencies.
+
+If you don't have PHP Composer installed somewhere on your system, you
+will need it for the following steps.  Install it as follows:
+
+        cd <directory where you want to install Composer>
+        php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+        php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+        php composer-setup.php
+        php -r "unlink('composer-setup.php');"
+
+Install the Composer dependencies as follows:
+
+        cd /example/path/to/zookeeper
+        php <Composer directory>/composer.phar install
+
+**Note:** In addition to the initial installation, run the
+instructions above for each new Zookeeper Online release to ensure the
+dependencies are kept up-to-date.
+
+Once you have installed the Composer dependencies, it's fine to delete
+the composer.phar that you downloaded, though you may want to keep it
+around, as you will need it for each new release.
+
+
 ### Push Notification (optional)
 
 Zookeeper can send push notifications via websockets.  If you
@@ -213,27 +241,7 @@ want to support the optional push notification service, you will need to:
    are on another OS, update your configuration to enable both modules,
    then restart Apache to pick up the change.
 
-2. Install PHP Composer
-
-   If you don't have PHP Composer installed somewhere on your system, you
-   will need it for the remaining steps.  Install it as follows:
-
-        cd <directory where you want to install Composer>
-        php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-        php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-        php composer-setup.php
-        php -r "unlink('composer-setup.php');"
-
-3. Install Ratchet (includes React)
-
-        cd /example/path/to/zookeeper
-        php <Composer directory>/composer.phar require cboden/ratchet react/datagram:^1.5
-
-   (Optional) If you are using the push notification HTTP proxy:
-
-        php <Composer directory>/composer.phar require ratchet/pawl react/http:^1.2
-
-4. Update your system to run the push notification server
+2. Update your system to run the push notification server
 
    As a first step, ensure you can run the notification server manually
    from a shell:
@@ -251,7 +259,7 @@ want to support the optional push notification service, you will need to:
    create a file `/etc/systemd/system/zkpush.service` using the
    example file below.
 
-5. (Optional) Configure the HTTP push notification proxy
+3. (Optional) Configure the HTTP push notification proxy
 
    If you want to send push notifications via HTTP, add the following
    stanza to the `config/config.php` file:
@@ -259,7 +267,7 @@ want to support the optional push notification service, you will need to:
        'push_proxy' => [
            [
                'proxy' => ZK\PushNotification\PushHttpProxy::class,
-               'ws_endpoint' => 'wss://example/source/endpoint',
+               'ws_endpoint' => 'ws://127.0.0.1:32080/push/onair',
                'http_endpoints' => [ 'https://example/target/endpoint' ]
            ],
            ...repeat for additional proxies...
@@ -271,8 +279,8 @@ want to support the optional push notification service, you will need to:
      data, use `ZK\PushNotification\PushHttpProxy::class`.  To send
      a FORM POST, use `ZK\PushNotification\PushFormPostProxy::class`.
    * 'ws_endpoint' is the ws push event stream to subscribe to.
-     Generally, this will be your Zookeeper Online ws endpoint
-     (e.g., wss://example.org/push/onair);
+     Set this value to 'ws://127.0.0.1:32080/push/onair' to subscribe
+     to the default internal Zookeeper Online ws endpoint.
    * 'http_endpoints' is an array of targets to receive the HTTP requests
 
 #### Example systemd file for push notification service
@@ -315,7 +323,7 @@ Notification](#user-content-push-notification-optional), above.)
 Once you have Composer, install url-highlight as follows:
 
         cd /example/path/to/zookeeper
-        php <Composer directory>/composer.phar require vstelmakh/url-highlight
+        php <Composer directory>/composer.phar install
 
 Zookeeper will automatically use url-highlight, if it is installed in
 this way; if not, it will fall back to the built-in legacy highlighter.
