@@ -31,6 +31,8 @@ use ZK\Engine\ILibrary;
 
 use ZK\UI\UICommon as UI;
 
+use JSMin\JSMin;
+
 class AddManager extends MenuItem {
     const MIN_REQUIRED = 4;        // minimum required A-File tracks/hour
 
@@ -326,7 +328,7 @@ class AddManager extends MenuItem {
     ?>
 
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
+    <?php ob_start([JSMin::class, 'minify']); ?>
 
     function onExport() {
       if(document.forms[1].os.value == "email") {
@@ -365,7 +367,7 @@ class AddManager extends MenuItem {
     private function emitConfirmID($name, $message, $action, $id="", $rtaction="") {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
+    <?php ob_start([JSMin::class, 'minify']); ?>
     function Confirm<?php echo $name; ?>(<?php if($id) echo "id"; ?>)
     {
     <?php if($rtaction) { ?>
@@ -1231,7 +1233,7 @@ class AddManager extends MenuItem {
         UI::setFocus();
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
+    <?php ob_start([JSMin::class, 'minify']); ?>
     $().ready(function(){
         var INITIAL_SORT_COL = 0; //date
         $('.sortable-table').tablesorter({

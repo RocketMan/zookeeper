@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -22,8 +22,8 @@
  *
  */
 
-require('ui/3rdp/Parsedown.php');
-require('ui/UICommon.php');
+require_once __DIR__."/vendor/autoload.php";
+require_once __DIR__."/ui/UICommon.php";
 
 use ZK\UI\UICommon as UI;
 

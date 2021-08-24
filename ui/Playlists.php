@@ -35,6 +35,8 @@ use ZK\Engine\PlaylistObserver;
 
 use ZK\UI\UICommon as UI;
 
+use JSMin\JSMin;
+
 use VStelmakh\UrlHighlight\UrlHighlight;
 
 
@@ -1070,7 +1072,7 @@ class Playlists extends MenuItem {
     <?php UI::markdownHelp(); ?>
       </FORM>
       <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
+    <?php ob_start([JSMin::class, 'minify']); ?>
             $("#ctext").on('input', function(e) {
                 var len = this.value.length;
                 $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
@@ -1368,7 +1370,7 @@ class Playlists extends MenuItem {
 
     </div>
       <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
+    <?php ob_start([JSMin::class, 'minify']); ?>
             $('input:radio[name="format"]').change(function() {
                 if($(this).is(':checked') && $(this).val() == "json") {
                     $("#json-help").show();
