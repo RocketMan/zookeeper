@@ -32,6 +32,8 @@ use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
+use JSMin\JSMin;
+
 class Main implements IController {
     protected $ssoUser;
     protected $dn;
@@ -112,7 +114,7 @@ class Main implements IController {
 
   <!-- pull down date & time pickers if browser is stupid -->
   <SCRIPT TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
+    <?php ob_start([JSMin::class, 'minify']); ?>
     var datefield=document.createElement("input");
     datefield.setAttribute("type", "date");
     if (datefield.type!="date") {
@@ -498,7 +500,7 @@ class Main implements IController {
     </FORM>
     </DIV>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
+    <?php ob_start([JSMin::class, 'minify']); ?>
     function showOld() {
         document.getElementById("oldSect").style.display = "block";
         document.getElementById("newSect").style.display = "none"; }

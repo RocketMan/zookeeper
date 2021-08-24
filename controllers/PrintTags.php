@@ -27,6 +27,8 @@ namespace ZK\Controllers;
 use ZK\UI\Editor;
 use ZK\UI\UICommon as UI;
 
+define("_SYSTEM_TTFONTS", dirname(__DIR__)."/fonts/");
+
 class PrintTags implements IController {
     const FONT_FACE="NimbusMono-Bold";
     const FONT_FILE="nimbusmono-bold.ttf";

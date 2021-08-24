@@ -22,8 +22,10 @@
  *
  */
 
-require('../ui/3rdp/JSMin.php');
-require('3rdp/SourceMap.php');
+require_once __DIR__."/../vendor/autoload.php";
+
+use axy\sourcemap\SourceMap;
+use JSMin\JSMin;
 
 // ensure target exists and is descendant of this directory
 $target = realpath(__DIR__.$_SERVER['PATH_INFO']);
@@ -50,6 +52,11 @@ header("Last-Modified: ".gmdate('D, d M Y H:i:s', $mtime)." GMT");
 if($_SERVER['REQUEST_METHOD'] == "HEAD")
     return;
 
+// get (possibly decorated) resource basename
+$uri = $_SERVER["REQUEST_URI"];
+$i = strrpos($uri, ".");
+$base = ($i !== false)?substr($uri, 0, $i):$uri;
+
 // generate the destination (minified) contents...
 // this must be the same algorithm used in .jshandler.php
 $minified = explode("\n", JSMIN::minify(file_get_contents($target)));
@@ -61,7 +68,7 @@ $scol = 0;
 $sline = 0;
 
 // generate the dest => src mappings
-$mappings = [];
+$map = new SourceMap();
 foreach($minified as $dline => $dtext) {
     // skip comments
     $lead = substr($dtext, 0, 2);
@@ -90,14 +97,17 @@ foreach($minified as $dline => $dtext) {
         }
 
         // add dest => src mapping
-        $mappings[] = [
-            'dest_line' => $dline+1,
-            'dest_col' => $dcol,
-            'src_index' => 0,
-            'src_line' => $sline,
-            'src_col' => $scol,
-            'token' => $token,
-        ];
+        $map->addPosition([
+	    'generated' => [
+                'line' => $dline,
+                'column' => $dcol
+	    ],
+	    'source' => [
+	        'fileName' => "${base}.src.js",
+                'line' => $sline,
+                'column' => $scol
+	    ],
+	]);
 
         $scol++;
         $dcol++;
@@ -106,12 +116,6 @@ foreach($minified as $dline => $dtext) {
 
 fclose($source);
 
-// get (possibly decorated) resource basename
-$uri = $_SERVER["REQUEST_URI"];
-$i = strrpos($uri, ".");
-$base = ($i !== false)?substr($uri, 0, $i):$uri;
-
 // generate the source map JSON
-$map = new SourceMap($base.".js", [$base.".src.js"]);
-$map->mappings = $mappings;
-echo $map->generateJSON();
+$map->file = "${base}.js";
+$map->save('php://output', 0);

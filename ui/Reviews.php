@@ -31,7 +31,11 @@ use ZK\Engine\ILibrary;
 
 use ZK\UI\UICommon as UI;
 
+use JSMin\JSMin;
+
 class Reviews extends MenuItem {
+    const PLAIN_TEXT_WRAP_LEN = 75;
+
     private static $actions = [
         [ "viewRecent", "viewRecentReviews" ],
         [ "viewRecentReview", "viewReview" ],
@@ -144,7 +148,7 @@ class Reviews extends MenuItem {
       ?>
 
       <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([\JSMin::class, 'minify']); ?>
+    <?php ob_start([JSMin::class, 'minify']); ?>
         $().ready(function(){
             var INITIAL_SORT_COL = 0; //date
             $('.sortable-table').tablesorter({
@@ -296,7 +300,7 @@ class Reviews extends MenuItem {
     
             $review = $row[2];
     
-            $body .= \WordWrap::word_wrap($review);
+            $body .= wordwrap($review, self::PLAIN_TEXT_WRAP_LEN, "\r\n", true);
     
             // Emit the postamble
             $body .= "\r\n\r\n--\r\nPost your music reviews online!\r\n";

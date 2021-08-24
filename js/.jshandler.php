@@ -22,7 +22,9 @@
  *
  */
 
-require('../ui/3rdp/JSMin.php');
+require_once __DIR__."/../vendor/autoload.php";
+
+use JSMin\JSMin;
 
 $target = realpath(__DIR__.$_SERVER['PATH_INFO']);
 if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
@@ -57,7 +59,7 @@ if($_SERVER['REQUEST_METHOD'] == "HEAD")
     return;
 
 ob_start("ob_gzhandler");
-ob_start([\JSMin::class, 'minify']);
+ob_start([JSMin::class, 'minify']);
 
 require_once($target);
 

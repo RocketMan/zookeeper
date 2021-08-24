@@ -21,16 +21,19 @@
 	    "ZK\\UI\\": "ui/"
 	},
 	"classmap": [
-	    "custom/",
-	    "ui/3rdp/"
+	    "custom/"
 	]
     },
     "require": {
 	"php": ">=7.2.5",
+	"axy/sourcemap": "^0.1.5",
 	"cboden/ratchet": "^0.4.3",
+	"erusev/parsedown": "^1.8.0-beta7",
+	"mrclay/jsmin-php": "^2.4.0",
 	"react/datagram": "^1.5",
 	"react/http": "^1.2",
 	"ratchet/pawl": "^0.3.5",
+	"rocketman/pdf-label": "^1.6+rocketman.1",
 	"vstelmakh/url-highlight": "^3.0"
     }
 }
