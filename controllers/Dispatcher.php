@@ -24,10 +24,15 @@
 
 namespace ZK\Controllers;
 
-if(file_exists(__DIR__."/../vendor/autoload.php"))
-    include __DIR__."/../vendor/autoload.php";
+if(!file_exists(__DIR__."/../vendor/autoload.php")) {
+    if(php_sapi_name() != "cli") {
+        error_log("Composer not configured");
+        http_response_code(500); // 500 Internal Server Error
+    }
+    die("Composer is not configured.  See INSTALLATION.md for information.\n");
+}
 
-include __DIR__."/../engine/Engine.php";
+require_once __DIR__."/../vendor/autoload.php";
 
 use ZK\Engine\Engine;
 
@@ -36,23 +41,6 @@ class Dispatcher {
     private $controllers;
 
     public function __construct() {
-        spl_autoload_register(function($class) {
-            // extract leaf class name
-            $p = strrchr($class, '\\');
-            $p = $p?substr($p, 1):$class;
-            if(is_file(__DIR__."/../custom/${p}.php"))
-                include __DIR__."/../custom/${p}.php";
-
-            else if(is_file(__DIR__."/${p}.php"))
-                include __DIR__."/${p}.php";
-
-            else if(is_file(__DIR__."/../ui/${p}.php"))
-                include __DIR__."/../ui/${p}.php";
-
-            else if(is_file(__DIR__."/../ui/3rdp/${p}.php"))
-                include __DIR__."/../ui/3rdp/${p}.php";
-        });
-
         // UI configuration file
         include __DIR__.'/../config/ui_config.php';
         if(isset($menu) && is_array($menu)) {
