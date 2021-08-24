@@ -224,14 +224,10 @@ want to support the optional push notification service, you will need to:
         php composer-setup.php
         php -r "unlink('composer-setup.php');"
 
-3. Install Ratchet (includes React)
+3. Install the dependencies
 
         cd /example/path/to/zookeeper
-        php <Composer directory>/composer.phar require cboden/ratchet react/datagram:^1.5
-
-   (Optional) If you are using the push notification HTTP proxy:
-
-        php <Composer directory>/composer.phar require ratchet/pawl react/http:^1.2
+        php <Composer directory>/composer.phar install
 
 4. Update your system to run the push notification server
 
@@ -315,7 +311,7 @@ Notification](#user-content-push-notification-optional), above.)
 Once you have Composer, install url-highlight as follows:
 
         cd /example/path/to/zookeeper
-        php <Composer directory>/composer.phar require vstelmakh/url-highlight
+        php <Composer directory>/composer.phar install
 
 Zookeeper will automatically use url-highlight, if it is installed in
 this way; if not, it will fall back to the built-in legacy highlighter.
