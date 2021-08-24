@@ -1,0 +1,36 @@
+{
+    "name": "rocketman/zookeeper",
+    "type": "project",
+    "description": "Zookeeper Online music database and charting software",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+	{
+	    "name": "Jim Mason",
+	    "email": "jmason@ibinx.com",
+	    "homepage": "https://www.ibinx.com/"
+	}
+    ],
+    "config": {
+	"preferred-install": "dist",
+	"discard-changes": "true"
+    },
+    "autoload": {
+	"psr-4": {
+	    "ZK\\Controllers\\": "controllers/",
+	    "ZK\\Engine\\": [ "engine/", "engine/impl/" ],
+	    "ZK\\UI\\": "ui/"
+	},
+	"classmap": [
+	    "custom/",
+	    "ui/3rdp/"
+	]
+    },
+    "require": {
+	"php": ">=7.2.5",
+	"cboden/ratchet": "^0.4.3",
+	"react/datagram": "^1.5",
+	"react/http": "^1.2",
+	"ratchet/pawl": "^0.3.5",
+	"vstelmakh/url-highlight": "^3.0"
+    }
+}

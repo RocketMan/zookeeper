@@ -24,6 +24,9 @@
 
 namespace ZK\Engine;
 
+if(file_exists(__DIR__."/../vendor/autoload.php"))
+    include_once __DIR__."/../vendor/autoload.php";
+
 class Engine {
     const VERSION = "2.11.0-DEV";
 
@@ -31,10 +34,7 @@ class Engine {
     private static $config;
     private static $session;
 
-    /**
-     * start of day initialization
-     */
-    public static function init() {
+    private static function legacyAutoloader() {
         spl_autoload_register(function($class) {
             // extract leaf class name
             $p = strrchr($class, '\\');
@@ -57,6 +57,30 @@ class Engine {
                    include __DIR__."/impl/${p}.php";
             }
         });
+    }
+
+    /*
+     * install autoloader for the engine implementation classes
+     */
+    private static function customAutoloader() {
+        spl_autoload_register(function($class) {
+            // search for file without Impl suffix in the 'impl' subdir
+            $prefix = str_replace("\\", "\\x5c", __NAMESPACE__."\\");
+            if(preg_match("/${prefix}(.+)Impl$/", $class, $matches) &&
+                    is_file($path = __DIR__."/impl/${matches[1]}.php")) {
+                include $path;
+            }
+        });
+    }
+
+    /**
+     * start of day initialization
+     */
+    public static function init() {
+        if(file_exists(__DIR__."/../vendor/autoload.php"))
+            self::customAutoloader();
+        else
+            self::legacyAutoloader();
 
         // application configuration file
         self::$config = new Config();

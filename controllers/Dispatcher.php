@@ -25,9 +25,9 @@
 namespace ZK\Controllers;
 
 if(file_exists(__DIR__."/../vendor/autoload.php"))
-    include __DIR__."/../vendor/autoload.php";
-
-include __DIR__."/../engine/Engine.php";
+    include_once __DIR__."/../vendor/autoload.php";
+else
+    include __DIR__."/../engine/Engine.php";
 
 use ZK\Engine\Engine;
 
@@ -35,7 +35,7 @@ class Dispatcher {
     private $menu;
     private $controllers;
 
-    public function __construct() {
+    private static function legacyAutoloader() {
         spl_autoload_register(function($class) {
             // extract leaf class name
             $p = strrchr($class, '\\');
@@ -52,6 +52,11 @@ class Dispatcher {
             else if(is_file(__DIR__."/../ui/3rdp/${p}.php"))
                 include __DIR__."/../ui/3rdp/${p}.php";
         });
+    }
+
+    public function __construct() {
+        if(!file_exists(__DIR__."/../vendor/autoload.php"))
+            self::legacyAutoloader();
 
         // UI configuration file
         include __DIR__.'/../config/ui_config.php';
