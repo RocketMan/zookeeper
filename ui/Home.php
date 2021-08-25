@@ -58,7 +58,7 @@ class Home extends MenuItem {
        if(! isset($y) || !$y)
           return;    // No charts!  bail.
     
-       if(!$numWeeks || $numWeeks == 1)
+       if(!$numweeks || $numweeks == 1)
           Engine::api(IChart::class)->getChart($topPlays, "", $lastWeek["week"], $limit);
        else {
           // Determine start chart date that will yield $numweeks worth of charts
