@@ -308,26 +308,6 @@ This file goes into the /etc/systemd/system directory of Debian:
 
 See systemctl(1) for information on how to control the service.
 
-### URL highlighter (optional)
-
-By default, Zookeeper provides rudimentary highlighting of URLs in
-playlist entries.  Improved URL highlighting can be obtained by
-installing the
-[url-highlight](https://github.com/vstelmakh/url-highlight) package.
-
-To install url-highlight, first install Composer, if you do not
-already have it installed somewhere on your system.  (For information
-on installing Composer, see 'Install PHP Composer' in [Push
-Notification](#user-content-push-notification-optional), above.)
-
-Once you have Composer, install url-highlight as follows:
-
-        cd /example/path/to/zookeeper
-        php <Composer directory>/composer.phar install
-
-Zookeeper will automatically use url-highlight, if it is installed in
-this way; if not, it will fall back to the built-in legacy highlighter.
-
 ___
 
 
