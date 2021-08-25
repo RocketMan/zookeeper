@@ -79,57 +79,16 @@ class Playlists extends MenuItem {
     }
     
     private function smartURL($name, $detect=true) {
+        $name = htmlentities($name);
+
         if($detect) {
             if(!isset($this->urlHighlighter))
-                $this->urlHighlighter = class_exists(UrlHighlight::class)?new UrlHighlight():false;
+                $this->urlHighlighter = new UrlHighlight();
 
-            $name = htmlentities($name);
+            $name = $this->urlHighlighter->highlightUrls($name);
+        }
 
-            if($this->urlHighlighter)
-                return $this->urlHighlighter->highlightUrls($name);
-
-            $words = explode(" ", $name);
-            for($i=0; $i<sizeof($words); $i++) {
-                $word = $words[$i];
-                $len = strlen($word);
-                $last = $len - 1;
-                if($word[0] == "(" && $word[$last] == ")" ||
-                         $word[0] == "\"" && $word[$last] == "\"" ||
-                         $word[0] == "'" && $word[$last] == "'" ||
-                         $word[0] == "{" && $word[$last] == "}" ||
-                         $word[0] == "[" && $word[$last] == "]") {
-                    $len -= 2;
-                    $word = substr($word, 1, $len);
-                }
-                $at = strrpos($word, "@");
-                $prefix = (substr($word, 0, 7) == "http://")?7:0;
-                $stroke = strpos(substr($word, $prefix), "/");
-                if($stroke) {
-                    $len = $stroke + $prefix;
-                    $dot = strrpos(substr($word, 0, $len), ".");
-                } else
-                    $dot = strrpos($word, ".");
-                $ipos = strtr($word, "'(){}|\\^~[]`", "            ") != $word;
-                if($ipos || $dot && ($dot >= $len - 2 || $dot < $len - 5) ||
-                        strpos($word, "..") !== false || is_numeric($word) || is_numeric($word[$len-1]) || is_numeric($word[$dot+1]))
-                    $dot = false;
-    
-                if($at && $dot)
-                    // e-mail address
-                    $ret .= "<A HREF=\"mailto:$word\">" . $words[$i] . "</A> ";
-                else if($dot) {
-                    // web address
-                    $ret .= "<A TARGET=\"_blank\" HREF=\"";
-                    if(!$prefix)
-                        $ret .= "http://";
-                    $ret .= $word . "\">" . $words[$i] . "</A> ";
-                } else
-                    $ret .= $words[$i] . " ";
-            }
-    
-            return trim($ret);
-        } else
-            return htmlentities($name);
+        return $name;
     }
     
     private function extractTime($time, &$fromTime, &$toTime) {
