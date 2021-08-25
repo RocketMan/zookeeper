@@ -153,8 +153,7 @@ b. If you are using shared hosting and do not have permission to edit
         php_value date.timezone "Asia/Kolkata"
 
    within the &lt;IfModule mod_php7.c> stanza if you are using PHP
-   7.4, within &lt;IfModule mod_php.c> if you are using PHP 8.0, or
-   within &lt;IfModule mod_php5.c> if you are using PHP 5.6.
+   7.4, or within &lt;IfModule mod_php.c> if you are using PHP 8.0.
 
    Alternatively, if you are using fastCGI, edit the `.user.ini`
    file in the `zookeeper` directory and add this setting:
