@@ -14,7 +14,7 @@ https://zookeeper.ibinx.com/master/
 
 ### Requirements
 
-* PHP 5.6 or later with MySQL PDO driver
+* PHP 7.2.5 or later with MySQL PDO driver
 * MySQL/MariaDB
 
 It is recommended to use PHP 7.4, as older versions have reached EOL
