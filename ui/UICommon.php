@@ -101,6 +101,9 @@ class UICommon {
      * return the URL of the current request, less leaf filename, if any
      */
     public static function getBaseUrl() {
+        if(php_sapi_name() == "cli")
+            return "";
+
         $uri = $_SERVER['REQUEST_URI'];
     
         // strip the query string, if any
