@@ -54,12 +54,10 @@ class Engine {
         self::customAutoloader();
 
         // application configuration file
-        self::$config = new Config();
-        self::$config->init(__DIR__.'/../config/config.php');
+        self::$config = new Config('config');
 
         // engine configuration file
-        self::$apis = new Config();
-        self::$apis->init(__DIR__.'/../config/engine_config.php');
+        self::$apis = new Config('engine_config');
 
         self::$session = new Session();
     }

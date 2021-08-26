@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -34,6 +34,7 @@ if(!file_exists(__DIR__."/../vendor/autoload.php")) {
 
 require_once __DIR__."/../vendor/autoload.php";
 
+use ZK\Engine\Config;
 use ZK\Engine\Engine;
 
 class Dispatcher {
@@ -42,32 +43,27 @@ class Dispatcher {
 
     public function __construct() {
         // UI configuration file
-        include __DIR__.'/../config/ui_config.php';
-        if(isset($menu) && is_array($menu)) {
-            $this->menu = $menu;
-            $customMenu = Engine::param('custom_menu');
-            if($customMenu)
-                $this->menu = array_merge($this->menu, $customMenu);
-        }
+        $this->menu = new Config('ui_config', 'menu');
+        $customMenu = Engine::param('custom_menu');
+        if($customMenu)
+            $this->menu->merge($customMenu);
 
         // Controllers
-        if(isset($controllers)) {
-            $this->controllers = $controllers;
-            $customControllers = Engine::param('custom_controllers');
-            if($customControllers)
-                $this->controllers = array_merge($this->controllers, $customControllers);
-        }
+        $this->controllers = new Config('ui_config', 'controllers');
+        $customControllers = Engine::param('custom_controllers');
+        if($customControllers)
+            $this->controllers->merge($customControllers);
     }
 
     /**
      * return menu entry that matches the specified action
      */
     public function match($action) {
-        foreach($this->menu as $entry) {
+        return $this->menu->iterate(function($entry) use($action) {
             if($entry[1] == $action || substr($entry[1], -1) == '%' &&
                     substr($entry[1], 0, -1) == substr($action, 0, strlen($entry[1])-1))
                 return $entry;
-        }
+        });
     }
 
     /**
@@ -79,7 +75,7 @@ class Dispatcher {
         // If no action was selected or if action is unauthorized,
         // default to the first one
         if(!$entry || !$session->isAuth($entry[0]))
-            $entry = $this->menu[0];
+            $entry = $this->menu->default();
 
         $handler = new $entry[3]();
         if($handler instanceof CommandTarget)
@@ -98,8 +94,8 @@ class Dispatcher {
      * compose the menu for the specified session
      */
     public function composeMenu($action, $session) {
-        $result = array();
-        foreach ($this->menu as $entry) {
+        $result = [];
+        $this->menu->iterate(function($entry) use(&$result, $action, $session) {
             if($entry[2] && $session->isAuth($entry[0])) {
                 $baseAction = substr($entry[1], -1) == '%'?
                             substr($entry[1], 0, -1):$entry[1];
@@ -111,7 +107,7 @@ class Dispatcher {
                               'label' => $entry[2],
                               'selected' => $selected ];
             }
-        }
+        });
         return $result;
     }
 
@@ -119,13 +115,11 @@ class Dispatcher {
      * dispatch request to the specified controller
      */
     public function processRequest($controller="") {
-        if(isset($this->controllers)) {
-            if(empty($controller) ||
-                    !array_key_exists($controller, $this->controllers))
-                $controller = array_keys($this->controllers)[0];
-            $impl = new $this->controllers[$controller]();
-            if($impl instanceof IController)
-                $impl->processRequest($this);
-        }
+        $implClass = empty($controller) ||
+                        !($p = $this->controllers->getParam($controller)) ?
+            $this->controllers->default():$p;
+        $impl = new $implClass();
+        if($impl instanceof IController)
+            $impl->processRequest($this);
     }
 }

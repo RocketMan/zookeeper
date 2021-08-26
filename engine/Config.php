@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -30,11 +30,62 @@ namespace ZK\Engine;
 class Config {
     private $config;
 
-    public function init($file) {
-        // populate the config property from the given file
-        include $file;
-        if(isset($config) && is_array($config))
-            $this->config = $config;
+    /**
+     * ctor
+     *
+     * @param file base filename of configuration file (without extension)
+     * @param variable variable name in config file (default 'config')
+     */
+    public function __construct($file, $variable = 'config') {
+        // populate the configuration from the given file and variable
+        include __DIR__."/../config/${file}.php";
+        if(isset($$variable) && is_array($$variable))
+            $this->config = $$variable;
+        else
+            throw new \Exception("Error parsing configuration: file=${file}.php, variable=${variable}");
+    }
+
+    /**
+     * merge an array of entries into this configuration
+     *
+     * @param config array to merge
+     */
+    public function merge($config) {
+        $this->config = array_merge($this->config, $config);
+    }
+
+    /**
+     * iterate over the entries in the configuration
+     *
+     * calls user-supplied callback for each entry.
+     * iteration ceases upon first non-null return value from the callback
+     *
+     * @param fn callback with signature 'function($entry)'
+     * @return first value returned by a callback, if any
+     */
+    public function iterate($fn) {
+        foreach($this->config as $entry)
+            if(($x = $fn($entry)) !== null)
+                return $x;
+    }
+
+    /**
+     * return the default (first) configuration entry
+     *
+     * @return default entry
+     */
+    public function default() {
+        return $this->config[array_keys($this->config)[0]];
+    }
+
+    /**
+     * determine whether the specified configuration param exists
+     *
+     * @param key name of param to test
+     * @return true if exists, false otherwise
+     */
+    public function hasParam($key) {
+        return array_key_exists($key, $this->config);
     }
 
     /**
@@ -45,19 +96,7 @@ class Config {
      * @return value or null if not set and no default specified
      */
     public function getParam($key, $default = null) {
-        return isset($this->config) &&
-                   array_key_exists($key, $this->config)?
+        return array_key_exists($key, $this->config)?
                    $this->config[$key]:$default;
-    }
-
-    /**
-     * set a configurate value in the in-memory configuration data
-     *
-     * @param key name of param
-     * @param value value to set
-     */
-    public function setParam($key, $value) {
-        if(isset($this->config))
-            $this->config[$key] = $value;
     }
 }
