@@ -142,8 +142,6 @@ $config = [
     /**
      * enable push notification
      *
-     * dependencies must be installed for this setting to take effect
-     *
      * see INSTALLATION.md for details
      */
     'push_enabled' => true,
