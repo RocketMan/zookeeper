@@ -1,10 +1,9 @@
 <?php
 /**
+ * User Interface configuration
  *
- * Navigation and command processing array
- *
- * Each array entry is itself an array which consists of four elements
- * as follows:  (names are for convenience; array is numeric/keyless)
+ * Each entry consists of four elements as follows:  (names are for
+ * convenience; array is numeric/keyless)
  *
  *    * access - specifies the required access level to use this
  *               function:  "a" is all, "u" is authenticated users,
@@ -21,16 +20,15 @@
  *               it will be selected if the action string is any of these:
  *               "someThing", "someThingElse", "someThingMore", etc.)
  *
- *    * menu -   text displayed in the navigation menu for this command;
+ *    * label -  text displayed in the navigation menu for this command;
  *               this should be 0 for commands which have no corresponding
  *               menu item
  *
- *    * class -  MenuItem class to which command is dispatched
+ *    * implementation - MenuItem class to which action is dispatched
  *
  * The first item in the list is the default if no action is specified.
  */
 
-//NOTE: server must be restarted for changes to take effect.
 $menu = [
 //  access, action,        menu label,              implementation class
     [ 'a', 'home',         0,                       ZK\UI\Home::class ],
@@ -53,23 +51,4 @@ $menu = [
     [ 'p', 'deepStorage',  'Deep Storage',          ZK\UI\DeepStorage::class ],
     [ 'x', 'adminUsers',   'Administer Users',      ZK\UI\UserAdmin::class ],
     [ 'a', 'viewChart',    'Airplay Charts',        ZK\UI\Charts::class ],
-];
-
-/**
- * IController implementations
- *
- * The first item in the list is the default if no target is specified.
- */
-$controllers = [
-    'main' =>         ZK\UI\Main::class,
-    'addexp' =>       ZK\Controllers\ExportAdd::class,
-    'export' =>       ZK\Controllers\ExportPlaylist::class,
-    'afile' =>        ZK\Controllers\ExportAfile::class,
-    'opensearch' =>   ZK\Controllers\OpenSearch::class,
-    'daily' =>        ZK\Controllers\RunDaily::class,
-    'print' =>        ZK\Controllers\PrintTags::class,
-    'rss' =>          ZK\Controllers\RSS::class,
-    'api' =>          ZK\Controllers\API::class,
-    'sso' =>          ZK\Controllers\SSOLogin::class,
-    'push' =>         ZK\Controllers\PushServer::class,
 ];

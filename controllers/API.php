@@ -360,7 +360,7 @@ class API extends CommandTarget implements IController {
     private $limit;
     private $serializer;
 
-    public function processRequest($dispatcher) {
+    public function processRequest() {
         $wantXml = $_REQUEST["xml"] || 
                 substr($_SERVER["HTTP_ACCEPT"], 0, 8) == "text/xml";
         $this->serializer = $wantXml?new XMLSerializer():new JSONSerializer();

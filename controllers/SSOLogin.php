@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -33,7 +33,7 @@ class SSOLogin implements IController {
     private $action;
     private $ssoOptions;
 
-    public function processRequest($dispatcher) {
+    public function processRequest() {
         $params = SSOCommon::zkQSParams();
         $state = $params["state"];
         if($state) {

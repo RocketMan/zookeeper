@@ -26,6 +26,7 @@ namespace ZK\UI;
 
 use ZK\Controllers\IController;
 use ZK\Controllers\SSOCommon;
+use ZK\Engine\Config;
 use ZK\Engine\Engine;
 use ZK\Engine\IUser;
 use ZK\Engine\Session;
@@ -34,31 +35,114 @@ use ZK\UI\UICommon as UI;
 
 use JSMin\JSMin;
 
-class Main implements IController {
+class MenuEntry {
+    private const FIELDS = [ 'access', 'action', 'label', 'implementation' ];
+
+    private $entry;
+
+    public function __construct($entry) {
+        $this->entry = $entry;
+    }
+
+    public function __get($var) {
+        $index = array_search($var, self::FIELDS);
+        return $index !== false?$this->entry[$index]:null;
+    }
+}
+
+class UIController implements IController {
     protected $ssoUser;
     protected $dn;
     protected $session;
+    protected $menu;
 
-    public function processRequest($dispatcher) {
+    /**
+     * return menu item that matches the specified action
+     */
+    protected function match($action) {
+        return $this->menu->iterate(function($entry) use($action) {
+            $item = new MenuEntry($entry);
+            $itemAction = $item->action;
+            if($itemAction == $action || substr($itemAction, -1) == '%' &&
+                    substr($itemAction, 0, -1) == substr($action, 0, strlen($itemAction)-1))
+                return $item;
+        });
+    }
 
+    /**
+     * dispatch action to the appropriate menu item/command target
+     */
+    public function dispatch($action, $subaction) {
+        $item = $this->match($action);
+
+        // If no action was selected or if action is unauthorized,
+        // default to the first one
+        if(!$item || !$this->session->isAuth($item->access))
+            $item = new MenuEntry($this->menu->default());
+
+        $implClass = $item->implementation;
+        $menuItem = new $implClass();
+        if($menuItem instanceof MenuItem)
+            $menuItem->process($action, $subaction, $this->session);
+    }
+
+    /**
+     * indicate whether the specified action is authorized for the session
+     */
+    public function isActionAuth($action) {
+        $item = $this->match($action);
+        return !$item || $this->session->isAuth($item->access);
+    }
+
+    /**
+     * compose the menu for the current session
+     */
+    public function composeMenu($action) {
+        $result = [];
+        $this->menu->iterate(function($entry) use(&$result, $action) {
+            $item = new MenuEntry($entry);
+            $itemAction = $item->action;
+            if($item->label && $this->session->isAuth($item->access)) {
+                $baseAction = substr($itemAction, -1) == '%'?
+                            substr($itemAction, 0, -1):$itemAction;
+                $selected = $itemAction == $action ||
+                        substr($itemAction, -1) == '%' &&
+                        substr($itemAction, 0, -1) ==
+                                substr($action, 0, strlen($itemAction) - 1);
+                $result[] = [ 'action' => $baseAction,
+                              'label' => $item->label,
+                              'selected' => $selected ];
+            }
+        });
+        return $result;
+    }
+
+    public function processRequest() {
         $this->session = Engine::session();
-        $this->preProcessRequest($dispatcher);
+
+        // UI configuration file
+        $this->menu = new Config('ui_config', 'menu');
+        $customMenu = Engine::param('custom_menu');
+        if($customMenu)
+            $this->menu->merge($customMenu);
+
+        $this->preProcessRequest();
 
         $isJson = substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
         if ($isJson) {
             $action =  $_REQUEST["action"];
             $subaction =  $_REQUEST["subaction"];
-            $dispatcher->dispatch($action, $subaction, $this->session);
+            $this->dispatch($action, $subaction);
         } else {
             $this->emitResponseHeader();
-            $this->emitBody($dispatcher);
+            $this->emitBody();
         }
     }
 
-    protected function preProcessRequest($dispatcher) {
+    protected function preProcessRequest() {
         // Validate the requested action is authorized
-        if(!empty($_REQUEST["session"]) && !empty($_REQUEST["action"]) &&
-                !$dispatcher->isActionAuth($_REQUEST["action"], $this->session) &&
+        if(!empty($_REQUEST["action"]) &&
+                !$this->isActionAuth($_REQUEST["action"]) &&
                 $_REQUEST["action"] != "loginValidate" &&
                 $_REQUEST["action"] != "logout") {
             $_REQUEST["action"] = "invalidAction";
@@ -137,10 +221,10 @@ class Main implements IController {
 <?php 
     }
     
-    protected function emitNavbar($dispatcher, $action) {
+    protected function emitNavbar($action) {
         echo "    <P CLASS=\"zktitle\"><A HREF=\"?\">".Engine::param('application')."</A></P>\n";
         echo "    <TABLE CELLPADDING=0>\n";
-        $menu = $dispatcher->composeMenu($action, $this->session);
+        $menu = $this->composeMenu($action);
         foreach($menu as $item) {
             echo  "      <TR><TD></TD>" .
                   "<TD><A CLASS=\"" . ($item['selected']?"nav2sel":"nav2") .
@@ -165,7 +249,7 @@ class Main implements IController {
         echo "    </TABLE>\n";
     }
     
-    protected function emitMain($dispatcher, $action, $subaction) {
+    protected function emitMain($action, $subaction) {
         switch($action) {
         case "login":
             $this->emitLogin();
@@ -197,12 +281,12 @@ class Main implements IController {
             // fall through...
         default:
             // dispatch action
-            $dispatcher->dispatch($action, $subaction, $this->session);
+            $this->dispatch($action, $subaction);
             break;
         }
     }
 
-    protected function emitBodyHeader($dispatcher) {
+    protected function emitBodyHeader() {
         $urls = Engine::param('urls');
         $station_full = Engine::param('station_full');
 ?>
@@ -217,19 +301,19 @@ class Main implements IController {
 <?php
     }
     
-    protected function emitBody($dispatcher) {
+    protected function emitBody() {
 ?>
 <BODY>
 <DIV CLASS="box">
   <DIV CLASS="header">
 <?php
-        $this->emitBodyHeader($dispatcher);
+        $this->emitBodyHeader();
         echo "  </DIV>\n";
         echo "  <DIV CLASS=\"leftNav\">\n";
-        $this->emitNavBar($dispatcher, $_REQUEST["action"]);
+        $this->emitNavBar($_REQUEST["action"]);
         echo "  </DIV>\n";
         echo "  <DIV CLASS=\"content\">\n";
-        $this->emitMain($dispatcher, $_REQUEST["action"], $_REQUEST["subaction"]);
+        $this->emitMain($_REQUEST["action"], $_REQUEST["subaction"]);
 ?>
   </DIV>
   <DIV CLASS="footer">

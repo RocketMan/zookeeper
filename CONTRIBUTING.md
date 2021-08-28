@@ -41,22 +41,24 @@ The following is an overview of the source code directory structure:
                  settings for the database, SSO setup (if any),
                  e-mail, hyperlinks, branding, etc.
                  
+            controller_config.php
+                 Controller configuration.  Here we map request targets
+                 onto controllers.
+                 
             engine_config.php
                  Model configuration.  This maps the model interfaces
-                 onto the concrete implementations.
+                 onto concrete implementations.
                  
             ui_config.php
-                 Controller and navigation configuration.  Controller
-                 configuration maps request targets onto controllers;
-                 navigation configuration defines menu items, access
-                 controls, and implementations.
+                 User interface configuration.  This defines menu items,
+                 access controls, and implementations.
                  
         controllers/
             Controllers are responsible for processing requests
             that are received by the application.  Controllers are
             instantiated and invoked by the Dispatcher, whose
             operation is specified via metadata in
-            config/ui_config.php.
+            config/controller_config.php.
             
         css/
             CSS assets.  These files are automatically whitespace

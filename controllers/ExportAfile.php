@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -29,7 +29,7 @@ use ZK\Engine\IChart;
 use ZK\UI\AddManager;
 
 class ExportAfile implements IController {
-    public function processRequest($dispatcher) {
+    public function processRequest() {
         $userAgent = $_SERVER["HTTP_USER_AGENT"];
         ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">

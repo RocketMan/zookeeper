@@ -38,77 +38,14 @@ use ZK\Engine\Config;
 use ZK\Engine\Engine;
 
 class Dispatcher {
-    private $menu;
     private $controllers;
 
     public function __construct() {
-        // UI configuration file
-        $this->menu = new Config('ui_config', 'menu');
-        $customMenu = Engine::param('custom_menu');
-        if($customMenu)
-            $this->menu->merge($customMenu);
-
         // Controllers
-        $this->controllers = new Config('ui_config', 'controllers');
+        $this->controllers = new Config('controller_config', 'controllers');
         $customControllers = Engine::param('custom_controllers');
         if($customControllers)
             $this->controllers->merge($customControllers);
-    }
-
-    /**
-     * return menu entry that matches the specified action
-     */
-    public function match($action) {
-        return $this->menu->iterate(function($entry) use($action) {
-            if($entry[1] == $action || substr($entry[1], -1) == '%' &&
-                    substr($entry[1], 0, -1) == substr($action, 0, strlen($entry[1])-1))
-                return $entry;
-        });
-    }
-
-    /**
-     * dispatch action to the appropriate menu item/command target
-     */
-    public function dispatch($action, $subaction, $session) {
-        $entry = $this->match($action);
-
-        // If no action was selected or if action is unauthorized,
-        // default to the first one
-        if(!$entry || !$session->isAuth($entry[0]))
-            $entry = $this->menu->default();
-
-        $handler = new $entry[3]();
-        if($handler instanceof CommandTarget)
-            $handler->process($action, $subaction, $session);
-    }
-
-    /**
-     * indicate whether the specified action is authorized for the session
-     */
-    public function isActionAuth($action, $session) {
-        $entry = $this->match($action);
-        return !$entry || $session->isAuth($entry[0]);
-    }
-
-    /**
-     * compose the menu for the specified session
-     */
-    public function composeMenu($action, $session) {
-        $result = [];
-        $this->menu->iterate(function($entry) use(&$result, $action, $session) {
-            if($entry[2] && $session->isAuth($entry[0])) {
-                $baseAction = substr($entry[1], -1) == '%'?
-                            substr($entry[1], 0, -1):$entry[1];
-                $selected = $entry[1] == $action ||
-                        substr($entry[1], -1) == '%' &&
-                        substr($entry[1], 0, -1) ==
-                                substr($action, 0, strlen($entry[1]) - 1);
-                $result[] = [ 'action' => $baseAction,
-                              'label' => $entry[2],
-                              'selected' => $selected ];
-            }
-        });
-        return $result;
     }
 
     /**
@@ -120,6 +57,6 @@ class Dispatcher {
             $this->controllers->default():$p;
         $impl = new $implClass();
         if($impl instanceof IController)
-            $impl->processRequest($this);
+            $impl->processRequest();
     }
 }
