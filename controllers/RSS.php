@@ -57,7 +57,7 @@ class RSS extends CommandTarget implements IController {
        //   $str);
     }
 
-    public function processRequest($dispatcher) {
+    public function processRequest() {
         $this->session = Engine::session();
 
         header("Content-type: text/xml");

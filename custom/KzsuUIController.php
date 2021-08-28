@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -36,8 +36,8 @@ use ZK\Engine\Engine;
  * The file is provided as an example of a custom UI controller;
  * it is not part of the basic functionality of Zookeeper Online.
  */
-class KzsuUIController extends Main {
-    protected function emitBodyHeader($dispatcher) {
+class KzsuUIController extends UIController {
+    protected function emitBodyHeader() {
         $urls = Engine::param('urls');
         $station_full = Engine::param('station_full');
 ?>

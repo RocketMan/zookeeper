@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -34,7 +34,7 @@ use ZK\UI\UICommon as UI;
 class RunDaily implements IController {
     private $catCodes;
     
-    public function processRequest($dispatcher) {
+    public function processRequest() {
         if(php_sapi_name() != "cli") {
             http_response_code(400);
             return;

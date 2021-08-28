@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -48,7 +48,7 @@ class PrintTags implements IController {
         ],
     ];
     
-    public function processRequest($dispatcher) {
+    public function processRequest() {
         header("Content-type: application/pdf");
 
         $form = empty($_REQUEST["form"])?self::LABEL_FORM:$_REQUEST["form"];

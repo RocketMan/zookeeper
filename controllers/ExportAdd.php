@@ -28,7 +28,7 @@ use ZK\Engine\Engine;
 use ZK\Engine\IChart;
 
 class ExportAdd implements IController {
-    public function processRequest($dispatcher) {
+    public function processRequest() {
         // Ensure there's a date
         $date = $_REQUEST["date"];
         if(strlen($date) != 10 ||

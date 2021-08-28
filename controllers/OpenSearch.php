@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -29,7 +29,7 @@ use ZK\Engine\Engine;
 use ZK\UI\UICommon as UI;
 
 class OpenSearch implements IController {
-    public function processRequest($dispatcher) {
+    public function processRequest() {
         $baseURL = UI::getBaseURL();
         $favicon = Engine::param('favicon', 'favicon.ico');
         $banner = Engine::param("station")." ".Engine::param("application");

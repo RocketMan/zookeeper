@@ -218,7 +218,7 @@ class PushServer implements IController {
         socket_close($socket);
     }
 
-    public function processRequest($dispatcher) {
+    public function processRequest() {
         if(php_sapi_name() != "cli") {
             http_response_code(400);
             return;
