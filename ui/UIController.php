@@ -128,7 +128,8 @@ class UIController implements IController {
 
         $this->preProcessRequest();
 
-        $isJson = substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
+        $isJson = isset($_SERVER["HTTP_ACCEPT"]) &&
+                substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
         if ($isJson) {
             $action =  $_REQUEST["action"];
             $subaction =  $_REQUEST["subaction"];
@@ -174,7 +175,6 @@ class UIController implements IController {
     }
 
     protected function emitResponseHeader() {
-        $userAgent = $_SERVER["HTTP_USER_AGENT"];
         $banner = Engine::param('application');
         $station = Engine::param('station');
         $station_full = Engine::param('station_full');

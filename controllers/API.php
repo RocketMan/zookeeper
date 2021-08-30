@@ -123,7 +123,7 @@ class JSONSerializer extends Serializer {
             echo "$nextToken{";
             $nextProp = "";
             foreach($fields as $field) {
-                $val = $row[$field];
+                $val = $row[$field] ?? "";
                 if($name == "albumrec") {
                     switch($field) {
                     case "category":
@@ -220,7 +220,7 @@ class XMLSerializer extends Serializer {
         foreach($data as $row) {
             echo "<$name>\n";
             foreach($fields as $field) {
-                $val = $row[$field];
+                $val = $row[$field] ?? "";
                 if($name == "albumrec") {
                     switch($field) {
                     case "category":
@@ -361,7 +361,7 @@ class API extends CommandTarget implements IController {
     private $serializer;
 
     public function processRequest() {
-        $wantXml = $_REQUEST["xml"] || 
+        $wantXml = $_REQUEST["xml"] ?? false || isset($_SERVER["HTTP_ACCEPT"]) &&
                 substr($_SERVER["HTTP_ACCEPT"], 0, 8) == "text/xml";
         $this->serializer = $wantXml?new XMLSerializer():new JSONSerializer();
 
@@ -623,7 +623,7 @@ class API extends CommandTarget implements IController {
     }
 
     private function emitHeader($method) {
-        $preflight = $_SERVER['REQUEST_METHOD'] == "OPTIONS";
+        $preflight = ($_SERVER['REQUEST_METHOD'] ?? null) == "OPTIONS";
         if($preflight)
             http_response_code(204); // 204 No Content
 
@@ -632,7 +632,7 @@ class API extends CommandTarget implements IController {
         // Go ahead and give the Content-type in all cases.
         header("Content-type: ". $this->serializer->getContentType());
 
-        $origin = $_SERVER['HTTP_ORIGIN'];
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
         if($origin) {
             if($method && in_array($method, self::$publicMethods)) {
                 header("Access-Control-Allow-Origin: *");

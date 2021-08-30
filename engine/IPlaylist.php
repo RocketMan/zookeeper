@@ -67,7 +67,7 @@ interface IPlaylist {
     function getRecentPlays($airname, $count);
     function deletePlaylist($playlist);
     function restorePlaylist($playlist);
-    function purgeDeletedPlaylists();
+    function purgeDeletedPlaylists($days=30);
     function getDeletedPlaylistCount($user);
     function getListsSelNormal($user);
     function getListsSelDeleted($user);

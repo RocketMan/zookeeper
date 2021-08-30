@@ -253,4 +253,29 @@ class UserImpl extends DBO implements IUser {
         $stmt->execute();
         return ($stmt->rowCount() > 0);
     }
+
+    public function deleteUser($user) {
+        // validate this user has no playlists nor reviews
+        $query = "SELECT COUNT(*) c FROM lists WHERE dj = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        $result = $stmt->executeAndFetch();
+        if($result['c'])
+            return false;
+
+        $query = "SELECT COUNT(*) c FROM reviews WHERE user = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        $result = $stmt->executeAndFetch();
+        if($result['c'])
+            return false;
+
+        // remove any airnames
+        Engine::api(IDJ::class)->getAirnames($user);
+
+        $query = "DELETE FROM users WHERE name = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        return $stmt->execute();
+    }
 }

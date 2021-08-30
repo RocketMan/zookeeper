@@ -820,13 +820,14 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $stmt->execute();
     }
 
-    public function purgeDeletedPlaylists() {
+    public function purgeDeletedPlaylists($days=30) {
         $query = "DELETE FROM tracks, lists, lists_del USING lists_del " .
                  "INNER JOIN lists " .
                  "LEFT OUTER JOIN tracks ON lists_del.listid = tracks.list " .
                  "WHERE lists_del.listid = lists.id ".
-                 "AND ADDDATE(deleted, 30) < NOW()";
+                 "AND ADDDATE(deleted, ?) < NOW()";
         $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $days);
         return $stmt->execute();
     }
 
