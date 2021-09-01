@@ -147,7 +147,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
             //
             // Note:  This is an unceremonious, non-restorable delete, as
             // the empty playlist is deemed to have no value.
-            $query = "DELETE FROM lists WHERE id = ?";
+            $query = "DELETE FROM lists, lists_del USING lists ".
+                     "LEFT OUTER JOIN lists_del ON lists_del.listid = lists.id ".
+                     "WHERE lists.id = ?";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $result['lid']);
             $stmt->execute();
