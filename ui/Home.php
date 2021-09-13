@@ -33,7 +33,6 @@ use ZK\UI\UICommon as UI;
 
 class Home extends MenuItem {
     public function processLocal($action, $subaction) {
-        UI::emitJS('js/home.js');
         echo "<H1>". Engine::param('station'). " Music :: " . Engine::param('application') . "</H1>\n";
         $requestLine = Engine::param('contact')['request'];
         if ($requestLine)
@@ -135,7 +134,11 @@ class Home extends MenuItem {
         }
         echo "<div class='home-currenttrack zk-fade-hidden'></div></div>";
         echo "</div></div>\n";
-        echo "<form><input type=hidden id='push-subscribe' value='" .
-            preg_replace("/^(http)/", "ws", UI::getBaseUrl()) . "push/onair'></form>\n";
+
+        if(Engine::param('push_enabled', true)) {
+            echo "<form><input type=hidden id='push-subscribe' value='" .
+                preg_replace("/^(http)/", "ws", UI::getBaseUrl()) . "push/onair'></form>\n";
+            UI::emitJS('js/home.js');
+        }
     }
 }
