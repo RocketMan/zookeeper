@@ -1272,10 +1272,12 @@ class Playlists extends MenuItem {
     }
 
     public function emitImportExportList() {
-       $menu[] = [ "u", "", "Export Playlist", "emitExportList" ];
-       $menu[] = [ "u", "importJSON", "Import Playlist (JSON)", "emitImportJSON" ];
-       $menu[] = [ "u", "importCSV", "Import Playlist (CSV)", "emitImportList" ];
-       $this->dispatchSubaction($this->action, $this->subaction, $menu);
+       $subactions = [
+           [ "u", "", "Export Playlist", "emitExportList" ],
+           [ "u", "importJSON", "Import Playlist (JSON)", "emitImportJSON" ],
+           [ "u", "importCSV", "Import Playlist (CSV)", "emitImportList" ]
+       ];
+       $this->dispatchSubaction($this->action, $this->subaction, $subactions);
     }
     
     public function emitExportList() {
@@ -2107,9 +2109,11 @@ class Playlists extends MenuItem {
             return;
         }
     
-        $menu[] = [ "a", "", "DJs active past 12 weeks", "emitViewDJMain" ];
-        $menu[] = [ "a", "viewAll", "All DJs", "emitViewDJMain" ];
-        $this->dispatchSubaction($this->action, $this->subaction, $menu);
+        $subactions = [
+            [ "a", "", "DJs active past 12 weeks", "emitViewDJMain" ],
+            [ "a", "viewAll", "All DJs", "emitViewDJMain" ]
+        ];
+        $this->dispatchSubaction($this->action, $this->subaction, $subactions);
     }
     
     public function emitViewDJMain() {

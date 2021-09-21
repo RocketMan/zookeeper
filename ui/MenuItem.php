@@ -33,9 +33,11 @@ abstract class MenuItem extends CommandTarget {
             echo "  <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n    <TR><TD VALIGN=BOTTOM CLASS=\"secCell\">\n";
 
         echo  "  <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>\n    <TR>\n";
-        foreach($subactions as $item)
-            if($item[2] && $this->session->isAuth($item[0]))
-                $this->emitSecondaryNavSel($action, $subaction, $item[1], $item[2]);
+        foreach($subactions as $item) {
+            $entry = new MenuEntry($item);
+            if($entry->label && $this->session->isAuth($entry->access))
+                $this->emitSecondaryNavSel($action, $subaction, $entry->action, $entry->label);
+        }
         echo "    </TR>\n  </TABLE>\n";
 
         if($extra)
@@ -48,8 +50,9 @@ abstract class MenuItem extends CommandTarget {
         // Dispatch the selected subaction
         $processed = 0;
         foreach($subactions as $item) {
-            if(($subaction == $item[1]) && $this->session->isAuth($item[0])) {
-                $this->{$item[3]}();
+            $entry = new MenuEntry($item);
+            if(($subaction == $entry->action) && $this->session->isAuth($entry->access)) {
+                $this->{$entry->implementation}();
                 $processed = 1;
                 break;
             }
@@ -57,7 +60,8 @@ abstract class MenuItem extends CommandTarget {
     
         // If no subaction was dispatched, default to the first one
         if(!$processed) {
-            $this->{$subactions[0][3]}();
+            $entry = new MenuEntry($subactions[0]);
+            $this->{$entry->implementation}();
         }
     }
 
