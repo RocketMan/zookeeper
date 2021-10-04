@@ -98,16 +98,16 @@ foreach($minified as $dline => $dtext) {
 
         // add dest => src mapping
         $map->addPosition([
-	    'generated' => [
+            'generated' => [
                 'line' => $dline,
                 'column' => $dcol
-	    ],
-	    'source' => [
-	        'fileName' => "${base}.src.js",
+            ],
+            'source' => [
+                'fileName' => "${base}.src.js",
                 'line' => $sline,
                 'column' => $scol
-	    ],
-	]);
+            ],
+        ]);
 
         $scol++;
         $dcol++;
