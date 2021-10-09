@@ -35,8 +35,18 @@ if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
     return;
 }
 
+$mtime = filemtime($target);
+header("ETag: \"${mtime}\""); // RFC 2616 requires ETag in 304 response
+if(isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
+        strstr($_SERVER['HTTP_IF_NONE_MATCH'], "\"${mtime}\"") !== false ||
+        isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
+        strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $mtime) {
+    http_response_code(304); // Not Modified
+    return;
+}
+
 header("Content-Type: text/html");
-header("Last-Modified: ".gmdate('D, d M Y H:i:s', filemtime($target))." GMT");
+header("Last-Modified: ".gmdate('D, d M Y H:i:s', $mtime)." GMT");
 
 // for HEAD requests, there is nothing more to do
 if($_SERVER['REQUEST_METHOD'] == "HEAD")
