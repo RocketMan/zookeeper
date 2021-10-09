@@ -23,7 +23,6 @@
  */
 
 require_once __DIR__."/vendor/autoload.php";
-require_once __DIR__."/ui/UICommon.php";
 
 use ZK\UI\UICommon as UI;
 
