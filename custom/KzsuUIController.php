@@ -29,7 +29,7 @@ use ZK\Engine\Engine;
 /**
  * KzsuUIController is the UI controller for KZSU Radio.
  *
- * It inherits all of the functionality of the default ZK\UI\Main
+ * It inherits all of the functionality of the default UIController
  * controller, with the exception of specific methods which are
  * overridden and customized for KZSU.
  *
