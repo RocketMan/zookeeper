@@ -129,7 +129,7 @@ class BaseStatement {
  * semantics for GROUP BY queries
  */
 class BasePDO {
-    const LIBRARY_TABLES = [
+    private const LIBRARY_TABLES = [
         "albumvol", "colltracknames", "publist", "tagqueue", "tracknames"
     ];
 

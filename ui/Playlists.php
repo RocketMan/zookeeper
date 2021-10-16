@@ -41,8 +41,8 @@ use VStelmakh\UrlHighlight\UrlHighlight;
 
 
 class Playlists extends MenuItem {
-    /* private */ const NME_PREFIX = "nme-";
-    /* private */ const DUPLICATE_SUFFIX = " (rebroadcast from %M j, Y%)";
+    private const NME_PREFIX = "nme-";
+    private const DUPLICATE_SUFFIX = " (rebroadcast from %M j, Y%)";
 
     //NOTE: update ui_config.php when changing the actions.
     private static $actions = [
