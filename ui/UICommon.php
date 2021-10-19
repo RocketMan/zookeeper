@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -121,11 +121,6 @@ class UICommon {
                preg_replace("{/[^/]+$}", "/", $uri);
     }
     
-    public static function startsWith($string, $startString) {
-        $len = strlen($startString); 
-        return (substr($string, 0, $len) === $startString); 
-    }
-
     /**
      * return the specified markdown as html
      *
@@ -180,24 +175,6 @@ class UICommon {
         }
     
         return htmlentities($arg, ENT_QUOTES, 'UTF-8');
-    }
-    
-    /**
-     * convert numeric arg to HTML
-     * 
-     * (This method just returns arg for table browsers.)
-     */
-    public static function HTMLifyNum($arg, $size, $noTables=0) {
-        if ($noTables) {
-            # right justify output for non-table browsers
-            $format = "%" . $size . "d ";
-            $arg = sprintf($format, $arg);
-        }
-        return $arg;
-    }
-
-    public static function isNumeric($target) {
-        return !$target || preg_replace("/[0-9\-]/", "", $target) == "";
     }
 
     public static function deLatin1ify($string,
@@ -300,7 +277,6 @@ class UICommon {
                  "$().ready(function(){".
                  "document.forms[0].$control.focus();".
                  "}); // -->\n</SCRIPT>\n";
-
         }
     }
 }

@@ -275,9 +275,7 @@ class AddManager extends MenuItem {
     }
     
     public function addManagerShowAdd() {
-        $date = $_REQUEST["date"];
-        if(!UI::isNumeric($date))
-            return;
+        $date = $_REQUEST["date"] ?? "";
     ?>
       <TABLE CELLPADDING=2 CELLSPACING=0 WIDTH="100%" BORDER=0>
         <TR>
