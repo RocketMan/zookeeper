@@ -505,8 +505,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 $timeStr = $playlist['showdate'] . " " . $timeAr[0];
                 $start = \DateTime::createFromFormat(self::TIME_FORMAT, $timeStr);
                 if($start) {
-                    $start->modify(self::GRACE_START);
                     $end = clone $start;
+                    $start->modify(self::GRACE_START);
 
                     // end time can be midnight or later
                     // in this case, adjust to the next day

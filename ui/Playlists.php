@@ -857,7 +857,7 @@ class Playlists extends MenuItem {
                 $window = Engine::api(IPlaylist::class)->getTimestampWindow($playlistId);
                 echo "<div>
                     <label>Time:</label>
-                    <input id='track-time' class='timepicker' step='60' type='time' data-date='".$playlist['showdate']."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' />
+                    <input id='track-time' class='timepicker' step='60' type='time' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' />
                 </div>";
             }?>
             <div>
