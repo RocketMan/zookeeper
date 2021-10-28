@@ -567,6 +567,9 @@ table.recentAirplay td, .sub {
     font-size: 8pt;
     color: #ffffff;
 }
+.tablesorter-default tr:hover .sub2 {
+    color: #000000;
+}
 .subhead2 {
     color: #d83d04;
     font-size: 10pt;
@@ -866,6 +869,6 @@ a.calLink {
     background-color: #ff9;
 }
 
-.date {
+.date, .time {
     white-space: nowrap;
 }

@@ -174,7 +174,8 @@ function emitAlbumsEx(table, data) {
         tr.append($("<TD>").html(entry.size));
         var created = entry.created.split('-');
         tr.append($("<TD>", {
-            align: 'center'
+            align: 'center',
+            class: 'date'
         }).html(created[1] + '/' + created[0].substring(2)));
         if(entry.pubkey) {
             tr.append($("<TD>").append(

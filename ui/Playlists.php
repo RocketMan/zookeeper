@@ -1865,7 +1865,7 @@ class Playlists extends MenuItem {
                     $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                 $timeplayed = self::timestampToAMPM($entry->getCreated());
                 echo "<TR class='commentRow".($editMode?"Edit":"")."'>" . $editCell .
-                     "<TD>$timeplayed</TD>" .
+                     "<TD class='time'>$timeplayed</TD>" .
                      "<TD COLSPAN=4>".UI::markdown($entry->getComment()).
                      "</TD></TR>\n";
                 $break = false;
@@ -1876,14 +1876,14 @@ class Playlists extends MenuItem {
                     $editCell = $editMode ? "<TD>" .
                         $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                     echo "<TR class='logEntry".($editMode?"Edit":"")."'>" . $editCell .
-                         "<TD>$timeplayed</TD>" .
+                         "<TD class='time'>$timeplayed</TD>" .
                          "<TD>".$entry->getLogEventType()."</TD>" .
                          "<TD COLSPAN=3>".$entry->getLogEventCode()."</TD>" .
                          "</TR>\n";
                     $break = false;
                 } else if(!$break) {
                     echo "<TR class='songDivider'>" . $editCell .
-                         "<TD>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
+                         "<TD class='time'>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
                     $break = true;
                 }
             })->onSetSeparator(function($entry) use($playlist, $editMode, &$break) {
@@ -1892,7 +1892,7 @@ class Playlists extends MenuItem {
                         $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                     $timeplayed = self::timestampToAMPM($entry->getCreated());
                     echo "<TR class='songDivider'>" . $editCell .
-                         "<TD>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
+                         "<TD class='time'>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
                     $break = true;
                 }
             })->onSpin(function($entry) use($playlist, $editMode, &$break) {
@@ -1904,7 +1904,7 @@ class Playlists extends MenuItem {
 
                 $albumLink = $this->makeAlbumLink($entry, true);
                 echo "<TR class='songRow'>" . $editCell .
-                     "<TD>$timeplayed</TD>" .
+                     "<TD class='time'>$timeplayed</TD>" .
                      "<TD>" . $this->smartURL($artistName) . "</TD>" .
                      "<TD>" . $this->smartURL($entry->getTrack()) . "</TD>" .
                      "<TD>$reviewCell</TD>" .
@@ -2205,7 +2205,7 @@ class Playlists extends MenuItem {
             $title = htmlentities($row[3]);
             $djs = htmlentities($row[5]);
             $tbody .= "<TR>" .
-                 "<TD ALIGN='RIGHT' CLASS='sub'>$timeRange&nbsp;</TD>" .
+                 "<TD ALIGN='RIGHT' CLASS='sub time range'>$timeRange&nbsp;</TD>" .
                  "<TD><A CLASS='nav' HREF='$href=$row[0]'>$title</A>&nbsp;&nbsp;($djs)</TD>" .
                  "</TR>\n";
             $count = $count + 1;

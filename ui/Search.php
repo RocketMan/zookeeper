@@ -192,7 +192,7 @@ class Search extends MenuItem {
         } else
             echo htmlentities($artist) . "</B></TD>";
         echo "<TD>&nbsp;</TD>" .
-             "<TD ALIGN=RIGHT>Added:</TD><TD><B>";
+             "<TD ALIGN=RIGHT>Added:</TD><TD class='date'><B>";
         list ($year, $month, $day) = explode("-", $albums[0]["created"]);
     
         echo "$month/$year</B></TD></TR>\n";

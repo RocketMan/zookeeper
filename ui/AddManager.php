@@ -585,8 +585,8 @@ class AddManager extends MenuItem {
             <TR><TD ALIGN=RIGHT>Number:</TD><TH ALIGN=LEFT><?php echo $aid;?></TH></TR>
             <TR><TD ALIGN=RIGHT>Artist:</TD><TH ALIGN=LEFT><?php echo htmlentities(stripslashes($artist));?></TH></TR>
             <TR><TD ALIGN=RIGHT>Album:</TD><TH ALIGN=LEFT><?php echo htmlentities(stripslashes($album));?></TH></TR>
-            <TR><TD ALIGN=RIGHT>Add Date:</TD><TD ALIGN=LEFT><?php echo $adddate;?></TD></TR>
-            <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT><?php echo $pulldate;?></TD></TR>
+            <TR><TD ALIGN=RIGHT>Add Date:</TD><TD ALIGN=LEFT class='date'><?php echo $adddate;?></TD></TR>
+            <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT class='date'><?php echo $pulldate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
         $emitted = false;
         for($i=0; $i<16; $i++)
@@ -733,8 +733,8 @@ class AddManager extends MenuItem {
             <TR><TD ALIGN=RIGHT>Number:</TD><TH ALIGN=LEFT><?php echo $aid;?></TH></TR>
             <TR><TD ALIGN=RIGHT>Artist:</TD><TH ALIGN=LEFT><?php echo htmlentities(stripslashes($artist));?></TH></TR>
             <TR><TD ALIGN=RIGHT>Album:</TD><TH ALIGN=LEFT><?php echo htmlentities(stripslashes($album));?></TH></TR>
-            <TR><TD ALIGN=RIGHT>Add Date:</TD><TD ALIGN=LEFT><?php echo $adddate;?></TD></TR>
-            <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT><?php echo $pulldate;?></TD></TR>
+            <TR><TD ALIGN=RIGHT>Add Date:</TD><TD ALIGN=LEFT class='date'><?php echo $adddate;?></TD></TR>
+            <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT class='date'><?php echo $pulldate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
         $emitted = false;
         for($i=0; $i<16; $i++)
@@ -1032,9 +1032,9 @@ class AddManager extends MenuItem {
     
             echo "<TABLE CELLPADDING=2 CELLSPACING=2>\n";
             echo "  <TR><TD ALIGN=RIGHT>Add Date:</TD>";
-            echo "<TD>" .$row["adddate"]. "</TD><TD WIDTH=20>&nbsp;</TD>";
+            echo "<TD class='date'>" .$row["adddate"]. "</TD><TD WIDTH=20>&nbsp;</TD>";
             echo "<TD ALIGN=RIGHT>Pull Date:</TD>";
-            echo "<TD>" .$row["pulldate"]. "</TD><TD WIDTH=20>&nbsp;</TD>";
+            echo "<TD class='date'>" .$row["pulldate"]. "</TD><TD WIDTH=20>&nbsp;</TD>";
     
             if($row["category"]) {
                 echo "<TD ALIGN=RIGHT>Charts:</TD><TD>";
@@ -1061,7 +1061,7 @@ class AddManager extends MenuItem {
                 for($j=0; $j<$i; $j++) {
                     list($y,$m,$d) = explode("-", $week[$j][0]);
                     $displayDate = date("j M", mktime(0,0,0,$m,$d,$y));
-                    echo "<TD ALIGN=CENTER CLASS=\"currentsTop\">$displayDate</TD>";
+                    echo "<TD ALIGN=CENTER CLASS='currentsTop date'>$displayDate</TD>";
                 }
                 echo "</TR>\n";
     
@@ -1135,11 +1135,11 @@ class AddManager extends MenuItem {
             $showStart = $startStopAr[0];
             $showEnd = $startStopAr[1];
             list($y, $m, $d) = explode("-", $row["showdate"]);
-            $showDate = str_replace(" ", "&nbsp;", date("d D", mktime(0,0,0,$m,$d,$y)));
+            $showDate = date("d D", mktime(0,0,0,$m,$d,$y));
 
             if ($showDate != $lastDate && $showStart != $DAY_END_TIME) {
                 if ($lastShowEnd && $lastShowEnd != $DAY_END_TIME) {
-                    echo "<TR CLASS='noPlaylist'><TD>" . $lastDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $DAY_END_TIME . "</span></TD><TD COLSPAN=6>No playlist</TD></TR>";
+                    echo "<TR CLASS='noPlaylist'><TD class='date'>" . $lastDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $DAY_END_TIME . "</span></TD><TD COLSPAN=6>No playlist</TD></TR>";
                 }
                 $lastShowEnd = $DAY_START_TIME;
             }
@@ -1147,7 +1147,7 @@ class AddManager extends MenuItem {
             // insert no playlist row if there is a gap in the regular 
             // program day, eg 6am - 11:59:59pm.
             if($lastShowEnd != $showStart && $showStart != $DAY_START_TIME) {
-                echo "<TR CLASS='noPlaylist'><TD>" . $showDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $showStart . "</span></TD><TD COLSPAN=6>No playlist</TD></TR>";
+                echo "<TR CLASS='noPlaylist'><TD class='date'>" . $showDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $showStart . "</span></TD><TD COLSPAN=6>No playlist</TD></TR>";
             }
 
             $lastShowEnd = $showEnd;
@@ -1158,7 +1158,7 @@ class AddManager extends MenuItem {
             else
                 echo "    <TR CLASS=\"hborder\">\n";
     
-            echo "<TD>".$showDate." <span class='sub'>".$showTime . "</span></TD>";
+            echo "<TD class='date'>".$showDate." <span class='sub time'>".$showTime . "</span></TD>";
     
             // User/Airname/Show names
             $name = htmlentities($row["name"]);
