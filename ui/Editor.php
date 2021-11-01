@@ -792,7 +792,7 @@ class Editor extends MenuItem {
       <TR><TD ALIGN=RIGHT>Category:</TD><TD ID="category"></TD></TR>
       <TR><TD ALIGN=RIGHT>Media:</TD><TD ID="medium"></TD></TR>
       <TR><TD ALIGN=RIGHT>Format:</TD><TD ID="size"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Location:</TD><TD><SPAN ID="location"></SPAN><SPAN ID="bin"></SPAN></TD></TR>
+      <TR><TD ALIGN=RIGHT>Location:</TD><TD><SPAN ID="location"></SPAN>&nbsp;<SPAN ID="bin"></SPAN></TD></TR>
       <TR><TD ALIGN=RIGHT>Date In:</TD><TD ID="created"></TD></TR>
       <TR><TD ALIGN=RIGHT>Date Mod:</TD><TD ID="updated"></TD></TR>
       <TR><TD ALIGN=RIGHT>Label:</TD><TD ID="name" CLASS="header"></TD></TR>
