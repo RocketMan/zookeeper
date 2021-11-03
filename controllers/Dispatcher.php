@@ -24,16 +24,6 @@
 
 namespace ZK\Controllers;
 
-if(!file_exists(__DIR__."/../vendor/autoload.php")) {
-    if(php_sapi_name() != "cli") {
-        error_log("Composer not configured");
-        http_response_code(500); // 500 Internal Server Error
-    }
-    die("Composer is not configured.  See INSTALLATION.md for information.\n");
-}
-
-require_once __DIR__."/../vendor/autoload.php";
-
 use ZK\Engine\Config;
 use ZK\Engine\Engine;
 

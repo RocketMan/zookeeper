@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -22,7 +22,15 @@
  *
  */
 
-require('controllers/Dispatcher.php');
+if(!file_exists(__DIR__."/vendor/autoload.php")) {
+    if(php_sapi_name() != "cli") {
+        error_log("Composer not configured");
+        http_response_code(500); // 500 Internal Server Error
+    }
+    die("Composer is not configured.  See INSTALLATION.md for information.\n");
+}
+
+require_once __DIR__."/vendor/autoload.php";
 
 use ZK\Controllers\Dispatcher;
 
