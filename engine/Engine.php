@@ -24,8 +24,6 @@
 
 namespace ZK\Engine;
 
-require_once __DIR__."/../vendor/autoload.php";
-
 class Engine {
     const VERSION = "2.11.0-DEV";
 
