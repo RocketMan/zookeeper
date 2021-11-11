@@ -28,7 +28,7 @@ use axy\sourcemap\SourceMap;
 use JSMin\JSMin;
 
 // ensure target exists and is descendant of this directory
-$target = realpath(__DIR__.$_SERVER['PATH_INFO']);
+$target = realpath(__DIR__.($_SERVER['PATH_INFO'] ?? $_SERVER['QUERY_STRING']));
 if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
         !file_exists($target)) {
     http_response_code(404);
