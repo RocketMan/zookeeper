@@ -26,7 +26,7 @@ require_once __DIR__."/../vendor/autoload.php";
 
 use JSMin\JSMin;
 
-$target = realpath(__DIR__.($_SERVER['PATH_INFO'] ?? $_SERVER['QUERY_STRING']));
+$target = realpath(__DIR__.$_SERVER['QUERY_STRING']);
 if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
         !file_exists($target)) {
     http_response_code(404);

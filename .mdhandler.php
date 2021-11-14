@@ -28,7 +28,7 @@ use ZK\UI\UICommon as UI;
 
 $stylesheet = "css/zoostyle.css";
 
-$target = realpath(__DIR__.($_SERVER['PATH_INFO'] ?? $_SERVER['QUERY_STRING']));
+$target = realpath(__DIR__.$_SERVER['QUERY_STRING']);
 if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
         !file_exists($target) || substr($target, -3) != '.md' )  {
     http_response_code(404);
