@@ -5,11 +5,11 @@ RewriteEngine on
 RewriteCond $0 !^\..*$
 RewriteCond $0 !\.src\.js$
 RewriteCond %{ENV:REDIRECT_done} "!=1"
-RewriteRule ^([^-]+)(-[0-9]+)?\.js$ .jshandler.php [L,E=ASSET:/$1.js]
+RewriteRule ^([^-]+)(-[0-9]+)?\.js$ .jshandler.php?asset=/$1.js [L]
 
 # rewrite asset-numericStamp.src.js to asset.js
 RewriteRule ^([^-]+)(-[0-9]+)?\.src\.js $1.js [E=done:1]
 
 # rewrite asset-numericStamp.map to source map for asset.js
-RewriteRule ^([^-]+)(-[0-9]+)?\.map$ .mapgenerator.php [L,E=ASSET:/$1.js]
+RewriteRule ^([^-]+)(-[0-9]+)?\.map$ .mapgenerator.php?asset=/$1.js [L]
 </IfModule>
