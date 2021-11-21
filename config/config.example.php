@@ -96,6 +96,16 @@ $config = [
     ],
 
     /**
+     * JWT secret
+     *
+     * set this value if you want to use JSON Web Tokens
+     *
+     * secret must be at least 12 characters in length and contain a number,
+     * an upper and a lowercase letter, and a special character *&!@%^#$.
+     */
+    'jwt_secret' => '',
+
+    /**
      * database settings
      */
     'db' => [

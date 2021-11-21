@@ -29,8 +29,15 @@ use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IReview;
+use ZK\Engine\IUser;
 use ZK\Engine\OnNowFilter;
 use ZK\Engine\PlaylistObserver;
+use ZK\Engine\Session;
+
+use ReallySimpleJWT\Build;
+use ReallySimpleJWT\Secret;
+use ReallySimpleJWT\Helper\Validator;
+use ReallySimpleJWT\Encoders\EncodeHS256;
 
 use ZK\UI\UICommon as UI;
 
@@ -43,6 +50,7 @@ abstract class Serializer {
     public abstract function startResponse($name, $attrs=null);
     public abstract function endResponse($name);
     public abstract function emitDataSetArray($name, $fields, &$data);
+    public abstract function emitData($name, $data);
 
     protected function getCatCodes() {
         if(!isset($this->catCodes))
@@ -158,6 +166,10 @@ class JSONSerializer extends Serializer {
         }
     }
 
+    public function emitData($name, $data) {
+        echo "{\"$name\":\"".self::jsonspecialchars($data)."\"}";
+    }
+
     private static function jsonspecialchars($str) {
         // escape backslash, quote, LF, CR, and tab
         $str1 = str_replace(["\\", "\"", "\n", "\r", "\t"],
@@ -251,6 +263,10 @@ class XMLSerializer extends Serializer {
         }
     }
 
+    public function emitData($name, $data) {
+        echo "<$name>".self::spec2hex($data)."</$name>\n";
+    }
+
     private static function spec2hex($str) {
         return preg_replace("/[[:cntrl:]]/", "", htmlspecialchars($str, ENT_XML1, 'UTF-8'));
     }
@@ -262,6 +278,8 @@ class XMLSerializer extends Serializer {
 
 class API extends CommandTarget implements IController {
     const MAX_LIMIT = 35;
+
+    const ACCESS_TOKEN_LIFESPAN = 300;	// in seconds
 
     const ALBUM_FIELDS = [
         "tag", "artist", "album", "category", "medium",
@@ -331,6 +349,7 @@ class API extends CommandTarget implements IController {
         [ "getChartsRq", "getCharts" ],
         [ "getPlaylistsRq", "getPlaylists" ],
         [ "getTracksRq", "getTracks" ],
+        [ "tokenRq", "getToken" ],
     ];
 
     /*
@@ -620,6 +639,63 @@ class API extends CommandTarget implements IController {
         $this->serializer->startResponse("getCurrentsRs");
         $this->serializer->emitDataSet("albumrec", $currentfields, $records);
         $this->serializer->endResponse("getCurrentsRs");
+    }
+
+    public function getToken() {
+        $secret = Engine::param('jwt_secret');
+        if(!$secret) {
+            $this->serializer->emitError("tokenRs", 1, "Authentication failed (not supported)");
+            return;
+        }
+
+        if(isset($_REQUEST["renew"]) && $_REQUEST["renew"] &&
+                $this->session->isAuth("T")) {
+            $user = $this->session->getUser();
+            $dn = $this->session->getDN();
+            $access = Engine::api(IUser::class)->getUser($user)['access'];
+        } else {
+            if(isset($_GET["user"]) || isset($_GET["password"])) {
+                    error_log("API::getToken user '".$_GET["user"]."' attempted authentication via GET");
+                $this->serializer->emitError("tokenRs", 1, "Authentication failed (POST requested)");
+                return;
+            }
+            $user = $_POST["user"];
+            $password = $_POST["password"];
+            if(!Engine::api(IUser::class)->validatePassword($user, $password, 1, $access)) {
+                $this->serializer->emitError("tokenRs", 1, "Authentication failed");
+                return;
+            }
+            $dn = Engine::api(IUser::class)->getUser($user)['realname'];
+        }
+
+        if(Session::checkLocal())
+            $access .= 'l';
+
+        // Restrict guest accounts to local subnet only
+        if(Session::checkAccess('d', $access) ||
+               Session::checkAccess('g', $access) &&
+                   !Session::checkAccess('l', $access)) {
+            $this->serializer->emitError("tokenRs", 1, "Authentication failed (account disabled or restricted)");
+            return;
+        }
+
+        $now = time();
+        $builder = new Build('JWT', new Validator(), new Secret(), new EncodeHS256());
+        $token = $builder->setContentType('JWT')
+                    ->setSecret($secret)
+                    ->setPayloadClaim('user', $user)
+                    ->setPayloadClaim('access', $access)
+                    ->setPayloadClaim('dn', $dn)
+                    ->setExpiration($now + self::ACCESS_TOKEN_LIFESPAN)
+                    ->setNotBefore($now - 30)
+                    ->setIssuedAt($now)
+                    ->setIssuer(SSOCommon::UA)
+                    ->setAudience(Engine::getBaseUrl())
+                    ->build();
+
+        $this->serializer->startResponse("tokenRs");
+        $this->serializer->emitData("token", $token->getToken());
+        $this->serializer->endResponse("tokenRs");
     }
 
     private function emitHeader($method) {

@@ -33,6 +33,7 @@
 	"react/datagram": "^1.5",
 	"react/http": "^1.2",
 	"ratchet/pawl": "^0.3.5",
+	"rbdwllr/reallysimplejwt": "^4.0",
 	"rocketman/pdf-label": "^1.6+rocketman.1",
 	"vstelmakh/url-highlight": "^3.0"
     }

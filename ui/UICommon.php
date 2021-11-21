@@ -24,6 +24,8 @@
 
 namespace ZK\UI;
 
+use ZK\Engine\Engine;
+
 class UICommon {
     const CHARSET_ASCII = 0;
     const CHARSET_LATIN1 = 1;
@@ -98,27 +100,10 @@ class UICommon {
     ];
 
     /**
-     * return the URL of the current request, less leaf filename, if any
+     * @deprecated use Engine::getBaseUrl
      */
     public static function getBaseUrl() {
-        if(php_sapi_name() == "cli")
-            return "";
-
-        $uri = $_SERVER['REQUEST_URI'];
-    
-        // strip the query string, if any
-        $qpos = strpos($uri, "?");
-        if($qpos !== false)
-            $uri = substr($uri, 0, $qpos);
-
-        $port = ":" . $_SERVER['SERVER_PORT'];
-        if($port == ":443" || $port == ":80")
-            $port = "";
-    
-        // compose the URL
-        return $_SERVER['REQUEST_SCHEME'] . "://" .
-               $_SERVER['SERVER_NAME'] . $port .
-               preg_replace("{/[^/]+$}", "/", $uri);
+        return Engine::getBaseUrl();
     }
     
     /**

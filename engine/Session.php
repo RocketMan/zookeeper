@@ -24,8 +24,18 @@
 
 namespace ZK\Engine;
 
+use ReallySimpleJWT\Decode;
+use ReallySimpleJWT\Jwt;
+use ReallySimpleJWT\Parse;
+use ReallySimpleJWT\Validate;
+use ReallySimpleJWT\Encoders\EncodeHS256;
+use ReallySimpleJWT\Exception\ValidateException;
+use ReallySimpleJWT\Helper\Validator;
+
 
 class Session extends DBO {
+    private const TOKEN_AUTH = "jwt";
+
     private $user;
     private $displayName;
     private $access = null;
@@ -59,6 +69,8 @@ class Session extends DBO {
         // it must be delievered in the request header as a cookie.
         if(!empty($_COOKIE[$this->sessionCookieName]))
             $this->validate($_COOKIE[$this->sessionCookieName]);
+        else if(!empty($_SERVER['REDIRECT_AUTH']))
+            $this->authorize($_SERVER['REDIRECT_AUTH']);
     }
 
     public function getDN() { return $this->displayName; }
@@ -150,6 +162,39 @@ class Session extends DBO {
         $this->setSessionCookie($sessionID);
     }
 
+    public function authorize($header) {
+        $auth = explode(" ", $header);
+        if(sizeof($auth) == 2 && strtolower($auth[0]) == "bearer") {
+            $secret = Engine::param('jwt_secret');
+            try {
+                if(empty($secret))
+                    throw new ValidateException("not supported");
+
+                $jwt = new Parse(new JWT($auth[1], $secret), new Decode());
+                $validate = new Validate($jwt, new EncodeHS256(), new Validator());
+                // validate methods raise exception when invalid
+                $validate->structure()
+                        ->expiration()
+                        ->notBefore()
+                        ->audience(Engine::getBaseUrl())
+                        ->signature();
+                $parsed = $jwt->parse();
+                $claims = $parsed->getPayload();
+                $this->user = $claims['user'];
+                $this->access = $claims['access'];
+                $this->displayName = $claims['dn'];
+                $this->sessionID = self::TOKEN_AUTH;
+            } catch(\Exception $e) {
+                http_response_code(401);
+                header("WWW-Authenticate: Bearer ".
+                          "realm=\"DefaultRealm\", ".
+                          "error=\"invalid_token\", ".
+                          "error_description=\"".$e->getMessage()."\"");
+                exit;
+            }
+        }
+    }
+
     public function validate($sessionID) {
         // invalidate session with invalid characters (injection control)
         $row = preg_match("/^[0-9a-f]+$/", $sessionID) ?
@@ -183,6 +228,9 @@ class Session extends DBO {
         case "a":    // all
             $allow = true;
             break;
+        case "T":    // token authentication
+            $allow = $this->sessionID == self::TOKEN_AUTH;
+            break;
         case "u":    // authenticated users only
             $allow = !empty($this->sessionID);
             break;
@@ -210,6 +258,7 @@ class Session extends DBO {
         case "a":    // all
             $allow = true;
             break;
+        case "T":    // token authentication (invalid for checkAccess)
         case "u":    // authenticated user (invalid for checkAccess)
         case "U":    // local (not SSO) user (invalid for checkAccess)
         case "":     // empty mode is invalid
