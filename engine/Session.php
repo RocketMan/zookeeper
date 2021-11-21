@@ -161,7 +161,6 @@ class Session extends DBO {
         if($user) {
             $this->user = $user['user'];
             $this->access = $user['groups'] . (self::checkLocal()?'l':'');
-	    error_log("access: ". $this->access);
             $this->displayName = $user['realname'];
             $this->sessionID = self::TOKEN_AUTH;
         }
