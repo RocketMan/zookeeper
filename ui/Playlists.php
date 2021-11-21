@@ -1228,49 +1228,6 @@ class Playlists extends MenuItem {
     <?php 
     }
 
-    /**
-     * scrub imported timestamp
-     *
-     * @param timestamp target
-     * @param window DateTime array from IPlaylist::getTimestampWindow
-     * @return scrubbed timestamp or null if not in show window
-     */
-    private static function fixupTimestamp(\DateTime $timestamp, array $window) {
-        // normalize for non-local timezone
-        $timestamp->setTimezone($window['start']->getTimezone());
-
-        // transpose timestamp to show date
-        $showDate = $window['start']->format("Y-m-d");
-        if($timestamp->format("Y-m-d") != $showDate) {
-            list($h, $m, $s) = explode(":", $timestamp->format("H:i:s"));
-            $timestamp = new \DateTime($showDate);
-            $timestamp->setTime($h, $m, $s);
-        }
-
-        // if playlist spans midnight, adjust post-midnight timestamp date
-        if($window['end']->format("G") < $window['start']->format("G") &&
-                $timestamp < $window['start'])
-            $timestamp->modify("+1 day");
-
-        // validate timestamp is within the show time range
-        $valid = false;
-        for($i=2; $i>0; $i--) {
-            if($timestamp >= $window['start'] &&
-                    $timestamp <= $window['end']) {
-                $valid = true;
-                break;
-            }
-
-            // try again on 12-hour clock (e.g., treat 03:30 as 15:30)
-            $timestamp->modify("+12 hour");
-        }
-
-        if(!$valid)
-            error_log("Spin time is outside of show start/end times.");
-
-        return $valid?$timestamp:null;
-    }
-
     public function emitImportExportList() {
        $subactions = [
            [ "u", "", "Export Playlist", "emitExportList" ],
@@ -1538,7 +1495,7 @@ class Playlists extends MenuItem {
 
                     if(count($line) == 6 && $line[5]) {
                         try {
-                            $timestamp = self::fixupTimestamp(
+                            $timestamp = PlaylistEntry::scrubTimestamp(
                                             new \DateTime($line[5]), $window);
                         } catch(\Exception $e) {
                             error_log("failed to parse timestamp: {$line[5]}");
@@ -1575,73 +1532,17 @@ class Playlists extends MenuItem {
             // read the JSON file
             $file = file_get_contents($userfile);
 
-            // parse the file
-            $json = json_decode($file);
+            try {
+                $api = Engine::api(IPlaylist::class);
+                $id = $api->importPlaylist($file, $this->session->getUser());
 
-            // validate json root node is type 'show'
-            if(!$json || $json->type != "show") {
-                // also allow for 'show' encapsulated within a 'getPlaylistsRs'
-                if($json && $json->data[0]->type == "show")
-                    $json = $json->data[0];
-                else
-                    echo "<B><FONT CLASS='error'>File is not in the expected format.  Ensure file is a valid JSON playlist.</FONT></B><BR>\n";
-            }
-
-            if($json && $json->type == "show") {
-                // validate the show's properties
-                $valid = false;
-                list($year, $month, $day) = explode("-", $json->date);
-                if($json->airname && $json->name && $json->time &&
-                        checkdate($month, $day, $year))
-                    $valid = true;
-
-                // lookup the airname
-                if($valid) {
-                    $djapi = Engine::api(IDJ::class);
-                    $airname = $djapi->getAirname($json->airname, $this->session->getUser());
-                    if(!$airname) {
-                        // airname does not exist; try to create it
-                        $success = $djapi->insertAirname(mb_substr($json->airname, 0, IDJ::MAX_AIRNAME_LENGTH), $this->session->getUser());
-                        if($success > 0) {
-                            // success!
-                            $airname = $djapi->lastInsertId();
-                        } else
-                            $valid = false;
-                    }
-                }
-
-                // create the playlist
-                if($valid) {
-                    $papi = Engine::api(IPlaylist::class);
-                    $papi->insertPlaylist($this->session->getUser(), $json->date, $json->time, mb_substr($json->name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $airname);
-                    $playlist = $papi->lastInsertId();
-
-                    // insert the tracks
-                    $status = '';
-                    $window = $papi->getTimestampWindow($playlist);
-                    foreach($json->data as $pentry) {
-                        $entry = PlaylistEntry::fromJSON($pentry);
-                        $created = $entry->getCreated();
-                        if($created) {
-                            try {
-                                $stamp = self::fixupTimestamp(
-                                            new \DateTime($created), $window);
-                                $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
-                            } catch(\Exception $e) {
-                                error_log("failed to parse timestamp: $created");
-                                $entry->setCreated(null);
-                            }
-                        }
-                        $success = $papi->insertTrackEntry($playlist, $entry, $status);
-                    }
-
-                    // display the editor
-                    $_REQUEST["playlist"] = $playlist;
-                    $this->action = "newListEditor";
-                    $this->emitEditor();
-                    $displayForm = false;
-                } else
-                    echo "<B><FONT CLASS='error'>Show details are invalid.</FONT></B><BR>\n";
+                // display the editor
+                $_REQUEST["playlist"] = $id;
+                $this->action = "newListEditor";
+                $this->emitEditor();
+                $displayForm = false;
+            } catch(\Exception $e) {
+                echo "<B><FONT CLASS='error'>".$e->getMessage()."</FONT></B><BR>\n";
             }
         }
 

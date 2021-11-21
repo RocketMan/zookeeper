@@ -862,4 +862,77 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $stmt->bindValue(1, $user);
         return $stmt->iterate(\PDO::FETCH_BOTH);
     }
+
+    /**
+     * @param $file import file data
+     * @param $user import to user
+     * @param $allAirnames allow all airnames (true) or restrict to user's airnames (default)
+     * @return id of imported playlist
+     * @throws Exception if playlist import is unsuccessful
+     */
+    public function importPlaylist($file, $user, $allAirnames=false) {
+        // parse the file
+        $json = json_decode($file);
+
+        // validate json root node is type 'show'
+        if(!$json || $json->type != "show") {
+            // also allow for 'show' encapsulated within a 'getPlaylistsRs'
+            if($json && $json->data[0]->type == "show")
+                $json = $json->data[0];
+            else
+                throw new \Exception("File is not in the expected format.  Ensure file is a valid JSON playlist.");
+        }
+
+        if($json && $json->type == "show") {
+            // validate the show's properties
+            $valid = false;
+            list($year, $month, $day) = explode("-", $json->date);
+            if($json->airname && $json->name && $json->time &&
+                    checkdate($month, $day, $year))
+                $valid = true;
+
+            // lookup the airname
+            if($valid) {
+                $djapi = Engine::api(IDJ::class);
+                $airname = $djapi->getAirname($json->airname, $allAirnames?"":$user);
+                if(!$airname) {
+                    // airname does not exist; try to create it
+                    $success = $djapi->insertAirname(mb_substr($json->airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
+                    if($success > 0) {
+                        // success!
+                        $airname = $djapi->lastInsertId();
+                    } else
+                        $valid = false;
+                }
+            }
+
+            // create the playlist
+            if($valid) {
+                $this->insertPlaylist($user, $json->date, $json->time, mb_substr($json->name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $airname);
+                $playlist = $this->lastInsertId();
+
+                // insert the tracks
+                $status = '';
+                $window = $this->getTimestampWindow($playlist);
+                foreach($json->data as $pentry) {
+                    $entry = PlaylistEntry::fromJSON($pentry);
+                    $created = $entry->getCreated();
+                    if($created) {
+                        try {
+                            $stamp = PlaylistEntry::scrubTimestamp(
+                                        new \DateTime($created), $window);
+                            $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
+                        } catch(\Exception $e) {
+                            error_log("failed to parse timestamp: $created");
+                            $entry->setCreated(null);
+                        }
+                    }
+                    $success = $this->insertTrackEntry($playlist, $entry, $status);
+                }
+
+                return $playlist;
+            } else
+                throw new \Exception("Show details are invalid");
+        }
+    }
 }
