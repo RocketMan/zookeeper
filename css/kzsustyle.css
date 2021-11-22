@@ -21,9 +21,6 @@ p.indented {
 p.center {
 	text-align: center;
 }
-ul {
-	list-style: disc;
-}
 li {
 	margin-left: 10px;
 	margin-bottom: 5px;
