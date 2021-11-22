@@ -108,6 +108,9 @@ li {
 ol {
     list-style-type: decimal;
 }
+ul {
+    list-style-type: disc;
+}
 ol, ul {
     display: block;
     margin: 1em 0;
