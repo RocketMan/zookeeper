@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -44,4 +44,8 @@ interface IUser {
     function updateUser($user, $password, $realname="XXZZ", $groups="XXZZ", $expiration="XXZZ");
     function insertUser($user, $password, $realname, $groups, $expiration);
     function deleteUser($user);
+    function getAPIKeys($user);
+    function addAPIKey($user, $apikey);
+    function deleteAPIKeys($user, array $apikeys);
+    function lookupAPIKey($apikey);
 }

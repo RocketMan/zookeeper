@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -277,5 +277,37 @@ class UserImpl extends DBO implements IUser {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
         return $stmt->execute();
+    }
+
+    public function getAPIKeys($user) {
+        $query = "SELECT id, apikey FROM apikeys WHERE user = ? ORDER BY id";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        return $stmt->iterate();
+    }
+
+    public function addAPIKey($user, $apikey) {
+        $query = "INSERT INTO apikeys (user, apikey) VALUES (?, ?)";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        $stmt->bindValue(2, $apikey);
+        return $stmt->execute();
+    }
+
+    public function deleteAPIKeys($user, array $ids) {
+        $in = str_repeat("?, ", sizeof($ids) - 1) . "?";
+        $query = "DELETE FROM apikeys WHERE user=? AND id IN ($in)";
+        $stmt = $this->prepare($query);
+        $params = array_merge([$user], $ids);
+        return $stmt->execute($params);
+    }
+
+    public function lookupAPIKey($apikey) {
+        $query = "SELECT user, groups, realname FROM apikeys a ".
+                 "LEFT JOIN users u ON a.user = u.name ".
+                 "WHERE apikey=?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $apikey);
+        return $stmt->executeAndFetch();
     }
 }

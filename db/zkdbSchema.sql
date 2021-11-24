@@ -91,6 +91,21 @@ CREATE TABLE IF NOT EXISTS `albumvol` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `apikeys`
+--
+
+CREATE TABLE `apikeys` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user` varchar(8) NOT NULL,
+  `apikey` varchar(40) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user` (`user`),
+  KEY `apikey` (`apikey`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `categories`
 --
 
