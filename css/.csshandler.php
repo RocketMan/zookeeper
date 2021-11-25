@@ -22,7 +22,7 @@
  *
  */
  
-$target = realpath(__DIR__.$_SERVER['PATH_INFO']);
+$target = realpath(__DIR__.$_GET['asset']);
 if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
         !file_exists($target)) {
     http_response_code(404);
