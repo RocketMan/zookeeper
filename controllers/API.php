@@ -633,9 +633,7 @@ class API extends CommandTarget implements IController {
             $id = $api->importPlaylist($file, $this->session->getUser(), $this->session->isAuth("v"));
 
             $this->serializer->startResponse("importPlaylistRs");
-            $attrs = [];
-            $attrs["id"] = $id;
-            $this->serializer->startResponse("show", $attrs);
+            $this->serializer->startResponse("show", ["id" => $id]);
             $this->serializer->endResponse("show");
             $this->serializer->endResponse("importPlaylistRs");
         } catch (\Exception $e) {
