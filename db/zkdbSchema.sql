@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS `albumvol` (
 CREATE TABLE `apikeys` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user` varchar(8) NOT NULL,
-  `apikey` varchar(40) DEFAULT NULL,
+  `apikey` varchar(40) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `user` (`user`),
   UNIQUE KEY `apikey` (`apikey`)
