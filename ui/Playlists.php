@@ -1609,15 +1609,16 @@ class Playlists extends MenuItem {
        <tr><th><input name=all id='all' type=checkbox></th><th align=right>API Key</th><th></th></tr>
    <?php
        foreach($keys as $key) {
-           echo "<tr><td><input name=id{$key['id']} type=checkbox></td>";
-           echo "<td class='apikey'>{$key['apikey']}</td><td><a href='#' title='Copy Key to Clipboard' class='copy'>&#x1f4cb;</a></td></tr>";
+           echo "<tr><td><input name=id{$key['id']} type=checkbox></td>".
+                "<td class='apikey'>{$key['apikey']}</td>".
+                "<td><a href='#' title='Copy Key to Clipboard' class='copy'>&#x1f4cb;</a></td></tr>";
        }
        echo "</table>";
        echo "<P><INPUT TYPE=submit CLASS=submit NAME=deleteKey VALUE=' Remove Key '>&nbsp;&nbsp;&nbsp;\n";
        } else
-           echo "<p><b>Your have no API Keys.</b></p>\n";
+           echo "<p><b>You have no API Keys.</b></p><p>\n";
 
-       echo "<INPUT TYPE=submit CLASS=submit NAME=newKey VALUE=' Generate New Key '>&nbsp;&nbsp;&nbsp;\n";
+       echo "<INPUT TYPE=submit CLASS=submit NAME=newKey VALUE=' Generate New Key '></p>\n";
        echo "<input type=hidden name=action value='{$this->action}'>\n";
        echo "<input type=hidden name=subaction value='{$this->subaction}'>\n";
        echo "</form>\n";
