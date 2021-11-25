@@ -42,7 +42,7 @@ $menu = [
     [ 'u', 'editList%',    'Edit Playlist',         ZK\UI\Playlists::class ],
     [ 'u', 'importExport', 'Import/Export',         ZK\UI\Playlists::class ],
     [ 'u', 'showLink',     'Link to Playlist',      ZK\UI\Playlists::class ],
-    [ 'u', 'updateDJInfo', 'Update Airname',        ZK\UI\Playlists::class ],
+    [ 'u', 'updateDJInfo', 'Edit Profile',          ZK\UI\Playlists::class ],
     [ 'a', 'viewDJ%',      'DJ Zone!',              ZK\UI\Playlists::class ],
     [ 'a', 'viewList%',    'Playlists by Date',     ZK\UI\Playlists::class ],
     [ 'u', 'addTrack',     0,                       ZK\UI\Playlists::class ],
