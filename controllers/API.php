@@ -42,7 +42,7 @@ abstract class Serializer {
     public abstract function endDocument();
     public abstract function startResponse($name, $attrs=null);
     public abstract function endResponse($name);
-    public abstract function emitDataSetArray($name, $fields, &$data);
+    public abstract function emitDataSetArray($name, $fields, $data);
 
     protected function getCatCodes() {
         if(!isset($this->catCodes))
@@ -117,7 +117,7 @@ class JSONSerializer extends Serializer {
         return $result;
     }
 
-    public function emitDataSetArray($name, $fields, &$data) {
+    public function emitDataSetArray($name, $fields, $data) {
         $nextToken = "";
         foreach($data as $row) {
             echo "$nextToken{";
@@ -216,7 +216,7 @@ class XMLSerializer extends Serializer {
         return $result;
     }
 
-    public function emitDataSetArray($name, $fields, &$data) {
+    public function emitDataSetArray($name, $fields, $data) {
         foreach($data as $row) {
             echo "<$name>\n";
             foreach($fields as $field) {
@@ -633,7 +633,7 @@ class API extends CommandTarget implements IController {
             $id = $api->importPlaylist($file, $this->session->getUser(), $this->session->isAuth("v"));
 
             $this->serializer->startResponse("importPlaylistRs");
-            $this->serializer->emitData("id", $id);
+            $this->serializer->emitDataSetArray("playlists", ["id"], [["id" => $id]]);
             $this->serializer->endResponse("importPlaylistRs");
         } catch (\Exception $e) {
             $this->serializer->emitError("importPlaylistRs", 200, $e->getMessage());
