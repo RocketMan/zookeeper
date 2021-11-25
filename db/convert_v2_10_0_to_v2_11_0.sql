@@ -45,7 +45,7 @@ CREATE TABLE `apikeys` (
   `apikey` varchar(40) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `user` (`user`),
-  KEY `apikey` (`apikey`)
+  UNIQUE KEY `apikey` (`apikey`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT;

@@ -36,7 +36,7 @@ $().ready(function() {
         $("INPUT:checkbox").prop('checked', all);
     });
     $("A.copy").click(function() {
-        var key = $(this).closest("tr").data("key");
+        var key = $(this).closest("TR").children("TD.apikey").html();
         copyToClipboard(key);
         alert('Key copied to clipboard!');
     });

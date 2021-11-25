@@ -875,3 +875,10 @@ a.calLink {
 .date, .time {
     white-space: nowrap;
 }
+
+a:hover.copy {
+    text-decoration: none;
+}
+.apikey {
+    font-family: monospace;
+}
