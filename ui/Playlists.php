@@ -1621,7 +1621,7 @@ class Playlists extends MenuItem {
        echo "<input type=hidden name=action value='{$this->action}'>\n";
        echo "<input type=hidden name=subaction value='{$this->subaction}'>\n";
        echo "</form>\n";
-       UI::emitJS('js/user.api.js');
+       UI::emitJS('js/user.apikey.js');
     }
 
     public function updateAirname() {
