@@ -26,6 +26,8 @@ namespace ZK\Engine;
 
 
 class Session extends DBO {
+    private const TOKEN_AUTH = "apikey";
+
     private $user;
     private $displayName;
     private $access = null;
@@ -59,6 +61,8 @@ class Session extends DBO {
         // it must be delievered in the request header as a cookie.
         if(!empty($_COOKIE[$this->sessionCookieName]))
             $this->validate($_COOKIE[$this->sessionCookieName]);
+        else if(!empty($_SERVER['HTTP_X_APIKEY']))
+            $this->authorizeApiKey($_SERVER['HTTP_X_APIKEY']);
     }
 
     public function getDN() { return $this->displayName; }
@@ -150,6 +154,26 @@ class Session extends DBO {
         $this->setSessionCookie($sessionID);
     }
 
+    public function authorizeApiKey($apikey) {
+        // invalidate apikey with invalid characters (injection control)
+        $user = preg_match("/^[0-9a-f]+$/", $apikey) ?
+                    Engine::api(IUser::class)->lookupAPIKey($apikey) : null;
+        if($user) {
+            $access = $user['groups'] . (self::checkLocal()?'l':'');
+
+            // Reject disabled and non-local guest accounts
+            if(self::checkAccess('d', $access) ||
+                   self::checkAccess('g', $access) &&
+                       !self::checkAccess('l', $access))
+                return;
+
+            $this->user = $user['user'];
+            $this->access = $access;
+            $this->displayName = $user['realname'];
+            $this->sessionID = self::TOKEN_AUTH;
+        }
+    }
+
     public function validate($sessionID) {
         // invalidate session with invalid characters (injection control)
         $row = preg_match("/^[0-9a-f]+$/", $sessionID) ?
@@ -183,6 +207,9 @@ class Session extends DBO {
         case "a":    // all
             $allow = true;
             break;
+        case "T":    // token authentication
+            $allow = $this->sessionID == self::TOKEN_AUTH;
+            break;
         case "u":    // authenticated users only
             $allow = !empty($this->sessionID);
             break;
@@ -210,6 +237,7 @@ class Session extends DBO {
         case "a":    // all
             $allow = true;
             break;
+        case "T":    // token authentication (invalid for checkAccess)
         case "u":    // authenticated user (invalid for checkAccess)
         case "U":    // local (not SSO) user (invalid for checkAccess)
         case "":     // empty mode is invalid

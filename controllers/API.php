@@ -42,7 +42,7 @@ abstract class Serializer {
     public abstract function endDocument();
     public abstract function startResponse($name, $attrs=null);
     public abstract function endResponse($name);
-    public abstract function emitDataSetArray($name, $fields, &$data);
+    public abstract function emitDataSetArray($name, $fields, $data);
 
     protected function getCatCodes() {
         if(!isset($this->catCodes))
@@ -117,7 +117,7 @@ class JSONSerializer extends Serializer {
         return $result;
     }
 
-    public function emitDataSetArray($name, $fields, &$data) {
+    public function emitDataSetArray($name, $fields, $data) {
         $nextToken = "";
         foreach($data as $row) {
             echo "$nextToken{";
@@ -216,7 +216,7 @@ class XMLSerializer extends Serializer {
         return $result;
     }
 
-    public function emitDataSetArray($name, $fields, &$data) {
+    public function emitDataSetArray($name, $fields, $data) {
         foreach($data as $row) {
             echo "<$name>\n";
             foreach($fields as $field) {
@@ -331,6 +331,7 @@ class API extends CommandTarget implements IController {
         [ "getChartsRq", "getCharts" ],
         [ "getPlaylistsRq", "getPlaylists" ],
         [ "getTracksRq", "getTracks" ],
+        [ "importPlaylistRq", "importPlaylist" ],
     ];
 
     /*
@@ -620,6 +621,24 @@ class API extends CommandTarget implements IController {
         $this->serializer->startResponse("getCurrentsRs");
         $this->serializer->emitDataSet("albumrec", $currentfields, $records);
         $this->serializer->endResponse("getCurrentsRs");
+    }
+
+    public function importPlaylist() {
+        try {
+            if(!$this->session->isAuth("u"))
+                throw new \Exception("Operation requires authentication");
+
+            $file = file_get_contents("php://input");
+            $api = Engine::api(IPlaylist::class);
+            $id = $api->importPlaylist($file, $this->session->getUser(), $this->session->isAuth("v"));
+
+            $this->serializer->startResponse("importPlaylistRs");
+            $this->serializer->startResponse("show", ["id" => $id]);
+            $this->serializer->endResponse("show");
+            $this->serializer->endResponse("importPlaylistRs");
+        } catch (\Exception $e) {
+            $this->serializer->emitError("importPlaylistRs", 200, $e->getMessage());
+        }
     }
 
     private function emitHeader($method) {

@@ -87,6 +87,49 @@ class PlaylistEntry {
         return mb_strlen($field) <= $length?$field:mb_substr($field, 0, $length);
     }
 
+    /**
+     * scrub user-supplied timestamp
+     *
+     * @param timestamp target
+     * @param window DateTime array from IPlaylist::getTimestampWindow
+     * @return scrubbed timestamp or null if not in show window
+     */
+    public static function scrubTimestamp(\DateTime $timestamp, array $window) {
+        // normalize for non-local timezone
+        $timestamp->setTimezone($window['start']->getTimezone());
+
+        // transpose timestamp to show date
+        $showDate = $window['start']->format("Y-m-d");
+        if($timestamp->format("Y-m-d") != $showDate) {
+            list($h, $m, $s) = explode(":", $timestamp->format("H:i:s"));
+            $timestamp = new \DateTime($showDate);
+            $timestamp->setTime($h, $m, $s);
+        }
+
+        // if playlist spans midnight, adjust post-midnight timestamp date
+        if($window['end']->format("G") < $window['start']->format("G") &&
+                $timestamp < $window['start'])
+            $timestamp->modify("+1 day");
+
+        // validate timestamp is within the show time range
+        $valid = false;
+        for($i=2; $i>0; $i--) {
+            if($timestamp >= $window['start'] &&
+                    $timestamp <= $window['end']) {
+                $valid = true;
+                break;
+            }
+
+            // try again on 12-hour clock (e.g., treat 03:30 as 15:30)
+            $timestamp->modify("+12 hour");
+        }
+
+        if(!$valid)
+            error_log("Spin time is outside of show start/end times.");
+
+        return $valid?$timestamp:null;
+    }
+
     public static function fromJSON($json) {
         $entry = new PlaylistEntry();
         switch($json->type) {
