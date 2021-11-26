@@ -159,8 +159,16 @@ class Session extends DBO {
         $user = preg_match("/^[0-9a-f]+$/", $apikey) ?
                     Engine::api(IUser::class)->lookupAPIKey($apikey) : null;
         if($user) {
+            $access = $user['groups'] . (self::checkLocal()?'l':'');
+
+            // Reject disabled and non-local guest accounts
+            if(self::checkAccess('d', $access) ||
+                   self::checkAccess('g', $access) &&
+                       !self::checkAccess('l', $access))
+                return;
+
             $this->user = $user['user'];
-            $this->access = $user['groups'] . (self::checkLocal()?'l':'');
+            $this->access = $access;
             $this->displayName = $user['realname'];
             $this->sessionID = self::TOKEN_AUTH;
         }

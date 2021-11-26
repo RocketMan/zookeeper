@@ -1600,7 +1600,7 @@ class Playlists extends MenuItem {
        if you trust the external application.</p>
        </div>
     <?php
-       $keys = Engine::api(IUser::class)->getAPIKeys($this->session->getUser())->asArray();
+       $keys = $api->getAPIKeys($this->session->getUser())->asArray();
        echo "       <form action='?' method=post>\n";
        if(sizeof($keys)) {
     ?>
