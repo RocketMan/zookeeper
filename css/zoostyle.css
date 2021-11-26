@@ -684,35 +684,6 @@ input[type="checkbox"]:checked:active {
     background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAMAAADXT/YiAAAAOVBMVEX///8zMzMqKipCQkI8PDwzMzNISEhISEhISEhCQkIqKio8PDwzMzMqKipISEhCQkI8PDwzMzMqKipFad0NAAAAE3RSTlMAIiIzMzNEZnd3qru7u8zMzMzMuKlnZwAAADhJREFUCNdjYIACJhjNJQRl8ApBWIw8goKsDDw8UAaDgAA3t4AAC1CGkx8ImMGKOPj42KAmsEMYAEUyAa2GdxXhAAAAAElFTkSuQmCC") center no-repeat, -webkit-linear-gradient(#FCFCFC, #DFDFDF);
 }
 
-/* calendar */
-a.calNav {
-    color: #990010;
-    text-decoration: none;
-}
-a.calNav:hover {
-    text-decoration: underline;
-}
-a.calLink {
-    color: #cc0000;
-    text-decoration: none;
-}
-.calBody {
-    color: #000000;
-    background-color: #ffffff;
-    border-color: #cccccc;
-    border-width: 1px;
-    border-style: solid;
-}
-.calendar, .calHead {
-    color: #000000;
-    background-color: #ffffff;
-    border-color: transparent;
-}
-.calGrid, .calToday {
-    color: #000000;
-    background-color: #cccccc;
-}
-
 /* base styling for tables that show list data, eg tracks.
  */
 .searchTable {
