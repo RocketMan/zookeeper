@@ -46,6 +46,6 @@ interface IUser {
     function deleteUser($user);
     function getAPIKeys($user);
     function addAPIKey($user, $apikey);
-    function deleteAPIKeys($user, array $apikeys);
+    function deleteAPIKeys($user, array $ids);
     function lookupAPIKey($apikey);
 }

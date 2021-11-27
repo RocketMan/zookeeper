@@ -1572,27 +1572,27 @@ class Playlists extends MenuItem {
     }
 
     public function updateDJInfo() {
-       $subactions = [
-           [ "u", "", "Update Airname", "updateAirname" ],
-           [ "u", "manageKeys", "Manage API Keys", "manageKeys" ],
-       ];
-       $this->dispatchSubaction($this->action, $this->subaction, $subactions);
+        $subactions = [
+            [ "u", "", "Update Airname", "updateAirname" ],
+            [ "u", "manageKeys", "Manage API Keys", "manageKeys" ],
+        ];
+        $this->dispatchSubaction($this->action, $this->subaction, $subactions);
     }
 
     public function manageKeys() {
-       $api = Engine::api(IUser::class);
-       if($_POST["newKey"]) {
-           $newKey = sha1(uniqid(rand()));
-           $api->addAPIKey($this->session->getUser(), $newKey);
-       } else if($_POST["deleteKey"]) {
-           $selKeys = [];
-           foreach($_POST as $key => $value) {
-               if(substr($key, 0, 2) == "id" && $value == "on")
-                   $selKeys[] = substr($key, 2);
-           }
-           if(sizeof($selKeys))
-               $api->deleteAPIKeys($this->session->getUser(), $selKeys);
-       }
+        $api = Engine::api(IUser::class);
+        if($_POST["newKey"]) {
+            $newKey = sha1(uniqid(rand()));
+            $api->addAPIKey($this->session->getUser(), $newKey);
+        } else if($_POST["deleteKey"]) {
+            $selKeys = [];
+            foreach($_POST as $key => $value) {
+                if(substr($key, 0, 2) == "id" && $value == "on")
+                    $selKeys[] = substr($key, 2);
+            }
+            if(sizeof($selKeys))
+                $api->deleteAPIKeys($this->session->getUser(), $selKeys);
+        }
     ?>
        <div class='user-tip' style='display: block; max-width: 550px;'>
        <p>API Keys allow external applications access to your playlists
@@ -1600,29 +1600,29 @@ class Playlists extends MenuItem {
        if you trust the external application.</p>
        </div>
     <?php
-       $keys = $api->getAPIKeys($this->session->getUser())->asArray();
-       echo "<form action='?' method=post>\n";
-       if(sizeof($keys)) {
+        $keys = $api->getAPIKeys($this->session->getUser())->asArray();
+        echo "<form action='?' method=post>\n";
+        if(sizeof($keys)) {
     ?>
        <p><b>Your API Keys:</b></p>
        <table border=0>
        <tr><th><input name=all id='all' type=checkbox></th><th align=right>API Key</th><th></th></tr>
    <?php
-       foreach($keys as $key) {
-           echo "<tr><td><input name=id{$key['id']} type=checkbox></td>".
-                "<td class='apikey'>{$key['apikey']}</td>".
-                "<td><a href='#' title='Copy Key to Clipboard' class='copy'>&#x1f4cb;</a></td></tr>\n";
-       }
-       echo "</table>\n";
-       echo "<p><input type=submit class=submit name=deleteKey value=' Remove Key '>&nbsp;&nbsp;&nbsp;\n";
-       } else
-           echo "<p><b>You have no API Keys.</b></p><p>\n";
+            foreach($keys as $key) {
+                echo "<tr><td><input name=id{$key['id']} type=checkbox></td>".
+                     "<td class='apikey'>{$key['apikey']}</td>".
+                     "<td><a href='#' title='Copy Key to Clipboard' class='copy'>&#x1f4cb;</a></td></tr>\n";
+            }
+            echo "</table>\n";
+            echo "<p><input type=submit class=submit name=deleteKey value=' Remove Key '>&nbsp;&nbsp;&nbsp;\n";
+        } else
+            echo "<p><b>You have no API Keys.</b></p><p>\n";
 
-       echo "<input type=submit class=submit name=newKey value=' Generate New Key '></p>\n";
-       echo "<input type=hidden name=action value='{$this->action}'>\n";
-       echo "<input type=hidden name=subaction value='{$this->subaction}'>\n";
-       echo "</form>\n";
-       UI::emitJS('js/user.apikey.js');
+        echo "<input type=submit class=submit name=newKey value=' Generate New Key '></p>\n";
+        echo "<input type=hidden name=action value='{$this->action}'>\n";
+        echo "<input type=hidden name=subaction value='{$this->subaction}'>\n";
+        echo "</form>\n";
+        UI::emitJS('js/user.apikey.js');
     }
 
     public function updateAirname() {
