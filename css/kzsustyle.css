@@ -223,6 +223,10 @@ P.zktitle A {
 }
 .submit {
 	background-color: #980000;
+	border-color: #3b0000;
+}
+.text, .textsp, .urlValue {
+	border-color: #3b0000;
 }
 .albumReview {
 	background-image: URL('../img/kzsu/kzsu_rinfo.gif');

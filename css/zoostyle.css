@@ -584,18 +584,18 @@ table.recentAirplay td, .sub {
     color: #ffffff;
     background-color: #5863da;
     border-width: 1px;
-    border-color: #3b0000;
+    border-color: #3843ba;
 }
 .success {
     color: #006600;
 }
 .text, .urlValue {
     padding: 2px;
-    border: 1px solid #3b0000;
+    border: 1px solid #2833aa;
 }
 .textsp {
     padding: 1px;
-    border: 1px solid #3b0000;
+    border: 1px solid #2833aa;
     width: 120px;
 }
 .zk-hidden {
