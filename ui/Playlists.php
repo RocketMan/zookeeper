@@ -1581,10 +1581,10 @@ class Playlists extends MenuItem {
 
     public function manageKeys() {
        $api = Engine::api(IUser::class);
-       if($_REQUEST["newKey"]) {
+       if($_POST["newKey"]) {
            $newKey = sha1(uniqid(rand()));
            $api->addAPIKey($this->session->getUser(), $newKey);
-       } else if($_REQUEST["deleteKey"]) {
+       } else if($_POST["deleteKey"]) {
            $selKeys = [];
            foreach($_POST as $key => $value) {
                if(substr($key, 0, 2) == "id" && $value == "on")
@@ -1601,7 +1601,7 @@ class Playlists extends MenuItem {
        </div>
     <?php
        $keys = $api->getAPIKeys($this->session->getUser())->asArray();
-       echo "       <form action='?' method=post>\n";
+       echo "<form action='?' method=post>\n";
        if(sizeof($keys)) {
     ?>
        <p><b>Your API Keys:</b></p>
@@ -1611,14 +1611,14 @@ class Playlists extends MenuItem {
        foreach($keys as $key) {
            echo "<tr><td><input name=id{$key['id']} type=checkbox></td>".
                 "<td class='apikey'>{$key['apikey']}</td>".
-                "<td><a href='#' title='Copy Key to Clipboard' class='copy'>&#x1f4cb;</a></td></tr>";
+                "<td><a href='#' title='Copy Key to Clipboard' class='copy'>&#x1f4cb;</a></td></tr>\n";
        }
-       echo "</table>";
-       echo "<P><INPUT TYPE=submit CLASS=submit NAME=deleteKey VALUE=' Remove Key '>&nbsp;&nbsp;&nbsp;\n";
+       echo "</table>\n";
+       echo "<p><input type=submit class=submit name=deleteKey value=' Remove Key '>&nbsp;&nbsp;&nbsp;\n";
        } else
            echo "<p><b>You have no API Keys.</b></p><p>\n";
 
-       echo "<INPUT TYPE=submit CLASS=submit NAME=newKey VALUE=' Generate New Key '></p>\n";
+       echo "<input type=submit class=submit name=newKey value=' Generate New Key '></p>\n";
        echo "<input type=hidden name=action value='{$this->action}'>\n";
        echo "<input type=hidden name=subaction value='{$this->subaction}'>\n";
        echo "</form>\n";
