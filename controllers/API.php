@@ -26,6 +26,7 @@ namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
 use ZK\Engine\IChart;
+use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IReview;
@@ -332,6 +333,7 @@ class API extends CommandTarget implements IController {
         [ "getPlaylistsRq", "getPlaylists" ],
         [ "getTracksRq", "getTracks" ],
         [ "importPlaylistRq", "importPlaylist" ],
+        [ "importAlbumRq", "importAlbum" ],
     ];
 
     /*
@@ -638,6 +640,26 @@ class API extends CommandTarget implements IController {
             $this->serializer->endResponse("importPlaylistRs");
         } catch (\Exception $e) {
             $this->serializer->emitError("importPlaylistRs", 200, $e->getMessage());
+        }
+    }
+
+    public function importAlbum() {
+        try {
+            if(!$this->session->isAuth("m"))
+                throw new \Exception("Operation requires authentication");
+
+            $file = file_get_contents("php://input");
+            $api = Engine::api(IEditor::class);
+            $tag = $api->importAlbum($file);
+            if(!$tag)
+                throw new \Exception("import failed");
+
+            $this->serializer->startResponse("importAlbumRs");
+            $this->serializer->startResponse("album", ["tag" => $tag]);
+            $this->serializer->endResponse("album");
+            $this->serializer->endResponse("importAlbumRs");
+        } catch (\Exception $e) {
+            $this->serializer->emitError("importAlbumRs", 200, $e->getMessage());
         }
     }
 

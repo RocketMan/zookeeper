@@ -36,6 +36,7 @@ interface IEditor {
 
     function insertUpdateAlbum(&$album, $tracks, $label);
     function insertUpdateLabel(&$label);
+    function importAlbum($file);
     function enqueueTag($tag, $user);
     function dequeueTag($tag, $user);
     function getNumQueuedTags($user);

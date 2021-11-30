@@ -272,6 +272,95 @@ class EditorImpl extends DBO implements IEditor {
         return true;
     }
 
+    private const NONALNUM="/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/";
+    private const STOPWORDS="/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i";
+
+    /**
+     * This is the PHP equivalent of the editor.common.js zkAlpha function
+     */
+    private static function zkAlpha($val, $isTrack=false) {
+        $words = preg_split(self::NONALNUM, $val);
+        $newVal = join(" ", array_map(function(int $index, string $word) use($words) {
+            // words starting with caps are kept as-is
+            if(preg_match('/^[A-Z]+/', $word))
+                return $word;
+
+            // stopwords are not capitalized, unless first or last
+            if(preg_match(self::STOPWORDS, $word) &&
+                        $index != 0 &&
+                        $index != sizeof($words) - 1) {
+                return strtolower($word);
+            }
+
+            // otherwise, capitalize the word
+            return strtoupper(substr($word, 0, 1)) .
+                    strtolower(substr($word, 1));
+        }, array_keys($words), array_values($words)));
+
+        if(!$isTrack && substr($newVal, 0, 4) == 'The ')
+            $newVal = substr($newVal, 4) . ', The';
+
+        return $newVal;
+    }
+
+    public function importAlbum($file) {
+        // decode and validate required fields
+        $json = json_decode($file, true, 4,
+                        PHP_VERSION_ID < 70300?0:JSON_THROW_ON_ERROR);
+        if(!$json || $json['type'] != "album" || !is_array($json['label']) ||
+                    !($json['label']['name'] || $json['label']['pubkey']) ||
+                    !$json['artist'] || !$json['album'])
+            throw new \Exception("File is not in the expected format.");
+
+        // convert field values to codes
+        $message = "";
+        foreach([["category", ILibrary::GENRES],
+                 ["medium", ILibrary::MEDIA],
+                 ["format", ILibrary::LENGTHS],
+                 ["location", ILibrary::LOCATIONS]] as $field) {
+            $codes = array_flip($field[1]);
+            if(key_exists($json[$field[0]], $codes))
+                $json[$field[0]] = $codes[$json[$field[0]]];
+            else
+                $message .= $field[0]. " '{$json[$field[0]]}', ";
+        }
+
+        if($message)
+            throw new \Exception("Bad field(s): " . substr($message, 0, -2));
+
+        // try to find label by name if no pubkey specified
+        if(!$json['label']['pubkey']) {
+            $label = Engine::api(ILibrary::class)->search(ILibrary::LABEL_NAME, 0, 1, $json['label']['name']);
+            if(sizeof($label))
+                $json['label']['pubkey'] = $label['pubkey'];
+        }
+        $json['pubkey'] = $json['label']['pubkey'];
+
+        // reindex tracks
+        $tracks = array_combine(range(1, sizeof($json['data'])),
+                    array_values($json['data']));
+
+        // normalize artist, album, and track names
+        foreach(["artist", "album"] as $field)
+            $json[$field] = self::zkAlpha($json[$field]);
+
+        foreach($tracks as &$track) {
+            $track["track"] = self::zkAlpha($track["track"], true);
+            if(isset($track["artist"]))
+                $track["artist"] = self::zkAlpha($track["artist"]);
+        }
+
+        // normalize label fields
+        foreach(["name","attention","address","city","maillist"] as $field) {
+            if(isset($json['label'][$field]))
+                $json['label'][$field] =
+                    self::zkAlpha($json['label'][$field], true);
+        }
+
+        return $this->insertUpdateAlbum($json, $tracks, $json['label'])?
+                                            $json["tag"]:null;
+    }
+
     public function enqueueTag($tag, $user) {
         $query = "INSERT INTO tagqueue (user, tag, keyed) values (?, ?, now())";
         $stmt = $this->prepare($query);
