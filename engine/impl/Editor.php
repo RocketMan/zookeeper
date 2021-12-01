@@ -307,9 +307,10 @@ class EditorImpl extends DBO implements IEditor {
         // decode and validate required fields
         $json = json_decode($file, true, 4,
                         PHP_VERSION_ID < 70300?0:JSON_THROW_ON_ERROR);
-        if(!$json || $json['type'] != "album" || !is_array($json['label']) ||
-                    !($json['label']['name'] || $json['label']['pubkey']) ||
-                    !$json['artist'] || !$json['album'])
+        if(!$json || empty($json['type']) || $json['type'] != "album" ||
+                    !is_array($json['label']) ||
+                    empty($json['label']['name']) && empty($json['label']['pubkey']) ||
+                    empty($json['artist']) || empty($json['album']))
             throw new \Exception("File is not in the expected format.");
 
         // convert field values to codes
@@ -329,7 +330,7 @@ class EditorImpl extends DBO implements IEditor {
             throw new \Exception("Bad field(s): " . substr($message, 0, -2));
 
         // try to find label by name if no pubkey specified
-        if(!$json['label']['pubkey']) {
+        if(empty($json['label']['pubkey'])) {
             $label = Engine::api(ILibrary::class)->search(ILibrary::LABEL_NAME, 0, 1, $json['label']['name']);
             if(sizeof($label))
                 $json['label']['pubkey'] = $label['pubkey'];
