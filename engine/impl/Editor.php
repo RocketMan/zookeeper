@@ -305,12 +305,17 @@ class EditorImpl extends DBO implements IEditor {
 
     public function importAlbum($file) {
         // decode and validate required fields
-        $json = json_decode($file, true, 4,
+        $json = json_decode($file, true, 6,
                         PHP_VERSION_ID < 70300?0:JSON_THROW_ON_ERROR);
-        if(!$json || empty($json['type']) || $json['type'] != "album" ||
-                    !is_array($json['label']) ||
-                    empty($json['label']['name']) && empty($json['label']['pubkey']) ||
-                    empty($json['artist']) || empty($json['album']))
+        if($json && $json['type'] != "album") {
+            // also allow for encapsulated 'album'
+            $json = $json['data'][0]['type'] == "album"?$json['data'][0]:null;
+        }
+
+        if(!$json || !is_array($json['label']) ||
+                    empty($json['artist']) || empty($json['album']) ||
+                    empty($json['label']['name']) &&
+                        empty($json['label']['pubkey']))
             throw new \Exception("File is not in the expected format.");
 
         // convert field values to codes
