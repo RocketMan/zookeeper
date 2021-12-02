@@ -41,7 +41,7 @@ abstract class Serializer {
     public abstract function getContentType();
     public abstract function startDocument();
     public abstract function endDocument();
-    public abstract function startResponse($name, $attrs=null);
+    public abstract function startResponse($name, $attrs=null, $errors=null);
     public abstract function endResponse($name);
     public abstract function emitDataSetArray($name, $fields, $data);
 
@@ -63,7 +63,8 @@ abstract class Serializer {
         $attrs = $this->newAttrs($code, $message);
         if($opts)
             $attrs += $opts;
-        $this->startResponse($request, $attrs);
+        $this->startResponse($request, $attrs,
+                [["code" => $code, "title" => $message]]);
         $this->endResponse($request);
     }
 
@@ -83,7 +84,7 @@ class JSONSerializer extends Serializer {
     public function startDocument() {}
     public function endDocument() {}
 
-    public function startResponse($name, $attrs=null) {
+    public function startResponse($name, $attrs=null, $errors=null) {
         if(!$attrs)
             $attrs = $this->newAttrs();
 
@@ -93,6 +94,11 @@ class JSONSerializer extends Serializer {
         echo "{\"type\":\"$name\",";
         foreach($attrs as $key => $value)
             echo "\"$key\":\"".self::jsonspecialchars($value)."\",";
+        if($errors) {
+            echo "\"errors\":[";
+            $this->emitDataSetArray("errors", ["code", "title"], $errors);
+            echo "],";
+        }
         echo "\"data\":[";
     }
 
@@ -189,7 +195,7 @@ class XMLSerializer extends Serializer {
         echo "</xml>\n";
     }
 
-    public function startResponse($name, $attrs=null) {
+    public function startResponse($name, $attrs=null, $errors=null) {
         if(!$attrs)
             $attrs = $this->newAttrs();
         echo "<$name";
