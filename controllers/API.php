@@ -30,6 +30,7 @@ use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IReview;
+use ZK\Engine\JsonApi;
 use ZK\Engine\OnNowFilter;
 use ZK\Engine\PlaylistObserver;
 
@@ -86,7 +87,9 @@ class JSONSerializer extends Serializer {
 
     public function startResponse($name, $attrs=null, $errors=null) {
         if(!$attrs)
-            $attrs = $this->newAttrs();
+            $attrs = $errors?
+                $this->newAttrs($errors[0]['code'], $errors[0]['title']):
+                $this->newAttrs();
 
         echo $this->nextToken;
         $this->nextToken = "";
@@ -96,7 +99,7 @@ class JSONSerializer extends Serializer {
             echo "\"$key\":\"".self::jsonspecialchars($value)."\",";
         if($errors) {
             echo "\"errors\":[";
-            $this->emitDataSetArray("errors", ["code", "title"], $errors);
+            $this->emitDataSetArray("errors", ["id", "code", "title"], $errors);
             echo "],";
         }
         echo "\"data\":[";
@@ -637,12 +640,16 @@ class API extends CommandTarget implements IController {
                 throw new \Exception("Operation requires authentication");
 
             $file = file_get_contents("php://input");
-            $api = Engine::api(IPlaylist::class);
-            $id = $api->importPlaylist($file, $this->session->getUser(), $this->session->isAuth("v"));
+            $json = new JsonApi($file, "show");
 
-            $this->serializer->startResponse("importPlaylistRs");
-            $this->serializer->startResponse("show", ["id" => $id]);
-            $this->serializer->endResponse("show");
+            $api = Engine::api(IPlaylist::class);
+            $api->importPlaylist($json, $this->session->getUser(), $this->session->isAuth("v"));
+
+            $this->serializer->startResponse("importPlaylistRs", null, $json->getErrors());
+            $json->iterateSuccess(function($attrs) {
+                $this->serializer->startResponse("show", $attrs);
+                $this->serializer->endResponse("show");
+            });
             $this->serializer->endResponse("importPlaylistRs");
         } catch (\Exception $e) {
             $this->serializer->emitError("importPlaylistRs", 200, $e->getMessage());
@@ -655,14 +662,16 @@ class API extends CommandTarget implements IController {
                 throw new \Exception("Operation requires authentication");
 
             $file = file_get_contents("php://input");
-            $api = Engine::api(IEditor::class);
-            $tag = $api->importAlbum($file);
-            if(!$tag)
-                throw new \Exception("import failed");
+            $json = new JsonApi($file, "album", JsonApi::FLAG_ARRAY);
 
-            $this->serializer->startResponse("importAlbumRs");
-            $this->serializer->startResponse("album", ["tag" => $tag]);
-            $this->serializer->endResponse("album");
+            $api = Engine::api(IEditor::class);
+            $api->importAlbum($json);
+
+            $this->serializer->startResponse("importAlbumRs", null, $json->getErrors());
+            $json->iterateSuccess(function($attrs) {
+                $this->serializer->startResponse("album", $attrs);
+                $this->serializer->endResponse("album");
+            });
             $this->serializer->endResponse("importAlbumRs");
         } catch (\Exception $e) {
             $this->serializer->emitError("importAlbumRs", 200, $e->getMessage());

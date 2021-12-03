@@ -864,26 +864,12 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
 
     /**
-     * @param $file import file data
+     * @param $jsonapi JsonApi importer instance
      * @param $user import to user
      * @param $allAirnames allow all airnames (true) or restrict to user's airnames (default)
-     * @return id of imported playlist
-     * @throws Exception if playlist import is unsuccessful
      */
-    public function importPlaylist($file, $user, $allAirnames=false) {
-        // parse the file
-        $json = json_decode($file);
-
-        // validate json root node is type 'show'
-        if(!$json || $json->type != "show") {
-            // also allow for 'show' encapsulated within a 'getPlaylistsRs'
-            if($json && $json->data[0]->type == "show")
-                $json = $json->data[0];
-            else
-                throw new \Exception("File is not in the expected format.  Ensure file is a valid JSON playlist.");
-        }
-
-        if($json && $json->type == "show") {
+    public function importPlaylist($jsonapi, $user, $allAirnames=false) {
+        $jsonapi->iterateData(function($json) use($jsonapi) {
             // validate the show's properties
             $valid = false;
             list($year, $month, $day) = explode("-", $json->date);
@@ -930,9 +916,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
                     $success = $this->insertTrackEntry($playlist, $entry, $status);
                 }
 
-                return $playlist;
+                $jsonapi->addSuccess($playlist);
             } else
-                throw new \Exception("Show details are invalid");
-        }
+                $jsonapi->addError($json->id, "Show details are invalid");
+        });
     }
 }
