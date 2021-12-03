@@ -200,7 +200,10 @@ class XMLSerializer extends Serializer {
 
     public function startResponse($name, $attrs=null, $errors=null) {
         if(!$attrs)
-            $attrs = $this->newAttrs();
+            $attrs = $errors?
+                $this->newAttrs($errors[0]['code'], $errors[0]['title']):
+                $this->newAttrs();
+
         echo "<$name";
         foreach($attrs as $key => $value)
             echo " $key=\"".self::spec2hexAttr($value)."\"";
