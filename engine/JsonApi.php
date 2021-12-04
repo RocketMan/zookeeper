@@ -68,7 +68,7 @@ class JsonApi {
         if($json && $this->get($json, 'type') == $type)
             $this->data = [ $json ];
         else if($json && is_array($data = $this->get($json, 'data')) &&
-                $this->get($data[0], 'type') == $type) 
+                $this->get($data[0], 'type') == $type)
             $this->data = $data;
         else {
             $this->data = $this->included = null;

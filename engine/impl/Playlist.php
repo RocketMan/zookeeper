@@ -869,7 +869,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
      * @param $allAirnames allow all airnames (true) or restrict to user's airnames (default)
      */
     public function importPlaylist($jsonapi, $user, $allAirnames=false) {
-        $jsonapi->iterateData(function($json) use($jsonapi) {
+        $jsonapi->iterateData(function($json) use($jsonapi, $user, $allAirnames) {
             // validate the show's properties
             $valid = false;
             list($year, $month, $day) = explode("-", $json->date);
