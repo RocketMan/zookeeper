@@ -77,8 +77,8 @@ class JsonApi {
 
         if($this->data) {
             for($i=0; $i<sizeof($this->data); $i++)
-                if(empty($this->get($data = $this->data[$i], 'id')))
-                    $this->set($data, 'id', "request-id-".($i+1));
+                if(empty($this->get($data = &$this->data[$i], 'lid')))
+                    $this->set($data, 'lid', "request-seq-".($i+1));
 
             $this->included = is_array($included = $this->get($json, 'included'))?$included:null;
         }
@@ -92,7 +92,7 @@ class JsonApi {
         return $this->hasFlag(self::FLAG_ARRAY)?$json[$field]:$json->$field;
     }
 
-    private function set($json, $field, $value) {
+    private function set(&$json, $field, $value) {
         if($this->hasFlag(self::FLAG_ARRAY))
             $json[$field] = $value;
         else

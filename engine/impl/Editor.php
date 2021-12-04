@@ -323,7 +323,7 @@ class EditorImpl extends DBO implements IEditor {
                     $message .= $field[0]. " '{$data[$field[0]]}', ";
 
             if($message) {
-                $json->addError($data['id'], "Bad field(s): " . substr($message, 0, -2));
+                $json->addError($data['lid'], "Bad field(s): " . substr($message, 0, -2));
                 return;
             }
 
@@ -339,11 +339,11 @@ class EditorImpl extends DBO implements IEditor {
                 $rel = $data['relationships']['label']['data'];
                 $label = $json->getIncluded($rel['type'], $rel['id']);
                 if(!$label) {
-                    $json->addError($data['id'], "missing included label");
+                    $json->addError($data['lid'], "missing included label");
                     return;
                 }
             } else {
-                $json->addError($data['id'], "missing label");
+                $json->addError($data['lid'], "missing label");
                 return;
             }
 
@@ -376,9 +376,9 @@ class EditorImpl extends DBO implements IEditor {
             }
 
             if($this->insertUpdateAlbum($data, $tracks, $label))
-                $json->addSuccess($data['id'], ["tag" => $data["tag"]]);
+                $json->addSuccess($data["tag"], ["lid" => $data["lid"]]);
             else
-                $json->addError($data['id'], "insert failed");
+                $json->addError($data['lid'], "insert failed");
         });
     }
 

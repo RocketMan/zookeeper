@@ -916,9 +916,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
                     $success = $this->insertTrackEntry($playlist, $entry, $status);
                 }
 
-                $jsonapi->addSuccess($playlist);
+                $jsonapi->addSuccess($playlist, ["lid" => $json->lid]);
             } else
-                $jsonapi->addError($json->id, "Show details are invalid");
+                $jsonapi->addError($json->lid, "Show details are invalid");
         });
     }
 }
