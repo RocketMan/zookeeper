@@ -332,8 +332,8 @@ var lists = {
 };
 
 function search(type, size, offset) {
-    var url = "zkapi.php?method=searchRq" +
-        "&type=" + type +
+    var url = "api/v1/search" +
+        "?type=" + type +
         "&key=" + encodeURIComponent($("#key").val());
 
     if(size >= 0)

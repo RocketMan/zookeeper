@@ -354,8 +354,8 @@ var lists = {
 };
 
 function search(size, offset) {
-    var url = "zkapi.php?method=libLookupRq" +
-        "&type=" + $("#type").val() +
+    var url = "api/v1/libLookup" +
+        "?type=" + $("#type").val() +
         "&sortBy=" + $("#sortBy").val() +
         "&key=" + encodeURIComponent($("#key").val());
 

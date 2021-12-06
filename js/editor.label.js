@@ -27,8 +27,8 @@ function changeSel(index) {
 }
 
 function getLabels(op, key) {
-    var url = "zkapi.php?method=getLabelsRq" +
-        "&operation=" + op +
+    var url = "api/v1/getLabels" +
+        "?operation=" + op +
         "&size=" + $("#list-size").val() +
         "&key=" + encodeURIComponent(key);
 

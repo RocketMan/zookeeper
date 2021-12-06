@@ -121,7 +121,7 @@ $().ready(function(){
         $("#track-titles").empty();
         clearUserInput(false);
         tagId = ""
-        var url = "zkapi.php?method=getTracksRq&json=1&key=" + id;
+        var url = "api/v1/getTracks?key=" + id;
         $.ajax({
             dataType : 'json',
             type: 'GET',
@@ -520,8 +520,8 @@ $().ready(function(){
     }
 
     function searchLibrary(key) {
-        var url = "zkapi.php?method=libLookupRq" +
-            "&type=artists" +
+        var url = "api/v1/libLookup" +
+            "?type=artists" +
             "&key=" + encodeURIComponent(key) + "*" +
             "&size=50";
         var results = $("#track-artists");
