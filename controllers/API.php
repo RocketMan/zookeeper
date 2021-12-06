@@ -344,8 +344,8 @@ class API extends CommandTarget implements IController {
         [ "getChartsRq", "getCharts" ],
         [ "getPlaylistsRq", "getPlaylists" ],
         [ "getTracksRq", "getTracks" ],
-        [ "importPlaylistRq", "importPlaylist" ],
-        [ "importAlbumRq", "importAlbum" ],
+        [ "importPlaylistsRq", "importPlaylist" ],
+        [ "importAlbumsRq", "importAlbum" ],
     ];
 
     /*
