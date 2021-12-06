@@ -272,6 +272,116 @@ class EditorImpl extends DBO implements IEditor {
         return true;
     }
 
+    private const NONALNUM="/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/";
+    private const STOPWORDS="/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i";
+
+    /**
+     * This is the PHP equivalent of the editor.common.js zkAlpha function
+     */
+    private static function zkAlpha($val, $isTrack=false) {
+        $words = preg_split(self::NONALNUM, $val);
+        $newVal = join(" ", array_map(function(int $index, string $word) use($words) {
+            // words starting with caps are kept as-is
+            if(preg_match('/^[A-Z]+/', $word))
+                return $word;
+
+            // stopwords are not capitalized, unless first or last
+            if(preg_match(self::STOPWORDS, $word) &&
+                        $index != 0 &&
+                        $index != sizeof($words) - 1) {
+                return strtolower($word);
+            }
+
+            // otherwise, capitalize the word
+            return strtoupper(substr($word, 0, 1)) .
+                    strtolower(substr($word, 1));
+        }, array_keys($words), array_values($words)));
+
+        if(!$isTrack && substr($newVal, 0, 4) == 'The ')
+            $newVal = substr($newVal, 4) . ', The';
+
+        return $newVal;
+    }
+
+    public function importAlbum($json) {
+        // map field values to codes
+        $maps = [["category", array_flip(ILibrary::GENRES)],
+                 ["medium", array_flip(ILibrary::MEDIA)],
+                 ["format", array_flip(ILibrary::LENGTHS)],
+                 ["location", array_flip(ILibrary::LOCATIONS)]];
+
+        $json->iterateData(function($data) use($json, $maps) {
+            $message = "";
+            if(empty($data['artist']) || empty($data['album']))
+                $message .= "artist or album missing, ";
+
+            // convert field values to codes
+            foreach($maps as $field)
+                if(key_exists($data[$field[0]], $field[1]))
+                    $data[$field[0]] = $field[1][$data[$field[0]]];
+                else
+                    $message .= $field[0]. " '{$data[$field[0]]}', ";
+
+            if($message) {
+                $json->addError($data['lid'], "Bad field(s): " . substr($message, 0, -2));
+                return;
+            }
+
+            // allow inline or related label
+            if(isset($data['label']['name']) ||
+                    isset($data['label']['pubkey'])) {
+                // inline
+                $label = $data['label'];
+            } else if(is_array($data['relationships']) &&
+                    is_array($data['relationships']['label']) &&
+                    is_array($data['relationships']['label']['data'])) {
+                // related
+                $rel = $data['relationships']['label']['data'];
+                $label = $json->getIncluded($rel['type'], $rel['id']);
+                if(!$label) {
+                    $json->addError($data['lid'], "missing included label");
+                    return;
+                }
+            } else {
+                $json->addError($data['lid'], "missing label");
+                return;
+            }
+
+            // try to find label by name if no pubkey specified
+            if(empty($label['pubkey'])) {
+                $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_NAME, 0, 1, $label['name']);
+                if(sizeof($label))
+                    $label['pubkey'] = $rec['pubkey'];
+            }
+            $data['pubkey'] = $label['pubkey'];
+
+            // reindex tracks
+            $tracks = array_combine(range(1, sizeof($data['data'])),
+                        array_values($data['data']));
+
+            // normalize artist, album, and track names
+            foreach(["artist", "album"] as $field)
+                $data[$field] = self::zkAlpha($data[$field]);
+
+            foreach($tracks as &$track) {
+                $track["track"] = self::zkAlpha($track["track"], true);
+                if(isset($track["artist"]))
+                    $track["artist"] = self::zkAlpha($track["artist"]);
+            }
+
+            // normalize label fields
+            foreach(["name","attention","address","city","maillist"] as $field) {
+                if(isset($label[$field]))
+                    $label[$field] = self::zkAlpha($label[$field], true);
+            }
+
+            if($this->insertUpdateAlbum($data, $tracks, $label))
+                $json->addSuccess($data["tag"], ["lid" => $data["lid"]]);
+            else
+                $json->addError($data['lid'], "insert failed");
+        });
+    }
+
     public function enqueueTag($tag, $user) {
         $query = "INSERT INTO tagqueue (user, tag, keyed) values (?, ?, now())";
         $stmt = $this->prepare($query);

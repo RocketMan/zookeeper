@@ -26,9 +26,11 @@ namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
 use ZK\Engine\IChart;
+use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IReview;
+use ZK\Engine\JsonApi;
 use ZK\Engine\OnNowFilter;
 use ZK\Engine\PlaylistObserver;
 
@@ -40,7 +42,7 @@ abstract class Serializer {
     public abstract function getContentType();
     public abstract function startDocument();
     public abstract function endDocument();
-    public abstract function startResponse($name, $attrs=null);
+    public abstract function startResponse($name, $attrs=null, $errors=null);
     public abstract function endResponse($name);
     public abstract function emitDataSetArray($name, $fields, $data);
 
@@ -62,7 +64,8 @@ abstract class Serializer {
         $attrs = $this->newAttrs($code, $message);
         if($opts)
             $attrs += $opts;
-        $this->startResponse($request, $attrs);
+        $this->startResponse($request, $attrs,
+                [["code" => $code, "title" => $message]]);
         $this->endResponse($request);
     }
 
@@ -82,9 +85,11 @@ class JSONSerializer extends Serializer {
     public function startDocument() {}
     public function endDocument() {}
 
-    public function startResponse($name, $attrs=null) {
+    public function startResponse($name, $attrs=null, $errors=null) {
         if(!$attrs)
-            $attrs = $this->newAttrs();
+            $attrs = $errors?
+                $this->newAttrs($errors[0]['code'], $errors[0]['title']):
+                $this->newAttrs();
 
         echo $this->nextToken;
         $this->nextToken = "";
@@ -92,6 +97,11 @@ class JSONSerializer extends Serializer {
         echo "{\"type\":\"$name\",";
         foreach($attrs as $key => $value)
             echo "\"$key\":\"".self::jsonspecialchars($value)."\",";
+        if($errors) {
+            echo "\"errors\":[";
+            $this->emitDataSetArray("errors", ["id", "code", "title"], $errors);
+            echo "],";
+        }
         echo "\"data\":[";
     }
 
@@ -188,9 +198,12 @@ class XMLSerializer extends Serializer {
         echo "</xml>\n";
     }
 
-    public function startResponse($name, $attrs=null) {
+    public function startResponse($name, $attrs=null, $errors=null) {
         if(!$attrs)
-            $attrs = $this->newAttrs();
+            $attrs = $errors?
+                $this->newAttrs($errors[0]['code'], $errors[0]['title']):
+                $this->newAttrs();
+
         echo "<$name";
         foreach($attrs as $key => $value)
             echo " $key=\"".self::spec2hexAttr($value)."\"";
@@ -331,7 +344,8 @@ class API extends CommandTarget implements IController {
         [ "getChartsRq", "getCharts" ],
         [ "getPlaylistsRq", "getPlaylists" ],
         [ "getTracksRq", "getTracks" ],
-        [ "importPlaylistRq", "importPlaylist" ],
+        [ "importPlaylistsRq", "importPlaylist" ],
+        [ "importAlbumsRq", "importAlbum" ],
     ];
 
     /*
@@ -629,15 +643,41 @@ class API extends CommandTarget implements IController {
                 throw new \Exception("Operation requires authentication");
 
             $file = file_get_contents("php://input");
-            $api = Engine::api(IPlaylist::class);
-            $id = $api->importPlaylist($file, $this->session->getUser(), $this->session->isAuth("v"));
+            $json = new JsonApi($file, "show");
 
-            $this->serializer->startResponse("importPlaylistRs");
-            $this->serializer->startResponse("show", ["id" => $id]);
-            $this->serializer->endResponse("show");
-            $this->serializer->endResponse("importPlaylistRs");
+            $api = Engine::api(IPlaylist::class);
+            $api->importPlaylist($json, $this->session->getUser(), $this->session->isAuth("v"));
+
+            $this->serializer->startResponse("importPlaylistsRs", null, $json->getErrors());
+            $json->iterateSuccess(function($attrs) {
+                $this->serializer->startResponse("show", $attrs);
+                $this->serializer->endResponse("show");
+            });
+            $this->serializer->endResponse("importPlaylistsRs");
         } catch (\Exception $e) {
-            $this->serializer->emitError("importPlaylistRs", 200, $e->getMessage());
+            $this->serializer->emitError("importPlaylistsRs", 200, $e->getMessage());
+        }
+    }
+
+    public function importAlbum() {
+        try {
+            if(!$this->session->isAuth("m"))
+                throw new \Exception("Operation requires authentication");
+
+            $file = file_get_contents("php://input");
+            $json = new JsonApi($file, "album", JsonApi::FLAG_ARRAY);
+
+            $api = Engine::api(IEditor::class);
+            $api->importAlbum($json);
+
+            $this->serializer->startResponse("importAlbumsRs", null, $json->getErrors());
+            $json->iterateSuccess(function($attrs) {
+                $this->serializer->startResponse("album", $attrs);
+                $this->serializer->endResponse("album");
+            });
+            $this->serializer->endResponse("importAlbumsRs");
+        } catch (\Exception $e) {
+            $this->serializer->emitError("importAlbumsRs", 200, $e->getMessage());
         }
     }
 

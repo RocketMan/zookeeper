@@ -31,6 +31,7 @@ use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IReview;
 use ZK\Engine\IUser;
+use ZK\Engine\JsonApi;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
 
@@ -1534,8 +1535,15 @@ class Playlists extends MenuItem {
             $file = file_get_contents($userfile);
 
             try {
+                $json = new JsonApi($file, "show", JsonApi::FLAG_EXCEPTION);
+
                 $api = Engine::api(IPlaylist::class);
-                $id = $api->importPlaylist($file, $this->session->getUser());
+                $api->importPlaylist($json, $this->session->getUser());
+
+                $id = 0;
+                $json->iterateSuccess(function($attrs) use(&$id) {
+                    $id = $attrs['id'];
+                });
 
                 // display the editor
                 $_REQUEST["playlist"] = $id;
