@@ -648,14 +648,14 @@ class API extends CommandTarget implements IController {
             $api = Engine::api(IPlaylist::class);
             $api->importPlaylist($json, $this->session->getUser(), $this->session->isAuth("v"));
 
-            $this->serializer->startResponse("importPlaylistRs", null, $json->getErrors());
+            $this->serializer->startResponse("importPlaylistsRs", null, $json->getErrors());
             $json->iterateSuccess(function($attrs) {
                 $this->serializer->startResponse("show", $attrs);
                 $this->serializer->endResponse("show");
             });
-            $this->serializer->endResponse("importPlaylistRs");
+            $this->serializer->endResponse("importPlaylistsRs");
         } catch (\Exception $e) {
-            $this->serializer->emitError("importPlaylistRs", 200, $e->getMessage());
+            $this->serializer->emitError("importPlaylistsRs", 200, $e->getMessage());
         }
     }
 
@@ -670,14 +670,14 @@ class API extends CommandTarget implements IController {
             $api = Engine::api(IEditor::class);
             $api->importAlbum($json);
 
-            $this->serializer->startResponse("importAlbumRs", null, $json->getErrors());
+            $this->serializer->startResponse("importAlbumsRs", null, $json->getErrors());
             $json->iterateSuccess(function($attrs) {
                 $this->serializer->startResponse("album", $attrs);
                 $this->serializer->endResponse("album");
             });
-            $this->serializer->endResponse("importAlbumRs");
+            $this->serializer->endResponse("importAlbumsRs");
         } catch (\Exception $e) {
-            $this->serializer->emitError("importAlbumRs", 200, $e->getMessage());
+            $this->serializer->emitError("importAlbumsRs", 200, $e->getMessage());
         }
     }
 
