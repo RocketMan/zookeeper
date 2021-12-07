@@ -377,6 +377,8 @@ class EditorImpl extends DBO implements IEditor {
 
             if(!$update)
                 unset($data["tag"]);
+            else if(empty($data["tag"]))
+                $data["tag"] = $data["id"];
 
             if($this->insertUpdateAlbum($data, $tracks, $label))
                 $json->addSuccess($data["tag"], ["lid" => $data["lid"]]);
