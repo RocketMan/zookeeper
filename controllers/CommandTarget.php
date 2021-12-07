@@ -35,11 +35,12 @@ abstract class CommandTarget {
     }
 
     public function dispatchAction($action, &$actions) {
-        $processed = 0;
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $processed = false;
         foreach($actions as $item) {
-            if($item[0] == $action) {
+            if($item[0] == $action && ($item[2] ?? $method) == $method) {
                 $this->{$item[1]}();
-                $processed = 1;
+                $processed = true;
             }
         }
 

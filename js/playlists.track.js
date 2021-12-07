@@ -121,14 +121,14 @@ $().ready(function(){
         $("#track-titles").empty();
         clearUserInput(false);
         tagId = ""
-        var url = "api/v1/getTracks?key=" + id;
+        var url = "api/v1/album/" + id;
         $.ajax({
             dataType : 'json',
             type: 'GET',
             accept: "application/json; charset=utf-8",
             url: url,
-        }).done(function (diskInfo) { //TODO: success?
-            if (diskInfo.code == INVALID_TAG) {
+        }).done(function (response) { //TODO: success?
+            if (response.code == INVALID_TAG) {
                 showUserError(id + ' is not a valid tag.');
                 return;
             }
@@ -138,6 +138,7 @@ $().ready(function(){
                 $("#track-tag").val(id);
             var options = "<option value=''>Select Track</option>";
             var options2 = "";
+            var diskInfo = response.data[0];
             trackList = diskInfo.data;
             for (var i=0; i < trackList.length; i++) {
                 var track = trackList[i];
@@ -151,7 +152,7 @@ $().ready(function(){
             $("#track-titles").html(options2);
             $("#track-title").attr('list','track-titles'); // webkit hack
             $("#track-artist").val(diskInfo.artist);
-            $("#track-label").val(diskInfo.label);
+            $("#track-label").val(diskInfo.label.name);
             $("#track-album").val(diskInfo.album);
             $("#track-title").val("");
             $("#track-submit").attr("disabled");

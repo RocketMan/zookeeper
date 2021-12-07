@@ -88,8 +88,7 @@ class ExportPlaylist extends CommandTarget implements IController {
 
     public function emitJSON() {
         header("Location: ".UI::getBaseUrl().
-               "api/v1/getPlaylists?operation=byID&key=".
-               $_REQUEST["playlist"]."&json=1&includeTracks=1");
+               "api/v1/playlist/{$_REQUEST["playlist"]}");
     }
 
     public function emitXML() {
