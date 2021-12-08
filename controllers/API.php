@@ -336,7 +336,7 @@ class API extends CommandTarget implements IController {
     ];
 
     const REVIEW_FIELDS_EXT = [
-        "type", "id", "tag", "airname", "date", "review", "links"
+        "type", "id", "airname", "date", "review", "links", "relationships"
     ];
 
     const TRACK_FIELDS = [
@@ -656,6 +656,7 @@ class API extends CommandTarget implements IController {
 
         if(!empty($_REQUEST["relation"])) {
             $relation = $_REQUEST["relation"];
+            unset($_REQUEST["relation"]);
             switch($relation) {
             case "reviews":
                 $this->getReview(0);
@@ -889,11 +890,33 @@ class API extends CommandTarget implements IController {
 
     public function getReview($byId = 1) {
         $reviews = Engine::api(IReview::class)->getReviews($_REQUEST["id"], 1, "", $this->session->isAuth("u"), $byId);
+
+        if(!empty($_REQUEST["relation"])) {
+            $relation = $_REQUEST["relation"];
+            unset($_REQUEST["relation"]);
+            switch($relation) {
+            case "album":
+                $_REQUEST["id"] = $reviews[0]["tag"];
+                $this->getAlbum();
+                break;
+            }
+            return;
+        }
+
         if(sizeof($reviews)) {
             foreach($reviews as &$review) {
                 $review["type"] = "review";
                 $review["date"] = $review["created"];
                 $review["links"] = ["self" => "{$this->base}/review/{$review['id']}"];
+                $review["relationships"] = [ "album" => [
+                    "links" => [
+                            "related" => "{$this->base}/review/{$review['id']}/album"
+                        ]
+                    ,
+                    "data" => [
+                         "type" => "album", "id" => $review['tag']
+                    ]
+                ]];
             }
             $this->serializer->startResponse("getReviewRs");
             $this->serializer->emitDataSetArray("reviewrec", API::REVIEW_FIELDS_EXT, $reviews);
