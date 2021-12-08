@@ -690,6 +690,7 @@ class API extends CommandTarget implements IController {
         if(in_array("label", $include)) {
             $l = $labels[0];
             $l["type"] = "label";
+            $l["id"] = $l["pubkey"];
             $l["links"] = ["self" => "{$base}/label/{$l['id']}"];
             unset($l["pubkey"]);
             if(!$this->session->isAuth("u"))
