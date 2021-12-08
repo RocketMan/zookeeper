@@ -42,7 +42,7 @@ abstract class Serializer {
     public abstract function getContentType();
     public abstract function startDocument();
     public abstract function endDocument();
-    public abstract function startResponse($name, $attrs=null, $errors=null);
+    public abstract function startResponse($name, $attrs=null);
     public abstract function endResponse($name);
     public abstract function emitDataSetArray($name, $fields, $data);
 
@@ -64,8 +64,8 @@ abstract class Serializer {
         $attrs = $this->newAttrs($code, $message);
         if($opts)
             $attrs += $opts;
-        $this->startResponse($request, $attrs,
-                [["id" => $attrs["id"], "code" => $code, "title" => $message]]);
+        $attrs["errors"] = [["id" => $attrs["id"], "code" => $code, "title" => $message]];
+        $this->startResponse($request, $attrs);
         $this->endResponse($request);
     }
 
@@ -85,27 +85,34 @@ class JSONSerializer extends Serializer {
     public function startDocument() {}
     public function endDocument() {}
 
-    private function emitAttrs($attrs) {
+    private function emitAttrs($attrs, $array = false) {
         $next = "";
         foreach($attrs as $key => $value) {
-            echo "${next}\"$key\":";
+            echo "${next}";
+            if(!$array)
+                echo "\"$key\":";
             if(is_array($value)) {
-                echo "{";
-                $this->emitAttrs($value);
-                echo "}";
+                $indexed = isset($value[0]);
+                echo $indexed?"[":"{";
+                $this->emitAttrs($value, $indexed);
+                echo $indexed?"]":"}";
             } else if(is_bool($value))
                 echo $value?"true":"false";
+            else if($key == "date")
+                echo "\"".substr($value, 0, 10)."\"";
             else
                 echo "\"".self::jsonspecialchars($value)."\"";
             $next = ",";
         }
     }
 
-    public function startResponse($name, $attrs=null, $errors=null) {
-        if(!$attrs)
-            $attrs = $errors?
-                $this->newAttrs($errors[0]['code'], $errors[0]['title']):
-                $this->newAttrs();
+    public function startResponse($name, $attrs=null) {
+        if(!$attrs || isset($attrs['errors']) && !sizeof($attrs['errors']))
+            $attrs = $this->newAttrs();
+        else if(!isset($attrs['code']) && isset($attrs['errors'])) {
+            $attrs['code'] = $attrs['errors'][0]['code'];
+            $attrs['message'] = $attrs['errors'][0]['title'];
+        }
 
         echo $this->nextToken;
         $this->nextToken = "";
@@ -114,11 +121,6 @@ class JSONSerializer extends Serializer {
         if($attrs && sizeof($attrs)) {
             $this->emitAttrs($attrs);
             echo ",";
-        }
-        if($errors) {
-            echo "\"errors\":[";
-            $this->emitDataSetArray("errors", ["id", "code", "title"], $errors);
-            echo "],";
         }
         echo "\"data\":[";
     }
@@ -174,6 +176,8 @@ class JSONSerializer extends Serializer {
                     }
                 } else if($field == "created") {
                     $val = ExportPlaylist::extractTime($val);
+                } else if($field == "date") {
+                    $val = substr($val, 0, 10);
                 }
                 echo "$nextProp\"$field\":\"".
                      self::jsonspecialchars(stripslashes($val)).
@@ -216,15 +220,18 @@ class XMLSerializer extends Serializer {
         echo "</xml>\n";
     }
 
-    public function startResponse($name, $attrs=null, $errors=null) {
-        if(!$attrs)
-            $attrs = $errors?
-                $this->newAttrs($errors[0]['code'], $errors[0]['title']):
-                $this->newAttrs();
+    public function startResponse($name, $attrs=null) {
+        if(!$attrs || isset($attrs['errors']) && !sizeof($attrs['errors']))
+            $attrs = $this->newAttrs();
+        else if(!isset($attrs['code']) && isset($attrs['errors'])) {
+            $attrs['code'] = $attrs['errors'][0]['code'];
+            $attrs['message'] = $attrs['errors'][0]['title'];
+        }
 
         echo "<$name";
         foreach($attrs as $key => $value)
-            echo " $key=\"".self::spec2hexAttr($value)."\"";
+            if(!is_array($value))
+                echo " $key=\"".self::spec2hexAttr($value)."\"";
         echo ">\n";
     }
 
@@ -273,6 +280,8 @@ class XMLSerializer extends Serializer {
                     }
                 } else if($field == "created") {
                     $val = ExportPlaylist::extractTime($val);
+                } else if($field == "date") {
+                    $val = substr($val, 0, 10);
                 }
                 echo "<$field>".
                      self::spec2hex(stripslashes($val)).
@@ -318,6 +327,10 @@ class API extends CommandTarget implements IController {
         "pubkey", "name"
     ];
 
+    const REVIEW_FIELDS_EXT = [
+        "type", "id", "tag", "airname", "date", "review"
+    ];
+
     const TRACK_FIELDS = [
         "tag", "artist", "album", "category", "medium",
         "size", "location", "bin", "created", "updated",
@@ -330,7 +343,7 @@ class API extends CommandTarget implements IController {
     ];
 
     const TRACK_DETAIL_FIELDS = [
-        "seq", "artist", "track", "url"
+        "type", "id", "artist", "track", "url"
     ];
 
     private static $ftFields = [
@@ -368,6 +381,8 @@ class API extends CommandTarget implements IController {
         [ "playlistRq", "getPlaylists", "GET" ],
         [ "playlistRq", "importPlaylist", "POST" ],
         [ "playlistRq", "deletePlaylist", "DELETE" ],
+        [ "labelRq", "getLabel", "GET" ],
+        [ "reviewRq", "getReview", "GET" ],
     ];
 
     /*
@@ -620,8 +635,23 @@ class API extends CommandTarget implements IController {
     }
 
     public function getAlbum() {
+        $apiver = $_REQUEST["apiver"] ?? 1;
         $key = $_REQUEST["id"];
+        $include = explode(",", $_REQUEST["include"] ?? "");
         $fields = API::TRACK_DETAIL_FIELDS;
+
+        if(!empty($_REQUEST["relation"])) {
+            $relation = $_REQUEST["relation"];
+            switch($relation) {
+            case "reviews":
+                $this->getReview(0);
+                break;
+            case "label":
+                $this->getLabel(0);
+                break;
+            }
+            return;
+        }
 
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $key);
         if(!$key || !sizeof($albums)) {
@@ -642,6 +672,50 @@ class API extends CommandTarget implements IController {
             self::array_remove($fields, "artist");
         }
 
+        foreach($records as &$record) {
+            $record["type"] = "track";
+            $record["id"] = $record["seq"];
+        }
+
+        $base = UI::getBaseUrl();
+        if(($pos = strpos($base, "api/v")) !== false)
+            $base = substr($base, 0, $pos);
+        $base = $base."api/v{$apiver}";
+
+        $rel = [];
+        $inc = [];
+        $rel["label"] = [];
+        $rel["label"]["links"] = ["related" => "{$base}/album/{$key}/label"];
+        $rel["label"]["data"] = ["type" => "label", "id" => $albums[0]["pubkey"]];
+        if(in_array("label", $include)) {
+            $l = $labels[0];
+            $l["type"] = "label";
+            $l["links"] = ["self" => "{$base}/label/{$l['id']}"];
+            unset($l["pubkey"]);
+            for($i=0; $i<sizeof($l); $i++)
+                unset($l[$i]);
+            $inc[] = $l;
+        }
+
+        $reviews = Engine::api(IReview::class)->getReviews($key);
+        if(sizeof($reviews)) {
+            $rel["reviews"] = [];
+            $rel["reviews"]["links"] = ["related" => "{$base}/album/{$key}/reviews"];
+            $rel["reviews"]["data"] = [];
+            foreach($reviews as $review) {
+                $rel["reviews"]["data"][] = ["type" => "review", "id" => $review['id']];
+                if(in_array("reviews", $include)) {
+                    $review["type"] = "review";
+                    $review["date"] = $review["created"];
+                    $review["links"] = ["self" => "{$base}/review/{$review['id']}"];
+                    unset($review["created"], $review["user"], $review["private"]);
+                    for($i=0; $i<sizeof($review); $i++)
+                        unset($review[$i]);
+                    $inc[] = $review;
+                }
+            }
+        }
+
         $attrs = [];
         $attrs["id"] = $key;
         $attrs["artist"] =  $artist;
@@ -652,6 +726,9 @@ class API extends CommandTarget implements IController {
         $attrs["format"] = ILibrary::LENGTHS[$albums[0]["size"]];
         $attrs["location"] = ILibrary::LOCATIONS[$albums[0]["location"]];
         $attrs["coll"] = $albums[0]["iscoll"]?true:false;
+        $attrs["relationships"] = $rel;
+        if(sizeof($inc))
+            $attrs["included"] = $inc;
         $this->serializer->startResponse("getAlbumRs");
         $this->serializer->startResponse("album", $attrs);
         $this->serializer->emitDataSetArray("trackrec", $fields, $records);
@@ -683,7 +760,7 @@ class API extends CommandTarget implements IController {
             $api = Engine::api(IPlaylist::class);
             $api->importPlaylist($json, $this->session->getUser(), $this->session->isAuth("v"));
 
-            $this->serializer->startResponse("importPlaylistsRs", null, $json->getErrors());
+            $this->serializer->startResponse("importPlaylistsRs", ["errors" => $json->getErrors()]);
             $json->iterateSuccess(function($attrs) {
                 $this->serializer->startResponse("show", $attrs);
                 $this->serializer->endResponse("show");
@@ -733,7 +810,7 @@ class API extends CommandTarget implements IController {
             $api = Engine::api(IEditor::class);
             $api->importAlbum($json, $_SERVER['REQUEST_METHOD'] == 'PUT');
 
-            $this->serializer->startResponse("importAlbumsRs", null, $json->getErrors());
+            $this->serializer->startResponse("importAlbumsRs", ["errors" => $json->getErrors()]);
             $json->iterateSuccess(function($attrs) {
                 $this->serializer->startResponse("album", $attrs);
                 $this->serializer->endResponse("album");
@@ -761,6 +838,46 @@ class API extends CommandTarget implements IController {
         } catch(\Exception $e) {
             $this->serializer->emitError("deleteAlbumRs", 200, $e->getMessage());
         }
+    }
+
+    public function getLabel($byId = 1) {
+        $fields = API::LABEL_FIELDS;
+        self::array_remove($fields, "pubkey");
+        array_unshift($fields, "type", "id");
+
+        if($byId)
+            $key = $_REQUEST["id"];
+        else {
+            $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["id"]);
+            if(sizeof($album))
+                $key = $album[0]['pubkey'];
+        }
+
+        $records = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $key);
+        foreach($records as &$record) {
+            $record["type"] = "label";
+            $record["id"] = $record["pubkey"];
+        }
+        if(sizeof($records)) {
+            $this->serializer->startResponse("getLabelRs");
+            $this->serializer->emitDataSetArray("labelrec", $fields, $records);
+            $this->serializer->endResponse("getLabelRs");
+        } else
+            $this->serializer->emitError("getLabelRs", 200, "invalid id");
+    }
+
+    public function getReview($byId = 1) {
+        $reviews = Engine::api(IReview::class)->getReviews($_REQUEST["id"], 1, "", $this->session->isAuth("u"), $byId);
+        if(sizeof($reviews)) {
+            foreach($reviews as &$review) {
+                $review["type"] = "review";
+                $review["date"] = $review["created"];
+            }
+            $this->serializer->startResponse("getReviewRs");
+            $this->serializer->emitDataSetArray("reviewrec", API::REVIEW_FIELDS_EXT, $reviews);
+            $this->serializer->endResponse("getReviewRs");
+        } else
+            $this->serializer->emitError("getReviewRs", 200, "invalid id");
     }
 
     private function emitHeader($method) {

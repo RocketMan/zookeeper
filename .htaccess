@@ -20,7 +20,7 @@ RewriteRule ^zkrss\.php$ index.php?target=rss [QSA,L]
 RewriteRule ^zk-feed-reader\.xslt$ controllers/RSS.xslt [QSA,L]
 RewriteRule ^zkapi\.php$ index.php?target=api [QSA,L]
 RewriteRule ^ssoLogin\.php$ index.php?target=sso [QSA,L]
-RewriteRule ^api/v([0-9]+(\.[0-9]+)*)/([^/]+)(/([0-9]+))?$ index.php?target=api&method=$3Rq&id=$5&apiver=$1 [QSA,L]
+RewriteRule ^api/v([0-9]+(\.[0-9]+)*)/([^/]+)(/([0-9]+))?(/(.+))?$ index.php?target=api&method=$3Rq&id=$5&relation=$7&apiver=$1 [QSA,L]
 RewriteCond $0 !^\.mdhandler.php/.*$
 RewriteRule ^(.+)\.md$ .mdhandler.php?asset=/$1.md [L]
 RewriteRule ^zk$ - [R=404,L]
