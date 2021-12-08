@@ -179,9 +179,16 @@ class JSONSerializer extends Serializer {
                 } else if($field == "date") {
                     $val = substr($val, 0, 10);
                 }
-                echo "$nextProp\"$field\":\"".
-                     self::jsonspecialchars(stripslashes($val)).
-                     "\"";
+                echo "$nextProp\"$field\":";
+                if(is_array($val)) {
+                    $indexed = isset($val[0]);
+                    echo $indexed?"[":"{";
+                    $this->emitAttrs($val, $indexed);
+                    echo $indexed?"]":"}";
+                } else
+                    echo "\"".
+                         self::jsonspecialchars(stripslashes($val)).
+                         "\"";
                 $nextProp = ",";
             }
 
@@ -283,9 +290,10 @@ class XMLSerializer extends Serializer {
                 } else if($field == "date") {
                     $val = substr($val, 0, 10);
                 }
-                echo "<$field>".
-                     self::spec2hex(stripslashes($val)).
-                     "</$field>\n";
+                if(!is_array($val))
+                    echo "<$field>".
+                         self::spec2hex(stripslashes($val)).
+                         "</$field>\n";
             }
             echo "</$name>\n";
         }
@@ -328,7 +336,7 @@ class API extends CommandTarget implements IController {
     ];
 
     const REVIEW_FIELDS_EXT = [
-        "type", "id", "tag", "airname", "date", "review"
+        "type", "id", "tag", "airname", "date", "review", "links"
     ];
 
     const TRACK_FIELDS = [
@@ -411,6 +419,7 @@ class API extends CommandTarget implements IController {
 
     private $limit;
     private $serializer;
+    private $base;
 
     public function processRequest() {
         $wantXml = $_REQUEST["xml"] ?? false || isset($_SERVER["HTTP_ACCEPT"]) &&
@@ -430,6 +439,12 @@ class API extends CommandTarget implements IController {
     }
 
     public function processLocal($action, $subaction) {
+        $apiver = $_REQUEST["apiver"] ?? 1;
+        $this->base = UI::getBaseUrl();
+        if(($pos = strpos($this->base, "api/v")) !== false)
+            $this->base = substr($this->base, 0, $pos);
+        $this->base .= "api/v{$apiver}";
+
         $this->dispatchAction($action, self::$methods);
     }
 
@@ -635,7 +650,6 @@ class API extends CommandTarget implements IController {
     }
 
     public function getAlbum() {
-        $apiver = $_REQUEST["apiver"] ?? 1;
         $key = $_REQUEST["id"];
         $include = explode(",", $_REQUEST["include"] ?? "");
         $fields = API::TRACK_DETAIL_FIELDS;
@@ -677,21 +691,16 @@ class API extends CommandTarget implements IController {
             $record["id"] = $record["seq"];
         }
 
-        $base = UI::getBaseUrl();
-        if(($pos = strpos($base, "api/v")) !== false)
-            $base = substr($base, 0, $pos);
-        $base = $base."api/v{$apiver}";
-
         $rel = [];
         $inc = [];
         $rel["label"] = [];
-        $rel["label"]["links"] = ["related" => "{$base}/album/{$key}/label"];
+        $rel["label"]["links"] = ["related" => "{$this->base}/album/{$key}/label"];
         $rel["label"]["data"] = ["type" => "label", "id" => $albums[0]["pubkey"]];
         if(in_array("label", $include)) {
             $l = $labels[0];
             $l["type"] = "label";
             $l["id"] = $l["pubkey"];
-            $l["links"] = ["self" => "{$base}/label/{$l['id']}"];
+            $l["links"] = ["self" => "{$this->base}/label/{$l['id']}"];
             unset($l["pubkey"]);
             if(!$this->session->isAuth("u"))
                 unset($l["attention"], $l["address"], $l["phone"],
@@ -705,14 +714,14 @@ class API extends CommandTarget implements IController {
         $reviews = Engine::api(IReview::class)->getReviews($key);
         if(sizeof($reviews)) {
             $rel["reviews"] = [];
-            $rel["reviews"]["links"] = ["related" => "{$base}/album/{$key}/reviews"];
+            $rel["reviews"]["links"] = ["related" => "{$this->base}/album/{$key}/reviews"];
             $rel["reviews"]["data"] = [];
             foreach($reviews as $review) {
                 $rel["reviews"]["data"][] = ["type" => "review", "id" => $review['id']];
                 if(in_array("reviews", $include)) {
                     $review["type"] = "review";
                     $review["date"] = $review["created"];
-                    $review["links"] = ["self" => "{$base}/review/{$review['id']}"];
+                    $review["links"] = ["self" => "{$this->base}/review/{$review['id']}"];
                     unset($review["created"], $review["user"], $review["private"]);
                     for($i=0; $i<sizeof($review)+5; $i++)
                         unset($review[$i]);
@@ -731,6 +740,7 @@ class API extends CommandTarget implements IController {
         $attrs["format"] = ILibrary::LENGTHS[$albums[0]["size"]];
         $attrs["location"] = ILibrary::LOCATIONS[$albums[0]["location"]];
         $attrs["coll"] = $albums[0]["iscoll"]?true:false;
+        $attrs["links"] = ["self" => "{$this->base}/album/$key"];
         $attrs["relationships"] = $rel;
         if(sizeof($inc))
             $attrs["included"] = $inc;
@@ -852,6 +862,7 @@ class API extends CommandTarget implements IController {
             self::array_remove($fields, "attention", "address",
                     "phone", "fax", "email", "mailcount",
                     "maillist", "international");
+        $fields[] = "links";
         array_unshift($fields, "type", "id");
 
         if($byId)
@@ -866,6 +877,7 @@ class API extends CommandTarget implements IController {
         foreach($records as &$record) {
             $record["type"] = "label";
             $record["id"] = $record["pubkey"];
+            $record["links"] = ["self" => "{$this->base}/label/{$record['id']}"];
         }
         if(sizeof($records)) {
             $this->serializer->startResponse("getLabelRs");
@@ -881,6 +893,7 @@ class API extends CommandTarget implements IController {
             foreach($reviews as &$review) {
                 $review["type"] = "review";
                 $review["date"] = $review["created"];
+                $review["links"] = ["self" => "{$this->base}/review/{$review['id']}"];
             }
             $this->serializer->startResponse("getReviewRs");
             $this->serializer->emitDataSetArray("reviewrec", API::REVIEW_FIELDS_EXT, $reviews);
