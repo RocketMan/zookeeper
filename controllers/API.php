@@ -692,7 +692,11 @@ class API extends CommandTarget implements IController {
             $l["type"] = "label";
             $l["links"] = ["self" => "{$base}/label/{$l['id']}"];
             unset($l["pubkey"]);
-            for($i=0; $i<sizeof($l); $i++)
+            if(!$this->session->isAuth("u"))
+                unset($l["attention"], $l["address"], $l["phone"],
+                        $l["fax"], $l["email"], $l["mailcount"],
+                        $l["maillist"], $l["international"]);
+            for($i=0; $i<sizeof($labels[0]); $i++)
                 unset($l[$i]);
             $inc[] = $l;
         }
@@ -709,7 +713,7 @@ class API extends CommandTarget implements IController {
                     $review["date"] = $review["created"];
                     $review["links"] = ["self" => "{$base}/review/{$review['id']}"];
                     unset($review["created"], $review["user"], $review["private"]);
-                    for($i=0; $i<sizeof($review); $i++)
+                    for($i=0; $i<sizeof($review)+5; $i++)
                         unset($review[$i]);
                     $inc[] = $review;
                 }
@@ -843,6 +847,10 @@ class API extends CommandTarget implements IController {
     public function getLabel($byId = 1) {
         $fields = API::LABEL_FIELDS;
         self::array_remove($fields, "pubkey");
+        if(!$this->session->isAuth("u"))
+            self::array_remove($fields, "attention", "address",
+                    "phone", "fax", "email", "mailcount",
+                    "maillist", "international");
         array_unshift($fields, "type", "id");
 
         if($byId)
