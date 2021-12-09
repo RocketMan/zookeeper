@@ -704,6 +704,7 @@ class API extends CommandTarget implements IController {
         $rel["label"] = [];
         $rel["label"]["links"] = ["related" => "{$this->base}/album/{$key}/label"];
         $rel["label"]["data"] = ["type" => "label", "id" => $albums[0]["pubkey"]];
+        $rel["label"]["meta"] = ["name" => $label];
         if(in_array("label", $include)) {
             $l = $labels[0];
             $l["type"] = "label";
@@ -742,7 +743,6 @@ class API extends CommandTarget implements IController {
         $attrs["id"] = $key;
         $attrs["artist"] =  $artist;
         $attrs["album"] = $albums[0]["album"];
-        $attrs["label"] = ["name" => $label, "pubkey" => $albums[0]["pubkey"]];
         $attrs["category"] = ILibrary::GENRES[$albums[0]["category"]];
         $attrs["medium"] = ILibrary::MEDIA[$albums[0]["medium"]];
         $attrs["format"] = ILibrary::LENGTHS[$albums[0]["size"]];

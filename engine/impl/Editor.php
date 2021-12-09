@@ -327,32 +327,32 @@ class EditorImpl extends DBO implements IEditor {
                 return;
             }
 
-            // allow inline or related label
-            if(isset($data['label']['name']) ||
-                    isset($data['label']['pubkey'])) {
-                // inline
-                $label = $data['label'];
-            } else if(is_array($data['relationships']) &&
-                    is_array($data['relationships']['label']) &&
-                    is_array($data['relationships']['label']['data'])) {
-                // related
-                $rel = $data['relationships']['label']['data'];
-                $label = $json->getIncluded($rel['type'], $rel['id']);
-                if(!$label) {
-                    $json->addError($data['lid'], "missing included label");
-                    return;
-                }
-            } else {
+            if(!is_array($data['relationships']) ||
+                    !is_array($data['relationships']['label']) ||
+                    !is_array($data['relationships']['label']['data'])) {
                 $json->addError($data['lid'], "missing label");
                 return;
             }
 
-            // try to find label by name if no pubkey specified
-            if(empty($label['pubkey'])) {
-                $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_NAME, 0, 1, $label['name']);
-                if(sizeof($label))
-                    $label['pubkey'] = $rec['pubkey'];
+            // try to resove the label by pubkey
+            $rel = $data['relationships']['label']['data'];
+            $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $rel['id']);
+            if(sizeof($rec))
+                $label = $rec[0];
+            else {
+                // if not found by pubkey, consult the included relation
+                $label = $json->getIncluded($rel['type'], $rel['id']);
+                if($label) {
+                    // try to find by name
+                    $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_NAME, 0, 1, $label['name']);
+                    if(sizeof($rec))
+                        $label = $rec[0];
+                } else {
+                    $json->addError($data['lid'], "missing included label");
+                    return;
+                }
             }
+
             $data['pubkey'] = $label['pubkey'];
 
             // reindex tracks
