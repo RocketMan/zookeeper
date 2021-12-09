@@ -26,6 +26,7 @@ namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
 use ZK\Engine\IChart;
+use ZK\Engine\IDJ;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
@@ -236,9 +237,12 @@ class XMLSerializer extends Serializer {
         }
 
         echo "<$name";
-        foreach($attrs as $key => $value)
+        foreach($attrs as $key => $value) {
+            if(is_bool($value))
+                $value = $value?"true":"false";
             if(!is_array($value))
                 echo " $key=\"".self::spec2hexAttr($value)."\"";
+        }
         echo ">\n";
     }
 
@@ -391,6 +395,9 @@ class API extends CommandTarget implements IController {
         [ "playlistRq", "deletePlaylist", "DELETE" ],
         [ "labelRq", "getLabel", "GET" ],
         [ "reviewRq", "getReview", "GET" ],
+        [ "reviewRq", "importReview", "POST" ],
+        [ "reviewRq", "importReview", "PUT" ],
+        [ "reviewRq", "deleteReview", "DELETE" ],
     ];
 
     /*
@@ -838,21 +845,21 @@ class API extends CommandTarget implements IController {
     }
 
     public function deleteAlbum() {
+        $id = $_REQUEST["id"];
         try {
             if(!$this->session->isAuth("m"))
                 throw new \Exception("Operation requires authentication");
 
-            if(empty($_REQUEST["id"]))
+            if(empty($id))
                 throw new \Exception("missing id");
 
-            $id = $_REQUEST["id"];
             Engine::api(IEditor::class)->deleteAlbum($id);
             $this->serializer->startResponse("deleteAlbumRs");
             $this->serializer->startResponse("album", ["id" => $id]);
             $this->serializer->endResponse("album");
             $this->serializer->endResponse("deleteAlbumRs");
         } catch(\Exception $e) {
-            $this->serializer->emitError("deleteAlbumRs", 200, $e->getMessage());
+            $this->serializer->emitError("deleteAlbumRs", 200, $e->getMessage(), ["id" => $id]);
         }
     }
 
@@ -923,6 +930,115 @@ class API extends CommandTarget implements IController {
             $this->serializer->endResponse("getReviewRs");
         } else
             $this->serializer->emitError("getReviewRs", 200, "invalid id");
+    }
+
+    public function importReview() {
+        try {
+            if(!$this->session->isAuth("u"))
+                throw new \Exception("Operation requires authentication");
+
+            $file = file_get_contents("php://input");
+            $json = new JsonApi($file, "review");
+            $json->iterateData(function($data) use($json) {
+                if(is_object($data->relationships) &&
+                        is_object($data->relationships->album) &&
+                        is_object($data->relationships->album->data) &&
+                        $data->relationships->album->data->type == "album") {
+                    $tag = $data->relationships->album->data->id;
+                    $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+                    if(!sizeof($album)) {
+                        $json->addError($data->lid, "album does not exist");
+                        return;
+                    }
+                } else {
+                    $json->addError($data->lid, "missing album relation");
+                    return;
+                }
+
+                $valid = $data->airname && $data->review;
+                if($valid) {
+                    $djapi = Engine::api(IDJ::class);
+                    $user = $this->session->getUser();
+                    $airname = $djapi->getAirname($data->airname,
+                            $this->session->isAuth("v")?"":$user);
+                    if(!$airname) {
+                        // airname does not exist; try to create it
+                        $success = $djapi->insertAirname(mb_substr($data->airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
+                        if($success > 0) {
+                            // success!
+                            $airname = $djapi->lastInsertId();
+                        } else
+                            $valid = false;
+                    }
+                }
+
+                // create/update the review
+                $revapi = Engine::api(IReview::class);
+                if($valid) {
+                    $private = (isset($data->private) && $data->private)?"1":"0";
+                    if($_SERVER['REQUEST_METHOD'] == 'PUT') {
+                        // update the review
+                        $reviews = $revapi->getReviews($data->id, 1, $user, 0, 1);
+                        if(sizeof($reviews))
+                            $valid = $revapi->updateReview($reviews[0]["tag"], $private, $airname, $data->review, $user);
+                        else {
+                            $json->addError($data->lid, "review does not exist, use POST");
+                            return;
+                        }
+                    } else {
+                        $reviews = $revapi->getReviews($tag, 1, $user, 0);
+                        if(sizeof($reviews)) {
+                            $json->addError($data->lid, "review already exists, use PUT");
+                            return;
+                        } else
+                            $valid = $revapi->insertReview($tag, $private, $airname, $data->review, $user);
+                        if($valid)
+                            $data->id = $revapi->lastInsertId();
+                    }
+                }
+
+                if($valid)
+                    $json->addSuccess($data->id, ["lid" => $data->lid]);
+                else
+                    $json->addError(isset($data->id)?$data->id:$data->lid, "Review is invalid");
+            });
+
+            $this->serializer->startResponse("importReviewRs", ["errors" => $json->getErrors()]);
+            $json->iterateSuccess(function($attrs) {
+                $this->serializer->startResponse("review", $attrs);
+                $this->serializer->endResponse("review");
+            });
+            $this->serializer->endResponse("importReviewRs");
+        } catch (\Exception $e) {
+            $this->serializer->emitError("importReviewRs", 200, $e->getMessage());
+        }
+    }
+
+    public function deleteReview() {
+        $id = $_REQUEST["id"];
+        try {
+            if(!$this->session->isAuth("u"))
+                throw new \Exception("Operation requires authentication");
+
+            if(empty($id))
+                throw new \Exception("missing id");
+
+            $user = $this->session->getUser();
+            $revapi = Engine::api(IReview::class);
+            $reviews = $revapi->getReviews($id, 1, $user, 0, 1);
+            if(!sizeof($reviews))
+                throw new \Exception("invalid id");
+            if($user != $reviews[0]["user"])
+                throw new \Exception("only review owner may delete");
+
+            $revapi->deleteReview($reviews[0]['tag'], $user);
+            $this->serializer->startResponse("deleteReviewRs");
+            $this->serializer->startResponse("review", ["id" => $id]);
+            $this->serializer->endResponse("review");
+            $this->serializer->endResponse("deleteReviewRs");
+        } catch(\Exception $e) {
+            $this->serializer->emitError("deleteReviewRs", 200, $e->getMessage(), ["id" => $id]);
+        }
     }
 
     private function emitHeader($method) {
