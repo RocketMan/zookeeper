@@ -959,8 +959,7 @@ class API extends CommandTarget implements IController {
                 if($valid) {
                     $djapi = Engine::api(IDJ::class);
                     $user = $this->session->getUser();
-                    $airname = $djapi->getAirname($data->airname,
-                            $this->session->isAuth("v")?"":$user);
+                    $airname = $djapi->getAirname($data->airname);
                     if(!$airname) {
                         // airname does not exist; try to create it
                         $success = $djapi->insertAirname(mb_substr($data->airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
