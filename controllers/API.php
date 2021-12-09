@@ -660,6 +660,7 @@ class API extends CommandTarget implements IController {
         $key = $_REQUEST["id"];
         $include = explode(",", $_REQUEST["include"] ?? "");
         $fields = API::TRACK_DETAIL_FIELDS;
+        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $key);
 
         if(!empty($_REQUEST["relation"])) {
             $relation = $_REQUEST["relation"];
@@ -669,13 +670,18 @@ class API extends CommandTarget implements IController {
                 $this->getReview(0);
                 break;
             case "label":
-                $this->getLabel(0);
+                if(sizeof($albums)) {
+                    header("Location: {$this->base}/label/{$albums[0]['pubkey']}");
+                    return;
+                }
+                // fall through...
+            default:
+                http_response_code(400);
                 break;
             }
             return;
         }
 
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $key);
         if(!$key || !sizeof($albums)) {
             $this->serializer->emitError("getAlbumRs", 100, "Unknown tag", ["id" => $key]);
             return;
@@ -863,7 +869,7 @@ class API extends CommandTarget implements IController {
         }
     }
 
-    public function getLabel($byId = 1) {
+    public function getLabel() {
         $fields = API::LABEL_FIELDS;
         self::array_remove($fields, "pubkey");
         if(!$this->session->isAuth("u"))
@@ -873,14 +879,7 @@ class API extends CommandTarget implements IController {
         $fields[] = "links";
         array_unshift($fields, "type", "id");
 
-        if($byId)
-            $key = $_REQUEST["id"];
-        else {
-            $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["id"]);
-            if(sizeof($album))
-                $key = $album[0]['pubkey'];
-        }
-
+        $key = $_REQUEST["id"];
         $records = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $key);
         foreach($records as &$record) {
             $record["type"] = "label";
@@ -903,8 +902,13 @@ class API extends CommandTarget implements IController {
             unset($_REQUEST["relation"]);
             switch($relation) {
             case "album":
-                $_REQUEST["id"] = $reviews[0]["tag"];
-                $this->getAlbum();
+                if(sizeof($reviews)) {
+                    header("Location: {$this->base}/album/{$reviews[0]["tag"]}");
+                    return;
+                }
+                // fall through...
+            default:
+                http_response_code(400);
                 break;
             }
             return;
