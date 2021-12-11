@@ -264,6 +264,20 @@ class PlaylistEntry {
     }
 
     /**
+     * return the time component of the 'created' datetime string
+     *
+     * @return time component on success; original datetime value otherwise
+     */
+    public function getCreatedTime() {
+        $datetime = $this->getCreated();
+
+        // yyyy-mm-dd hh:mm:ss
+        if($datetime && strlen($datetime) == 19)
+            $datetime = substr($datetime, 11, 8);
+        return $datetime;
+    }
+
+    /**
      * get the value of the PlaylistEntry as an associative array
      *
      * CAUTION: the values returned by this method are undefined

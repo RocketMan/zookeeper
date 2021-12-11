@@ -721,19 +721,20 @@ class API extends CommandTarget implements IController {
                     (new PlaylistObserver())->onComment(function($entry) use(&$events) {
                         $events[] = ["type" => "comment",
                                      "comment" => $entry->getComment(),
-                                     "created" => $entry->getCreated()];
+                                     "created" => $entry->getCreatedTime()];
                     })->onLogEvent(function($entry) use(&$events) {
                         $events[] = ["type" => "logEvent",
                                      "event" => $entry->getLogEventType(),
                                      "code" => $entry->getLogEventCode(),
-                                     "created" => $entry->getCreated()];
+                                     "created" => $entry->getCreatedTime()];
                     })->onSetSeparator(function($entry) use(&$events) {
                         $events[] = ["type" => "break",
-                                     "created" => $entry->getCreated()];
+                                     "created" => $entry->getCreatedTime()];
                     })->onSpin(function($entry) use(&$events) {
                         $spin = $entry->asArray();
                         $spin["type"] = "track";
                         $spin["artist"] = UI::swapNames($spin["artist"]);
+                        $spin["created"] = $entry->getCreatedTime();
                         unset($spin["id"]);
                         $events[] = $spin;
                     }), 0, $filter);
