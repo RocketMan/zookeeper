@@ -745,6 +745,7 @@ class API extends CommandTarget implements IController {
             $rshow[] = new ResourceObject('show', $id?$id:$row["id"],
                 new Attribute("name", $row["description"]),
                 new Attribute("date", $row["showdate"]),
+                new Attribute("time", $row["showtime"]),
                 new Attribute("airname", $row["airname"]),
                 ...$tracks);
         }
