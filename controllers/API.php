@@ -37,6 +37,25 @@ use ZK\Engine\PlaylistObserver;
 
 use ZK\UI\UICommon as UI;
 
+use JsonApiPhp\JsonApi\Attribute;
+use JsonApiPhp\JsonApi\CompoundDocument;
+use JsonApiPhp\JsonApi\DataDocument;
+use JsonApiPhp\JsonApi\Error;
+use JsonApiPhp\JsonApi\Error\Code;
+use JsonApiPhp\JsonApi\Error\Id;
+use JsonApiPhp\JsonApi\Error\Title;
+use JsonApiPhp\JsonApi\ErrorDocument;
+use JsonApiPhp\JsonApi\Included;
+use JsonApiPhp\JsonApi\Link\RelatedLink;
+use JsonApiPhp\JsonApi\Link\SelfLink;
+use JsonApiPhp\JsonApi\Meta;
+use JsonApiPhp\JsonApi\ResourceCollection;
+use JsonApiPhp\JsonApi\ResourceIdentifier;
+use JsonApiPhp\JsonApi\ResourceIdentifierCollection;
+use JsonApiPhp\JsonApi\ResourceObject;
+use JsonApiPhp\JsonApi\ToMany;
+use JsonApiPhp\JsonApi\ToOne;
+
 abstract class Serializer {
     private $catCodes;
 
@@ -46,6 +65,7 @@ abstract class Serializer {
     public abstract function startResponse($name, $attrs=null);
     public abstract function endResponse($name);
     public abstract function emitDataSetArray($name, $fields, $data);
+    public abstract function emitDocument($name, $doc);
 
     protected function getCatCodes() {
         if(!isset($this->catCodes))
@@ -65,7 +85,7 @@ abstract class Serializer {
         $attrs = $this->newAttrs($code, $message);
         if($opts)
             $attrs += $opts;
-        $attrs["errors"] = [["id" => $attrs["id"], "code" => $code, "title" => $message]];
+        $attrs["errors"] = [["id" => $attrs["id"]?$attrs["id"]:1, "code" => $code, "title" => $message]];
         $this->startResponse($request, $attrs);
         $this->endResponse($request);
     }
@@ -80,6 +100,7 @@ class JSONSerializer extends Serializer {
     const CONTENT_TYPE = "application/vnd.api+json; charset=UTF-8";
 
     private $nextToken = "";
+    private $hasErrors = false;
 
     public function getContentType() { return JSONSerializer::CONTENT_TYPE; }
 
@@ -118,17 +139,20 @@ class JSONSerializer extends Serializer {
         echo $this->nextToken;
         $this->nextToken = "";
 
-        echo "{\"type\":\"$name\",";
+        echo "{\"type\":\"$name\"";
         if($attrs && sizeof($attrs)) {
-            $this->emitAttrs($attrs);
             echo ",";
+            $this->emitAttrs($attrs);
         }
-        echo "\"data\":[";
+
+        if(!$this->hasErrors)
+            echo ",\"data\":[";
     }
 
     public function endResponse($name) {
+        echo $this->hasErrors?"}":"]}";
+        $this->hasErrors = false;
         $this->nextToken = ",";
-        echo "]}";
     }
 
     private function getAFileCatList($cats) {
@@ -196,6 +220,19 @@ class JSONSerializer extends Serializer {
             $nextToken = ",";
             echo "}";
         }
+    }
+
+    public function emitDocument($name, $doc) {
+        echo json_encode($doc);
+    }
+
+    public function emitError($request, $code, $message, $opts = null) {
+        $error = new ErrorDocument(
+            new Error(
+                new Id('1'),
+                new Code($code),
+                new Title($message)));
+        $this->emitDocument($request, $error);
     }
 
     private static function jsonspecialchars($str) {
@@ -303,6 +340,61 @@ class XMLSerializer extends Serializer {
         }
     }
 
+    private function emitArray($eltname, $a) {
+        switch($eltname) {
+        case "getAlbumRs":
+            $eltname = "trackrec";
+            break;
+        case "getPlaylistsRs":
+            $eltname = "event";
+            break;
+        default:
+            // unknown, should not get here, default to something
+            $eltname = "track";
+            break;
+        }
+
+        foreach($a as $element)  {
+            echo "<{$eltname}>\n";
+            foreach($element as $name => $value) {
+                if(empty($value) || is_string($value))
+                    echo "<{$name}>$value</{$name}>\n";
+            }
+            echo "</{$eltname}>\n";
+        }
+    }
+
+    public function emitDocument($rootname, $doc) {
+        if($doc instanceof \JsonSerializable) {
+            $root = $doc->jsonSerialize();
+            echo "<{$rootname}>\n";
+            foreach($root->data as $node) {
+                echo "<{$node->type} ";
+                echo "id=\"".self::spec2hex($node->id)."\"";
+                foreach($node->attributes as $name => $value) {
+                    if(empty($value) || is_string($value))
+                        echo " {$name}=\"".self::spec2hex($value)."\"";
+                    else if(is_bool($value))
+                        echo " {$name}=\"".($value?"true":"false")."\"";
+                }
+                echo ">\n";
+
+                // zkapi responses contain only one contained-list property
+                //
+                // If this ever changes, the following code will need
+                // revisiting.
+                foreach($node->attributes as $name => $value) {
+                    if(is_array($value)) {
+                        $this->emitArray($rootname, $value);
+                        break;
+                    }
+                }
+                echo "</{$node->type}>\n";
+            }
+            echo "</{$rootname}>\n";
+        }
+    }
+
     private static function spec2hex($str) {
         return preg_replace("/[[:cntrl:]]/", "", htmlspecialchars($str, ENT_XML1, 'UTF-8'));
     }
@@ -340,7 +432,7 @@ class API extends CommandTarget implements IController {
     ];
 
     const REVIEW_FIELDS_EXT = [
-        "type", "id", "airname", "date", "review", "links", "relationships"
+        "airname", "date", "review"
     ];
 
     const TRACK_FIELDS = [
@@ -355,7 +447,7 @@ class API extends CommandTarget implements IController {
     ];
 
     const TRACK_DETAIL_FIELDS = [
-        "type", "id", "artist", "track", "url"
+        "seq", "artist", "track", "url"
     ];
 
     private static $ftFields = [
@@ -600,34 +692,29 @@ class API extends CommandTarget implements IController {
 
         switch($_REQUEST["operation"]) {
         case "byID":
-             $row = Engine::api(IPlaylist::class)->getPlaylist($key, 1);
-             $published = !$row || $row['airname'] || $row['dj'] == $this->session->getUser();
-             $result = new SingleRowIterator($published?$row:false);
-             $id = $key;
-             break;
+            $row = Engine::api(IPlaylist::class)->getPlaylist($key, 1);
+            $published = !$row || $row['airname'] || $row['dj'] == $this->session->getUser();
+            $result = new SingleRowIterator($published?$row:false);
+            $id = $key;
+            break;
         case "byDate":
-             $result = Engine::api(IPlaylist::class)->getPlaylistsByDate($key);
-             break;
+            $result = Engine::api(IPlaylist::class)->getPlaylistsByDate($key);
+            break;
         case "onNow":
-             $result = Engine::api(IPlaylist::class)->getWhatsOnNow();
-             $filter = OnNowFilter::class;
-             break;
+            $result = Engine::api(IPlaylist::class)->getWhatsOnNow();
+            $filter = OnNowFilter::class;
+            break;
         default:
-             if(isset($_REQUEST["operation"]))
-                 $this->serializer->emitError("getPlaylistsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
-             else
-                 $this->serializer->emitError("getPlaylistsRs", 20, "missing id");
-             return;
+            if(isset($_REQUEST["operation"]))
+                $this->serializer->emitError("getPlaylistsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
+            else
+                $this->serializer->emitError("getPlalistsRs", 20, "missing id");
+            return;
         }
-        $this->serializer->startResponse("getPlaylistsRs");
+
+        $rshow = [];
         while($row = $result->fetch()) {
-            $attrs = [];
-            $attrs["name"] = $row["description"];
-            $attrs["date"] = $row["showdate"];
-            $attrs["time"] = $row["showtime"];
-            $attrs["airname"] = $row["airname"];
-            $attrs["id"] = $id?$id:$row["id"];
-            $this->serializer->startResponse("show", $attrs);
+            $tracks = [];
             if($includeTracks && $includeTracks != "false") {
                 $events = [];
                 Engine::api(IPlaylist::class)->getTracksWithObserver($id?$id:$row["id"],
@@ -647,13 +734,40 @@ class API extends CommandTarget implements IController {
                         $spin = $entry->asArray();
                         $spin["type"] = "track";
                         $spin["artist"] = UI::swapNames($spin["artist"]);
+                        unset($spin["id"]);
                         $events[] = $spin;
                     }), 0, $filter);
-                $this->serializer->emitDataSetArray("event", API::PLAYLIST_DETAIL_FIELDS, $events);
+
+                  if(sizeof($events))
+                      $tracks[] = new Attribute("events", $events);
             }
-            $this->serializer->endResponse("show");
+
+            $rshow[] = new ResourceObject('show', $id?$id:$row["id"],
+                new Attribute("name", $row["description"]),
+                new Attribute("date", $row["showdate"]),
+                new Attribute("airname", $row["airname"]),
+                ...$tracks);
         }
-        $this->serializer->endResponse("getPlaylistsRs");
+
+        if($_REQUEST["operation"] != "byID" || sizeof($rshow)) {
+            $dd = new DataDocument(new ResourceCollection(...$rshow));
+            $this->serializer->emitDocument("getPlaylistsRs", $dd);
+        } else
+            $this->serializer->emitError("getPlaylistsRs", 200, "invalid id $key");
+    }
+
+    private static function getAttributes($fields, $record) {
+        $result = [];
+        foreach($fields as $field) {
+            $value = $record[$field];
+            if($field == "created") {
+                $value = ExportPlaylist::extractTime($value);
+            } else if($field == "date") {
+                $value = substr($value, 0, 10);
+            }
+            $result[] = new Attribute($field, $value);
+        }
+        return $result;
     }
 
     public function getAlbum() {
@@ -683,7 +797,7 @@ class API extends CommandTarget implements IController {
         }
 
         if(!$key || !sizeof($albums)) {
-            $this->serializer->emitError("getAlbumRs", 100, "Unknown tag", ["id" => $key]);
+            $this->serializer->emitError("getAlbumRs", 100, "Unknown tag $key");
             return;
         }
 
@@ -700,69 +814,69 @@ class API extends CommandTarget implements IController {
             self::array_remove($fields, "artist");
         }
 
-        foreach($records as &$record) {
-            $record["type"] = "track";
-            $record["id"] = $record["seq"];
-        }
+        $rc = [];
+        $rcd = [];
+        $incc = [];
+        if(sizeof($labels)) {
+            $rcd[] = new ToOne("label",
+                     new ResourceIdentifier("label", $albums[0]["pubkey"]),
+                     new RelatedLink("{$this->base}/album/$key/label"),
+                     new Meta("name", $label));
 
-        $rel = [];
-        $inc = [];
-        $rel["label"] = [];
-        $rel["label"]["links"] = ["related" => "{$this->base}/album/{$key}/label"];
-        $rel["label"]["data"] = ["type" => "label", "id" => $albums[0]["pubkey"]];
-        $rel["label"]["meta"] = ["name" => $label];
-        if(in_array("label", $include)) {
-            $l = $labels[0];
-            $l["type"] = "label";
-            $l["id"] = $l["pubkey"];
-            $l["links"] = ["self" => "{$this->base}/label/{$l['id']}"];
-            unset($l["pubkey"]);
-            if(!$this->session->isAuth("u"))
-                unset($l["attention"], $l["address"], $l["phone"],
-                        $l["fax"], $l["email"], $l["mailcount"],
-                        $l["maillist"], $l["international"]);
-            for($i=0; $i<sizeof($labels[0]); $i++)
-                unset($l[$i]);
-            $inc[] = $l;
+            if(in_array("label", $include)) {
+                $l = $labels[0];
+                $incc[] = new ResourceObject("label", $l["pubkey"],
+                        new SelfLink("{$this->base}/label/{$l['id']}"),
+                            ...self::getAttributes(API::LABEL_FIELDS, $l));
+            }
         }
 
         $reviews = Engine::api(IReview::class)->getReviews($key);
         if(sizeof($reviews)) {
-            $rel["reviews"] = [];
-            $rel["reviews"]["links"] = ["related" => "{$this->base}/album/{$key}/reviews"];
-            $rel["reviews"]["data"] = [];
             foreach($reviews as $review) {
-                $rel["reviews"]["data"][] = ["type" => "review", "id" => $review['id']];
+                $rc[] = new ResourceIdentifier("review", $review['id']);
                 if(in_array("reviews", $include)) {
-                    $review["type"] = "review";
                     $review["date"] = $review["created"];
-                    $review["links"] = ["self" => "{$this->base}/review/{$review['id']}"];
-                    unset($review["created"], $review["user"], $review["private"]);
-                    for($i=0; $i<sizeof($review)+5; $i++)
-                        unset($review[$i]);
-                    $inc[] = $review;
+                    $incc[] = new ResourceObject("review", $review['id'],
+                       new SelfLink("{$this->base}/review/{$review['id']}"),
+                       new ToOne("album",
+                           new ResourceIdentifier("album", $review['tag'])),
+                       ...self::getAttributes(API::REVIEW_FIELDS_EXT, $review));
                 }
             }
         }
 
-        $attrs = [];
-        $attrs["id"] = $key;
-        $attrs["artist"] =  $artist;
-        $attrs["album"] = $albums[0]["album"];
-        $attrs["category"] = ILibrary::GENRES[$albums[0]["category"]];
-        $attrs["medium"] = ILibrary::MEDIA[$albums[0]["medium"]];
-        $attrs["format"] = ILibrary::LENGTHS[$albums[0]["size"]];
-        $attrs["location"] = ILibrary::LOCATIONS[$albums[0]["location"]];
-        $attrs["coll"] = $albums[0]["iscoll"]?true:false;
-        $attrs["links"] = ["self" => "{$this->base}/album/$key"];
-        $attrs["relationships"] = $rel;
-        if(sizeof($inc))
-            $attrs["included"] = $inc;
-        $this->serializer->startResponse("getAlbumRs");
-        $this->serializer->startResponse("album", $attrs);
-        $this->serializer->emitDataSetArray("trackrec", $fields, $records);
-        $this->serializer->endResponse("album");
-        $this->serializer->endResponse("getAlbumRs");
+        if(!empty($rc))
+            $rcd[] = new ToMany("reviews",
+                        new ResourceIdentifierCollection(...$rc),
+                        new RelatedLink("{$this->base}/album/$key/reviews"));
+
+        if(!empty($records)) {
+            $out = [];
+            foreach($records as &$record) {
+                $r = [];
+                foreach($fields as $field)
+                    $r[$field] = $record[$field];
+                $out[] = $r;
+            }
+            $rcd[] = new Attribute("tracks", $out);
+        }
+
+        $ralbum = new ResourceObject('album', $key,
+                new SelfLink("{$this->base}/album/$key"),
+                new Attribute("artist", $artist),
+                new Attribute("album", $albums[0]["album"]),
+                new Attribute("category", ILibrary::GENRES[$albums[0]["category"]]),
+                new Attribute("medium", ILibrary::MEDIA[$albums[0]["medium"]]),
+                new Attribute("location", ILibrary::LOCATIONS[$albums[0]["location"]]),
+                new Attribute("coll", $albums[0]["iscoll"]?true:false),
+                ...$rcd);
+
+        if(!empty($incc))
+            $dd = new CompoundDocument(new ResourceCollection($ralbum), new Included(...$incc));
+        else
+            $dd = new DataDocument(new ResourceCollection($ralbum));
+        $this->serializer->emitDocument("getAlbumRs", $dd);
     }
 
     public function getCurrents() {
@@ -876,22 +990,22 @@ class API extends CommandTarget implements IController {
             self::array_remove($fields, "attention", "address",
                     "phone", "fax", "email", "mailcount",
                     "maillist", "international");
-        $fields[] = "links";
-        array_unshift($fields, "type", "id");
 
         $key = $_REQUEST["id"];
         $records = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $key);
-        foreach($records as &$record) {
-            $record["type"] = "label";
-            $record["id"] = $record["pubkey"];
-            $record["links"] = ["self" => "{$this->base}/label/{$record['id']}"];
-        }
+
         if(sizeof($records)) {
-            $this->serializer->startResponse("getLabelRs");
-            $this->serializer->emitDataSetArray("labelrec", $fields, $records);
-            $this->serializer->endResponse("getLabelRs");
+            $rlabels = [];
+            foreach($records as $record) {
+                $attrs = self::getAttributes($fields, $record);
+                $rlabels[] = new ResourceObject('label', $record["pubkey"],
+                    new SelfLink("{$this->base}/label/{$record["pubkey"]}"),
+                    ...$attrs);
+            }
+            $dd = new DataDocument(new ResourceCollection(...$rlabels));
+            $this->serializer->emitDocument("getLabelsRs", $dd);
         } else
-            $this->serializer->emitError("getLabelRs", 200, "invalid id");
+            $this->serializer->emitError("getLabelsRs", 200, "invalid id");
     }
 
     public function getReview($byId = 1) {
@@ -915,23 +1029,20 @@ class API extends CommandTarget implements IController {
         }
 
         if(sizeof($reviews)) {
-            foreach($reviews as &$review) {
-                $review["type"] = "review";
+            $rreview = [];
+            foreach($reviews as $review) {
                 $review["date"] = $review["created"];
-                $review["links"] = ["self" => "{$this->base}/review/{$review['id']}"];
-                $review["relationships"] = [ "album" => [
-                    "links" => [
-                            "related" => "{$this->base}/review/{$review['id']}/album"
-                        ]
-                    ,
-                    "data" => [
-                         "type" => "album", "id" => $review['tag']
-                    ]
-                ]];
+                $key = $review["id"];
+
+                $rreview[] = new ResourceObject("review", $key,
+                    new SelfLink("{$this->base}/review/${key}"),
+                    new ToOne("album",
+                        new ResourceIdentifier("album", $review['tag']),
+                        new RelatedLink("{$this->base}/review/${key}/album")),
+                    ...self::getAttributes(API::REVIEW_FIELDS_EXT, $review));
             }
-            $this->serializer->startResponse("getReviewRs");
-            $this->serializer->emitDataSetArray("reviewrec", API::REVIEW_FIELDS_EXT, $reviews);
-            $this->serializer->endResponse("getReviewRs");
+            $dd = new DataDocument(new ResourceCollection(...$rreview));
+            $this->serializer->emitDocument("getReviewRs", $dd);
         } else
             $this->serializer->emitError("getReviewRs", 200, "invalid id");
     }

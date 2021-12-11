@@ -870,20 +870,23 @@ class PlaylistImpl extends DBO implements IPlaylist {
      */
     public function importPlaylist($jsonapi, $user, $allAirnames=false) {
         $jsonapi->iterateData(function($json) use($jsonapi, $user, $allAirnames) {
+            // allow for legacy attributes at the data level
+            $attrs = isset($json->attributes)?$json->attributes:$json;
+
             // validate the show's properties
             $valid = false;
-            list($year, $month, $day) = explode("-", $json->date);
-            if($json->airname && $json->name && $json->time &&
+            list($year, $month, $day) = explode("-", $attrs->date);
+            if($attrs->airname && $attrs->name && $attrs->time &&
                     checkdate($month, $day, $year))
                 $valid = true;
 
             // lookup the airname
             if($valid) {
                 $djapi = Engine::api(IDJ::class);
-                $airname = $djapi->getAirname($json->airname, $allAirnames?"":$user);
+                $airname = $djapi->getAirname($attrs->airname, $allAirnames?"":$user);
                 if(!$airname) {
                     // airname does not exist; try to create it
-                    $success = $djapi->insertAirname(mb_substr($json->airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
+                    $success = $djapi->insertAirname(mb_substr($attrs->airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
                     if($success > 0) {
                         // success!
                         $airname = $djapi->lastInsertId();
@@ -894,13 +897,14 @@ class PlaylistImpl extends DBO implements IPlaylist {
 
             // create the playlist
             if($valid) {
-                $this->insertPlaylist($user, $json->date, $json->time, mb_substr($json->name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $airname);
+                $this->insertPlaylist($user, $attrs->date, $attrs->time, mb_substr($attrs->name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $airname);
                 $playlist = $this->lastInsertId();
 
                 // insert the tracks
                 $status = '';
                 $window = $this->getTimestampWindow($playlist);
-                foreach($json->data as $pentry) {
+                $data = isset($json->attributes)?$attrs->events:$json->data;
+                foreach($data as $pentry) {
                     $entry = PlaylistEntry::fromJSON($pentry);
                     $created = $entry->getCreated();
                     if($created) {

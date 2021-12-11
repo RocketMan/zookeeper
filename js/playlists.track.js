@@ -128,7 +128,7 @@ $().ready(function(){
             accept: "application/json; charset=utf-8",
             url: url,
         }).done(function (response) { //TODO: success?
-            if (response.code == INVALID_TAG) {
+            if (response.errors && response.errors[0].code == INVALID_TAG) {
                 showUserError(id + ' is not a valid tag.');
                 return;
             }
@@ -139,7 +139,7 @@ $().ready(function(){
             var options = "<option value=''>Select Track</option>";
             var options2 = "";
             var diskInfo = response.data[0];
-            trackList = diskInfo.data;
+            trackList = diskInfo.attributes.tracks;
             for (var i=0; i < trackList.length; i++) {
                 var track = trackList[i];
                 var artist = track.artist ? track.artist + ' - ' : '';
@@ -151,9 +151,9 @@ $().ready(function(){
             $("#track-title-pick").find('option').remove().end().append(options);
             $("#track-titles").html(options2);
             $("#track-title").attr('list','track-titles'); // webkit hack
-            $("#track-artist").val(diskInfo.artist);
+            $("#track-artist").val(diskInfo.attributes.artist);
             $("#track-label").val(diskInfo.relationships.label.meta.name);
-            $("#track-album").val(diskInfo.album);
+            $("#track-album").val(diskInfo.attributes.album);
             $("#track-title").val("");
             $("#track-submit").attr("disabled");
             $("#track-submit").prop("disabled", true);
@@ -175,7 +175,7 @@ $().ready(function(){
                     }
                 }
             }
-            $("#tag-artist").text(diskInfo.artist  + ' - ' + diskInfo.album);
+            $("#tag-artist").text(diskInfo.attributes.artist  + ' - ' + diskInfo.attributes.album);
 
         }).fail(function (jqXHR, textStatus, errorThrown) {
             showUserError('Ajax error: ' + textStatus);

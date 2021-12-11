@@ -312,15 +312,16 @@ class EditorImpl extends DBO implements IEditor {
 
         $json->iterateData(function($data) use($json, $update, $maps) {
             $message = "";
-            if(empty($data['artist']) || empty($data['album']))
+            $album = $data['attributes'];
+            if(empty($album['artist']) || empty($album['album']))
                 $message .= "artist or album missing, ";
 
             // convert field values to codes
             foreach($maps as $field)
-                if(key_exists($data[$field[0]], $field[1]))
-                    $data[$field[0]] = $field[1][$data[$field[0]]];
+                if(key_exists($album[$field[0]], $field[1]))
+                    $album[$field[0]] = $field[1][$album[$field[0]]];
                 else
-                    $message .= $field[0]. " '{$data[$field[0]]}', ";
+                    $message .= $field[0]. " '{$album[$field[0]]}', ";
 
             if($message) {
                 $json->addError($data['lid'], "Bad field(s): " . substr($message, 0, -2));
@@ -353,15 +354,15 @@ class EditorImpl extends DBO implements IEditor {
                 }
             }
 
-            $data['pubkey'] = $label['pubkey'];
+            $album['pubkey'] = $label['pubkey'];
 
             // reindex tracks
-            $tracks = array_combine(range(1, sizeof($data['data'])),
-                        array_values($data['data']));
+            $tracks = array_combine(range(1, sizeof($album['tracks'])),
+                        array_values($album['tracks']));
 
             // normalize artist, album, and track names
             foreach(["artist", "album"] as $field)
-                $data[$field] = self::zkAlpha($data[$field]);
+                $album[$field] = self::zkAlpha($album[$field]);
 
             foreach($tracks as &$track) {
                 $track["track"] = self::zkAlpha($track["track"], true);
@@ -376,12 +377,12 @@ class EditorImpl extends DBO implements IEditor {
             }
 
             if(!$update)
-                unset($data["tag"]);
-            else if(empty($data["tag"]))
-                $data["tag"] = $data["id"];
+                unset($album["tag"]);
+            else if(empty($album["tag"]))
+                $album["tag"] = $album["id"];
 
-            if($this->insertUpdateAlbum($data, $tracks, $label))
-                $json->addSuccess($data["tag"], ["lid" => $data["lid"]]);
+            if($this->insertUpdateAlbum($album, $tracks, $label))
+                $json->addSuccess($album["tag"], ["lid" => $data["lid"]]);
             else
                 $json->addError($data['lid'], "insert failed");
         });

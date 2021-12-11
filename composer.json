@@ -29,6 +29,7 @@
 	"axy/sourcemap": "^0.1.5",
 	"cboden/ratchet": "^0.4.3",
 	"erusev/parsedown": "^1.8.0-beta7",
+	"json-api-php/json-api": "^2.2",
 	"mrclay/jsmin-php": "^2.4.0",
 	"react/datagram": "^1.5",
 	"react/http": "^1.2",

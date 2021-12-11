@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "de344bfd1cb29bb31f95ff957e2f7b43",
+    "content-hash": "0e71b2615492780a8d7a56f75184763e",
     "packages": [
         {
             "name": "axy/backtrace",
@@ -431,6 +431,60 @@
                 "source": "https://github.com/guzzle/psr7/tree/1.8.2"
             },
             "time": "2021-04-26T09:17:50+00:00"
+        },
+        {
+            "name": "json-api-php/json-api",
+            "version": "2.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/json-api-php/json-api.git",
+                "reference": "fcecfd38ee5ea58885cfb70e6033eb3983c4fc10"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/json-api-php/json-api/zipball/fcecfd38ee5ea58885cfb70e6033eb3983c4fc10",
+                "reference": "fcecfd38ee5ea58885cfb70e6033eb3983c4fc10",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2.13",
+                "phpunit/phpunit": "^7.0||^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "JsonApiPhp\\JsonApi\\": "src/"
+                },
+                "files": [
+                    "src/functions.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Alexey Karapetov",
+                    "email": "karapetov@gmail.com"
+                }
+            ],
+            "description": "An attempt to express JSON API specs (jsonapi.org) in object-oriented way as a set of PHP 7 classes",
+            "support": {
+                "issues": "https://github.com/json-api-php/json-api/issues",
+                "source": "https://github.com/json-api-php/json-api/tree/2.2.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.me/f3ath",
+                    "type": "custom"
+                }
+            ],
+            "time": "2020-10-13T00:41:38+00:00"
         },
         {
             "name": "mrclay/jsmin-php",
@@ -2169,5 +2223,5 @@
         "php": ">=7.2.5"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.1.0"
 }
