@@ -30,6 +30,7 @@ class Engine {
     private static $apis;
     private static $config;
     private static $session;
+    private static $base;
 
     /*
      * install autoloader for the engine implementation classes
@@ -99,6 +100,41 @@ class Engine {
             return $api;
         } else
             throw new \Exception("Unknown API '$intf'");
+    }
+
+    /**
+     * return the URL of the current request, less leaf filename, if any
+     */
+    public static function getBaseUrl() {
+        if(php_sapi_name() == "cli")
+            return "";
+
+        if(self::$base)
+            return self::$base;
+
+        $uri = $_SERVER['REQUEST_URI'];
+
+        // strip the query string, if any
+        $qpos = strpos($uri, "?");
+        if($qpos !== false)
+            $uri = substr($uri, 0, $qpos);
+
+        $port = ":" . $_SERVER['SERVER_PORT'];
+        if($port == ":443" || $port == ":80")
+            $port = "";
+
+        // compose the URL
+        self::$base = $_SERVER['REQUEST_SCHEME'] . "://" .
+               $_SERVER['SERVER_NAME'] . $port .
+               preg_replace("{/[^/]+$}", "/", $uri);
+
+        if(($pos = strpos(self::$base, "api/v")) !== false) {
+            $apiver = $_REQUEST["apiver"] ?? 1;
+            self::$base = substr(self::$base, 0, $pos);
+            self::$base .= "api/v{$apiver}";
+        }
+
+        return self::$base;
     }
 }
 

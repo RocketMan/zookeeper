@@ -22,8 +22,10 @@
  *
  */
 
-namespace ZK\Controllers;
+namespace ZK\API;
 
+use ZK\Controllers\CommandTarget;
+use ZK\Controllers\IController;
 use ZK\Engine\Engine;
 use ZK\Engine\IChart;
 use ZK\Engine\IEditor;
@@ -35,6 +37,9 @@ use ZK\Engine\OnNowFilter;
 use ZK\Engine\PlaylistObserver;
 
 use ZK\UI\UICommon as UI;
+
+use Enm\JsonApi\Model\Request\Request;
+use Enm\JsonApi\Server\JsonApiServer;
 
 abstract class Serializer {
     private $catCodes;
@@ -343,9 +348,14 @@ class API extends CommandTarget implements IController {
         [ "getCurrentsRq", "getCurrents" ],
         [ "getChartsRq", "getCharts" ],
         [ "getPlaylistsRq", "getPlaylists" ],
-        [ "getTracksRq", "getTracks" ],
         [ "importPlaylistsRq", "importPlaylist" ],
-        [ "importAlbumsRq", "importAlbum" ],
+        [ "jsonApi", "jsonApi" ],
+    ];
+
+    private static $jsonApi = [
+        [ "album", Albums::class ],
+        [ "label", Labels::class ],
+        [ "review", Reviews::class ],
     ];
 
     /*
@@ -387,6 +397,7 @@ class API extends CommandTarget implements IController {
         $this->limit = $_REQUEST["size"];
         if(!$this->limit || $this->limit > API::MAX_LIMIT)
             $this->limit = API::MAX_LIMIT;
+
         $this->serializer->startDocument();
         $this->processLocal($_REQUEST["method"], null);
         $this->serializer->endDocument();
@@ -588,42 +599,32 @@ class API extends CommandTarget implements IController {
         $this->serializer->endResponse("getPlaylistsRs");
     }
 
-    public function getTracks() {
-        $key = $_REQUEST["key"];
-        $fields = API::TRACK_DETAIL_FIELDS;
+    public function jsonApi() {
+        $jsonApi = new JsonApiServer(
+                new \Enm\JsonApi\Serializer\Deserializer(),
+                new \Enm\JsonApi\Serializer\Serializer());
+        foreach(self::$jsonApi as $api)
+            $jsonApi->addHandler($api[0], new $api[1]());
 
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $key);
-        if(!$key || !sizeof($albums)) {
-            $this->serializer->emitError("getTracksRs", 100, "Unknown tag", ["tag" => $key]);
-            return;
-        }
-        
-        $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $albums[0]["pubkey"]);
-        
-        $artist = strcmp(substr($albums[0]["artist"], 0, 8), "[coll]: ")?
-                      $albums[0]["artist"]:"Various Artists";
-        $label = sizeof($labels)?$labels[0]["name"]:"(Unknown)";
+        try {
+            $request = new Request(
+                $_SERVER["REQUEST_METHOD"] ?? "GET",
+                new \GuzzleHttp\Psr7\Uri($_GET["uri"] . "?" . $_SERVER["QUERY_STRING"]),
+                $jsonApi->createRequestBody(file_get_contents('php://input')),
+                null);
 
-        if($albums[0]["iscoll"])
-            $records = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 200, $key);
-        else {
-            $records = Engine::api(ILibrary::class)->search(ILibrary::TRACK_KEY, 0, 200, $key);
-            self::array_remove($fields, "artist");
+            $response = $jsonApi->handleRequest($request);
+        } catch(\Exception $e){
+            $response = $jsonApi->handleException($e);
         }
 
-        $attrs = $this->serializer->newAttrs();
-        $attrs["tag"] = $key;
-        $attrs["artist"] =  $artist;
-        $attrs["album"] = $albums[0]["album"];
-        $attrs["label"] = $label;
-        $attrs["collection"] = ILibrary::GENRES[$albums[0]["category"]];
-        $attrs["medium"] = ILibrary::MEDIA[$albums[0]["medium"]];
-        $attrs["isCompilation"] = $albums[0]["iscoll"]?"true":"false";
-        $this->serializer->startResponse("getTracksRs", $attrs);
-        $this->serializer->emitDataSetArray("trackrec", $fields, $records);
-        $this->serializer->endResponse("getTracksRs");
+        //header("HTTP/1.1 ".$response->status());
+        foreach($response->headers()->all() as $header => $value)
+            header("{$header}: {$value}");
+
+        echo $jsonApi->createResponseBody($response);
     }
-    
+
     public function getCurrents() {
         $currentfields = API::ALBUM_FIELDS;
         array_push($currentfields, "label", "afile_number",
@@ -656,28 +657,6 @@ class API extends CommandTarget implements IController {
             $this->serializer->endResponse("importPlaylistsRs");
         } catch (\Exception $e) {
             $this->serializer->emitError("importPlaylistsRs", 200, $e->getMessage());
-        }
-    }
-
-    public function importAlbum() {
-        try {
-            if(!$this->session->isAuth("m"))
-                throw new \Exception("Operation requires authentication");
-
-            $file = file_get_contents("php://input");
-            $json = new JsonApi($file, "album", JsonApi::FLAG_ARRAY);
-
-            $api = Engine::api(IEditor::class);
-            $api->importAlbum($json);
-
-            $this->serializer->startResponse("importAlbumsRs", null, $json->getErrors());
-            $json->iterateSuccess(function($attrs) {
-                $this->serializer->startResponse("album", $attrs);
-                $this->serializer->endResponse("album");
-            });
-            $this->serializer->endResponse("importAlbumsRs");
-        } catch (\Exception $e) {
-            $this->serializer->emitError("importAlbumsRs", 200, $e->getMessage());
         }
     }
 
