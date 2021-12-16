@@ -84,6 +84,15 @@ class Albums implements RequestHandlerInterface {
         return $newVal;
     }
 
+    public static function getFieldValueToCodeMap() {
+        return [
+            ["category", array_flip(ILibrary::GENRES)],
+            ["medium", array_flip(ILibrary::MEDIA)],
+            ["format", array_flip(ILibrary::LENGTHS)],
+            ["location", array_flip(ILibrary::LOCATIONS)]
+        ];
+    }
+
     public static function fromRecord($rec) {
         $res = new JsonResource("album", $rec["tag"]);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."/album/".$rec["tag"]));
@@ -223,10 +232,7 @@ class Albums implements RequestHandlerInterface {
         $attrs = $album->attributes();
 
         // map field values to codes
-        $maps = [["category", array_flip(ILibrary::GENRES)],
-                 ["medium", array_flip(ILibrary::MEDIA)],
-                 ["format", array_flip(ILibrary::LENGTHS)],
-                 ["location", array_flip(ILibrary::LOCATIONS)]];
+        $maps = self::getFieldValueToCodeMap();
 
         foreach($maps as $field) {
             $val = $attrs->getRequired($field[0]);
@@ -301,10 +307,7 @@ class Albums implements RequestHandlerInterface {
         $attrs = $request->requestBody()->data()->first("album")->attributes();
 
         // map field values to codes
-        $maps = [["category", array_flip(ILibrary::GENRES)],
-                 ["medium", array_flip(ILibrary::MEDIA)],
-                 ["format", array_flip(ILibrary::LENGTHS)],
-                 ["location", array_flip(ILibrary::LOCATIONS)]];
+        $maps = self::getFieldValueToCodeMap();
 
         foreach($maps as $field)
             if($attrs->has($field[0])) {
