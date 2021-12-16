@@ -25,6 +25,7 @@
 namespace ZK\API;
 
 use ZK\Engine\Engine;
+use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
 
@@ -33,10 +34,12 @@ use Enm\JsonApi\Exception\ResourceNotFoundException;
 use Enm\JsonApi\Model\Document\Document;
 use Enm\JsonApi\Model\Document\DocumentInterface;
 use Enm\JsonApi\Model\Request\RequestInterface;
+use Enm\JsonApi\Model\Response\CreatedResponse;
 use Enm\JsonApi\Model\Resource\JsonResource;
 use Enm\JsonApi\Model\Resource\Link\Link;
 use Enm\JsonApi\Model\Resource\Relationship\Relationship;
 use Enm\JsonApi\Model\Response\DocumentResponse;
+use Enm\JsonApi\Model\Response\EmptyResponse;
 use Enm\JsonApi\Model\Response\ResponseInterface;
 use Enm\JsonApi\Server\RequestHandler\NoRelationshipModificationTrait;
 use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
@@ -121,13 +124,92 @@ class Reviews implements RequestHandlerInterface {
     }
 
     public function createResource(RequestInterface $request): ResponseInterface {
-        throw new NotAllowedException("TBD");
+        $review = $request->requestBody()->data()->first("review");
+        $tag = $review->relationships()->get("album")->related()->first("album")->id();
+        $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        if(sizeof($album) == 0)
+            throw new ResourceNotFoundException("album", $tag);
+
+        $djapi = Engine::api(IDJ::class);
+        $user = Engine::session()->getUser();
+        $attrs = $review->attributes();
+        $an = $attrs->getRequired("airname");
+        $airname = $djapi->getAirname($an);
+        if(!$airname) {
+            // airname does not exist; try to create it
+            $success = $djapi->insertAirname(mb_substr($an, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
+            if(!$success)
+                throw new NotAllowedException("Cannot create airname $an");
+
+            $airname = $djapi->lastInsertId();
+        }
+
+        $private = $attrs->getOptional("private", false);
+        $review = $attrs->getRequired("review");
+
+        $revapi = Engine::api(IReview::class);
+        $reviews = $revapi->getReviews($tag, 1, $user, 0);
+        if(sizeof($reviews))
+            throw new NotAllowedException("review already exists, use PATCH");
+
+        if($revapi->insertReview($tag, $private, $airname, $review, $user))
+            return new CreatedResponse(Engine::getBaseUrl()."/review/{$revapi->lastInsertId()}");
+
+        throw new \Exception("creation failed");
     }
     public function patchResource(RequestInterface $request): ResponseInterface {
-        throw new NotAllowedException("TBD");
+        $review = $request->requestBody()->data()->first("review");
+        $tag = $review->relationships()->get("album")->related()->first("album")->id();
+        $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        if(sizeof($album) == 0)
+            throw new ResourceNotFoundException("album", $tag);
+
+        $djapi = Engine::api(IDJ::class);
+        $user = Engine::session()->getUser();
+        $attrs = $review->attributes();
+        $an = $attrs->getRequired("airname");
+        $airname = $djapi->getAirname($an);
+        if(!$airname) {
+            // airname does not exist; try to create it
+            $success = $djapi->insertAirname(mb_substr($an, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
+            if(!$success)
+                throw new NotAllowedException("Cannot create airname $an");
+
+            $airname = $djapi->lastInsertId();
+        }
+
+        $private = $attrs->getOptional("private", false);
+        $review = $attrs->getRequired("review");
+
+        $revapi = Engine::api(IReview::class);
+        $reviews = $revapi->getReviews($tag, 1, $user, 0);
+        if(!sizeof($reviews))
+            throw new NotAllowedException("review does not exist, use POST");
+
+        if($revapi->updateReview($tag, $private, $airname, $review, $user))
+            return new EmptyResponse();
+
+        throw new \Exception("update failed");
     }
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
-        throw new NotAllowedException("TBD");
+        $session = Engine::session();
+        if(!$session->isAuth("u"))
+            throw new NotAllowedException("Operation requires authentication");
+
+        $key = $request->id();
+        $revapi = Engine::api(IReview::class);
+        $reviews = $revapi->getReviews($key, 1, "", Engine::session()->isAuth("u"), 1);
+
+        if(sizeof($reviews) == 0)
+            throw new ResourceNotFoundException("review", $key);
+
+        $user = $session->getUser();
+        if($user != $reviews[0]["user"])
+            throw new NotAllowedException("only review owner may delete");
+
+        $revapi->deleteReview($key, $user);
+
+        return new EmptyResponse();
     }
 }
