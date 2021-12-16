@@ -154,6 +154,30 @@ class PlaylistEntry {
         return $entry;
     }
 
+    public static function fromArray($array) {
+        $entry = new PlaylistEntry();
+        switch($array["type"]) {
+        case "break":
+            $entry->setSetSeparator();
+            break;
+        case "comment":
+            $entry->setComment(self::scrubField($array["comment"], PlaylistEntry::MAX_COMMENT_LENGTH));
+            break;
+        case "logEvent":
+            $entry->setLogEvent(self::scrubField($array["event"]), self::scrubField($array["code"]));
+            break;
+        case "track":
+            $entry->setArtist(self::scrubField($array["artist"]));
+            $entry->setTrack(self::scrubField($array["track"]));
+            $entry->setAlbum(self::scrubField($array["album"]));
+            $entry->setLabel(self::scrubField($array["label"]));
+            $entry->setTag($array["tag"]);
+            break;
+        }
+        $entry->setCreated($array["created"]);
+        return $entry;
+    }
+
     /**
      * return the type of this playlist entry
      *
@@ -261,6 +285,20 @@ class PlaylistEntry {
     public function setSetSeparator() {
         $this->entry['artist'] = IPlaylist::SPECIAL_TRACK;
         return $this;
+    }
+
+    /**
+     * return the time component of the 'created' datetime string
+     *
+     * @return time component on success; original datetime value otherwise
+     */
+    public function getCreatedTime() {
+        $datetime = $this->getCreated();
+
+        // yyyy-mm-dd hh:mm:ss
+        if($datetime && strlen($datetime) == 19)
+            $datetime = substr($datetime, 11, 8);
+        return $datetime;
     }
 
     /**

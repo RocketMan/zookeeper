@@ -863,6 +863,14 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $stmt->iterate(\PDO::FETCH_BOTH);
     }
 
+    public function isListDeleted($id) {
+        $query = "SELECT airname FROM lists_del WHERE listid = ?";
+	$stmt = $this->prepare($query);
+	$stmt->bindValue(1, $id);
+	$result = $stmt->executeAndFetch();
+	return $result?true:false;
+    }
+
     /**
      * @param $jsonapi JsonApi importer instance
      * @param $user import to user

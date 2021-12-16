@@ -356,6 +356,7 @@ class API extends CommandTarget implements IController {
         [ "album", Albums::class ],
         [ "label", Labels::class ],
         [ "review", Reviews::class ],
+        [ "show", Playlists::class ],
     ];
 
     /*
