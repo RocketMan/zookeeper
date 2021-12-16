@@ -348,7 +348,6 @@ class API extends CommandTarget implements IController {
         [ "getCurrentsRq", "getCurrents" ],
         [ "getChartsRq", "getCharts" ],
         [ "getPlaylistsRq", "getPlaylists" ],
-        [ "importPlaylistsRq", "importPlaylist" ],
         [ "jsonApi", "jsonApi" ],
     ];
 
@@ -637,28 +636,6 @@ class API extends CommandTarget implements IController {
         $this->serializer->startResponse("getCurrentsRs");
         $this->serializer->emitDataSet("albumrec", $currentfields, $records);
         $this->serializer->endResponse("getCurrentsRs");
-    }
-
-    public function importPlaylist() {
-        try {
-            if(!$this->session->isAuth("u"))
-                throw new \Exception("Operation requires authentication");
-
-            $file = file_get_contents("php://input");
-            $json = new JsonApi($file, "show");
-
-            $api = Engine::api(IPlaylist::class);
-            $api->importPlaylist($json, $this->session->getUser(), $this->session->isAuth("v"));
-
-            $this->serializer->startResponse("importPlaylistsRs", null, $json->getErrors());
-            $json->iterateSuccess(function($attrs) {
-                $this->serializer->startResponse("show", $attrs);
-                $this->serializer->endResponse("show");
-            });
-            $this->serializer->endResponse("importPlaylistsRs");
-        } catch (\Exception $e) {
-            $this->serializer->emitError("importPlaylistsRs", 200, $e->getMessage());
-        }
     }
 
     private function emitHeader($method) {
