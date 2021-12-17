@@ -128,8 +128,9 @@ class Engine {
                $_SERVER['SERVER_NAME'] . $port .
                preg_replace("{/[^/]+$}", "/", $uri);
 
+        // strip api leaf elements
         if(($pos = strpos(self::$base, "api/v")) !== false) {
-            $apiver = $_REQUEST["apiver"] ?? 1;
+            $apiver = $_SERVER['REDIRECT_APIVER'] ?? 1;
             self::$base = substr(self::$base, 0, $pos);
             self::$base .= "api/v{$apiver}";
         }

@@ -597,7 +597,7 @@ class API extends CommandTarget implements IController {
         try {
             $request = new Request(
                 $_SERVER["REQUEST_METHOD"] ?? "GET",
-                new \GuzzleHttp\Psr7\Uri($_GET["uri"] . "?" . $_SERVER["QUERY_STRING"]),
+                new \GuzzleHttp\Psr7\Uri(($_SERVER["REDIRECT_APIURI"] ?? "") . "?" . $_SERVER["QUERY_STRING"]),
                 $jsonApi->createRequestBody(file_get_contents('php://input')),
                 null);
 
