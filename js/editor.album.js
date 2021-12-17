@@ -27,8 +27,8 @@ function changeSel(index) {
 }
 
 function getAlbums(op, key) {
-    var url = "api/v1/getAlbums" +
-        "?operation=" + op +
+    var url = "zkapi.php?method=getAlbumsRq" +
+        "&operation=" + op +
         "&size=" + $("#list-size").val() +
         "&key=" + encodeURIComponent(key);
 
