@@ -221,7 +221,7 @@ class Playlists implements RequestHandlerInterface {
 
         $key = $request->id();
         if(empty($key))
-            throw new ResourceNotFoundException("show", $key);
+            throw new ResourceNotFoundException("show", $key ?? 0);
 
         $api = Engine::api(IPlaylist::class);
         $list = $api->getPlaylist($key);

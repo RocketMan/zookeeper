@@ -48,17 +48,17 @@ class Labels implements RequestHandlerInterface {
 
     const FIELDS = [ "name", "attention", "address", "city", "state",
                      "zip", "phone", "fax", "mailcount", "maillist",
-		     "international", "pcreated", "modified", "url",
-		     "email" ];
-		     
+                     "international", "pcreated", "modified", "url",
+                     "email" ];
+
     public static function fromRecord($rec) {
         $res = new JsonResource("label", $rec["pubkey"]);
-	$res->links()->set(new Link("self", Engine::getBaseUrl()."/label/".$rec["pubkey"]));
-	foreach(self::FIELDS as $field)
-	    $res->attributes()->set($field, $rec[$field]);
-	return $res;
+        $res->links()->set(new Link("self", Engine::getBaseUrl()."/label/".$rec["pubkey"]));
+        foreach(self::FIELDS as $field)
+            $res->attributes()->set($field, $rec[$field]);
+        return $res;
     }
-    
+
     public function fetchResource(RequestInterface $request): ResponseInterface {
         $key = $request->id();
         $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $key);

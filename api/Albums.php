@@ -263,23 +263,27 @@ class Albums implements RequestHandlerInterface {
             }
         }
 
-        // reindex tracks
-        $tracks = array_combine(range(1, sizeof($attrs->getOptional('tracks'))),
-                    array_values($attrs->getOptional('tracks')));
+        $tracks = $attrs->getOptional('tracks');
+        if($tracks) {
+            // reindex tracks
+            $tracks = array_combine(range(1, sizeof($tracks)),
+                        array_values($tracks));
 
-        // normalize artist, album, and track names
+            // normalize track names
+            foreach($tracks as &$track) {
+                $track["track"] = self::zkAlpha($track["track"], true);
+                if(isset($track["artist"]))
+                    $track["artist"] = self::zkAlpha($track["artist"]);
+            }
+        }
+
+        // normalize artist and album names
         $a = [];
         foreach(["artist", "album"] as $field)
             $a[$field] = self::zkAlpha($attrs->getRequired($field));
         foreach(self::FIELDS as $field)
             if(!isset($a[$field]) && $attrs->has($field))
                 $a[$field] = $attrs->getOptional($field);
-
-        foreach($tracks as &$track) {
-            $track["track"] = self::zkAlpha($track["track"], true);
-            if(isset($track["artist"]))
-                $track["artist"] = self::zkAlpha($track["artist"]);
-        }
 
         // normalize label fields
         foreach(["name","attention","address","city","maillist"] as $field) {
@@ -298,7 +302,7 @@ class Albums implements RequestHandlerInterface {
 
         $key = $request->id();
         if(empty($key))
-            throw new ResourceNotFoundException("album", $key);
+            throw new ResourceNotFoundException("album", $key ?? 0);
 
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $key);
         if(sizeof($albums) == 0)
@@ -317,11 +321,34 @@ class Albums implements RequestHandlerInterface {
                 $attrs->set($field[0], $field[1][$val]);
             }
 
-        foreach(self::FIELDS as $field)
-            if($attrs->has($field))
-                $albums[0][$field] = $attrs->getRequired($field);
+        foreach(self::FIELDS as $field) {
+            if($attrs->has($field)) {
+                $value = $attrs->getRequired($field);
+                switch($field) {
+                case "artist":
+                case "album":
+                    $value = self::zkAlpha($value);
+                    break;
+                default:
+                    break;
+                }
+                $albums[0][$field] = $value;
+            }
+        }
 
         $tracks = $attrs->getOptional("tracks");
+        if($tracks) {
+            // reindex tracks
+            $tracks = array_combine(range(1, sizeof($tracks)),
+                        array_values($tracks));
+
+            // normalize track names
+            foreach($tracks as &$track) {
+                $track["track"] = self::zkAlpha($track["track"], true);
+                if(isset($track["artist"]))
+                    $track["artist"] = self::zkAlpha($track["artist"]);
+            }
+        }
 
         Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], $tracks, null);
 
@@ -334,7 +361,7 @@ class Albums implements RequestHandlerInterface {
 
         $key = $request->id();
         if(empty($key))
-            throw new ResourceNotFoundException("album", $key);
+            throw new ResourceNotFoundException("album", $key ?? 0);
 
         Engine::api(IEditor::class)->deleteAlbum($id);
 
