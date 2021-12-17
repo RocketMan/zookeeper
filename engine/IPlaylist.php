@@ -72,5 +72,4 @@ interface IPlaylist {
     function getListsSelNormal($user);
     function getListsSelDeleted($user);
     function isListDeleted($id);
-    function importPlaylist($json, $user, $allAirnames=false);
 }

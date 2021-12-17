@@ -31,7 +31,6 @@ use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IReview;
 use ZK\Engine\IUser;
-use ZK\Engine\JsonApi;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
 
@@ -1534,24 +1533,79 @@ class Playlists extends MenuItem {
             // read the JSON file
             $file = file_get_contents($userfile);
 
-            try {
-                $json = new JsonApi($file, "show", JsonApi::FLAG_EXCEPTION);
+            // parse the file
+            $json = json_decode($file);
 
-                $api = Engine::api(IPlaylist::class);
-                $api->importPlaylist($json, $this->session->getUser());
+            // allow type 'show' in root node (legacy)
+            if(!$json || $json->type != "show") {
+                // 'show' encapsulated within data
+                if($json && is_array($json->data) && $json->data[0]->type == "show")
+                    $json = $json->data[0];
+                else if($json && $json->data && $json->data->type == "show")
+                    $json = $json->data;
+                else
+                    echo "<B><FONT CLASS='error'>File is not in the expected format.  Ensure file is a valid JSON playlist.</FONT></B><BR>\n";
+            }
 
-                $id = 0;
-                $json->iterateSuccess(function($attrs) use(&$id) {
-                    $id = $attrs['id'];
-                });
+            if($json && $json->type == "show") {
+                // allow for legacy attributes at the data level
+                $attrs = isset($json->attributes)?$json->attributes:$json;
 
-                // display the editor
-                $_REQUEST["playlist"] = $id;
-                $this->action = "newListEditor";
-                $this->emitEditor();
-                $displayForm = false;
-            } catch(\Exception $e) {
-                echo "<B><FONT CLASS='error'>".$e->getMessage()."</FONT></B><BR>\n";
+                // validate the show's properties
+                $valid = false;
+                list($year, $month, $day) = explode("-", $attrs->date);
+                if($attrs->airname && $attrs->name && $attrs->time &&
+                        checkdate($month, $day, $year))
+                    $valid = true;
+
+                // lookup the airname
+                if($valid) {
+                    $djapi = Engine::api(IDJ::class);
+                    $airname = $djapi->getAirname($attrs->airname, $this->session->getUser());
+                    if(!$airname) {
+                        // airname does not exist; try to create it
+                        $success = $djapi->insertAirname(mb_substr($attrs->airname, 0, IDJ::MAX_AIRNAME_LENGTH), $this->session->getUser());
+                        if($success > 0) {
+                            // success!
+                            $airname = $djapi->lastInsertId();
+                        } else
+                            $valid = false;
+                    }
+                }
+
+                // create the playlist
+                if($valid) {
+                    $papi = Engine::api(IPlaylist::class);
+                    $papi->insertPlaylist($this->session->getUser(), $attrs->date, $attrs->time, mb_substr($attrs->name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $airname);
+                    $playlist = $papi->lastInsertId();
+
+                    // insert the tracks
+                    $status = '';
+                    $window = $papi->getTimestampWindow($playlist);
+                    $data = isset($json->attributes)?$attrs->events:$json->data;
+                    foreach($data as $pentry) {
+                        $entry = PlaylistEntry::fromJSON($pentry);
+                        $created = $entry->getCreated();
+                        if($created) {
+                            try {
+                                $stamp = PlaylistEntry::scrubTimestamp(
+                                            new \DateTime($created), $window);
+                                $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
+                            } catch(\Exception $e) {
+                                error_log("failed to parse timestamp: $created");
+                                $entry->setCreated(null);
+                            }
+                        }
+                        $success = $papi->insertTrackEntry($playlist, $entry, $status);
+                    }
+
+                    // display the editor
+                    $_REQUEST["playlist"] = $playlist;
+                    $this->action = "newListEditor";
+                    $this->emitEditor();
+                    $displayForm = false;
+                } else
+                    echo "<B><FONT CLASS='error'>Show details are invalid.</FONT></B><BR>\n";
             }
         }
 
