@@ -121,14 +121,15 @@ $().ready(function(){
         $("#track-titles").empty();
         clearUserInput(false);
         tagId = ""
-        var url = "api/v1/getTracks?key=" + id;
+        var url = "api/v1/album/" + id +
+	    "?" + encodeURIComponent("fields[album]") + "=artist,album,tracks";
         $.ajax({
             dataType : 'json',
             type: 'GET',
             accept: "application/json; charset=utf-8",
             url: url,
-        }).done(function (diskInfo) { //TODO: success?
-            if (diskInfo.code == INVALID_TAG) {
+        }).done(function (response) { //TODO: success?
+            if (response.errors && response.errors[0].code == INVALID_TAG) {
                 showUserError(id + ' is not a valid tag.');
                 return;
             }
@@ -138,7 +139,8 @@ $().ready(function(){
                 $("#track-tag").val(id);
             var options = "<option value=''>Select Track</option>";
             var options2 = "";
-            trackList = diskInfo.data;
+            var diskInfo = response.data;
+            trackList = diskInfo.attributes.tracks;
             for (var i=0; i < trackList.length; i++) {
                 var track = trackList[i];
                 var artist = track.artist ? track.artist + ' - ' : '';
@@ -150,9 +152,9 @@ $().ready(function(){
             $("#track-title-pick").find('option').remove().end().append(options);
             $("#track-titles").html(options2);
             $("#track-title").attr('list','track-titles'); // webkit hack
-            $("#track-artist").val(diskInfo.artist);
-            $("#track-label").val(diskInfo.label);
-            $("#track-album").val(diskInfo.album);
+            $("#track-artist").val(diskInfo.attributes.artist);
+            $("#track-label").val(diskInfo.relationships.label.meta.name);
+            $("#track-album").val(diskInfo.attributes.album);
             $("#track-title").val("");
             $("#track-submit").attr("disabled");
             $("#track-submit").prop("disabled", true);
@@ -174,7 +176,7 @@ $().ready(function(){
                     }
                 }
             }
-            $("#tag-artist").text(diskInfo.artist  + ' - ' + diskInfo.album);
+            $("#tag-artist").text(diskInfo.attributes.artist  + ' - ' + diskInfo.attributes.album);
 
         }).fail(function (jqXHR, textStatus, errorThrown) {
             showUserError('Ajax error: ' + textStatus);
@@ -520,8 +522,8 @@ $().ready(function(){
     }
 
     function searchLibrary(key) {
-        var url = "api/v1/libLookup" +
-            "?type=artists" +
+        var url = "zkapi.php?method=libLookupRq" +
+            "&type=artists" +
             "&key=" + encodeURIComponent(key) + "*" +
             "&size=50";
         var results = $("#track-artists");
