@@ -191,22 +191,25 @@ class Playlists implements RequestHandlerInterface {
         $playlist = $papi->lastInsertId();
 
         // insert the tracks
-        $status = '';
-        $window = $papi->getTimestampWindow($playlist);
-        foreach($attrs->getOptional("events") as $pentry) {
-            $entry = PlaylistEntry::fromArray($pentry);
-            $created = $entry->getCreated();
-            if($created) {
-                try {
-                    $stamp = PlaylistEntry::scrubTimestamp(
-                                new \DateTime($created), $window);
-                    $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
-                } catch(\Exception $e) {
-                    error_log("failed to parse timestamp: $created");
-                    $entry->setCreated(null);
+        $events = $attrs->getOptional("events");
+        if($events) {
+            $status = '';
+            $window = $papi->getTimestampWindow($playlist);
+            foreach($events as $pentry) {
+                $entry = PlaylistEntry::fromArray($pentry);
+                $created = $entry->getCreated();
+                if($created) {
+                    try {
+                        $stamp = PlaylistEntry::scrubTimestamp(
+                                    new \DateTime($created), $window);
+                        $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
+                    } catch(\Exception $e) {
+                        error_log("failed to parse timestamp: $created");
+                        $entry->setCreated(null);
+                    }
                 }
+                $success = $papi->insertTrackEntry($playlist, $entry, $status);
             }
-            $success = $papi->insertTrackEntry($playlist, $entry, $status);
         }
 
         if($playlist)
