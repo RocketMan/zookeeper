@@ -115,21 +115,23 @@ $().ready(function(){
     }
 
     function getDiskInfo(id, refArtist) {
-        const INVALID_TAG = 100;
         $("#track-title-pick").find('option').remove();
         $("#track-title").attr('list',''); // webkit hack
         $("#track-titles").empty();
         clearUserInput(false);
         tagId = ""
+        // chars [ and ] in the QS param name are supposed to be %-encoded.
+        // It seems to work ok without and reads better in the server logs,
+        // but this may need revisiting if there are problems.
         var url = "api/v1/album/" + id +
-	    "?" + encodeURIComponent("fields[album]") + "=artist,album,tracks";
+            "?fields[album]=artist,album,tracks";
         $.ajax({
             dataType : 'json',
             type: 'GET',
             accept: "application/json; charset=utf-8",
             url: url,
         }).done(function (response) { //TODO: success?
-            if (response.errors && response.errors[0].code == INVALID_TAG) {
+            if (response.errors) {
                 showUserError(id + ' is not a valid tag.');
                 return;
             }
@@ -179,7 +181,10 @@ $().ready(function(){
             $("#tag-artist").text(diskInfo.attributes.artist  + ' - ' + diskInfo.attributes.album);
 
         }).fail(function (jqXHR, textStatus, errorThrown) {
-            showUserError('Ajax error: ' + textStatus);
+            var json = JSON.parse(jqXHR.responseText);
+            var status = (json && json.errors)?
+                    json.errors[0].title:('Ajax error: ' + textStatus);
+            showUserError(status);
         });
     }
 
