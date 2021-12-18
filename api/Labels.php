@@ -25,6 +25,7 @@
 namespace ZK\API;
 
 use ZK\Engine\Engine;
+use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 
 use Enm\JsonApi\Exception\NotAllowedException;
@@ -33,7 +34,9 @@ use Enm\JsonApi\Model\Document\Document;
 use Enm\JsonApi\Model\Request\RequestInterface;
 use Enm\JsonApi\Model\Resource\JsonResource;
 use Enm\JsonApi\Model\Resource\Link\Link;
+use Enm\JsonApi\Model\Response\CreatedResponse;
 use Enm\JsonApi\Model\Response\DocumentResponse;
+use Enm\JsonApi\Model\Response\EmptyResponse;
 use Enm\JsonApi\Model\Response\ResponseInterface;
 use Enm\JsonApi\Server\RequestHandler\NoRelationshipFetchTrait;
 use Enm\JsonApi\Server\RequestHandler\NoRelationshipModificationTrait;
@@ -80,10 +83,72 @@ class Labels implements RequestHandlerInterface {
     }
 
     public function createResource(RequestInterface $request): ResponseInterface {
-        throw new NotAllowedException("TBD");
+        if(!Engine::session()->isAuth("m"))
+            throw new NotAllowedException("Operation requires authentication");
+
+        $lr = $request->requestBody()->data()->first("label");
+        $attrs = $lr->attributes();
+
+        // try to find by name
+        $name = Albums::zkAlpha($attrs->getRequired("name"), true);
+        $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_NAME, 0, 1, $name);
+        if(sizeof($rec))
+            throw new NotAllowedException("label with this name already exists");
+
+        $label = [];
+        foreach(Labels::FIELDS as $field)
+            if($attrs->has($field))
+                $label[$field] = $attrs->getOptional($field);
+
+        // normalize label fields
+        foreach(["name","attention","address","city","maillist"] as $field) {
+            if(isset($label[$field]))
+                $label[$field] = Albums::zkAlpha($label[$field], true);
+        }
+
+        if(Engine::api(IEditor::class)->insertUpdateLabel($label))
+            return new CreatedResponse(Engine::getBaseUrl()."/label/{$label['pubkey']}");
+
+        throw new \Exception("creation failed");
     }
 
     public function patchResource(RequestInterface $request): ResponseInterface {
-        throw new NotAllowedException("TBD");
+        if(!Engine::session()->isAuth("m"))
+            throw new NotAllowedException("Operation requires authentication");
+
+        $key = $request->id();
+        if(empty($key))
+            throw new ResourceNotFoundException("label", $key ?? 0);
+
+        $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $key);
+        if(sizeof($rec) == 0)
+            throw new ResourceNotFoundException("label", $key);
+        $label = $rec[0];
+
+        $lr = $request->requestBody()->data()->first("label");
+        $attrs = $lr->attributes();
+
+        if($attrs->has("name")) {
+            // check for duplicate name
+            $name = Albums::zkAlpha($attrs->getRequired("name"), true);
+            $alt = Engine::api(ILibrary::class)->search(ILibrary::LABEL_NAME, 0, 10, $name);
+            if(sizeof($alt) > 1 || sizeof($alt) && $alt[0]["pubkey"] != $key)
+                throw new NotAllowedException("label with this name already exists");
+        }
+
+        foreach(Labels::FIELDS as $field)
+            if($attrs->has($field))
+                $label[$field] = $attrs->getOptional($field);
+
+        // normalize label fields
+        foreach(["name","attention","address","city","maillist"] as $field) {
+            if(isset($label[$field]))
+                $label[$field] = Albums::zkAlpha($label[$field], true);
+        }
+
+        if(Engine::api(IEditor::class)->insertUpdateLabel($label))
+            return new EmptyResponse();
+
+        throw new \Exception("update failed");
     }
 }
