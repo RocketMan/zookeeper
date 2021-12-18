@@ -181,8 +181,80 @@ class Albums implements RequestHandlerInterface {
     }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
-        // TBD add filter-based album retrieval
-        throw new NotAllowedException("album fetch by id only");
+        // we paginate according to the cursor pagination profile
+        // https://jsonapi.org/profiles/ethanresnick/cursor-pagination/
+
+        if($request->hasFilter("name")) {
+            $op = ILibrary::OP_BY_NAME;
+            $key = $request->filterValue("name");
+        } else if($request->hasFilter("tag")) {
+            $op = ILibrary::OP_BY_TAG;
+            $key = $request->filterValue("tag");
+        } else if($request->hasPagination("before")) {
+            // previous page
+            $op = ILibrary::OP_PREV_PAGE;
+            $key = $request->paginationValue("before");
+        } else if($request->hasPagination("after")) {
+            // next page
+            $op = ILibrary::OP_NEXT_PAGE;
+            $key = $request->paginationValue("after");
+        } else if($request->hasPagination("previous")) {
+            // previous line
+            $op = ILibrary::OP_PREV_LINE;
+            $key = $request->paginationValue("previous");
+        } else if($request->hasPagination("next")) {
+            // next line
+            $op = ILibrary::OP_NEXT_LINE;
+            $key = $request->paginationValue("next");
+        } else
+            throw new NotAllowedException("must specify filter or page");
+
+        $limit = $request->hasPagination("size")?
+                $request->paginationValue("size"):null;
+        if(!$limit || $limit > API::MAX_LIMIT)
+            $limit = API::MAX_LIMIT;
+
+        $records = Engine::api(ILibrary::class)->listAlbums($op, $key, $limit);
+        $result = [];
+        $labelMap = [];
+        foreach($records as $record) {
+            $resource = self::fromRecord($record);
+            $result[] = $resource;
+
+            if(array_key_exists($record["pubkey"], $labelMap))
+                $res = $labelMap[$record["pubkey"]];
+            else {
+                $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $record["pubkey"]);
+                if(sizeof($labels)) {
+                    $res = Labels::fromRecord($labels[0]);
+                    $labelMap[$record["pubkey"]] = $res;
+                } else
+                    continue;
+            }
+
+            $relation = new Relationship("label", $res);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."/album/{$record["tag"]}/label"));
+            $relation->links()->set(new Link("self", Engine::getBaseUrl()."/album/{$record["tag"]}/relationships/label"));
+            $resource->relationships()->set($relation);
+        }
+
+        $document = new Document($result);
+
+        $base = Engine::getBaseUrl()."/album?";
+        $size = "&page[size]=$limit";
+
+        $obj = $records[0];
+        $prev = urlencode("{$obj["artist"]}|{$obj["album"]}|{$obj["tag"]}");
+        $document->links()->set(new Link("prev", "{$base}page[before]={$prev}{$size}"));
+        $document->links()->set(new Link("prevLine", "{$base}page[previous]={$prev}{$size}"));
+
+        $obj = $records[sizeof($records)-1];
+        $next = urlencode("{$obj["artist"]}|{$obj["album"]}|{$obj["tag"]}");
+        $document->links()->set(new Link("next", "{$base}page[after]={$next}{$size}"));
+        $document->links()->set(new Link("nextLine", "{$base}page[next]={$next}{$size}"));
+
+        $response = new DocumentResponse($document);
+        return $response;
     }
 
     public function fetchRelationship(RequestInterface $request): ResponseInterface {

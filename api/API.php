@@ -37,7 +37,6 @@ use ZK\Engine\PlaylistObserver;
 use ZK\UI\UICommon as UI;
 
 use Enm\JsonApi\Model\Request\Request;
-use Enm\JsonApi\Server\JsonApiServer;
 
 abstract class Serializer {
     private $catCodes;
@@ -335,7 +334,7 @@ class API extends CommandTarget implements IController {
         [ "libLookupRq", "libraryLookup" ],
         [ "getCurrentsRq", "getCurrents" ],
         [ "getChartsRq", "getCharts" ],
-        [ "getPlaylistsRq", "getPlaylists" ],
+        [ "getPlaylistsRq", "getPlaylists" ], // LEGACY marked for deprecation
         [ "jsonApi", "jsonApi" ],
     ];
 
@@ -588,7 +587,7 @@ class API extends CommandTarget implements IController {
     }
 
     public function jsonApi() {
-        $jsonApi = new JsonApiServer(
+        $jsonApi = new ApiServer(
                 new \Enm\JsonApi\Serializer\Deserializer(),
                 new \Enm\JsonApi\Serializer\Serializer());
         foreach(self::$jsonApi as $api)
