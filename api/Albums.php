@@ -241,17 +241,17 @@ class Albums implements RequestHandlerInterface {
         $document = new Document($result);
 
         $base = Engine::getBaseUrl()."/album?";
-        $size = "&page[size]=$limit";
+        $size = "&page%5Bsize%5D=$limit";
 
         $obj = $records[0];
         $prev = urlencode("{$obj["artist"]}|{$obj["album"]}|{$obj["tag"]}");
-        $document->links()->set(new Link("prev", "{$base}page[before]={$prev}{$size}"));
-        $document->links()->set(new Link("prevLine", "{$base}page[previous]={$prev}{$size}"));
+        $document->links()->set(new Link("prev", "{$base}page%5Bbefore%5D={$prev}{$size}"));
+        $document->links()->set(new Link("prevLine", "{$base}page%5Bprevious%5D={$prev}{$size}"));
 
         $obj = $records[sizeof($records)-1];
         $next = urlencode("{$obj["artist"]}|{$obj["album"]}|{$obj["tag"]}");
-        $document->links()->set(new Link("next", "{$base}page[after]={$next}{$size}"));
-        $document->links()->set(new Link("nextLine", "{$base}page[next]={$next}{$size}"));
+        $document->links()->set(new Link("next", "{$base}page%5Bafter%5D={$next}{$size}"));
+        $document->links()->set(new Link("nextLine", "{$base}page%5Bnext%5D={$next}{$size}"));
 
         $response = new DocumentResponse($document);
         return $response;
