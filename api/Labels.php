@@ -78,8 +78,63 @@ class Labels implements RequestHandlerInterface {
     }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
-        // TBD add filter-based label retrieval
-        throw new NotAllowedException("label fetch by id only");
+        // we paginate according to the cursor pagination profile
+        // https://jsonapi.org/profiles/ethanresnick/cursor-pagination/
+
+        if($request->hasFilter("name")) {
+            $op = ILibrary::OP_BY_NAME;
+            $key = $request->filterValue("name");
+        } else if($request->hasFilter("tag")) {
+            $op = ILibrary::OP_BY_TAG;
+            $key = $request->filterValue("tag");
+        } else if($request->hasPagination("before")) {
+            // previous page
+            $op = ILibrary::OP_PREV_PAGE;
+            $key = $request->paginationValue("before");
+        } else if($request->hasPagination("after")) {
+            // next page
+            $op = ILibrary::OP_NEXT_PAGE;
+            $key = $request->paginationValue("after");
+        } else if($request->hasPagination("previous")) {
+            // previous line
+            $op = ILibrary::OP_PREV_LINE;
+            $key = $request->paginationValue("previous");
+        } else if($request->hasPagination("next")) {
+            // next line
+            $op = ILibrary::OP_NEXT_LINE;
+            $key = $request->paginationValue("next");
+        } else
+            throw new NotAllowedException("must specify filter or page");
+
+        $limit = $request->hasPagination("size")?
+                $request->paginationValue("size"):null;
+        if(!$limit || $limit > API::MAX_LIMIT)
+            $limit = API::MAX_LIMIT;
+
+        $records = Engine::api(ILibrary::class)->listLabels($op, $key, $limit);
+        $result = [];
+        foreach($records as $record) {
+            $resource = self::fromRecord($record);
+            $result[] = $resource;
+        }
+
+        $document = new Document($result);
+
+        $base = Engine::getBaseUrl()."/label?";
+        $size = "&page%5Bsize%5D=$limit";
+
+        $obj = $records[0];
+        $prev = urlencode("{$obj["name"]}|{$obj["pubkey"]}");
+        $document->links()->set(new Link("prev", "{$base}page%5Bbefore%5D={$prev}{$size}"));
+        $document->links()->set(new Link("prevLine", "{$base}page%5Bprevious%5D={$prev}{$size}"));
+        $document->links()->set(new Link("nextLine", "{$base}page%5Bnext%5D={$prev}{$size}"));
+
+        $obj = $records[sizeof($records)-1];
+        $next = urlencode("{$obj["name"]}|{$obj["pubkey"]}");
+        $document->links()->set(new Link("next", "{$base}page%5Bafter%5D={$next}{$size}"));
+
+        $response = new DocumentResponse($document);
+        return $response;
     }
 
     public function createResource(RequestInterface $request): ResponseInterface {
