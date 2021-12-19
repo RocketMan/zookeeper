@@ -119,6 +119,14 @@ class Engine {
         if($qpos !== false)
             $uri = substr($uri, 0, $qpos);
 
+        // api gets only path
+        // FILTER_VALIDATE_URL insists on absolute path
+        if(isset($_SERVER['REDIRECT_APIVER'])) {
+            $apiver = $_SERVER['REDIRECT_APIVER'];
+            $pos = strpos($uri, "api/v");
+            return self::$base = substr($uri, 0, $pos) . "api/v{$apiver}";
+        }
+
         $port = ":" . $_SERVER['SERVER_PORT'];
         if($port == ":443" || $port == ":80")
             $port = "";
@@ -127,13 +135,6 @@ class Engine {
         self::$base = $_SERVER['REQUEST_SCHEME'] . "://" .
                $_SERVER['SERVER_NAME'] . $port .
                preg_replace("{/[^/]+$}", "/", $uri);
-
-        // strip api leaf elements
-        if(($pos = strpos(self::$base, "api/v")) !== false) {
-            $apiver = $_SERVER['REDIRECT_APIVER'] ?? 1;
-            self::$base = substr(self::$base, 0, $pos);
-            self::$base .= "api/v{$apiver}";
-        }
 
         return self::$base;
     }
