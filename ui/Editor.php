@@ -780,8 +780,6 @@ class Editor extends MenuItem {
 
          echo "</SELECT><BR><INPUT NAME='bdown' id='bdown' VALUE='&or;' TYPE='submit' CLASS='editorDown' ></TD>\n";
          echo "</TR></TABLE>\n";
-         echo "  <INPUT TYPE=HIDDEN NAME=up id='up' VALUE=''>\n";
-         echo "  <INPUT TYPE=HIDDEN NAME=down id='down' VALUE=''>\n";
          echo "  <INPUT TYPE=HIDDEN id='list-size' VALUE='$this->limit'>\n";
     ?>
     </TD><TD>
@@ -932,8 +930,6 @@ class Editor extends MenuItem {
             echo "  <OPTION VALUE=''>\n";
         echo "</SELECT><BR><INPUT NAME='bdown' id='bdown' VALUE='&or;' TYPE='submit' CLASS='editorDown'></TD>\n";
         echo "</TR></TABLE>\n";
-        echo "  <INPUT TYPE=HIDDEN NAME=up id='up' VALUE=''>\n";
-        echo "  <INPUT TYPE=HIDDEN NAME=down id='down' VALUE=''>\n";
         echo "  <INPUT TYPE=HIDDEN id='list-size' VALUE='$this->limit'>\n";
         echo "  <INPUT TYPE=HIDDEN id='seltag' VALUE='".$_REQUEST["seltag"]."'>\n";
         echo "  <INPUT TYPE=HIDDEN id='req-name' VALUE=\"".$_REQUEST["name"]."\">\n";

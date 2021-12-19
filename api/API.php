@@ -328,8 +328,6 @@ class API extends CommandTarget implements IController {
 
     private static $methods = [
         [ "", "unknownMethod" ],
-        [ "getAlbumsRq", "albumPager" ],
-        [ "getLabelsRq", "labelPager" ],
         [ "searchRq", "fullTextSearch" ],
         [ "libLookupRq", "libraryLookup" ],
         [ "getCurrentsRq", "getCurrents" ],
@@ -397,34 +395,6 @@ class API extends CommandTarget implements IController {
     public function unknownMethod() {
         $method = $_REQUEST["method"];
         $this->serializer->emitError($method?$method:"status", 10, "Invalid method: $method");
-    }
-
-    public function albumPager() {
-        $op = self::$pager_operations[$_REQUEST["operation"]];
-        if(isset($op)) {
-            $records = Engine::api(ILibrary::class)->listAlbums(
-                     $op,
-                     $_REQUEST["key"],
-                     $this->limit);
-            $this->serializer->startResponse("getAlbumsRs");
-            $this->serializer->emitDataSetArray("albumrec", API::ALBUM_FIELDS, $records);
-            $this->serializer->endResponse("getAlbumsRs");
-        } else
-            $this->serializer->emitError("getAlbumsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
-    }
-
-    public function labelPager() {
-        $op = self::$pager_operations[$_REQUEST["operation"]];
-        if(isset($op)) {
-            $records = Engine::api(ILibrary::class)->listLabels(
-                     $op,
-                     $_REQUEST["key"],
-                     $this->limit);
-            $this->serializer->startResponse("getLabelsRs");
-            $this->serializer->emitDataSetArray("labelrec", API::LABEL_FIELDS, $records);
-            $this->serializer->endResponse("getLabelsRs");
-        } else
-            $this->serializer->emitError("getLabelsRs", 20, "Invalid operation: ".$_REQUEST["operation"]);
     }
 
     public function fullTextSearch() {
