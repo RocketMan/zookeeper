@@ -242,8 +242,6 @@ class Albums implements RequestHandlerInterface {
 
         $base = Engine::getBaseUrl()."/album?";
         $size = "&page%5Bsize%5D=$limit";
-        if($request->requestsInclude("label"))
-            $size .= "&include=label";
 
         $obj = $records[0];
         $prev = urlencode("{$obj["artist"]}|{$obj["album"]}|{$obj["tag"]}");
