@@ -95,7 +95,7 @@ class Albums implements RequestHandlerInterface {
 
     public static function fromRecord($rec) {
         $res = new JsonResource("album", $rec["tag"]);
-        $res->links()->set(new Link("self", Engine::getBaseUrl()."/album/".$rec["tag"]));
+        $res->links()->set(new Link("self", Engine::getBaseUrl()."album/".$rec["tag"]));
         foreach(self::FIELDS as $field) {
             switch($field) {
             case "category":
@@ -155,8 +155,8 @@ class Albums implements RequestHandlerInterface {
             $res = Labels::fromRecord($labels[0]);
 
             $relation = new Relationship("label", $res);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."/album/$key/label"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."/album/$key/relationships/label"));
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/$key/label"));
+            $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/$key/relationships/label"));
             $relation->metaInformation()->set("name", $labels[0]["name"]);
             $resource->relationships()->set($relation);
         }
@@ -165,7 +165,7 @@ class Albums implements RequestHandlerInterface {
         if(sizeof($reviews)) {
             $relations = new ResourceCollection();
             $relation = new Relationship("reviews", $relations);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."/album/$key/reviews"));
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/$key/reviews"));
             $resource->relationships()->set($relation);
             foreach($reviews as $review) {
                 $res = Reviews::fromRecord($review);
@@ -233,14 +233,14 @@ class Albums implements RequestHandlerInterface {
             }
 
             $relation = new Relationship("label", $res);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."/album/{$record["tag"]}/label"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."/album/{$record["tag"]}/relationships/label"));
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
+            $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
             $resource->relationships()->set($relation);
         }
 
         $document = new Document($result);
 
-        $base = Engine::getBaseUrl()."/album?";
+        $base = Engine::getBaseUrl()."album?";
         $size = "&page%5Bsize%5D=$limit";
 
         $obj = $records[0];
@@ -289,8 +289,8 @@ class Albums implements RequestHandlerInterface {
         }
 
         $document = new Document($res);
-        $document->links()->set(new Link("self", Engine::getBaseUrl()."/album/$key/relationships/".$request->relationship()));
-        $document->links()->set(new Link("related", Engine::getBaseUrl()."/album/$key/".$request->relationship()));
+        $document->links()->set(new Link("self", Engine::getBaseUrl()."album/$key/relationships/".$request->relationship()));
+        $document->links()->set(new Link("related", Engine::getBaseUrl()."album/$key/".$request->relationship()));
 
         $response = new DocumentResponse($document);
         return $response;
@@ -364,7 +364,7 @@ class Albums implements RequestHandlerInterface {
         }
 
         if(Engine::api(IEditor::class)->insertUpdateAlbum($a, $tracks, $label))
-            return new CreatedResponse(Engine::getBaseUrl()."/album/{$a['tag']}");
+            return new CreatedResponse(Engine::getBaseUrl()."album/{$a['tag']}");
         throw new \Exception("creation failed");
     }
 

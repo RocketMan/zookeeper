@@ -58,7 +58,7 @@ class Playlists implements RequestHandlerInterface {
     public static function fromRecord($rec) {
         $id = $rec["id"];
         $res = new JsonResource("show", $id);
-        $res->links()->set(new Link("self", Engine::getBaseUrl()."/playlist/".$id));
+        $res->links()->set(new Link("self", Engine::getBaseUrl()."playlist/".$id));
         $attrs = $res->attributes();
         $attrs->set("name", $rec["description"]);
         $attrs->set("date", $rec["showdate"]);
@@ -213,7 +213,7 @@ class Playlists implements RequestHandlerInterface {
         }
 
         if($playlist)
-            return new CreatedResponse(Engine::getBaseUrl()."/playlist/$playlist");
+            return new CreatedResponse(Engine::getBaseUrl()."playlist/$playlist");
 
         throw new \Exception("creation failed");
     }

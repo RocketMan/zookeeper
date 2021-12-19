@@ -120,11 +120,11 @@ class Engine {
             $uri = substr($uri, 0, $qpos);
 
         // api gets only path
-        // FILTER_VALIDATE_URL insists on absolute path
+        // must be absolute path for FILTER_VALIDATE_URL
         if(isset($_SERVER['REDIRECT_APIVER'])) {
             $apiver = $_SERVER['REDIRECT_APIVER'];
             $pos = strpos($uri, "api/v");
-            return self::$base = substr($uri, 0, $pos) . "api/v{$apiver}";
+            return self::$base = substr($uri, 0, $pos) . "api/v{$apiver}/";
         }
 
         $port = ":" . $_SERVER['SERVER_PORT'];

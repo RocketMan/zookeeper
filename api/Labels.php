@@ -56,7 +56,7 @@ class Labels implements RequestHandlerInterface {
 
     public static function fromRecord($rec) {
         $res = new JsonResource("label", $rec["pubkey"]);
-        $res->links()->set(new Link("self", Engine::getBaseUrl()."/label/".$rec["pubkey"]));
+        $res->links()->set(new Link("self", Engine::getBaseUrl()."label/".$rec["pubkey"]));
         foreach(self::FIELDS as $field)
             $res->attributes()->set($field, $rec[$field]);
         return $res;
@@ -120,7 +120,7 @@ class Labels implements RequestHandlerInterface {
 
         $document = new Document($result);
 
-        $base = Engine::getBaseUrl()."/label?";
+        $base = Engine::getBaseUrl()."label?";
         $size = "&page%5Bsize%5D=$limit";
 
         $obj = $records[0];
@@ -162,7 +162,7 @@ class Labels implements RequestHandlerInterface {
         }
 
         if(Engine::api(IEditor::class)->insertUpdateLabel($label))
-            return new CreatedResponse(Engine::getBaseUrl()."/label/{$label['pubkey']}");
+            return new CreatedResponse(Engine::getBaseUrl()."label/{$label['pubkey']}");
 
         throw new \Exception("creation failed");
     }

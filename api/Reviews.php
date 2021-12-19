@@ -52,7 +52,7 @@ class Reviews implements RequestHandlerInterface {
                      
     public static function fromRecord($rec) {
         $res = new JsonResource("review", $rec["id"]);
-        $res->links()->set(new Link("self", Engine::getBaseUrl()."/review/".$rec["id"]));
+        $res->links()->set(new Link("self", Engine::getBaseUrl()."review/".$rec["id"]));
         foreach(self::FIELDS as $field) {
             switch($field) {
             case "date":
@@ -80,8 +80,8 @@ class Reviews implements RequestHandlerInterface {
         if(sizeof($albums)) {
             $res = Albums::fromRecord($albums[0]);
             $relation = new Relationship("album", $res);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."/review/$key/album"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."/review/$key/relationships/album"));
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/$key/album"));
+            $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/$key/relationships/album"));
             $resource->relationships()->set($relation);
         }
 
@@ -116,8 +116,8 @@ class Reviews implements RequestHandlerInterface {
         }        
 
         $document = new Document($res);
-        $document->links()->set(new Link("self", Engine::getBaseUrl()."/review/$key/relationships/".$request->relationship()));
-        $document->links()->set(new Link("related", Engine::getBaseUrl()."/review/$key/".$request->relationship()));
+        $document->links()->set(new Link("self", Engine::getBaseUrl()."review/$key/relationships/".$request->relationship()));
+        $document->links()->set(new Link("related", Engine::getBaseUrl()."review/$key/".$request->relationship()));
 
         $response = new DocumentResponse($document);
         return $response;
@@ -153,7 +153,7 @@ class Reviews implements RequestHandlerInterface {
             throw new NotAllowedException("review already exists, use PATCH");
 
         if($revapi->insertReview($tag, $private, $airname, $review, $user))
-            return new CreatedResponse(Engine::getBaseUrl()."/review/{$revapi->lastInsertId()}");
+            return new CreatedResponse(Engine::getBaseUrl()."review/{$revapi->lastInsertId()}");
 
         throw new \Exception("creation failed");
     }
