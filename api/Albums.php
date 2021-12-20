@@ -333,10 +333,9 @@ class Albums implements RequestHandlerInterface {
         $base = Engine::getBaseUrl()."album?{$filter}";
         $size = "&page%5Bprofile%5D=offset&page%5Bsize%5D=$limit";
 
-        if($offset) {
-            $next = $offset + $limit;
+        if($offset)
             $document->links()->set(new Link("next", "{$base}&page%5Boffset%5D={$next}{$size}"));
-        } else
+        else
             $next = $offset = $total; // no more rows remaining
 
         $link = new Link("first", "{$base}{$size}");
