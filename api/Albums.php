@@ -180,8 +180,8 @@ class Albums implements RequestHandlerInterface {
         return $response;
     }
 
-    public function fetchResources(RequestInterface $request): ResponseInterface {
-        // we paginate according to the cursor pagination profile
+    protected function paginateCursor(RequestInterface $request): ResponseInterface {
+        // pagination according to the cursor pagination profile
         // https://jsonapi.org/profiles/ethanresnick/cursor-pagination/
 
         if($request->hasFilter("artist")) {
@@ -254,6 +254,115 @@ class Albums implements RequestHandlerInterface {
         $document->links()->set(new Link("next", "{$base}page%5Bafter%5D={$next}{$size}"));
 
         $response = new DocumentResponse($document);
+        return $response;
+    }
+
+    protected function paginateOffset(RequestInterface $request): ResponseInterface {
+        if($request->hasFilter("artist")) {
+            $op = ILibrary::ALBUM_ARTIST;
+            $key = $request->filterValue("artist");
+            $filter = "filter%5Bartist%5D=" . urlencode($key);
+        } else if($request->hasFilter("album")) {
+            $op = ILibrary::ALBUM_NAME;
+            $key = $request->filterValue("album");
+            $filter = "filter%5Balbum%5D=" . urlencode($key);
+        } else if($request->hasFilter("track")) {
+            $op = ILibrary::TRACK_NAME;
+            $key = $request->filterValue("track");
+            $filter = "filter%5Btrack%5D=" . urlencode($key);
+        } else if($request->hasFilter("label.name")) {
+            $op = ILibrary::LABEL_NAME;
+            $key = $request->filterValue("label.name");
+            $filter = "filter%5Blabel.name%5D=" . urlencode($key);
+        } else
+            throw new NotAllowedException("must specify filter");
+
+        $reqOffset = $offset = $request->hasPagination("offset")?
+            $request->paginationValue("offset"):0;
+
+        $limit = $request->hasPagination("size")?
+                $request->paginationValue("size"):null;
+        if(!$limit || $limit > API::MAX_LIMIT)
+            $limit = API::MAX_LIMIT;
+
+        $order = $request->order();
+        $sort = sizeof($order)?$order[array_keys($order)[0]]:"";
+
+        $libraryAPI = Engine::api(ILibrary::class);
+        $total = $libraryAPI->searchPos($op, $offset, -1, $key);
+        $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
+
+        $result = [];
+        $labelMap = [];
+        foreach($records as $record) {
+            $resource = self::fromRecord($record);
+            $result[] = $resource;
+
+            $reviews = Engine::api(IReview::class)->getReviews($record["tag"]);
+            if(sizeof($reviews)) {
+                $relations = new ResourceCollection();
+                $relation = new Relationship("reviews", $relations);
+                $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/reviews"));
+                $resource->relationships()->set($relation);
+                foreach($reviews as $review) {
+                    $res = Reviews::fromRecord($review);
+                    $relation = new Relationship("review", $res);
+                    $relations->set($res);
+                }
+            }
+
+            if(array_key_exists($record["pubkey"], $labelMap))
+                $res = $labelMap[$record["pubkey"]];
+            else {
+                $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $record["pubkey"]);
+                if(sizeof($labels)) {
+                    $res = Labels::fromRecord($labels[0]);
+                    $labelMap[$record["pubkey"]] = $res;
+                } else
+                    continue;
+            }
+
+            $relation = new Relationship("label", $res);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
+            $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
+            $resource->relationships()->set($relation);
+        }
+
+        $document = new Document($result);
+
+        $base = Engine::getBaseUrl()."album?{$filter}";
+        $size = "&page%5Bprofile%5D=offset&page%5Bsize%5D=$limit";
+
+        if($offset) {
+            $next = $offset + $limit;
+            $document->links()->set(new Link("next", "{$base}&page%5Boffset%5D={$next}{$size}"));
+        } else
+            $next = $offset = $total; // no more rows remaining
+
+        $link = new Link("first", "{$base}{$size}");
+        $link->metaInformation()->set("total", $total);
+        $link->metaInformation()->set("more", $reqOffset?$total:($total - $offset));
+        $link->metaInformation()->set("offset", $reqOffset);
+        $document->links()->set($link);
+
+        $response = new DocumentResponse($document);
+        return $response;
+    }
+
+    public function fetchResources(RequestInterface $request): ResponseInterface {
+        $profile = $request->hasPagination("profile")?
+                   $request->paginationValue("profile"):"offset";
+        switch($profile) {
+        case "cursor":
+            $response = $this->paginateCursor($request);
+            break;
+        case "offset":
+            $response = $this->paginateOffset($request);
+            break;
+        default:
+            throw new NotAllowedException("unknown pagination profile '{$profile}'");
+        }
+
         return $response;
     }
 
