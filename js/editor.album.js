@@ -28,7 +28,7 @@ function changeSel(index) {
 
 function getAlbums(key) {
     var url = "api/v1/album?" + key +
-        "&page[size]=" + $("#list-size").val();
+        "&page[profile]=cursor&page[size]=" + $("#list-size").val();
     paginateAlbums(null, url);
 }
 
@@ -92,9 +92,9 @@ function paginateAlbums(op, url) {
 function onSearchNow() {
     var search = $("#search").val();
     if(search.lastIndexOf('.') == search.length-1 && search.length > 3)
-        getAlbums('filter[tag]=' + encodeURIComponent(search));
+        getAlbums('filter[id]=' + encodeURIComponent(search));
     else
-        getAlbums('filter[name]=' + ($("#coll").is(':checked')?"[coll]: ":"") + encodeURIComponent(search));
+        getAlbums('filter[artist]=' + ($("#coll").is(':checked')?"[coll]: ":"") + encodeURIComponent(search));
 }
 
 function scrollUp() {

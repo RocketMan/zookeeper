@@ -32,6 +32,9 @@ and the controllers, which are in `controllers`.
 The following is an overview of the source code directory structure:
 
     project-root/
+        api/
+            API implementation.  This includes legacy APIs and JSON:API.
+
         build/
             files for continuous integration
 

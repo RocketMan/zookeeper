@@ -184,12 +184,12 @@ class Albums implements RequestHandlerInterface {
         // we paginate according to the cursor pagination profile
         // https://jsonapi.org/profiles/ethanresnick/cursor-pagination/
 
-        if($request->hasFilter("name")) {
+        if($request->hasFilter("artist")) {
             $op = ILibrary::OP_BY_NAME;
-            $key = $request->filterValue("name");
-        } else if($request->hasFilter("tag")) {
+            $key = $request->filterValue("artist");
+        } else if($request->hasFilter("id")) {
             $op = ILibrary::OP_BY_TAG;
-            $key = $request->filterValue("tag");
+            $key = $request->filterValue("id");
         } else if($request->hasPagination("before")) {
             // previous page
             $op = ILibrary::OP_PREV_PAGE;
@@ -241,7 +241,7 @@ class Albums implements RequestHandlerInterface {
         $document = new Document($result);
 
         $base = Engine::getBaseUrl()."album?";
-        $size = "&page%5Bsize%5D=$limit";
+        $size = "&page%5Bprofile%5D=cursor&page%5Bsize%5D=$limit";
 
         $obj = $records[0];
         $prev = urlencode("{$obj["artist"]}|{$obj["album"]}|{$obj["tag"]}");

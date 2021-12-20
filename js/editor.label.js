@@ -28,7 +28,7 @@ function changeSel(index) {
 
 function getLabels(key) {
     var url = "api/v1/label?" + key +
-        "&page[size]=" + $("#list-size").val();
+        "&page[profile]=cursor&page[size]=" + $("#list-size").val();
     paginateLabels(null, url);
 }
 
@@ -99,7 +99,7 @@ $().ready(function() {
     var seltag = $("#seltag").val();
     var name = $("#req-name").val();
     if(seltag > 0) {
-        getLabels('filter[tag]=' + encodeURIComponent(seltag));
+        getLabels('filter[album.id]=' + encodeURIComponent(seltag));
         $("#list").focus();
     } else if(name.length > 0) {
         getLabels('filter[name]=' + encodeURIComponent(name));

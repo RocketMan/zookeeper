@@ -84,9 +84,9 @@ class Labels implements RequestHandlerInterface {
         if($request->hasFilter("name")) {
             $op = ILibrary::OP_BY_NAME;
             $key = $request->filterValue("name");
-        } else if($request->hasFilter("tag")) {
+        } else if($request->hasFilter("album.id")) {
             $op = ILibrary::OP_BY_TAG;
-            $key = $request->filterValue("tag");
+            $key = $request->filterValue("album.id");
         } else if($request->hasPagination("before")) {
             // previous page
             $op = ILibrary::OP_PREV_PAGE;
@@ -121,7 +121,7 @@ class Labels implements RequestHandlerInterface {
         $document = new Document($result);
 
         $base = Engine::getBaseUrl()."label?";
-        $size = "&page%5Bsize%5D=$limit";
+        $size = "&page%5Bprofile%5D=cursor&page%5Bsize%5D=$limit";
 
         $obj = $records[0];
         $prev = urlencode("{$obj["name"]}|{$obj["pubkey"]}");
