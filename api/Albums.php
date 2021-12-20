@@ -334,9 +334,9 @@ class Albums implements RequestHandlerInterface {
         $size = "&page%5Bprofile%5D=offset&page%5Bsize%5D=$limit";
 
         if($offset)
-            $document->links()->set(new Link("next", "{$base}&page%5Boffset%5D={$next}{$size}"));
+            $document->links()->set(new Link("next", "{$base}&page%5Boffset%5D={$offset}{$size}"));
         else
-            $next = $offset = $total; // no more rows remaining
+            $offset = $total; // no more rows remaining
 
         $link = new Link("first", "{$base}{$size}");
         $link->metaInformation()->set("total", $total);
