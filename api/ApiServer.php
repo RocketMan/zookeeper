@@ -69,7 +69,9 @@ class ApiServer extends JsonApiServer {
         // This means it will tell us there are negations even if none.
         //
         // To detect this case, we first test an unlikely field name.
-        if (!$request->requestsField($resource->type(), "#&*(Q@")) {
+        // If it succeeds, we know that no fields have been requested.
+        if ($request->requestsAttributes() &&
+                !$request->requestsField($resource->type(), "#&*(Q@")) {
             // There is a field filter, so we can trust `requestsField`
             $negation = false;
             foreach ($resource->attributes()->all() as $key => $value) {
