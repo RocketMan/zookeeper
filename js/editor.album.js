@@ -118,7 +118,7 @@ function lineDown() {
 $().ready(function() {
     var seltag = $("#seltag").val();
     if(seltag > 0) {
-        getAlbums('filter[tag]=' + encodeURIComponent(seltag));
+        getAlbums('filter[id]=' + encodeURIComponent(seltag));
         $("#list").focus();
     } else {
         getAlbums('page[before]=');
