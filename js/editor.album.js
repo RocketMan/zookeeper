@@ -33,7 +33,7 @@ function getAlbums(key) {
 }
 
 function paginateAlbums(op, url) {
-    url += "&fields[album]=artist,album,category,medium,size,created,updated,location,bin";
+    url += "&fields[album]=-tracks";
     url += "&fields[label]=name,address,city,state,zip&include=label";
 
     $.ajax({

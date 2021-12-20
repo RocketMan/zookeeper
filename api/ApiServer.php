@@ -56,4 +56,40 @@ class ApiServer extends JsonApiServer {
             }
         }
     }
+
+    /**
+     * add support for fields negation (e.g., fields[resource]=-notWanted)
+     */
+    protected function cleanUpResource(
+        ResourceInterface $resource,
+        RequestInterface $request
+    ): void {
+        // If no fields have been requested for a given type, then
+        // `requestsField` will return true for any candidate name.
+        // This means it will tell us there are negations even if none.
+        //
+        // To detect this case, we first test an unlikely field name.
+        if (!$request->requestsField($resource->type(), "#&*(Q@")) {
+            // There is a field filter, so we can trust `requestsField`
+            $negation = false;
+            foreach ($resource->attributes()->all() as $key => $value) {
+                if ($request->requestsField($resource->type(), "-" . $key)) {
+                    $resource->attributes()->remove($key);
+                    $negation = true;
+                }
+            }
+
+            if ($negation) {
+                // There was one or more negation, finish the clean-up
+                if (!$request->requestsRelationships()) {
+                    foreach ($resource->relationships()->all() as $relationship)
+                        $resource->relationships()->removeElement($relationship);
+                }
+                return;
+            }
+        }
+
+        // in all other cases, delegate to the superclass
+        parent::cleanUpResource($resource, $request);
+    }
 }
