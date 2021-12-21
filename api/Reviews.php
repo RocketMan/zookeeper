@@ -83,6 +83,13 @@ class Reviews implements RequestHandlerInterface {
             $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/$key/album"));
             $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/$key/relationships/album"));
             $resource->relationships()->set($relation);
+
+            $label = new JsonResource("label", $albums[0]["pubkey"]);
+            $label->links()->set(new Link("self", Engine::getBaseUrl()."label/".$albums[0]["pubkey"]));
+            $relation = new Relationship("label", $label);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/$key/label"));
+            $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/$key/relationships/label"));
+            $resource->relationships()->set($relation);
         }
 
         $document = new Document($resource);
@@ -125,6 +132,7 @@ class Reviews implements RequestHandlerInterface {
             $resource->relationships()->set($relation);
 
             $label = new JsonResource("label", $record["pubkey"]);
+            $label->links()->set(new Link("self", Engine::getBaseUrl()."label/".$record["pubkey"]));
             $relation = new Relationship("label", $label);
             $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/{$record["id"]}/label"));
             $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/{$record["id"]}/relationships/label"));
