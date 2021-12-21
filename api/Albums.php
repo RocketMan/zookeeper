@@ -53,6 +53,11 @@ class Albums implements RequestHandlerInterface {
 
     const TRACK_FIELDS = [ "seq", "artist", "track", "url" ];
 
+    const LINKS_NONE = 0;
+    const LINKS_LABEL = 1;
+    const LINKS_REVIEWS = 2;
+    const LINKS_ALL = ~0;
+
     private const NONALNUM="/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/";
     private const STOPWORDS="/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i";
 
@@ -141,41 +146,57 @@ class Albums implements RequestHandlerInterface {
         return $res;
     }
 
-    public function fetchResource(RequestInterface $request): ResponseInterface {
-        $key = $request->id();
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $key);
-        if(sizeof($albums) == 0)
-            throw new ResourceNotFoundException("album", $key);
+    public static function fromArray(array $records, $flags = self::LINKS_NONE) {
+        $result = [];
+        $labelMap = [];
+        foreach($records as $record) {
+            $resource = self::fromRecord($record);
+            $result[] = $resource;
 
-        $album = $albums[0];
-        $resource = self::fromRecord($album);
+            if($flags & self::LINKS_REVIEWS) {
+                $reviews = Engine::api(IReview::class)->getReviews($record["tag"]);
+                if(sizeof($reviews)) {
+                    $relations = new ResourceCollection();
+                    $relation = new Relationship("reviews", $relations);
+                    $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/reviews"));
+                    $resource->relationships()->set($relation);
+                    foreach($reviews as $review) {
+                        $res = Reviews::fromRecord($review);
+                        $relation = new Relationship("review", $res);
+                        $relations->set($res);
+                    }
+                }
+            }
 
-        $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $album["pubkey"]);
-        if(sizeof($labels)) {
-            $res = Labels::fromRecord($labels[0]);
+            if($flags & self::LINKS_LABEL) {
+                if(array_key_exists($record["pubkey"], $labelMap))
+                    $res = $labelMap[$record["pubkey"]];
+                else {
+                    $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $record["pubkey"]);
+                    if(sizeof($labels)) {
+                        $res = Labels::fromRecord($labels[0]);
+                        $labelMap[$record["pubkey"]] = $res;
+                    } else
+                        continue;
+                }
 
-            $relation = new Relationship("label", $res);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/$key/label"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/$key/relationships/label"));
-            $relation->metaInformation()->set("name", $labels[0]["name"]);
-            $resource->relationships()->set($relation);
-        }
-
-        $reviews = Engine::api(IReview::class)->getReviews($key);
-        if(sizeof($reviews)) {
-            $relations = new ResourceCollection();
-            $relation = new Relationship("reviews", $relations);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/$key/reviews"));
-            $resource->relationships()->set($relation);
-            foreach($reviews as $review) {
-                $res = Reviews::fromRecord($review);
-                $relation = new Relationship("review", $res);
-                $relations->set($res);
+                $relation = new Relationship("label", $res);
+                $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
+                $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
+                $resource->relationships()->set($relation);
             }
         }
 
-        $document = new Document($resource);
+        return $result;
+    }
 
+    public function fetchResource(RequestInterface $request): ResponseInterface {
+        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $request->id());
+        if(sizeof($albums) == 0)
+            throw new ResourceNotFoundException("album", $request->id());
+
+        $resource = self::fromArray($albums, self::LINKS_ALL);
+        $document = new Document($resource[0]);
         $response = new DocumentResponse($document);
         return $response;
     }
@@ -215,29 +236,7 @@ class Albums implements RequestHandlerInterface {
             $limit = API::MAX_LIMIT;
 
         $records = Engine::api(ILibrary::class)->listAlbums($op, $key, $limit);
-        $result = [];
-        $labelMap = [];
-        foreach($records as $record) {
-            $resource = self::fromRecord($record);
-            $result[] = $resource;
-
-            if(array_key_exists($record["pubkey"], $labelMap))
-                $res = $labelMap[$record["pubkey"]];
-            else {
-                $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $record["pubkey"]);
-                if(sizeof($labels)) {
-                    $res = Labels::fromRecord($labels[0]);
-                    $labelMap[$record["pubkey"]] = $res;
-                } else
-                    continue;
-            }
-
-            $relation = new Relationship("label", $res);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
-            $resource->relationships()->set($relation);
-        }
-
+        $result = self::fromArray($records, self::LINKS_LABEL);
         $document = new Document($result);
 
         $base = Engine::getBaseUrl()."album?";
@@ -289,45 +288,9 @@ class Albums implements RequestHandlerInterface {
         $sort = sizeof($order)?$order[array_keys($order)[0]]:"";
 
         $libraryAPI = Engine::api(ILibrary::class);
-        $total = $libraryAPI->searchPos($op, $offset, -1, $key);
+        $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
         $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
-
-        $result = [];
-        $labelMap = [];
-        foreach($records as $record) {
-            $resource = self::fromRecord($record);
-            $result[] = $resource;
-
-            $reviews = Engine::api(IReview::class)->getReviews($record["tag"]);
-            if(sizeof($reviews)) {
-                $relations = new ResourceCollection();
-                $relation = new Relationship("reviews", $relations);
-                $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/reviews"));
-                $resource->relationships()->set($relation);
-                foreach($reviews as $review) {
-                    $res = Reviews::fromRecord($review);
-                    $relation = new Relationship("review", $res);
-                    $relations->set($res);
-                }
-            }
-
-            if(array_key_exists($record["pubkey"], $labelMap))
-                $res = $labelMap[$record["pubkey"]];
-            else {
-                $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $record["pubkey"]);
-                if(sizeof($labels)) {
-                    $res = Labels::fromRecord($labels[0]);
-                    $labelMap[$record["pubkey"]] = $res;
-                } else
-                    continue;
-            }
-
-            $relation = new Relationship("label", $res);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
-            $resource->relationships()->set($relation);
-        }
-
+        $result = self::fromArray($records, self::LINKS_LABEL);
         $document = new Document($result);
 
         $base = Engine::getBaseUrl()."album?{$filter}";
@@ -341,7 +304,7 @@ class Albums implements RequestHandlerInterface {
         $link = new Link("first", "{$base}{$size}");
         $link->metaInformation()->set("total", $total);
         $link->metaInformation()->set("more", $reqOffset?$total:($total - $offset));
-        $link->metaInformation()->set("offset", $reqOffset);
+        $link->metaInformation()->set("offset", (int)$reqOffset);
         $document->links()->set($link);
 
         $response = new DocumentResponse($document);
