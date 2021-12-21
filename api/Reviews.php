@@ -92,10 +92,10 @@ class Reviews implements RequestHandlerInterface {
     }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
-        if($request->hasFilter("airname")) {
+        if($request->hasFilter("airname.id")) {
             $op = ILibrary::ALBUM_AIRNAME;
-            $key = $request->filterValue("airname");
-            $filter = "filter%5Bairname%5D=" . urlencode($key);
+            $key = $request->filterValue("airname.id");
+            $filter = "filter%5Bairname.id%5D=" . urlencode($key);
         } else
             throw new NotAllowedException("must specify filter");
 
