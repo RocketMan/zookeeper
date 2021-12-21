@@ -123,6 +123,13 @@ class Reviews implements RequestHandlerInterface {
             $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/{$record["id"]}/album"));
             $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/{$record["id"]}/relationships/album"));
             $resource->relationships()->set($relation);
+
+            $label = new JsonResource("label", $record["pubkey"]);
+            $relation = new Relationship("label", $label);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/{$record["id"]}/label"));
+            $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/{$record["id"]}/relationships/label"));
+            $relation->metaInformation()->set("name", $record["name"]);
+            $resource->relationships()->set($relation);
         }
         $document = new Document($result);
 
@@ -156,6 +163,14 @@ class Reviews implements RequestHandlerInterface {
             $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $reviews[0]['tag']);
             if(sizeof($albums))
                 $res = Albums::fromRecord($albums[0]);
+            break;
+        case "label":
+            $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $reviews[0]['tag']);
+            if(sizeof($albums)) {
+                $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $albums[0]['pubkey']);
+                if(sizeof($labels))
+                    $res = Labels::fromRecord($labels[0]);
+            }
             break;
         case "relationships":
             throw new NotAllowedException("unspecified relationship");
