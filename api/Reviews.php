@@ -163,7 +163,7 @@ class Reviews implements RequestHandlerInterface {
         case "album":
             $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $reviews[0]['tag']);
             if(sizeof($albums))
-                $res = Albums::fromRecord($albums[0]);
+                $res = Albums::fromArray($albums, Albums::LINKS_ALL)[0];
             break;
         case "relationships":
             throw new NotAllowedException("unspecified relationship");
