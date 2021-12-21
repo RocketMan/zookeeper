@@ -226,7 +226,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $bindType = 4;
             break;
         case ILibrary::ALBUM_AIRNAME:
-            $query = "SELECT a.id, artist, album, category, medium, ".
+            $query = "SELECT r.id, artist, album, category, medium, ".
                      "size, a.created, a.updated, a.pubkey, location, bin, a.tag, iscoll, ".
                      "p.name, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed ".
                      "FROM reviews r LEFT JOIN albumvol a ON a.tag = r.tag ".
