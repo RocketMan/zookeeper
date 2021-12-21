@@ -62,6 +62,22 @@ class Labels implements RequestHandlerInterface {
         return $res;
     }
 
+    public static function fromAttrs($attrs) {
+        $label = [];
+
+        foreach(Labels::FIELDS as $field)
+            if($attrs->has($field))
+                $label[$field] = $attrs->getOptional($field);
+
+        // normalize label fields
+        foreach(["name","attention","address","city","maillist"] as $field) {
+            if(isset($label[$field]))
+                $label[$field] = Albums::zkAlpha($label[$field], true);
+        }
+
+        return $label;
+    }
+
     public function fetchResource(RequestInterface $request): ResponseInterface {
         $key = $request->id();
         $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $key);
@@ -150,16 +166,7 @@ class Labels implements RequestHandlerInterface {
         if(sizeof($rec))
             throw new NotAllowedException("label with this name already exists");
 
-        $label = [];
-        foreach(Labels::FIELDS as $field)
-            if($attrs->has($field))
-                $label[$field] = $attrs->getOptional($field);
-
-        // normalize label fields
-        foreach(["name","attention","address","city","maillist"] as $field) {
-            if(isset($label[$field]))
-                $label[$field] = Albums::zkAlpha($label[$field], true);
-        }
+        $label = self::fromAttrs($attrs);
 
         if(Engine::api(IEditor::class)->insertUpdateLabel($label))
             return new CreatedResponse(Engine::getBaseUrl()."label/{$label['pubkey']}");
@@ -191,15 +198,7 @@ class Labels implements RequestHandlerInterface {
                 throw new NotAllowedException("label with this name already exists");
         }
 
-        foreach(Labels::FIELDS as $field)
-            if($attrs->has($field))
-                $label[$field] = $attrs->getOptional($field);
-
-        // normalize label fields
-        foreach(["name","attention","address","city","maillist"] as $field) {
-            if(isset($label[$field]))
-                $label[$field] = Albums::zkAlpha($label[$field], true);
-        }
+        array_merge($label, self::fromAttrs($attrs));
 
         if(Engine::api(IEditor::class)->insertUpdateLabel($label))
             return new EmptyResponse();

@@ -190,6 +190,51 @@ class Albums implements RequestHandlerInterface {
         return $result;
     }
 
+    public static function fromAttrs($attrs, $required = false) {
+        $album = [];
+
+        // map field values to codes
+        $maps = self::getFieldValueToCodeMap();
+        foreach($maps as $field)
+            if($attrs->has($field[0]) || $required) {
+                $val = $attrs->getRequired($field[0]);
+                if(!isset($field[1][$val]))
+                    throw new \InvalidArgumentException("Value $val is not defined for property {$field[0]}");
+                $album[$field[0]] = $field[1][$val];
+            }
+
+        foreach(self::FIELDS as $field) {
+            if($attrs->has($field)) {
+                $value = $attrs->getRequired($field);
+                switch($field) {
+                case "artist":
+                case "album":
+                    $value = self::zkAlpha($value);
+                    break;
+                default:
+                    break;
+                }
+                $album[$field] = $value;
+            }
+        }
+
+        $tracks = $attrs->getOptional("tracks");
+        if($tracks) {
+            // reindex tracks
+            $tracks = array_combine(range(1, sizeof($tracks)),
+                        array_values($tracks));
+
+            // normalize track names
+            foreach($tracks as &$track) {
+                $track["track"] = self::zkAlpha($track["track"], true);
+                if(isset($track["artist"]))
+                    $track["artist"] = self::zkAlpha($track["artist"]);
+            }
+        }
+
+        return [$album, $tracks];
+    }
+
     public function fetchResource(RequestInterface $request): ResponseInterface {
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $request->id());
         if(sizeof($albums) == 0)
@@ -374,15 +419,9 @@ class Albums implements RequestHandlerInterface {
         $album = $request->requestBody()->data()->first("album");
         $attrs = $album->attributes();
 
-        // map field values to codes
-        $maps = self::getFieldValueToCodeMap();
-
-        foreach($maps as $field) {
-            $val = $attrs->getRequired($field[0]);
-            if(!isset($field[1][$val]))
-                throw new \InvalidArgumentException("Value $val is not defined for property {$field[0]}");
-            $attrs->set($field[0], $field[1][$val]);
-        }
+        $attrs->getRequired("artist");
+        $attrs->getRequired("album");
+        [$a, $tracks] = self::fromAttrs($attrs, true);
 
         // try to resolve the label by pubkey
         $id = $album->relationships()->get("label")->related()->first("label")->id();
@@ -405,28 +444,6 @@ class Albums implements RequestHandlerInterface {
                         $label[$field] = $la->getOptional($field);
             }
         }
-
-        $tracks = $attrs->getOptional('tracks');
-        if($tracks) {
-            // reindex tracks
-            $tracks = array_combine(range(1, sizeof($tracks)),
-                        array_values($tracks));
-
-            // normalize track names
-            foreach($tracks as &$track) {
-                $track["track"] = self::zkAlpha($track["track"], true);
-                if(isset($track["artist"]))
-                    $track["artist"] = self::zkAlpha($track["artist"]);
-            }
-        }
-
-        // normalize artist and album names
-        $a = [];
-        foreach(["artist", "album"] as $field)
-            $a[$field] = self::zkAlpha($attrs->getRequired($field));
-        foreach(self::FIELDS as $field)
-            if(!isset($a[$field]) && $attrs->has($field))
-                $a[$field] = $attrs->getOptional($field);
 
         // normalize label fields
         foreach(["name","attention","address","city","maillist"] as $field) {
@@ -452,47 +469,8 @@ class Albums implements RequestHandlerInterface {
             throw new ResourceNotFoundException("album", $key);
 
         $attrs = $request->requestBody()->data()->first("album")->attributes();
-
-        // map field values to codes
-        $maps = self::getFieldValueToCodeMap();
-
-        foreach($maps as $field)
-            if($attrs->has($field[0])) {
-                $val = $attrs->getRequired($field[0]);
-                if(!isset($field[1][$val]))
-                    throw new \InvalidArgumentException("Value $val is not defined for property {$field[0]}");
-                $attrs->set($field[0], $field[1][$val]);
-            }
-
-        foreach(self::FIELDS as $field) {
-            if($attrs->has($field)) {
-                $value = $attrs->getRequired($field);
-                switch($field) {
-                case "artist":
-                case "album":
-                    $value = self::zkAlpha($value);
-                    break;
-                default:
-                    break;
-                }
-                $albums[0][$field] = $value;
-            }
-        }
-
-        $tracks = $attrs->getOptional("tracks");
-        if($tracks) {
-            // reindex tracks
-            $tracks = array_combine(range(1, sizeof($tracks)),
-                        array_values($tracks));
-
-            // normalize track names
-            foreach($tracks as &$track) {
-                $track["track"] = self::zkAlpha($track["track"], true);
-                if(isset($track["artist"]))
-                    $track["artist"] = self::zkAlpha($track["artist"]);
-            }
-        }
-
+        [$album, $tracks] = self::fromAttrs($attrs);
+        array_merge($albums[0], $album);
         Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], $tracks, null);
 
         return new EmptyResponse();
