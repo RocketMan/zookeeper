@@ -49,7 +49,7 @@ class Reviews implements RequestHandlerInterface {
     use NoRelationshipModificationTrait;
 
     const FIELDS = [ "airname", "date", "review" ];
-                     
+
     public static function fromRecord($rec) {
         $res = new JsonResource("review", $rec["id"]);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."review/".$rec["id"]));
@@ -66,7 +66,7 @@ class Reviews implements RequestHandlerInterface {
         }
         return $res;
     }
-    
+
     public function fetchResource(RequestInterface $request): ResponseInterface {
         $key = $request->id();
         $reviews = Engine::api(IReview::class)->getReviews($key, 1, "", Engine::session()->isAuth("u"), 1);
@@ -92,8 +92,56 @@ class Reviews implements RequestHandlerInterface {
     }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
-        // TBD add filter-based album retrieval
-        throw new NotAllowedException("review fetch by id only");
+        if($request->hasFilter("airname")) {
+            $op = ILibrary::ALBUM_AIRNAME;
+            $key = $request->filterValue("airname");
+            $filter = "filter%5Bairname%5D=" . urlencode($key);
+        } else
+            throw new NotAllowedException("must specify filter");
+
+        $reqOffset = $offset = $request->hasPagination("offset")?
+                $request->paginationValue("offset"):0;
+
+        $limit = $request->hasPagination("size")?
+                $request->paginationValue("size"):null;
+        if(!$limit || $limit > API::MAX_LIMIT)
+            $limit = API::MAX_LIMIT;
+
+        $sort = $_GET["sort"] ?? "";
+
+        $libraryAPI = Engine::api(ILibrary::class);
+        $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
+        $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
+        $result = [];
+        foreach($records as $record) {
+            $resource = self::fromRecord($record);
+            $result[] = $resource;
+
+            // ILibrary::ALBUM_AIRNAME returns album details in the result
+            $res = Albums::fromRecord($record);
+            $relation = new Relationship("album", $res);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/{$record["id"]}/album"));
+            $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/{$record["id"]}/relationships/album"));
+            $resource->relationships()->set($relation);
+        }
+        $document = new Document($result);
+
+        $base = Engine::getBaseUrl()."review?{$filter}";
+        $size = "&page%5Bprofile%5D=offset&page%5Bsize%5D=$limit";
+
+        if($offset)
+            $document->links()->set(new Link("next", "{$base}&page%5Boffset%5D={$offset}{$size}"));
+        else
+            $offset = $total; // no more rows remaining
+
+        $link = new Link("first", "{$base}{$size}");
+        $link->metaInformation()->set("total", $total);
+        $link->metaInformation()->set("more", $reqOffset?$total:($total - $offset));
+        $link->metaInformation()->set("offset", (int)$reqOffset);
+        $document->links()->set($link);
+
+        $response = new DocumentResponse($document);
+        return $response;
     }
 
     public function fetchRelationship(RequestInterface $request): ResponseInterface {
