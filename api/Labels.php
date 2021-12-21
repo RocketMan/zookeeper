@@ -62,6 +62,15 @@ class Labels implements RequestHandlerInterface {
         return $res;
     }
 
+    public static function fromArray(array $records) {
+        $result = [];
+        foreach($records as $record) {
+            $resource = self::fromRecord($record);
+            $result[] = $resource;
+        }
+        return $result;
+    }
+
     public static function fromAttrs($attrs) {
         $label = [];
 
@@ -93,8 +102,8 @@ class Labels implements RequestHandlerInterface {
         return $response;
     }
 
-    public function fetchResources(RequestInterface $request): ResponseInterface {
-        // we paginate according to the cursor pagination profile
+    protected function paginateCursor(RequestInterface $request): ResponseInterface {
+        // pagination according to the cursor pagination profile
         // https://jsonapi.org/profiles/ethanresnick/cursor-pagination/
 
         if($request->hasFilter("name")) {
@@ -150,6 +159,65 @@ class Labels implements RequestHandlerInterface {
         $document->links()->set(new Link("next", "{$base}page%5Bafter%5D={$next}{$size}"));
 
         $response = new DocumentResponse($document);
+        return $response;
+    }
+
+    protected function paginateOffset(RequestInterface $request): ResponseInterface {
+        if($request->hasFilter("name")) {
+            $op = ILibrary::LABEL_NAME;
+            $key = $request->filterValue("name");
+            $filter = "filter%5Bname%5D=" . urlencode($key);
+        } else
+            throw new NotAllowedException("must specify filter");
+
+        $reqOffset = $offset = $request->hasPagination("offset")?
+                $request->paginationValue("offset"):0;
+
+        $limit = $request->hasPagination("size")?
+                $request->paginationValue("size"):null;
+        if(!$limit || $limit > API::MAX_LIMIT)
+            $limit = API::MAX_LIMIT;
+
+        $sort = $_GET["sort"] ?? "";
+
+        $libraryAPI = Engine::api(ILibrary::class);
+        $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
+        $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
+        $result = self::fromArray($records);
+        $document = new Document($result);
+
+        $base = Engine::getBaseUrl()."label?{$filter}";
+        $size = "&page%5Bprofile%5D=offset&page%5Bsize%5D=$limit";
+
+        if($offset)
+            $document->links()->set(new Link("next", "{$base}&page%5Boffset%5D={$offset}{$size}"));
+        else
+            $offset = $total; // no more rows remaining
+
+        $link = new Link("first", "{$base}{$size}");
+        $link->metaInformation()->set("total", $total);
+        $link->metaInformation()->set("more", $reqOffset?$total:($total - $offset));
+        $link->metaInformation()->set("offset", (int)$reqOffset);
+        $document->links()->set($link);
+
+        $response = new DocumentResponse($document);
+        return $response;
+    }
+
+    public function fetchResources(RequestInterface $request): ResponseInterface {
+        $profile = $request->hasPagination("profile")?
+                   $request->paginationValue("profile"):"offset";
+        switch($profile) {
+        case "cursor":
+            $response = $this->paginateCursor($request);
+            break;
+        case "offset":
+            $response = $this->paginateOffset($request);
+            break;
+        default:
+            throw new NotAllowedException("unknown pagination profile '{$profile}'");
+        }
+
         return $response;
     }
 

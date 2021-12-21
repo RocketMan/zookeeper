@@ -322,15 +322,14 @@ class Albums implements RequestHandlerInterface {
             throw new NotAllowedException("must specify filter");
 
         $reqOffset = $offset = $request->hasPagination("offset")?
-            $request->paginationValue("offset"):0;
+                $request->paginationValue("offset"):0;
 
         $limit = $request->hasPagination("size")?
                 $request->paginationValue("size"):null;
         if(!$limit || $limit > API::MAX_LIMIT)
             $limit = API::MAX_LIMIT;
 
-        $order = $request->order();
-        $sort = sizeof($order)?$order[array_keys($order)[0]]:"";
+        $sort = $_GET["sort"] ?? "";
 
         $libraryAPI = Engine::api(ILibrary::class);
         $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
