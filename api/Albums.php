@@ -314,10 +314,10 @@ class Albums implements RequestHandlerInterface {
             $op = ILibrary::TRACK_NAME;
             $key = $request->filterValue("track");
             $filter = "filter%5Btrack%5D=" . urlencode($key);
-        } else if($request->hasFilter("label.name")) {
-            $op = ILibrary::LABEL_NAME;
-            $key = $request->filterValue("label.name");
-            $filter = "filter%5Blabel.name%5D=" . urlencode($key);
+        } else if($request->hasFilter("label.id")) {
+            $op = ILibrary::ALBUM_PUBKEY;
+            $key = $request->filterValue("label.id");
+            $filter = "filter%5Blabel.id%5D=" . urlencode($key);
         } else
             throw new NotAllowedException("must specify filter");
 
