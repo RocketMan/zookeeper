@@ -579,7 +579,9 @@ class API extends CommandTarget implements IController {
         foreach($response->headers()->all() as $header => $value)
             header("{$header}: {$value}");
 
+        ob_start("ob_gzhandler");
         echo $jsonApi->createResponseBody($response);
+        ob_end_flush();
     }
 
     public function getCurrents() {
