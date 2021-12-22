@@ -125,6 +125,9 @@ class Albums implements RequestHandlerInterface {
             $res->attributes()->set($field, $value);
         }
 
+        if($rec["reviewed"] ?? 0)
+            $res->metaInformation()->set("reviewed", true);
+
         $fields = self::TRACK_FIELDS;
         if($rec["iscoll"])
             $key = ILibrary::COLL_KEY;
@@ -371,6 +374,9 @@ class Albums implements RequestHandlerInterface {
         $libraryAPI = Engine::api(ILibrary::class);
         $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
         $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
+        if($op != ILibrary::ALBUM_AIRNAME)
+            $libraryAPI->markAlbumsReviewed($records, Engine::session()->isAuth("u"));
+
         switch($op) {
         case ILibrary::ALBUM_AIRNAME:
             $result = $this->marshallReviews($records);
