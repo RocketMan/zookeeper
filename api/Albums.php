@@ -301,6 +301,14 @@ class Albums implements RequestHandlerInterface {
         return $response;
     }
 
+    protected function marshallTracks(array $records) {
+        $result = self::fromArray($records, self::LINKS_LABEL);
+        array_map(function($res, $rec) {
+            $res->metaInformation()->set("track", $rec["track"]);
+        }, $result, $records);
+        return $result;
+    }
+
     protected function marshallReviews(array $records) {
         $result = [];
         foreach($records as $record) {
@@ -363,9 +371,17 @@ class Albums implements RequestHandlerInterface {
         $libraryAPI = Engine::api(ILibrary::class);
         $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
         $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
-        $result = $op == ILibrary::ALBUM_AIRNAME?
-                $this->marshallReviews($records):
-                self::fromArray($records, self::LINKS_LABEL);
+        switch($op) {
+        case ILibrary::ALBUM_AIRNAME:
+            $result = $this->marshallReviews($records);
+            break;
+        case ILibrary::TRACK_NAME:
+            $result = $this->marshallTracks($records);
+            break;
+        default:
+            $result = self::fromArray($records, self::LINKS_LABEL);
+            break;
+        }
         $document = new Document($result);
 
         $base = Engine::getBaseUrl()."album?{$filter}";
