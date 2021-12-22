@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -527,10 +527,10 @@ $().ready(function(){
     }
 
     function searchLibrary(key) {
-        var url = "zkapi.php?method=libLookupRq" +
-            "&type=artists" +
-            "&key=" + encodeURIComponent(key) + "*" +
-            "&size=50";
+        var url = "api/v1/album?filter[artist]=" +
+            encodeURIComponent(key) + "*" +
+            "&size=50&fields[album]=artist,album";
+
         var results = $("#track-artists");
         $.ajax({
             dataType : 'json',
@@ -540,14 +540,14 @@ $().ready(function(){
             success: function(response) {
                 $("#track-artist").attr('list',''); // webkit hack
                 results.empty();
-                if(response.total > 0) {
-                    var data = response.data[0];
-                    data.data.forEach(function(entry) {
-                        var row = htmlify(entry.artist) + " - " +
-                            htmlify(entry.album) + " (#" +
-                            entry.tag + ")";
-                        results.append("<option data-tag='" + entry.tag +
-                                       "' data-artist='" + htmlify(entry.artist) +
+                if(response.links.first.meta.total > 0) {
+                    response.data.forEach(function(entry) {
+                        var attrs = entry.attributes;
+                        var row = htmlify(attrs.artist) + " - " +
+                            htmlify(attrs.album) + " (#" +
+                            entry.id + ")";
+                        results.append("<option data-tag='" + entry.id +
+                                       "' data-artist='" + htmlify(attrs.artist) +
                                        "' value='" + row + "'>");
                     });
                     $("#track-artist").attr('list','track-artists'); // webkit hack
