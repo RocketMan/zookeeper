@@ -303,7 +303,6 @@ class Albums implements RequestHandlerInterface {
 
     protected function marshallReviews(array $records) {
         $result = [];
-        $labelMap = [];
         foreach($records as $record) {
             $resource = self::fromRecord($record);
             $result[] = $resource;
