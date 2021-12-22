@@ -42,11 +42,13 @@ use Enm\JsonApi\Model\Response\DocumentResponse;
 use Enm\JsonApi\Model\Response\EmptyResponse;
 use Enm\JsonApi\Model\Response\ResponseInterface;
 use Enm\JsonApi\Server\RequestHandler\NoRelationshipModificationTrait;
+use Enm\JsonApi\Server\RequestHandler\NoResourceFetchTrait;
 use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
 
 
 class Reviews implements RequestHandlerInterface {
     use NoRelationshipModificationTrait;
+    use NoResourceFetchTrait;
 
     const FIELDS = [ "airname", "date", "review" ];
 
@@ -86,67 +88,6 @@ class Reviews implements RequestHandlerInterface {
         }
 
         $document = new Document($resource);
-
-        $response = new DocumentResponse($document);
-        return $response;
-    }
-
-    public function fetchResources(RequestInterface $request): ResponseInterface {
-        if($request->hasFilter("airname.id")) {
-            $op = ILibrary::ALBUM_AIRNAME;
-            $key = $request->filterValue("airname.id");
-            $filter = "filter%5Bairname.id%5D=" . urlencode($key);
-        } else
-            throw new NotAllowedException("must specify filter");
-
-        $reqOffset = $offset = $request->hasPagination("offset")?
-                $request->paginationValue("offset"):0;
-
-        $limit = $request->hasPagination("size")?
-                $request->paginationValue("size"):null;
-        if(!$limit || $limit > API::MAX_LIMIT)
-            $limit = API::MAX_LIMIT;
-
-        $sort = $_GET["sort"] ?? "";
-
-        $libraryAPI = Engine::api(ILibrary::class);
-        $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
-        $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
-        $result = [];
-        foreach($records as $record) {
-            $resource = self::fromRecord($record);
-            $result[] = $resource;
-
-            // ILibrary::ALBUM_AIRNAME returns album details in the result
-            $res = Albums::fromRecord($record);
-            $relation = new Relationship("album", $res);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/{$record["id"]}/album"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/{$record["id"]}/relationships/album"));
-            $resource->relationships()->set($relation);
-
-            $label = new JsonResource("label", $record["pubkey"]);
-            $label->links()->set(new Link("self", Engine::getBaseUrl()."label/".$record["pubkey"]));
-            $relation = new Relationship("label", $label);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
-            $relation->metaInformation()->set("name", $record["name"]);
-            $res->relationships()->set($relation);
-        }
-        $document = new Document($result);
-
-        $base = Engine::getBaseUrl()."review?{$filter}";
-        $size = "&page%5Bprofile%5D=offset&page%5Bsize%5D=$limit";
-
-        if($offset)
-            $document->links()->set(new Link("next", "{$base}&page%5Boffset%5D={$offset}{$size}"));
-        else
-            $offset = $total; // no more rows remaining
-
-        $link = new Link("first", "{$base}{$size}");
-        $link->metaInformation()->set("total", $total);
-        $link->metaInformation()->set("more", $reqOffset?$total:($total - $offset));
-        $link->metaInformation()->set("offset", (int)$reqOffset);
-        $document->links()->set($link);
 
         $response = new DocumentResponse($document);
         return $response;

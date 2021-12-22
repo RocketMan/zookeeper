@@ -162,7 +162,6 @@ class Albums implements RequestHandlerInterface {
                     $resource->relationships()->set($relation);
                     foreach($reviews as $review) {
                         $res = Reviews::fromRecord($review);
-                        $relation = new Relationship("review", $res);
                         $relations->set($res);
                     }
                 }
@@ -302,6 +301,32 @@ class Albums implements RequestHandlerInterface {
         return $response;
     }
 
+    protected function marshallReviews(array $records) {
+        $result = [];
+        $labelMap = [];
+        foreach($records as $record) {
+            $resource = self::fromRecord($record);
+            $result[] = $resource;
+
+            $relations = new ResourceCollection();
+            $relation = new Relationship("reviews", $relations);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/reviews"));
+            $resource->relationships()->set($relation);
+            $res = Reviews::fromRecord($record);
+            $res->metaInformation()->set("date", $record["reviewed"]);
+            $relations->set($res);
+
+            $res = Labels::fromRecord($record);
+            $relation = new Relationship("label", $res);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
+            $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
+            $relation->metaInformation()->set("name", $record["name"]);
+            $resource->relationships()->set($relation);
+        }
+
+        return $result;
+    }
+
     protected function paginateOffset(RequestInterface $request): ResponseInterface {
         if($request->hasFilter("artist")) {
             $op = ILibrary::ALBUM_ARTIST;
@@ -319,6 +344,10 @@ class Albums implements RequestHandlerInterface {
             $op = ILibrary::ALBUM_PUBKEY;
             $key = $request->filterValue("label.id");
             $filter = "filter%5Blabel.id%5D=" . urlencode($key);
+        } else if($request->hasFilter("reviews.airname.id")) {
+            $op = ILibrary::ALBUM_AIRNAME;
+            $key = $request->filterValue("reviews.airname.id");
+            $filter = "filter%5Breviews.airname.id%5D=" . urlencode($key);
         } else
             throw new NotAllowedException("must specify filter");
 
@@ -335,7 +364,9 @@ class Albums implements RequestHandlerInterface {
         $libraryAPI = Engine::api(ILibrary::class);
         $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
         $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
-        $result = self::fromArray($records, self::LINKS_LABEL);
+        $result = $op == ILibrary::ALBUM_AIRNAME?
+                $this->marshallReviews($records):
+                self::fromArray($records, self::LINKS_LABEL);
         $document = new Document($result);
 
         $base = Engine::getBaseUrl()."album?{$filter}";
