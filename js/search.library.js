@@ -375,7 +375,8 @@ function search(size, offset) {
     var url = "api/v1/" + requestMap[type] +
         encodeURIComponent($("#key").val()) +
         "&sort=" + $("#sortBy").val() +
-        "&fields[album]=-tracks";
+        "&fields[album]=-tracks" +
+	"&fields[label]=name,city,state,modified";
 
     if(size >= 0)
         url += "&page[size]=" + size;
