@@ -395,7 +395,7 @@ class Albums implements RequestHandlerInterface {
         $link = new Link("first", "{$base}{$size}");
         $link->metaInformation()->set("total", $total);
         $link->metaInformation()->set("more", ($reqOffset == "")?$total:($total - $offset));
-        $link->metaInformation()->set("offset", (int)$reqOffset);
+        $link->metaInformation()->set("offset", $reqOffset);
         $document->links()->set($link);
 
         $response = new DocumentResponse($document);
