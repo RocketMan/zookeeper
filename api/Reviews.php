@@ -60,6 +60,9 @@ class Reviews implements RequestHandlerInterface {
             case "date":
                 $value = substr($rec["created"], 0, 10);
                 break;
+            case "airname":
+                $value = $rec["airname"] ?? $rec["realname"];
+                break;
             default:
                 $value = $rec[$field];
                 break;

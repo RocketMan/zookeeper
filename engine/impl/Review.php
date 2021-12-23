@@ -99,12 +99,14 @@ class ReviewImpl extends DBO implements IReview {
         settype($tag, "integer");
         if($byName)
             $query = "SELECT r.id, r.created, r.review, " .
-                     "r.private, r.user, a.airname, r.tag " .
+                     "r.private, r.user, a.airname, r.tag, realname " .
                      "FROM reviews r " .
+                     "LEFT JOIN users u ON u.name = r.user " .
                      "LEFT JOIN airnames a ON a.id = r.airname ";
         else
-            $query = "SELECT id, created, review, " .
-                     "private, user, airname, tag FROM reviews r ";
+            $query = "SELECT r.id, created, review, " .
+                     "private, user, airname, tag, realname FROM reviews r " .
+                     "LEFT JOIN users u ON u.name = r.user ";
         $query .= $byId?"WHERE r.id=? ":"WHERE tag=? ";
         if($user)
             $query .= "AND user=? ";
