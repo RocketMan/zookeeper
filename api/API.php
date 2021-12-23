@@ -329,7 +329,6 @@ class API extends CommandTarget implements IController {
     private static $methods = [
         [ "", "unknownMethod" ],
         [ "searchRq", "fullTextSearch" ],
-        [ "libLookupRq", "libraryLookup" ],
         [ "getCurrentsRq", "getCurrents" ],
         [ "getChartsRq", "getCharts" ],
         [ "getPlaylistsRq", "getPlaylists" ], // LEGACY marked for deprecation
@@ -414,42 +413,6 @@ class API extends CommandTarget implements IController {
             $this->serializer->endResponse($result["type"]);
         }
         $this->serializer->endResponse("searchRs");
-    }
-
-    public function libraryLookup() {
-        $type = self::$libKeys[$_REQUEST["type"]];
-        if(!$type) {
-            $this->serializer->emitError("libLookupRs", 20, "Invalid type: ".$_REQUEST["type"]);
-            return;
-        }
-
-        $key = $_REQUEST["key"];
-        $offset = $_REQUEST["offset"];
-        $libraryAPI = Engine::api(ILibrary::class);
-        $total = $libraryAPI->searchPos($type[0], $offset, -1, $key);
-        $attrs = $this->serializer->newAttrs();
-        $attrs["total"] = $total;
-        $attrs["dataType"] = $_REQUEST["type"];
-        $this->serializer->startResponse("libLookupRs", $attrs);
-
-        $results = $libraryAPI->searchPos($type[0], $offset, $this->limit, $key, $_REQUEST["sortBy"]);
-        switch($type[0]) {
-        case ILibrary::LABEL_NAME:
-        case ILibrary::ALBUM_AIRNAME:
-            break;
-        default:
-            $libraryAPI->markAlbumsReviewed($results, $this->session->isAuth("u"));
-            break;
-        }
-        $attrs = [];
-        // conform to the more/offset semantics of searchRq
-        if(!$offset) $offset = $total; // no more rows remaining
-        $attrs["more"] = $_REQUEST["offset"] == ""?($total - $offset):$total;
-        $attrs["offset"] = $_REQUEST["offset"];
-        $this->serializer->startResponse($_REQUEST["type"], $attrs);
-        $this->serializer->emitDataSetArray($type[1], $type[2], $results);
-        $this->serializer->endResponse($_REQUEST["type"]);
-        $this->serializer->endResponse("libLookupRs");
     }
 
     public function getCharts() {
