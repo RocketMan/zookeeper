@@ -164,7 +164,7 @@ function emitAlbumsEx(table, data) {
                 }, true) + "'>").append(getArtist(attrs)));
         }
         tr.append(td);
-        var reviewClass = entry.relationships.reviews?"albumReview":"albumNoReview";
+        var reviewClass = (entry.relationships && entry.relationships.reviews)?"albumReview":"albumNoReview";
         tr.append($("<TD>", {
             style: 'padding: 0 0 0 6px'
         }).append($("<DIV>", {
@@ -178,7 +178,7 @@ function emitAlbumsEx(table, data) {
         }).html(htmlify(attrs.album))));
         var collection = attrs.location;
         collection = (collection == "Library")?attrs.category:
-            "<I>" + collection + "&nbsp;" + attrs.bin + "</I>";
+            "<I>" + collection + "&nbsp;" + (attrs.bin?attrs.bin:'') + "</I>";
         tr.append($("<TD>").html(collection));
         tr.append($("<TD>").html(attrs.medium));
         tr.append($("<TD>").html(attrs.size));
@@ -187,7 +187,7 @@ function emitAlbumsEx(table, data) {
             align: 'center',
             class: 'date'
         }).html(created[1] + '/' + created[0].substring(2)));
-        if(entry.relationships.label) {
+        if(entry.relationships && entry.relationships.label) {
             var label = entry.relationships.label;
             tr.append($("<TD>").append(
                 $("<A href='#" + encobj({
@@ -279,7 +279,7 @@ var lists = {
                 tr.append($("<TD>").html(collection));
                 tr.append($("<TD>").html(attrs.medium));
                 tr.append($("<TD>").html(attrs.size));
-                if(entry.relationships.label) {
+                if(entry.relationships && entry.relationships.label) {
                     var label = entry.relationships.label;
                     tr.append($("<TD>").append(
                         $("<A href='#" + encobj({
