@@ -210,14 +210,14 @@ class LibraryImpl extends DBO implements ILibrary {
       
             $query = "SELECT a.tag, track, artist, album, seq, ".
                      "category, medium, size, location, bin, ".
-                     "a.pubkey, name, address, city, state, zip ".
+                     "a.pubkey, name, address, city, state, zip, iscoll ".
                      "FROM tracknames t, albumvol a ".
                      "LEFT JOIN publist p ON a.pubkey = p.pubkey ".
                      "WHERE a.tag = t.tag AND ".
                      "track LIKE ? ".
                      "UNION SELECT a.tag, track, c.artist, a.artist, seq, ".
                      "category, medium, size, location, bin, ".
-                     "a.pubkey, name, address, city, state, zip ".
+                     "a.pubkey, name, address, city, state, zip, iscoll ".
                      "FROM colltracknames c LEFT JOIN albumvol a ON a.tag = c.tag ".
                      "LEFT JOIN publist p ON a.pubkey = p.pubkey ".
                      "WHERE track LIKE ? ".

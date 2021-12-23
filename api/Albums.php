@@ -98,7 +98,7 @@ class Albums implements RequestHandlerInterface {
         ];
     }
 
-    public static function fromRecord($rec) {
+    public static function fromRecord($rec, $wantTracks = true) {
         $res = new JsonResource("album", $rec["tag"]);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."album/".$rec["tag"]));
         foreach(self::FIELDS as $field) {
@@ -125,27 +125,26 @@ class Albums implements RequestHandlerInterface {
             $res->attributes()->set($field, $value);
         }
 
-        if($rec["reviewed"] ?? 0)
-            $res->metaInformation()->set("reviewed", true);
+        if($wantTracks) {
+            $fields = self::TRACK_FIELDS;
+            if($rec["iscoll"])
+                $key = ILibrary::COLL_KEY;
+            else {
+                $key = ILibrary::TRACK_KEY;
+                $fields = array_diff($fields, ["artist"]);
+            }
+            $tracks = Engine::api(ILibrary::class)->search($key, 0, 200, $rec["tag"]);
 
-        $fields = self::TRACK_FIELDS;
-        if($rec["iscoll"])
-            $key = ILibrary::COLL_KEY;
-        else {
-            $key = ILibrary::TRACK_KEY;
-            $fields = array_diff($fields, ["artist"]);
+            $albumTracks = [];
+            foreach($tracks as $track) {
+                $r = [];
+                foreach($fields as $field)
+                    $r[$field] = $track[$field];
+                $albumTracks[] = $r;
+            }
+
+            $res->attributes()->set("tracks", $albumTracks);
         }
-        $tracks = Engine::api(ILibrary::class)->search($key, 0, 200, $rec["tag"]);
-
-        $albumTracks = [];
-        foreach($tracks as $track) {
-            $r = [];
-            foreach($fields as $field)
-                $r[$field] = $track[$field];
-            $albumTracks[] = $r;
-        }
-
-        $res->attributes()->set("tracks", $albumTracks);
         return $res;
     }
 
@@ -304,11 +303,48 @@ class Albums implements RequestHandlerInterface {
         return $response;
     }
 
-    protected function marshallTracks(array $records) {
-        $result = self::fromArray($records, self::LINKS_LABEL);
-        array_map(function($res, $rec) {
-            $res->metaInformation()->set("track", $rec["track"]);
-        }, $result, $records);
+    protected function fromTrackSearch(array $records) {
+        $result = [];
+        $map = [];
+        foreach($records as $record) {
+            $tag = $record["tag"];
+            if(array_key_exists($tag, $map)) {
+                $resource = $map[$tag];
+                $tracks = $resource->attributes()->getOptional("tracks");
+            } else {
+                // ILibrary::TRACK_NAME returns '[coll]: title' in the
+                // album field (normally in artist) and the track artist
+                // in artist.  For reconstituting the album record, we
+                // temporarily restore the original artist.
+                if($record["iscoll"]) {
+                    $artist = $record["artist"];
+                    $record["artist"] = $record["album"];
+                }
+                $resource = $map[$tag] = self::fromRecord($record, false);
+                // we need to put this back so it is available for the track
+                if($record["iscoll"])
+                    $record["artist"] = $artist;
+                $result[] = $resource;
+                $tracks = [];
+
+                $res = Labels::fromRecord($record);
+                $relation = new Relationship("label", $res);
+                $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
+                $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
+                $relation->metaInformation()->set("name", $record["name"]);
+                $resource->relationships()->set($relation);
+            }
+            $fields = self::TRACK_FIELDS;
+            if(!$record["iscoll"])
+                $fields = array_diff($fields, ["artist"]);
+
+            $r = [];
+            foreach($fields as $field)
+                $r[$field] = $record[$field];
+
+            $tracks[] = $r;
+            $resource->attributes()->set("tracks", $tracks);
+        }
         return $result;
     }
 
@@ -382,7 +418,7 @@ class Albums implements RequestHandlerInterface {
             $result = $this->marshallReviews($records);
             break;
         case ILibrary::TRACK_NAME:
-            $result = $this->marshallTracks($records);
+            $result = $this->fromTrackSearch($records);
             break;
         default:
             $result = self::fromArray($records, self::LINKS_LABEL);

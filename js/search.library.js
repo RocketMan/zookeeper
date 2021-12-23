@@ -80,7 +80,15 @@ function emitMore(table, data) {
             colSpan: 4
         }).append("&nbsp;&nbsp;");
 
-        if(data.data.length < more) {
+        // for track search, we paginate by tracks
+        var count = data.data.length;
+        if(count > 0 && data.data[0].attributes.tracks) {
+            data.data.forEach(function(entry) {
+                count += entry.attributes.tracks.length - 1;
+            });
+        }
+
+        if(count < more) {
             var numchunks = 10;
             var page = (offset / chunksize) | 0;
             var start = ((page / numchunks) | 0) * numchunks;
@@ -230,59 +238,61 @@ var lists = {
         table.append($("<THEAD>").append(tr));
 
         data.data.forEach(function(entry) {
-            tr = $("<TR>");
-            var td = $("<TD>");
             var attrs = entry.attributes;
-            if(attrs.artist.match(/^\[coll\]/i)) {
-                // It's a collection; HREF the album key
-                td.html($("<A>", {
+            attrs.tracks.forEach(function(track) {
+                tr = $("<TR>");
+                var td = $("<TD>");
+                if(attrs.artist.match(/^\[coll\]/i)) {
+                    // It's a collection; HREF the album key
+                    td.html($("<A>", {
+                        href: "?s=byAlbumKey&n=" +
+                            encodeURIComponent(entry.id) +
+                            "&q=" + maxresults +
+                            "&action=search"
+                    }).html(getArtist(track)));
+                } else {
+                    td.append(
+                        $("<A href='#" + encobj({
+                            type: 'artists',
+                            key: track.artist,
+                            sortBy: 'Artist',
+                            form: true
+                        }, true) + "'>").append(getArtist(attrs)));
+                }
+                tr.append(td);
+                tr.append($("<TD>").html($("<A>", {
                     href: "?s=byAlbumKey&n=" +
                         encodeURIComponent(entry.id) +
                         "&q=" + maxresults +
                         "&action=search"
-                }).html(getArtist(attrs)));
-            } else {
-                td.append(
-                    $("<A href='#" + encobj({
-                        type: 'artists',
-                        key: attrs.artist,
-                        sortBy: 'Artist',
-                        form: true
-                    }, true) + "'>").append(getArtist(attrs)));
-            }
-            tr.append(td);
-            tr.append($("<TD>").html($("<A>", {
-                href: "?s=byAlbumKey&n=" +
-                    encodeURIComponent(entry.id) +
-                    "&q=" + maxresults +
-                    "&action=search"
-            }).html(htmlify(attrs.album))));
-            tr.append($("<TD>").append(
-                $("<A href='#" + encobj({
-                    type: 'tracks',
-                    key: entry.meta.track,
-                    sortBy: 'Track',
-                    form: true
-                }, true) + "'>").append(htmlify(entry.meta.track))));
-            var collection = attrs.location;
-            collection = (collection == "Library")?attrs.category:
-                "<I>" + collection + "&nbsp;" + attrs.bin + "</I>";
-            tr.append($("<TD>").html(collection));
-            tr.append($("<TD>").html(attrs.medium));
-            tr.append($("<TD>").html(attrs.size));
-            if(entry.relationships.label) {
-                var label = entry.relationships.label;
+                }).html(htmlify(attrs.album))));
                 tr.append($("<TD>").append(
                     $("<A href='#" + encobj({
-                        type: 'albumsByPubkey',
-                        key: label.data.id,
-                        sortBy: '',
-                        n: ''
-                    }, true) + "'>").append(htmlify(label.meta.name))));
-            } else {
-                tr.append($("<TD>").html("Unknown"));
-            }
-            table.append(tr);
+                        type: 'tracks',
+                        key: track.track,
+                        sortBy: 'Track',
+                        form: true
+                    }, true) + "'>").append(htmlify(track.track))));
+                var collection = attrs.location;
+                collection = (collection == "Library")?attrs.category:
+                    "<I>" + collection + "&nbsp;" + attrs.bin + "</I>";
+                tr.append($("<TD>").html(collection));
+                tr.append($("<TD>").html(attrs.medium));
+                tr.append($("<TD>").html(attrs.size));
+                if(entry.relationships.label) {
+                    var label = entry.relationships.label;
+                    tr.append($("<TD>").append(
+                        $("<A href='#" + encobj({
+                            type: 'albumsByPubkey',
+                            key: label.data.id,
+                            sortBy: '',
+                            n: ''
+                        }, true) + "'>").append(htmlify(label.meta.name))));
+                } else {
+                    tr.append($("<TD>").html("Unknown"));
+                }
+                table.append(tr);
+            })
         });
 
         emitMore(table, data);
@@ -375,8 +385,10 @@ function search(size, offset) {
     var url = "api/v1/" + requestMap[type] +
         encodeURIComponent($("#key").val()) +
         "&sort=" + $("#sortBy").val() +
-        "&fields[album]=-tracks" +
-	"&fields[label]=name,city,state,modified";
+        "&fields[label]=name,city,state,modified";
+
+    if(type != 'tracks')
+        url += "&fields[album]=-tracks";
 
     if(size >= 0)
         url += "&page[size]=" + size;
