@@ -56,6 +56,7 @@ class Albums implements RequestHandlerInterface {
     const LINKS_NONE = 0;
     const LINKS_LABEL = 1;
     const LINKS_REVIEWS = 2;
+    const INCLUDE_REVIEW_BODY = 4;
     const LINKS_ALL = ~0;
 
     private const NONALNUM="/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/";
@@ -153,7 +154,7 @@ class Albums implements RequestHandlerInterface {
         $labelMap = [];
 
         if($flags & self::LINKS_REVIEWS)
-            Engine::api(ILibrary::class)->linkReviews($records, Engine::session()->isAuth("u"));
+            Engine::api(ILibrary::class)->linkReviews($records, Engine::session()->isAuth("u"), $flags & self::INCLUDE_REVIEW_BODY);
 
         foreach($records as $record) {
             $resource = self::fromRecord($record);
@@ -412,6 +413,10 @@ class Albums implements RequestHandlerInterface {
         $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
         $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
 
+        $links = self::LINKS_ALL;
+        if(!$request->requestsInclude("reviews"))
+            $links &= ~self::INCLUDE_REVIEW_BODY;
+
         switch($op) {
         case ILibrary::ALBUM_AIRNAME:
             $result = $this->marshallReviews($records);
@@ -420,7 +425,7 @@ class Albums implements RequestHandlerInterface {
             $result = $this->fromTrackSearch($records);
             break;
         default:
-            $result = self::fromArray($records, self::LINKS_ALL);
+            $result = self::fromArray($records, $links);
             break;
         }
         $document = new Document($result);

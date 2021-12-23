@@ -313,7 +313,7 @@ class LibraryImpl extends DBO implements ILibrary {
         return $airname?$airname:$realname;
     }
     
-    public function linkReviews(&$albums, $loggedIn = 0) {
+    public function linkReviews(&$albums, $loggedIn = false, $includeBody = false) {
         $chain = [];
         $tags = [];
         $queryset = "";
@@ -327,7 +327,9 @@ class LibraryImpl extends DBO implements ILibrary {
                 $tags[$tag] = $i;
             }
         }
-        $query = "SELECT tag, a.airname, realname, r.id, review FROM reviews r " .
+
+        $ib = $includeBody?"":"null";
+        $query = "SELECT tag, a.airname, realname, r.id, $ib review FROM reviews r " .
                  "LEFT JOIN users u ON r.user = u.name " .
                  "LEFT JOIN airnames a ON r.airname = a.id WHERE " .
                  "tag IN (0" . $queryset . ")";
