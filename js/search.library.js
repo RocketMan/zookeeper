@@ -164,7 +164,7 @@ function emitAlbumsEx(table, data) {
                 }, true) + "'>").append(getArtist(attrs)));
         }
         tr.append(td);
-        var reviewClass = entry.meta && entry.meta.reviewed?"albumReview":"albumNoReview";
+        var reviewClass = entry.relationships.reviews?"albumReview":"albumNoReview";
         tr.append($("<TD>", {
             style: 'padding: 0 0 0 6px'
         }).append($("<DIV>", {

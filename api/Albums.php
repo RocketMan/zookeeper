@@ -410,8 +410,6 @@ class Albums implements RequestHandlerInterface {
         $libraryAPI = Engine::api(ILibrary::class);
         $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
         $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
-        if($op != ILibrary::ALBUM_AIRNAME)
-            $libraryAPI->markAlbumsReviewed($records, Engine::session()->isAuth("u"));
 
         switch($op) {
         case ILibrary::ALBUM_AIRNAME:
@@ -421,7 +419,7 @@ class Albums implements RequestHandlerInterface {
             $result = $this->fromTrackSearch($records);
             break;
         default:
-            $result = self::fromArray($records, self::LINKS_LABEL);
+            $result = self::fromArray($records, self::LINKS_ALL);
             break;
         }
         $document = new Document($result);
