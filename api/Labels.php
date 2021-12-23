@@ -187,7 +187,7 @@ class Labels implements RequestHandlerInterface {
         $document = new Document($result);
 
         $base = Engine::getBaseUrl()."label?{$filter}";
-        $size = "&page%5Bprofile%5D=offset&page%5Bsize%5D=$limit";
+        $size = "&page%5Bsize%5D=$limit";
 
         if($offset)
             $document->links()->set(new Link("next", "{$base}&page%5Boffset%5D={$offset}{$size}"));
