@@ -313,6 +313,44 @@ class LibraryImpl extends DBO implements ILibrary {
         return $airname?$airname:$realname;
     }
     
+    public function linkReviews(&$albums, $loggedIn = 0) {
+        $chain = [];
+        $tags = [];
+        $queryset = "";
+        for($i = 0; $albums != null && $i < sizeof($albums); $i++) {
+            $tag = array_key_exists("tag", $albums[$i])?$albums[$i]["tag"]:0;
+            if($tag) {
+                if(array_key_exists($tag, $tags))
+                    $chain[$i] = $tags[$tag];
+                else
+                    $queryset .= ", $tag";
+                $tags[$tag] = $i;
+            }
+        }
+        $query = "SELECT tag, a.airname, realname, r.id, review FROM reviews r " .
+                 "LEFT JOIN users u ON r.user = u.name " .
+                 "LEFT JOIN airnames a ON r.airname = a.id WHERE " .
+                 "tag IN (0" . $queryset . ")";
+        if(!$loggedIn)
+            $query .= " AND private = 0";
+        $query .= " GROUP BY tag";
+        $stmt = $this->prepare($query);
+        $stmt->execute();
+        while($row = $stmt->fetch()) {
+            $review = [
+                "id" => $row['id'],
+                "airname" => self::displayName($row[1], $row[2]),
+                "date" => substr($row['created'], 0, 10),
+                "review" => $row['review']
+            ];
+            for($next = $tags[$row[0]]; $next >= 0; $next = array_key_exists($next, $chain)?$chain[$next]:-1) {
+                $reviews = $albums[$next]["reviews"] ?? [];
+                $reviews[] = $review;
+                $albums[$next]["reviews"] = $reviews;
+            }
+        }
+    }
+
     // For a given $albums array, add 'reviewed' and 'reviewer' columns
     // for each album which has at least one music review.
     //

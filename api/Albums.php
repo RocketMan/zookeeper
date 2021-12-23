@@ -151,21 +151,22 @@ class Albums implements RequestHandlerInterface {
     public static function fromArray(array $records, $flags = self::LINKS_NONE) {
         $result = [];
         $labelMap = [];
+
+        if($flags & self::LINKS_REVIEWS)
+            Engine::api(ILibrary::class)->linkReviews($records, Engine::session()->isAuth("u"));
+
         foreach($records as $record) {
             $resource = self::fromRecord($record);
             $result[] = $resource;
 
-            if($flags & self::LINKS_REVIEWS) {
-                $reviews = Engine::api(IReview::class)->getReviews($record["tag"]);
-                if(sizeof($reviews)) {
-                    $relations = new ResourceCollection();
-                    $relation = new Relationship("reviews", $relations);
-                    $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/reviews"));
-                    $resource->relationships()->set($relation);
-                    foreach($reviews as $review) {
-                        $res = Reviews::fromRecord($review);
-                        $relations->set($res);
-                    }
+            if($flags & self::LINKS_REVIEWS && isset($record["reviews"])) {
+                $relations = new ResourceCollection();
+                $relation = new Relationship("reviews", $relations);
+                $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/reviews"));
+                $resource->relationships()->set($relation);
+                foreach($record["reviews"] as $review) {
+                    $res = Reviews::fromRecord($review);
+                    $relations->set($res);
                 }
             }
 
