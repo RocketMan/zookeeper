@@ -317,15 +317,6 @@ class API extends CommandTarget implements IController {
         "tracks" => API::TRACK_FIELDS,
     ];
 
-    private static $libKeys = [
-        "albums" => [ ILibrary::ALBUM_NAME, "albumrec", API::ALBUM_FIELDS ],
-        "albumsByPubkey" => [ ILibrary::ALBUM_PUBKEY, "albumrec", API::ALBUM_FIELDS ],
-        "artists" => [ ILibrary::ALBUM_ARTIST, "albumrec", API::ALBUM_FIELDS ],
-        "labels" => [ ILibrary::LABEL_NAME, "labelrec", API::LABEL_FIELDS ],
-        "reviews" => [ ILibrary::ALBUM_AIRNAME, "reviewrec", API::REVIEW_FIELDS ],
-        "tracks" => [ ILibrary::TRACK_NAME, "albumrec", API::TRACK_FIELDS ],
-    ];
-
     private static $methods = [
         [ "", "unknownMethod" ],
         [ "searchRq", "fullTextSearch" ],
