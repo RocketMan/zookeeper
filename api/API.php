@@ -338,11 +338,8 @@ class API extends CommandTarget implements IController {
 
     /*
      * Allowed HTTP methods for pre-flighted CORS requests.
-     * Technically, this should be unnecessary, as the spec
-     * provides a default set of GET, HEAD, and POST.
-     * We provide an explicit response just to be sure.
      */
-    private static $defaultACAM = "GET, HEAD, POST";
+    private static $defaultACAM = "GET, HEAD, POST, DELETE, PATCH";
 
     private $limit;
     private $serializer;
