@@ -72,7 +72,7 @@ function header(title, sortable) {
 
 function emitMore(table, data) {
     var meta = data.links.first.meta;
-    var more = meta.more;
+    var more = meta.total;
     if(more > 0) {
         var offset = meta.offset;
         var tr = $("<TR>");
@@ -406,7 +406,7 @@ function search(size, offset) {
             results.empty();
             if(response.links.first.meta.total > 0) {
                 // if this is not the entire result set, paginate
-                if(response.data.length < response.links.first.meta.more &&
+                if(response.data.length < response.links.first.meta.total &&
                    response.data.length > chunksize)
                     response.data = response.data.slice(0, chunksize);
                 // default is sort by artist

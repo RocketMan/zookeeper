@@ -398,7 +398,7 @@ class Albums implements RequestHandlerInterface {
             throw new NotAllowedException("must specify filter");
 
         $reqOffset = $offset = $request->hasPagination("offset")?
-                $request->paginationValue("offset"):"";
+                $request->paginationValue("offset"):0;
 
         $limit = $request->hasPagination("size")?
                 $request->paginationValue("size"):null;
@@ -434,7 +434,7 @@ class Albums implements RequestHandlerInterface {
 
         $link = new Link("first", "{$base}{$size}");
         $link->metaInformation()->set("total", $total);
-        $link->metaInformation()->set("more", ($reqOffset == "")?($total - $offset):$total);
+        $link->metaInformation()->set("more", $total - $offset);
         $link->metaInformation()->set("offset", $reqOffset);
         $document->links()->set($link);
 
