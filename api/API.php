@@ -303,10 +303,6 @@ class API extends CommandTarget implements IController {
         "type", "comment", "artist", "track", "album", "label", "tag", "event", "code", "created"
     ];
 
-    const TRACK_DETAIL_FIELDS = [
-        "seq", "artist", "track"
-    ];
-
     private static $ftFields = [
         "tags" => API::ALBUM_FIELDS,
         "albums" => API::ALBUM_FIELDS,
@@ -347,15 +343,6 @@ class API extends CommandTarget implements IController {
      * We provide an explicit response just to be sure.
      */
     private static $defaultACAM = "GET, HEAD, POST";
-
-    private static $pager_operations = [
-        "prevLine" => ILibrary::OP_PREV_LINE,
-        "nextLine" => ILibrary::OP_NEXT_LINE,
-        "prevPage" => ILibrary::OP_PREV_PAGE,
-        "nextPage" => ILibrary::OP_NEXT_PAGE,
-        "searchByName" => ILibrary::OP_BY_NAME,
-        "searchByTag" => ILibrary::OP_BY_TAG,
-    ];
 
     private $limit;
     private $serializer;
