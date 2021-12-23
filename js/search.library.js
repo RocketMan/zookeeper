@@ -150,7 +150,7 @@ function emitAlbumsEx(table, data) {
             // It's a collection; HREF the album key
             td.html($("<A>", {
                 href: "?s=byAlbumKey&n=" +
-                    encodeURIComponent(attrs.tag) +
+                    encodeURIComponent(entry.id) +
                     "&q=" + maxresults +
                     "&action=search"
             }).html(getArtist(attrs)));
