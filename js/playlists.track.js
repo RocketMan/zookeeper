@@ -529,7 +529,7 @@ $().ready(function(){
     function searchLibrary(key) {
         var url = "api/v1/album?filter[artist]=" +
             encodeURIComponent(key) + "*" +
-            "&size=50&fields[album]=artist,album";
+            "&page[size]=50&fields[album]=artist,album";
 
         var results = $("#track-artists");
         $.ajax({
