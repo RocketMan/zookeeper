@@ -22,7 +22,7 @@
  *
  */
 
-namespace ZK\API;
+namespace ZK\JsonApi;
 
 use Enm\JsonApi\Model\Document\DocumentInterface;
 use Enm\JsonApi\Model\Request\RequestInterface;

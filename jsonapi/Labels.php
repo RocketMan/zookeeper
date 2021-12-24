@@ -22,8 +22,9 @@
  *
  */
 
-namespace ZK\API;
+namespace ZK\JsonApi;
 
+use ZK\Controllers\API;
 use ZK\Engine\Engine;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;

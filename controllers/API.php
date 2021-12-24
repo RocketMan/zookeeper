@@ -22,16 +22,20 @@
  *
  */
 
-namespace ZK\API;
+namespace ZK\Controllers;
 
-use ZK\Controllers\CommandTarget;
-use ZK\Controllers\IController;
 use ZK\Engine\Engine;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\OnNowFilter;
 use ZK\Engine\PlaylistObserver;
+
+use ZK\JsonApi\Albums;
+use ZK\JsonApi\ApiServer;
+use ZK\JsonApi\Labels;
+use ZK\JsonApi\Reviews;
+use ZK\JsonApi\Playlists;
 
 use ZK\UI\UICommon as UI;
 
