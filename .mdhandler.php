@@ -52,6 +52,9 @@ header("Last-Modified: ".gmdate('D, d M Y H:i:s', $mtime)." GMT");
 if($_SERVER['REQUEST_METHOD'] == "HEAD")
     return;
 
+$depth = substr_count($_GET['asset'], '/', 1);
+$stylesheet = str_repeat("../", $depth) . $stylesheet;
+
 ob_start("ob_gzhandler");
 
 echo "<!DOCTYPE html>\n<HTML lang=\"en\">\n<HEAD>\n";

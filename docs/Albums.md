@@ -45,3 +45,13 @@ information, see the [JSON:API main page](./API.md).
   * album
   * label
   * track
+
+### Update
+
+Update the album's label by issuing a PATCH request to
+`api/v1/album/_id_/relationships/label`, where \_id_ is the album tag.
+The request body should contain a JSON document of the form:
+
+    { "data": { "type": "label", "id": _lid_ } }
+
+Where \_lid_ is the ID of the desired label.
