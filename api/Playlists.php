@@ -26,7 +26,6 @@ namespace ZK\API;
 
 use ZK\Engine\Engine;
 use ZK\Engine\IDJ;
-use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
