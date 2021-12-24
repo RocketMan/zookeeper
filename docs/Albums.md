@@ -28,20 +28,19 @@ information, see the [JSON:API main page](./API.md).
 
 ### Filters
 
-#### Offset Profile
+* Offset Profile
   * artist
   * album
   * track
   * label.id
   * reviews.airname.id
-
-#### Cursor Profile
+* Cursor Profile
   * artist
   * id
 
 ### Sorting
 
-#### Offset Profile
+* Offset Profile
   * artist
   * album
   * label

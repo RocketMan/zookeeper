@@ -27,16 +27,15 @@ There are no relations.
 
 ### Filters
 
-#### Offset Profile
+* Offset Profile
   * name
-
-#### Cursor Profile
+* Cursor Profile
   * name
   * album.id
 
 ### Sorting
 
-#### Offset Profile
+* Offset Profile
   * artist
   * album
   * label
