@@ -29,6 +29,9 @@ clear architectural boundaries between the busienss logic / model
 (in `engine`), the presentation, which is contained in `js` and `ui`,
 and the controllers, which are in `controllers`.
 
+The API implementation is contained in `api`.  Detailed information
+on the [Zookeeper JSON:API](docs/API.md) is available here.
+
 The following is an overview of the source code directory structure:
 
     project-root/
