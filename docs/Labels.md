@@ -56,16 +56,15 @@ below.  Suffix with a '-' to reverse the sense of the sort.
 
 To insert a new label, issue a POST to `api/v1/label`.  Label details
 are in the request body in the same format returned by GET.  X-APIKEY
-authentication required, must belong to 'm' group for adding a
-label.
+authentication required; you must belong to the 'm' group.
 
 ### Update
 
 Update label with \_id_ by issuing a PATCH request to
 `api/v1/label/_id_`.  Label details are in the request body in same
 format returned by GET.  Attributes not specified in the PATCH request
-remain unchanged.  X-APIKEY authentication required, must belong to
-'m' group.
+remain unchanged.  X-APIKEY authentication required; you must belong to
+the 'm' group.
 
 ### Delete
 
