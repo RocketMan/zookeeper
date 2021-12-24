@@ -56,7 +56,7 @@ class Albums implements RequestHandlerInterface {
     const LINKS_NONE = 0;
     const LINKS_LABEL = 1;
     const LINKS_REVIEWS = 2;
-    const INCLUDE_REVIEW_BODY = 4;
+    const LINKS_REVIEWS_WITH_BODY = 4;
     const LINKS_ALL = ~0;
 
     private const NONALNUM="/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/";
@@ -154,7 +154,7 @@ class Albums implements RequestHandlerInterface {
         $labelMap = [];
 
         if($flags & self::LINKS_REVIEWS)
-            Engine::api(ILibrary::class)->linkReviews($records, Engine::session()->isAuth("u"), $flags & self::INCLUDE_REVIEW_BODY);
+            Engine::api(ILibrary::class)->linkReviews($records, Engine::session()->isAuth("u"), $flags & self::LINKS_REVIEWS_WITH_BODY);
 
         foreach($records as $record) {
             $resource = self::fromRecord($record);
@@ -415,7 +415,7 @@ class Albums implements RequestHandlerInterface {
 
         $links = self::LINKS_ALL;
         if(!$request->requestsInclude("reviews"))
-            $links &= ~self::INCLUDE_REVIEW_BODY;
+            $links &= ~self::LINKS_REVIEWS_WITH_BODY;
 
         switch($op) {
         case ILibrary::ALBUM_AIRNAME:
