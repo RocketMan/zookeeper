@@ -10,8 +10,8 @@ information, see the [JSON:API main page](./API.md).
 * category
 * medium
 * size
-* created
-* updated
+* created (read-only)
+* updated (read-only)
 * location
 * bin
 * coll

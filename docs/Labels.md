@@ -16,8 +16,8 @@ information, see the [JSON:API main page](./API.md).
 * mailcount
 * maillist
 * international
-* pcreated
-* modified
+* pcreated (read-only)
+* modified (read-only)
 * url
 * email
 

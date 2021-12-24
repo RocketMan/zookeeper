@@ -5,16 +5,19 @@ integration with external applications.
 
 The endpoints exposed by the API are:
 
-* api/v1/[album](Albums.md)
-* api/v1/[label](Labels.md)
-* api/v1/[playlist](Playlists.md)
-* api/v1/[review](Reviews.md)
+* [api/v1/album](Albums.md)
+* [api/v1/label](Labels.md)
+* [api/v1/playlist](Playlists.md)
+* [api/v1/review](Reviews.md)
 
 The endpoints are relative to the installation directory of zookeeper.
 
 You will find detailed information about each endpoint through the
 links above.  The following is a discussion of the general conventions
 of the API.
+
+See the [JSON:API specification](https://jsonapi.org/format/) for
+information on the request format and document structure.
 
 ### Retrieval
 

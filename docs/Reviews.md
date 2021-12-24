@@ -15,4 +15,5 @@ information, see the [JSON:API main page](./API.md).
 
 ### Filters
 
-Pagination is not supported.
+Review search by DJ airname is supported through the album type by using
+the filter `reviews.airname.id`.

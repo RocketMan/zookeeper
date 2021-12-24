@@ -28,7 +28,4 @@ There are no relations.
   * date
   * id
 
-Review search by airname is supported through the album type by using
-the filter reviews.airname.id.
-
 Pagination is not supported.
