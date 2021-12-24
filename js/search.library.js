@@ -275,7 +275,7 @@ var lists = {
                     }, true) + "'>").append(htmlify(track.track))));
                 var collection = attrs.location;
                 collection = (collection == "Library")?attrs.category:
-                    "<I>" + collection + "&nbsp;" + attrs.bin + "</I>";
+                    "<I>" + collection + "&nbsp;" + (attrs.bin?attrs.bin:'') + "</I>";
                 tr.append($("<TD>").html(collection));
                 tr.append($("<TD>").html(attrs.medium));
                 tr.append($("<TD>").html(attrs.size));
