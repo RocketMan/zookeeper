@@ -62,10 +62,10 @@ label.
 ### Update
 
 Update label with \_id_ by issuing a PATCH request to
-`api/v1/label/_id_`.  Label details are in request body in same format
-returned by GET.  Attributes not specified in the PATCH request remain
-unchanged.  X-APIKEY authentication required, must belong to 'm'
-group.
+`api/v1/label/_id_`.  Label details are in the request body in same
+format returned by GET.  Attributes not specified in the PATCH request
+remain unchanged.  X-APIKEY authentication required, must belong to
+'m' group.
 
 ### Delete
 
