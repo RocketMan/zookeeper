@@ -58,6 +58,29 @@ below.  Suffix with a '-' to reverse the sense of the sort.
   * label
   * track
 
+**TIP:** It is often useful to access the name of the music label
+associated with an album.  Zookeeper denormalizes the label name and
+makes it availble as metadata in the album's label relationship.  In
+this way, it is not necessary to request separately the label
+information just to obtain the name.
+````
+     "relationships": {
+       "label": {
+         "links": {
+           "related": "/api/v1/album/825555/label",
+           "self": "/api/v1/album/825555/relationships/label"
+         },
+         "meta": {
+           "name": "Quango Music Group"
+         },
+         "data": {
+           "type": "label",
+           "id": "7211"
+         }
+       }
+     }
+````
+
 ### Insert
 
 To insert a new album, issue a POST to `api/v1/album`.  Album details
