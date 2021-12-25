@@ -9,6 +9,8 @@ Retrieval is via GET request to `api/v1/playlist` (filter/pagination) or
 `api/v1/playlist/_id_`, where \_id_ is the id of a specific playlist.  See
 below for a list of possible filter options.
 
+An [example playlist document](Samples.md#playlist) is available here.
+
 ### Fields
 
 * name

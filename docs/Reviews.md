@@ -12,6 +12,8 @@ Filtering is not possible at the api/v1/review endpoint; however,
 pagination of all reviews by a DJ is possible at the api/v1/album
 endpoint, via the reviews.airname.id filter.
 
+An [example review document](Samples.md#review) is available here.
+
 ### Fields
 
 * airname

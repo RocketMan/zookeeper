@@ -9,6 +9,8 @@ Retrieval is via GET request to `api/v1/album` (filter/pagination) or
 `api/v1/album/_id_`, where \_id_ is the tag of a specific album.  See
 below for a list of possible filter options.
 
+An [example album document](Samples.md#album) is available here.
+
 ### Fields
 
 * artist
