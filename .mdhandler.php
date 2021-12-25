@@ -53,12 +53,12 @@ if($_SERVER['REQUEST_METHOD'] == "HEAD")
     return;
 
 $depth = substr_count($_GET['asset'], '/', 1);
-$stylesheet = str_repeat("../", $depth) . $stylesheet;
+$stylesheet = str_repeat("../", $depth) . UI::decorate($stylesheet);
 
 ob_start("ob_gzhandler");
 
 echo "<!DOCTYPE html>\n<HTML lang=\"en\">\n<HEAD>\n";
-UI::emitCSS($stylesheet);
+echo "<LINK REL=\"stylesheet\" HREF=\"$stylesheet\">\n";
 echo "<TITLE>".basename($_SERVER['REQUEST_URI'])."</TITLE>\n";
 echo "</HEAD>\n<BODY>\n<DIV class='box'>\n";
 
