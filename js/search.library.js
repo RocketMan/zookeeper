@@ -251,13 +251,14 @@ var lists = {
                             "&action=search"
                     }).html(getArtist(track)));
                 } else {
+                    var artist = track.artist != null?track.artist:getArtist(attrs);
                     td.append(
                         $("<A href='#" + encobj({
                             type: 'artists',
-                            key: track.artist,
+                            key: artist,
                             sortBy: 'Artist',
                             form: true
-                        }, true) + "'>").append(getArtist(attrs)));
+                        }, true) + "'>").append(artist));
                 }
                 tr.append(td);
                 tr.append($("<TD>").html($("<A>", {
