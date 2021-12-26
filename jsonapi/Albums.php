@@ -370,10 +370,10 @@ class Albums implements RequestHandlerInterface {
         return $result;
     }
 
-    protected function marshallReviews(array $records) {
+    protected function marshallReviews(array $records, $flags) {
         $result = [];
         foreach($records as $record) {
-            $resource = self::fromRecord($record, true);
+            $resource = self::fromRecord($record, $flags & self::LINKS_TRACKS);
             $result[] = $resource;
 
             $relations = new ResourceCollection();
@@ -442,7 +442,7 @@ class Albums implements RequestHandlerInterface {
 
         switch($op) {
         case ILibrary::ALBUM_AIRNAME:
-            $result = $this->marshallReviews($records);
+            $result = $this->marshallReviews($records, $links);
             break;
         case ILibrary::TRACK_NAME:
             $result = $this->fromTrackSearch($records);
