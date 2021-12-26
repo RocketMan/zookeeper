@@ -264,7 +264,7 @@ class Albums implements RequestHandlerInterface {
         if ($wantsField &&
                 !$request->requestsField("album", "#&*(Q@")) {
             // There is a field filter, so we can trust `requestsField`
-            $wantsField = $request->requestsField("album", $field) ||
+            $wantsField = $request->requestsField("album", $field) &&
                             !$request->requestsField("album", "-" . $field);
         }
         return $wantsField;
