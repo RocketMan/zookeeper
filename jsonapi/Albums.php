@@ -58,6 +58,7 @@ class Albums implements RequestHandlerInterface {
     const LINKS_LABEL = 1;
     const LINKS_REVIEWS = 2;
     const LINKS_REVIEWS_WITH_BODY = 4;
+    const LINKS_TRACKS = 8;
     const LINKS_ALL = ~0;
 
     private const NONALNUM="/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/";
@@ -127,6 +128,7 @@ class Albums implements RequestHandlerInterface {
             $res->attributes()->set($field, $value);
         }
 
+        $albumTracks = null;
         if($wantTracks) {
             $fields = self::TRACK_FIELDS;
             if($rec["iscoll"])
@@ -144,9 +146,8 @@ class Albums implements RequestHandlerInterface {
                     $r[$field] = $track[$field];
                 $albumTracks[] = $r;
             }
-
-            $res->attributes()->set("tracks", $albumTracks);
         }
+        $res->attributes()->set("tracks", $albumTracks);
         return $res;
     }
 
@@ -158,7 +159,7 @@ class Albums implements RequestHandlerInterface {
             Engine::api(ILibrary::class)->linkReviews($records, Engine::session()->isAuth("u"), $flags & self::LINKS_REVIEWS_WITH_BODY);
 
         foreach($records as $record) {
-            $resource = self::fromRecord($record);
+            $resource = self::fromRecord($record, $flags & self::LINKS_TRACKS);
             $result[] = $resource;
 
             if($flags & self::LINKS_REVIEWS && isset($record["reviews"])) {
@@ -251,6 +252,24 @@ class Albums implements RequestHandlerInterface {
         return $response;
     }
 
+    protected function requestsField(RequestInterface $request, string $field) {
+        $wantsField = $request->requestsAttributes();
+
+        // If there is no field filter, then `requestsField` will
+        // return true for any field.  This means it will incorrectly
+        // indicate field negations even if there are none.
+        //
+        // To detect this case, we first test an unlikely field name.
+        // If it succeeds, we know that there is no field filter.
+        if ($wantsField &&
+                !$request->requestsField("album", "#&*(Q@")) {
+            // There is a field filter, so we can trust `requestsField`
+            $wantsField = $request->requestsField("album", $field) ||
+                            !$request->requestsField("album", "-" . $field);
+        }
+        return $wantsField;
+    }
+
     protected function paginateCursor(RequestInterface $request): ResponseInterface {
         // pagination according to the cursor pagination profile
         // https://jsonapi.org/profiles/ethanresnick/cursor-pagination/
@@ -286,7 +305,8 @@ class Albums implements RequestHandlerInterface {
             $limit = API::MAX_LIMIT;
 
         $records = Engine::api(ILibrary::class)->listAlbums($op, $key, $limit);
-        $result = self::fromArray($records, self::LINKS_LABEL);
+        $wantTracks = $this->requestsField($request, "tracks")?self::LINKS_TRACKS:0;
+        $result = self::fromArray($records, self::LINKS_LABEL | $wantTracks);
         $document = new Document($result);
 
         $base = Engine::getBaseUrl()."album?";
@@ -302,8 +322,7 @@ class Albums implements RequestHandlerInterface {
         $next = urlencode("{$obj["artist"]}|{$obj["album"]}|{$obj["tag"]}");
         $document->links()->set(new Link("next", "{$base}page%5Bafter%5D={$next}{$size}"));
 
-        $response = new DocumentResponse($document);
-        return $response;
+        return new DocumentResponse($document);
     }
 
     protected function fromTrackSearch(array $records) {
@@ -354,7 +373,7 @@ class Albums implements RequestHandlerInterface {
     protected function marshallReviews(array $records) {
         $result = [];
         foreach($records as $record) {
-            $resource = self::fromRecord($record);
+            $resource = self::fromRecord($record, true);
             $result[] = $resource;
 
             $relations = new ResourceCollection();
@@ -418,6 +437,9 @@ class Albums implements RequestHandlerInterface {
         if(!$request->requestsInclude("reviews"))
             $links &= ~self::LINKS_REVIEWS_WITH_BODY;
 
+        if(!$this->requestsField($request, "tracks"))
+            $links &= ~self::LINKS_TRACKS;
+
         switch($op) {
         case ILibrary::ALBUM_AIRNAME:
             $result = $this->marshallReviews($records);
@@ -445,8 +467,7 @@ class Albums implements RequestHandlerInterface {
         $link->metaInformation()->set("offset", $reqOffset);
         $document->links()->set($link);
 
-        $response = new DocumentResponse($document);
-        return $response;
+        return new DocumentResponse($document);
     }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
