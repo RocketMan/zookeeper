@@ -194,7 +194,7 @@ class Albums implements RequestHandlerInterface {
                 $relation = new Relationship("label", $res);
                 $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
                 $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
-                $relation->metaInformation()->set("name", $labels[0]["name"]);
+                $relation->metaInformation()->set("name", $res->attributes()->getOptional("name"));
                 $resource->relationships()->set($relation);
             }
         }
