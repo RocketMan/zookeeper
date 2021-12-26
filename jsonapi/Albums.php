@@ -128,6 +128,8 @@ class Albums implements RequestHandlerInterface {
             $res->attributes()->set($field, $value);
         }
 
+        // the framework will remove any fields not requested, but track
+        // retrieval is expensive, so we avoid it if not needed
         $albumTracks = null;
         if($wantTracks) {
             $fields = self::TRACK_FIELDS;
@@ -155,6 +157,10 @@ class Albums implements RequestHandlerInterface {
         $result = [];
         $labelMap = [];
 
+        // collect review information only if requested.
+        //
+        // review body retrieval is expensive, so unless
+        // it will appear in the response, we avoid it.
         if($flags & self::LINKS_REVIEWS)
             Engine::api(ILibrary::class)->linkReviews($records, Engine::session()->isAuth("u"), $flags & self::LINKS_REVIEWS_WITH_BODY);
 
