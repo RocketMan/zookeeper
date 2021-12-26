@@ -55,27 +55,28 @@ useful for scrolling through the music library or labels.  For
 example, `api/v1/album?filter[artist]=_value_&page[profile]=cursor`
 will zoom to the artist named \_value_.
 
-The query string request parameters are:
-  * **page[profile]=_profile_** (where _profile_ is 'cursor' or 'offset' (the default)
+The offset pagination profile is the default.  Request the cursor
+profile with query string parameter `page[profile]=cursor`.
+
+Other query string parameters are:
   * **filter[_name_]=_key_** (required; e.g., `filter[artist]=example`)
   * **page[size]=_count_** (default 50)
-  * **page[offset]=_offset_** (default 0)
+  * **page[offset]=_offset_** (for the offset profile, default is 0)
 
-For the **offset pagination profile**, the response contains
-pagination information in the metadata of the `links/first` element:
+For the **offset profile**, the response contains pagination information
+in the metadata of the `links/first` element:
   * `links/first/meta/total` = total number of matches
   * `links/first/meta/more` = number of matches remaining after the current page
   * `links/first/meta/offset` = offset of the current page
 
-For the offset pagination profile, the `links/next` element contains a
-link to retrieve the next page.  It is omitted if there are no more
-pages.
+As well, the `links/next` element contains a link to retrieve the next
+page.  It is omitted if there are no more pages.
 
 For the **cursor pagination profile**, the response contains elements
 `links/prev`, `links/prevLine`, `links/next`, and `links/nextLine`, which
 are links to the corresponding page.
 
-See the hyperlinks at the top of the page for specific filters
+See the hyperlinks at the top of the page for specific filters that are
 supported by each type.
 
 ### Creation and update

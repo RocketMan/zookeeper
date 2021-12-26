@@ -49,6 +49,9 @@ form `filter[_field_]=_value_`.  Possible fields are listed below.
   * artist
   * id
 
+Note for the track filter, page[size] refers to the number of tracks
+returned, not the number of albums.
+
 ### Sorting
 
 Specify sorting via the 'sort' query string parameter.  Values are listed
