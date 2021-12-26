@@ -81,9 +81,10 @@ class Reviews implements RequestHandlerInterface {
             
         $resource = self::fromRecord($reviews[0]);
 
+        $wantsTracks = $request->requestsInclude("album");
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $reviews[0]['tag']);
         if(sizeof($albums)) {
-            $res = Albums::fromRecord($albums[0]);
+            $res = Albums::fromRecord($albums[0], $wantsTracks);
             $relation = new Relationship("album", $res);
             $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/$key/album"));
             $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/$key/relationships/album"));
@@ -107,7 +108,7 @@ class Reviews implements RequestHandlerInterface {
         case "album":
             $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $reviews[0]['tag']);
             if(sizeof($albums))
-                $res = Albums::fromArray($albums, Albums::LINKS_LABEL)[0];
+                $res = Albums::fromArray($albums, Albums::LINKS_LABEL|Albums::LINKS_TRACKS)[0];
             break;
         case "relationships":
             throw new NotAllowedException("unspecified relationship");
