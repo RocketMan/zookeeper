@@ -242,24 +242,14 @@ var lists = {
             attrs.tracks.forEach(function(track) {
                 tr = $("<TR>");
                 var td = $("<TD>");
-                if(attrs.artist.match(/^\[coll\]/i)) {
-                    // It's a collection; HREF the album key
-                    td.html($("<A>", {
-                        href: "?s=byAlbumKey&n=" +
-                            encodeURIComponent(entry.id) +
-                            "&q=" + maxresults +
-                            "&action=search"
-                    }).html(getArtist(track)));
-                } else {
-                    var artist = track.artist != null?track.artist:getArtist(attrs);
-                    td.append(
-                        $("<A href='#" + encobj({
-                            type: 'artists',
-                            key: artist,
-                            sortBy: 'Artist',
-                            form: true
-                        }, true) + "'>").append(artist));
-                }
+                var artist = track.artist != null?track.artist:getArtist(attrs);
+                td.append(
+                    $("<A href='#" + encobj({
+                        type: 'artists',
+                        key: artist,
+                        sortBy: 'Artist',
+                        form: true
+                    }, true) + "'>").append(artist));
                 tr.append(td);
                 tr.append($("<TD>").html($("<A>", {
                     href: "?s=byAlbumKey&n=" +
