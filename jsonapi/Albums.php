@@ -511,10 +511,8 @@ class Albums implements RequestHandlerInterface {
 
         switch($request->relationship()) {
         case "label":
-            $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $album["pubkey"]);
-        
-            if(sizeof($labels))
-                $res = Labels::fromRecord($labels[0]);
+            if($album["pubkey"])
+                $res = Labels::fromRecord($album);
             break;
         case "reviews":
             $reviews = Engine::api(IReview::class)->getReviews($key);
