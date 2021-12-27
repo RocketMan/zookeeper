@@ -64,9 +64,20 @@ class Config {
      * @return first value returned by a callback, if any
      */
     public function iterate($fn) {
-        foreach($this->config as $entry)
-            if(($x = $fn($entry)) !== null)
-                return $x;
+        switch((new \ReflectionFunction($fn))->getNumberOfParameters()) {
+        case 1:
+            foreach($this->config as $entry)
+                if(($x = $fn($entry)) !== null)
+                    return $x;
+            break;
+        case 2:
+            foreach($this->config as $key => $value)
+                if(($x = $fn($key, $value)) !== null)
+                    return $x;
+            break;
+        default:
+            throw new \InvalidArgumentException("closure expects 1 or 2 arguments");
+        }
     }
 
     /**

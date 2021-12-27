@@ -24,6 +24,7 @@
 
 namespace ZK\Controllers;
 
+use ZK\Engine\Config;
 use ZK\Engine\Engine;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
@@ -31,11 +32,7 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\OnNowFilter;
 use ZK\Engine\PlaylistObserver;
 
-use ZK\JsonApi\Albums;
 use ZK\JsonApi\ApiServer;
-use ZK\JsonApi\Labels;
-use ZK\JsonApi\Reviews;
-use ZK\JsonApi\Playlists;
 
 use ZK\UI\UICommon as UI;
 
@@ -325,13 +322,6 @@ class API extends CommandTarget implements IController {
         [ "jsonApi", "jsonApi" ],
     ];
 
-    private static $jsonApi = [
-        [ "album", Albums::class ],
-        [ "label", Labels::class ],
-        [ "review", Reviews::class ],
-        [ "playlist", Playlists::class ],
-    ];
-
     /*
      * These APIs permit cross-origin scripting across all origins.
      */
@@ -501,8 +491,11 @@ class API extends CommandTarget implements IController {
         $jsonApi = new ApiServer(
                 new \Enm\JsonApi\Serializer\Deserializer(),
                 new \Enm\JsonApi\Serializer\Serializer());
-        foreach(self::$jsonApi as $api)
-            $jsonApi->addHandler($api[0], new $api[1]());
+
+        $config = new Config('controller_config', 'jsonApiControllers');
+        $config->iterate(function($type, $handler) use($jsonApi) {
+            $jsonApi->addHandler($type, new $handler());
+        });
 
         try {
             $request = new Request(

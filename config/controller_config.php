@@ -18,3 +18,15 @@ $controllers = [
     'push' =>         ZK\Controllers\PushServer::class,
     'validate' =>     ZK\Controllers\Validate::class,
 ];
+
+/**
+ * JSON:API controllers
+ *
+ * Each entry is a JSON:API type to RequestHandler mapping
+ */
+$jsonApiControllers = [
+    'album' =>        ZK\JsonApi\Albums::class,
+    'label' =>        ZK\JsonApi\Labels::class,
+    'review' =>       ZK\JsonApi\Reviews::class,
+    'playlist' =>     ZK\JsonApi\Playlists::class,
+];
