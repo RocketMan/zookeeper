@@ -142,12 +142,16 @@ class LibraryImpl extends DBO implements ILibrary {
         case ILibrary::ALBUM_ARTIST:
             $query = "SELECT tag, artist, album, category, medium, size, ".
                      "created, updated, a.pubkey, location, bin, iscoll, ".
-                     "name, address, city, state, zip ".
+                     "name, address, city, state, zip, ".
+                     "attention, phone, fax, international, mailcount, ".
+                     "maillist, pcreated, modified, p.url, email ".
                      "FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey ".
                      "WHERE artist LIKE ? ".
                      "UNION SELECT c.tag, c.artist, a.artist, category, medium, size, ".
                      "created, updated, a.pubkey, location, bin, iscoll, ".
-                     "name, address, city, state, zip ".
+                     "name, address, city, state, zip, ".
+                     "attention, phone, fax, international, mailcount, ".
+                     "maillist, pcreated, modified, p.url, email ".
                      "FROM colltracknames c, albumvol a LEFT JOIN publist p ".
                      "ON a.pubkey = p.pubkey WHERE c.tag = a.tag ".
                      "AND c.artist LIKE ? ".
@@ -163,7 +167,9 @@ class LibraryImpl extends DBO implements ILibrary {
         case ILibrary::ALBUM_NAME:
             $query = "SELECT tag, artist, album, category, medium, size, ".
                      "created, updated, a.pubkey, location, bin, iscoll, ".
-                     "name, address, city, state, zip ".
+                     "name, address, city, state, zip, ".
+                     "attention, phone, fax, international, mailcount, ".
+                     "maillist, pcreated, modified, p.url, email ".
                      "FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey ".
                      "WHERE album LIKE ? ".
                      self::orderBy($sortBy).
@@ -174,7 +180,9 @@ class LibraryImpl extends DBO implements ILibrary {
             settype($search, "integer");
             $query = "SELECT tag, artist, album, category, medium, size, ".
                      "created, updated, a.pubkey, location, bin, iscoll, ".
-                     "name, address, city, state, zip ".
+                     "name, address, city, state, zip, ".
+                     "attention, phone, fax, international, mailcount, ".
+                     "maillist, pcreated, modified, p.url, email ".
                      "FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey ".
                      "WHERE a.pubkey=? ".
                      self::orderBy($sortBy).

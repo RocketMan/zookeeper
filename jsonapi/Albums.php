@@ -183,9 +183,8 @@ class Albums implements RequestHandlerInterface {
                 if(array_key_exists($record["pubkey"], $labelMap))
                     $res = $labelMap[$record["pubkey"]];
                 else {
-                    $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $record["pubkey"]);
-                    if(sizeof($labels)) {
-                        $res = Labels::fromRecord($labels[0]);
+                    if($record["pubkey"]) {
+                        $res = Labels::fromRecord($record);
                         $labelMap[$record["pubkey"]] = $res;
                     } else
                         continue;
@@ -270,8 +269,17 @@ class Albums implements RequestHandlerInterface {
         if ($wantsField &&
                 !$request->requestsField("album", "#&*(Q@")) {
             // There is a field filter, so we can trust `requestsField`
-            $wantsField = $request->requestsField("album", $field) ||
-                            !$request->requestsField("album", "-" . $field);
+            $neg = false;
+            foreach(self::FIELDS as $f) {
+                if($request->requestsField("album", "-" . $f)) {
+                    if($f == $field) return false;
+                    $neg = true;
+                    break;
+                }
+            }
+            $wantsField = $neg ?
+                    !$request->requestsField("album", "-" . $field) :
+                    $request->requestsField("album", $field);
         }
         return $wantsField;
     }
