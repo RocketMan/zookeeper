@@ -338,7 +338,7 @@ class ChartImpl extends DBO implements IChart {
             $album["category"] = $row["category"];
             $album["medium"] = $row["medium"];
             $album["size"] = $row["size"];
-            $album["label"] = $row["name"];
+            $album["label"] = $row["name"]?$row["name"]:"(Unknown)";
         }
     }
     
