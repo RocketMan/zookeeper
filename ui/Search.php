@@ -197,7 +197,7 @@ class Search extends MenuItem {
     
         echo "$month/$year</B></TD></TR>\n";
         echo "  <TR><TD ALIGN=RIGHT>Label:</TD><TD><B>";
-        if(isset($albums[0]["name"])) {
+        if($albums[0]["pubkey"]) {
             echo "<A HREF=\"".
                            "?s=byLabelKey&amp;n=". UI::URLify($albums[0]["pubkey"]).
                            "&amp;q=". $this->maxresults.

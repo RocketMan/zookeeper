@@ -197,7 +197,7 @@ function emitAlbumsEx(table, data) {
                     n: ''
                 }, true) + "'>").append(htmlify(label.meta.name))));
         } else {
-            tr.append($("<TD>").html("Unknown"));
+            tr.append($("<TD>").html("(Unknown)"));
         }
         table.append(tr);
     });
@@ -280,7 +280,7 @@ var lists = {
                             n: ''
                         }, true) + "'>").append(htmlify(label.meta.name))));
                 } else {
-                    tr.append($("<TD>").html("Unknown"));
+                    tr.append($("<TD>").html("(Unknown)"));
                 }
                 table.append(tr);
             })
@@ -361,7 +361,7 @@ var lists = {
                         "&action=search"
                 }).html(htmlify(label.meta.name))));
             } else {
-                tr.append($("<TD>").html("Unknown"));
+                tr.append($("<TD>").html("(Unknown)"));
             }
             tr.append($("<TD>", { class: 'date' }).html(entry.relationships.reviews.data[0].meta.date));
             table.append(tr);
