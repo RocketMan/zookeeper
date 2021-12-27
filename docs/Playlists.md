@@ -23,6 +23,7 @@ An [example playlist document](Samples.md#playlist) is available here.
   * artist
   * album
   * track
+  * tag
   * comment
   * event
   * code
