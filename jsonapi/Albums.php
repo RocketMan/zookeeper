@@ -363,12 +363,14 @@ class Albums implements RequestHandlerInterface {
                 $result[] = $resource;
                 $tracks = [];
 
-                $res = Labels::fromRecord($record);
-                $relation = new Relationship("label", $res);
-                $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
-                $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
-                $relation->metaInformation()->set("name", $record["name"]);
-                $resource->relationships()->set($relation);
+                if($record["pubkey"]) {
+                    $res = Labels::fromRecord($record);
+                    $relation = new Relationship("label", $res);
+                    $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
+                    $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
+                    $relation->metaInformation()->set("name", $record["name"]);
+                    $resource->relationships()->set($relation);
+                }
             }
             $fields = self::TRACK_FIELDS;
             if(!$record["iscoll"])
