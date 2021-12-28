@@ -24,7 +24,6 @@
 
 namespace ZK\API;
 
-use ZK\Controllers\API;
 use ZK\Engine\Engine;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
@@ -315,8 +314,8 @@ class Albums implements RequestHandlerInterface {
 
         $limit = $request->hasPagination("size")?
                 $request->paginationValue("size"):null;
-        if(!$limit || $limit > API::MAX_LIMIT)
-            $limit = API::MAX_LIMIT;
+        if(!$limit || $limit > ApiServer::MAX_LIMIT)
+            $limit = ApiServer::MAX_LIMIT;
 
         $records = Engine::api(ILibrary::class)->listAlbums($op, $key, $limit);
         $wantTracks = $this->requestsField($request, "tracks")?self::LINKS_TRACKS:0;
@@ -440,8 +439,8 @@ class Albums implements RequestHandlerInterface {
 
         $limit = $request->hasPagination("size")?
                 $request->paginationValue("size"):null;
-        if(!$limit || $limit > API::MAX_LIMIT)
-            $limit = API::MAX_LIMIT;
+        if(!$limit || $limit > ApiServer::MAX_LIMIT)
+            $limit = ApiServer::MAX_LIMIT;
 
         $sort = $_GET["sort"] ?? "";
 

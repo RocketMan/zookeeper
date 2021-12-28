@@ -24,7 +24,6 @@
 
 namespace ZK\API;
 
-use ZK\Controllers\API;
 use ZK\Engine\Engine;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
@@ -134,8 +133,8 @@ class Labels implements RequestHandlerInterface {
 
         $limit = $request->hasPagination("size")?
                 $request->paginationValue("size"):null;
-        if(!$limit || $limit > API::MAX_LIMIT)
-            $limit = API::MAX_LIMIT;
+        if(!$limit || $limit > ApiServer::MAX_LIMIT)
+            $limit = ApiServer::MAX_LIMIT;
 
         $records = Engine::api(ILibrary::class)->listLabels($op, $key, $limit);
         $result = [];
@@ -176,8 +175,8 @@ class Labels implements RequestHandlerInterface {
 
         $limit = $request->hasPagination("size")?
                 $request->paginationValue("size"):null;
-        if(!$limit || $limit > API::MAX_LIMIT)
-            $limit = API::MAX_LIMIT;
+        if(!$limit || $limit > ApiServer::MAX_LIMIT)
+            $limit = ApiServer::MAX_LIMIT;
 
         $sort = $_GET["sort"] ?? "";
 

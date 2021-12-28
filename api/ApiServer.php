@@ -33,6 +33,8 @@ use Enm\JsonApi\Server\JsonApiServer;
  * Zookeeper custom implementation of JsonApiServer
  */
 class ApiServer extends JsonApiServer {
+    const MAX_LIMIT = 35;
+
     /**
      * This fixes a bug in the upstream handling of include for
      * resource collections.
