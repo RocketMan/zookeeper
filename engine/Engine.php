@@ -121,11 +121,8 @@ class Engine {
 
         // api gets only path
         // must be absolute path for FILTER_VALIDATE_URL
-        if(isset($_SERVER['REDIRECT_APIVER'])) {
-            $apiver = $_SERVER['REDIRECT_APIVER'];
-            $pos = strpos($uri, "api/v");
-            return self::$base = substr($uri, 0, $pos) . "api/v{$apiver}/";
-        }
+        if(isset($_SERVER['REDIRECT_APIVER']))
+            return self::$base = $_SERVER['REDIRECT_PREFIX'] ?? "/";
 
         $port = ":" . $_SERVER['SERVER_PORT'];
         if($port == ":443" || $port == ":80")
