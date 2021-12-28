@@ -45,13 +45,13 @@ try {
     $uri = preg_replace("|^{$_SERVER["REDIRECT_PREFIX"]}|", "", $_SERVER["REQUEST_URI"]);
 
     $request = new Request(
-        $_SERVER["REQUEST_METHOD"] ?? "GET",
+        $_SERVER["REQUEST_METHOD"],
         new Uri($uri),
         $jsonApi->createRequestBody(file_get_contents('php://input')),
         null);
 
     $response = $jsonApi->handleRequest($request);
-} catch(\Exception $e){
+} catch(\Exception $e) {
     $response = $jsonApi->handleException($e);
 }
 

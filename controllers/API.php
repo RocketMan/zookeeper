@@ -29,9 +29,8 @@ use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\OnNowFilter;
+use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
-
-use ZK\UI\UICommon as UI;
 
 abstract class Serializer {
     private $catCodes;
@@ -471,7 +470,7 @@ class API extends CommandTarget implements IController {
                     })->onSpin(function($entry) use(&$events) {
                         $spin = $entry->asArray();
                         $spin["type"] = "track";
-                        $spin["artist"] = UI::swapNames($spin["artist"]);
+                        $spin["artist"] = PlaylistEntry::swapNames($spin["artist"]);
                         $events[] = $spin;
                     }), 0, $filter);
                 $this->serializer->emitDataSetArray("event", API::PLAYLIST_DETAIL_FIELDS, $events);

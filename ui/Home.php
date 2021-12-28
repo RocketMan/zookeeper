@@ -28,6 +28,7 @@ use ZK\Engine\Engine;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
+use ZK\Engine\PlaylistEntry;
 
 use ZK\UI\UICommon as UI;
 
@@ -92,7 +93,7 @@ class Home extends MenuItem {
              if (preg_match("/^COLL$/i", $artist))
                  $artist = "Various Artists";
              else if ($tagId)
-                 $artist = UI::swapNames($artist);
+                 $artist = PlaylistEntry::swapNames($artist);
 
              $artist = UI::HTMLify($artist, 20);
              echo "<TR>";

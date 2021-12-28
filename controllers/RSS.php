@@ -126,7 +126,7 @@ class RSS extends CommandTarget implements IController {
                 // Artist
                 $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " <i>";
                 // Album & Label
-                $output .= "<a href=\"".UI::getBaseUrl().
+                $output .= "<a href=\"".Engine::getBaseUrl().
                              "?s=byAlbumKey&amp;n=".$chart[$i]["tag"].
                              "&amp;q=10".
                              "&amp;action=search".
@@ -152,7 +152,7 @@ class RSS extends CommandTarget implements IController {
        $title = "$station Radio Airplay Charts";
     
        echo "<channel>\n<title>$title</title>\n";
-       echo "<link>".UI::getBaseUrl()."?action=viewChart</link>\n";
+       echo "<link>".Engine::getBaseUrl()."?action=viewChart</link>\n";
        echo "<description>$station Radio Airplay Charts</description>\n";
        echo "<managingEditor>".Engine::param('email')['md']."</managingEditor>\n";
        echo "<language>en-us</language>\n";
@@ -161,11 +161,11 @@ class RSS extends CommandTarget implements IController {
        while($weeks && ($week = $weeks->fetch())) {
           $endDate = $week["week"];
           $output = $this->composeChartRSS($endDate, $name, $top);
-          $link = UI::getBaseUrl()."?action=viewChart&amp;subaction=weekly&amp;year=".substr($endDate,0,4)."&amp;month=".substr($endDate,5,2)."&amp;day=".substr($endDate,8,2);
+          $link = Engine::getBaseUrl()."?action=viewChart&amp;subaction=weekly&amp;year=".substr($endDate,0,4)."&amp;month=".substr($endDate,5,2)."&amp;day=".substr($endDate,8,2);
           echo "<item>\n<title>$name</title>\n";
           echo "<guid>$link</guid>\n";
           echo "<link>$link</link>\n";
-          echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=charts\">$title</source>\n";
+          echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=charts\">$title</source>\n";
           echo "<pubDate>".date("r", strtotime($endDate))."</pubDate>\n";
           // zk:subtitle is blank as title already contains the date
           echo "<zk:subtitle></zk:subtitle>\n";
@@ -181,7 +181,7 @@ class RSS extends CommandTarget implements IController {
        $title = "$station Radio Music Reviews";
     
        echo "<channel>\n<title>$title</title>\n";
-       echo "<link>".UI::getBaseUrl()."?action=viewRecent</link>\n";
+       echo "<link>".Engine::getBaseUrl()."?action=viewRecent</link>\n";
        echo "<description>Recent album reviews by $station DJs</description>\n";
        echo "<managingEditor>".Engine::param('email')['md']."</managingEditor>\n";
        echo "<ttl>20</ttl>\n";
@@ -189,7 +189,7 @@ class RSS extends CommandTarget implements IController {
        $results = Engine::api(IReview::class)->getRecentReviews("", 0, $limit);
        while($results && ($row = $results->fetch())) {
           // Link to album
-          $link = UI::getBaseUrl()."?action=viewRecentReview&amp;tag=$row[0]";
+          $link = Engine::getBaseUrl()."?action=viewRecentReview&amp;tag=$row[0]";
     
           // DJ
           if($row[1])
@@ -225,9 +225,9 @@ class RSS extends CommandTarget implements IController {
           echo "<guid isPermaLink=\"false\">review-".$row[0]."-".substr($row[3],0,10)."</guid>\n";
           echo "<category>".self::xmlentities(ILibrary::GENRES[$album[0]["category"]])."</category>\n";
           echo "<link>$link</link>\n";
-          //echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=reviews\">".self::xmlentities($djname)."</source>\n";
+          //echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=reviews\">".self::xmlentities($djname)."</source>\n";
           echo "<dc:creator>".self::xmlentities($djname)."</dc:creator>\n";
-          echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=reviews\">$title</source>\n";
+          echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=reviews\">$title</source>\n";
           $time = strtotime($row[3]);
           echo "<pubDate>".date("r", $time)."</pubDate>\n";
           echo "<zk:subtitle>Reviewed ".date("F j, Y", $time)."</zk:subtitle>\n</item>\n";
@@ -290,7 +290,7 @@ class RSS extends CommandTarget implements IController {
                 // Artist
                 $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " <i>";
                 // Album & Label
-                $output .= "<a href=\"".UI::getBaseUrl().
+                $output .= "<a href=\"".Engine::getBaseUrl().
                              "?s=byAlbumKey&amp;n=".$row["tag"].
                              "&amp;q=10".
                              "&amp;action=search".
@@ -313,7 +313,7 @@ class RSS extends CommandTarget implements IController {
        $title = "$station Radio A-File Adds";
     
        echo "<channel>\n<title>$title</title>\n";
-       echo "<link>".UI::getBaseUrl()."?action=addmgr</link>\n";
+       echo "<link>".Engine::getBaseUrl()."?action=addmgr</link>\n";
        echo "<description>$station Radio A-File Adds</description>\n";
        echo "<managingEditor>".Engine::param('email')['md']."</managingEditor>\n";
        echo "<language>en-us</language>\n";
@@ -322,11 +322,11 @@ class RSS extends CommandTarget implements IController {
        while($weeks && ($week = $weeks->fetch())) {
           $addDate = $week["adddate"];
           $output = $this->composeAddRSS($addDate, $name);
-          $link = UI::getBaseUrl()."?action=addmgr&amp;subaction=adds&amp;date=$addDate";
+          $link = Engine::getBaseUrl()."?action=addmgr&amp;subaction=adds&amp;date=$addDate";
           echo "<item>\n<title>$name</title>\n";
           echo "<guid>$link</guid>\n";
           echo "<link>$link</link>\n";
-          echo "<source url=\"".UI::getBaseUrl()."zkrss.php?feed=adds\">$title</source>\n";
+          echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=adds\">$title</source>\n";
           echo "<pubDate>".date("r", strtotime($addDate))."</pubDate>\n";
           // zk:subtitle is blank as title already contains the date
           echo "<zk:subtitle></zk:subtitle>\n";
@@ -337,6 +337,6 @@ class RSS extends CommandTarget implements IController {
     
     public function emitError() {
        $message = "Invalid feed: ".$_REQUEST["feed"];
-       echo "<channel>\n<title>$message</title>\n<link>".UI::getBaseUrl()."</link>\n<description>$message</description>\n</channel>\n";
+       echo "<channel>\n<title>$message</title>\n<link>".Engine::getBaseUrl()."</link>\n<description>$message</description>\n</channel>\n";
     }
 }

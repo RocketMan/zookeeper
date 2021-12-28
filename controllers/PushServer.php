@@ -30,7 +30,6 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\OnNowFilter;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
-use ZK\UI\UICommon as UI;
 
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
@@ -97,7 +96,7 @@ class NowAiringServer implements MessageComponentInterface {
             $filter = Engine::api(IPlaylist::class)->getTracksWithObserver($show['id'],
                 (new PlaylistObserver())->onSpin(function($entry) use(&$event) {
                     $spin = $entry->asArray();
-                    $spin['artist'] = UI::swapNames($spin['artist']);
+                    $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
                     $event = $spin;
                 })->onComment(function($entry) use(&$event) {
                     $event = null;

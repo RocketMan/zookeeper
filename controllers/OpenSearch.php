@@ -26,11 +26,9 @@ namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
 
-use ZK\UI\UICommon as UI;
-
 class OpenSearch implements IController {
     public function processRequest() {
-        $baseURL = UI::getBaseURL();
+        $baseURL = Engine::getBaseUrl();
         $favicon = Engine::param('favicon', 'favicon.ico');
         $banner = Engine::param("station")." ".Engine::param("application");
         

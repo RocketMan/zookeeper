@@ -273,7 +273,7 @@ class Playlists extends MenuItem {
                     $playlist['id'] = $playlistId;
                     if($type == PlaylistEntry::TYPE_SPIN) {
                         $spin = $entry->asArray();
-                        $spin['artist'] = UI::swapNames($spin['artist']);
+                        $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
                     } else
                         $spin = null;
                     PushServer::sendAsyncNotification($playlist, $spin);
@@ -1918,7 +1918,7 @@ class Playlists extends MenuItem {
                     $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                 $timeplayed = self::timestampToAMPM($entry->getCreated());
                 $reviewCell = $entry->getReviewed() ? "<div class='albumReview'></div>" : "";
-                $artistName = UI::swapNames($entry->getArtist());
+                $artistName = PlaylistEntry::swapNames($entry->getArtist());
 
                 $albumLink = $this->makeAlbumLink($entry, true);
                 echo "<TR class='songRow'>" . $editCell .

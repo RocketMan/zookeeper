@@ -31,8 +31,6 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\IUser;
 use ZK\Engine\PlaylistEntry;
 
-use ZK\UI\UICommon as UI;
-
 class Validate implements IController {
     private $success = true;
     private $session;

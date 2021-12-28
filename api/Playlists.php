@@ -30,8 +30,6 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
 
-use ZK\UI\UICommon as UI;
-
 use Enm\JsonApi\Exception\NotAllowedException;
 use Enm\JsonApi\Exception\ResourceNotFoundException;
 use Enm\JsonApi\Model\Document\Document;
@@ -81,7 +79,7 @@ class Playlists implements RequestHandlerInterface {
             })->onSpin(function($entry) use(&$events) {
                 $spin = $entry->asArray();
                 $spin["type"] = "track";
-                $spin["artist"] = UI::swapNames($spin["artist"]);
+                $spin["artist"] = PlaylistEntry::swapNames($spin["artist"]);
                 $spin["created"] = $entry->getCreatedTime();
                 unset($spin["id"]);
                 $events[] = $spin;
