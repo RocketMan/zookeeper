@@ -106,11 +106,18 @@ class Engine {
      * return the URL of the current request, less leaf filename, if any
      */
     public static function getBaseUrl() {
+        if(self::$base)
+            return self::$base;
+
         if(php_sapi_name() == "cli")
             return "";
 
-        if(self::$base)
+        // api gets path only
+        // must be absolute path for FILTER_VALIDATE_URL
+        if(isset($_SERVER['REDIRECT_APIVER'])) {
+            self::$base = $_SERVER['REDIRECT_PREFIX'] ?? "/";
             return self::$base;
+        }
 
         $uri = $_SERVER['REQUEST_URI'];
 
@@ -118,11 +125,6 @@ class Engine {
         $qpos = strpos($uri, "?");
         if($qpos !== false)
             $uri = substr($uri, 0, $qpos);
-
-        // api gets only path
-        // must be absolute path for FILTER_VALIDATE_URL
-        if(isset($_SERVER['REDIRECT_APIVER']))
-            return self::$base = $_SERVER['REDIRECT_PREFIX'] ?? "/";
 
         $port = ":" . $_SERVER['SERVER_PORT'];
         if($port == ":443" || $port == ":80")
