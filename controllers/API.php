@@ -36,8 +36,6 @@ use ZK\Engine\PlaylistObserver;
 
 use ZK\UI\UICommon as UI;
 
-use Enm\JsonApi\Model\Request\Request;
-
 abstract class Serializer {
     private $catCodes;
 
@@ -319,7 +317,6 @@ class API extends CommandTarget implements IController {
         [ "getCurrentsRq", "getCurrents" ],
         [ "getChartsRq", "getCharts" ],
         [ "getPlaylistsRq", "getPlaylists" ], // LEGACY marked for deprecation
-        [ "jsonApi", "jsonApi" ],
     ];
 
     /*
@@ -485,37 +482,6 @@ class API extends CommandTarget implements IController {
             $this->serializer->endResponse("show");
         }
         $this->serializer->endResponse("getPlaylistsRs");
-    }
-
-    public function jsonApi() {
-        $jsonApi = new ApiServer(
-                new \Enm\JsonApi\Serializer\Deserializer(),
-                new \Enm\JsonApi\Serializer\Serializer());
-
-        $config = new Config('controller_config', 'apiControllers');
-        $config->iterate(function($type, $handler) use($jsonApi) {
-            $jsonApi->addHandler($type, new $handler());
-        });
-
-        try {
-            $request = new Request(
-                $_SERVER["REQUEST_METHOD"] ?? "GET",
-                new \GuzzleHttp\Psr7\Uri(($_SERVER["REDIRECT_APIURI"] ?? "") . "?" . $_SERVER["QUERY_STRING"]),
-                $jsonApi->createRequestBody(file_get_contents('php://input')),
-                null);
-
-            $response = $jsonApi->handleRequest($request);
-        } catch(\Exception $e){
-            $response = $jsonApi->handleException($e);
-        }
-
-        //header("HTTP/1.1 ".$response->status());
-        foreach($response->headers()->all() as $header => $value)
-            header("{$header}: {$value}");
-
-        ob_start("ob_gzhandler");
-        echo $jsonApi->createResponseBody($response);
-        ob_end_flush();
     }
 
     public function getCurrents() {
