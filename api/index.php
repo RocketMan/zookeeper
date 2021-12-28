@@ -26,6 +26,7 @@ require_once __DIR__."/../vendor/autoload.php";
 
 use ZK\API\ApiServer;
 use ZK\Engine\Config;
+use ZK\Engine\Engine;
 
 use Enm\JsonApi\Model\Request\Request;
 use Enm\JsonApi\Serializer\Deserializer;
