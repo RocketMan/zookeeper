@@ -32,33 +32,65 @@ use Enm\JsonApi\Serializer\Deserializer;
 use Enm\JsonApi\Serializer\Serializer;
 use GuzzleHttp\Psr7\Uri;
 
-$jsonApi = new ApiServer(new Deserializer(), new Serializer());
+const CORS_METHODS = "GET, HEAD, POST, PATCH, DELETE";
 
-$config = new Config('controller_config', 'apiControllers');
-$config->iterate(function($type, $handler) use($jsonApi) {
-    $jsonApi->addHandler($type, new $handler());
-});
+function isPreflight() {
+    $preflight = ($_SERVER['REQUEST_METHOD'] ?? null) == "OPTIONS";
+    if($preflight)
+        http_response_code(204); // 204 No Content
 
-try {
-    // Remove the uri prefix manually, as Request's api prefix removal
-    // is broken for multilevel prefixes.
-    $uri = preg_replace("|^{$_SERVER["REDIRECT_PREFIX"]}|", "", $_SERVER["REQUEST_URI"]);
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
+    if($origin) {
+        foreach(Engine::param('allowed_domains') as $domain) {
+            if(preg_match("/" . preg_quote($domain) . "$/", $origin)) {
+                header("Access-Control-Allow-Origin: {$origin}");
+                header("Access-Control-Allow-Credentials: true");
+                break;
+            }
+        }
 
-    $request = new Request(
-        $_SERVER["REQUEST_METHOD"],
-        new Uri($uri),
-        $jsonApi->createRequestBody(file_get_contents('php://input')),
-        null);
+        if($preflight) {
+            header("Access-Control-Allow-Methods: " . CORS_METHODS);
+            header("Access-Control-Max-Age: 3600");
+        }
+    }
 
-    $response = $jsonApi->handleRequest($request);
-} catch(\Exception $e) {
-    $response = $jsonApi->handleException($e);
+    return $preflight;
 }
 
-//header("HTTP/1.1 ".$response->status());
-foreach($response->headers()->all() as $header => $value)
-    header("{$header}: {$value}");
+function serveRequest() {
+    $jsonApi = new ApiServer(new Deserializer(), new Serializer());
 
-ob_start("ob_gzhandler");
-echo $jsonApi->createResponseBody($response);
-ob_end_flush();
+    $config = new Config('controller_config', 'apiControllers');
+    $config->iterate(function($type, $handler) use($jsonApi) {
+        $jsonApi->addHandler($type, new $handler());
+    });
+
+    try {
+        // Remove the uri prefix manually, as Request's api prefix removal
+        // is broken for multilevel prefixes.
+        $uri = preg_replace("|^{$_SERVER["REDIRECT_PREFIX"]}|", "", $_SERVER["REQUEST_URI"]);
+
+        $request = new Request(
+            $_SERVER["REQUEST_METHOD"],
+            new Uri($uri),
+            $jsonApi->createRequestBody(file_get_contents('php://input')),
+            null);
+
+        $response = $jsonApi->handleRequest($request);
+    } catch(\Exception $e) {
+        $response = $jsonApi->handleException($e);
+    }
+
+    //header("HTTP/1.1 ".$response->status());
+    foreach($response->headers()->all() as $header => $value)
+        header("{$header}: {$value}");
+
+    ob_start("ob_gzhandler");
+    echo $jsonApi->createResponseBody($response);
+    ob_end_flush();
+}
+
+// BEGIN MAINLINE
+if(!isPreflight())
+    serveRequest();
