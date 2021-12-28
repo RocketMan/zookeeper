@@ -24,6 +24,8 @@
 
 namespace ZK\Controllers;
 
+use ZK\API\ApiServer;
+
 use ZK\Engine\Config;
 use ZK\Engine\Engine;
 use ZK\Engine\IChart;
@@ -31,8 +33,6 @@ use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\OnNowFilter;
 use ZK\Engine\PlaylistObserver;
-
-use ZK\JsonApi\ApiServer;
 
 use ZK\UI\UICommon as UI;
 

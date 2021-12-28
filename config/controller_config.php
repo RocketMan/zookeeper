@@ -20,13 +20,13 @@ $controllers = [
 ];
 
 /**
- * JSON:API controllers
+ * API controllers
  *
  * Each entry is a JSON:API type to RequestHandler mapping
  */
 $jsonApiControllers = [
-    'album' =>        ZK\JsonApi\Albums::class,
-    'label' =>        ZK\JsonApi\Labels::class,
-    'review' =>       ZK\JsonApi\Reviews::class,
-    'playlist' =>     ZK\JsonApi\Playlists::class,
+    'album' =>        ZK\API\Albums::class,
+    'label' =>        ZK\API\Labels::class,
+    'review' =>       ZK\API\Reviews::class,
+    'playlist' =>     ZK\API\Playlists::class,
 ];

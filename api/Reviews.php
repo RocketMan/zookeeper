@@ -22,7 +22,7 @@
  *
  */
 
-namespace ZK\JsonApi;
+namespace ZK\API;
 
 use ZK\Engine\Engine;
 use ZK\Engine\IDJ;

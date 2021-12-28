@@ -35,6 +35,9 @@ Zookeeper APIs follow the JSON:API standard.  More information about
 The following is an overview of the source code directory structure:
 
     project-root/
+        api/
+            JSON:API implementation.
+
         build/
             files for continuous integration
 
@@ -123,9 +126,6 @@ The following is an overview of the source code directory structure:
             JavaScript assets.  These are the client (browser) resident
             components of the UI.  The files are automatically minified
             and source maps generated upon delivery.
-
-        jsonapi/
-            JSON:API implementation.
 
         ui/
             Server-generated UI.  Menu items are specified in metadata,

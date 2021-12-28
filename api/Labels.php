@@ -22,7 +22,7 @@
  *
  */
 
-namespace ZK\JsonApi;
+namespace ZK\API;
 
 use ZK\Controllers\API;
 use ZK\Engine\Engine;
