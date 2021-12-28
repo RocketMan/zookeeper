@@ -492,7 +492,7 @@ class API extends CommandTarget implements IController {
                 new \Enm\JsonApi\Serializer\Deserializer(),
                 new \Enm\JsonApi\Serializer\Serializer());
 
-        $config = new Config('controller_config', 'jsonApiControllers');
+        $config = new Config('controller_config', 'apiControllers');
         $config->iterate(function($type, $handler) use($jsonApi) {
             $jsonApi->addHandler($type, new $handler());
         });
