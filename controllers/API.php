@@ -24,9 +24,6 @@
 
 namespace ZK\Controllers;
 
-use ZK\API\ApiServer;
-
-use ZK\Engine\Config;
 use ZK\Engine\Engine;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
@@ -329,7 +326,7 @@ class API extends CommandTarget implements IController {
     /*
      * Allowed HTTP methods for pre-flighted CORS requests.
      */
-    private static $defaultACAM = "GET, HEAD, POST, DELETE, PATCH";
+    private static $defaultACAM = "GET, HEAD, POST";
 
     private $limit;
     private $serializer;
