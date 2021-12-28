@@ -40,8 +40,8 @@ $config->iterate(function($type, $handler) use($jsonApi) {
 });
 
 try {
-    // Request's api prefix removal is broken for multiple directory
-    // levels and it leaves the trailing slash, so we do it manually.
+    // Remove the uri prefix manually, as Request's api prefix removal
+    // is broken for multilevel prefixes.
     $uri = preg_replace("|^{$_SERVER["REDIRECT_PREFIX"]}|", "", $_SERVER["REQUEST_URI"]);
 
     $request = new Request(
