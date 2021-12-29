@@ -37,6 +37,10 @@
 
 var items, links;
 
+function htmlify(s) {
+    return s != null?s.replace(/&/g, '&amp;').replace(/</g, '&lt;'):'';
+}
+
 function changeList() {
     var list = $("#list");
     var index = list.prop('selectedIndex');
@@ -54,10 +58,10 @@ function changeList() {
                 html += val + '"';
                 if(key == 'url')
                     html += ' TARGET="_blank"';
-                html += '>' + val + '</A>';
+                html += '>' + htmlify(val) + '</A>';
                 field.html(html);
             } else {
-                field.html(val);
+                field.html(htmlify(val));
             }
         }
     }
