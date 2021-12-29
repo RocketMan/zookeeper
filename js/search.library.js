@@ -39,7 +39,7 @@ function decobj(s) {
 }
 
 function htmlify(s) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    return s != null?s.replace(/&/g, '&amp;').replace(/</g, '&lt;'):'';
 }
 
 function header(title, sortable) {
