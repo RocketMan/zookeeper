@@ -92,6 +92,7 @@ interface ILibrary {
 
     function search($tableIndex, $pos, $count, $search, $sortBy = 0);
     function searchPos($tableIndex, &$pos, $count, $search, $sortBy = 0);
+    function linkReviews(&$albums, $loggedIn = false, $includeBody = false);
     function markAlbumsReviewed(&$albums, $loggedIn = 0);
     function markAlbumsPlayable(&$albums);
     function listAlbums($op, $key, $limit);

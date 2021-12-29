@@ -130,6 +130,33 @@ class PlaylistEntry {
         return $valid?$timestamp:null;
     }
 
+   /**
+    *  converts "last, first" to "first last" being careful to not swap
+    *  other formats that have commas. call only for ZK library entries
+    *  since manual entries don't need this. Test cases: The Band, CSN&Y,
+    *  Bing Crosby & Fred Astaire, Bunett, June and Maqueque, Electro, Brad 
+    *  Feat. Marwan Kanafaneg, Kallick, Kathy Band: 694717, 418485, 911685, 
+    *  914824, 880994, 1134313.
+    */
+    public static function swapNames($fullName) {
+        $suffixMap = [ "band" => "", "with" => "", "and" => "", "feat." => "" ];
+
+        $namesAr = explode(", ", $fullName);
+        if (count($namesAr) == 2) {
+            $spacesAr = explode(" ", $namesAr[1]);
+            $spacesCnt = count($spacesAr);
+            if ($spacesCnt == 1) {
+                $fullName = $namesAr[1] . " " . $namesAr[0];
+            } else if ($spacesCnt > 1) {
+                $key = strtolower($spacesAr[1]);
+                if (array_key_exists($key, $suffixMap)) {
+                    $fullName = $spacesAr[0] . ' ' . $namesAr[0] . ' ' . substr($namesAr[1], strlen($spacesAr[0]));
+                }
+            }
+        }
+        return $fullName;
+    }
+
     public static function fromJSON($json) {
         $entry = new PlaylistEntry();
         switch($json->type) {
@@ -151,6 +178,30 @@ class PlaylistEntry {
             break;
         }
         $entry->setCreated($json->created);
+        return $entry;
+    }
+
+    public static function fromArray($array) {
+        $entry = new PlaylistEntry();
+        switch($array["type"]) {
+        case "break":
+            $entry->setSetSeparator();
+            break;
+        case "comment":
+            $entry->setComment(self::scrubField($array["comment"], PlaylistEntry::MAX_COMMENT_LENGTH));
+            break;
+        case "logEvent":
+            $entry->setLogEvent(self::scrubField($array["event"]), self::scrubField($array["code"]));
+            break;
+        case "track":
+            $entry->setArtist(self::scrubField($array["artist"]));
+            $entry->setTrack(self::scrubField($array["track"]));
+            $entry->setAlbum(self::scrubField($array["album"]));
+            $entry->setLabel(self::scrubField($array["label"]));
+            $entry->setTag($array["tag"]);
+            break;
+        }
+        $entry->setCreated($array["created"]);
         return $entry;
     }
 
@@ -261,6 +312,20 @@ class PlaylistEntry {
     public function setSetSeparator() {
         $this->entry['artist'] = IPlaylist::SPECIAL_TRACK;
         return $this;
+    }
+
+    /**
+     * return the time component of the 'created' datetime string
+     *
+     * @return time component on success; original datetime value otherwise
+     */
+    public function getCreatedTime() {
+        $datetime = $this->getCreated();
+
+        // yyyy-mm-dd hh:mm:ss
+        if($datetime && strlen($datetime) == 19)
+            $datetime = substr($datetime, 11, 8);
+        return $datetime;
     }
 
     /**

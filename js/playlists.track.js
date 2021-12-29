@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -115,20 +115,23 @@ $().ready(function(){
     }
 
     function getDiskInfo(id, refArtist) {
-        const INVALID_TAG = 100;
         $("#track-title-pick").find('option').remove();
         $("#track-title").attr('list',''); // webkit hack
         $("#track-titles").empty();
         clearUserInput(false);
         tagId = ""
-        var url = "api/v1/getTracks?key=" + id;
+        // chars [ and ] in the QS param name are supposed to be %-encoded.
+        // It seems to work ok without and reads better in the server logs,
+        // but this may need revisiting if there are problems.
+        var url = "api/v1/album/" + id +
+            "?fields[album]=artist,album,tracks";
         $.ajax({
             dataType : 'json',
             type: 'GET',
             accept: "application/json; charset=utf-8",
             url: url,
-        }).done(function (diskInfo) { //TODO: success?
-            if (diskInfo.code == INVALID_TAG) {
+        }).done(function (response) { //TODO: success?
+            if (response.errors) {
                 showUserError(id + ' is not a valid tag.');
                 return;
             }
@@ -138,7 +141,8 @@ $().ready(function(){
                 $("#track-tag").val(id);
             var options = "<option value=''>Select Track</option>";
             var options2 = "";
-            trackList = diskInfo.data;
+            var diskInfo = response.data;
+            trackList = diskInfo.attributes.tracks;
             for (var i=0; i < trackList.length; i++) {
                 var track = trackList[i];
                 var artist = track.artist ? track.artist + ' - ' : '';
@@ -150,9 +154,9 @@ $().ready(function(){
             $("#track-title-pick").find('option').remove().end().append(options);
             $("#track-titles").html(options2);
             $("#track-title").attr('list','track-titles'); // webkit hack
-            $("#track-artist").val(diskInfo.artist);
-            $("#track-label").val(diskInfo.label);
-            $("#track-album").val(diskInfo.album);
+            $("#track-artist").val(diskInfo.attributes.artist);
+            $("#track-label").val(diskInfo.relationships.label.meta.name);
+            $("#track-album").val(diskInfo.attributes.album);
             $("#track-title").val("");
             $("#track-submit").attr("disabled");
             $("#track-submit").prop("disabled", true);
@@ -174,10 +178,13 @@ $().ready(function(){
                     }
                 }
             }
-            $("#tag-artist").text(diskInfo.artist  + ' - ' + diskInfo.album);
+            $("#tag-artist").text(diskInfo.attributes.artist  + ' - ' + diskInfo.attributes.album);
 
         }).fail(function (jqXHR, textStatus, errorThrown) {
-            showUserError('Ajax error: ' + textStatus);
+            var json = JSON.parse(jqXHR.responseText);
+            var status = (json && json.errors)?
+                    json.errors[0].title:('Ajax error: ' + textStatus);
+            showUserError(status);
         });
     }
 
@@ -520,10 +527,10 @@ $().ready(function(){
     }
 
     function searchLibrary(key) {
-        var url = "api/v1/libLookup" +
-            "?type=artists" +
-            "&key=" + encodeURIComponent(key) + "*" +
-            "&size=50";
+        var url = "api/v1/album?filter[artist]=" +
+            encodeURIComponent(key) + "*" +
+            "&page[size]=50&fields[album]=artist,album";
+
         var results = $("#track-artists");
         $.ajax({
             dataType : 'json',
@@ -533,14 +540,14 @@ $().ready(function(){
             success: function(response) {
                 $("#track-artist").attr('list',''); // webkit hack
                 results.empty();
-                if(response.total > 0) {
-                    var data = response.data[0];
-                    data.data.forEach(function(entry) {
-                        var row = htmlify(entry.artist) + " - " +
-                            htmlify(entry.album) + " (#" +
-                            entry.tag + ")";
-                        results.append("<option data-tag='" + entry.tag +
-                                       "' data-artist='" + htmlify(entry.artist) +
+                if(response.links.first.meta.total > 0) {
+                    response.data.forEach(function(entry) {
+                        var attrs = entry.attributes;
+                        var row = htmlify(attrs.artist) + " - " +
+                            htmlify(attrs.album) + " (#" +
+                            entry.id + ")";
+                        results.append("<option data-tag='" + entry.id +
+                                       "' data-artist='" + htmlify(attrs.artist) +
                                        "' value='" + row + "'>");
                     });
                     $("#track-artist").attr('list','track-artists'); // webkit hack

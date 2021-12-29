@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -23,14 +23,18 @@
 /*! Zookeeper Online (C) 1997-2020 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 function changeSel(index) {
-    $("#seltag").val(items[index].tag);
+    $("#seltag").val(items[index].id);
 }
 
-function getAlbums(op, key) {
-    var url = "api/v1/getAlbums" +
-        "?operation=" + op +
-        "&size=" + $("#list-size").val() +
-        "&key=" + encodeURIComponent(key);
+function getAlbums(key) {
+    var url = "api/v1/album?" + key +
+        "&page[profile]=cursor&page[size]=" + $("#list-size").val();
+    paginateAlbums(null, url);
+}
+
+function paginateAlbums(op, url) {
+    url += "&fields[album]=-tracks,-coll";
+    url += "&fields[label]=name,address,city,state,zip&include=label";
 
     $.ajax({
         dataType : 'json',
@@ -40,11 +44,27 @@ function getAlbums(op, key) {
         success: function (response) {
             var list = $("#list");
             list.empty();
+            links = response.links;
             items = response.data;
             items.forEach(function(obj) {
                 var option = $('<option/>');
-                option.val(obj.tag).text(obj.artist);
+                option.val(obj.id).text(obj.attributes.artist);
                 list.append(option);
+                obj.attributes.tag = obj.id;
+                if(obj.relationships != null) {
+                    var label = response.included.find(x => x.id == obj.relationships.label.data.id);
+                    obj.attributes.name = label.attributes.name;
+                    obj.attributes.address = label.attributes.address;
+                    obj.attributes.city = label.attributes.city;
+                    obj.attributes.state = label.attributes.state;
+                    obj.attributes.zip = label.attributes.zip;
+                } else {
+                    obj.attributes.name = '';
+                    obj.attributes.address = '';
+                    obj.attributes.city = '';
+                    obj.attributes.state = '';
+                    obj.attributes.zip = '';
+                }
             });
 
             switch(op) {
@@ -62,11 +82,6 @@ function getAlbums(op, key) {
             }
 
             changeList();
-
-            var obj = items[0];
-            $("#up").val(obj.artist + "|" + obj.album + "|" + obj.tag);
-            obj = items[items.length-1];
-            $("#down").val(obj.artist + "|" + obj.album + "|" + obj.tag);
         },
         error: function (jqXHR, textStatus, errorThrown) {
             alert('There was a problem retrieving the JSON data:\n' + textStatus);
@@ -77,36 +92,36 @@ function getAlbums(op, key) {
 function onSearchNow() {
     var search = $("#search").val();
     if(search.lastIndexOf('.') == search.length-1 && search.length > 3)
-        getAlbums('searchByTag', search);
+        getAlbums('filter[id]=' + encodeURIComponent(search));
     else
-        getAlbums('searchByName', ($("#coll").is(':checked')?"[coll]: ":"") + search);
+        getAlbums('filter[artist]=' + ($("#coll").is(':checked')?"[coll]: ":"") + encodeURIComponent(search));
 }
 
 function scrollUp() {
-    getAlbums("prevPage", $("#up").val());
+    paginateAlbums('prevPage', links.prev);
     return false;
 }
 
 function scrollDown() {
-    getAlbums("nextPage", $("#down").val());
+    paginateAlbums('nextPage', links.next);
     return false;
 }
 
 function lineUp() {
-    getAlbums('prevLine', $("#up").val());
+    paginateAlbums('prevLine', links.prevLine);
 }
 
 function lineDown() {
-    getAlbums('nextLine', $("#up").val());
+    paginateAlbums('nextLine', links.nextLine);
 }
 
 $().ready(function() {
     var seltag = $("#seltag").val();
     if(seltag > 0) {
-        getAlbums('searchByTag', seltag);
+        getAlbums('filter[id]=' + encodeURIComponent(seltag));
         $("#list").focus();
     } else {
-        scrollUp();
+        getAlbums('page[before]=');
         $("#search").focus();
     }
 

@@ -24,6 +24,8 @@
 
 namespace ZK\UI;
 
+use ZK\Engine\Engine;
+
 class UICommon {
     const CHARSET_ASCII = 0;
     const CHARSET_LATIN1 = 1;
@@ -99,26 +101,10 @@ class UICommon {
 
     /**
      * return the URL of the current request, less leaf filename, if any
+     * @deprecated use Engine::getBaseUrl()
      */
     public static function getBaseUrl() {
-        if(php_sapi_name() == "cli")
-            return "";
-
-        $uri = $_SERVER['REQUEST_URI'];
-    
-        // strip the query string, if any
-        $qpos = strpos($uri, "?");
-        if($qpos !== false)
-            $uri = substr($uri, 0, $qpos);
-
-        $port = ":" . $_SERVER['SERVER_PORT'];
-        if($port == ":443" || $port == ":80")
-            $port = "";
-    
-        // compose the URL
-        return $_SERVER['REQUEST_SCHEME'] . "://" .
-               $_SERVER['SERVER_NAME'] . $port .
-               preg_replace("{/[^/]+$}", "/", $uri);
+        return Engine::getBaseUrl();
     }
     
     /**
@@ -202,34 +188,6 @@ class UICommon {
               [ "\x85"=>"...", "\xde"=>"Th", "\xdf"=>"ss", "\xfe"=>"th" ] );
 
         return $string;
-    }
-
-
-   /**
-    *  converts "last, first" to "first last" being careful to not swap
-    *  other formats that have commas. call only for ZK library entries
-    *  since manual entries don't need this. Test cases: The Band, CSN&Y,
-    *  Bing Crosby & Fred Astaire, Bunett, June and Maqueque, Electro, Brad 
-    *  Feat. Marwan Kanafaneg, Kallick, Kathy Band: 694717, 418485, 911685, 
-    *  914824, 880994, 1134313.
-    */
-    public static function swapNames($fullName) {
-        $suffixMap = [ "band" => "", "with" => "", "and" => "", "feat." => "" ];
-    
-        $namesAr = explode(", ", $fullName);
-        if (count($namesAr) == 2) {
-            $spacesAr = explode(" ", $namesAr[1]);
-            $spacesCnt = count($spacesAr);
-            if ($spacesCnt == 1) {
-                $fullName = $namesAr[1] . " " . $namesAr[0];
-            } else if ($spacesCnt > 1) {
-                $key = strtolower($spacesAr[1]);
-                if (array_key_exists($key, $suffixMap)) {
-                    $fullName = $spacesAr[0] . ' ' . $namesAr[0] . ' ' . substr($namesAr[1], strlen($spacesAr[0]));
-                }
-            }
-        }
-        return $fullName;
     }
 
     /**

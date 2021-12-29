@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -35,28 +35,29 @@
  *
  */
 
-var items;
+var items, links;
 
 function changeList() {
     var list = $("#list");
     var index = list.prop('selectedIndex');
     changeSel(index);
-    for(var key in items[0]) {
+    for(var key in items[0].attributes) {
         var field = $("#"+key);
         if(field.length > 0) {
-            if(key == 'email' || key == 'url') {
+            var val = items[index].attributes[key];
+            if(val != null && (key == 'email' || key == 'url')) {
                 var html = '<A HREF="';
-                if(key == 'email' && items[index][key].indexOf('mailto:') != 0)
+                if(key == 'email' && val.indexOf('mailto:') != 0)
                     html += 'mailto:';
-                else if(key == 'url' && items[index][key].indexOf('http://') != 0)
+                else if(key == 'url' && val.indexOf('http://') != 0)
                     html += 'http://';
-                html += items[index][key] + '"';
+                html += val + '"';
                 if(key == 'url')
                     html += ' TARGET="_blank"';
-                html += '>' + items[index][key] + '</A>';
+                html += '>' + val + '</A>';
                 field.html(html);
             } else {
-                field.html(items[index][key]);
+                field.html(val);
             }
         }
     }

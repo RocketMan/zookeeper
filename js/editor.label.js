@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -23,15 +23,16 @@
 /*! Zookeeper Online (C) 1997-2020 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 function changeSel(index) {
-    $("#selpubkey").val(items[index].pubkey);
+    $("#selpubkey").val(items[index].id);
 }
 
-function getLabels(op, key) {
-    var url = "api/v1/getLabels" +
-        "?operation=" + op +
-        "&size=" + $("#list-size").val() +
-        "&key=" + encodeURIComponent(key);
+function getLabels(key) {
+    var url = "api/v1/label?" + key +
+        "&page[profile]=cursor&page[size]=" + $("#list-size").val();
+    paginateLabels(null, url);
+}
 
+function paginateLabels(op, url) {
     $.ajax({
         dataType : 'json',
         type: 'GET',
@@ -40,11 +41,13 @@ function getLabels(op, key) {
         success: function (response) {
             var list = $("#list");
             list.empty();
+            links = response.links;
             items = response.data;
             items.forEach(function(obj) {
                 var option = $('<option/>');
-                option.val(obj.pubkey).text(obj.name);
+                option.val(obj.id).text(obj.attributes.name);
                 list.append(option);
+                obj.attributes.pubkey = obj.id;
             });
 
             switch(op) {
@@ -62,11 +65,6 @@ function getLabels(op, key) {
             }
 
             changeList();
-
-            var obj = items[0];
-            $("#up").val(obj.name + "|" + obj.pubkey);
-            obj = items[items.length-1];
-            $("#down").val(obj.name + "|" + obj.pubkey);
         },
         error: function (jqXHR, textStatus, errorThrown) {
             alert('There was a problem retrieving the JSON data:\n' + textStatus);
@@ -76,38 +74,38 @@ function getLabels(op, key) {
 
 function onSearchNow() {
     var search = $("#search").val();
-    getLabels('searchByName', search);
+    getLabels('filter[name]=' + encodeURIComponent(search));
 }
 
 function scrollUp() {
-    getLabels("prevPage", $("#up").val());
+    paginateLabels("prevPage", links.prev);
     return false;
 }
 
 function scrollDown() {
-    getLabels("nextPage", $("#down").val());
+    paginateLabels("nextPage", links.next);
     return false;
 }
 
 function lineUp() {
-    getLabels('prevLine', $("#up").val());
+    paginateLabels('prevLine', links.prevLine);
 }
 
 function lineDown() {
-    getLabels('nextLine', $("#up").val());
+    paginateLabels('nextLine', links.nextLine);
 }
 
 $().ready(function() {
     var seltag = $("#seltag").val();
     var name = $("#req-name").val();
     if(seltag > 0) {
-        getLabels('searchByTag', seltag);
+        getLabels('filter[album.id]=' + encodeURIComponent(seltag));
         $("#list").focus();
     } else if(name.length > 0) {
-        getLabels('searchByName', name);
+        getLabels('filter[name]=' + encodeURIComponent(name));
         $("#list").focus();
     } else {
-        scrollUp();
+        getLabels('page[before]=');
         $("#search").focus();
     }
 

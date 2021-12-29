@@ -29,9 +29,15 @@ clear architectural boundaries between the busienss logic / model
 (in `engine`), the presentation, which is contained in `js` and `ui`,
 and the controllers, which are in `controllers`.
 
+Zookeeper APIs follow the JSON:API standard.  More information about
+[Zookeeper JSON:API](docs/API.md) is available here.
+
 The following is an overview of the source code directory structure:
 
     project-root/
+        api/
+            JSON:API implementation.
+
         build/
             files for continuous integration
 
@@ -40,26 +46,26 @@ The following is an overview of the source code directory structure:
                  This is the main configuration file.  It includes
                  settings for the database, SSO setup (if any),
                  e-mail, hyperlinks, branding, etc.
-                 
+
             controller_config.php
                  Controller configuration.  Here we map request targets
                  onto controllers.
-                 
+
             engine_config.php
                  Model configuration.  This maps the model interfaces
                  onto concrete implementations.
-                 
+
             ui_config.php
                  User interface configuration.  This defines menu items,
                  access controls, and implementations.
-                 
+
         controllers/
             Controllers are responsible for processing requests
             that are received by the application.  Controllers are
             instantiated and invoked by the Dispatcher, whose
             operation is specified via metadata in
             config/controller_config.php.
-            
+
         css/
             CSS assets.  These files are automatically whitespace
             compressed upon delivery.
@@ -72,11 +78,11 @@ The following is an overview of the source code directory structure:
             TIP: If you add classes to this directory after installation,
             run `composer dump-autoload` to regenerate the classmap.
             See INSTALLATION.md for more information about Composer.
-            
+
         engine/
             Business operations, configuration, and session
             management.
-            
+
             Business operations are defined by interfaces.
             Each interface represents a logic grouping of
             operations.  The pattern is to call Engine::api
@@ -99,10 +105,10 @@ The following is an overview of the source code directory structure:
             Session state is application-managed; access the
             current session state through the singleton
             Engine::session.
-            
+
             Configuration file data is accessible through
             various methods on the Engine class.
-            
+
         engine/impl/
             Concrete implementations of the business operations.
             Classes in this directory should never be referenced
@@ -112,15 +118,15 @@ The following is an overview of the source code directory structure:
 
         fonts/
             TrueType fonts for label printing
-            
+
         img/
             image files
-            
+
         js/
             JavaScript assets.  These are the client (browser) resident
             components of the UI.  The files are automatically minified
             and source maps generated upon delivery.
-            
+
         ui/
             Server-generated UI.  Menu items are specified in metadata,
             via config/ui_config.php.
@@ -134,10 +140,10 @@ The following is an overview of the source code directory structure:
 
         composer.lock
             Composer dependency version lock
-            
+
         index.php
             main endpoint for the application
-            
+
        .htaccess
             maps virtual endpoints onto index.php.  This file also
             contains PHP settings when run via a webserver module.

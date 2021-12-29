@@ -27,8 +27,6 @@ namespace ZK\Controllers;
 use ZK\Engine\Engine;
 use ZK\Engine\IUser;
 
-use ZK\UI\UICommon as UI;
-
 class SSOLogin implements IController {
     private $action;
     private $ssoOptions;
@@ -58,7 +56,7 @@ class SSOLogin implements IController {
                 // external redirection requested
                 $target = $location;
             } else
-                $target = UI::getBaseUrl();
+                $target = Engine::getBaseUrl();
         
         } else {
             // check that cookies are enabled
@@ -87,7 +85,7 @@ class SSOLogin implements IController {
                 } else {
                     // cookies are not enabled; alert user
                     $rq = [ "action" => "cookiesDisabled" ];
-                    $target = UI::getBaseUrl();
+                    $target = Engine::getBaseUrl();
                 }
             } else {
                 // send a test cookie
