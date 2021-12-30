@@ -30,7 +30,6 @@ class Engine {
     private static $apis;
     private static $config;
     private static $session;
-    private static $base;
 
     /*
      * install autoloader for the engine implementation classes
@@ -106,18 +105,13 @@ class Engine {
      * return the URL of the current request, less leaf filename, if any
      */
     public static function getBaseUrl() {
-        if(self::$base)
-            return self::$base;
+        // api gets path only
+        // must be absolute path for FILTER_VALIDATE_URL
+        if(isset($_SERVER['REDIRECT_APIVER']))
+            return $_SERVER['REDIRECT_PREFIX'] ?? "/";
 
         if(php_sapi_name() == "cli")
             return "";
-
-        // api gets path only
-        // must be absolute path for FILTER_VALIDATE_URL
-        if(isset($_SERVER['REDIRECT_APIVER'])) {
-            self::$base = $_SERVER['REDIRECT_PREFIX'] ?? "/";
-            return self::$base;
-        }
 
         $uri = $_SERVER['REQUEST_URI'];
 
@@ -131,11 +125,9 @@ class Engine {
             $port = "";
 
         // compose the URL
-        self::$base = $_SERVER['REQUEST_SCHEME'] . "://" .
+        return $_SERVER['REQUEST_SCHEME'] . "://" .
                $_SERVER['SERVER_NAME'] . $port .
                preg_replace("{/[^/]+$}", "/", $uri);
-
-        return self::$base;
     }
 }
 
