@@ -865,9 +865,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
 
     public function isListDeleted($id) {
         $query = "SELECT airname FROM lists_del WHERE listid = ?";
-	$stmt = $this->prepare($query);
-	$stmt->bindValue(1, $id);
-	$result = $stmt->executeAndFetch();
-	return $result?true:false;
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $id);
+        $result = $stmt->executeAndFetch();
+        return $result?true:false;
     }
 }

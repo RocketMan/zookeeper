@@ -272,37 +272,6 @@ class EditorImpl extends DBO implements IEditor {
         return true;
     }
 
-    private const NONALNUM="/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/";
-    private const STOPWORDS="/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i";
-
-    /**
-     * This is the PHP equivalent of the editor.common.js zkAlpha function
-     */
-    private static function zkAlpha($val, $isTrack=false) {
-        $words = preg_split(self::NONALNUM, $val);
-        $newVal = join(" ", array_map(function(int $index, string $word) use($words) {
-            // words starting with caps are kept as-is
-            if(preg_match('/^[A-Z]+/', $word))
-                return $word;
-
-            // stopwords are not capitalized, unless first or last
-            if(preg_match(self::STOPWORDS, $word) &&
-                        $index != 0 &&
-                        $index != sizeof($words) - 1) {
-                return strtolower($word);
-            }
-
-            // otherwise, capitalize the word
-            return strtoupper(substr($word, 0, 1)) .
-                    strtolower(substr($word, 1));
-        }, array_keys($words), array_values($words)));
-
-        if(!$isTrack && substr($newVal, 0, 4) == 'The ')
-            $newVal = substr($newVal, 4) . ', The';
-
-        return $newVal;
-    }
-
     public function enqueueTag($tag, $user) {
         $query = "INSERT INTO tagqueue (user, tag, keyed) values (?, ?, now())";
         $stmt = $this->prepare($query);
