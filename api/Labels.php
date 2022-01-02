@@ -189,7 +189,9 @@ class Labels implements RequestHandlerInterface {
         if($ftop) {
             [$total, $retval] = $libraryAPI->searchFullText($ftop, $key, $limit, $offset);
             $records = $retval[0]["result"];
-            $offset = $retval[0]["offset"];
+            $offset = $retval[0]["offset"] + $limit;
+            if($offset >= $total)
+                $offset = 0;
         } else {
             $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
             $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
