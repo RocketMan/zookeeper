@@ -58,7 +58,7 @@ class Reviews implements RequestHandlerInterface {
         foreach(self::FIELDS as $field) {
             switch($field) {
             case "date":
-                $value = substr($rec["created"], 0, 10);
+                $value = substr($rec["reviewed"], 0, 10);
                 break;
             case "airname":
                 $value = $rec["airname"] ?? $rec["realname"];

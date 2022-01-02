@@ -74,7 +74,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY r.created DESC" ],
          [ "tracks", "albumrec", "tracknames", "track",
                   "SELECT t.tag, artist, album, category, medium, size, ".
-                  "location, bin, created, updated, track FROM tracknames t ".
+                  "location, bin, created, updated, track, seq, url FROM tracknames t ".
                   "LEFT JOIN albumvol ON albumvol.tag = t.tag ".
                   //"LEFT JOIN publist ON albumvol.pubkey = publist.pubkey ".
                   "WHERE MATCH (track) AGAINST(? IN BOOLEAN MODE) ".
@@ -337,7 +337,8 @@ class LibraryImpl extends DBO implements ILibrary {
         }
 
         $ib = $includeBody?"":"null";
-        $query = "SELECT tag, a.airname, realname, r.id, $ib review FROM reviews r " .
+        $query = "SELECT tag, a.airname, realname, r.id, r.created, " .
+                 "$ib review FROM reviews r " .
                  "LEFT JOIN users u ON r.user = u.name " .
                  "LEFT JOIN airnames a ON r.airname = a.id WHERE " .
                  "tag IN (0" . $queryset . ")";
@@ -350,7 +351,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $review = [
                 "id" => $row['id'],
                 "airname" => self::displayName($row[1], $row[2]),
-                "date" => substr($row['created'], 0, 10),
+                "reviewed" => $row['created'],
                 "review" => $row['review']
             ];
             for($next = $tags[$row[0]]; $next >= 0; $next = array_key_exists($next, $chain)?$chain[$next]:-1) {

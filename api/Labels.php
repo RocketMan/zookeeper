@@ -163,10 +163,15 @@ class Labels implements RequestHandlerInterface {
     }
 
     protected function paginateOffset(RequestInterface $request): ResponseInterface {
+        $ftop = null;
         if($request->hasFilter("name")) {
             $op = ILibrary::LABEL_NAME;
             $key = $request->filterValue("name");
             $filter = "filter%5Bname%5D=" . urlencode($key);
+        } else if($request->hasFilter("match(name)"))
+            $ftop = "labels";
+            $key = $request->filterValue("match(name)");
+            $filter = "filter%5Bmatch%28name%29%5D=" . urlencode($key);
         } else
             throw new NotAllowedException("must specify filter");
 
@@ -181,8 +186,14 @@ class Labels implements RequestHandlerInterface {
         $sort = $_GET["sort"] ?? "";
 
         $libraryAPI = Engine::api(ILibrary::class);
-        $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
-        $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
+        if($ftop) {
+            [$total, $retval] = $libraryAPI->searchFullText($ftop, $key, $limit, $offset);
+            $records = $retval[0]["result"];
+            $offset = $retval[0]["offset"];
+        } else {
+            $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
+            $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
+        }
         $result = self::fromArray($records);
         $document = new Document($result);
 

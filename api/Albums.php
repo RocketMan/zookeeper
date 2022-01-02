@@ -60,6 +60,19 @@ class Albums implements RequestHandlerInterface {
     const LINKS_TRACKS = 8;
     const LINKS_ALL = ~0;
 
+    private static $paginateOps = [
+        "artist" =>               [ ILibrary::ALBUM_ARTIST, null ],
+        "album" =>                [ ILibrary::ALBUM_NAME, null ],
+        "track" =>                [ ILibrary::TRACK_NAME, null ],
+        "label.id" =>             [ ILibrary::ALBUM_PUBKEY, null ],
+        "reviews.airname.id" =>   [ ILibrary::ALBUM_AIRNAME, null ],
+        "match(artist,album)" =>  [ -1, "albums" ],
+        "match(album,artist)" =>  [ -1, "albums" ],
+        "match(artist,track)" =>  [ -1, "compilations" ],
+        "match(track,artist)" =>  [ -1, "compilations" ],
+        "match(track)" =>         [ ILibrary::TRACK_NAME, "tracks" ],
+    ];
+
     private const NONALNUM="/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/";
     private const STOPWORDS="/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i";
 
@@ -411,27 +424,17 @@ class Albums implements RequestHandlerInterface {
     }
 
     protected function paginateOffset(RequestInterface $request): ResponseInterface {
-        if($request->hasFilter("artist")) {
-            $op = ILibrary::ALBUM_ARTIST;
-            $key = $request->filterValue("artist");
-            $filter = "filter%5Bartist%5D=" . urlencode($key);
-        } else if($request->hasFilter("album")) {
-            $op = ILibrary::ALBUM_NAME;
-            $key = $request->filterValue("album");
-            $filter = "filter%5Balbum%5D=" . urlencode($key);
-        } else if($request->hasFilter("track")) {
-            $op = ILibrary::TRACK_NAME;
-            $key = $request->filterValue("track");
-            $filter = "filter%5Btrack%5D=" . urlencode($key);
-        } else if($request->hasFilter("label.id")) {
-            $op = ILibrary::ALBUM_PUBKEY;
-            $key = $request->filterValue("label.id");
-            $filter = "filter%5Blabel.id%5D=" . urlencode($key);
-        } else if($request->hasFilter("reviews.airname.id")) {
-            $op = ILibrary::ALBUM_AIRNAME;
-            $key = $request->filterValue("reviews.airname.id");
-            $filter = "filter%5Breviews.airname.id%5D=" . urlencode($key);
-        } else
+        $ops = null;
+        foreach(self::$paginateOps as $type => $value) {
+            if($request->hasFilter($type)) {
+                $key = $request->filterValue($type);
+                $filter = "filter%5B" . urlencode($type) . "%5D=" . urlencode($key);
+                $ops = $value;
+                break;
+            }
+        }
+
+        if(!$ops)
             throw new NotAllowedException("must specify filter");
 
         $reqOffset = $offset = $request->hasPagination("offset")?
@@ -445,8 +448,14 @@ class Albums implements RequestHandlerInterface {
         $sort = $_GET["sort"] ?? "";
 
         $libraryAPI = Engine::api(ILibrary::class);
-        $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
-        $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
+        if($ops[1]) {
+            [$total, $retval] = $libraryAPI->searchFullText($ops[1], $key, $limit, $offset);
+            $records = $retval[0]["result"];
+            $offset = $retval[0]["offset"];
+        } else {
+            $total = (int)$libraryAPI->searchPos($ops[0], $offset, -1, $key);
+            $records = $libraryAPI->searchPos($ops[0], $offset, $limit, $key, $sort);
+        }
 
         $links = self::LINKS_ALL;
         if(!$request->requestsInclude("reviews"))
@@ -455,7 +464,7 @@ class Albums implements RequestHandlerInterface {
         if(!$this->requestsField($request, "tracks"))
             $links &= ~self::LINKS_TRACKS;
 
-        switch($op) {
+        switch($ops[0]) {
         case ILibrary::ALBUM_AIRNAME:
             $result = $this->marshallReviews($records, $links);
             break;
