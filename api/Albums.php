@@ -451,7 +451,9 @@ class Albums implements RequestHandlerInterface {
         if($ops[1]) {
             [$total, $retval] = $libraryAPI->searchFullText($ops[1], $key, $limit, $offset);
             $records = $retval[0]["result"];
-            $offset = $retval[0]["offset"];
+            $offset = $retval[0]["offset"] + $limit;
+            if($offset >= $total)
+                $offset = 0;
         } else {
             $total = (int)$libraryAPI->searchPos($ops[0], $offset, -1, $key);
             $records = $libraryAPI->searchPos($ops[0], $offset, $limit, $key, $sort);
