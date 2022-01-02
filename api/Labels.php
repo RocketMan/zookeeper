@@ -168,7 +168,7 @@ class Labels implements RequestHandlerInterface {
             $op = ILibrary::LABEL_NAME;
             $key = $request->filterValue("name");
             $filter = "filter%5Bname%5D=" . urlencode($key);
-        } else if($request->hasFilter("match(name)"))
+        } else if($request->hasFilter("match(name)")) {
             $ftop = "labels";
             $key = $request->filterValue("match(name)");
             $filter = "filter%5Bmatch%28name%29%5D=" . urlencode($key);
