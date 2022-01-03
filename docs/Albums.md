@@ -45,12 +45,19 @@ form `filter[_field_]=_value_`.  Possible fields are listed below.
   * track
   * label.id
   * reviews.airname.id
+  * match(artist,album)
+  * match(artist,track)
+  * match(track)
 * Cursor Profile
   * artist
   * id
 
 Note for the track filter, page[size] refers to the number of tracks
 returned, not the number of albums.
+
+Fields match exactly, unless '*' is appended, in which case a stemming
+search is done.  The 'match' keyword indicates a full-text search against
+the indicated columns.
 
 ### Sorting
 

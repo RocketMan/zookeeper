@@ -39,8 +39,13 @@ form `filter[_field_]=_value_`.  Possible fields are listed below.
 
   * date
   * id
+  * match(event)
 
-Pagination and sorting are not supported.
+Fields match exactly, unless '*' is appended, in which case a stemming
+search is done.  The 'match' keyword indicates a full-text search against
+the indicated column.
+
+Pagination is supported only for match.  Sorting is not supported.
 
 ### Insert
 

@@ -47,10 +47,18 @@ use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
 
 
 class Reviews implements RequestHandlerInterface {
+    use OffsetPaginationTrait;
     use NoRelationshipModificationTrait;
-    use NoResourceFetchTrait;
 
     const FIELDS = [ "airname", "date", "review" ];
+
+    const LINKS_NONE = 0;
+    const LINKS_ALBUM = 1;
+    const LINKS_ALL = ~0;
+
+    private static $paginateOps = [
+        "match(review)" => [ -1, "reviews" ],
+    ];
 
     public static function fromRecord($rec) {
         $res = new JsonResource("review", $rec["id"]);
@@ -72,6 +80,28 @@ class Reviews implements RequestHandlerInterface {
         return $res;
     }
 
+    public static function fromArray(array $records, $flags = self::LINKS_NONE) {
+        $result = [];
+        $wantsAlbum = $flags & self::LINKS_ALBUM;
+        foreach($records as $record) {
+            $resource = self::fromRecord($record, $flags);
+            $result[] = $resource;
+
+            if($wantsAlbum) {
+                // full text reviews album info is incomplete;
+                // fetch if the caller has requested it
+                $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $record["tag"]);
+                $res = Albums::fromArray($albums, Albums::LINKS_LABEL|Albums::LINKS_TRACKS)[0];
+            } else
+                $res = Albums::fromRecord($record, false);
+
+            $relation = new Relationship("album", $res);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/{$record["list"]}/album"));
+            $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/{$record["list"]}/relationships/album"));
+            $resource->relationships()->set($relation);
+        }
+        return $result;
+    }
     public function fetchResource(RequestInterface $request): ResponseInterface {
         $key = $request->id();
         $reviews = Engine::api(IReview::class)->getReviews($key, 1, "", Engine::session()->isAuth("u"), 1);
@@ -95,6 +125,11 @@ class Reviews implements RequestHandlerInterface {
 
         $response = new DocumentResponse($document);
         return $response;
+    }
+
+    public function fetchResources(RequestInterface $request): ResponseInterface {
+        $wantsAlbum = $request->requestsInclude("album");
+        return $this->paginateOffset($request, self::$paginateOps, $wantsAlbum?self::LINKS_ALBUM:0);
     }
 
     public function fetchRelationship(RequestInterface $request): ResponseInterface {

@@ -56,7 +56,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY name" ],
          [ "playlists", "playlistrec", "tracks", "artist,album,track",
                   "SELECT list, description, a.airname, showdate, " .
-                  "artist, album, track FROM tracks t " .
+                  "artist, album, track, showtime FROM tracks t " .
                   "LEFT JOIN lists l ON t.list = l.id " .
                   "LEFT JOIN airnames a ON l.airname = a.id " .
                   "WHERE l.airname IS NOT NULL AND " .
@@ -65,7 +65,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY showdate DESC, list DESC, t.id" ],
          [ "reviews", "reviewrec", "reviews", "review",
                   "SELECT r.tag, av.artist, av.album, an.airname, " .
-                  "DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed " .
+                  "DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id " .
                   "FROM reviews r " .
                   "LEFT JOIN albumvol av ON r.tag = av.tag " .
                   "LEFT JOIN airnames an ON r.airname = an.id " .

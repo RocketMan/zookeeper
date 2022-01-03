@@ -46,6 +46,7 @@ use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
 
 
 class Albums implements RequestHandlerInterface {
+    use OffsetPaginationTrait;
     use NoRelationshipModificationTrait;
 
     const FIELDS = [ "artist", "album", "category", "medium", "size",
@@ -423,79 +424,6 @@ class Albums implements RequestHandlerInterface {
         return $result;
     }
 
-    protected function paginateOffset(RequestInterface $request): ResponseInterface {
-        $ops = null;
-        foreach(self::$paginateOps as $type => $value) {
-            if($request->hasFilter($type)) {
-                $key = $request->filterValue($type);
-                $filter = "filter%5B" . urlencode($type) . "%5D=" . urlencode($key);
-                $ops = $value;
-                break;
-            }
-        }
-
-        if(!$ops)
-            throw new NotAllowedException("must specify filter");
-
-        $reqOffset = $offset = $request->hasPagination("offset")?
-                (int)$request->paginationValue("offset"):0;
-
-        $limit = $request->hasPagination("size")?
-                $request->paginationValue("size"):null;
-        if(!$limit || $limit > ApiServer::MAX_LIMIT)
-            $limit = ApiServer::MAX_LIMIT;
-
-        $sort = $_GET["sort"] ?? "";
-
-        $libraryAPI = Engine::api(ILibrary::class);
-        if($ops[1]) {
-            [$total, $retval] = $libraryAPI->searchFullText($ops[1], $key, $limit, $offset);
-            $records = $retval[0]["result"];
-            $offset = $retval[0]["offset"] + $limit;
-            if($offset >= $total)
-                $offset = 0;
-        } else {
-            $total = (int)$libraryAPI->searchPos($ops[0], $offset, -1, $key);
-            $records = $libraryAPI->searchPos($ops[0], $offset, $limit, $key, $sort);
-        }
-
-        $links = self::LINKS_ALL;
-        if(!$request->requestsInclude("reviews"))
-            $links &= ~self::LINKS_REVIEWS_WITH_BODY;
-
-        if(!$this->requestsField($request, "tracks"))
-            $links &= ~self::LINKS_TRACKS;
-
-        switch($ops[0]) {
-        case ILibrary::ALBUM_AIRNAME:
-            $result = $this->marshallReviews($records, $links);
-            break;
-        case ILibrary::TRACK_NAME:
-            $result = $this->fromTrackSearch($records);
-            break;
-        default:
-            $result = self::fromArray($records, $links);
-            break;
-        }
-        $document = new Document($result);
-
-        $base = Engine::getBaseUrl()."album?{$filter}";
-        $size = "&page%5Bsize%5D=$limit";
-
-        if($offset)
-            $document->links()->set(new Link("next", "{$base}&page%5Boffset%5D={$offset}{$size}"));
-        else
-            $offset = $total; // no more rows remaining
-
-        $link = new Link("first", "{$base}{$size}");
-        $link->metaInformation()->set("total", $total);
-        $link->metaInformation()->set("more", $total - $offset);
-        $link->metaInformation()->set("offset", $reqOffset);
-        $document->links()->set($link);
-
-        return new DocumentResponse($document);
-    }
-
     public function fetchResources(RequestInterface $request): ResponseInterface {
         $profile = $request->hasPagination("profile")?
                    $request->paginationValue("profile"):"offset";
@@ -504,7 +432,14 @@ class Albums implements RequestHandlerInterface {
             $response = $this->paginateCursor($request);
             break;
         case "offset":
-            $response = $this->paginateOffset($request);
+            $links = self::LINKS_ALL;
+            if(!$request->requestsInclude("reviews"))
+                $links &= ~self::LINKS_REVIEWS_WITH_BODY;
+
+            if(!$this->requestsField($request, "tracks"))
+                $links &= ~self::LINKS_TRACKS;
+
+            $response = $this->paginateOffset($request, self::$paginateOps, $links);
             break;
         default:
             throw new NotAllowedException("unknown pagination profile '{$profile}'");

@@ -26,6 +26,10 @@ An [example review document](Samples.md#review) is available here.
 
 ### Filters
 
+* match(review)
+
+`match(review)` does a full-text search against the review body.
+
 Review search by DJ airname is supported through the api/v1/album
 endpoint by using the filter `reviews.airname.id`.
 
