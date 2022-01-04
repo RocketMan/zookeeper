@@ -92,7 +92,7 @@ class Playlists implements RequestHandlerInterface {
 
         $retval = $result->asArray();
         $size = sizeof($retval);
-        $offset += $size;
+        $offset = 0;
         return [$size, $retval];
     }
 
