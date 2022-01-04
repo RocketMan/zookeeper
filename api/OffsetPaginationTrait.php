@@ -31,6 +31,8 @@ use Enm\JsonApi\Exception\NotAllowedException;
 use Enm\JsonApi\Model\Document\Document;
 use Enm\JsonApi\Model\Request\RequestInterface;
 use Enm\JsonApi\Model\Resource\Link\Link;
+use Enm\JsonApi\Model\Resource\Relationship\Relationship;
+use Enm\JsonApi\Model\Resource\ResourceCollection;
 use Enm\JsonApi\Model\Response\DocumentResponse;
 use Enm\JsonApi\Model\Response\ResponseInterface;
 
@@ -41,6 +43,104 @@ trait OffsetPaginationTrait {
             $resource = self::fromRecord($record);
             $result[] = $resource;
         }
+        return $result;
+    }
+
+    protected function fromTrackSearch(array $records) {
+        $result = [];
+        $map = [];
+        foreach($records as $record) {
+            $tag = $record["tag"];
+            if(array_key_exists($tag, $map)) {
+                $resource = $map[$tag];
+                $tracks = $resource->attributes()->getOptional("tracks");
+            } else {
+                // ILibrary::TRACK_NAME returns '[coll]: title' in the
+                // album field (normally in artist) and the track artist
+                // in artist.  For reconstituting the album record, we
+                // temporarily restore the original artist.
+                if($record["iscoll"]) {
+                    $artist = $record["artist"];
+                    $record["artist"] = $record["album"];
+                }
+                $resource = $map[$tag] = Albums::fromRecord($record, false);
+                // we need to put this back so it is available for the track
+                if($record["iscoll"])
+                    $record["artist"] = $artist;
+                $result[] = $resource;
+                $tracks = [];
+
+                if($record["pubkey"]) {
+                    $res = Labels::fromRecord($record);
+                    $relation = new Relationship("label", $res);
+                    $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
+                    $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
+                    $relation->metaInformation()->set("name", $record["name"]);
+                    $resource->relationships()->set($relation);
+                }
+            }
+            $fields = Albums::TRACK_FIELDS;
+            if(!$record["iscoll"])
+                $fields = array_diff($fields, ["artist"]);
+
+            $r = [];
+            foreach($fields as $field)
+                $r[$field] = $record[$field];
+
+            $tracks[] = $r;
+            $resource->attributes()->set("tracks", $tracks);
+        }
+        return $result;
+    }
+
+    protected function fromPlaylistSearch(array $records) {
+        $result = [];
+        $map = [];
+        foreach($records as $record) {
+            $list = $record["list"];
+            if(array_key_exists($list, $map)) {
+                $resource = $map[$list];
+                $events = $resource->attributes()->getOptional("events");
+            } else {
+                $resource = $map[$list] = Playlists::fromRecord($record);
+                $result[] = $resource;
+                $events = [];
+            }
+
+            $fields = [ "artist", "album", "track" ];
+
+            $r = [ "type" => "track" ];
+            foreach($fields as $field)
+                $r[$field] = $record[$field];
+
+            $events[] = $r;
+            $resource->attributes()->set("events", $events);
+        }
+        return $result;
+    }
+
+    protected function marshallReviews(array $records, $flags) {
+        $result = [];
+        foreach($records as $record) {
+            $resource = Albums::fromRecord($record, $flags & Albums::LINKS_TRACKS);
+            $result[] = $resource;
+
+            $relations = new ResourceCollection();
+            $relation = new Relationship("reviews", $relations);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/reviews"));
+            $resource->relationships()->set($relation);
+            $res = Reviews::fromRecord($record);
+            $res->metaInformation()->set("date", $record["reviewed"]);
+            $relations->set($res);
+
+            $res = Labels::fromRecord($record);
+            $relation = new Relationship("label", $res);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
+            $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
+            $relation->metaInformation()->set("name", $record["name"]);
+            $resource->relationships()->set($relation);
+        }
+
         return $result;
     }
 
@@ -90,6 +190,9 @@ trait OffsetPaginationTrait {
         case ILibrary::TRACK_NAME:
             $result = $this->fromTrackSearch($records);
             break;
+	case Playlists::PLAYLIST_SEARCH:
+	    $result = $this->fromPlaylistSearch($records);
+	    break;
         default:
             $result = self::fromArray($records, $links);
             break;

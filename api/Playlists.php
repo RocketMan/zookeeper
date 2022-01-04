@@ -52,10 +52,12 @@ class Playlists implements RequestHandlerInterface {
     use NoRelationshipModificationTrait;
     use NoResourceModificationTrait;
 
+    const PLAYLIST_SEARCH = 1000;
+
     private static $paginateOps = [
         "date" => "paginate",
         "id" => "paginate",
-        "match(event)" => [ -1, "playlists" ],
+        "match(event)" => [ self::PLAYLIST_SEARCH, "playlists" ],
     ];
 
     private static function paginate(RequestInterface $request, $type, $key, &$offset): array {
