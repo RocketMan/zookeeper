@@ -54,6 +54,7 @@ class Reviews implements RequestHandlerInterface {
 
     const LINKS_NONE = 0;
     const LINKS_ALBUM = 1;
+    const LINKS_ALBUM_TRACKS = 2;
     const LINKS_ALL = ~0;
 
     private static $paginateOps = [
@@ -91,7 +92,10 @@ class Reviews implements RequestHandlerInterface {
                 // full text reviews album info is incomplete;
                 // fetch if the caller has requested it
                 $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $record["tag"]);
-                $res = Albums::fromArray($albums, Albums::LINKS_LABEL|Albums::LINKS_TRACKS)[0];
+                $aflags = Albums::LINKS_LABEL;
+                if($flags & self::LINKS_ALBUM_TRACKS)
+                    $aflags |= Albums::LINKS_TRACKS;
+                $res = Albums::fromArray($albums, $aflags)[0];
             } else
                 $res = Albums::fromRecord($record, false);
 
@@ -111,7 +115,8 @@ class Reviews implements RequestHandlerInterface {
             
         $resource = self::fromRecord($reviews[0]);
 
-        $wantsTracks = $request->requestsInclude("album");
+        $wantsTracks = $request->requestsInclude("album") &&
+                $request->requestsField("album", "tracks");
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $reviews[0]['tag']);
         if(sizeof($albums)) {
             $res = Albums::fromRecord($albums[0], $wantsTracks);
@@ -128,8 +133,12 @@ class Reviews implements RequestHandlerInterface {
     }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
-        $wantsAlbum = $request->requestsInclude("album");
-        return $this->paginateOffset($request, self::$paginateOps, $wantsAlbum?self::LINKS_ALBUM:0);
+        $flags = self::LINKS_NONE;
+        if($request->requestsInclude("album"))
+            $flags |= self::LINKS_ALBUM;
+        if($request->requestsField("album", "tracks"))
+            $flags |= self::LINKS_ALBUM_TRACKS;
+        return $this->paginateOffset($request, self::$paginateOps, $flags);
     }
 
     public function fetchRelationship(RequestInterface $request): ResponseInterface {
@@ -142,8 +151,12 @@ class Reviews implements RequestHandlerInterface {
         switch($request->relationship()) {
         case "album":
             $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $reviews[0]['tag']);
-            if(sizeof($albums))
-                $res = Albums::fromArray($albums, Albums::LINKS_LABEL|Albums::LINKS_TRACKS)[0];
+            if(sizeof($albums)) {
+                $aflags = Albums::LINKS_LABEL;
+                if($request->requestsField("album", "tracks"))
+                    $aflags |= Albums::LINKS_TRACKS;
+                $res = Albums::fromArray($albums, $aflags)[0];
+            }
             break;
         case "relationships":
             throw new NotAllowedException("unspecified relationship");
