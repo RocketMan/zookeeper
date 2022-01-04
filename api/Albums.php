@@ -270,33 +270,6 @@ class Albums implements RequestHandlerInterface {
         return $response;
     }
 
-    protected function requestsField(RequestInterface $request, string $field) {
-        $wantsField = $request->requestsAttributes();
-
-        // If there is no field filter, then `requestsField` will
-        // return true for any field.  This means it will incorrectly
-        // indicate field negations even if there are none.
-        //
-        // To detect this case, we first test an unlikely field name.
-        // If it succeeds, we know that there is no field filter.
-        if ($wantsField &&
-                !$request->requestsField("album", "#&*(Q@")) {
-            // There is a field filter, so we can trust `requestsField`
-            $neg = false;
-            foreach(self::FIELDS as $f) {
-                if($request->requestsField("album", "-" . $f)) {
-                    if($f == $field) return false;
-                    $neg = true;
-                    break;
-                }
-            }
-            $wantsField = $neg ?
-                    !$request->requestsField("album", "-" . $field) :
-                    $request->requestsField("album", $field);
-        }
-        return $wantsField;
-    }
-
     protected function paginateCursor(RequestInterface $request): ResponseInterface {
         // pagination according to the cursor pagination profile
         // https://jsonapi.org/profiles/ethanresnick/cursor-pagination/
@@ -332,7 +305,7 @@ class Albums implements RequestHandlerInterface {
             $limit = ApiServer::MAX_LIMIT;
 
         $records = Engine::api(ILibrary::class)->listAlbums($op, $key, $limit);
-        $wantTracks = $this->requestsField($request, "tracks")?self::LINKS_TRACKS:0;
+        $wantTracks = $request->requestsField("album", "tracks")?self::LINKS_TRACKS:0;
         $result = self::fromArray($records, self::LINKS_LABEL | $wantTracks);
         $document = new Document($result);
 
@@ -436,7 +409,7 @@ class Albums implements RequestHandlerInterface {
             if(!$request->requestsInclude("reviews"))
                 $links &= ~self::LINKS_REVIEWS_WITH_BODY;
 
-            if(!$this->requestsField($request, "tracks"))
+            if(!$request->requestsField("album", "tracks"))
                 $links &= ~self::LINKS_TRACKS;
 
             $response = $this->paginateOffset($request, self::$paginateOps, $links);

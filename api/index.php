@@ -24,11 +24,11 @@
 
 require_once __DIR__."/../vendor/autoload.php";
 
+use ZK\API\ApiRequest;
 use ZK\API\ApiServer;
 use ZK\Engine\Config;
 use ZK\Engine\Engine;
 
-use Enm\JsonApi\Model\Request\Request;
 use Enm\JsonApi\Serializer\Deserializer;
 use Enm\JsonApi\Serializer\Serializer;
 use GuzzleHttp\Psr7\Uri;
@@ -75,7 +75,7 @@ function serveRequest() {
         $uri = substr($_SERVER["REQUEST_URI"],
                         strlen($_SERVER["REDIRECT_PREFIX"] ?? ""));
 
-        $request = new Request(
+        $request = new ApiRequest(
             $_SERVER["REQUEST_METHOD"],
             new Uri($uri),
             $jsonApi->createRequestBody(file_get_contents('php://input')),
