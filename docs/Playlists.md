@@ -41,9 +41,9 @@ form `filter[_field_]=_value_`.  Possible fields are listed below.
   * id
   * match(event)
 
-Fields match exactly, unless '*' is appended, in which case a stemming
-search is done.  The 'match' keyword indicates a full-text search against
-the indicated column.
+`date` may have the value 'onNow', which returns the curently on-air
+playlist, if any.  The 'match' keyword indicates a full-text search
+against artist, album, or label of any spin.
 
 Pagination is supported only for match.  Sorting is not supported.
 

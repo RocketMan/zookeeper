@@ -54,29 +54,29 @@ class Playlists implements RequestHandlerInterface {
 
     private static $paginateOps = [
         "date" => "paginate",
-        "onNow" => "paginate",
         "id" => "paginate",
         "match(event)" => [ -1, "playlists" ],
     ];
 
-    private static function paginate(RequestInterface $request, &$offset): array {
-        if($request->hasFilter("date")) {
-            // by date
-            $keys = $request->filterValue("date", ",");
+    private static function paginate(RequestInterface $request, $type, $key, &$offset): array {
+        switch($type) {
+        case "date":
+            if(strtolower($key) == "onnow") {
+                $result = Engine::api(IPlaylist::class)->getWhatsOnNow();
+                break;
+            }
             $rows = [];
+            $keys = explode(",", $key);
             foreach($keys as $key) {
                 $result = Engine::api(IPlaylist::class)->getPlaylistsByDate($key)->asArray();
                 if(sizeof($result))
                     $rows = array_merge($rows, $result);
             }
             $result = new ArrayIterator($rows);
-        } else if($request->hasFilter("onNow")) {
-            $result = Engine::api(IPlaylist::class)->getWhatsOnNow();
-            $filter = OnNowFilter::class;
-        } else if($request->hasFilter("id")) {
-            // by id
-            $keys = $request->filterValue("id", ",");
+            break;
+        case "id":
             $rows = [];
+            $keys = explode(",", $key);
             foreach($keys as $key) {
                 $row = Engine::api(IPlaylist::class)->getPlaylist($key, 1);
                 if(!$row)
@@ -87,6 +87,7 @@ class Playlists implements RequestHandlerInterface {
                     $rows[] = $row;
             }
             $result = new ArrayIterator($rows);
+            break;
         }
 
         $retval = $result->asArray();
@@ -126,7 +127,7 @@ class Playlists implements RequestHandlerInterface {
                 $spin["created"] = $entry->getCreatedTime();
                 unset($spin["id"]);
                 $events[] = $spin;
-            }), 0, $filter);
+            }));
 
         if(sizeof($events))
             $res->attributes()->set("events", $events);
