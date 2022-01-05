@@ -197,8 +197,8 @@ var lists = {
             album.attributes.tracks.forEach(function(track) {
                 tr = $("<TR>").append(indent());
                 var td = $("<TD>").html('<A HREF="?s=byArtist&n=' +
-                                    encodeURIComponent(track.artist) +
-                                    '&q=10&action=search" CLASS="nav">' + getArtist(track) + '</A>' +
+                                    encodeURIComponent(track.artist?track.artist:album.attributes.artist) +
+                                    '&q=10&action=search" CLASS="nav">' + getArtist(track.artist?track:album.attributes) + '</A>' +
                                     "&nbsp;&#8226;&nbsp;");
                 var albumx = $("<I>").html('<A HREF="?action=findAlbum&n=' + entry.id +
                                       '" CLASS="nav">' + album.attributes.album + '</A>');
