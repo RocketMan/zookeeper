@@ -71,7 +71,7 @@ function emitMore(table, response, data, type) {
                 td.append("<B>...</B>");
         } else {
             var offset = -1, size = -1; // scope for closure
-            if(links.meta.total > 25) {
+            if(more > 25) {
                 offset = 0;
                 size = 15;
             }
