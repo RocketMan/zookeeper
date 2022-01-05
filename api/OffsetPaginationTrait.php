@@ -215,7 +215,7 @@ trait OffsetPaginationTrait {
         else
             $offset = $total; // no more rows remaining
 
-        $link = new Link("first", "{$base}{$size}");
+        $link = new Link("first", "{$base}");
         $link->metaInformation()->set("total", $total);
         $link->metaInformation()->set("more", $total - $offset);
         $link->metaInformation()->set("offset", $reqOffset);
