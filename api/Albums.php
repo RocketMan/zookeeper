@@ -69,8 +69,8 @@ class Albums implements RequestHandlerInterface {
         "reviews.airname.id" =>   [ ILibrary::ALBUM_AIRNAME, null ],
         "match(artist,album)" =>  [ -1, "albums" ],
         "match(album,artist)" =>  [ -1, "albums" ],
-        "match(artist,track)" =>  [ -1, "compilations" ],
-        "match(track,artist)" =>  [ -1, "compilations" ],
+        "match(artist,track)" =>  [ ILibrary::TRACK_NAME, "compilations" ],
+        "match(track,artist)" =>  [ ILibrary::TRACK_NAME, "compilations" ],
         "match(track)" =>         [ ILibrary::TRACK_NAME, "tracks" ],
     ];
 
