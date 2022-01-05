@@ -33,6 +33,30 @@ An [example review document](Samples.md#review) is available here.
 Review search by DJ airname is supported through the api/v1/album
 endpoint by using the filter `reviews.airname.id`.
 
+**TIP:** It is often useful to access the name and artist of the album
+associated with a review.  Zookeeper denormalizes this information and
+makes it availble as metadata in the review's album relationship.  In
+this way, it is not necessary to request separately the album just to
+obtain the artist and album name.
+````
+     "relationships": {
+       "album": {
+         "links": {
+           "related": "/api/v1/review/19184/album",
+           "self": "/api/v1/review/19184/relationships/album"
+         },
+         "meta": {
+           "album": "Rave Tapes",
+           "artist": "Mogwai"
+         },
+         "data": {
+           "type": "album",
+           "id": "1049082"
+         }
+       }
+     }
+````
+
 ### Insert
 
 To insert a new music review, issue a POST to `api/v1/review`.  Review
