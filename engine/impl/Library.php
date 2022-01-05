@@ -45,7 +45,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY artist, album, tag" ],
          [ "compilations", "albumrec", "colltracknames", "artist,track",
                   "SELECT c.tag, c.artist, album, category, medium, size, ".
-                  "location, bin, created, updated, track, seq, url, pubkey FROM colltracknames c " .
+                  "location, bin, created, updated, track, seq, url, pubkey, iscoll FROM colltracknames c " .
                   "LEFT JOIN albumvol ON albumvol.tag = c.tag " .
                   "WHERE MATCH (c.artist,track) AGAINST(? IN BOOLEAN MODE) ".
                   "AND location != 'U' " .
