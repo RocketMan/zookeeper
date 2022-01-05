@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -71,6 +71,14 @@ trait OffsetPaginationTrait {
                 $tracks = [];
 
                 if($record["pubkey"]) {
+                    // full text label info is sometimes incomplete;
+                    // optionally backfill the name for now; we may get rid
+                    // of this if there is a perceptable performance hit
+                    if(!$record["name"]) {
+                        $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $record["pubkey"]);
+                        if(sizeof($labels))
+                            $record["name"] = $labels[0]["name"];
+                    }
                     $res = Labels::fromRecord($record);
                     $relation = new Relationship("label", $res);
                     $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
@@ -190,9 +198,9 @@ trait OffsetPaginationTrait {
         case ILibrary::TRACK_NAME:
             $result = $this->fromTrackSearch($records);
             break;
-	case Playlists::PLAYLIST_SEARCH:
-	    $result = $this->fromPlaylistSearch($records);
-	    break;
+        case Playlists::PLAYLIST_SEARCH:
+            $result = $this->fromPlaylistSearch($records);
+            break;
         default:
             $result = self::fromArray($records, $links);
             break;

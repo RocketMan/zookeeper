@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -45,7 +45,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY artist, album, tag" ],
          [ "compilations", "albumrec", "colltracknames", "artist,track",
                   "SELECT c.tag, c.artist, album, category, medium, size, ".
-                  "location, bin, created, updated, track FROM colltracknames c " .
+                  "location, bin, created, updated, track, seq, url, pubkey FROM colltracknames c " .
                   "LEFT JOIN albumvol ON albumvol.tag = c.tag " .
                   "WHERE MATCH (c.artist,track) AGAINST(? IN BOOLEAN MODE) ".
                   "AND location != 'U' " .
@@ -74,7 +74,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY r.created DESC" ],
          [ "tracks", "albumrec", "tracknames", "track",
                   "SELECT t.tag, artist, album, category, medium, size, ".
-                  "location, bin, created, updated, track, seq, url FROM tracknames t ".
+                  "location, bin, created, updated, track, seq, url, pubkey FROM tracknames t ".
                   "LEFT JOIN albumvol ON albumvol.tag = t.tag ".
                   //"LEFT JOIN publist ON albumvol.pubkey = publist.pubkey ".
                   "WHERE MATCH (track) AGAINST(? IN BOOLEAN MODE) ".
