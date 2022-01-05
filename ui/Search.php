@@ -33,6 +33,7 @@ use ZK\UI\UICommon as UI;
 class Search extends MenuItem {
     private static $actions = [
         [ "find", "ftSearch" ],
+        [ "finx", "ftSearch2" ],
         [ "findAlbum", "findAlbum" ],
         [ "search", "doSearch" ],
     ];
@@ -69,6 +70,19 @@ class Search extends MenuItem {
         echo "<FORM ACTION=\"?\" METHOD=\"POST\">\n";
         echo "<P><B>Find It:</B>&nbsp;&nbsp;<INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$search\" autocomplete=off>&nbsp;&nbsp;<SPAN ID=\"total\"></SPAN></P>\n";
         echo "<INPUT TYPE=HIDDEN NAME=action VALUE=\"find\">\n";
+        echo "<INPUT TYPE=HIDDEN NAME=key id='key' VALUE=''>\n";
+        echo "</FORM>\n";
+        echo "<SPAN ID=\"results\">Search the database for music, reviews, and playlists.";
+        echo "</SPAN>\n";
+    }
+
+    public function ftSearch2() {
+        UI::emitJS('js/search.findit2.js');
+
+        $search = array_key_exists("search", $_REQUEST)?$_REQUEST["search"]:"";
+        echo "<FORM ACTION=\"?\" METHOD=\"POST\">\n";
+        echo "<P><B>Find It:</B>&nbsp;&nbsp;<INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$search\" autocomplete=off>&nbsp;&nbsp;<SPAN ID=\"total\"></SPAN></P>\n";
+        echo "<INPUT TYPE=HIDDEN NAME=action VALUE=\"finx\">\n";
         echo "<INPUT TYPE=HIDDEN NAME=key id='key' VALUE=''>\n";
         echo "</FORM>\n";
         echo "<SPAN ID=\"results\">Search the database for music, reviews, and playlists.";

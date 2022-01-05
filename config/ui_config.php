@@ -33,6 +33,7 @@ $menu = [
 //  access, action,        menu label,              implementation class
     [ 'a', 'home',         0,                       ZK\UI\Home::class ],
     [ 'a', 'find%',        'Find It!',              ZK\UI\Search::class ],
+    [ 'a', 'finx%',        'Find It! (testing)',    ZK\UI\Search::class ],
     [ 'a', 'search',       'Classic Search',        ZK\UI\Search::class ],
     [ 'm', 'editor',       'Library Editor',        ZK\UI\Editor::class ],
     [ 'a', 'viewRecent%',  'Recent Reviews',        ZK\UI\Reviews::class ],
