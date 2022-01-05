@@ -122,7 +122,7 @@ function emitAlbumsEx(table, response, odata, header, tag) {
                             "&nbsp;&#8226;&nbsp;");
         var albumx = $("<I>").html('<A HREF="?action=findAlbum&n=' + album.id +
                                   '" CLASS="nav">' + album.attributes.album + '</A>');
-        td.append(albumx).append('&nbsp; (' + album.relationships.label.meta.name + ')');
+        td.append(albumx).append('&nbsp; (' + (album.relationships && album.relationships.label ? album.relationships.label.meta.name : "Unknown") + ')');
         tr.append(td);
         table.append(tr);
     });
