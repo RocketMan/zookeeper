@@ -100,8 +100,10 @@ class Reviews implements RequestHandlerInterface {
                 $res = Albums::fromRecord($record, false);
 
             $relation = new Relationship("album", $res);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/{$record["list"]}/album"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/{$record["list"]}/relationships/album"));
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/{$record["id"]}/album"));
+            $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/{$record["id"]}/relationships/album"));
+	    $relation->metaInformation()->set("album", $res->attributes()->getOptional("album"));
+	    $relation->metaInformation()->set("artist", $res->attributes()->getOptional("artist"));
             $resource->relationships()->set($relation);
         }
         return $result;
