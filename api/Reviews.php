@@ -114,21 +114,13 @@ class Reviews implements RequestHandlerInterface {
 
         if(sizeof($reviews) == 0)
             throw new ResourceNotFoundException("review", $key);
-            
-        $resource = self::fromRecord($reviews[0]);
 
-        $wantsTracks = $request->requestsInclude("album") &&
-                $request->requestsField("album", "tracks");
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $reviews[0]['tag']);
-        if(sizeof($albums)) {
-            $res = Albums::fromRecord($albums[0], $wantsTracks);
-            $relation = new Relationship("album", $res);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/$key/album"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/$key/relationships/album"));
-            $relation->metaInformation()->set("album", $res->attributes()->getOptional("album"));
-            $relation->metaInformation()->set("artist", $res->attributes()->getOptional("artist"));
-            $resource->relationships()->set($relation);
-        }
+        $flags = self::LINKS_ALBUM;
+        if($request->requestsInclude("album") &&
+                $request->requestsField("album", "tracks"))
+            $flags |= self::LINKS_ALBUM_TRACKS;
+
+        $resource = self::fromArray($reviews, $flags)[0];
 
         $document = new Document($resource);
 
