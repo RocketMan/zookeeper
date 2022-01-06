@@ -18,7 +18,6 @@ AddDefaultCharset UTF-8
 RewriteEngine on
 RewriteRule ^zkrss\.php$ index.php?target=rss [QSA,L]
 RewriteRule ^zk-feed-reader\.xslt$ controllers/RSS.xslt [QSA,L]
-RewriteRule ^zkapi\.php$ index.php?target=api [QSA,L]
 RewriteRule ^ssoLogin\.php$ index.php?target=sso [QSA,L]
 RewriteCond $0 !^\.mdhandler.php/.*$
 RewriteRule ^(.+)\.md$ .mdhandler.php?asset=/$1.md [L]
