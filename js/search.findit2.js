@@ -110,7 +110,7 @@ function emitAlbumsEx(table, response, odata, header, tag) {
 
     data.forEach(function(entry) {
         var album = response.all ?
-                    response.included.find(x => x.id == entry.id) : entry;
+                    response.included.find(x => { return x.id == entry.id && x.type == 'album'; }) : entry;
         tr = $("<TR>").append(indent());
         var tagId = "";
         if(tag)
@@ -193,7 +193,7 @@ var lists = {
 
         data.forEach(function(entry) {
             var album = response.all ?
-                        response.included.find(x => x.id == entry.id) : entry;
+                        response.included.find(x => { return x.id == entry.id && x.type == 'album'; }) : entry;
             album.attributes.tracks.forEach(function(track) {
                 tr = $("<TR>").append(indent());
                 var td = $("<TD>").html('<A HREF="?s=byArtist&n=' +
@@ -224,7 +224,7 @@ var lists = {
 
         data.forEach(function(entry) {
             var label = response.all ?
-                        response.included.find(x => x.id == entry.id) : entry;
+                        response.included.find(x => { return x.id == entry.id && x.type == 'label'; }) : entry;
             tr = $("<TR>").append(indent());
             var td = $("<TD>").html('<A HREF="?s=byLabelKey&n=' +
                                     entry.id + '&q=10&action=search" CLASS="nav">' +
@@ -251,7 +251,7 @@ var lists = {
 
         data.forEach(function(entry) {
             var list = response.all ?
-                        response.included.find(x => x.id == entry.id) : entry;
+                        response.included.find(x => { return x.id == entry.id && x.type == 'show'; }) : entry;
             tr = $("<TR>").append(indent());
             var now = new Date();
             var sd = list.attributes.date;
@@ -299,7 +299,7 @@ var lists = {
 
         data.forEach(function(entry) {
             var review = response.all ?
-                        response.included.find(x => x.id == entry.id) : entry;
+                        response.included.find(x => { return x.id == entry.id && x.type == 'review'; }) : entry;
             var album = review.relationships.album;
             tr = $("<TR>").append(indent());
             var td = $("<TD>").html('<A HREF="?s=byArtist&n=' +
@@ -331,7 +331,7 @@ var lists = {
 
         data.forEach(function(entry) {
             var album = response.all ?
-                        response.included.find(x => x.id == entry.id) : entry;
+                        response.included.find(x => { return x.id == entry.id && x.type == 'album'; }) : entry;
             album.attributes.tracks.forEach(function(track) {
                 tr = $("<TR>").append(indent());
                 var td = $("<TD>");
