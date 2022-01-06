@@ -33,7 +33,7 @@ class ApiRequest extends Request {
     /**
      * hack to access private properties of superclass
      */
-    protected function getProperty($name) {
+    protected function __get($name) {
         $ref = new \ReflectionClass(parent::class);
         $prop = $ref->getProperty($name);
         $prop->setAccessible(true);
@@ -55,7 +55,7 @@ class ApiRequest extends Request {
 
         $wantsField = $this->requestsAttributes();
         if($wantsField) {
-            $fields = $this->getProperty("fields");
+            $fields = $this->fields;
             if(key_exists($type, $fields)) {
                 $neg = false;
                 foreach($fields[$type] as $field) {
