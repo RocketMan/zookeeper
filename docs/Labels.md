@@ -40,9 +40,14 @@ form `filter[_field_]=_value_`.  Possible fields are listed below.
 
 * Offset Profile
   * name
+  * match(name)
 * Cursor Profile
   * name
   * album.id
+
+Fields match exactly, unless '*' is appended, in which case a stemming
+search is done.  The 'match' keyword indicates a full-text search against
+the indicated column.
 
 ### Sorting
 

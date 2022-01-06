@@ -299,6 +299,10 @@ The following are sample documents for each of the data types.
           "related": "/api/v1/review/11653/album",
           "self": "/api/v1/review/11653/relationships/album"
         },
+        "meta": {
+          "album": "Jazz Around The World",
+          "artist": "[coll]: Jazz Around The World"
+        },
         "data": {
           "type": "album",
           "id": "922610"

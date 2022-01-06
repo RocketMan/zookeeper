@@ -29,4 +29,5 @@ $apiControllers = [
     'label' =>        ZK\API\Labels::class,
     'review' =>       ZK\API\Reviews::class,
     'playlist' =>     ZK\API\Playlists::class,
+    'search' =>       ZK\API\UnifiedSearch::class,
 ];

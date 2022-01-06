@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -47,10 +47,20 @@ use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
 
 
 class Reviews implements RequestHandlerInterface {
+    use OffsetPaginationTrait;
     use NoRelationshipModificationTrait;
-    use NoResourceFetchTrait;
 
     const FIELDS = [ "airname", "date", "review" ];
+
+    const LINKS_NONE = 0;
+    const LINKS_ALBUM = 1;
+    const LINKS_ALBUM_TRACKS = 2;
+    const LINKS_REVIEW_BODY = 4;
+    const LINKS_ALL = ~0;
+
+    private static $paginateOps = [
+        "match(review)" => [ -1, "reviews" ],
+    ];
 
     public static function fromRecord($rec) {
         $res = new JsonResource("review", $rec["id"]);
@@ -58,7 +68,7 @@ class Reviews implements RequestHandlerInterface {
         foreach(self::FIELDS as $field) {
             switch($field) {
             case "date":
-                $value = substr($rec["created"], 0, 10);
+                $value = substr($rec["reviewed"], 0, 10);
                 break;
             case "airname":
                 $value = $rec["airname"] ?? $rec["realname"];
@@ -72,29 +82,68 @@ class Reviews implements RequestHandlerInterface {
         return $res;
     }
 
+    public static function fromArray(array $records, $flags = self::LINKS_NONE) {
+        $result = [];
+        $wantsAlbum = $flags & self::LINKS_ALBUM;
+        $wantsReview = $flags & self::LINKS_REVIEW_BODY;
+        foreach($records as $record) {
+            if(empty($record["review"]) && $wantsReview) {
+                $reviews = Engine::api(IReview::class)->getReviews($record["id"], 1, "", Engine::session()->isAuth("u"), 1);
+                $record["review"] = $reviews[0]["review"];
+            }
+            $resource = self::fromRecord($record);
+            $result[] = $resource;
+
+            if($wantsAlbum) {
+                // full text reviews album info is incomplete;
+                // fetch if the caller has requested it
+                $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $record["tag"]);
+                $aflags = Albums::LINKS_LABEL;
+                if($flags & self::LINKS_ALBUM_TRACKS)
+                    $aflags |= Albums::LINKS_TRACKS;
+                $res = Albums::fromArray($albums, $aflags)[0];
+            } else
+                $res = Albums::fromRecord($record, false);
+
+            $relation = new Relationship("album", $res);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/{$record["id"]}/album"));
+            $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/{$record["id"]}/relationships/album"));
+            $relation->metaInformation()->set("album", $res->attributes()->getOptional("album"));
+            $relation->metaInformation()->set("artist", $res->attributes()->getOptional("artist"));
+            $resource->relationships()->set($relation);
+        }
+        return $result;
+    }
+
     public function fetchResource(RequestInterface $request): ResponseInterface {
         $key = $request->id();
         $reviews = Engine::api(IReview::class)->getReviews($key, 1, "", Engine::session()->isAuth("u"), 1);
 
         if(sizeof($reviews) == 0)
             throw new ResourceNotFoundException("review", $key);
-            
-        $resource = self::fromRecord($reviews[0]);
 
-        $wantsTracks = $request->requestsInclude("album");
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $reviews[0]['tag']);
-        if(sizeof($albums)) {
-            $res = Albums::fromRecord($albums[0], $wantsTracks);
-            $relation = new Relationship("album", $res);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/$key/album"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/$key/relationships/album"));
-            $resource->relationships()->set($relation);
-        }
+        $flags = self::LINKS_ALBUM;
+        if($request->requestsInclude("album") &&
+                $request->requestsField("album", "tracks"))
+            $flags |= self::LINKS_ALBUM_TRACKS;
+
+        $resource = self::fromArray($reviews, $flags)[0];
 
         $document = new Document($resource);
 
         $response = new DocumentResponse($document);
         return $response;
+    }
+
+    public function fetchResources(RequestInterface $request): ResponseInterface {
+        $flags = self::LINKS_NONE;
+        if($request->requestsInclude("album"))
+            $flags |= self::LINKS_ALBUM;
+        if($request->requestsField("album", "tracks"))
+            $flags |= self::LINKS_ALBUM_TRACKS;
+        if($request->requestsField("review", "review"))
+            $flags |= self::LINKS_REVIEW_BODY;
+        return $this->paginateOffset($request, self::$paginateOps, $flags);
     }
 
     public function fetchRelationship(RequestInterface $request): ResponseInterface {
@@ -107,8 +156,12 @@ class Reviews implements RequestHandlerInterface {
         switch($request->relationship()) {
         case "album":
             $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $reviews[0]['tag']);
-            if(sizeof($albums))
-                $res = Albums::fromArray($albums, Albums::LINKS_LABEL|Albums::LINKS_TRACKS)[0];
+            if(sizeof($albums)) {
+                $aflags = Albums::LINKS_LABEL;
+                if($request->requestsField("album", "tracks"))
+                    $aflags |= Albums::LINKS_TRACKS;
+                $res = Albums::fromArray($albums, $aflags)[0];
+            }
             break;
         case "relationships":
             throw new NotAllowedException("unspecified relationship");
@@ -158,6 +211,7 @@ class Reviews implements RequestHandlerInterface {
 
         throw new \Exception("creation failed");
     }
+
     public function patchResource(RequestInterface $request): ResponseInterface {
         $review = $request->requestBody()->data()->first("review");
         $tag = $review->relationships()->get("album")->related()->first("album")->id();

@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -46,6 +46,7 @@ use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
 
 
 class Albums implements RequestHandlerInterface {
+    use OffsetPaginationTrait;
     use NoRelationshipModificationTrait;
 
     const FIELDS = [ "artist", "album", "category", "medium", "size",
@@ -59,6 +60,19 @@ class Albums implements RequestHandlerInterface {
     const LINKS_REVIEWS_WITH_BODY = 4;
     const LINKS_TRACKS = 8;
     const LINKS_ALL = ~0;
+
+    private static $paginateOps = [
+        "artist" =>               [ ILibrary::ALBUM_ARTIST, null ],
+        "album" =>                [ ILibrary::ALBUM_NAME, null ],
+        "track" =>                [ ILibrary::TRACK_NAME, null ],
+        "label.id" =>             [ ILibrary::ALBUM_PUBKEY, null ],
+        "reviews.airname.id" =>   [ ILibrary::ALBUM_AIRNAME, null ],
+        "match(artist,album)" =>  [ -1, "albums" ],
+        "match(album,artist)" =>  [ -1, "albums" ],
+        "match(artist,track)" =>  [ ILibrary::TRACK_NAME, "compilations" ],
+        "match(track,artist)" =>  [ ILibrary::TRACK_NAME, "compilations" ],
+        "match(track)" =>         [ ILibrary::TRACK_NAME, "tracks" ],
+    ];
 
     private const NONALNUM="/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/";
     private const STOPWORDS="/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i";
@@ -256,33 +270,6 @@ class Albums implements RequestHandlerInterface {
         return $response;
     }
 
-    protected function requestsField(RequestInterface $request, string $field) {
-        $wantsField = $request->requestsAttributes();
-
-        // If there is no field filter, then `requestsField` will
-        // return true for any field.  This means it will incorrectly
-        // indicate field negations even if there are none.
-        //
-        // To detect this case, we first test an unlikely field name.
-        // If it succeeds, we know that there is no field filter.
-        if ($wantsField &&
-                !$request->requestsField("album", "#&*(Q@")) {
-            // There is a field filter, so we can trust `requestsField`
-            $neg = false;
-            foreach(self::FIELDS as $f) {
-                if($request->requestsField("album", "-" . $f)) {
-                    if($f == $field) return false;
-                    $neg = true;
-                    break;
-                }
-            }
-            $wantsField = $neg ?
-                    !$request->requestsField("album", "-" . $field) :
-                    $request->requestsField("album", $field);
-        }
-        return $wantsField;
-    }
-
     protected function paginateCursor(RequestInterface $request): ResponseInterface {
         // pagination according to the cursor pagination profile
         // https://jsonapi.org/profiles/ethanresnick/cursor-pagination/
@@ -318,7 +305,7 @@ class Albums implements RequestHandlerInterface {
             $limit = ApiServer::MAX_LIMIT;
 
         $records = Engine::api(ILibrary::class)->listAlbums($op, $key, $limit);
-        $wantTracks = $this->requestsField($request, "tracks")?self::LINKS_TRACKS:0;
+        $wantTracks = $request->requestsField("album", "tracks")?self::LINKS_TRACKS:0;
         $result = self::fromArray($records, self::LINKS_LABEL | $wantTracks);
         $document = new Document($result);
 
@@ -338,153 +325,6 @@ class Albums implements RequestHandlerInterface {
         return new DocumentResponse($document);
     }
 
-    protected function fromTrackSearch(array $records) {
-        $result = [];
-        $map = [];
-        foreach($records as $record) {
-            $tag = $record["tag"];
-            if(array_key_exists($tag, $map)) {
-                $resource = $map[$tag];
-                $tracks = $resource->attributes()->getOptional("tracks");
-            } else {
-                // ILibrary::TRACK_NAME returns '[coll]: title' in the
-                // album field (normally in artist) and the track artist
-                // in artist.  For reconstituting the album record, we
-                // temporarily restore the original artist.
-                if($record["iscoll"]) {
-                    $artist = $record["artist"];
-                    $record["artist"] = $record["album"];
-                }
-                $resource = $map[$tag] = self::fromRecord($record, false);
-                // we need to put this back so it is available for the track
-                if($record["iscoll"])
-                    $record["artist"] = $artist;
-                $result[] = $resource;
-                $tracks = [];
-
-                if($record["pubkey"]) {
-                    $res = Labels::fromRecord($record);
-                    $relation = new Relationship("label", $res);
-                    $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
-                    $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
-                    $relation->metaInformation()->set("name", $record["name"]);
-                    $resource->relationships()->set($relation);
-                }
-            }
-            $fields = self::TRACK_FIELDS;
-            if(!$record["iscoll"])
-                $fields = array_diff($fields, ["artist"]);
-
-            $r = [];
-            foreach($fields as $field)
-                $r[$field] = $record[$field];
-
-            $tracks[] = $r;
-            $resource->attributes()->set("tracks", $tracks);
-        }
-        return $result;
-    }
-
-    protected function marshallReviews(array $records, $flags) {
-        $result = [];
-        foreach($records as $record) {
-            $resource = self::fromRecord($record, $flags & self::LINKS_TRACKS);
-            $result[] = $resource;
-
-            $relations = new ResourceCollection();
-            $relation = new Relationship("reviews", $relations);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/reviews"));
-            $resource->relationships()->set($relation);
-            $res = Reviews::fromRecord($record);
-            $res->metaInformation()->set("date", $record["reviewed"]);
-            $relations->set($res);
-
-            $res = Labels::fromRecord($record);
-            $relation = new Relationship("label", $res);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
-            $relation->metaInformation()->set("name", $record["name"]);
-            $resource->relationships()->set($relation);
-        }
-
-        return $result;
-    }
-
-    protected function paginateOffset(RequestInterface $request): ResponseInterface {
-        if($request->hasFilter("artist")) {
-            $op = ILibrary::ALBUM_ARTIST;
-            $key = $request->filterValue("artist");
-            $filter = "filter%5Bartist%5D=" . urlencode($key);
-        } else if($request->hasFilter("album")) {
-            $op = ILibrary::ALBUM_NAME;
-            $key = $request->filterValue("album");
-            $filter = "filter%5Balbum%5D=" . urlencode($key);
-        } else if($request->hasFilter("track")) {
-            $op = ILibrary::TRACK_NAME;
-            $key = $request->filterValue("track");
-            $filter = "filter%5Btrack%5D=" . urlencode($key);
-        } else if($request->hasFilter("label.id")) {
-            $op = ILibrary::ALBUM_PUBKEY;
-            $key = $request->filterValue("label.id");
-            $filter = "filter%5Blabel.id%5D=" . urlencode($key);
-        } else if($request->hasFilter("reviews.airname.id")) {
-            $op = ILibrary::ALBUM_AIRNAME;
-            $key = $request->filterValue("reviews.airname.id");
-            $filter = "filter%5Breviews.airname.id%5D=" . urlencode($key);
-        } else
-            throw new NotAllowedException("must specify filter");
-
-        $reqOffset = $offset = $request->hasPagination("offset")?
-                (int)$request->paginationValue("offset"):0;
-
-        $limit = $request->hasPagination("size")?
-                $request->paginationValue("size"):null;
-        if(!$limit || $limit > ApiServer::MAX_LIMIT)
-            $limit = ApiServer::MAX_LIMIT;
-
-        $sort = $_GET["sort"] ?? "";
-
-        $libraryAPI = Engine::api(ILibrary::class);
-        $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
-        $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
-
-        $links = self::LINKS_ALL;
-        if(!$request->requestsInclude("reviews"))
-            $links &= ~self::LINKS_REVIEWS_WITH_BODY;
-
-        if(!$this->requestsField($request, "tracks"))
-            $links &= ~self::LINKS_TRACKS;
-
-        switch($op) {
-        case ILibrary::ALBUM_AIRNAME:
-            $result = $this->marshallReviews($records, $links);
-            break;
-        case ILibrary::TRACK_NAME:
-            $result = $this->fromTrackSearch($records);
-            break;
-        default:
-            $result = self::fromArray($records, $links);
-            break;
-        }
-        $document = new Document($result);
-
-        $base = Engine::getBaseUrl()."album?{$filter}";
-        $size = "&page%5Bsize%5D=$limit";
-
-        if($offset)
-            $document->links()->set(new Link("next", "{$base}&page%5Boffset%5D={$offset}{$size}"));
-        else
-            $offset = $total; // no more rows remaining
-
-        $link = new Link("first", "{$base}{$size}");
-        $link->metaInformation()->set("total", $total);
-        $link->metaInformation()->set("more", $total - $offset);
-        $link->metaInformation()->set("offset", $reqOffset);
-        $document->links()->set($link);
-
-        return new DocumentResponse($document);
-    }
-
     public function fetchResources(RequestInterface $request): ResponseInterface {
         $profile = $request->hasPagination("profile")?
                    $request->paginationValue("profile"):"offset";
@@ -493,7 +333,14 @@ class Albums implements RequestHandlerInterface {
             $response = $this->paginateCursor($request);
             break;
         case "offset":
-            $response = $this->paginateOffset($request);
+            $links = self::LINKS_ALL;
+            if(!$request->requestsInclude("reviews"))
+                $links &= ~self::LINKS_REVIEWS_WITH_BODY;
+
+            if(!$request->requestsField("album", "tracks"))
+                $links &= ~self::LINKS_TRACKS;
+
+            $response = $this->paginateOffset($request, self::$paginateOps, $links);
             break;
         default:
             throw new NotAllowedException("unknown pagination profile '{$profile}'");

@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -45,7 +45,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY artist, album, tag" ],
          [ "compilations", "albumrec", "colltracknames", "artist,track",
                   "SELECT c.tag, c.artist, album, category, medium, size, ".
-                  "location, bin, created, updated, track FROM colltracknames c " .
+                  "location, bin, created, updated, track, seq, url, pubkey, 1 iscoll FROM colltracknames c " .
                   "LEFT JOIN albumvol ON albumvol.tag = c.tag " .
                   "WHERE MATCH (c.artist,track) AGAINST(? IN BOOLEAN MODE) ".
                   "AND location != 'U' " .
@@ -56,7 +56,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY name" ],
          [ "playlists", "playlistrec", "tracks", "artist,album,track",
                   "SELECT list, description, a.airname, showdate, " .
-                  "artist, album, track FROM tracks t " .
+                  "artist, album, track, showtime FROM tracks t " .
                   "LEFT JOIN lists l ON t.list = l.id " .
                   "LEFT JOIN airnames a ON l.airname = a.id " .
                   "WHERE l.airname IS NOT NULL AND " .
@@ -65,7 +65,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY showdate DESC, list DESC, t.id" ],
          [ "reviews", "reviewrec", "reviews", "review",
                   "SELECT r.tag, av.artist, av.album, an.airname, " .
-                  "DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed " .
+                  "DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id " .
                   "FROM reviews r " .
                   "LEFT JOIN albumvol av ON r.tag = av.tag " .
                   "LEFT JOIN airnames an ON r.airname = an.id " .
@@ -74,7 +74,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY r.created DESC" ],
          [ "tracks", "albumrec", "tracknames", "track",
                   "SELECT t.tag, artist, album, category, medium, size, ".
-                  "location, bin, created, updated, track FROM tracknames t ".
+                  "location, bin, created, updated, track, seq, url, pubkey FROM tracknames t ".
                   "LEFT JOIN albumvol ON albumvol.tag = t.tag ".
                   //"LEFT JOIN publist ON albumvol.pubkey = publist.pubkey ".
                   "WHERE MATCH (track) AGAINST(? IN BOOLEAN MODE) ".
@@ -337,7 +337,8 @@ class LibraryImpl extends DBO implements ILibrary {
         }
 
         $ib = $includeBody?"":"null";
-        $query = "SELECT tag, a.airname, realname, r.id, $ib review FROM reviews r " .
+        $query = "SELECT tag, a.airname, realname, r.id, r.created, " .
+                 "$ib review FROM reviews r " .
                  "LEFT JOIN users u ON r.user = u.name " .
                  "LEFT JOIN airnames a ON r.airname = a.id WHERE " .
                  "tag IN (0" . $queryset . ")";
@@ -350,7 +351,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $review = [
                 "id" => $row['id'],
                 "airname" => self::displayName($row[1], $row[2]),
-                "date" => substr($row['created'], 0, 10),
+                "reviewed" => $row['created'],
                 "review" => $row['review']
             ];
             for($next = $tags[$row[0]]; $next >= 0; $next = array_key_exists($next, $chain)?$chain[$next]:-1) {

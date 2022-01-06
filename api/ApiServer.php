@@ -73,7 +73,7 @@ class ApiServer extends JsonApiServer {
         // To detect this case, we first test an unlikely field name.
         // If it succeeds, we know that no fields have been requested.
         if ($request->requestsAttributes() &&
-                !$request->requestsField($resource->type(), "#&*(Q@")) {
+                !$request->requestsField($resource->type(), "-#&*(Q@")) {
             // There is a field filter, so we can trust `requestsField`
             $negation = false;
             foreach ($resource->attributes()->all() as $key => $value) {

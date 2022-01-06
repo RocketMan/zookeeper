@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -45,6 +45,7 @@ use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
 
 
 class Labels implements RequestHandlerInterface {
+    use OffsetPaginationTrait;
     use NoRelationshipFetchTrait;
     use NoRelationshipModificationTrait;
     use NoResourceDeletionTrait;
@@ -54,21 +55,17 @@ class Labels implements RequestHandlerInterface {
                      "international", "pcreated", "modified", "url",
                      "email" ];
 
+    private static $paginateOps = [
+        "name" => [ ILibrary::LABEL_NAME, null ],
+        "match(name)" => [ -1, "labels" ],
+    ];
+
     public static function fromRecord($rec) {
         $res = new JsonResource("label", $rec["pubkey"]);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."label/".$rec["pubkey"]));
         foreach(self::FIELDS as $field)
             $res->attributes()->set($field, $rec[$field]);
         return $res;
-    }
-
-    public static function fromArray(array $records) {
-        $result = [];
-        foreach($records as $record) {
-            $resource = self::fromRecord($record);
-            $result[] = $resource;
-        }
-        return $result;
     }
 
     public static function fromAttrs($attrs) {
@@ -162,48 +159,6 @@ class Labels implements RequestHandlerInterface {
         return $response;
     }
 
-    protected function paginateOffset(RequestInterface $request): ResponseInterface {
-        if($request->hasFilter("name")) {
-            $op = ILibrary::LABEL_NAME;
-            $key = $request->filterValue("name");
-            $filter = "filter%5Bname%5D=" . urlencode($key);
-        } else
-            throw new NotAllowedException("must specify filter");
-
-        $reqOffset = $offset = $request->hasPagination("offset")?
-                (int)$request->paginationValue("offset"):0;
-
-        $limit = $request->hasPagination("size")?
-                $request->paginationValue("size"):null;
-        if(!$limit || $limit > ApiServer::MAX_LIMIT)
-            $limit = ApiServer::MAX_LIMIT;
-
-        $sort = $_GET["sort"] ?? "";
-
-        $libraryAPI = Engine::api(ILibrary::class);
-        $total = (int)$libraryAPI->searchPos($op, $offset, -1, $key);
-        $records = $libraryAPI->searchPos($op, $offset, $limit, $key, $sort);
-        $result = self::fromArray($records);
-        $document = new Document($result);
-
-        $base = Engine::getBaseUrl()."label?{$filter}";
-        $size = "&page%5Bsize%5D=$limit";
-
-        if($offset)
-            $document->links()->set(new Link("next", "{$base}&page%5Boffset%5D={$offset}{$size}"));
-        else
-            $offset = $total; // no more rows remaining
-
-        $link = new Link("first", "{$base}{$size}");
-        $link->metaInformation()->set("total", $total);
-        $link->metaInformation()->set("more", $total - $offset);
-        $link->metaInformation()->set("offset", $reqOffset);
-        $document->links()->set($link);
-
-        $response = new DocumentResponse($document);
-        return $response;
-    }
-
     public function fetchResources(RequestInterface $request): ResponseInterface {
         $profile = $request->hasPagination("profile")?
                    $request->paginationValue("profile"):"offset";
@@ -212,7 +167,7 @@ class Labels implements RequestHandlerInterface {
             $response = $this->paginateCursor($request);
             break;
         case "offset":
-            $response = $this->paginateOffset($request);
+            $response = $this->paginateOffset($request, self::$paginateOps, 0);
             break;
         default:
             throw new NotAllowedException("unknown pagination profile '{$profile}'");

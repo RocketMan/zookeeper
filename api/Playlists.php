@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -36,7 +36,6 @@ use Enm\JsonApi\Model\Document\Document;
 use Enm\JsonApi\Model\Request\RequestInterface;
 use Enm\JsonApi\Model\Resource\JsonResource;
 use Enm\JsonApi\Model\Resource\Link\Link;
-use Enm\JsonApi\Model\Resource\ResourceCollection;
 use Enm\JsonApi\Model\Response\CreatedResponse;
 use Enm\JsonApi\Model\Response\DocumentResponse;
 use Enm\JsonApi\Model\Response\EmptyResponse;
@@ -48,12 +47,59 @@ use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
 
 
 class Playlists implements RequestHandlerInterface {
+    use OffsetPaginationTrait;
     use NoRelationshipFetchTrait;
     use NoRelationshipModificationTrait;
     use NoResourceModificationTrait;
 
+    const PLAYLIST_SEARCH = 1000;
+
+    private static $paginateOps = [
+        "date" => "paginate",
+        "id" => "paginate",
+        "match(event)" => [ self::PLAYLIST_SEARCH, "playlists" ],
+    ];
+
+    private static function paginate(RequestInterface $request, $type, $key, &$offset): array {
+        switch($type) {
+        case "date":
+            if(strtolower($key) == "onnow") {
+                $result = Engine::api(IPlaylist::class)->getWhatsOnNow();
+                break;
+            }
+            $rows = [];
+            $keys = explode(",", $key);
+            foreach($keys as $key) {
+                $result = Engine::api(IPlaylist::class)->getPlaylistsByDate($key)->asArray();
+                if(sizeof($result))
+                    $rows = array_merge($rows, $result);
+            }
+            $result = new ArrayIterator($rows);
+            break;
+        case "id":
+            $rows = [];
+            $keys = explode(",", $key);
+            foreach($keys as $key) {
+                $row = Engine::api(IPlaylist::class)->getPlaylist($key, 1);
+                if(!$row)
+                    throw new ResourceNotFoundException("show", $key);
+                $row["list"] = $key;
+                $published = $row['airname'] || $row['dj'] == Engine::session()->getUser();
+                if($published)
+                    $rows[] = $row;
+            }
+            $result = new ArrayIterator($rows);
+            break;
+        }
+
+        $retval = $result->asArray();
+        $size = sizeof($retval);
+        $offset = 0;
+        return [$size, $retval];
+    }
+
     public static function fromRecord($rec) {
-        $id = $rec["id"];
+        $id = $rec["list"];
         $res = new JsonResource("show", $id);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."playlist/".$id));
         $attrs = $res->attributes();
@@ -83,14 +129,14 @@ class Playlists implements RequestHandlerInterface {
                 $spin["created"] = $entry->getCreatedTime();
                 unset($spin["id"]);
                 $events[] = $spin;
-            }), 0, $filter);
+            }));
 
         if(sizeof($events))
             $res->attributes()->set("events", $events);
 
         return $res;
     }
-    
+
     public function fetchResource(RequestInterface $request): ResponseInterface {
         $key = $request->id();
         $api = Engine::api(IPlaylist::class);
@@ -102,7 +148,7 @@ class Playlists implements RequestHandlerInterface {
         if(!$row["airname"] && $row["dj"] != Engine::session()->getUser())
             throw new ResourceNotFoundException("show", $key);
 
-        $row["id"] = $key;
+        $row["list"] = $key;
         $resource = self::fromRecord($row);
 
         $document = new Document($resource);
@@ -111,44 +157,7 @@ class Playlists implements RequestHandlerInterface {
     }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
-        if($request->hasFilter("date")) {
-            // by date
-            $keys = $request->filterValue("date", ",");
-            $rows = [];
-            foreach($keys as $key) {
-                $result = Engine::api(IPlaylist::class)->getPlaylistsByDate($key)->asArray();
-                if(sizeof($result))
-                    $rows = array_merge($rows, $result);
-            }
-            $result = new ArrayIterator($rows);
-        } else if($request->hasFilter("onNow")) {
-            $result = Engine::api(IPlaylist::class)->getWhatsOnNow();
-            $filter = OnNowFilter::class;
-        } else if($request->hasFilter("id")) {
-            // by id
-            $keys = $request->filterValue("id", ",");
-            $rows = [];
-            foreach($keys as $key) {
-                $row = Engine::api(IPlaylist::class)->getPlaylist($key, 1);
-                if(!$row)
-                    throw new ResourceNotFoundException("show", $key);
-                $row["id"] = $key;
-                $published = $row['airname'] || $row['dj'] == Engine::session()->getUser();
-                if($published)
-                    $rows[] = $row;
-            }
-            $result = new ArrayIterator($rows);
-        } else
-            throw new NotAllowedException("unknown filter");
-
-        $rshow = [];
-        while($row = $result->fetch())
-            $rshow[] = self::fromRecord($row);
-
-        $resource = new ResourceCollection($rshow);
-        $document = new Document($resource);
-        $response = new DocumentResponse($document);
-        return $response;
+        return $this->paginateOffset($request, self::$paginateOps, 0);
     }
 
     public function createResource(RequestInterface $request): ResponseInterface {
@@ -246,5 +255,11 @@ class ArrayIterator {
 
     public function fetch() {
         return array_shift($this->rows);
+    }
+
+    public function asArray() {
+        $result = $this->rows;
+        $this->rows = null;
+        return $result;
     }
 }
