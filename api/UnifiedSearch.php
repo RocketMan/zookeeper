@@ -54,7 +54,7 @@ class UnifiedSearch implements RequestHandlerInterface {
         if($request->hasFilter("*")) {
             $key = $request->filterValue("*");
         } else
-            throw new NotAllowedException("must specify filter");
+            throw new NotAllowedException("Must specify filter.  May be one of: *");
 
         $limit = $request->hasPagination("size")?
                 $request->paginationValue("size"):null;

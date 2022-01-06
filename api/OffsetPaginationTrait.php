@@ -164,7 +164,7 @@ trait OffsetPaginationTrait {
         }
 
         if(!$ops)
-            throw new NotAllowedException("must specify filter");
+            throw new NotAllowedException("Must specify filter.  May be one of: ".implode(", ", array_keys($paginateOps)));
 
         $reqOffset = $offset = $request->hasPagination("offset")?
                 (int)$request->paginationValue("offset"):0;
