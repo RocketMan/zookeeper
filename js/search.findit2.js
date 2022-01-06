@@ -371,6 +371,7 @@ function search(type, url, size, offset) {
         url += "&include=album,label,review,show";
 
     url += "&fields[album]=artist,album,tracks";
+    url += "&fields[label]=name,city,state";
 
     $.ajax({
         dataType: 'json',
