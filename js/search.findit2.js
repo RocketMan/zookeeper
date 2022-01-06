@@ -370,6 +370,8 @@ function search(type, url, size, offset) {
     if(type == null)
         url += "&include=album,label,review,show";
 
+    url += "&fields[album]=artist,album,tracks";
+
     $.ajax({
         dataType: 'json',
         type: 'GET',
