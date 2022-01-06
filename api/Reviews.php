@@ -55,6 +55,7 @@ class Reviews implements RequestHandlerInterface {
     const LINKS_NONE = 0;
     const LINKS_ALBUM = 1;
     const LINKS_ALBUM_TRACKS = 2;
+    const LINKS_REVIEW_BODY = 4;
     const LINKS_ALL = ~0;
 
     private static $paginateOps = [
@@ -84,8 +85,13 @@ class Reviews implements RequestHandlerInterface {
     public static function fromArray(array $records, $flags = self::LINKS_NONE) {
         $result = [];
         $wantsAlbum = $flags & self::LINKS_ALBUM;
+        $wantsReview = $flags & self::LINKS_REVIEW_BODY;
         foreach($records as $record) {
-            $resource = self::fromRecord($record, $flags);
+            if(!$record["review"] && $wantsReview) {
+                $reviews = Engine::api(IReview::class)->getReviews($record["id"], 1, "", Engine::session()->isAuth("u"), 1);
+                $record["review"] = $reviews[0]["review"];
+            }
+            $resource = self::fromRecord($record);
             $result[] = $resource;
 
             if($wantsAlbum) {
@@ -134,6 +140,8 @@ class Reviews implements RequestHandlerInterface {
             $flags |= self::LINKS_ALBUM;
         if($request->requestsField("album", "tracks"))
             $flags |= self::LINKS_ALBUM_TRACKS;
+        if($request->requestsField("review", "review"))
+            $flags |= self::LINKS_REVIEW_BODY;
         return $this->paginateOffset($request, self::$paginateOps, $flags);
     }
 
