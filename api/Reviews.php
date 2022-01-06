@@ -87,7 +87,7 @@ class Reviews implements RequestHandlerInterface {
         $wantsAlbum = $flags & self::LINKS_ALBUM;
         $wantsReview = $flags & self::LINKS_REVIEW_BODY;
         foreach($records as $record) {
-            if(!$record["review"] && $wantsReview) {
+            if(empty($record["review"]) && $wantsReview) {
                 $reviews = Engine::api(IReview::class)->getReviews($record["id"], 1, "", Engine::session()->isAuth("u"), 1);
                 $record["review"] = $reviews[0]["review"];
             }
