@@ -114,6 +114,7 @@ class Reviews implements RequestHandlerInterface {
         }
         return $result;
     }
+
     public function fetchResource(RequestInterface $request): ResponseInterface {
         $key = $request->id();
         $reviews = Engine::api(IReview::class)->getReviews($key, 1, "", Engine::session()->isAuth("u"), 1);
@@ -210,6 +211,7 @@ class Reviews implements RequestHandlerInterface {
 
         throw new \Exception("creation failed");
     }
+
     public function patchResource(RequestInterface $request): ResponseInterface {
         $review = $request->requestBody()->data()->first("review");
         $tag = $review->relationships()->get("album")->related()->first("album")->id();
