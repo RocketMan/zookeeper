@@ -68,7 +68,7 @@ class UnifiedSearch implements RequestHandlerInterface {
             $more = $result["more"];
             $type = $result["type"];
             $records = $result["result"];
-            
+
             $ctx = hash_init("crc32");
             hash_update($ctx, serialize($records));
 
