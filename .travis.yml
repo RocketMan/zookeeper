@@ -40,4 +40,4 @@ before_script:
   - export HTTP_ACCEPT="application/json"
   - export HTTP_USER_AGENT="Travis CI"
 
-script: php zk validate base=http://127.0.0.1/
+script: php zk validate url=http://127.0.0.1/
