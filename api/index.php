@@ -73,8 +73,9 @@ function serveRequest() {
         // assert(strpos($_SERVER["REQUEST_URI"],
         //           $_SERVER["REDIRECT_PREFIX"]) === 0);
         $uri = substr($_SERVER["REQUEST_URI"],
-                        strlen($_SERVER["REDIRECT_PREFIX"] ?? ""));
-phpinfo();
+                        strlen($_SERVER["REDIRECT_PREFIX"] ??
+			       $_SERVER["REDIRECT_REDIRECT_PREFIX"] ?? ""));
+
         $request = new ApiRequest(
             $_SERVER["REQUEST_METHOD"],
             new Uri($uri),
