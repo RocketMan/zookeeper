@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -34,6 +34,7 @@ use Enm\JsonApi\Serializer\Serializer;
 use GuzzleHttp\Psr7\Uri;
 
 const CORS_METHODS = "GET, HEAD, POST, PATCH, DELETE";
+const CORS_MAX_AGE = 3600;
 
 function isPreflight() {
     $preflight = ($_SERVER['REQUEST_METHOD'] ?? null) == "OPTIONS";
@@ -52,7 +53,7 @@ function isPreflight() {
 
         if($preflight) {
             header("Access-Control-Allow-Methods: " . CORS_METHODS);
-            header("Access-Control-Max-Age: 3600");
+            header("Access-Control-Max-Age: " . CORS_MAX_AGE);
         }
     }
 
@@ -73,7 +74,6 @@ function serveRequest() {
         //
         // assert(strpos($_SERVER["REQUEST_URI"],
         //           $_SERVER["REDIRECT_PREFIX"]) === 0);
-
         $uri = substr($_SERVER["REQUEST_URI"],
                         strlen($_SERVER["REDIRECT_PREFIX"] ?? ""));
 
