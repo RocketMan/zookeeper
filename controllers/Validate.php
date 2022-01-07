@@ -211,7 +211,6 @@ class Validate implements IController {
 
             // parse the json looking for the spin
             $success6 = false;
-	    echo "DEBUG: $page.\n";
             $json = json_decode($page);
             $included = $json->included;
             foreach($included as $data) {
