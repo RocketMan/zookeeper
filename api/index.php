@@ -72,10 +72,10 @@ function serveRequest() {
         // is broken for multilevel prefixes.
         //
         // assert(strpos($_SERVER["REQUEST_URI"],
-        //           $_SERVER["PREFIX"]) === 0);
+        //           $_SERVER["REDIRECT_PREFIX"]) === 0);
 
         $uri = substr($_SERVER["REQUEST_URI"],
-                        strlen($_SERVER["PREFIX"] ?? ""));
+                        strlen($_SERVER["REDIRECT_PREFIX"] ?? ""));
 
         $request = new ApiRequest(
             $_SERVER["REQUEST_METHOD"],

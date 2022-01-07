@@ -215,7 +215,7 @@ class Validate implements IController {
                   "filter[*]" => explode(' ', self::TEST_TRACK)[1],
                   "include" => "show"
                 ]);
-phpinfo();
+
             // parse the json looking for the spin
             $success6 = false;
             $json = json_decode($page);

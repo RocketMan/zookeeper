@@ -16,6 +16,9 @@
     Alias /php5-fcgi /usr/lib/cgi-bin/php5-fcgi
     FastCgiExternalServer /usr/lib/cgi-bin/php5-fcgi -host 127.0.0.1:9000 -pass-header Authorization
 
+    RewriteCond %{ENV:REDIRECT_REDIRECT_APIVER} !^$
+    RewriteRule .* - [E=REDIRECT_APIVER:%{ENV:REDIRECT_REDIRECT_APIVER},E=REDIRECT_PREFIX:%{ENV:REDIRECT_REDIRECT_PREFIX}]
+
     <Directory /usr/lib/cgi-bin>
         Require all granted
     </Directory>
