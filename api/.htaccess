@@ -1,10 +1,18 @@
 <IfModule mod_rewrite.c>
 RewriteEngine On
-# the following rule is needed for php5-fcgi, as apache does an extra rewrite
+# The following rule is needed for php-fcgi, as apache does an extra rewrite.
+#
+# In absence of this rule, we would end up with REDIRECT_APIVER in the non-
+# php-fcgi case, but with php-fcgi, we get REDIRECT_REDIRECT_APIVER due to
+# the extra rewrite.  By rewriting to APIVER (and PREFIX) here, the extra
+# rewrite of php-fcgi will result in REDIRECT_APIVER as expected.  In the
+# non php-fcgi case, this rule will result in an unused APIVER/PREFIX.
 #RewriteCond %{ENV:REDIRECT_APIVER} !^$
 #RewriteRule .* - [E=APIVER:%{ENV:REDIRECT_APIVER},E=PREFIX:%{ENV:REDIRECT_PREFIX}]
 RewriteCond %{REQUEST_URI}::$0 ^(/.+)/(v([0-9]+(\.[0-9]+)*)/.*)::\2$
 RewriteRule .* - [E=BASE:%1,E=APIVER:%3,E=PREFIX:%1/v%3/]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ %{ENV:BASE}/index.php [L]
+SetEnvIf REDIRECT_APIVER (.+) APIVER=$1
+SetEnvIf REDIRECT_PREFIX (.+) PREFIX=$1
 </IfModule>
