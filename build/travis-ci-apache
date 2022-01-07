@@ -9,8 +9,8 @@
     Require all granted
     <IfModule mod_rewrite.c>
       RewriteEngine On
-      RewriteCond %{ENV:REDIRECT_APIVER} !^$
-      RewriteRule .* - [E=APIVER:%{ENV:REDIRECT_APIVER},E=PREFIX:%{ENV:REDIRECT_PREFIX}]
+      RewriteCond %{ENV:REDIRECT_REDIRECT_APIVER} !^$
+      RewriteRule .* - [E=REDIRECT_APIVER:%{ENV:REDIRECT_REDIRECT_APIVER},E=REDIRECT_PREFIX:%{ENV:REDIRECT_REDIRECT_PREFIX}]
     </IfModule>
   </Directory>
 
