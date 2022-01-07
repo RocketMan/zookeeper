@@ -7,6 +7,9 @@
     Options FollowSymLinks MultiViews ExecCGI
     AllowOverride All
     Require all granted
+    
+    RewriteCond %{ENV:REDIRECT_REDIRECT_APIVER} !^$
+    RewriteRule .* - [E=APIVER:%{ENV:REDIRECT_REDIRECT_APIVER},E=PREFIX:%{ENV:REDIRECT_REDIRECT_PREFIX}]
   </Directory>
 
   # Wire up Apache to use Travis CI's php-fpm.
@@ -15,9 +18,6 @@
     Action php5-fcgi /php5-fcgi
     Alias /php5-fcgi /usr/lib/cgi-bin/php5-fcgi
     FastCgiExternalServer /usr/lib/cgi-bin/php5-fcgi -host 127.0.0.1:9000 -pass-header Authorization
-
-    RewriteCond %{ENV:REDIRECT_REDIRECT_APIVER} !^$
-    RewriteRule .* - [E=APIVER:%{ENV:REDIRECT_REDIRECT_APIVER},E=PREFIX:%{ENV:REDIRECT_REDIRECT_PREFIX}]
 
     <Directory /usr/lib/cgi-bin>
         Require all granted
