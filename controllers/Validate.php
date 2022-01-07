@@ -203,7 +203,7 @@ class Validate implements IController {
 
         if($this->doTest("validate search", $success3)) {
             $page = SSOCommon::zkHttpGet(
-                "http://192.168.0.1/api/v1/search",
+                "http://127.0.0.1/api/v1/search",
                 [ "page[size]" => 5,
                   "filter[*]" => explode(' ', self::TEST_TRACK)[1],
                   "include" => "show"
