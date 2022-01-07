@@ -33,7 +33,7 @@ class ApiRequest extends Request {
     /**
      * hack to access private properties of superclass
      */
-    protected function __get($name) {
+    public function __get($name) {
         $ref = new \ReflectionClass(parent::class);
         $prop = $ref->getProperty($name);
         $prop->setAccessible(true);
