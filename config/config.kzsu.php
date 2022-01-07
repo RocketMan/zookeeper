@@ -21,7 +21,7 @@ $config = [
 
     'station_freq' => '90.1FM',
 
-    'copyright' => '&copy; 2002-2021 Stanford University.  All rights reserved.  Please read the Stanford University <A HREF="https://www.stanford.edu/site/terms/">acceptable use policy</A>',
+    'copyright' => '&copy; 2002-2022 Stanford University.  All rights reserved.  Please read the Stanford University <A HREF="https://www.stanford.edu/site/terms/">acceptable use policy</A>',
 
     'logo' => 'img/kzsu/kzsu_aharoni.png',
     'favicon' => 'img/kzsu/favicon.ico',
