@@ -109,7 +109,7 @@ class Engine {
         // must be absolute path for FILTER_VALIDATE_URL
         if(isset($_SERVER['REDIRECT_APIVER']))
             return $_SERVER['REDIRECT_PREFIX'] ??
-	           $_SERVER['REDIRECT_REDIRECT_PREFIX'] ?? "/";
+                   $_SERVER['REDIRECT_REDIRECT_PREFIX'] ?? "/";
 
         if(php_sapi_name() == "cli")
             return "";

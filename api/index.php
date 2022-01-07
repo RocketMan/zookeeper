@@ -70,11 +70,17 @@ function serveRequest() {
     try {
         // Remove the uri prefix manually, as Request's api prefix removal
         // is broken for multilevel prefixes.
+        //
+        // NB: Travis apache is doing two redirects for the rewrite rule,
+        // so we end up with REDIRECT_REDIRECT_PREFIX.
+        //
         // assert(strpos($_SERVER["REQUEST_URI"],
-        //           $_SERVER["REDIRECT_PREFIX"]) === 0);
+        //           $_SERVER["REDIRECT_PREFIX"] ??
+        //           $_SERVER["REDIRECT_REDIRECT_PREFIX"]) === 0);
+
         $uri = substr($_SERVER["REQUEST_URI"],
                         strlen($_SERVER["REDIRECT_PREFIX"] ??
-			       $_SERVER["REDIRECT_REDIRECT_PREFIX"] ?? ""));
+                               $_SERVER["REDIRECT_REDIRECT_PREFIX"] ?? ""));
 
         $request = new ApiRequest(
             $_SERVER["REQUEST_METHOD"],
