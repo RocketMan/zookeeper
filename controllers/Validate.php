@@ -78,8 +78,8 @@ class Validate implements IController {
         }
 
         if(!isset($_REQUEST["url"])) {
-            echo "Usage: zk validate url=__path to zookeeper__";
-            return;
+            echo "Usage: zk validate url=__path to zookeeper__\n";
+            exit(1);
         }
 
         $this->session = Engine::session();
