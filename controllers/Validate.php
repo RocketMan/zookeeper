@@ -202,19 +202,21 @@ class Validate implements IController {
         }
 
         if($this->doTest("validate search", $success3)) {
-            $stream = popen(__DIR__."/../".
-                "zk api method=searchRq type= offset= size=5 key=".
-                explode(' ', self::TEST_TRACK)[1], "r");
-            $page = stream_get_contents($stream);
-            pclose($stream);
+            $page = SSOCommon::zkHttpGet(
+                "http://192.168.0.1/api/v1/search",
+                [ "page[size]" => 5,
+                  "filter[*]" => explode(' ', self::TEST_TRACK)[1],
+                  "include" => "show"
+                ]);
 
             // parse the json looking for the spin
             $success6 = false;
             $json = json_decode($page);
-            foreach($json->data as $data) {
-                if($data->type == "playlists") {
-                    foreach($data->data as $playlist) {
-                        if($playlist->track == self::TEST_TRACK) {
+            $included = $json->included;
+            foreach($included as $data) {
+                if($data->type == "show") {
+                    foreach($data->attributes->events as $event) {
+                        if($event->track == self::TEST_TRACK) {
                             $success6 = true;
                             break 2;
                         }
