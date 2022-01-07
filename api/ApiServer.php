@@ -27,6 +27,8 @@ namespace ZK\API;
 use Enm\JsonApi\Model\Document\DocumentInterface;
 use Enm\JsonApi\Model\Request\RequestInterface;
 use Enm\JsonApi\Model\Resource\ResourceInterface;
+use Enm\JsonApi\Model\Response\EmptyResponse;
+use Enm\JsonApi\Model\Response\ResponseInterface;
 use Enm\JsonApi\Server\JsonApiServer;
 
 /**
@@ -34,6 +36,19 @@ use Enm\JsonApi\Server\JsonApiServer;
  */
 class ApiServer extends JsonApiServer {
     const MAX_LIMIT = 35;
+
+    const CORS_METHODS = "GET, HEAD, POST, PATCH, DELETE";
+    const CORS_MAX_AGE = 3600;
+
+    /**
+     * determine if the specified ORIGIN is allowed for CORS requests
+     *
+     * default implementation always indicates not allowed
+     *
+     * @param $origin target ORIGIN
+     * @return true if allowed, false otherwise
+     */
+    function originAllowed(string $origin): bool { return false; }
 
     /**
      * This fixes a bug in the upstream handling of include for
@@ -95,5 +110,32 @@ class ApiServer extends JsonApiServer {
 
         // in all other cases, delegate to the superclass
         parent::cleanUpResource($resource, $request);
+    }
+
+    /**
+     * add support for CORS
+     */
+    public function handleRequest(
+        RequestInterface $request
+    ): ResponseInterface {
+        switch($request->method()) {
+        case "OPTIONS":
+            // CORS preflight
+            $response = new EmptyResponse();
+            $response->headers()->set("Access-Control-Allow-Methods", self::CORS_METHODS);
+            $response->headers()->set("Access-Control-Max-Age", self::CORS_MAX_AGE);
+            break;
+        default:
+            $response = parent::handleRequest($request);
+            break;
+        }
+
+        if($request->headers()->has('HTTP_ORIGIN') &&
+                $this->originAllowed($origin = $request->headers()->getRequired('HTTP_ORIGIN'))) {
+            $response->headers()->set("Access-Control-Allow-Origin", $origin);
+            $response->headers()->set("Access-Control-Allow-Credentials", "true");
+        }
+
+        return $response;
     }
 }

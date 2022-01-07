@@ -24,12 +24,32 @@
 
 namespace ZK\API;
 
+use Enm\JsonApi\Model\Document\DocumentInterface;
 use Enm\JsonApi\Model\Request\Request;
+use Psr\Http\Message\UriInterface;
 
 /**
  * Zookeeper custom implementation of Request
  */
 class ApiRequest extends Request {
+    const EXTRA_METHODS = [ "OPTIONS" ];
+
+    public function __construct(
+            string $method,
+            UriInterface $uri,
+            ?DocumentInterface $requestBody = null,
+            ?string $apiPrefix = null) {
+        $method = strtoupper($method);
+
+        // superclass ctor allows only basic methods; for extra
+        // methods, we must fake it and then fix up after
+        parent::__construct(
+            in_array($method, self::EXTRA_METHODS, true)?"GET":$method,
+            $uri, $requestBody, $apiPrefix);
+
+        $this->method = $method;
+    }
+
     /**
      * hack to access private properties of superclass
      */
@@ -38,6 +58,13 @@ class ApiRequest extends Request {
         $prop = $ref->getProperty($name);
         $prop->setAccessible(true);
         return $prop->getValue($this);
+    }
+
+    public function __set($name, $value) {
+        $ref = new \ReflectionClass(parent::class);
+        $prop = $ref->getProperty($name);
+        $prop->setAccessible(true);
+        return $prop->setValue($this, $value);
     }
 
     /**

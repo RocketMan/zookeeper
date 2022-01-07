@@ -33,35 +33,23 @@ use Enm\JsonApi\Serializer\Deserializer;
 use Enm\JsonApi\Serializer\Serializer;
 use GuzzleHttp\Psr7\Uri;
 
-const CORS_METHODS = "GET, HEAD, POST, PATCH, DELETE";
-const CORS_MAX_AGE = 3600;
-
-function isPreflight() {
-    $preflight = ($_SERVER['REQUEST_METHOD'] ?? null) == "OPTIONS";
-    if($preflight)
-        http_response_code(204); // 204 No Content
-
-    $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
-    if($origin) {
-        foreach(Engine::param('allowed_domains') as $domain) {
-            if(preg_match("/" . preg_quote($domain) . "$/", $origin)) {
-                header("Access-Control-Allow-Origin: {$origin}");
-                header("Access-Control-Allow-Credentials: true");
-                break;
-            }
-        }
-
-        if($preflight) {
-            header("Access-Control-Allow-Methods: " . CORS_METHODS);
-            header("Access-Control-Max-Age: " . CORS_MAX_AGE);
-        }
-    }
-
-    return $preflight;
-}
-
 function serveRequest() {
-    $jsonApi = new ApiServer(new Deserializer(), new Serializer());
+    $jsonApi = new class(new Deserializer(), new Serializer())
+                extends ApiServer {
+        public function originAllowed(string $origin): bool {
+            $allowed = false;
+            $host = parse_url($origin, PHP_URL_HOST);
+            if($host) {
+                foreach(Engine::param('allowed_domains') as $domain) {
+                    if(preg_match("/" . preg_quote($domain) . "$/", $host)) {
+                        $allowed = true;
+                        break;
+                    }
+                 }
+            }
+            return $allowed;
+        }
+    };
 
     $config = new Config('controller_config', 'apiControllers');
     $config->iterate(function($type, $handler) use($jsonApi) {
@@ -83,6 +71,9 @@ function serveRequest() {
             $jsonApi->createRequestBody(file_get_contents('php://input')),
             null);
 
+        if(isset($_SERVER['HTTP_ORIGIN']))
+            $request->headers()->set('HTTP_ORIGIN', $_SERVER['HTTP_ORIGIN']);
+
         $response = $jsonApi->handleRequest($request);
     } catch(\Exception $e) {
         $response = $jsonApi->handleException($e);
@@ -98,5 +89,4 @@ function serveRequest() {
 }
 
 // BEGIN MAINLINE
-if(!isPreflight())
-    serveRequest();
+serveRequest();
