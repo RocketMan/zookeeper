@@ -77,6 +77,11 @@ class Validate implements IController {
             return;
         }
 
+        if(!isset($_REQUEST["url"])) {
+            echo "Usage: zk validate url=__path to zookeeper__";
+            return;
+        }
+
         $this->session = Engine::session();
         echo "\nStarting Validation...\n\n";
         try {
@@ -187,10 +192,12 @@ class Validate implements IController {
             $success4 = false;
 
         if($this->doTest("view playlist", $success4)) {
-            $stream = popen(__DIR__."/../".
-                "zk main action=viewListById subaction= playlist=$pid", "r");
-            $page = stream_get_contents($stream);
-            pclose($stream);
+            $page = SSOCommon::zkHttpGet(
+                $_REQUEST["url"],
+                [ "action" => "viewListById",
+                  "subaction" => "",
+                  "playlist" => $pid
+                ]);
 
             // scrape the page looking for the comment and spin we inserted.
             // both should be present, and the comment should follow the spin
@@ -203,7 +210,7 @@ class Validate implements IController {
 
         if($this->doTest("validate search", $success3)) {
             $page = SSOCommon::zkHttpGet(
-                "http://127.0.0.1/api/v1/search",
+                $_REQUEST["url"] . "/api/v1/search",
                 [ "page[size]" => 5,
                   "filter[*]" => explode(' ', self::TEST_TRACK)[1],
                   "include" => "show"
