@@ -70,8 +70,10 @@ function serveRequest() {
     try {
         // Remove the uri prefix manually, as Request's api prefix removal
         // is broken for multilevel prefixes.
+        //
         // assert(strpos($_SERVER["REQUEST_URI"],
         //           $_SERVER["REDIRECT_PREFIX"]) === 0);
+
         $uri = substr($_SERVER["REQUEST_URI"],
                         strlen($_SERVER["REDIRECT_PREFIX"] ?? ""));
 

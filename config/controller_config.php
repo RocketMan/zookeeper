@@ -13,7 +13,6 @@ $controllers = [
     'daily' =>        ZK\Controllers\RunDaily::class,
     'print' =>        ZK\Controllers\PrintTags::class,
     'rss' =>          ZK\Controllers\RSS::class,
-    'api' =>          ZK\Controllers\API::class,
     'sso' =>          ZK\Controllers\SSOLogin::class,
     'push' =>         ZK\Controllers\PushServer::class,
     'validate' =>     ZK\Controllers\Validate::class,
