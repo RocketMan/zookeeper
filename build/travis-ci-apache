@@ -7,9 +7,6 @@
     Options FollowSymLinks MultiViews ExecCGI
     AllowOverride All
     Require all granted
-    
-    RewriteCond %{ENV:REDIRECT_REDIRECT_APIVER} !^$
-    RewriteRule .* - [E=APIVER:%{ENV:REDIRECT_REDIRECT_APIVER},E=PREFIX:%{ENV:REDIRECT_REDIRECT_PREFIX}]
   </Directory>
 
   # Wire up Apache to use Travis CI's php-fpm.
