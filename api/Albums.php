@@ -109,7 +109,7 @@ class Albums implements RequestHandlerInterface {
         return [
             ["category", array_flip(ILibrary::GENRES)],
             ["medium", array_flip(ILibrary::MEDIA)],
-            ["format", array_flip(ILibrary::LENGTHS)],
+            ["size", array_flip(ILibrary::LENGTHS)],
             ["location", array_flip(ILibrary::LOCATIONS)]
         ];
     }
@@ -217,16 +217,6 @@ class Albums implements RequestHandlerInterface {
     public static function fromAttrs($attrs, $required = false) {
         $album = [];
 
-        // map field values to codes
-        $maps = self::getFieldValueToCodeMap();
-        foreach($maps as $field)
-            if($attrs->has($field[0]) || $required) {
-                $val = $attrs->getRequired($field[0]);
-                if(!isset($field[1][$val]))
-                    throw new \InvalidArgumentException("Value $val is not defined for property {$field[0]}");
-                $album[$field[0]] = $field[1][$val];
-            }
-
         foreach(self::FIELDS as $field) {
             if($attrs->has($field)) {
                 $value = $attrs->getRequired($field);
@@ -241,6 +231,16 @@ class Albums implements RequestHandlerInterface {
                 $album[$field] = $value;
             }
         }
+
+        // map field values to codes
+        $maps = self::getFieldValueToCodeMap();
+        foreach($maps as $field)
+            if($attrs->has($field[0]) || $required) {
+                $val = $attrs->getRequired($field[0]);
+                if(!isset($field[1][$val]))
+                    throw new \InvalidArgumentException("Value $val is not defined for property {$field[0]}");
+                $album[$field[0]] = $field[1][$val];
+            }
 
         $tracks = $attrs->getOptional("tracks");
         if($tracks) {
@@ -444,7 +444,8 @@ class Albums implements RequestHandlerInterface {
 
         $attrs = $request->requestBody()->data()->first("album")->attributes();
         [$album, $tracks] = self::fromAttrs($attrs);
-        array_merge($albums[0], $album);
+        $albums[0] = array_merge($albums[0], $album);
+        $albums[0]["format"] = $albums[0]["size"];
         Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], $tracks, null);
 
         return new EmptyResponse();
@@ -479,6 +480,7 @@ class Albums implements RequestHandlerInterface {
         if(sizeof($albums) == 0)
             throw new ResourceNotFoundException("album", $request->id());
 
+        $albums[0]["format"] = $albums[0]["size"];
         $albums[0]["pubkey"] = $pubkey;
         Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], null, $labels[0]);
 

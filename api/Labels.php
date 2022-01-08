@@ -221,7 +221,7 @@ class Labels implements RequestHandlerInterface {
                 throw new NotAllowedException("label with this name already exists");
         }
 
-        array_merge($label, self::fromAttrs($attrs));
+        $label = array_merge($label, self::fromAttrs($attrs));
 
         if(Engine::api(IEditor::class)->insertUpdateLabel($label))
             return new EmptyResponse();
