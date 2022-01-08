@@ -33,60 +33,57 @@ use Enm\JsonApi\Serializer\Deserializer;
 use Enm\JsonApi\Serializer\Serializer;
 use GuzzleHttp\Psr7\Uri;
 
-function serveRequest() {
-    $jsonApi = new class(new Deserializer(), new Serializer())
-                extends ApiServer {
-        public function originAllowed(string $origin): bool {
-            $allowed = false;
-            $host = parse_url($origin, PHP_URL_HOST);
-            if($host) {
-                foreach(Engine::param('allowed_domains') as $domain) {
-                    if(preg_match("/" . preg_quote($domain) . "$/", $host)) {
-                        $allowed = true;
-                        break;
-                    }
-                 }
-            }
-            return $allowed;
+$apiServer = new class(new Deserializer(), new Serializer()) extends ApiServer {
+    /**
+     * @see ApiServer::originAllowed($origin)
+     */
+    public function originAllowed(string $origin): bool {
+        $allowed = false;
+        $host = parse_url($origin, PHP_URL_HOST);
+        if($host) {
+            foreach(Engine::param('allowed_domains') as $domain) {
+                if(preg_match("/" . preg_quote($domain) . "$/", $host)) {
+                    $allowed = true;
+                    break;
+                }
+             }
         }
-    };
-
-    $config = new Config('controller_config', 'apiControllers');
-    $config->iterate(function($type, $handler) use($jsonApi) {
-        $jsonApi->addHandler($type, new $handler());
-    });
-
-    try {
-        // Remove the uri prefix manually, as Request's api prefix removal
-        // is broken for multilevel prefixes.
-        //
-        // assert(strpos($_SERVER["REQUEST_URI"],
-        //           $_SERVER["REDIRECT_PREFIX"]) === 0);
-        $uri = substr($_SERVER["REQUEST_URI"],
-                        strlen($_SERVER["REDIRECT_PREFIX"] ?? ""));
-
-        $request = new ApiRequest(
-            $_SERVER["REQUEST_METHOD"],
-            new Uri($uri),
-            $jsonApi->createRequestBody(file_get_contents('php://input')),
-            null);
-
-        if(isset($_SERVER['HTTP_ORIGIN']))
-            $request->headers()->set('HTTP_ORIGIN', $_SERVER['HTTP_ORIGIN']);
-
-        $response = $jsonApi->handleRequest($request);
-    } catch(\Exception $e) {
-        $response = $jsonApi->handleException($e);
+        return $allowed;
     }
+};
 
-    //header("HTTP/1.1 ".$response->status());
-    foreach($response->headers()->all() as $header => $value)
-        header("{$header}: {$value}");
+$config = new Config('controller_config', 'apiControllers');
+$config->iterate(function($type, $handler) use($apiServer) {
+    $apiServer->addHandler($type, new $handler());
+});
 
-    ob_start("ob_gzhandler");
-    echo $jsonApi->createResponseBody($response);
-    ob_end_flush();
+try {
+    // Remove the uri prefix manually, as Request's api prefix removal
+    // is broken for multilevel prefixes.
+    //
+    // assert(strpos($_SERVER["REQUEST_URI"],
+    //           $_SERVER["REDIRECT_PREFIX"]) === 0);
+    $uri = substr($_SERVER["REQUEST_URI"],
+                    strlen($_SERVER["REDIRECT_PREFIX"] ?? ""));
+
+    $request = new ApiRequest(
+        $_SERVER["REQUEST_METHOD"],
+        new Uri($uri),
+        $apiServer->createRequestBody(file_get_contents('php://input')),
+        null);
+
+    if(isset($_SERVER['HTTP_ORIGIN']))
+        $request->headers()->set('HTTP_ORIGIN', $_SERVER['HTTP_ORIGIN']);
+
+    $response = $apiServer->handleRequest($request);
+} catch(\Exception $e) {
+    $response = $apiServer->handleException($e);
 }
 
-// BEGIN MAINLINE
-serveRequest();
+//header("HTTP/1.1 ".$response->status());
+foreach($response->headers()->all() as $header => $value)
+    header("{$header}: {$value}");
+
+ob_start("ob_gzhandler");
+echo $apiServer->createResponseBody($response);
+ob_end_flush(); // ob_gzhandler
