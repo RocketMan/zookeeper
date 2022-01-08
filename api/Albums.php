@@ -49,7 +49,7 @@ class Albums implements RequestHandlerInterface {
     use OffsetPaginationTrait;
     use NoRelationshipModificationTrait;
 
-    const FIELDS = [ "artist", "album", "category", "medium", "format",
+    const FIELDS = [ "artist", "album", "category", "medium", "size",
                      "created", "updated", "location", "bin", "coll" ];
 
     const TRACK_FIELDS = [ "seq", "artist", "track", "url" ];
@@ -125,8 +125,8 @@ class Albums implements RequestHandlerInterface {
             case "medium":
                 $value = ILibrary::MEDIA[$rec[$field]];
                 break;
-            case "format":
-                $value = ILibrary::LENGTHS[$rec["size"]];
+            case "size":
+                $value = ILibrary::LENGTHS[$rec[$field]];
                 break;
             case "location":
                 $value = ILibrary::LOCATIONS[$rec[$field]];
@@ -442,7 +442,6 @@ class Albums implements RequestHandlerInterface {
         if(sizeof($albums) == 0)
             throw new ResourceNotFoundException("album", $key);
 
-        $albums[0]["format"] = $albums[0]["size"];
         $attrs = $request->requestBody()->data()->first("album")->attributes();
         [$album, $tracks] = self::fromAttrs($attrs);
         array_merge($albums[0], $album);
@@ -480,7 +479,6 @@ class Albums implements RequestHandlerInterface {
         if(sizeof($albums) == 0)
             throw new ResourceNotFoundException("album", $request->id());
 
-        $albums[0]["format"] = $albums[0]["size"];
         $albums[0]["pubkey"] = $pubkey;
         Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], null, $labels[0]);
 
