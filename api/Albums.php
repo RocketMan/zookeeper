@@ -482,7 +482,7 @@ class Albums implements RequestHandlerInterface {
 
         $albums[0]["format"] = $albums[0]["size"];
         $albums[0]["pubkey"] = $pubkey;
-        Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], null, $labels[0]);
+        Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], null, null);
 
         return new EmptyResponse();
     }
