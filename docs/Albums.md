@@ -17,7 +17,7 @@ An [example album document](Samples.md#album) is available here.
 * album
 * category
 * medium
-* size
+* format
 * created (read-only)
 * updated (read-only)
 * location
