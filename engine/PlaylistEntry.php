@@ -174,7 +174,13 @@ class PlaylistEntry {
             $entry->setTrack(self::scrubField($json->track));
             $entry->setAlbum(self::scrubField($json->album));
             $entry->setLabel(self::scrubField($json->label));
-            $entry->setTag($json->tag->id ?? $json->tag);
+            if(($a = $json->{"zk:relationships"} ?? null) &&
+                    ($a = $a->albums ?? null) &&
+                    ($a = $a->data ?? null) &&
+                    $a->type ?? null == "album" &&
+                    ($a = $a->id ?? null) ||
+                    ($a = $json->tag ?? null))
+                $entry->setTag($a);
             break;
         }
         $entry->setCreated($json->created);
@@ -198,8 +204,12 @@ class PlaylistEntry {
             $entry->setTrack(self::scrubField($array["track"]));
             $entry->setAlbum(self::scrubField($array["album"]));
             $entry->setLabel(self::scrubField($array["label"]));
-            if($array["tag"] && ($tag = $array["tag"]["id"]))
-                $entry->setTag($tag);
+            if(($a = $array["zk:relationships"] ?? null) &&
+                    ($a = $a["albums"] ?? null) &&
+                    ($a = $a["data"] ?? null) &&
+                    $a["type"] ?? null == "album" &&
+                    ($a = $a["id"] ?? null))
+                $entry->setTag($a);
             break;
         }
         $entry->setCreated($array["created"]);
