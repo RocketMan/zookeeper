@@ -24,6 +24,7 @@
 
 namespace ZK\API;
 
+use Enm\JsonApi\Model\JsonApi;
 use Enm\JsonApi\Model\Document\DocumentInterface;
 use Enm\JsonApi\Model\Request\RequestInterface;
 use Enm\JsonApi\Model\Resource\ResourceInterface;
@@ -34,6 +35,9 @@ use Enm\JsonApi\Server\JsonApiServer;
  */
 class ApiServer extends JsonApiServer {
     const MAX_LIMIT = 35;
+
+    const CONTENT_TYPE = JsonApi::CONTENT_TYPE .
+                '; ext="https://zookeeper.ibinx.com/ext/zk"';
 
     /**
      * This fixes a bug in the upstream handling of include for

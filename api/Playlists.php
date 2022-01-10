@@ -173,11 +173,14 @@ class Playlists implements RequestHandlerInterface {
 
         $document = new Document($resource);
         $response = new DocumentResponse($document);
+        $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
         return $response;
     }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
-        return $this->paginateOffset($request, self::$paginateOps, 0);
+        $response = $this->paginateOffset($request, self::$paginateOps, 0);
+        $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
+        return $response;
     }
 
     public function fetchRelationship(RequestInterface $request): ResponseInterface {
@@ -214,6 +217,7 @@ class Playlists implements RequestHandlerInterface {
         $document->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/".$request->relationship()));
 
         $response = new DocumentResponse($document);
+        $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
         return $response;
     }
 
