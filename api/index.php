@@ -45,7 +45,7 @@ function isPreflight() {
     if($origin) {
         foreach(Engine::param('allowed_domains') as $domain) {
             if(preg_match("/" . preg_quote($domain) . "$/", $origin)) {
-                header("Access-Control-Allow-Origin: {$origin}");
+                header("Access-Control-Allow-Origin: $origin");
                 header("Access-Control-Allow-Credentials: true");
                 break;
             }
@@ -61,11 +61,11 @@ function isPreflight() {
 }
 
 function serveRequest() {
-    $jsonApi = new ApiServer(new Deserializer(), new Serializer());
+    $apiServer = new ApiServer(new Deserializer(), new Serializer());
 
     $config = new Config('controller_config', 'apiControllers');
-    $config->iterate(function($type, $handler) use($jsonApi) {
-        $jsonApi->addHandler($type, new $handler());
+    $config->iterate(function($type, $handler) use($apiServer) {
+        $apiServer->addHandler($type, new $handler());
     });
 
     try {
@@ -80,20 +80,20 @@ function serveRequest() {
         $request = new ApiRequest(
             $_SERVER["REQUEST_METHOD"],
             new Uri($uri),
-            $jsonApi->createRequestBody(file_get_contents('php://input')),
+            $apiServer->createRequestBody(file_get_contents('php://input')),
             null);
 
-        $response = $jsonApi->handleRequest($request);
+        $response = $apiServer->handleRequest($request);
     } catch(\Exception $e) {
-        $response = $jsonApi->handleException($e);
+        $response = $apiServer->handleException($e);
     }
 
     //header("HTTP/1.1 ".$response->status());
     foreach($response->headers()->all() as $header => $value)
-        header("{$header}: {$value}");
+        header("$header: $value");
 
     ob_start("ob_gzhandler");
-    echo $jsonApi->createResponseBody($response);
+    echo $apiServer->createResponseBody($response);
     ob_end_flush();
 }
 
