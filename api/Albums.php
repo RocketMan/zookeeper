@@ -444,8 +444,9 @@ class Albums implements RequestHandlerInterface {
 
         $attrs = $request->requestBody()->data()->first("album")->attributes();
         [$album, $tracks] = self::fromAttrs($attrs);
+        $albums[0]["coll"] = $albums[0]["iscoll"]; // pre-merge
         $albums[0] = array_merge($albums[0], $album);
-        $albums[0]["format"] = $albums[0]["size"];
+        $albums[0]["format"] = $albums[0]["size"]; // post-merge
         Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], $tracks, null);
 
         return new EmptyResponse();
