@@ -375,7 +375,7 @@ class Albums implements RequestHandlerInterface {
         case "relationships":
             throw new NotAllowedException("unspecified relationship");
         default:
-            throw new ResourceNotFoundException("album", $request->relationship());
+            throw new NotAllowedException('You are not allowed to fetch the relationship ' . $request->relationship());
         }
 
         $document = new Document($res);

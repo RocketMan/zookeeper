@@ -26,6 +26,7 @@ namespace ZK\API;
 
 use ZK\Engine\Engine;
 use ZK\Engine\IDJ;
+use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
@@ -36,11 +37,12 @@ use Enm\JsonApi\Model\Document\Document;
 use Enm\JsonApi\Model\Request\RequestInterface;
 use Enm\JsonApi\Model\Resource\JsonResource;
 use Enm\JsonApi\Model\Resource\Link\Link;
+use Enm\JsonApi\Model\Resource\Relationship\Relationship;
+use Enm\JsonApi\Model\Resource\ResourceCollection;
 use Enm\JsonApi\Model\Response\CreatedResponse;
 use Enm\JsonApi\Model\Response\DocumentResponse;
 use Enm\JsonApi\Model\Response\EmptyResponse;
 use Enm\JsonApi\Model\Response\ResponseInterface;
-use Enm\JsonApi\Server\RequestHandler\NoRelationshipFetchTrait;
 use Enm\JsonApi\Server\RequestHandler\NoRelationshipModificationTrait;
 use Enm\JsonApi\Server\RequestHandler\NoResourceModificationTrait;
 use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
@@ -48,7 +50,6 @@ use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
 
 class Playlists implements RequestHandlerInterface {
     use OffsetPaginationTrait;
-    use NoRelationshipFetchTrait;
     use NoRelationshipModificationTrait;
     use NoResourceModificationTrait;
 
@@ -98,7 +99,7 @@ class Playlists implements RequestHandlerInterface {
         return [$size, $retval];
     }
 
-    public static function fromRecord($rec) {
+    public static function fromRecord($rec, $wantAlbums = false) {
         $id = $rec["list"];
         $res = new JsonResource("show", $id);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."playlist/".$id));
@@ -107,6 +108,8 @@ class Playlists implements RequestHandlerInterface {
         $attrs->set("date", $rec["showdate"]);
         $attrs->set("time", $rec["showtime"]);
         $attrs->set("airname", $rec["airname"]);
+
+        $relations = new ResourceCollection();
 
         $events = [];
         Engine::api(IPlaylist::class)->getTracksWithObserver($id,
@@ -122,17 +125,34 @@ class Playlists implements RequestHandlerInterface {
             })->onSetSeparator(function($entry) use(&$events) {
                 $events[] = ["type" => "break",
                              "created" => $entry->getCreatedTime()];
-            })->onSpin(function($entry) use(&$events) {
+            })->onSpin(function($entry) use(&$events, $relations, $wantAlbums) {
                 $spin = $entry->asArray();
                 $spin["type"] = "track";
                 $spin["artist"] = PlaylistEntry::swapNames($spin["artist"]);
                 $spin["created"] = $entry->getCreatedTime();
+                if($spin["tag"]) {
+                    $tag = $spin["tag"];
+                    if($wantAlbums &&
+                            sizeof($albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
+                        $res = Albums::fromArray($albums, Albums::LINKS_ALL)[0];
+                    else
+                        $res = new JsonResource("album", $tag);
+                    $relations->set($res);
+                    $spin["tag"] = ["type" => "album", "id" => $tag];
+                } else
+                    unset($spin["tag"]);
                 unset($spin["id"]);
                 $events[] = $spin;
             }));
 
         if(sizeof($events))
             $res->attributes()->set("events", $events);
+
+        if(!$relations->isEmpty()) {
+            $relation = new Relationship("albums", $relations);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/albums"));
+            $res->relationships()->set($relation);
+        }
 
         return $res;
     }
@@ -149,7 +169,7 @@ class Playlists implements RequestHandlerInterface {
             throw new ResourceNotFoundException("show", $key);
 
         $row["list"] = $key;
-        $resource = self::fromRecord($row);
+        $resource = self::fromRecord($row, $request->requestsInclude("albums"));
 
         $document = new Document($resource);
         $response = new DocumentResponse($document);
@@ -158,6 +178,43 @@ class Playlists implements RequestHandlerInterface {
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
         return $this->paginateOffset($request, self::$paginateOps, 0);
+    }
+
+    public function fetchRelationship(RequestInterface $request): ResponseInterface {
+        switch($request->relationship()) {
+        case "albums":
+            break;
+        case "relationships":
+            throw new NotAllowedException("unspecified relationship");
+        default:
+            throw new NotAllowedException('You are not allowed to fetch the relationship ' . $request->relationship());
+        }
+
+        $relations = new ResourceCollection();
+
+        $flags = Albums::LINKS_ALL;
+        if(!$request->requestsField("album", "tracks"))
+            $flags &= ~Albums::LINKS_TRACKS;
+
+        $id = $request->id();
+        Engine::api(IPlaylist::class)->getTracksWithObserver($id,
+            (new PlaylistObserver())->onSpin(function($entry) use($relations, $flags) {
+                $tag = $entry->getTag();
+                if($tag) {
+                    if(sizeof($albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
+                        $res = Albums::fromArray($albums, $flags)[0];
+                    else
+                        $res = new JsonResource("album", $tag);
+                    $relations->set($res);
+                }
+            }));
+
+        $document = new Document($relations);
+        $document->links()->set(new Link("self", Engine::getBaseUrl()."playlist/$id/relationships/".$request->relationship()));
+        $document->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/".$request->relationship()));
+
+        $response = new DocumentResponse($document);
+        return $response;
     }
 
     public function createResource(RequestInterface $request): ResponseInterface {
