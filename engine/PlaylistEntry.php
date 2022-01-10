@@ -177,7 +177,7 @@ class PlaylistEntry {
             if(($a = $json->{"zk:relationships"} ?? null) &&
                     ($a = $a->albums ?? null) &&
                     ($a = $a->data ?? null) &&
-                    $a->type ?? null == "album" &&
+                    ($a->type ?? null == "album") &&
                     ($a = $a->id ?? null) ||
                     ($a = $json->tag ?? null))
                 $entry->setTag($a);
@@ -207,7 +207,7 @@ class PlaylistEntry {
             if(($a = $array["zk:relationships"] ?? null) &&
                     ($a = $a["albums"] ?? null) &&
                     ($a = $a["data"] ?? null) &&
-                    $a["type"] ?? null == "album" &&
+                    ($a["type"] ?? null == "album") &&
                     ($a = $a["id"] ?? null))
                 $entry->setTag($a);
             break;
