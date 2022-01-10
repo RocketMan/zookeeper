@@ -413,7 +413,10 @@ function search(size, offset) {
             $("#n").focus();
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert('There was a problem retrieving the JSON data:\n' + textStatus);
+            var json = JSON.parse(jqXHR.responseText);
+            var status = (json && json.errors)?
+                    json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
+            alert(status);
         }
     });
 }

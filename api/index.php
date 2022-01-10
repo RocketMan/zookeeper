@@ -88,7 +88,7 @@ function serveRequest() {
         $response = $apiServer->handleException($e);
     }
 
-    //header("HTTP/1.1 ".$response->status());
+    header("HTTP/1.1 ".$response->status());
     foreach($response->headers()->all() as $header => $value)
         header("$header: $value");
 

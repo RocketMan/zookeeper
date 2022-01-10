@@ -131,11 +131,6 @@ $().ready(function(){
             accept: "application/json; charset=utf-8",
             url: url,
         }).done(function (response) { //TODO: success?
-            if (response.errors) {
-                showUserError(id + ' is not a valid tag.');
-                return;
-            }
-
             tagId = id;
             if($("#track-tag").val() != id)
                 $("#track-tag").val(id);
@@ -182,8 +177,13 @@ $().ready(function(){
 
         }).fail(function (jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
-            var status = (json && json.errors)?
-                    json.errors[0].title:('Ajax error: ' + textStatus);
+            if (json && json.errors) {
+                if (json.errors[0].status == 404)
+                    status = id + ' is not a valid tag.';
+                else
+                    status = json.errors[0].title;
+            } else
+                status = 'There was a problem retrieving the data: ' + textStatus;
             showUserError(status);
         });
     }
@@ -555,7 +555,10 @@ $().ready(function(){
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                alert('There was a problem retrieving the JSON data:\n' + textStatus);
+                var json = JSON.parse(jqXHR.responseText);
+                var status = (json && json.errors)?
+                        json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
+                alert(status);
             }
         });
     }
