@@ -204,12 +204,12 @@ class PlaylistEntry {
             $entry->setTrack(self::scrubField($array["track"]));
             $entry->setAlbum(self::scrubField($array["album"]));
             $entry->setLabel(self::scrubField($array["label"]));
-            if(($a = $array["xattr:relationships"] ?? null) &&
-                    ($a = $a["albums"] ?? null) &&
-                    ($a = $a["data"] ?? null) &&
-                    ($a["type"] ?? null == "album") &&
-                    ($a = $a["id"] ?? null))
-                $entry->setTag($a);
+            if(isset($array["xattr:relationships"])) {
+                try {
+                    $album = $array["xattr:relationships"]->get("albums")->related()->first("album");
+                    $entry->setTag($album->id());
+                } catch(\Exception $e) {}
+            }
             break;
         }
         $entry->setCreated($array["created"]);

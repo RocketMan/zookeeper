@@ -26,11 +26,11 @@ require_once __DIR__."/../vendor/autoload.php";
 
 use ZK\API\ApiRequest;
 use ZK\API\ApiServer;
+use ZK\API\XODeserializer;
+use ZK\API\XOSerializer;
 use ZK\Engine\Config;
 use ZK\Engine\Engine;
 
-use Enm\JsonApi\Serializer\Deserializer;
-use Enm\JsonApi\Serializer\Serializer;
 use GuzzleHttp\Psr7\Uri;
 
 const CORS_METHODS = "GET, HEAD, POST, PATCH, DELETE";
@@ -61,7 +61,7 @@ function isPreflight() {
 }
 
 function serveRequest() {
-    $apiServer = new ApiServer(new Deserializer(), new Serializer());
+    $apiServer = new ApiServer(new XODeserializer(), new XOSerializer());
 
     $config = new Config('controller_config', 'apiControllers');
     $config->iterate(function($type, $handler) use($apiServer) {
