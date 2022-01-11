@@ -138,7 +138,7 @@ class Playlists implements RequestHandlerInterface {
                     else
                         $res = new JsonResource("album", $tag);
                     $relations->set($res);
-                    $spin["zk:relationships"] = ["albums" => ["data" => ["type" => "album", "id" => $tag]]];
+                    $spin["xattr:relationships"] = ["albums" => ["data" => ["type" => "album", "id" => $tag]]];
                 }
                 unset($spin["tag"]);
                 unset($spin["id"]);

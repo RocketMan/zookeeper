@@ -174,7 +174,7 @@ class PlaylistEntry {
             $entry->setTrack(self::scrubField($json->track));
             $entry->setAlbum(self::scrubField($json->album));
             $entry->setLabel(self::scrubField($json->label));
-            if(($a = $json->{"zk:relationships"} ?? null) &&
+            if(($a = $json->{"xattr:relationships"} ?? null) &&
                     ($a = $a->albums ?? null) &&
                     ($a = $a->data ?? null) &&
                     ($a->type ?? null == "album") &&
@@ -204,7 +204,7 @@ class PlaylistEntry {
             $entry->setTrack(self::scrubField($array["track"]));
             $entry->setAlbum(self::scrubField($array["album"]));
             $entry->setLabel(self::scrubField($array["label"]));
-            if(($a = $array["zk:relationships"] ?? null) &&
+            if(($a = $array["xattr:relationships"] ?? null) &&
                     ($a = $a["albums"] ?? null) &&
                     ($a = $a["data"] ?? null) &&
                     ($a["type"] ?? null == "album") &&

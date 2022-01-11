@@ -37,7 +37,7 @@ class ApiServer extends JsonApiServer {
     const MAX_LIMIT = 35;
 
     const CONTENT_TYPE = JsonApi::CONTENT_TYPE .
-                '; ext="https://zookeeper.ibinx.com/ext/zk"';
+                '; ext="https://zookeeper.ibinx.com/ext/xattr"';
 
     /**
      * This fixes a bug in the upstream handling of include for
