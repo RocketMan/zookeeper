@@ -205,6 +205,8 @@ class PlaylistEntry {
             $entry->setAlbum(self::scrubField($array["album"]));
             $entry->setLabel(self::scrubField($array["label"]));
             if(isset($array["xattr:relationships"])) {
+                // using the 'xattr' extension
+                // see https://github.com/RocketMan/zookeeper/pull/263
                 try {
                     $album = $array["xattr:relationships"]->get("albums")->related()->first("album");
                     $entry->setTag($album->id());

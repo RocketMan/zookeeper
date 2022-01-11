@@ -33,6 +33,8 @@ use Enm\JsonApi\Serializer\Serializer;
 
 /**
  * JSON:API serializer with support for 'xattr' extension
+ *
+ * see https://github.com/RocketMan/zookeeper/pull/263
  */
 class XOSerializer extends Serializer {
     protected function serializeAttribute($attr) {

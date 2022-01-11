@@ -138,6 +138,8 @@ class Playlists implements RequestHandlerInterface {
                     else
                         $res = new JsonResource("album", $tag);
                     $relations->set($res);
+                    // using the 'xattr' extension
+                    // see https://github.com/RocketMan/zookeeper/pull/263
                     $spin["xattr:relationships"] = new Relationship("albums", $res);
                 }
                 unset($spin["tag"]);

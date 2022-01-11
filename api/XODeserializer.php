@@ -32,6 +32,8 @@ use Enm\JsonApi\Serializer\Deserializer;
 
 /**
  * JSON:API deserializer with support for 'xattr' extension
+ *
+ * see https://github.com/RocketMan/zookeeper/pull/263
  */
 class XODeserializer extends Deserializer {
     protected function deserializeAttribute($attr) {
