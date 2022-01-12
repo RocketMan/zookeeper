@@ -147,7 +147,7 @@ class Playlists implements RequestHandlerInterface {
                         $relations->set($res);
                         // using the 'xa' extension
                         // see https://github.com/RocketMan/zookeeper/pull/263
-                        $spin["xa:relationships"] = new Relationship("albums", $res);
+                        $spin["xa:relationships"] = new Relationship("album", $res);
                     }
                     unset($spin["tag"]);
                     unset($spin["id"]);

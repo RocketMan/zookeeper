@@ -174,8 +174,8 @@ class PlaylistEntry {
             $entry->setTrack(self::scrubField($json->track));
             $entry->setAlbum(self::scrubField($json->album));
             $entry->setLabel(self::scrubField($json->label));
-            if(($a = $json->{"xattr:relationships"} ?? null) &&
-                    ($a = $a->albums ?? null) &&
+            if(($a = $json->{"xa:relationships"} ?? null) &&
+                    ($a = $a->album ?? null) &&
                     ($a = $a->data ?? null) &&
                     ($a->type ?? null == "album") &&
                     ($a = $a->id ?? null) ||
@@ -204,11 +204,11 @@ class PlaylistEntry {
             $entry->setTrack(self::scrubField($array["track"]));
             $entry->setAlbum(self::scrubField($array["album"]));
             $entry->setLabel(self::scrubField($array["label"]));
-            if(isset($array["xattr:relationships"])) {
-                // using the 'xattr' extension
+            if(isset($array["xa:relationships"])) {
+                // using the 'xa' extension
                 // see https://github.com/RocketMan/zookeeper/pull/263
                 try {
-                    $album = $array["xattr:relationships"]->get("albums")->related()->first("album");
+                    $album = $array["xa:relationships"]->get("album")->related()->first("album");
                     $entry->setTag($album->id());
                 } catch(\Exception $e) {}
             }
