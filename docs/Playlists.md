@@ -23,14 +23,17 @@ An [example playlist document](Samples.md#playlist) is available here.
   * artist
   * album
   * track
-  * tag
+  * xa:relationships**
   * comment
   * event
   * code
 
+(** See https://github.com/RocketMan/zookeeper/pull/263 for a discussion
+of the 'xa:relationships' attribute.)
+
 ### Relations
 
-There are no relations.
+* albums (to-many)
 
 ### Filters
 

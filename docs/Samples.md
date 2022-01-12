@@ -164,7 +164,6 @@ The following are sample documents for each of the data types.
         "comment": "Rebroadcast of an episode originally aired on May 20, 2021.",
         "created": null
       }, {
-        "tag": null,
         "artist": "Marika Papagika",
         "track": "Smyrneiko Minore",
         "album": "I Believe I'll Go Back Home: 1906\u20131959",
@@ -172,7 +171,6 @@ The following are sample documents for each of the data types.
         "created": "21:00:00",
         "type": "track"
       }, {
-        "tag": null,
         "artist": "His Name Is Alive",
         "track": "Liadin",
         "album": "Hope Is a Candle",
@@ -180,7 +178,6 @@ The following are sample documents for each of the data types.
         "created": "21:04:00",
         "type": "track"
       }, {
-        "tag": null,
         "artist": "The Durutti Column",
         "track": "Weakness and Fever (originally released as a 7\" single)",
         "album": "LC (Reissue)",
@@ -188,15 +185,21 @@ The following are sample documents for each of the data types.
         "created": "21:07:00",
         "type": "track"
       }, {
-        "tag": "118820",
         "artist": "For Against",
         "track": "You Only Live Twice",
         "album": "Aperture",
         "label": "Independent Project",
         "created": "21:12:00",
-        "type": "track"
+        "type": "track",
+        "xa:relationships": {
+          "album": {
+            "data": {
+              "type": "album",
+              "id": "118820"
+            }
+          }
+        }
       }, {
-        "tag": null,
         "artist": "Andrew Weathers & Hayden Pedigo",
         "track": "Tomorrow Is the Song I Sing",
         "album": "Big Tex, Here We Come",
@@ -204,7 +207,6 @@ The following are sample documents for each of the data types.
         "created": "21:16:00",
         "type": "track"
       }, {
-        "tag": null,
         "artist": "Souled American",
         "track": "Dark as a Dungeon",
         "album": "Sonny",
@@ -215,7 +217,6 @@ The following are sample documents for each of the data types.
         "type": "break",
         "created": null
       }, {
-        "tag": null,
         "artist": "Hey Exit",
         "track": "Last Harvest",
         "album": "Eulogy for Land",
@@ -223,15 +224,21 @@ The following are sample documents for each of the data types.
         "created": "21:26:00",
         "type": "track"
       }, {
-        "tag": "1060007",
         "artist": "Calla",
         "track": "Elsewhere",
         "album": "Calla",
         "label": "Arena Rock Recording Co.",
         "created": "21:34:00",
-        "type": "track"
+        "type": "track",
+        "xa:relationships": {
+          "album": {
+            "data": {
+              "type": "album",
+              "id": "1060007"
+            }
+          }
+        }
       }, {
-        "tag": null,
         "artist": "claire rousay",
         "track": "discrete (the market)",
         "album": "a softer focus",
@@ -239,7 +246,6 @@ The following are sample documents for each of the data types.
         "created": "21:39:00",
         "type": "track"
       }, {
-        "tag": null,
         "artist": "Jusell, Prymek, Sage, Shiroishi",
         "track": "Flower Clock",
         "album": "Yamawarau (\u5c71\u7b11\u3046)",
@@ -247,7 +253,6 @@ The following are sample documents for each of the data types.
         "created": "21:45:00",
         "type": "track"
       }, {
-        "tag": null,
         "artist": "Rolf Lislevand",
         "track": "Santiago De Murcia: Folias Gallegas",
         "album": "Altre Follie, 1500-1750",
@@ -255,15 +260,21 @@ The following are sample documents for each of the data types.
         "created": "21:49:00",
         "type": "track"
       }, {
-        "tag": "463845",
         "artist": "Loren Mazzacane Connors",
         "track": "Dance Acadia",
         "album": "Evangeline",
         "label": "Road Cone",
         "created": "21:52:00",
-        "type": "track"
+        "type": "track",
+        "xa:relationships": {
+          "album": {
+            "data": {
+              "type": "album",
+              "id": "463845"
+            }
+          }
+        }
       }, {
-        "tag": null,
         "artist": "Paul Galbraith",
         "track": "Sonata No. 3 BWV 1005 in D Major",
         "album": "The Sonatas & Partitas (arr. for 8-String Guitar)",
@@ -271,6 +282,23 @@ The following are sample documents for each of the data types.
         "created": "21:53:00",
         "type": "track"
       }]
+    },
+    "relationships": {
+      "albums": {
+        "links": {
+          "related": "/api/v1/playlist/42667/albums"
+        },
+        "data": [{
+          "type": "album",
+          "id": "118820"
+        }, {
+          "type": "album",
+          "id": "1060007"
+        }, {
+          "type": "album",
+          "id": "463845"
+        }]
+      }
     },
     "links": {
       "self": "/api/v1/playlist/42667"
