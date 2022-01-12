@@ -49,7 +49,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "LEFT JOIN albumvol ON albumvol.tag = c.tag " .
                   "WHERE MATCH (c.artist,track) AGAINST(? IN BOOLEAN MODE) ".
                   "AND location != 'U' " .
-                  "ORDER BY c.artist, album, c.tag" ],
+                  "ORDER BY c.artist, album, c.tag, c.seq" ],
          [ "labels", "labelrec", "publist", "name",
                   "SELECT * FROM publist " .
                   "WHERE MATCH (name) AGAINST(? IN BOOLEAN MODE) ".
