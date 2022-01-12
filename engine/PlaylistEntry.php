@@ -174,7 +174,13 @@ class PlaylistEntry {
             $entry->setTrack(self::scrubField($json->track));
             $entry->setAlbum(self::scrubField($json->album));
             $entry->setLabel(self::scrubField($json->label));
-            $entry->setTag($json->tag);
+            if(($a = $json->{"xa:relationships"} ?? null) &&
+                    ($a = $a->album ?? null) &&
+                    ($a = $a->data ?? null) &&
+                    ($a->type ?? null == "album") &&
+                    ($a = $a->id ?? null) ||
+                    ($a = $json->tag ?? null))
+                $entry->setTag($a);
             break;
         }
         $entry->setCreated($json->created);
@@ -198,7 +204,14 @@ class PlaylistEntry {
             $entry->setTrack(self::scrubField($array["track"]));
             $entry->setAlbum(self::scrubField($array["album"]));
             $entry->setLabel(self::scrubField($array["label"]));
-            $entry->setTag($array["tag"]);
+            if(isset($array["xa:relationships"])) {
+                // using the 'xa' extension
+                // see https://github.com/RocketMan/zookeeper/pull/263
+                try {
+                    $album = $array["xa:relationships"]->get("album")->related()->first("album");
+                    $entry->setTag($album->id());
+                } catch(\Exception $e) {}
+            }
             break;
         }
         $entry->setCreated($array["created"]);

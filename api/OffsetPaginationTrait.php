@@ -110,7 +110,7 @@ trait OffsetPaginationTrait {
                 $resource = $map[$list];
                 $events = $resource->attributes()->getOptional("events");
             } else {
-                $resource = $map[$list] = Playlists::fromRecord($record);
+                $resource = $map[$list] = Playlists::fromRecord($record, Playlists::LINKS_NONE);
                 $result[] = $resource;
                 $events = [];
             }
