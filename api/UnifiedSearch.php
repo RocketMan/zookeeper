@@ -89,7 +89,7 @@ class UnifiedSearch implements RequestHandlerInterface {
                 $filter = "label?filter%5Bmatch%28name%29%5D=";
                 break;
             case "playlists":
-                $related = $this->fromPlaylistSearch($records, Playlists::LINKS_NONE);
+                $related = $this->fromPlaylistSearch($records);
                 $rel = new Relationship("show", $related);
                 $filter = "playlist?filter%5Bmatch%28event%29%5D=";
                 break;

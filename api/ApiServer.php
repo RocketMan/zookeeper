@@ -36,6 +36,7 @@ use Enm\JsonApi\Server\JsonApiServer;
 class ApiServer extends JsonApiServer {
     const MAX_LIMIT = 35;
 
+    // 'ext' media type parameter must be quoted (JSON:API v1.1 sec 5.4)
     const CONTENT_TYPE = JsonApi::CONTENT_TYPE .
                 '; ext="https://zookeeper.ibinx.com/ext/xa"';
 

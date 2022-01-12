@@ -101,7 +101,7 @@ trait OffsetPaginationTrait {
         return $result;
     }
 
-    protected function fromPlaylistSearch(array $records, $flags) {
+    protected function fromPlaylistSearch(array $records) {
         $result = [];
         $map = [];
         foreach($records as $record) {
@@ -110,7 +110,7 @@ trait OffsetPaginationTrait {
                 $resource = $map[$list];
                 $events = $resource->attributes()->getOptional("events");
             } else {
-                $resource = $map[$list] = Playlists::fromRecord($record, $flags);
+                $resource = $map[$list] = Playlists::fromRecord($record, Playlists::LINKS_NONE);
                 $result[] = $resource;
                 $events = [];
             }
@@ -199,7 +199,7 @@ trait OffsetPaginationTrait {
             $result = $this->fromTrackSearch($records);
             break;
         case Playlists::PLAYLIST_SEARCH:
-            $result = $this->fromPlaylistSearch($records, Playlists::LINKS_NONE);
+            $result = $this->fromPlaylistSearch($records);
             break;
         default:
             $result = self::fromArray($records, $links);

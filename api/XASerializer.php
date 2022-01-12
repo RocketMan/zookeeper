@@ -50,14 +50,14 @@ class XASerializer extends Serializer {
 
                     $values = [];
                     if($value instanceof RelationshipInterface)
-                        $values[$value->name()] = 
+                        $values[$value->name()] =
                             $this->serializeRelationship($value);
                     else {
                         if(!($value instanceof RelationshipCollectionInterface))
                             throw new \TypeError("expected type RelationshipCollection, got " . gettype($value));
 
                         foreach($value->all() as $relationship)
-                            $values[$relationship->name()] = 
+                            $values[$relationship->name()] =
                                 $this->serializeRelationship($relationship);
                     }
                     $value = $values;
