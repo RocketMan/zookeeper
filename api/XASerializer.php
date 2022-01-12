@@ -53,7 +53,9 @@ class XASerializer extends Serializer {
                         $values[$value->name()] = 
                             $this->serializeRelationship($value);
                     else {
-                        assert($value instanceof RelationshipCollectionInterface);
+                        if(!($value instanceof RelationshipCollectionInterface))
+                            throw new \TypeError("expected type RelationshipCollection, got " . gettype($value));
+
                         foreach($value->all() as $relationship)
                             $values[$relationship->name()] = 
                                 $this->serializeRelationship($relationship);
@@ -69,7 +71,9 @@ class XASerializer extends Serializer {
                     if($value instanceof LinkInterface)
                         $values[$value->name()] = $this->serializeLink($value);
                     else {
-                        assert($value instanceof LinkCollectionInterface);
+                        if(!($value instanceof LinkCollectionInterface))
+                            throw new \TypeError("expected type LinkCollection, got " . gettype($value));
+
                         foreach($value->all() as $link)
                             $values[$link->name()] = $this->serializeLink($link);
                     }
