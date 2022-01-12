@@ -55,6 +55,12 @@ class Playlists implements RequestHandlerInterface {
 
     const PLAYLIST_SEARCH = 1000;
 
+    const LINKS_NONE = 0;
+    const LINKS_EVENTS = 1;
+    const LINKS_ALBUMS = 2;
+    const LINKS_ALBUMS_DETAILS = 4;
+    const LINKS_ALL = ~0;
+
     private static $paginateOps = [
         "date" => "paginate",
         "id" => "paginate",
@@ -99,7 +105,7 @@ class Playlists implements RequestHandlerInterface {
         return [$size, $retval];
     }
 
-    public static function fromRecord($rec, $wantAlbums = false) {
+    public static function fromRecord($rec, $flags) {
         $id = $rec["list"];
         $res = new JsonResource("show", $id);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."playlist/".$id));
@@ -109,51 +115,53 @@ class Playlists implements RequestHandlerInterface {
         $attrs->set("time", $rec["showtime"]);
         $attrs->set("airname", $rec["airname"]);
 
-        $relations = new ResourceCollection();
+        if($flags & self::LINKS_EVENTS) {
+            $relations = new ResourceCollection();
 
-        $events = [];
-        Engine::api(IPlaylist::class)->getTracksWithObserver($id,
-            (new PlaylistObserver())->onComment(function($entry) use(&$events) {
-                $events[] = ["type" => "comment",
-                             "comment" => $entry->getComment(),
-                             "created" => $entry->getCreatedTime()];
-            })->onLogEvent(function($entry) use(&$events) {
-                $events[] = ["type" => "logEvent",
-                             "event" => $entry->getLogEventType(),
-                             "code" => $entry->getLogEventCode(),
-                             "created" => $entry->getCreatedTime()];
-            })->onSetSeparator(function($entry) use(&$events) {
-                $events[] = ["type" => "break",
-                             "created" => $entry->getCreatedTime()];
-            })->onSpin(function($entry) use(&$events, $relations, $wantAlbums) {
-                $spin = $entry->asArray();
-                $spin["type"] = "track";
-                $spin["artist"] = PlaylistEntry::swapNames($spin["artist"]);
-                $spin["created"] = $entry->getCreatedTime();
-                if($spin["tag"]) {
-                    $tag = $spin["tag"];
-                    if($wantAlbums &&
-                            sizeof($albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
-                        $res = Albums::fromArray($albums, Albums::LINKS_ALL)[0];
-                    else
-                        $res = new JsonResource("album", $tag);
-                    $relations->set($res);
-                    // using the 'xattr' extension
-                    // see https://github.com/RocketMan/zookeeper/pull/263
-                    $spin["xattr:relationships"] = new Relationship("albums", $res);
-                }
-                unset($spin["tag"]);
-                unset($spin["id"]);
-                $events[] = $spin;
-            }));
+            $events = [];
+            Engine::api(IPlaylist::class)->getTracksWithObserver($id,
+                (new PlaylistObserver())->onComment(function($entry) use(&$events) {
+                    $events[] = ["type" => "comment",
+                                 "comment" => $entry->getComment(),
+                                 "created" => $entry->getCreatedTime()];
+                })->onLogEvent(function($entry) use(&$events) {
+                    $events[] = ["type" => "logEvent",
+                                 "event" => $entry->getLogEventType(),
+                                 "code" => $entry->getLogEventCode(),
+                                 "created" => $entry->getCreatedTime()];
+                })->onSetSeparator(function($entry) use(&$events) {
+                    $events[] = ["type" => "break",
+                                 "created" => $entry->getCreatedTime()];
+                })->onSpin(function($entry) use(&$events, $relations, $flags) {
+                    $spin = $entry->asArray();
+                    $spin["type"] = "track";
+                    $spin["artist"] = PlaylistEntry::swapNames($spin["artist"]);
+                    $spin["created"] = $entry->getCreatedTime();
+                    if($spin["tag"] && $flags & self::LINKS_ALBUMS) {
+                        $tag = $spin["tag"];
+                        if($flags & self::LINKS_ALBUMS_DETAILS &&
+                                sizeof($albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
+                            $res = Albums::fromArray($albums, Albums::LINKS_ALL)[0];
+                        else
+                            $res = new JsonResource("album", $tag);
+                        $relations->set($res);
+                        // using the 'xattr' extension
+                        // see https://github.com/RocketMan/zookeeper/pull/263
+                        $spin["xattr:relationships"] = new Relationship("albums", $res);
+                    }
+                    unset($spin["tag"]);
+                    unset($spin["id"]);
+                    $events[] = $spin;
+                }));
 
-        if(sizeof($events))
-            $res->attributes()->set("events", $events);
+            if(sizeof($events))
+                $res->attributes()->set("events", $events);
 
-        if(!$relations->isEmpty()) {
-            $relation = new Relationship("albums", $relations);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/albums"));
-            $res->relationships()->set($relation);
+            if(!$relations->isEmpty()) {
+                $relation = new Relationship("albums", $relations);
+                $relation->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/albums"));
+                $res->relationships()->set($relation);
+            }
         }
 
         return $res;
@@ -171,7 +179,11 @@ class Playlists implements RequestHandlerInterface {
             throw new ResourceNotFoundException("show", $key);
 
         $row["list"] = $key;
-        $resource = self::fromRecord($row, $request->requestsInclude("albums"));
+        $flags = self::LINKS_EVENTS | self::LINKS_ALBUMS;
+        if($request->requestsInclude("albums"))
+            $flags |= self::LINKS_ALBUMS_DETAILS;
+
+        $resource = self::fromRecord($row, $flags);
 
         $document = new Document($resource);
         $response = new DocumentResponse($document);

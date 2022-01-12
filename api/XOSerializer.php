@@ -45,6 +45,9 @@ class XOSerializer extends Serializer {
                 case "xattr:relationships":
                     // xattr:relationships may contain a single
                     // Relationship or a RelationshipCollection
+                    if(is_null($value))
+                        break;
+
                     $values = [];
                     if($value instanceof RelationshipInterface)
                         $values[$value->name()] = 
@@ -59,6 +62,9 @@ class XOSerializer extends Serializer {
                     break;
                 case "xattr:links":
                     // xattr:links may contain a single Link or a LinkCollection
+                    if(is_null($value))
+                        break;
+
                     $values = [];
                     if($value instanceof LinkInterface)
                         $values[$value->name()] = $this->serializeLink($value);
