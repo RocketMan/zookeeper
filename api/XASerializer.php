@@ -32,18 +32,18 @@ use Enm\JsonApi\Model\Resource\ResourceInterface;
 use Enm\JsonApi\Serializer\Serializer;
 
 /**
- * JSON:API serializer with support for 'xattr' extension
+ * JSON:API serializer with support for 'xa' extension
  *
  * see https://github.com/RocketMan/zookeeper/pull/263
  */
-class XOSerializer extends Serializer {
+class XASerializer extends Serializer {
     protected function serializeAttribute($attr) {
         if(is_array($attr)) {
             $data = [];
             foreach($attr as $key => $value) {
                 switch((string)$key) {
-                case "xattr:relationships":
-                    // xattr:relationships may contain a single
+                case "xa:relationships":
+                    // xa:relationships may contain a single
                     // Relationship or a RelationshipCollection
                     if(is_null($value))
                         break;
@@ -60,8 +60,8 @@ class XOSerializer extends Serializer {
                     }
                     $value = $values;
                     break;
-                case "xattr:links":
-                    // xattr:links may contain a single Link or a LinkCollection
+                case "xa:links":
+                    // xa:links may contain a single Link or a LinkCollection
                     if(is_null($value))
                         break;
 

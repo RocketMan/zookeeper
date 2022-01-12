@@ -31,22 +31,22 @@ use Enm\JsonApi\Model\Resource\ResourceInterface;
 use Enm\JsonApi\Serializer\Deserializer;
 
 /**
- * JSON:API deserializer with support for 'xattr' extension
+ * JSON:API deserializer with support for 'xa' extension
  *
  * see https://github.com/RocketMan/zookeeper/pull/263
  */
-class XODeserializer extends Deserializer {
+class XADeserializer extends Deserializer {
     protected function deserializeAttribute($attr) {
         if(is_array($attr)) {
             $data = [];
             foreach($attr as $key => $value) {
                 switch((string)$key) {
-                case "xattr:relationships":
+                case "xa:relationships":
                     $dummy = new JsonResource("dummy", 0);
                     $this->buildResourceRelationships($value, $dummy);
                     $value = $dummy->relationships();
                     break;
-                case "xattr:links":
+                case "xa:links":
                     $dummy = new JsonResource("dummy", 0);
                     foreach($value as $name => $link)
                         $this->buildLink($dummy->links(), $name,

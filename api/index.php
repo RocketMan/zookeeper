@@ -26,8 +26,8 @@ require_once __DIR__."/../vendor/autoload.php";
 
 use ZK\API\ApiRequest;
 use ZK\API\ApiServer;
-use ZK\API\XODeserializer;
-use ZK\API\XOSerializer;
+use ZK\API\XADeserializer;
+use ZK\API\XASerializer;
 use ZK\Engine\Config;
 use ZK\Engine\Engine;
 
@@ -61,7 +61,7 @@ function isPreflight() {
 }
 
 function serveRequest() {
-    $apiServer = new ApiServer(new XODeserializer(), new XOSerializer());
+    $apiServer = new ApiServer(new XADeserializer(), new XASerializer());
 
     $config = new Config('controller_config', 'apiControllers');
     $config->iterate(function($type, $handler) use($apiServer) {
