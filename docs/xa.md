@@ -1,4 +1,4 @@
-## JSON:API 'XA' extension
+## JSON:API Complex Attribute Extension
 
 This extension provides a means to link complex attributes to related
 resources.
