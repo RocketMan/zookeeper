@@ -150,7 +150,10 @@ $().ready(function(){
             $("#track-titles").html(options2);
             $("#track-title").attr('list','track-titles'); // webkit hack
             $("#track-artist").val(diskInfo.attributes.artist);
-            $("#track-label").val(diskInfo.relationships.label.meta.name);
+            $("#track-label").val(diskInfo.relationships != null &&
+                                  diskInfo.relationships.label != null ?
+                                  diskInfo.relationships.label.meta.name :
+                                  "(Unknown)");
             $("#track-album").val(diskInfo.attributes.album);
             $("#track-title").val("");
             $("#track-submit").attr("disabled");

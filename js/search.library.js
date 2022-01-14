@@ -352,7 +352,7 @@ var lists = {
             }).html(htmlify(attrs.album))).append(showTag == 'true'?
                                          " <FONT CLASS='sub'>(Tag&nbsp;#" +
                                          entry.id + ")<FONT>":""));
-            if(entry.relationships.label) {
+            if(entry.relationships && entry.relationships.label) {
                 var label = entry.relationships.label;
                 tr.append($("<TD>").html($("<A>", {
                     href: "?s=byLabelKey&n=" +
