@@ -34,7 +34,7 @@ use Enm\JsonApi\Serializer\Serializer;
 /**
  * JSON:API serializer with support for 'xa' extension
  *
- * see https://github.com/RocketMan/zookeeper/pull/263
+ * see https://zookeeper.ibinx.com/ext/xa
  */
 class XASerializer extends Serializer {
     protected function serializeAttribute($attr) {

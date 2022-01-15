@@ -33,7 +33,7 @@ use Enm\JsonApi\Serializer\Deserializer;
 /**
  * JSON:API deserializer with support for 'xa' extension
  *
- * see https://github.com/RocketMan/zookeeper/pull/263
+ * see https://zookeeper.ibinx.com/ext/xa
  */
 class XADeserializer extends Deserializer {
     protected function deserializeAttribute($attr) {
