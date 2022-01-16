@@ -572,7 +572,13 @@ $().ready(function(){
         if(opt.length > 0) {
             getDiskInfo(opt.data("tag"), opt.data("artist"));
         } else {
-            $("#track-tag").val("");
+            // clear auto-filled album info
+            if($("#track-tag").val().length > 0) {
+                $("#track-tag").val("");
+                $("#track-title").val("");
+                $("#track-album").val("");
+                $("#track-label").val("");
+            }
             $("#track-artists").empty();
             $("#track-titles").empty();
             if(artist.length > 3) {
