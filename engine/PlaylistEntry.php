@@ -169,6 +169,7 @@ class PlaylistEntry {
         case "logEvent":
             $entry->setLogEvent(self::scrubField($json->event), self::scrubField($json->code));
             break;
+        case "spin":
         case "track":
             $entry->setArtist(self::scrubField($json->artist));
             $entry->setTrack(self::scrubField($json->track));
@@ -199,6 +200,7 @@ class PlaylistEntry {
         case "logEvent":
             $entry->setLogEvent(self::scrubField($array["event"]), self::scrubField($array["code"]));
             break;
+        case "spin":
         case "track":
             $entry->setArtist(self::scrubField($array["artist"]));
             $entry->setTrack(self::scrubField($array["track"]));

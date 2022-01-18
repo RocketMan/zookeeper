@@ -134,7 +134,7 @@ class Playlists implements RequestHandlerInterface {
                                  "created" => $entry->getCreatedTime()];
                 })->onSpin(function($entry) use(&$events, $relations, $flags) {
                     $spin = $entry->asArray();
-                    $spin["type"] = "track";
+                    $spin["type"] = "spin";
                     $spin["artist"] = PlaylistEntry::swapNames($spin["artist"]);
                     $spin["created"] = $entry->getCreatedTime();
                     if($spin["tag"] && $flags & self::LINKS_ALBUMS) {

@@ -169,28 +169,28 @@ The following are sample documents for each of the data types.
         "album": "I Believe I'll Go Back Home: 1906\u20131959",
         "label": "Mississippi",
         "created": "21:00:00",
-        "type": "track"
+        "type": "spin"
       }, {
         "artist": "His Name Is Alive",
         "track": "Liadin",
         "album": "Hope Is a Candle",
         "label": "Disciples",
         "created": "21:04:00",
-        "type": "track"
+        "type": "spin"
       }, {
         "artist": "The Durutti Column",
         "track": "Weakness and Fever (originally released as a 7\" single)",
         "album": "LC (Reissue)",
         "label": "Factory Benelux",
         "created": "21:07:00",
-        "type": "track"
+        "type": "spin"
       }, {
         "artist": "For Against",
         "track": "You Only Live Twice",
         "album": "Aperture",
         "label": "Independent Project",
         "created": "21:12:00",
-        "type": "track",
+        "type": "spin",
         "xa:relationships": {
           "album": {
             "data": {
@@ -205,14 +205,14 @@ The following are sample documents for each of the data types.
         "album": "Big Tex, Here We Come",
         "label": "Debacle",
         "created": "21:16:00",
-        "type": "track"
+        "type": "spin"
       }, {
         "artist": "Souled American",
         "track": "Dark as a Dungeon",
         "album": "Sonny",
         "label": "Rough Trade",
         "created": "21:21:00",
-        "type": "track"
+        "type": "spin"
       }, {
         "type": "break",
         "created": null
@@ -222,14 +222,14 @@ The following are sample documents for each of the data types.
         "album": "Eulogy for Land",
         "label": "Full Spectrum",
         "created": "21:26:00",
-        "type": "track"
+        "type": "spin"
       }, {
         "artist": "Calla",
         "track": "Elsewhere",
         "album": "Calla",
         "label": "Arena Rock Recording Co.",
         "created": "21:34:00",
-        "type": "track",
+        "type": "spin",
         "xa:relationships": {
           "album": {
             "data": {
@@ -244,28 +244,28 @@ The following are sample documents for each of the data types.
         "album": "a softer focus",
         "label": "American Dreams",
         "created": "21:39:00",
-        "type": "track"
+        "type": "spin"
       }, {
         "artist": "Jusell, Prymek, Sage, Shiroishi",
         "track": "Flower Clock",
         "album": "Yamawarau (\u5c71\u7b11\u3046)",
         "label": "cachedmedia",
         "created": "21:45:00",
-        "type": "track"
+        "type": "spin"
       }, {
         "artist": "Rolf Lislevand",
         "track": "Santiago De Murcia: Folias Gallegas",
         "album": "Altre Follie, 1500-1750",
         "label": "AliaVox",
         "created": "21:49:00",
-        "type": "track"
+        "type": "spin"
       }, {
         "artist": "Loren Mazzacane Connors",
         "track": "Dance Acadia",
         "album": "Evangeline",
         "label": "Road Cone",
         "created": "21:52:00",
-        "type": "track",
+        "type": "spin",
         "xa:relationships": {
           "album": {
             "data": {
@@ -280,7 +280,7 @@ The following are sample documents for each of the data types.
         "album": "The Sonatas & Partitas (arr. for 8-String Guitar)",
         "label": "Delos",
         "created": "21:53:00",
-        "type": "track"
+        "type": "spin"
       }]
     },
     "relationships": {
