@@ -59,7 +59,7 @@ function paginateAlbums(op, url) {
                     obj.attributes.state = label.attributes.state;
                     obj.attributes.zip = label.attributes.zip;
                 } else {
-                    obj.attributes.name = '';
+                    obj.attributes.name = '(Unknown)';
                     obj.attributes.address = '';
                     obj.attributes.city = '';
                     obj.attributes.state = '';

@@ -839,13 +839,13 @@ class Editor extends MenuItem {
             if(!$name) {
                 if($_REQUEST["selpubkey"]) {
                     $row = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $_REQUEST["selpubkey"])[0];
-                    $name = $row["name"];
+                    $name = $row["name"] ?? "(Unknown)";
                     $address = $row["address"];
                     $city = $row["city"];
                     $state = $row["state"];
                     $zip = $row["zip"];
                 } else {
-                    $name = $row["name"];
+                    $name = $row["name"] ?? "(Unknown)";
                     $address = $row["address"];
                     $city = $row["city"];
                     $state = $row["state"];
