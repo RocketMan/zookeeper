@@ -106,7 +106,7 @@ class Playlists implements RequestHandlerInterface {
     }
 
     public static function fromRecord($rec, $flags) {
-        $id = $rec["list"];
+        $id = $rec["list"] ?? $rec["id"];
         $res = new JsonResource("show", $id);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."playlist/".$id));
         $attrs = $res->attributes();
@@ -167,6 +167,15 @@ class Playlists implements RequestHandlerInterface {
         return $res;
     }
 
+    public static function fromArray(array $records, $flags = self::LINKS_NONE) {
+        $result = [];
+        foreach($records as $record) {
+            $resource = self::fromRecord($record, $flags);
+            $result[] = $resource;
+        }
+        return $result;
+    }
+
     public function fetchResource(RequestInterface $request): ResponseInterface {
         $key = $request->id();
         $api = Engine::api(IPlaylist::class);
@@ -192,7 +201,11 @@ class Playlists implements RequestHandlerInterface {
     }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
-        $response = $this->paginateOffset($request, self::$paginateOps, 0);
+        $flags = self::LINKS_EVENTS | self::LINKS_ALBUMS;
+        if($request->requestsInclude("albums"))
+            $flags |= self::LINKS_ALBUMS_DETAILS;
+
+        $response = $this->paginateOffset($request, self::$paginateOps, $flags);
         $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
         return $response;
     }
