@@ -1,0 +1,13 @@
+# Invocation of php-fpm results in an extra rewrite,
+# which prefixes the environment variables with REDIRECT_.
+#
+# These rules rewrite the existing REDIRECT_x to x.  After
+# php-fpm, they will once again be REDIRECT_x as expected,
+# rather than REDIRECT_REDIRECT_x.
+
+<IfModule mod_rewrite.c>
+RewriteCond %{ENV:REDIRECT_APIVER} (.+)
+RewriteRule .* - [E=APIVER:%1]
+RewriteCond %{ENV:REDIRECT_PREFIX} (.+)
+RewriteRule .* - [E=PREFIX:%1]
+</IfModule>
