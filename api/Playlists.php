@@ -71,20 +71,19 @@ class Playlists implements RequestHandlerInterface {
         switch($type) {
         case "date":
             if(strtolower($key) == "onnow") {
-                $result = Engine::api(IPlaylist::class)->getWhatsOnNow();
+                $result = Engine::api(IPlaylist::class)->getWhatsOnNow()->asArray();
                 break;
             }
-            $rows = [];
+            $result = [];
             $keys = explode(",", $key);
             foreach($keys as $key) {
-                $result = Engine::api(IPlaylist::class)->getPlaylistsByDate($key)->asArray();
-                if(sizeof($result))
-                    $rows = array_merge($rows, $result);
+                $rows = Engine::api(IPlaylist::class)->getPlaylistsByDate($key)->asArray();
+                if(sizeof($rows))
+                    $result = array_merge($result, $rows);
             }
-            $result = new ArrayIterator($rows);
             break;
         case "id":
-            $rows = [];
+            $result = [];
             $keys = explode(",", $key);
             foreach($keys as $key) {
                 $row = Engine::api(IPlaylist::class)->getPlaylist($key, 1);
@@ -93,16 +92,14 @@ class Playlists implements RequestHandlerInterface {
                 $row["list"] = $key;
                 $published = $row['airname'] || $row['dj'] == Engine::session()->getUser();
                 if($published)
-                    $rows[] = $row;
+                    $result[] = $row;
             }
-            $result = new ArrayIterator($rows);
             break;
         }
 
-        $retval = $result->asArray();
-        $size = sizeof($retval);
+        $size = sizeof($result);
         $offset = 0;
-        return [$size, $retval];
+        return [$size, $result];
     }
 
     public static function fromRecord($rec, $flags) {
@@ -188,7 +185,9 @@ class Playlists implements RequestHandlerInterface {
             throw new ResourceNotFoundException("show", $key);
 
         $row["list"] = $key;
-        $flags = self::LINKS_EVENTS | self::LINKS_ALBUMS;
+        $flags = self::LINKS_NONE;
+        if($request->requestsField("show", "events"))
+            $flags |= self::LINKS_EVENTS | self::LINKS_ALBUMS;
         if($request->requestsInclude("albums"))
             $flags |= self::LINKS_ALBUMS_DETAILS;
 
@@ -201,7 +200,9 @@ class Playlists implements RequestHandlerInterface {
     }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
-        $flags = self::LINKS_EVENTS | self::LINKS_ALBUMS;
+        $flags = self::LINKS_NONE;
+        if($request->requestsField("show", "events"))
+            $flags |= self::LINKS_EVENTS | self::LINKS_ALBUMS;
         if($request->requestsInclude("albums"))
             $flags |= self::LINKS_ALBUMS_DETAILS;
 
@@ -331,23 +332,5 @@ class Playlists implements RequestHandlerInterface {
         $api->deletePlaylist($key);
 
         return new EmptyResponse();
-    }
-}
-
-class ArrayIterator {
-    private $rows;
-
-    public function __construct($rows) {
-        $this->rows = $rows;
-    }
-
-    public function fetch() {
-        return array_shift($this->rows);
-    }
-
-    public function asArray() {
-        $result = $this->rows;
-        $this->rows = null;
-        return $result;
     }
 }
