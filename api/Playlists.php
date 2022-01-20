@@ -185,7 +185,9 @@ class Playlists implements RequestHandlerInterface {
             throw new ResourceNotFoundException("show", $key);
 
         $row["list"] = $key;
-        $flags = self::LINKS_EVENTS | self::LINKS_ALBUMS;
+        $flags = self::LINKS_NONE;
+        if($request->requestsField("show", "events"))
+            $flags |= self::LINKS_EVENTS | self::LINKS_ALBUMS;
         if($request->requestsInclude("albums"))
             $flags |= self::LINKS_ALBUMS_DETAILS;
 
@@ -198,7 +200,9 @@ class Playlists implements RequestHandlerInterface {
     }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
-        $flags = self::LINKS_EVENTS | self::LINKS_ALBUMS;
+        $flags = self::LINKS_NONE;
+        if($request->requestsField("show", "events"))
+            $flags |= self::LINKS_EVENTS | self::LINKS_ALBUMS;
         if($request->requestsInclude("albums"))
             $flags |= self::LINKS_ALBUMS_DETAILS;
 
