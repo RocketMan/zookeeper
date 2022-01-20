@@ -606,6 +606,14 @@ $().ready(function(){
             getDiskInfo(newId);
     });
 
+    $("#track-album").on('change', function() {
+        $("#track-tag").val("");
+    });
+
+    $("#track-label").on('change', function() {
+        $("#track-tag").val("");
+    });
+
     $(".playlistTable .grab").mousedown(grabStart);
 
     $("*[data-focus]").focus();
