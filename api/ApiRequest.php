@@ -30,6 +30,8 @@ use Enm\JsonApi\Model\Request\Request;
  * Zookeeper custom implementation of Request
  */
 class ApiRequest extends Request {
+    private $fieldNegation = [];
+
     /**
      * hack to access private properties of superclass
      */
@@ -48,16 +50,18 @@ class ApiRequest extends Request {
         if($wantsField) {
             $fields = $this->fields;
             if(key_exists($type, $fields)) {
-                $neg = false;
-                foreach($fields[$type] as $field) {
-                    if(substr($field, 0, 1) == "-") {
-                        if($field === "-" . $name) return false;
-                        $neg = true;
-                        break;
+                if(!key_exists($type, $this->fieldNegation)) {
+                    $this->fieldNegation[$type] = false;
+                    foreach($fields[$type] as $field) {
+                        if(substr($field, 0, 1) == "-") {
+                            $this->fieldNegation[$type] = true;
+                            if($field === "-" . $name) return false;
+                            break;
+                        }
                     }
                 }
 
-                $wantsField = $neg ?
+                $wantsField = $this->fieldNegation[$type] ?
                         !in_array("-" . $name, $fields[$type], true) :
                         in_array($name, $fields[$type], true);
             }
