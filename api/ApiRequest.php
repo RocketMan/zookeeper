@@ -44,15 +44,6 @@ class ApiRequest extends Request {
      * add support for fields negation (e.g., fields[resource]=-notWanted)
      */
     public function requestsField(string $type, string $name): bool {
-        // If caller requests a negated name, he wants to know if the
-        // negation literally appears in the fields list, versus the
-        // normal semantics of wanting to know if the field is requsted.
-        // See ApiServer::cleanUpResource which depends on this behaviour.
-        //
-        // In this case, delegate to the superclass.
-        if(substr($name, 0, 1) == "-")
-            return parent::requestsField($type, $name);
-
         $wantsField = $this->requestsAttributes();
         if($wantsField) {
             $fields = $this->fields;
