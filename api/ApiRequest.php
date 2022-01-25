@@ -83,7 +83,9 @@ class ApiRequest extends Request {
      * superclass), rather than the derived class as desired.
      *
      * If the upstream superclass method ever changes 'new self' to
-     * 'new static' for late static binding, this method can go away.
+     * 'new static' for late static binding, this method can be changed
+     * to delegate subrequest creation to the superclass, then simply
+     * add subclass-specifics (namely, fieldNegation) on the result.
      */
     public function createSubRequest(
         string $relationship,
