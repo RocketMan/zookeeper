@@ -76,16 +76,7 @@ class ApiRequest extends Request {
     }
 
     /**
-     * Fix to run subrequest on derived class
-     *
-     * The superclass method creates subrequests via 'new self', which
-     * instantiates the class where the 'new' appears (that is, the
-     * superclass), rather than the derived class as desired.
-     *
-     * If the upstream superclass method ever changes 'new self' to
-     * 'new static' for late static binding, this method can be changed
-     * to delegate subrequest creation to the superclass, then simply
-     * add subclass-specifics (namely, fieldNegation) on the result.
+     * Fix to use derived class for the subrequest
      */
     public function createSubRequest(
         string $relationship,
