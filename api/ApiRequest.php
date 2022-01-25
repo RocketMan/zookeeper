@@ -25,12 +25,15 @@
 namespace ZK\API;
 
 use Enm\JsonApi\Model\Request\Request;
+use Enm\JsonApi\Model\Request\RequestInterface;
+use Enm\JsonApi\Model\Resource\ResourceInterface;
 
 /**
  * Zookeeper custom implementation of Request
  */
 class ApiRequest extends Request {
-    private $fieldNegation = [];
+    protected $requestCache = [];
+    protected $fieldNegation = [];
 
     /**
      * hack to access private properties of superclass
@@ -50,23 +53,85 @@ class ApiRequest extends Request {
         if($wantsField) {
             $fields = $this->fields;
             if(key_exists($type, $fields)) {
+                $negatedName = "-" . $name;
+
                 if(!key_exists($type, $this->fieldNegation)) {
                     $this->fieldNegation[$type] = false;
                     foreach($fields[$type] as $field) {
                         if(substr($field, 0, 1) == "-") {
                             $this->fieldNegation[$type] = true;
-                            if($field === "-" . $name) return false;
+                            if($field === $negatedName) return false;
                             break;
                         }
                     }
                 }
 
                 $wantsField = $this->fieldNegation[$type] ?
-                        !in_array("-" . $name, $fields[$type], true) :
+                        !in_array($negatedName, $fields[$type], true) :
                         in_array($name, $fields[$type], true);
             }
         }
 
         return $wantsField;
+    }
+
+    /**
+     * Fix to run subrequest on derived class
+     *
+     * The superclass method creates subrequests via 'new self', which
+     * instantiates the class where the 'new' appears (that is, the
+     * superclass), rather than the derived class as desired.
+     *
+     * If the upstream superclass method ever changes 'new self' to
+     * 'new static' for late static binding, this method can go away.
+     */
+    public function createSubRequest(
+        string $relationship,
+        ?ResourceInterface $resource = null,
+        bool $keepFilters = false
+    ): RequestInterface {
+        $requestKey = $relationship . ($keepFilters ? '-filtered' : '-not-filtered');
+        if (!key_exists($requestKey, $this->requestCache)) {
+            $includes = [];
+            foreach ($this->includes as $include) {
+                if (strpos($include, '.') !== false && strpos($include, $relationship . '.') === 0) {
+                    $includes[] = explode('.', $include, 2)[1];
+                }
+            }
+
+            $queryFields = [];
+            foreach ($this->fields as $type => $fields) {
+                $queryFields[$type] = implode(',', $fields);
+            }
+
+            $type = $resource ? $resource->type() : $this->type();
+            $id = $resource ? $resource->id() : $this->id();
+            $relationshipPart = '/' . $relationship;
+            if (!$this->requestsInclude($relationship)) {
+                $relationshipPart = '/relationships' . $relationshipPart;
+            }
+
+            $subRequest = new static(
+                $this->method(),
+                $this->uri()
+                    ->withPath(($this->fileInPath ? '/' . $this->fileInPath : '') . ($this->apiPrefix ? '/' . $this->apiPrefix : '') . '/' . $type . '/' . $id . $relationshipPart)
+                    ->withQuery(
+                        http_build_query([
+                            'fields' => $queryFields,
+                            'filter' => $keepFilters ? $this->filter : [],
+                            'include' => implode(',', $includes)
+                        ])
+                    ),
+                null,
+                $this->apiPrefix
+            );
+
+            $subRequest->headers = $this->headers;
+            $subRequest->fieldNegation = &$this->fieldNegation;
+
+            $this->requestCache[$requestKey] = $subRequest;
+        }
+
+        return $this->requestCache[$requestKey];
     }
 }

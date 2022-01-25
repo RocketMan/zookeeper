@@ -63,27 +63,4 @@ class ApiServer extends JsonApiServer {
             }
         }
     }
-
-    /**
-     * Optimise implementation of cleanUpResource.
-     *
-     * ApiRequest::requestsField checks requestsAttributes, so no need
-     * to do it here as well.
-     *
-     * This is an optimisation only and is not required.
-     */
-    protected function cleanUpResource(
-        ResourceInterface $resource,
-        RequestInterface $request
-    ): void {
-        foreach ($resource->attributes()->all() as $key => $value) {
-            if (!$request->requestsField($resource->type(), $key))
-                $resource->attributes()->remove($key);
-        }
-
-        if (!$request->requestsRelationships()) {
-            foreach ($resource->relationships()->all() as $relationship)
-                $resource->relationships()->removeElement($relationship);
-        }
-    }
 }
