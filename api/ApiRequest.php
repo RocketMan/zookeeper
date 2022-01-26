@@ -25,11 +25,16 @@
 namespace ZK\API;
 
 use Enm\JsonApi\Model\Request\Request;
+use Enm\JsonApi\Model\Request\RequestInterface;
+use Enm\JsonApi\Model\Resource\ResourceInterface;
 
 /**
  * Zookeeper custom implementation of Request
  */
 class ApiRequest extends Request {
+    protected $requestCache = [];
+    protected $fieldNegation = [];
+
     /**
      * hack to access private properties of superclass
      */
@@ -44,34 +49,82 @@ class ApiRequest extends Request {
      * add support for fields negation (e.g., fields[resource]=-notWanted)
      */
     public function requestsField(string $type, string $name): bool {
-        // If caller requests a negated name, he wants to know if the
-        // negation literally appears in the fields list, versus the
-        // normal semantics of wanting to know if the field is requsted.
-        // See ApiServer::cleanUpResource which depends on this behaviour.
-        //
-        // In this case, delegate to the superclass.
-        if(substr($name, 0, 1) == "-")
-            return parent::requestsField($type, $name);
-
         $wantsField = $this->requestsAttributes();
         if($wantsField) {
             $fields = $this->fields;
             if(key_exists($type, $fields)) {
-                $neg = false;
-                foreach($fields[$type] as $field) {
-                    if(substr($field, 0, 1) == "-") {
-                        if($field === "-" . $name) return false;
-                        $neg = true;
-                        break;
+                $negatedName = "-" . $name;
+
+                if(!key_exists($type, $this->fieldNegation)) {
+                    $this->fieldNegation[$type] = false;
+                    foreach($fields[$type] as $field) {
+                        if(substr($field, 0, 1) == "-") {
+                            $this->fieldNegation[$type] = true;
+                            if($field === $negatedName) return false;
+                            break;
+                        }
                     }
                 }
 
-                $wantsField = $neg ?
-                        !in_array("-" . $name, $fields[$type], true) :
+                $wantsField = $this->fieldNegation[$type] ?
+                        !in_array($negatedName, $fields[$type], true) :
                         in_array($name, $fields[$type], true);
             }
         }
 
         return $wantsField;
+    }
+
+    /**
+     * Fix to use derived class for the subrequest
+     */
+    public function createSubRequest(
+        string $relationship,
+        ?ResourceInterface $resource = null,
+        bool $keepFilters = false
+    ): RequestInterface {
+        $requestKey = $relationship . ($keepFilters ? '-filtered' : '-not-filtered');
+        if (!key_exists($requestKey, $this->requestCache)) {
+            $includes = [];
+            foreach ($this->includes as $include) {
+                if (strpos($include, '.') !== false && strpos($include, $relationship . '.') === 0) {
+                    $includes[] = explode('.', $include, 2)[1];
+                }
+            }
+
+            $queryFields = [];
+            foreach ($this->fields as $type => $fields) {
+                $queryFields[$type] = implode(',', $fields);
+            }
+
+            $type = $resource ? $resource->type() : $this->type();
+            $id = $resource ? $resource->id() : $this->id();
+            $relationshipPart = '/' . $relationship;
+            if (!$this->requestsInclude($relationship)) {
+                $relationshipPart = '/relationships' . $relationshipPart;
+            }
+
+            $subRequest = new static(
+                $this->method(),
+                $this->uri()
+                    ->withPath(($this->fileInPath ? '/' . $this->fileInPath : '') . ($this->apiPrefix ? '/' . $this->apiPrefix : '') . '/' . $type . '/' . $id . $relationshipPart)
+                    ->withQuery(
+                        http_build_query([
+                            'fields' => $queryFields,
+                            'filter' => $keepFilters ? $this->filter : [],
+                            'include' => implode(',', $includes)
+                        ])
+                    ),
+                null,
+                $this->apiPrefix
+            );
+
+            $subRequest->headers()->mergeCollection($this->headers());
+            $subRequest->fieldNegation = &$this->fieldNegation;
+
+            $this->requestCache[$requestKey] = $subRequest;
+        }
+
+        return $this->requestCache[$requestKey];
     }
 }
