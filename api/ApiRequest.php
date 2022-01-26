@@ -119,7 +119,7 @@ class ApiRequest extends Request {
                 $this->apiPrefix
             );
 
-            $subRequest->headers = $this->headers;
+            $subRequest->headers()->mergeCollection($this->headers());
             $subRequest->fieldNegation = &$this->fieldNegation;
 
             $this->requestCache[$requestKey] = $subRequest;
