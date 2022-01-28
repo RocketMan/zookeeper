@@ -117,7 +117,7 @@ trait OffsetPaginationTrait {
 
             $fields = [ "artist", "album", "track" ];
 
-            $r = [ "type" => "track" ];
+            $r = [ "type" => "spin" ];
             foreach($fields as $field)
                 $r[$field] = $record[$field];
 
