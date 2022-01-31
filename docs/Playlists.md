@@ -6,7 +6,7 @@ information, see the [JSON:API main page](./API.md).
 ### Retrieval
 
 Retrieval is via GET request to `api/v1/playlist` (filter/pagination) or
-`api/v1/playlist/_id_`, where \_id_ is the id of a specific playlist.  See
+`api/v1/playlist/:id`, where :id is the id of a specific playlist.  See
 below for a list of possible filter options.
 
 An [example playlist document](Samples.md#playlist) is available here.
@@ -63,11 +63,50 @@ airname.
 
 ### Update
 
-Playlist update is not supported.  Use Delete and Insert anew as
-needed.
+Update the playlist with id :id by issuing a PATCH request to
+`api/v1/playlist/:id`.  Playlist details are in the request body in same
+format returned by GET.  Attributes not specified in the PATCH request
+remain unchanged.  X-APIKEY authentication required; update will fail
+if you do not own the playlist.
+
+**Note:** Events are not updated/updatable via this PATCH but instead
+may be added, updated, or deleted via the [Events Relationship](#events) (see below).
 
 ### Delete
 
-Delete playlist with \_id_ by issuing a DELETE request to
-`api/v1/playlist/_id_`.  X-APIKEY authentication required.
+Delete playlist with :id by issuing a DELETE request to
+`api/v1/playlist/:id`.  X-APIKEY authentication required.
 Delete will fail if you do not own the playlist.
+
+<a name="events"></a>
+### Events Relationship
+
+Events appear as attributes of a playlist.  In addition, they are
+exposed via the "events" relationship, where they may be individually
+added, updated, or deleted.
+
+When events are accessed as a relationship, each one has a unique 'id'.
+To get the list of events with id's, do a GET request to
+`api/v1/playlist/:id/events`, where :id is the playlist id.
+
+You may add new events, update existing events, or delete events via
+the endpoint:
+
+`api/v1/playlist/:id/relationships/events`
+
+where :id is the playlist id.
+
+* To add a new event, issue a POST to the endpoint above;
+* To modify an event, issue a PATCH to the endpoint above;
+* To delete an event, issue a DELETE to the above endpoint.
+
+In all cases, the request body contains a single event in the format
+returned by `api/v1/playlist/:id/events`.
+
+X-APIKEY authentication is required; the operation will fail if you do
+not own the playlist.
+
+**Notes:**
+* If you add an event to a live playlist (one that is on-air 'now')
+and do not supply a `created` property, created will be set automatically;
+* To modify an event, you must specify _all_ attributes.

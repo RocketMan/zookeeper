@@ -463,7 +463,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
 
     public function getTrack($id) {
-        $query = "SELECT tag, artist, track, album, label, id, created FROM tracks " .
+        $query = "SELECT tag, artist, track, album, label, id, created, list FROM tracks " .
                  "WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
