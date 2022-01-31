@@ -56,7 +56,7 @@ Content-Type: application/vnd.api+json; ext="https://zookeeper.ibinx.com/ext/xa"
         "album": "Aperture",
         "label": "Independent Project",
         "created": "21:12:00",
-        "type": "track",
+        "type": "spin",
         "xa:relationships": {
           "album": {
             "data": {
@@ -71,7 +71,7 @@ Content-Type: application/vnd.api+json; ext="https://zookeeper.ibinx.com/ext/xa"
         "album": "Evangeline",
         "label": "Road Cone",
         "created": "21:52:00",
-        "type": "track",
+        "type": "spin",
         "xa:relationships": {
           "album": {
             "data": {
