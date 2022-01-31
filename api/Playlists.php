@@ -288,8 +288,12 @@ class Playlists implements RequestHandlerInterface {
         }
 
         $document = new Document($relations);
-        $document->links()->set(new Link("self", Engine::getBaseUrl()."playlist/$id/relationships/".$request->relationship()));
-        $document->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/".$request->relationship()));
+        if($request->requestsAttributes())
+            $document->links()->set(new Link("self", Engine::getBaseUrl()."playlist/$id/".$request->relationship()));
+        else {
+            $document->links()->set(new Link("self", Engine::getBaseUrl()."playlist/$id/relationships/".$request->relationship()));
+            $document->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/".$request->relationship()));
+        }
 
         $response = new DocumentResponse($document);
         $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
