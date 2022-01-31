@@ -11,6 +11,8 @@ below for a list of possible filter options.
 
 An [example playlist document](Samples.md#playlist) is available here.
 
+An example of [playlist creation](PlaylistCreation.md) is here.
+
 ### Fields
 
 * name
@@ -50,11 +52,11 @@ against artist, album, or label of any spin.
 
 Pagination is supported only for match.  Sorting is not supported.
 
-### Insert
+### <a name="insert"></a>Insert
 
 To insert a new playlist, issue a POST to `api/v1/playlist`.  Playlist
 details are in the request body in the same format returned by GET.
-X-APIKEY authentication required and you must own the playlist.
+X-APIKEY authentication required.
 
 If you belong to 'v' group, you may insert playlists on behalf of
 other users: You will own the list in these cases (i.e., can update or
