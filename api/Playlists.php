@@ -461,8 +461,13 @@ class Playlists implements RequestHandlerInterface {
         if($list['dj'] != Engine::session()->getUser())
             throw new NotAllowedException("not owner");
 
-        $event = $request->requestBody()->data()->first("event")->attributes()->all();
-        $entry = PlaylistEntry::fromArray($event);
+        $event = $request->requestBody()->data()->first("event");
+        $entry = PlaylistEntry::fromArray($event->attributes()->all());
+
+        try {
+            $album = $event->relationships()->get("album")->related()->first("album");
+            $entry->setTag($album->id());
+        } catch(\Exception $e) {}
 
         if($created = $entry->getCreated()) {
             $window = $api->getTimestampWindow($key);
@@ -514,12 +519,17 @@ class Playlists implements RequestHandlerInterface {
         // TBD allow changes instead of complete relacement
         $entry = PlaylistEntry::fromArray($event->attributes()->all());
         $entry->setId($id);
+
+        try {
+            $album = $event->relationships()->get("album")->related()->first("album");
+            $entry->setTag($album->id());
+        } catch(\Exception $e) {}
+
         $created = $entry->getCreated();
         if($created) {
             $window = $api->getTimestampWindow($key);
             try {
-                $stamp = PlaylistEntry::scrubTimestamp(
-                            new \DateTime($created), $window);
+                $stamp = PlaylistEntry::scrubTimestamp(new \DateTime($created), $window);
                 $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
             } catch(\Exception $e) {
                 error_log("failed to parse timestamp: $created");
