@@ -89,6 +89,8 @@ When events are accessed as a relationship, each one has a unique 'id'.
 To get the list of events with id's, do a GET request to
 `api/v1/playlist/:id/events`, where :id is the playlist id.
 
+A [sample events document](Samples.md#events) is available here.
+
 You may add new events, update existing events, or delete events via
 the endpoint:
 
@@ -109,4 +111,7 @@ not own the playlist.
 **Notes:**
 * If you add an event to a live playlist (one that is on-air 'now')
 and do not supply a `created` property, created will be set automatically;
+* Added or modified events are automatically positioned to the correct
+position in the playlist relative to their created time;
+* Added events with no created time are placed at the end of the playlist;
 * To modify an event, you must specify _all_ attributes.
