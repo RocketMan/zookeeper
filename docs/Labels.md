@@ -6,7 +6,7 @@ information, see the [JSON:API main page](./API.md).
 ### Retrieval
 
 Retrieval is via GET request to `api/v1/label` (filter/pagination) or
-`api/v1/label/_id_`, where \_id_ is the id of a specific label.  See
+`api/v1/label/:id`, where :id is the id of a specific label.  See
 below for a list of possible filter options.
 
 An [example label document](Samples.md#label) is available here.
@@ -67,8 +67,8 @@ authentication required; you must belong to the 'm' group.
 
 ### Update
 
-Update label with \_id_ by issuing a PATCH request to
-`api/v1/label/_id_`.  Label details are in the request body in same
+Update label with :id by issuing a PATCH request to
+`api/v1/label/:id`.  Label details are in the request body in same
 format returned by GET.  Attributes not specified in the PATCH request
 remain unchanged.  X-APIKEY authentication required; you must belong to
 the 'm' group.

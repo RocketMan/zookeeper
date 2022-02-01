@@ -6,7 +6,7 @@ information, see the [JSON:API main page](./API.md).
 ### Retrieval
 
 Retrieval is via GET request to `api/v1/album` (filter/pagination) or
-`api/v1/album/_id_`, where \_id_ is the tag of a specific album.  See
+`api/v1/album/:id`, where :id is the tag of a specific album.  See
 below for a list of possible filter options.
 
 An [example album document](Samples.md#album) is available here.
@@ -142,14 +142,14 @@ information about `relationships` and `included`.
 
 ### Update
 
-Update album with tag \_id_ by issuing a PATCH request to
-`api/v1/album/_id_`.  Album details are in the request body in same
+Update album with tag :id by issuing a PATCH request to
+`api/v1/album/:id`.  Album details are in the request body in same
 format returned by GET.  Attributes not specified in the PATCH request
 remain unchanged.  X-APIKEY authentication required; you must belong to
 the 'm' group.
 
 Update the album's linked label by issuing a PATCH request to
-`api/v1/album/_id_/relationships/label`, where \_id_ is the album tag.
+`api/v1/album/:id/relationships/label`, where :id is the album tag.
 The request body should contain a JSON document of the form:
 
     { "data": { "type": "label", "id": _lid_ } }
@@ -158,7 +158,7 @@ Where \_lid_ is the ID of the desired label.
 
 ### Delete
 
-Delete the album with tag \_id_ by sending a DELETE request to
-`api/v1/album/_id_`.  Delete will fail if the album has reviews, or if
+Delete the album with tag :id by sending a DELETE request to
+`api/v1/album/:id`.  Delete will fail if the album has reviews, or if
 it has ever been in the a-file or has charted.  X-APIKEY
 authentication required; you must belong to the 'm' group.
