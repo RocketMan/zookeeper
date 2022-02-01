@@ -24,6 +24,7 @@
 
 namespace ZK\API;
 
+use ZK\Controllers\PushServer;
 use ZK\Engine\Engine;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
@@ -358,8 +359,13 @@ class Playlists implements RequestHandlerInterface {
             }
         }
 
-        if($playlist)
+        if($playlist) {
+            if($airname && $papi->isNowWithinShow(
+                    ["showdate" => $date, "showtime" => $time]))
+                PushServer::sendAsyncNotification();
+
             return new CreatedResponse(Engine::getBaseUrl()."playlist/$playlist");
+        }
 
         throw new \Exception("creation failed");
     }
@@ -478,11 +484,26 @@ class Playlists implements RequestHandlerInterface {
                 error_log("failed to parse timestamp: $created");
                 $entry->setCreated(null);
             }
-        } else if($api->isNowWithinShow($list))
+            $autoTimestamp = false;
+        } else if($autoTimestamp = $api->isNowWithinShow($list))
             $entry->setCreated((new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL));
 
         $status = '';
         $updateStatus = $api->insertTrackEntry($key, $entry, $status);
+
+        if($updateStatus && $list['airname']) {
+            if($autoTimestamp) {
+                $list['id'] = $key;
+                if($entry->isType(PlaylistEntry::TYPE_SPIN)) {
+                    $spin = $entry->asArray();
+                    $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
+                } else
+                    $spin = null;
+
+                PushServer::sendAsyncNotification($list, $spin);
+            } else if($api->isNowWithinShow($list))
+                PushServer::sendAsyncNotification();
+        }
 
         return $updateStatus ?
             new DocumentResponse(new Document(new JsonResource("event", $entry->getId()))) :
@@ -538,6 +559,9 @@ class Playlists implements RequestHandlerInterface {
         }
 
         $success = $api->updateTrackEntry($key, $entry);
+
+        if($success && $list['airname'] && $api->isNowWithinShow($list))
+            PushServer::sendAsyncNotification();
 
         return $success ?
             new EmptyResponse() :
