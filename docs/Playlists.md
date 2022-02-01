@@ -11,7 +11,7 @@ below for a list of possible filter options.
 
 An [example playlist document](Samples.md#playlist) is available here.
 
-An example of [playlist creation](PlaylistCreation.md) is here.
+An example of [playlist creation](PlaylistEvents.md) is here.
 
 ### Fields
 
