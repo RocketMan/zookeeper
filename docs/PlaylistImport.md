@@ -1,11 +1,12 @@
 ## Example Zookeeper JSON:API playlist import
 
-The following example imports a show and its events in a single request.
+In the following example, we import a playlist, inclusive of all its
+events, in a single request.
 
 If you want to create a show and then dynamically add events to it,
 see the [playlist creation](PlaylistEvents.md) example.
 
-Playlist creation requires a valid API Key, which you can manage from
+Playlist import requires a valid API Key, which you can manage from
 within the application (Edit Profile > Manage API Keys).
 
 ### Request:
@@ -34,14 +35,14 @@ Content-Type: application/vnd.api+json
       "airname": "Jim",
       "events": [{
         "type": "comment",
-        "comment": "welcome to the show"
-        "created": "17:00:00",
+        "comment": "welcome to the show",
+        "created": "17:00:00"
       }, {
         "type": "spin",
         "artist": "Calla",
         "track": "Elsewhere",
         "album": "Calla",
-        "label": "Arena Rock Recording Co."
+        "label": "Arena Rock Recording Co.",
         "created": "17:01:00",
         "xa:relationships": {
           "album": {

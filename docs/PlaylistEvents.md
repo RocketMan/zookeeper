@@ -1,13 +1,13 @@
 ## Example Zookeeper JSON:API playlist creation
 
-The following example illustrates creating a show and adding events
-dynamically.
+The following example illustrates dynamic playlist creation, where
+we create an empty playlist and add events to it.
 
-It is also possible to [create a show and all its events](PlaylistImport.md)
-in a single request.
+If you want to create a playlist and all its events in a single
+request, see [this example](PlaylistImport.md).
 
-If the show date and time encompass 'now', the server will automatically
-timestamp the events.
+Note that for the following example, if the show date and time
+encompass 'now', the server will automatically timestamp the events.
 
 Playlist creation requires a valid API Key, which you can manage from
 within the application (Edit Profile > Manage API Keys).

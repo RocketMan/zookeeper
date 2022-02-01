@@ -7,11 +7,11 @@ information, see the [JSON:API main page](./API.md).
 
 Retrieval is via GET request to `api/v1/playlist` (filter/pagination) or
 `api/v1/playlist/:id`, where :id is the id of a specific playlist.  See
-below for a list of possible filter options.
+below for a list of possible filter options.  An [example playlist
+document](Samples.md#playlist) is available here.
 
-An [example playlist document](Samples.md#playlist) is available here.
-
-An example of [playlist creation](PlaylistEvents.md) is here.
+An example of [playlist creation](PlaylistEvents.md) via the API can
+be found here.
 
 ### Fields
 
@@ -39,9 +39,9 @@ of the 'xa:relationships' attribute.)
 * events (to-many)
 
 Events are included as attributes rather than relations in the
-playlist resource object.  To fetch events as relations, use
-`api/v1/playlist/:id/events`.  See the [Events Relationship](#events)
-section below for more information.
+playlist resource object.  To fetch events as relations, issue a GET
+request to `api/v1/playlist/:id/events`.  See the
+[Events Relationship](#events) section below for more information.
 
 ### Filters
 
