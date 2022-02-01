@@ -36,6 +36,12 @@ of the 'xa:relationships' attribute.)
 ### Relations
 
 * albums (to-many)
+* events (to-many)
+
+Events are included as attributes rather than relations in the
+playlist resource object.  To fetch events as relations, use
+`api/v1/playlist/:id/events`.  See the [Events Relationship](#events)
+section below for more information.
 
 ### Filters
 
@@ -81,17 +87,17 @@ Delete playlist with :id by issuing a DELETE request to
 Delete will fail if you do not own the playlist.
 
 <a name="events"></a>
-### Events Relationship
+## Events Relationship
 
 Events appear as attributes of a playlist.  In addition, they are
-exposed via the "events" relationship, where they may be individually
+exposed via the 'events' relationship, where they may be individually
 added, updated, or deleted.
 
 When events are accessed as a relationship, each one has a unique 'id'.
-To get the list of events with id's, do a GET request to
+To get the list of events with id's, issue a GET request to
 `api/v1/playlist/:id/events`, where :id is the playlist id.
-
-A [sample events document](Samples.md#events) is available here.
+A [sample events document](Samples.md#events) returned by this
+endpoint is available here.
 
 You may add new events, update existing events, or delete events via
 the endpoint:
