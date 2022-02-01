@@ -475,6 +475,7 @@ class Playlists implements RequestHandlerInterface {
             $entry->setTag($album->id());
         } catch(\Exception $e) {}
 
+        $autoTimestamp = false;
         if($created = $entry->getCreated()) {
             $window = $api->getTimestampWindow($key);
             try {
@@ -484,14 +485,13 @@ class Playlists implements RequestHandlerInterface {
                 error_log("failed to parse timestamp: $created");
                 $entry->setCreated(null);
             }
-            $autoTimestamp = false;
         } else if($autoTimestamp = $api->isNowWithinShow($list))
             $entry->setCreated((new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL));
 
         $status = '';
-        $updateStatus = $api->insertTrackEntry($key, $entry, $status);
+        $success = $api->insertTrackEntry($key, $entry, $status);
 
-        if($updateStatus && $list['airname']) {
+        if($success && $list['airname']) {
             if($autoTimestamp) {
                 $list['id'] = $key;
                 if($entry->isType(PlaylistEntry::TYPE_SPIN)) {
@@ -505,7 +505,7 @@ class Playlists implements RequestHandlerInterface {
                 PushServer::sendAsyncNotification();
         }
 
-        return $updateStatus ?
+        return $success ?
             new DocumentResponse(new Document(new JsonResource("event", $entry->getId()))) :
             new BadRequestException($status ?? "DB update error");
     }
