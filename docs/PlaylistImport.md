@@ -74,4 +74,5 @@ Content-Length: 0
 Upon successful playlist creation, the server returns HTTP code `201
 Created`, together with a response header `Location` that identifies
 the newly created playlist resource.  This is the expected response,
-per the [JSON:API v1.0 specification, section 7.1.2.1](https://jsonapi.org/format/#crud-creating-responses).
+per [section 7.1.2.1](https://jsonapi.org/format/#crud-creating-responses)
+of the JSON:API specification.
