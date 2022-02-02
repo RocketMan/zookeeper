@@ -122,6 +122,14 @@ Content-Type: application/vnd.api+json
 }
 ````
 ---
+Use `relationships` as illustrated above to link to a Zookeeper album.
+The album id is the tag number.
+
+Linking in this way places a hyperlink in your playlist to the
+Zookeeper album.  As well, it ensures the spin counts toward charting,
+if the album is in the A-File.
+
+
 ### The server responds:
 ---
 ````
