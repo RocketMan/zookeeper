@@ -12,6 +12,11 @@ encompass 'now', the server will automatically timestamp the events.
 Playlist creation requires a valid API Key, which you can manage from
 within the application (Edit Profile > Manage API Keys).
 
+If you belong to 'v' group, you may create playlists on behalf of
+other users: You will own the list in these cases (i.e., can update or
+delete them), but they will display publicly under the other user's
+airname.
+
 ### <a id="show"></a> Create the show:
 ---
 ````
@@ -53,7 +58,7 @@ The value of `Location` is used as the base for the subsequent requests.
 ### <a id="eventComment"></a> Add a comment:
 ---
 ````
-POST /api/v1/playlist/628/relationships/events HTTP/1.1
+POST /api/v1/playlist/628/events HTTP/1.1
 X-APIKEY: eb5e0e0b42a84531af5f257ed61505050494788d
 Content-Type: application/vnd.api+json
 
@@ -91,7 +96,7 @@ section 7.3.
 ### <a id="eventSpin"></a> Add a spin:
 ---
 ````
-POST /api/v1/playlist/628/relationships/events HTTP/1.1
+POST /api/v1/playlist/628/events HTTP/1.1
 X-APIKEY: eb5e0e0b42a84531af5f257ed61505050494788d
 Content-Type: application/vnd.api+json
 

@@ -94,24 +94,34 @@ exposed via the 'events' relationship, where they may be individually
 added, updated, or deleted.
 
 When events are accessed as a relationship, each one has a unique 'id'.
-To get the list of events with id's, issue a GET request to
-`api/v1/playlist/:id/events`, where :id is the playlist id.
-A [sample events document](Samples.md#events) returned by this
-endpoint is available here.
+To get the list of events with id's, issue a GET request to the
+endpoint:
+
+        api/v1/playlist/:id/events
+
+where :id is the playlist id.  A [sample events
+document](Samples.md#events) returned by this endpoint is available
+here.
 
 You may add new events, update existing events, or delete events via
-the endpoint:
+this same endpoint:
 
-`api/v1/playlist/:id/relationships/events`
-
-where :id is the playlist id.
-
-* To add a new event, issue a POST to the endpoint above;
-* To modify an event, issue a PATCH to the endpoint above;
-* To delete an event, issue a DELETE to the above endpoint.
+* To add a new event, issue a POST to the endpoint;
+* To modify an event, issue a PATCH to the endpoint;
+* To delete an event, issue a DELETE to the endpoint.
 
 In all cases, the request body contains a single event in the format
-returned by `api/v1/playlist/:id/events`.
+returned by a GET request to the endpoint.
+
+For POST, upon success, you will receive an HTTP `200 OK` response;
+the response body will contain a resource object with the id of the
+created event.  For PATCH and DELETE, upon success, you will receive
+an HTTP `204 No Content` response.
+
+If you wish, you may also use the endpoint
+`api/v1/playlist/:id/relationships/events` for event addition,
+modification, and deletion.  The request and response semantics, as
+well as the server action are the same.
 
 X-APIKEY authentication is required; the operation will fail if you do
 not own the playlist.
