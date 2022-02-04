@@ -379,8 +379,12 @@ class Albums implements RequestHandlerInterface {
         }
 
         $document = new Document($res);
-        $document->links()->set(new Link("self", Engine::getBaseUrl()."album/$key/relationships/".$request->relationship()));
-        $document->links()->set(new Link("related", Engine::getBaseUrl()."album/$key/".$request->relationship()));
+        if($request->requestsAttributes())
+            $document->links()->set(new Link("self", Engine::getBaseUrl()."album/$key/".$request->relationship()));
+        else {
+            $document->links()->set(new Link("self", Engine::getBaseUrl()."album/$key/relationships/".$request->relationship()));
+            $document->links()->set(new Link("related", Engine::getBaseUrl()."album/$key/".$request->relationship()));
+        }
 
         $response = new DocumentResponse($document);
         return $response;

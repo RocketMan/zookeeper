@@ -89,7 +89,7 @@ supported by each type.
     review).
 
 * **Updates** are performed by sending a PATCH request.  For example,
-    update album \_id_ with PATCH to `api/v1/album/_id_`.  Album details
+    update album :id with PATCH to `api/v1/album/:id`.  Album details
     are in request body in same format returned by GET.  X-APIKEY
     authentication required, must belong to 'm' group.  PATCH is
     supported for album and label only.
@@ -97,8 +97,8 @@ supported by each type.
 * Attributes not specified in the PATCH request remain unchanged.
 
 * **Delete** an object with a DELETE request.  For example, delete the
-    album with tag \_id_ by sending a DELETE request to
-    `api/v1/album/_id_`.  Delete will fail if the album has reviews,
+    album with tag :id by sending a DELETE request to
+    `api/v1/album/:id`.  Delete will fail if the album has reviews,
     or if it has ever been in the a-file or has charted.  DELETE is
     supported for all types except label.  X-APIKEY authentication
     required; you must belong to the 'm' group for deleting an album.

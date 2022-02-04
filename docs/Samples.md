@@ -310,6 +310,202 @@ The following are sample documents for each of the data types.
 }
 ````
 ---
+### <a id="events"></a> sample playlist events document:
+
+````
+{
+  "data": [{
+    "type": "event",
+    "id": "818834",
+    "attributes": {
+      "type": "comment",
+      "comment": "Rebroadcast of an episode originally aired on May 20, 2021.",
+      "created": null
+    }
+  }, {
+    "type": "event",
+    "id": "818835",
+    "attributes": {
+      "type": "spin",
+      "artist": "Marika Papagika",
+      "track": "Smyrneiko Minore",
+      "album": "I Believe I'll Go Back Home: 1906\u20131959",
+      "label": "Mississippi",
+      "created": "21:00:00"
+    }
+  }, {
+    "type": "event",
+    "id": "818836",
+    "attributes": {
+      "type": "spin",
+      "artist": "His Name Is Alive",
+      "track": "Liadin",
+      "album": "Hope Is a Candle",
+      "label": "Disciples",
+      "created": "21:04:00"
+    }
+  }, {
+    "type": "event",
+    "id": "818837",
+    "attributes": {
+      "type": "spin",
+      "artist": "The Durutti Column",
+      "track": "Weakness and Fever (originally released as a 7\" single)",
+      "album": "LC (Reissue)",
+      "label": "Factory Benelux",
+      "created": "21:07:00"
+    }
+  }, {
+    "type": "event",
+    "id": "818838",
+    "attributes": {
+      "type": "spin",
+      "artist": "For Against",
+      "track": "You Only Live Twice",
+      "album": "Aperture",
+      "label": "Independent Project",
+      "created": "21:12:00"
+    },
+    "relationships": {
+      "album": {
+        "data": {
+          "type": "album",
+          "id": "118820"
+        }
+      }
+    }
+  }, {
+    "type": "event",
+    "id": "818839",
+    "attributes": {
+      "type": "spin",
+      "artist": "Andrew Weathers & Hayden Pedigo",
+      "track": "Tomorrow Is the Song I Sing",
+      "album": "Big Tex, Here We Come",
+      "label": "Debacle",
+      "created": "21:16:00"
+    }
+  }, {
+    "type": "event",
+    "id": "818840",
+    "attributes": {
+      "type": "spin",
+      "artist": "Souled American",
+      "track": "Dark as a Dungeon",
+      "album": "Sonny",
+      "label": "Rough Trade",
+      "created": "21:21:00"
+    }
+  }, {
+    "type": "event",
+    "id": "818841",
+    "attributes": {
+      "type": "break",
+      "created": null
+    }
+  }, {
+    "type": "event",
+    "id": "818842",
+    "attributes": {
+      "type": "spin",
+      "artist": "Hey Exit",
+      "track": "Last Harvest",
+      "album": "Eulogy for Land",
+      "label": "Full Spectrum",
+      "created": "21:26:00"
+    }
+  }, {
+    "type": "event",
+    "id": "818843",
+    "attributes": {
+      "type": "spin",
+      "artist": "Calla",
+      "track": "Elsewhere",
+      "album": "Calla",
+      "label": "Arena Rock Recording Co.",
+      "created": "21:34:00"
+    },
+    "relationships": {
+      "album": {
+        "data": {
+          "type": "album",
+          "id": "1060007"
+        }
+      }
+    }
+  }, {
+    "type": "event",
+    "id": "818844",
+    "attributes": {
+      "type": "spin",
+      "artist": "claire rousay",
+      "track": "discrete (the market)",
+      "album": "a softer focus",
+      "label": "American Dreams",
+      "created": "21:39:00"
+    }
+  }, {
+    "type": "event",
+    "id": "818845",
+    "attributes": {
+      "type": "spin",
+      "artist": "Jusell, Prymek, Sage, Shiroishi",
+      "track": "Flower Clock",
+      "album": "Yamawarau (\u5c71\u7b11\u3046)",
+      "label": "cachedmedia",
+      "created": "21:45:00"
+    }
+  }, {
+    "type": "event",
+    "id": "818846",
+    "attributes": {
+      "type": "spin",
+      "artist": "Rolf Lislevand",
+      "track": "Santiago De Murcia: Folias Gallegas",
+      "album": "Altre Follie, 1500-1750",
+      "label": "AliaVox",
+      "created": "21:49:00"
+    }
+  }, {
+    "type": "event",
+    "id": "818847",
+    "attributes": {
+      "type": "spin",
+      "artist": "Loren Mazzacane Connors",
+      "track": "Dance Acadia",
+      "album": "Evangeline",
+      "label": "Road Cone",
+      "created": "21:52:00"
+    },
+    "relationships": {
+      "album": {
+        "data": {
+          "type": "album",
+          "id": "463845"
+        }
+      }
+    }
+  }, {
+    "type": "event",
+    "id": "818848",
+    "attributes": {
+      "type": "spin",
+      "artist": "Paul Galbraith",
+      "track": "Sonata No. 3 BWV 1005 in D Major",
+      "album": "The Sonatas & Partitas (arr. for 8-String Guitar)",
+      "label": "Delos",
+      "created": "21:53:00"
+    }
+  }],
+  "links": {
+    "self": "/api/v1/playlist/42667/events"
+  },
+  "jsonapi": {
+    "version": "1.0"
+  }
+}
+````
+---
 ### <a id="review"></a> sample review document:
 ````
 {

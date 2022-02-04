@@ -170,8 +170,12 @@ class Reviews implements RequestHandlerInterface {
         }        
 
         $document = new Document($res);
-        $document->links()->set(new Link("self", Engine::getBaseUrl()."review/$key/relationships/".$request->relationship()));
-        $document->links()->set(new Link("related", Engine::getBaseUrl()."review/$key/".$request->relationship()));
+        if($request->requestsAttributes())
+            $document->links()->set(new Link("self", Engine::getBaseUrl()."review/$key/".$request->relationship()));
+        else {
+            $document->links()->set(new Link("self", Engine::getBaseUrl()."review/$key/relationships/".$request->relationship()));
+            $document->links()->set(new Link("related", Engine::getBaseUrl()."review/$key/".$request->relationship()));
+        }
 
         $response = new DocumentResponse($document);
         return $response;

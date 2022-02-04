@@ -5,7 +5,7 @@ information, see the [JSON:API main page](./API.md).
 
 ### Retrieval
 
-Retrieval is via GET request to `api/v1/review/_id_`, where \_id_ is
+Retrieval is via GET request to `api/v1/review/:id`, where :id is
 the id of a specific review.
 
 Filtering is not possible at the api/v1/review endpoint; however,
@@ -70,6 +70,6 @@ as needed.
 
 ### Delete
 
-Delete the review with \_id_ by sending a DELETE request to
-`api/v1/review/_id_`.  X-APIKEY authentication required; delete
+Delete the review with :id by sending a DELETE request to
+`api/v1/review/:id`.  X-APIKEY authentication required; delete
 will fail if you do not own the review.

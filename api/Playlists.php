@@ -24,6 +24,7 @@
 
 namespace ZK\API;
 
+use ZK\Controllers\PushServer;
 use ZK\Engine\Engine;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
@@ -31,6 +32,7 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
 
+use Enm\JsonApi\Exception\BadRequestException;
 use Enm\JsonApi\Exception\NotAllowedException;
 use Enm\JsonApi\Exception\ResourceNotFoundException;
 use Enm\JsonApi\Model\Document\Document;
@@ -43,15 +45,11 @@ use Enm\JsonApi\Model\Response\CreatedResponse;
 use Enm\JsonApi\Model\Response\DocumentResponse;
 use Enm\JsonApi\Model\Response\EmptyResponse;
 use Enm\JsonApi\Model\Response\ResponseInterface;
-use Enm\JsonApi\Server\RequestHandler\NoRelationshipModificationTrait;
-use Enm\JsonApi\Server\RequestHandler\NoResourceModificationTrait;
 use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
 
 
 class Playlists implements RequestHandlerInterface {
     use OffsetPaginationTrait;
-    use NoRelationshipModificationTrait;
-    use NoResourceModificationTrait;
 
     const PLAYLIST_SEARCH = 1000;
 
@@ -212,23 +210,17 @@ class Playlists implements RequestHandlerInterface {
     }
 
     public function fetchRelationship(RequestInterface $request): ResponseInterface {
-        switch($request->relationship()) {
-        case "albums":
-            break;
-        case "relationships":
-            throw new NotAllowedException("unspecified relationship");
-        default:
-            throw new NotAllowedException('You are not allowed to fetch the relationship ' . $request->relationship());
-        }
-
-        $relations = new ResourceCollection();
-
         $flags = Albums::LINKS_ALL;
         if(!$request->requestsField("album", "tracks"))
             $flags &= ~Albums::LINKS_TRACKS;
 
         $id = $request->id();
-        Engine::api(IPlaylist::class)->getTracksWithObserver($id,
+
+        $relations = new ResourceCollection();
+
+        switch($request->relationship()) {
+        case "albums":
+            Engine::api(IPlaylist::class)->getTracksWithObserver($id,
             (new PlaylistObserver())->onSpin(function($entry) use($relations, $flags) {
                 $tag = $entry->getTag();
                 if($tag) {
@@ -236,13 +228,73 @@ class Playlists implements RequestHandlerInterface {
                         $res = Albums::fromArray($albums, $flags)[0];
                     else
                         $res = new JsonResource("album", $tag);
+
                     $relations->set($res);
                 }
             }));
+            break;
+        case "events":
+            if(!$request->requestsInclude("album"))
+                $flags = Albums::LINKS_NONE;
+            Engine::api(IPlaylist::class)->getTracksWithObserver($id,
+            (new PlaylistObserver())->onComment(function($entry) use($relations) {
+                $e = new JsonResource("event", $entry->getId());
+                $a = $e->attributes();
+                $a->set("type", "comment");
+                $a->set("comment", $entry->getComment());
+                $a->set("created", $entry->getCreatedTime());
+                $relations->set($e);
+            })->onLogEvent(function($entry) use($relations) {
+                $e = new JsonResource("event", $entry->getId());
+                $a = $e->attributes();
+                $a->set("type", "logEvent");
+                $a->set("event", $entry->getLogEventType());
+                $a->set("code", $entry->getLogEventCode());
+                $a->set("created", $entry->getCreatedTime());
+                $relations->set($e);
+            })->onSetSeparator(function($entry) use($relations) {
+                $e = new JsonResource("event", $entry->getId());
+                $a = $e->attributes();
+                $a->set("type", "break");
+                $a->set("created", $entry->getCreatedTime());
+                $relations->set($e);
+            })->onSpin(function($entry) use($relations, $flags) {
+                $e = new JsonResource("event", $entry->getId());
+                $a = $e->attributes();
+                $a->set("type", "spin");
+                $attrs = $entry->asArray();
+                unset($attrs["tag"]);
+                unset($attrs["id"]);
+                $a->merge($attrs);
+                $a->set("artist", PlaylistEntry::swapNames($entry->getArtist()));
+                $a->set("created", $entry->getCreatedTime());
+
+                $tag = $entry->getTag();
+                if($tag) {
+                    if($flags && sizeof($albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
+                        $res = Albums::fromArray($albums, $flags)[0];
+                    else
+                        $res = new JsonResource("album", $tag);
+
+                    $e->relationships()->set(new Relationship("album", $res));
+                }
+
+                $relations->set($e);
+            }));
+            break;
+        case "relationships":
+            throw new NotAllowedException("unspecified relationship");
+        default:
+            throw new NotAllowedException('You are not allowed to fetch the relationship ' . $request->relationship());
+        }
 
         $document = new Document($relations);
-        $document->links()->set(new Link("self", Engine::getBaseUrl()."playlist/$id/relationships/".$request->relationship()));
-        $document->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/".$request->relationship()));
+        if($request->requestsAttributes())
+            $document->links()->set(new Link("self", Engine::getBaseUrl()."playlist/$id/".$request->relationship()));
+        else {
+            $document->links()->set(new Link("self", Engine::getBaseUrl()."playlist/$id/relationships/".$request->relationship()));
+            $document->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/".$request->relationship()));
+        }
 
         $response = new DocumentResponse($document);
         $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
@@ -307,10 +359,71 @@ class Playlists implements RequestHandlerInterface {
             }
         }
 
-        if($playlist)
+        if($playlist) {
+            if($airname && $papi->isNowWithinShow(
+                    ["showdate" => $date, "showtime" => $time]))
+                PushServer::sendAsyncNotification();
+
             return new CreatedResponse(Engine::getBaseUrl()."playlist/$playlist");
+        }
 
         throw new \Exception("creation failed");
+    }
+
+    public function patchResource(RequestInterface $request): ResponseInterface {
+        $session = Engine::session();
+        if(!$session->isAuth("u"))
+            throw new NotAllowedException("Operation requires authentication");
+
+        $key = $request->id();
+        if(empty($key))
+            throw new BadRequestException("must specify id");
+
+        $api = Engine::api(IPlaylist::class);
+        $list = $api->getPlaylist($key);
+        if(!$list || $api->isListDeleted($key))
+            throw new ResourceNotFoundException("show", $key);
+
+        if($list['dj'] != $session->getUser())
+            throw new NotAllowedException("not owner");
+
+        $show = $request->requestBody()->data()->first("show");
+        $attrs = $show->attributes();
+
+        // validate the show's properties
+        $name = $attrs->has("name")?$attrs->getRequired("name"):$list['description'];
+        $time = $attrs->has("time")?$attrs->getRequired("time"):$list['showtime'];
+
+        if($attrs->has("date")) {
+            list($year, $month, $day) = explode("-", $date = $attrs->getRequired("date"));
+            if(!checkdate($month, $day, $year))
+                throw new \InvalidArgumentException("date is invalid");
+        } else
+            $date = $list['showdate'];
+
+        if($attrs->has("airname")) {
+            // lookup the airname
+            $airname = $attrs->getRequired("airname");
+            $djapi = Engine::api(IDJ::class);
+            $user = $session->getUser();
+            $airname = $djapi->getAirname($airname, $session->isAuth("v")?"":$user);
+            if(!$airname) {
+                // airname does not exist; try to create it
+                $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
+                if($success > 0) {
+                    // success!
+                    $airname = $djapi->lastInsertId();
+                } else
+                    throw new \InvalidArgumentException("airname is invalid");
+            }
+        } else
+            $airname = $list['airname'];
+
+        $success = $api->updatePlaylist($key, $date, $time, $name, $airname);
+
+        return $success ?
+            new EmptyResponse() :
+            new BadRequestException("DB update error");
     }
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
@@ -319,7 +432,7 @@ class Playlists implements RequestHandlerInterface {
 
         $key = $request->id();
         if(empty($key))
-            throw new ResourceNotFoundException("show", $key ?? 0);
+            throw new BadRequestException("must specify id");
 
         $api = Engine::api(IPlaylist::class);
         $list = $api->getPlaylist($key);
@@ -332,5 +445,160 @@ class Playlists implements RequestHandlerInterface {
         $api->deletePlaylist($key);
 
         return new EmptyResponse();
+    }
+
+    public function addRelatedResources(RequestInterface $request): ResponseInterface {
+        if($request->relationship() != "events") {
+            throw new NotAllowedException('You are not allowed to modify the relationship ' . $request->relationship());
+        }
+
+        if(!Engine::session()->isAuth("u"))
+            throw new NotAllowedException("Operation requires authentication");
+
+        $key = $request->id();
+        if(empty($key))
+            throw new BadRequestException("must specify id");
+
+        $api = Engine::api(IPlaylist::class);
+        $list = $api->getPlaylist($key);
+        if(!$list || $api->isListDeleted($key))
+            throw new ResourceNotFoundException("show", $key);
+
+        if($list['dj'] != Engine::session()->getUser())
+            throw new NotAllowedException("not owner");
+
+        $event = $request->requestBody()->data()->first("event");
+        $entry = PlaylistEntry::fromArray($event->attributes()->all());
+
+        try {
+            $album = $event->relationships()->get("album")->related()->first("album");
+            $entry->setTag($album->id());
+        } catch(\Exception $e) {}
+
+        $autoTimestamp = false;
+        if($created = $entry->getCreated()) {
+            $window = $api->getTimestampWindow($key);
+            try {
+                $stamp = PlaylistEntry::scrubTimestamp(new \DateTime($created), $window);
+                $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
+            } catch(\Exception $e) {
+                error_log("failed to parse timestamp: $created");
+                $entry->setCreated(null);
+            }
+        } else if($autoTimestamp = $api->isNowWithinShow($list))
+            $entry->setCreated((new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL));
+
+        $status = '';
+        $success = $api->insertTrackEntry($key, $entry, $status);
+
+        if($success && $list['airname']) {
+            if($autoTimestamp) {
+                $list['id'] = $key;
+                if($entry->isType(PlaylistEntry::TYPE_SPIN)) {
+                    $spin = $entry->asArray();
+                    $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
+                } else
+                    $spin = null;
+
+                PushServer::sendAsyncNotification($list, $spin);
+            } else if($api->isNowWithinShow($list))
+                PushServer::sendAsyncNotification();
+        }
+
+        return $success ?
+            new DocumentResponse(new Document(new JsonResource("event", $entry->getId()))) :
+            new BadRequestException($status ?? "DB update error");
+    }
+
+    public function replaceRelatedResources(RequestInterface $request): ResponseInterface {
+        if($request->relationship() != "events") {
+            throw new NotAllowedException('You are not allowed to modify the relationship ' . $request->relationship());
+        }
+
+        if(!Engine::session()->isAuth("u"))
+            throw new NotAllowedException("Operation requires authentication");
+
+        $key = $request->id();
+        if(empty($key))
+            throw new BadRequestException("must specify id");
+
+        $api = Engine::api(IPlaylist::class);
+        $list = $api->getPlaylist($key);
+        if(!$list || $api->isListDeleted($key))
+            throw new ResourceNotFoundException("show", $key);
+
+        if($list['dj'] != Engine::session()->getUser())
+            throw new NotAllowedException("not owner");
+
+        $event = $request->requestBody()->data()->first("event");
+
+        $id = $event->id();
+        $track = $api->getTrack($id);
+        if(!$track || $track['list'] != $key)
+            throw new NotAllowedException("event not in list");
+
+        // TBD allow changes instead of complete relacement
+        $entry = PlaylistEntry::fromArray($event->attributes()->all());
+        $entry->setId($id);
+
+        try {
+            $album = $event->relationships()->get("album")->related()->first("album");
+            $entry->setTag($album->id());
+        } catch(\Exception $e) {}
+
+        $created = $entry->getCreated();
+        if($created) {
+            $window = $api->getTimestampWindow($key);
+            try {
+                $stamp = PlaylistEntry::scrubTimestamp(new \DateTime($created), $window);
+                $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
+            } catch(\Exception $e) {
+                error_log("failed to parse timestamp: $created");
+                $entry->setCreated(null);
+            }
+        }
+
+        $success = $api->updateTrackEntry($key, $entry);
+
+        if($success && $list['airname'] && $api->isNowWithinShow($list))
+            PushServer::sendAsyncNotification();
+
+        return $success ?
+            new EmptyResponse() :
+            new BadRequestException("DB update error");
+    }
+
+    public function removeRelatedResources(RequestInterface $request): ResponseInterface {
+        if($request->relationship() != "events") {
+            throw new NotAllowedException('You are not allowed to modify the relationship ' . $request->relationship());
+        }
+
+        if(!Engine::session()->isAuth("u"))
+            throw new NotAllowedException("Operation requires authentication");
+
+        $key = $request->id();
+        if(empty($key))
+            throw new BadRequestException("must specify id");
+
+        $api = Engine::api(IPlaylist::class);
+        $list = $api->getPlaylist($key);
+        if(!$list || $api->isListDeleted($key))
+            throw new ResourceNotFoundException("show", $key);
+
+        if($list['dj'] != Engine::session()->getUser())
+            throw new NotAllowedException("not owner");
+
+        $event = $request->requestBody()->data()->first("event");
+
+        $id = $event->id();
+        $track = $api->getTrack($id);
+        if(!$track || $track['list'] != $key)
+            throw new NotAllowedException("event not in list");
+
+        $success = $api->deleteTrack($id);
+
+        return $success ?
+            new EmptyResponse() :
+            new BadRequestException("DB update error");
     }
 }
