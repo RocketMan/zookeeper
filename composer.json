@@ -27,6 +27,9 @@
     },
     "require": {
 	"php": ">=7.2.5",
+	"ext-curl": "*",
+	"ext-pdo": "*",
+	"ext-pdo_mysql": "*",
 	"axy/sourcemap": "^0.1.5",
 	"cboden/ratchet": "^0.4.3",
 	"enm/json-api-server": "^3.1",
