@@ -155,6 +155,8 @@ class Validate implements IController {
         if($this->doTest("create api key")) {
             $apiKey = sha1(uniqid(rand()));
             $success = Engine::api(IUser::class)->addAPIKey($this->testUser, $apiKey);
+            if($success)
+                $apiKeyId = Engine::api(IUser::class)->lastInsertId();
             $this->showSuccess($success);
         }
 
@@ -329,7 +331,7 @@ class Validate implements IController {
         }
 
         if($this->doTest("release api key")) {
-            $success = Engine::api(IUser::class)->deleteAPIKeys($this->testUser, [ $apiKey ]);
+            $success = Engine::api(IUser::class)->deleteAPIKeys($this->testUser, [ $apiKeyId ]);
             $this->showSuccess($success);
         }
     }
