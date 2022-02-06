@@ -221,7 +221,7 @@ class Validate implements IController {
                 else
                     $success2 = false;
             }
-
+echo $response->getBody()->getContents();
             $this->showSuccess($success2);
         } else
             $success2 = false;
@@ -330,7 +330,7 @@ class Validate implements IController {
             $this->showSuccess($success);
         }
 
-        if($this->doTest("release api key")) {
+        if($this->doTest("release api key", $success)) {
             $success = Engine::api(IUser::class)->deleteAPIKeys($this->testUser, [ $apiKeyId ]);
             $this->showSuccess($success);
         }
