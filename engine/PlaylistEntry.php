@@ -216,7 +216,10 @@ class PlaylistEntry {
             }
             break;
         }
-        $entry->setCreated($array["created"]);
+
+        if(isset($array["created"]))
+            $entry->setCreated($array["created"]);
+
         return $entry;
     }
 
