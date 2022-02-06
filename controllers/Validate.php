@@ -221,7 +221,7 @@ class Validate implements IController {
                 else
                     $success2 = false;
             }
-echo $response->getBody()->getContents();
+echo "DEBUG: code=".$response->getStatusCode()." s2=".($success2?"1":"0")." body=".$response->getBody()->getContents().".\n";
             $this->showSuccess($success2);
         } else
             $success2 = false;
