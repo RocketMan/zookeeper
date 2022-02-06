@@ -31,6 +31,9 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\IUser;
 use ZK\Engine\PlaylistEntry;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
+
 class Validate implements IController {
     private $success = true;
     private $session;
@@ -149,6 +152,20 @@ class Validate implements IController {
     }
 
     public function validatePlaylists() {
+        if($this->doTest("create api key")) {
+            $apiKey = sha1(uniqid(rand()));
+            $success = Engine::api(IUser::class)->addAPIKey($this->testUser, $apiKey);
+            $this->showSuccess($success);
+        }
+
+        $client = new Client([
+            'base_uri' => $_REQUEST["url"],
+            RequestOptions::HEADERS => [
+                'Accept' => 'application/json',
+                'X-APIKEY' => $apiKey
+            ]
+        ]);
+
         if($this->doTest("create airname")) {
             $djapi = Engine::api(IDJ::class);
             $airname = self::TEST_NAME." ".$this->testUser; // make unique
@@ -158,46 +175,110 @@ class Validate implements IController {
             $success = false;
 
         if($this->doTest("create playlist", $success)) {
-            $aid = $djapi->lastInsertId();
-            $papi = Engine::api(IPlaylist::class);
-            $success = $papi->insertPlaylist($this->testUser, "2020-01-01", "1200-1400", "TEST Show", $aid);
-            if($success)
-                $pid = $papi->lastInsertId();
+            $response = $client->post('api/v1/playlist', [
+                RequestOptions::JSON => [
+                    'data' => [
+                        'type' => 'show',
+                        'attributes' => [
+                            'name' => 'TEST Show',
+                            'date' => '2020-01-01',
+                            'time' => '1200-1400',
+                            'airname' => $airname
+                        ]
+                    ]
+                ]
+            ]);
+
+            $success = $response->getStatusCode() == 201;
+            if($success) {
+                $list = $response->getHeader('Location')[0];
+                $pid = basename($list);
+            }
+
             $this->showSuccess($success);
         }
 
         if($this->doTest("insert comment", $success)) {
-            $comment = (new PlaylistEntry())->setComment(self::TEST_COMMENT);
-            $success2 = $papi->insertTrackEntry($pid, $comment, $status);
+            $response = $client->post($list . '/events', [
+                RequestOptions::JSON => [
+                    'data' => [
+                        'type' => 'event',
+                        'attributes' => [
+                            'type' => 'comment',
+                            'comment' => self::TEST_COMMENT
+                        ]
+                    ]
+                ]
+            ]);
+
+            $success2 = $response->getStatusCode() == 200;
+            if($success2) {
+                $json = json_decode($response->getBody()->getContents());
+                if($json !== null && $json->data)
+                    $cid = $json->data->id;
+                else
+                    $success2 = false;
+            }
+
             $this->showSuccess($success2);
         } else
             $success2 = false;
 
         if($this->doTest("insert spin", $success)) {
-            $spin = new PlaylistEntry([
-                    'artist'=>'TEST, Artist',
-                    'album'=>'TEST Album',
-                    'track'=>self::TEST_TRACK,
-                    'label'=>'TEST Label'
+            $response = $client->post($list . '/events', [
+                RequestOptions::JSON => [
+                    'data' => [
+                        'type' => 'event',
+                        'attributes' => [
+                            'type' => 'spin',
+                            'artist' => 'TEST, Artist',
+                            'album' => 'TEST Album',
+                            'track' => self::TEST_TRACK,
+                            'label' => 'TEST Label'
+                        ]
+                    ]
+                ]
             ]);
-            $success3 = $papi->insertTrackEntry($pid, $spin, $status);
+
+            $success3 = $response->getStatusCode() == 200;
+            if($success3) {
+                $json = json_decode($response->getBody()->getContents());
+                if($json !== null && $json->data)
+                    $sid = $json->data->id;
+                else
+                    $success3 = false;
+            }
             $this->showSuccess($success3);
         } else
             $success3 = false;
 
         if($this->doTest("move track", $success2 && $success3)) {
-            $success4 = $papi->moveTrack($pid, $spin->getId(), $comment->getId());
+            $response = $client->post('', [
+                RequestOptions::FORM_PARAMS => [
+                    "action" => "moveTrack",
+                    "playlist" => $pid,
+                    "fromId" => $sid,
+                    "toId" => $cid
+                ]
+            ]);
+
+            $success4 = $response->getStatusCode() == 200;
             $this->showSuccess($success4);
         } else
             $success4 = false;
 
         if($this->doTest("view playlist", $success4)) {
-            $page = SSOCommon::zkHttpGet(
-                $_REQUEST["url"],
-                [ "action" => "viewListById",
-                  "subaction" => "",
-                  "playlist" => $pid
-                ]);
+            $response = $client->get('', [
+                RequestOptions::QUERY => [
+                    "action" => "viewListById",
+                    "subaction" => "",
+                    "playlist" => $pid
+                ],
+                RequestOptions::HEADERS => [
+                    "Accept" => "text/html"
+                ]
+            ]);
+            $page = $response->getBody()->getContents();
 
             // scrape the page looking for the comment and spin we inserted.
             // both should be present, and the comment should follow the spin
@@ -209,12 +290,14 @@ class Validate implements IController {
         }
 
         if($this->doTest("validate search", $success3)) {
-            $page = SSOCommon::zkHttpGet(
-                $_REQUEST["url"] . "/api/v1/search",
-                [ "page[size]" => 5,
-                  "filter[*]" => explode(' ', self::TEST_TRACK)[1],
-                  "include" => "show"
-                ]);
+            $response = $client->get('api/v1/search', [
+                RequestOptions::QUERY => [
+                    "page[size]" => 5,
+                    "filter[*]" => explode(' ', self::TEST_TRACK)[1],
+                    "include" => "show"
+                ]
+            ]);
+            $page = $response->getBody()->getContents();
 
             // parse the json looking for the spin
             $success6 = false;
@@ -235,12 +318,18 @@ class Validate implements IController {
         }
 
         if($this->doTest("delete playlist", $success)) {
-            $papi->deletePlaylist($pid);
-            $this->showSuccess(true);
+            $response = $client->delete($list);
+            $success = $response->getStatusCode() == 204;
+            $this->showSuccess($success);
         }
 
         if($this->doTest("purge playlists", $success)) {
-            $success = $papi->purgeDeletedPlaylists(0);
+            $success = Engine::api(IPlaylist::class)->purgeDeletedPlaylists(0);
+            $this->showSuccess($success);
+        }
+
+        if($this->doTest("release api key")) {
+            $success = Engine::api(IUser::class)->deleteAPIKeys($this->testUser, [ $apiKey ]);
             $this->showSuccess($success);
         }
     }
