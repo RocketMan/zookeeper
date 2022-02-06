@@ -215,13 +215,13 @@ class Validate implements IController {
 
             $success2 = $response->getStatusCode() == 200;
             if($success2) {
-                $json = json_decode($r = $response->getBody()->getContents());
+                $json = json_decode($response->getBody()->getContents());
                 if($json !== null && $json->data)
                     $cid = $json->data->id;
                 else
                     $success2 = false;
             }
-echo "DEBUG: code=".$response->getStatusCode()." s2=".($success2?"1":"0")." body=".$r.".\n";
+
             $this->showSuccess($success2);
         } else
             $success2 = false;
