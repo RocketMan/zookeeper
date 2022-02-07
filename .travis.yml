@@ -38,8 +38,5 @@ before_script:
   - mysql -u root zookeeper < db/categories.sql
   - mysql -u root zookeeper < db/chartemail.sql
   - mysql -u root zookeeper < db/bootstrapUser.sql
-  # Set some $_SERVER vars used in Main.php
-  - export HTTP_ACCEPT="application/json"
-  - export HTTP_USER_AGENT="Travis CI"
 
 script: php zk validate url=http://127.0.0.1/

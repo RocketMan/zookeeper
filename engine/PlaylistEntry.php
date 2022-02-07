@@ -180,8 +180,16 @@ class PlaylistEntry {
                     ($a = $a->data ?? null) &&
                     ($a->type ?? null == "album") &&
                     ($a = $a->id ?? null) ||
-                    ($a = $json->tag ?? null))
-                $entry->setTag($a);
+                    ($a = $json->tag ?? null)) {
+                $albumrec = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $a);
+                if(sizeof($albumrec)) {
+                    // don't allow modification of album info if tag is set
+                    $entry->setTag($a);
+                    $entry->setArtist(self::swapNames($albumrec[0]["artist"]));
+                    $entry->setAlbum($albumrec[0]["album"]);
+                    $entry->setLabel($albumrec[0]["name"]);
+                }
+            }
             break;
         }
         $entry->setCreated($json->created);
@@ -202,21 +210,34 @@ class PlaylistEntry {
             break;
         case "spin":
         case "track":
-            $entry->setArtist(self::scrubField($array["artist"]));
             $entry->setTrack(self::scrubField($array["track"]));
-            $entry->setAlbum(self::scrubField($array["album"]));
-            $entry->setLabel(self::scrubField($array["label"]));
             if(isset($array["xa:relationships"])) {
                 // using the 'xa' extension
                 // see https://github.com/RocketMan/zookeeper/pull/263
                 try {
                     $album = $array["xa:relationships"]->get("album")->related()->first("album");
-                    $entry->setTag($album->id());
+                    $albumrec = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $album->id());
+                    if(sizeof($albumrec)) {
+                        // don't allow modification of album info if tag is set
+                        $entry->setTag($album->id());
+                        $entry->setArtist(self::swapNames($albumrec[0]["artist"]));
+                        $entry->setAlbum($albumrec[0]["album"]);
+                        $entry->setLabel($albumrec[0]["name"]);
+                    }
                 } catch(\Exception $e) {}
+            }
+
+            if(!$entry->getTag()) {
+                $entry->setArtist(self::scrubField($array["artist"]));
+                $entry->setAlbum(self::scrubField($array["album"]));
+                $entry->setLabel(self::scrubField($array["label"]));
             }
             break;
         }
-        $entry->setCreated($array["created"]);
+
+        if(isset($array["created"]))
+            $entry->setCreated($array["created"]);
+
         return $entry;
     }
 

@@ -28,53 +28,11 @@ use ZK\Engine\Engine;
 use ZK\Engine\IUser;
 use ZK\Engine\Session;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
+
 class SSOCommon {
     const UA = "Zookeeper-SSO/2.0; (+https://zookeeper.ibinx.com/)";
-
-    public static function zkHttpGet($url, $params = 0, $accessToken = 0) {
-        if($params)
-            $url .= "?" . http_build_query($params);
-    
-        $headers = array('Connection: close');
-        if($accessToken)
-            $headers[] = "Authorization: Bearer " . $accessToken;
-    
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_USERAGENT, SSOCommon::UA);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        //curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        //curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-        $result = curl_exec($ch);
-        curl_close($ch);
-        return $result;
-    }
-    
-    public static function zkHttpPost($url, $params, $accessToken = 0) {
-        $postdata = http_build_query($params);
-    
-        $headers = array('Connection: close');
-        if($accessToken)
-            $headers[] = "Authorization: Bearer " . $accessToken;
-    
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_USERAGENT, SSOCommon::UA);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        //curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        //curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-        $result = curl_exec($ch);
-        curl_close($ch);
-        return $result;
-    }
     
     public static function zkHttpRedirect($url, $params) {
         $qs = http_build_query($params);
@@ -108,28 +66,41 @@ class SSOCommon {
         $code = $params["code"];
         if($code) {
             // positive authorization received; get the access token
-            $params = [
-                "client_id" => $SSO_client_id,
-                "code" => $code,
-                "client_secret" => $SSO_client_secret,
-                "redirect_uri" => $SSO_redirect_uri,
-                "grant_type" => "authorization_code"
-            ];
-    
-            $token = self::zkHttpPost($OAuth_token_uri, $params);
-            $token = json_decode($token, true);
+            $client = new Client([
+                RequestOptions::HEADERS => [
+                    'User-Agent' => self::UA
+                ]
+            ]);
+
+            $response = $client->post($OAuth_token_uri, [
+                RequestOptions::FORM_PARAMS => [
+                    "client_id" => $SSO_client_id,
+                    "code" => $code,
+                    "client_secret" => $SSO_client_secret,
+                    "redirect_uri" => $SSO_redirect_uri,
+                    "grant_type" => "authorization_code"
+                ]
+            ]);
+
+            $token = json_decode($response->getBody()->getContents(), true);
     
             $idToken = $token["id_token"];
             if($idToken) {
                 // open the id_token
-                $tokeninfo = self::zkHttpGet($OAuth_tokeninfo_uri . "?id_token=" . urlencode($idToken));
-                $tokeninfo = json_decode($tokeninfo, true);
+                $response = $client->get($OAuth_tokeninfo_uri . "?id_token=" . urlencode($idToken));
+
+                $tokeninfo = json_decode($response->getBody()->getContents(), true);
     
                 $userId = $tokeninfo["user_id"];
                 if($userId) {
                     // get the profile
-                    $profile = self::zkHttpGet($OAuth_userinfo_uri, 0, $token["access_token"]);
-                    return json_decode($profile, true);
+                    $response = $client->get($OAuth_userinfo_uri, [
+                        RequestOptions::HEADERS => [
+                            "Authorization" => "Bearer " . $token["access_token"]
+                        ]
+                    ]);
+
+                    return json_decode($response->getBody()->getContents(), true);
                 }
             }
     
