@@ -235,7 +235,7 @@ class PlaylistEntry {
             break;
         }
 
-        if(isset($array["created"]))
+//        if(isset($array["created"]))
             $entry->setCreated($array["created"]);
 
         return $entry;
