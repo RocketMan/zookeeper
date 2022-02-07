@@ -39,9 +39,11 @@ class Validate implements IController {
     private $session;
     private $testUser;
     private $testPass;
+    private $client;
+    private $apiKeyId;
 
     private const TEST_NAME = "TEST User";
-    private const TEST_ACCESS = "qr";  // some unused roles for safety
+    private const TEST_ACCESS = "qrm";  // some unused roles for safety (include 'm' for library validation)
     private const TEST_COMMENT = "TEST comment!";
     private const TEST_TRACK = "TEST Grommet Track"; // second word is search key
 
@@ -90,6 +92,8 @@ class Validate implements IController {
         try {
             $this->validateCreateUser();
             $this->validateSignon();
+            if(strpos(self::TEST_ACCESS, 'm') !== false)
+                $this->validateLibrary();
             $this->validatePlaylists();
             $this->validateCategories();
             $this->validateDeleteUser();
@@ -149,17 +153,14 @@ class Validate implements IController {
             // Resume normal error reporting
             error_reporting(E_ALL & ~E_NOTICE);
         }
-    }
 
-    public function validatePlaylists() {
-        $apiKeyId = false; // we use this as a runTest conditional later on
         if($this->doTest("create api key")) {
             $apiKey = sha1(uniqid(rand()));
             $success = Engine::api(IUser::class)->addAPIKey($this->testUser, $apiKey);
             if($success) {
-                $apiKeyId = Engine::api(IUser::class)->lastInsertId();
+                $this->apiKeyId = Engine::api(IUser::class)->lastInsertId();
 
-                $client = new Client([
+                $this->client = new Client([
                     'base_uri' => $_REQUEST["url"],
                     RequestOptions::HEADERS => [
                         'Accept' => 'application/json',
@@ -169,12 +170,13 @@ class Validate implements IController {
             }
 
             $this->showSuccess($success);
-        } else
-            $success = false;
+        }
+    }
 
-        if($this->doTest("create playlist", $success)) {
+    public function validatePlaylists() {
+        if($this->doTest("create playlist")) {
             $airname = self::TEST_NAME." ".$this->testUser; // make unique
-            $response = $client->post('api/v1/playlist', [
+            $response = $this->client->post('api/v1/playlist', [
                 RequestOptions::JSON => [
                     'data' => [
                         'type' => 'show',
@@ -198,7 +200,7 @@ class Validate implements IController {
         }
 
         if($this->doTest("insert comment", $success)) {
-            $response = $client->post($list . '/events', [
+            $response = $this->client->post($list . '/events', [
                 RequestOptions::JSON => [
                     'data' => [
                         'type' => 'event',
@@ -224,7 +226,7 @@ class Validate implements IController {
             $success2 = false;
 
         if($this->doTest("insert spin", $success)) {
-            $response = $client->post($list . '/events', [
+            $response = $this->client->post($list . '/events', [
                 RequestOptions::JSON => [
                     'data' => [
                         'type' => 'event',
@@ -252,7 +254,7 @@ class Validate implements IController {
             $success3 = false;
 
         if($this->doTest("move track", $success2 && $success3)) {
-            $response = $client->post('', [
+            $response = $this->client->post('', [
                 RequestOptions::FORM_PARAMS => [
                     "action" => "moveTrack",
                     "playlist" => $pid,
@@ -267,7 +269,7 @@ class Validate implements IController {
             $success4 = false;
 
         if($this->doTest("view playlist", $success4)) {
-            $response = $client->get('', [
+            $response = $this->client->get('', [
                 RequestOptions::QUERY => [
                     "action" => "viewListById",
                     "subaction" => "",
@@ -289,7 +291,7 @@ class Validate implements IController {
         }
 
         if($this->doTest("validate search", $success3)) {
-            $response = $client->get('api/v1/search', [
+            $response = $this->client->get('api/v1/search', [
                 RequestOptions::QUERY => [
                     "page[size]" => 5,
                     "filter[*]" => explode(' ', self::TEST_TRACK)[1],
@@ -317,7 +319,7 @@ class Validate implements IController {
         }
 
         if($this->doTest("delete playlist", $success)) {
-            $response = $client->delete($list);
+            $response = $this->client->delete($list);
             $success = $response->getStatusCode() == 204;
             $this->showSuccess($success);
         }
@@ -326,9 +328,116 @@ class Validate implements IController {
             $success = Engine::api(IPlaylist::class)->purgeDeletedPlaylists(0);
             $this->showSuccess($success);
         }
+    }
 
-        if($this->doTest("release api key", $apiKeyId)) {
-            $success = Engine::api(IUser::class)->deleteAPIKeys($this->testUser, [ $apiKeyId ]);
+    public function validateLibrary() {
+        if($this->doTest("create label", isset($this->apiKeyId))) {
+            $labelname = "TEST Label ".$this->testUser; // make unique
+            $response = $this->client->post('api/v1/label', [
+                RequestOptions::JSON => [
+                    'data' => [
+                        'type' => 'label',
+                        'attributes' => [
+                            'name' => $labelname
+                        ]
+                    ]
+                ]
+            ]);
+
+            $success = $response->getStatusCode() == 201;
+            if($success) {
+                $label = $response->getHeader('Location')[0];
+                $pubkey = basename($label);
+            }
+
+            $this->showSuccess($success);
+        }
+
+        if($this->doTest("create album", $success)) {
+            $albumname = "TEST Album ".$this->testUser; // make unique
+            $response = $this->client->post('api/v1/album', [
+                RequestOptions::JSON => [
+                    'data' => [
+                        'type' => 'album',
+                        'attributes' => [
+                            'artist' => 'TEST Artist',
+                            'album' => $albumname,
+                            'category' => 'World',
+                            'medium' => 'CD',
+                            'location' => 'Library',
+                            'size' => 'Full',
+                            'coll' => false,
+                            'tracks' => [
+                                [
+                                    'track' => 'TEST track 1'
+                                ],[
+                                    'track' => 'TEST track 2'
+                                ]
+                            ]
+                        ],
+                        'relationships' => [
+                            'label' => [
+                                'data' => [
+                                    'type' => 'label',
+                                    'id' => $pubkey
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]);
+
+            $success = $response->getStatusCode() == 201;
+            if($success) {
+                $album = $response->getHeader('Location')[0];
+                $tag = basename($album);
+            }
+
+            $this->showSuccess($success);
+        }
+
+        if($this->doTest("search album", $success)) {
+            $response = $this->client->get('api/v1/album', [
+                RequestOptions::QUERY => [
+                    "page[size]" => 5,
+                    "filter[album]" => $albumname,
+                    "include" => "label"
+                ]
+            ]);
+            $page = $response->getBody()->getContents();
+
+            // parse the json looking for the album and label
+            $success7 = false;
+            $json = json_decode($page);
+            foreach($json->data as $data) {
+                if($data->type == "album" &&
+                        $data->attributes->album == $albumname) {
+                    $success7 = true;
+                    break;
+                }
+            }
+
+            $success8 = false;
+            foreach($json->included as $data) {
+                if($data->type == "label" &&
+                        $data->attributes->name == $labelname) {
+                    $success8 = true;
+                    break;
+                }
+            }
+
+            $this->showSuccess($success7 && $success8);
+        }
+
+        if($this->doTest("delete album", $success)) {
+            $response = $this->client->delete($album);
+            $success = $response->getStatusCode() == 204;
+            $this->showSuccess($success);
+        }
+
+        if($this->doTest("delete label", $success)) {
+            $response = $this->client->delete($label);
+            $success = $response->getStatusCode() == 204;
             $this->showSuccess($success);
         }
     }
@@ -342,6 +451,11 @@ class Validate implements IController {
     }
 
     public function validateDeleteUser() {
+        if($this->doTest("release api key", isset($this->apiKeyId))) {
+            $success = Engine::api(IUser::class)->deleteAPIKeys($this->testUser, [ $this->apiKeyId ]);
+            $this->showSuccess($success);
+        }
+
         if($this->doTest("delete user", isset($this->testUser))) {
             // invalidate session
             $this->session->invalidate();
