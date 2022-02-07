@@ -40,7 +40,6 @@ use Enm\JsonApi\Model\Response\EmptyResponse;
 use Enm\JsonApi\Model\Response\ResponseInterface;
 use Enm\JsonApi\Server\RequestHandler\NoRelationshipFetchTrait;
 use Enm\JsonApi\Server\RequestHandler\NoRelationshipModificationTrait;
-use Enm\JsonApi\Server\RequestHandler\NoResourceDeletionTrait;
 use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
 
 
@@ -48,7 +47,6 @@ class Labels implements RequestHandlerInterface {
     use OffsetPaginationTrait;
     use NoRelationshipFetchTrait;
     use NoRelationshipModificationTrait;
-    use NoResourceDeletionTrait;
 
     const FIELDS = [ "name", "attention", "address", "city", "state",
                      "zip", "phone", "fax", "mailcount", "maillist",
@@ -203,7 +201,7 @@ class Labels implements RequestHandlerInterface {
 
         $key = $request->id();
         if(empty($key))
-            throw new ResourceNotFoundException("label", $key ?? 0);
+            throw new BadRequestException("must specify id");
 
         $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $key);
         if(sizeof($rec) == 0)
@@ -227,5 +225,18 @@ class Labels implements RequestHandlerInterface {
             return new EmptyResponse();
 
         throw new \Exception("update failed");
+    }
+
+    public function deleteResource(RequestInterface $request): ResponseInterface {
+        if(!Engine::session()->isAuth("m"))
+            throw new NotAllowedException("Operation requires authentication");
+
+        $key = $request->id();
+        if(empty($key))
+            throw new BadRequestException("must specify id");
+
+        Engine::api(IEditor::class)->deleteLabel($key);
+
+        return new EmptyResponse();
     }
 }

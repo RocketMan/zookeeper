@@ -440,7 +440,7 @@ class Albums implements RequestHandlerInterface {
 
         $key = $request->id();
         if(empty($key))
-            throw new ResourceNotFoundException("album", $key ?? 0);
+            throw new BadRequestException("must specify id");
 
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $key);
         if(sizeof($albums) == 0)
@@ -462,9 +462,9 @@ class Albums implements RequestHandlerInterface {
 
         $key = $request->id();
         if(empty($key))
-            throw new ResourceNotFoundException("album", $key ?? 0);
+            throw new BadRequestException("must specify id");
 
-        Engine::api(IEditor::class)->deleteAlbum($id);
+        Engine::api(IEditor::class)->deleteAlbum($key);
 
         return new EmptyResponse();
     }

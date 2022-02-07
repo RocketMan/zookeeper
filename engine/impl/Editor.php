@@ -272,6 +272,100 @@ class EditorImpl extends DBO implements IEditor {
         return true;
     }
 
+    public function deleteAlbum($tag) {
+        // use a fresh connection so we don't adversely affect
+        // anything else by changing the attributes, etc.
+        $pdo = $this->newPDO();
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+        $pdo->beginTransaction();
+
+        try {
+            $query = "SELECT count(*) c FROM albumvol WHERE tag = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $tag);
+            $result = $stmt->executeAndFetch();
+            if($result['c'] == 0)
+                throw new \Exception("album does not exist");
+
+            $query = "SELECT count(*) c FROM reviews WHERE tag = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $tag);
+            $result = $stmt->executeAndFetch();
+            if($result['c'])
+                throw new \Exception("album has reviews");
+
+            $query = "SELECT count(*) c FROM currents WHERE tag = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $tag);
+            $result = $stmt->executeAndFetch();
+            if($result['c'])
+                throw new \Exception("album has been in the a-file");
+
+            $query = "SELECT count(*) c FROM plays WHERE tag = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $tag);
+            $result = $stmt->executeAndFetch();
+            if($result['c'])
+                throw new \Exception("album has charted");
+
+            $query = "DELETE FROM tagqueue WHERE tag = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $tag);
+            $stmt->execute();
+
+            $query = "DELETE FROM tracknames WHERE tag = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $tag);
+            $stmt->execute();
+
+            $query = "DELETE FROM colltracknames WHERE tag = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $tag);
+            $stmt->execute();
+
+            $query = "DELETE FROM albumvol WHERE tag = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $tag);
+            $stmt->execute();
+
+            // any spins which reference this album will already have
+            // a private copy of the artist/album/label name; all that
+            // remains is to remove the link to the album
+            $query = "UPDATE tracks SET tag = NULL WHERE tag = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $tag);
+            $stmt->execute();
+
+            // if we made it this far, success!
+            $pdo->commit();
+        } catch(\Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    public function deleteLabel($pubkey) {
+        $query = "SELECT count(*) c FROM publist WHERE pubkey = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $pubkey);
+        $result = $stmt->executeAndFetch();
+        if($result['c'] == 0)
+            throw new \Exception("label does not exist");
+
+        $query = "SELECT count(*) c FROM albumvol WHERE pubkey = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $pubkey);
+        $result = $stmt->executeAndFetch();
+        if($result['c'])
+            throw new \Exception("label has albums");
+
+        $query = "DELETE FROM publist WHERE pubkey = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $pubkey);
+        return $stmt->execute();
+    }
+
     public function enqueueTag($tag, $user) {
         $query = "INSERT INTO tagqueue (user, tag, keyed) values (?, ?, now())";
         $stmt = $this->prepare($query);

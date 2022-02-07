@@ -75,4 +75,7 @@ the 'm' group.
 
 ### Delete
 
-Label deletion is not supported.
+Delete the label with pubkey :id by sending a DELETE request to
+`api/v1/label/:id`.  Delete will fail if the label has any albums
+assigned.  X-APIKEY authentication required; you must belong to the
+'m' group.

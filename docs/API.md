@@ -100,8 +100,9 @@ supported by each type.
     album with tag :id by sending a DELETE request to
     `api/v1/album/:id`.  Delete will fail if the album has reviews,
     or if it has ever been in the a-file or has charted.  DELETE is
-    supported for all types except label.  X-APIKEY authentication
-    required; you must belong to the 'm' group for deleting an album.
+    supported for all types.  X-APIKEY authentication is required;
+    you must belong to the 'm' group for deleting an album or label,
+    or to delete a playlist or review, you must be its owner.
 
 * For playlist insert/delete, X-APIKEY authentication required and you
   must own the playlist.  If you belong to 'v' group, you may insert
