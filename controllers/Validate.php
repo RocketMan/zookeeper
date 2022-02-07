@@ -152,22 +152,25 @@ class Validate implements IController {
     }
 
     public function validatePlaylists() {
+        $apiKeyId = false; // we use this as a runTest conditional later on
         if($this->doTest("create api key")) {
             $apiKey = sha1(uniqid(rand()));
             $success = Engine::api(IUser::class)->addAPIKey($this->testUser, $apiKey);
-            if($success)
+            if($success) {
                 $apiKeyId = Engine::api(IUser::class)->lastInsertId();
+
+                $client = new Client([
+                    'base_uri' => $_REQUEST["url"],
+                    RequestOptions::HEADERS => [
+                        'Accept' => 'application/json',
+                        'X-APIKEY' => $apiKey
+                    ]
+                ]);
+            }
+
             $this->showSuccess($success);
         } else
             $success = false;
-
-        $client = new Client([
-            'base_uri' => $_REQUEST["url"],
-            RequestOptions::HEADERS => [
-                'Accept' => 'application/json',
-                'X-APIKEY' => $apiKey
-            ]
-        ]);
 
         if($this->doTest("create playlist", $success)) {
             $response = $client->post('api/v1/playlist', [
@@ -323,7 +326,7 @@ class Validate implements IController {
             $this->showSuccess($success);
         }
 
-        if($this->doTest("release api key", $success)) {
+        if($this->doTest("release api key", $apiKeyId)) {
             $success = Engine::api(IUser::class)->deleteAPIKeys($this->testUser, [ $apiKeyId ]);
             $this->showSuccess($success);
         }

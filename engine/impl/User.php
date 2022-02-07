@@ -274,7 +274,7 @@ class UserImpl extends DBO implements IUser {
         Engine::api(IDJ::class)->getAirnames($user);
 
         // remove any api keys
-        $query = "DELETE FROM apikeys WHERE user=?";
+        $query = "DELETE FROM apikeys WHERE user = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
         $stmt->execute();
