@@ -229,18 +229,18 @@ class EditorImpl extends DBO implements IEditor {
                 $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $label["pubkey"]);
                 $stmt->bindValue(2, trim($label["name"]));
-                $stmt->bindValue(3, $label["attention"]);
-                $stmt->bindValue(4, $label["address"]);
-                $stmt->bindValue(5, $label["city"]);
-                $stmt->bindValue(6, $label["state"]);
-                $stmt->bindValue(7, $label["zip"]);
-                $stmt->bindValue(8, $label["foreign"]?"T":"F");
-                $stmt->bindValue(9, $label["phone"]);
-                $stmt->bindValue(10, $label["fax"]);
-                $stmt->bindValue(11, $label["email"]);
-                $stmt->bindValue(12, $label["url"]);
-                $stmt->bindValue(13, (int)$label["mailcount"]);
-                $stmt->bindValue(14, $label["maillist"]);
+                $stmt->bindValue(3, $label["attention"] ?? "");
+                $stmt->bindValue(4, $label["address"] ?? "");
+                $stmt->bindValue(5, $label["city"] ?? "");
+                $stmt->bindValue(6, $label["state"] ?? "");
+                $stmt->bindValue(7, $label["zip"] ?? "");
+                $stmt->bindValue(8, ($label["foreign"] ?? false)?"T":"F");
+                $stmt->bindValue(9, $label["phone"] ?? "");
+                $stmt->bindValue(10, $label["fax"] ?? "");
+                $stmt->bindValue(11, $label["email"] ?? "");
+                $stmt->bindValue(12, $label["url"] ?? "");
+                $stmt->bindValue(13, (int)($label["mailcount"] ?? 0));
+                $stmt->bindValue(14, $label["maillist"] ?? "");
             } else if($label) {
                 $query = "UPDATE publist SET name=?, attention=?, " .
                          "address=?, city=?, state=?, zip=?, international=?, " .
