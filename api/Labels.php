@@ -188,6 +188,7 @@ class Labels implements RequestHandlerInterface {
             throw new NotAllowedException("label with this name already exists");
 
         $label = self::fromAttrs($attrs);
+        $label["pubkey"] = 0;
 
         if(Engine::api(IEditor::class)->insertUpdateLabel($label))
             return new CreatedResponse(Engine::getBaseUrl()."label/{$label['pubkey']}");

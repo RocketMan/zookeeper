@@ -429,6 +429,7 @@ class Albums implements RequestHandlerInterface {
                 $label[$field] = self::zkAlpha($label[$field], true);
         }
 
+        $a["tag"] = 0;
         $a["format"] = $a["size"];
         if(Engine::api(IEditor::class)->insertUpdateAlbum($a, $tracks, $label))
             return new CreatedResponse(Engine::getBaseUrl()."album/{$a['tag']}");
