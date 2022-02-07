@@ -192,7 +192,7 @@ class EditorImpl extends DBO implements IEditor {
             for($i=1; $tracks && array_key_exists($i, $tracks); $i++) {
                 $trackRow = $tracks[$i];
                 $trackName = trim($trackRow['track']);
-                $trackUrl = trim($trackRow['url']);
+                $trackUrl = trim($trackRow['url'] ?? "");
                 $query = "INSERT INTO tracknames (tag, seq, track, url) VALUES (?, ?, ?, ?)";
                 if ($iscoll)
                     $query = "INSERT INTO colltracknames (tag, seq, track, url, artist) VALUES (?, ?, ?, ?, ?)";

@@ -189,6 +189,7 @@ class Labels implements RequestHandlerInterface {
 
         $label = self::fromAttrs($attrs);
         $label["pubkey"] = 0;
+        $label["foreign"] = $label["international"];
 
         if(Engine::api(IEditor::class)->insertUpdateLabel($label))
             return new CreatedResponse(Engine::getBaseUrl()."label/{$label['pubkey']}");
@@ -221,6 +222,7 @@ class Labels implements RequestHandlerInterface {
         }
 
         $label = array_merge($label, self::fromAttrs($attrs));
+        $label["foreign"] = $label["international"];
 
         if(Engine::api(IEditor::class)->insertUpdateLabel($label))
             return new EmptyResponse();
