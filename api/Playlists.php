@@ -321,20 +321,20 @@ class Playlists implements RequestHandlerInterface {
 
         // lookup the airname
         $djapi = Engine::api(IDJ::class);
-        $airname = $djapi->getAirname($airname, $session->isAuth("v")?"":$user);
-        if(!$airname) {
+        $aid = $djapi->getAirname($airname, $session->isAuth("v")?"":$user);
+        if(!$aid) {
             // airname does not exist; try to create it
             $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
             if($success > 0) {
                 // success!
-                $airname = $djapi->lastInsertId();
+                $aid = $djapi->lastInsertId();
             } else
                 throw new \InvalidArgumentException("airname is invalid");
         }
 
         // create the playlist
         $papi = Engine::api(IPlaylist::class);
-        $papi->insertPlaylist($user, $date, $time, mb_substr($name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $airname);
+        $papi->insertPlaylist($user, $date, $time, mb_substr($name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $aid);
         $playlist = $papi->lastInsertId();
 
         // insert the tracks
@@ -360,7 +360,7 @@ class Playlists implements RequestHandlerInterface {
         }
 
         if($playlist) {
-            if($airname && $papi->isNowWithinShow(
+            if($an && $papi->isNowWithinShow(
                     ["showdate" => $date, "showtime" => $time]))
                 PushServer::sendAsyncNotification();
 
