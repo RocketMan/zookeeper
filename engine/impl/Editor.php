@@ -53,7 +53,7 @@ class EditorImpl extends DBO implements IEditor {
         if($album["location"] != "G")
            $album["bin"] = "";
     
-        $newLabel = $label && !isset($label["pubkey"]) &&
+        $newLabel = $label && !$label["pubkey"] &&
                                    array_key_exists("name", $label);
     
         // Label
@@ -102,7 +102,7 @@ class EditorImpl extends DBO implements IEditor {
                 $stmt->bindValue(12, (int)$label["mailcount"]);
                 $stmt->bindValue(13, $label["maillist"]);
                 $stmt->bindValue(14, $label["pubkey"]);
-            } else if(!isset($album["tag"])) {
+            } else if(!$album["tag"]) {
                 $query = "UPDATE publist SET modified=now() WHERE pubkey=?";
                 $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $album["pubkey"]);
@@ -128,7 +128,7 @@ class EditorImpl extends DBO implements IEditor {
             $iscoll = "1";
         }
     
-        $newAlbum = !isset($album["tag"]);
+        $newAlbum = !$album["tag"];
     
         do {
             if($newAlbum) {
@@ -213,7 +213,7 @@ class EditorImpl extends DBO implements IEditor {
     }
     
     public function insertUpdateLabel(&$label) {
-        $newLabel = $label && !isset($label["pubkey"]);
+        $newLabel = $label && !$label["pubkey"];
     
         // Label
         do {
