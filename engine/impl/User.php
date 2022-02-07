@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -272,6 +272,12 @@ class UserImpl extends DBO implements IUser {
 
         // remove any airnames
         Engine::api(IDJ::class)->getAirnames($user);
+
+        // remove any api keys
+        $query = "DELETE FROM apikeys WHERE user=?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        $stmt->execute();
 
         $query = "DELETE FROM users WHERE name = ?";
         $stmt = $this->prepare($query);

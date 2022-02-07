@@ -158,7 +158,8 @@ class Validate implements IController {
             if($success)
                 $apiKeyId = Engine::api(IUser::class)->lastInsertId();
             $this->showSuccess($success);
-        }
+        } else
+            $success = false;
 
         $client = new Client([
             'base_uri' => $_REQUEST["url"],
@@ -167,14 +168,6 @@ class Validate implements IController {
                 'X-APIKEY' => $apiKey
             ]
         ]);
-
-        if($this->doTest("create airname")) {
-            $djapi = Engine::api(IDJ::class);
-            $airname = self::TEST_NAME." ".$this->testUser; // make unique
-            $success = $djapi->insertAirname($airname, $this->testUser);
-            $this->showSuccess($success);
-        } else
-            $success = false;
 
         if($this->doTest("create playlist", $success)) {
             $response = $client->post('api/v1/playlist', [
