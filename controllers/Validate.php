@@ -175,7 +175,7 @@ class Validate implements IController {
 
     public function validatePlaylists() {
         $success = false;
-        if($this->doTest("create playlist")) {
+        if($this->doTest("create playlist", true)) {
             $airname = self::TEST_NAME." ".$this->testUser; // make unique
             $response = $this->client->post('api/v1/playlist', [
                 RequestOptions::JSON => [
@@ -419,15 +419,54 @@ class Validate implements IController {
             }
 
             $success8 = false;
-            foreach($json->included as $data) {
-                if($data->type == "label" &&
-                        $data->attributes->name == $labelname) {
-                    $success8 = true;
-                    break;
+            if(isset($json->included)) {
+                foreach($json->included as $data) {
+                    if($data->type == "label" &&
+                            $data->attributes->name == $labelname) {
+                        $success8 = true;
+                        break;
+                    }
                 }
             }
 
             $this->showSuccess($success7 && $success8);
+        }
+
+        if($this->doTest("edit album", $success)) {
+            $albumname2 = "TEST EDIT Album ".$this->testUser; // make unique
+            $response = $this->client->patch($album, [
+                RequestOptions::JSON => [
+                    'data' => [
+                        'type' => 'album',
+                        'attributes' => [
+                            'artist' => 'TEST Artist EDIT',
+                            'album' => $albumname2,
+                            'category' => 'Jazz',
+                            'medium' => '12"'
+                        ]
+                    ]
+                ]
+            ]);
+
+            $success = $response->getStatusCode() == 204;
+            $this->showSuccess($success);
+        }
+
+        if($this->doTest("edit label", $success)) {
+            $response = $this->client->patch($label, [
+                RequestOptions::JSON => [
+                    'data' => [
+                        'type' => 'label',
+                        'attributes' => [
+                            'city' => 'TEST city',
+                            'international' => true
+                        ]
+                    ]
+                ]
+            ]);
+
+            $success = $response->getStatusCode() == 204;
+            $this->showSuccess($success);
         }
 
         if($this->doTest("delete album", $success)) {
