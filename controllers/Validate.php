@@ -192,6 +192,7 @@ class Validate implements IController {
             ]);
 
             $success = $response->getStatusCode() == 201;
+	    echo "DEBUG: ".$response->getBody()->getContents();
             if($success) {
                 $list = $response->getHeader('Location')[0];
                 $pid = basename($list);
@@ -346,7 +347,6 @@ class Validate implements IController {
             ]);
 
             $success = $response->getStatusCode() == 201;
-	    echo "DEBUG: ".$response->getBody()->getContents();
             if($success) {
                 $label = $response->getHeader('Location')[0];
                 $pubkey = basename($label);
@@ -390,7 +390,6 @@ class Validate implements IController {
             ]);
 
             $success = $response->getStatusCode() == 201;
-	    echo "DEBUG: ".$response->getBody()->getContents();
             if($success) {
                 $album = $response->getHeader('Location')[0];
                 $tag = basename($album);
