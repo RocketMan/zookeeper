@@ -346,6 +346,7 @@ class Validate implements IController {
             ]);
 
             $success = $response->getStatusCode() == 201;
+	    echo "DEBUG: ".$response->getBody()->getContents();
             if($success) {
                 $label = $response->getHeader('Location')[0];
                 $pubkey = basename($label);
