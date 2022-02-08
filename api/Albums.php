@@ -430,13 +430,12 @@ class Albums implements RequestHandlerInterface {
                 }
 
                 $a["pubkey"] = $label["pubkey"] = 0;
-                $label["foreign"] = $label["international"];
+                $label["foreign"] = $label["international"] ?? false;
             }
         }
 
         $a["tag"] = 0;
         $a["format"] = $a["size"];
-        $label["foreign"] = $label["international"];
         if(Engine::api(IEditor::class)->insertUpdateAlbum($a, $tracks, $label))
             return new CreatedResponse(Engine::getBaseUrl()."album/{$a['tag']}");
         throw new \Exception("creation failed");
