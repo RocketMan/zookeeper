@@ -65,47 +65,53 @@ class SSOCommon {
     
         $code = $params["code"];
         if($code) {
-            // positive authorization received; get the access token
-            $client = new Client([
-                RequestOptions::HEADERS => [
-                    'User-Agent' => self::UA
-                ]
-            ]);
+            try {
+                // positive authorization received; get the access token
+                $client = new Client([
+                    RequestOptions::HEADERS => [
+                        'User-Agent' => self::UA
+                    ]
+                ]);
 
-            $response = $client->post($OAuth_token_uri, [
-                RequestOptions::FORM_PARAMS => [
-                    "client_id" => $SSO_client_id,
-                    "code" => $code,
-                    "client_secret" => $SSO_client_secret,
-                    "redirect_uri" => $SSO_redirect_uri,
-                    "grant_type" => "authorization_code"
-                ]
-            ]);
+                $response = $client->post($OAuth_token_uri, [
+                    RequestOptions::FORM_PARAMS => [
+                        "client_id" => $SSO_client_id,
+                        "code" => $code,
+                        "client_secret" => $SSO_client_secret,
+                        "redirect_uri" => $SSO_redirect_uri,
+                        "grant_type" => "authorization_code"
+                    ]
+                ]);
 
-            $token = json_decode($response->getBody()->getContents(), true);
+                $token = json_decode($response->getBody()->getContents(), true);
     
-            $idToken = $token["id_token"];
-            if($idToken) {
-                // open the id_token
-                $response = $client->get($OAuth_tokeninfo_uri . "?id_token=" . urlencode($idToken));
+                $idToken = $token["id_token"];
+                if($idToken) {
+                    // open the id_token
+                    $response = $client->get($OAuth_tokeninfo_uri . "?id_token=" . urlencode($idToken));
 
-                $tokeninfo = json_decode($response->getBody()->getContents(), true);
+                    $tokeninfo = json_decode($response->getBody()->getContents(), true);
     
-                $userId = $tokeninfo["user_id"];
-                if($userId) {
-                    // get the profile
-                    $response = $client->get($OAuth_userinfo_uri, [
-                        RequestOptions::HEADERS => [
-                            "Authorization" => "Bearer " . $token["access_token"]
-                        ]
-                    ]);
+                    $userId = $tokeninfo["user_id"];
+                    if($userId) {
+                        // get the profile
+                        $response = $client->get($OAuth_userinfo_uri, [
+                            RequestOptions::HEADERS => [
+                                "Authorization" => "Bearer " . $token["access_token"]
+                            ]
+                        ]);
 
-                    return json_decode($response->getBody()->getContents(), true);
+                        return json_decode($response->getBody()->getContents(), true);
+                    }
                 }
+
+                $error = "ssoInvalidAssertion";
+                return false;
+            } catch(\Exception $e) {
+                error_log("ssoCheckAssertion: " . $e->getMessage());
+                $error = "ssoError";
+                return false;
             }
-    
-            $error = "ssoInvalidAssertion";
-            return false;
         } else {
             $error = "ssoInvalidAssertion";
             return false;
