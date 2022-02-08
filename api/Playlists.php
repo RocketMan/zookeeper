@@ -360,7 +360,7 @@ class Playlists implements RequestHandlerInterface {
         }
 
         if($playlist) {
-            if($an && $papi->isNowWithinShow(
+            if($aid && $papi->isNowWithinShow(
                     ["showdate" => $date, "showtime" => $time]))
                 PushServer::sendAsyncNotification();
 
