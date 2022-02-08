@@ -388,16 +388,16 @@ class Validate implements IController {
                 ]
             ]);
 
-            $success = $response->getStatusCode() == 201;
-            if($success) {
+            $success2 = $response->getStatusCode() == 201;
+            if($success2) {
                 $album = $response->getHeader('Location')[0];
                 $tag = basename($album);
             }
 
-            $this->showSuccess($success);
+            $this->showSuccess($success2);
         }
 
-        if($this->doTest("search album", $success)) {
+        if($this->doTest("search album", $success2)) {
             $response = $this->client->get('api/v1/album', [
                 RequestOptions::QUERY => [
                     "page[size]" => 5,
@@ -432,7 +432,7 @@ class Validate implements IController {
             $this->showSuccess($success7 && $success8);
         }
 
-        if($this->doTest("edit album", $success)) {
+        if($this->doTest("edit album", $success2)) {
             $albumname2 = "TEST EDIT Album ".$this->testUser; // make unique
             $response = $this->client->patch($album, [
                 RequestOptions::JSON => [
@@ -448,8 +448,8 @@ class Validate implements IController {
                 ]
             ]);
 
-            $success = $response->getStatusCode() == 204;
-            $this->showSuccess($success);
+            $success3 = $response->getStatusCode() == 204;
+            $this->showSuccess($success3);
         }
 
         if($this->doTest("edit label", $success)) {
@@ -465,20 +465,20 @@ class Validate implements IController {
                 ]
             ]);
 
-            $success = $response->getStatusCode() == 204;
-            $this->showSuccess($success);
+            $success4 = $response->getStatusCode() == 204;
+            $this->showSuccess($success4);
         }
 
-        if($this->doTest("delete album", $success)) {
+        if($this->doTest("delete album", $success2)) {
             $response = $this->client->delete($album);
-            $success = $response->getStatusCode() == 204;
-            $this->showSuccess($success);
+            $success5 = $response->getStatusCode() == 204;
+            $this->showSuccess($success5);
         }
 
         if($this->doTest("delete label", $success)) {
             $response = $this->client->delete($label);
-            $success = $response->getStatusCode() == 204;
-            $this->showSuccess($success);
+            $success6 = $response->getStatusCode() == 204;
+            $this->showSuccess($success6);
         }
     }
 
