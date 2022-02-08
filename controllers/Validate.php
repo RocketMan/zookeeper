@@ -331,6 +331,44 @@ class Validate implements IController {
         }
     }
 
+    protected function searchAlbum($title, $test,
+            $albumName, $labelField, $labelValue) {
+        if($this->doTest($title, $test)) {
+            $response = $this->client->get('api/v1/album', [
+                RequestOptions::QUERY => [
+                    "page[size]" => 5,
+                    "filter[album]" => $albumName,
+                    "include" => "label"
+                ]
+            ]);
+            $page = $response->getBody()->getContents();
+
+            // parse the json looking for the album and label
+            $successAlbum = false;
+            $json = json_decode($page);
+            foreach($json->data as $data) {
+                if($data->type == "album" &&
+                        $data->attributes->album == $albumName) {
+                    $successAlbum = true;
+                    break;
+                }
+            }
+
+            $successLabel = false;
+            if(isset($json->included)) {
+                foreach($json->included as $data) {
+                    if($data->type == "label" &&
+                            $data->attributes->{$labelField} == $labelValue) {
+                        $successLabel = true;
+                        break;
+                    }
+                }
+            }
+
+            $this->showSuccess($successAlbum && $successLabel);
+        }
+    }
+
     public function validateLibrary() {
         if($this->doTest("create label", isset($this->apiKeyId))) {
             $labelname = "TEST Label ".$this->testUser; // make unique
@@ -397,40 +435,7 @@ class Validate implements IController {
             $this->showSuccess($success2);
         }
 
-        if($this->doTest("search album", $success2)) {
-            $response = $this->client->get('api/v1/album', [
-                RequestOptions::QUERY => [
-                    "page[size]" => 5,
-                    "filter[album]" => $albumname,
-                    "include" => "label"
-                ]
-            ]);
-            $page = $response->getBody()->getContents();
-
-            // parse the json looking for the album and label
-            $success7 = false;
-            $json = json_decode($page);
-            foreach($json->data as $data) {
-                if($data->type == "album" &&
-                        $data->attributes->album == $albumname) {
-                    $success7 = true;
-                    break;
-                }
-            }
-
-            $success8 = false;
-            if(isset($json->included)) {
-                foreach($json->included as $data) {
-                    if($data->type == "label" &&
-                            $data->attributes->name == $labelname) {
-                        $success8 = true;
-                        break;
-                    }
-                }
-            }
-
-            $this->showSuccess($success7 && $success8);
-        }
+        $this->searchAlbum("validate created", $success2, $albumname, "name", $labelname);
 
         if($this->doTest("edit album", $success2)) {
             $albumname2 = "TEST EDIT Album ".$this->testUser; // make unique
@@ -468,6 +473,9 @@ class Validate implements IController {
             $success4 = $response->getStatusCode() == 204;
             $this->showSuccess($success4);
         }
+
+        $this->searchAlbum("validate edited",
+                $success3 && $success4, $albumname2, "city", "TEST City");
 
         if($this->doTest("delete album", $success2)) {
             $response = $this->client->delete($album);
