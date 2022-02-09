@@ -17,6 +17,7 @@ An [example review document](Samples.md#review) is available here.
 ### Fields
 
 * airname
+* private
 * date
 * review
 
