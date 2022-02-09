@@ -213,7 +213,7 @@ class Reviews implements RequestHandlerInterface {
         if($revapi->insertReview($tag, $private, $airname, $review, $user))
             return new CreatedResponse(Engine::getBaseUrl()."review/{$revapi->lastInsertId()}");
 
-        throw new \Exception("creation failed");
+        throw new \Exception("$tag,$private,$airname,$review,$user"/*"creation failed"*/);
     }
 
     public function patchResource(RequestInterface $request): ResponseInterface {
