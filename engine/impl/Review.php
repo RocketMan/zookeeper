@@ -134,7 +134,7 @@ class ReviewImpl extends DBO implements IReview {
         $stmt->bindValue(4, $review);
         if($airname)
             $stmt->bindValue(5, $airname);
-        return $stmt->execute()?$stmt->rowCount():0;
+        return $stmt->execute()?true:$stmt->errorInfo()[2];
     }
     
     public function updateReview($tag, $private, $airname, $review, $user) {
