@@ -210,10 +210,10 @@ class Reviews implements RequestHandlerInterface {
         if(sizeof($reviews))
             throw new NotAllowedException("review already exists, use PATCH");
 
-        if(($x = $revapi->insertReview($tag, $private, $airname, $review, $user)) === true)
+        if($revapi->insertReview($tag, $private, $airname, $review, $user))
             return new CreatedResponse(Engine::getBaseUrl()."review/{$revapi->lastInsertId()}");
 
-        throw new \Exception($x/*"creation failed"*/);
+        throw new \Exception("$tag,$private,$airname,$review,$user"/*"creation failed"*/);
     }
 
     public function patchResource(RequestInterface $request): ResponseInterface {
