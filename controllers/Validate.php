@@ -340,7 +340,7 @@ class Validate implements IController {
             ]
         ]);
         $page = $response->getBody()->getContents();
-
+echo "DEBUG: $page.";
         // parse the json looking for the album and label
         $successAlbum = false;
         $json = json_decode($page);
