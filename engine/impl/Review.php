@@ -134,7 +134,7 @@ class ReviewImpl extends DBO implements IReview {
         $stmt->bindValue(4, $review);
         if($airname)
             $stmt->bindValue(5, $airname);
-        return $stmt->execute()?$stmt->rowCount():0;
+        return $stmt->execute();
     }
     
     public function updateReview($tag, $private, $airname, $review, $user) {
@@ -151,7 +151,7 @@ class ReviewImpl extends DBO implements IReview {
         $stmt->bindValue($p++, $review);
         $stmt->bindValue($p++, $tag);
         $stmt->bindValue($p++, $user);
-        return $stmt->execute()?$stmt->rowCount():0;
+        return $stmt->execute();
     }
     
     public function deleteReview($tag, $user) {
@@ -160,6 +160,6 @@ class ReviewImpl extends DBO implements IReview {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
         $stmt->bindValue(2, $user);
-        return $stmt->execute()?$stmt->rowCount():0;
+        return $stmt->execute();
     }
 }
