@@ -50,7 +50,7 @@ class Reviews implements RequestHandlerInterface {
     use OffsetPaginationTrait;
     use NoRelationshipModificationTrait;
 
-    const FIELDS = [ "airname", "private", "date", "review" ];
+    const FIELDS = [ "airname", "published", "date", "review" ];
 
     const LINKS_NONE = 0;
     const LINKS_ALBUM = 1;
@@ -73,8 +73,8 @@ class Reviews implements RequestHandlerInterface {
             case "airname":
                 $value = $rec["airname"] ?? $rec["realname"];
                 break;
-            case "private":
-                $value = $rec["private"] ? true : false;
+            case "published":
+                $value = !$rec["private"];
                 break;
             default:
                 $value = $rec[$field];
@@ -205,7 +205,7 @@ class Reviews implements RequestHandlerInterface {
             $airname = $djapi->lastInsertId();
         }
 
-        $private = $attrs->getOptional("private", false);
+        $private = $attrs->getOptional("published", true) ? 0 : 1;
         $review = $attrs->getRequired("review");
 
         $revapi = Engine::api(IReview::class);
@@ -213,7 +213,7 @@ class Reviews implements RequestHandlerInterface {
         if(sizeof($reviews))
             throw new NotAllowedException("review already exists, use PATCH");
 
-        if($revapi->insertReview($tag, $private?1:0, $airname, $review, $user))
+        if($revapi->insertReview($tag, $private, $airname, $review, $user))
             return new CreatedResponse(Engine::getBaseUrl()."review/{$revapi->lastInsertId()}");
 
         throw new \Exception("creation failed");
@@ -240,7 +240,7 @@ class Reviews implements RequestHandlerInterface {
             $airname = $djapi->lastInsertId();
         }
 
-        $private = $attrs->getOptional("private", false);
+        $private = $attrs->getOptional("published", true) ? 0 : 1;
         $review = $attrs->getRequired("review");
 
         $revapi = Engine::api(IReview::class);
@@ -248,7 +248,7 @@ class Reviews implements RequestHandlerInterface {
         if(!sizeof($reviews))
             throw new NotAllowedException("review does not exist, use POST");
 
-        if($revapi->updateReview($tag, $private?1:0, $airname, $review, $user))
+        if($revapi->updateReview($tag, $private, $airname, $review, $user))
             return new EmptyResponse();
 
         throw new \Exception("update failed");

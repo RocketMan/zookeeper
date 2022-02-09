@@ -514,7 +514,7 @@ The following are sample documents for each of the data types.
     "id": "11653",
     "attributes": {
       "airname": "Decca",
-      "private": false,
+      "published": true,
       "date": "2010-01-15",
       "review": "Another \u201cevery track is good\u201d release from Putumayo. Featuring established stars such as Huge Masekela and newcomers.  Stylish, fresh, and all so damned good.\r\n\r\n1. Slow, sexy  French version of \u201cThe Sea\u201d.  Yum! \r\n2. Slow and romantic w/delicate female vocals & a gentle lyricism.\r\n3. Acoustic guitar, sweet Afro-jazz w/warm male vocals.\r\n4. Chan Chan for kora?!?!  Check out this Afro-Cuban blend.\r\n5. Piano, female vocals in a jazzy/bluesy blend in English.  Stylish.\r\n6. Muted trumpet & piano low key, laid back French jazz.  Tres hip.\r\n7. Jazz/Klezmer blend w/sweet clarinet & a relaxed vibe.\r\n8. Mixes retro Hawaiian w/laid back jazz.  Light & breezy.\r\n9. Gershwin goes African. Balafon/guitar mix on \u201cSummertime\u201d\r\n10. Sexy jazz cha-cha w/sparkling trumpet & hip perc.\r\n11. Mid/upbeat Afro-jazz-soul w/cool vocals.  So good.\r\n"
     },
