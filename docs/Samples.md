@@ -131,7 +131,7 @@ The following are sample documents for each of the data types.
       "fax": "",
       "mailcount": "0",
       "maillist": "G",
-      "international": "F",
+      "international": false,
       "pcreated": "1994-01-05",
       "modified": "1996-07-14",
       "url": null,
