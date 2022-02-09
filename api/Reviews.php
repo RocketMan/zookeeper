@@ -267,7 +267,7 @@ class Reviews implements RequestHandlerInterface {
         if($user != $reviews[0]["user"])
             throw new NotAllowedException("only review owner may delete");
 
-        $revapi->deleteReview($key, $user);
+        $revapi->deleteReview($reviews[0]["tag"], $user);
 
         return new EmptyResponse();
     }

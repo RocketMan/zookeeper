@@ -331,12 +331,12 @@ class Validate implements IController {
         }
     }
 
-    protected function searchAlbum($albumName, $labelField, $labelValue) {
+    protected function searchAlbum($albumName, $related, $field, $value) {
         $response = $this->client->get('api/v1/album', [
             RequestOptions::QUERY => [
                 "page[size]" => 5,
                 "filter[album]" => $albumName,
-                "include" => "label"
+                "include" => "label,reviews"
             ]
         ]);
         $page = $response->getBody()->getContents();
@@ -355,8 +355,8 @@ class Validate implements IController {
         $successLabel = false;
         if(isset($json->included)) {
             foreach($json->included as $data) {
-                if($data->type == "label" &&
-                        $data->attributes->{$labelField} == $labelValue) {
+                if($data->type == $related &&
+                        $data->attributes->{$field} == $value) {
                     $successLabel = true;
                     break;
                 }
@@ -433,7 +433,7 @@ class Validate implements IController {
         }
 
         if($this->doTest("validate create", $success2)) {
-            $success7 = $this->searchAlbum($albumname, "name", $labelname);
+            $success7 = $this->searchAlbum($albumname, "label", "name", $labelname);
             $this->showSuccess($success7);
         }
 
@@ -475,8 +475,48 @@ class Validate implements IController {
         }
 
         if($this->doTest("validate edit", $success3 && $success4)) {
-            $success8 = $this->searchAlbum($albumname2, "city", "TEST City");
+            $success8 = $this->searchAlbum($albumname2, "label", "city", "TEST City");
             $this->showSuccess($success8);
+        }
+
+        if($this->doTest("create review", $success2)) {
+            $airname = self::TEST_NAME." ".$this->testUser; // make unique
+            $response = $this->client->post('api/v1/review', [
+                RequestOptions::JSON => [
+                    'data' => [
+                        'type' => 'review',
+                        'attributes' => [
+                            'airname' => $airname,
+                            'date' => '2022-02-09',
+                            'review' => 'This is a review'
+                        ],
+                        'relationships' => [
+                            'album' => [
+                                'data' => [
+                                    'type' => 'album',
+                                    'id' => $tag
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]);
+
+            $success9 = $response->getStatusCode() == 201;
+            if($success9)
+                $review = $response->getHeader('Location')[0];
+            $this->showSuccess($success9);
+        }
+
+        if($this->doTest("validate review", $success9)) {
+            $success10 = $this->searchAlbum($albumname2, "review", "review", "This is a review");
+            $this->showSuccess($success10);
+        }
+
+        if($this->doTest("delete review", $success9)) {
+            $response = $this->client->delete($review);
+            $success11 = $response->getStatusCode() == 204;
+            $this->showSuccess($success11);
         }
 
         if($this->doTest("delete album", $success2)) {
