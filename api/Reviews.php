@@ -210,7 +210,7 @@ class Reviews implements RequestHandlerInterface {
         if(sizeof($reviews))
             throw new NotAllowedException("review already exists, use PATCH");
 
-        if($revapi->insertReview($tag, $private, $airname, $review, $user))
+        if($revapi->insertReview($tag, $private?1:0, $airname, $review, $user))
             return new CreatedResponse(Engine::getBaseUrl()."review/{$revapi->lastInsertId()}");
 
         throw new \Exception("creation failed");
@@ -245,7 +245,7 @@ class Reviews implements RequestHandlerInterface {
         if(!sizeof($reviews))
             throw new NotAllowedException("review does not exist, use POST");
 
-        if($revapi->updateReview($tag, $private, $airname, $review, $user))
+        if($revapi->updateReview($tag, $private?1:0, $airname, $review, $user))
             return new EmptyResponse();
 
         throw new \Exception("update failed");
