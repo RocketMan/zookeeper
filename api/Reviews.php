@@ -50,7 +50,7 @@ class Reviews implements RequestHandlerInterface {
     use OffsetPaginationTrait;
     use NoRelationshipModificationTrait;
 
-    const FIELDS = [ "airname", "date", "review" ];
+    const FIELDS = [ "airname", "private", "date", "review" ];
 
     const LINKS_NONE = 0;
     const LINKS_ALBUM = 1;
@@ -72,6 +72,9 @@ class Reviews implements RequestHandlerInterface {
                 break;
             case "airname":
                 $value = $rec["airname"] ?? $rec["realname"];
+                break;
+            case "private":
+                $value = $rec["private"] ? true : false;
                 break;
             default:
                 $value = $rec[$field];
