@@ -41,13 +41,11 @@ use Enm\JsonApi\Model\Response\CreatedResponse;
 use Enm\JsonApi\Model\Response\DocumentResponse;
 use Enm\JsonApi\Model\Response\EmptyResponse;
 use Enm\JsonApi\Model\Response\ResponseInterface;
-use Enm\JsonApi\Server\RequestHandler\NoRelationshipModificationTrait;
 use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
 
 
 class Albums implements RequestHandlerInterface {
     use OffsetPaginationTrait;
-    use NoRelationshipModificationTrait;
 
     const FIELDS = [ "artist", "album", "category", "medium", "size",
                      "created", "updated", "location", "bin", "coll" ];
@@ -260,12 +258,16 @@ class Albums implements RequestHandlerInterface {
     }
 
     public function fetchResource(RequestInterface $request): ResponseInterface {
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $request->id());
-        if(sizeof($albums) == 0)
+        $id = $request->id();
+        $printq = $id == "printq" && Engine::session()->isAuth("m");
+        $albums = $printq ?
+            Engine::api(IEditor::class)->getQueuedTags(Engine::session()->getUser())->asArray() :
+            Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $id);
+        if(sizeof($albums) == 0 && !$printq)
             throw new ResourceNotFoundException("album", $request->id());
 
         $resource = self::fromArray($albums, self::LINKS_ALL);
-        $document = new Document($resource[0]);
+        $document = new Document($printq ? $resource : $resource[0]);
         $response = new DocumentResponse($document);
         return $response;
     }
@@ -474,6 +476,29 @@ class Albums implements RequestHandlerInterface {
         Engine::api(IEditor::class)->deleteAlbum($key);
 
         return new EmptyResponse();
+    }
+
+    public function addRelatedResources(RequestInterface $request): ResponseInterface {
+        if($request->relationship() != "printq" || !Engine::session()->isAuth("m"))
+            throw new NotAllowedException('You are not allowed to modify the relationship ' . $request->relationship());
+
+        $tag = $request->id();
+        $user = Engine::session()->getUser();
+        if(Engine::api(IEditor::class)->enqueueTag($tag, $user))
+            return new EmptyResponse();
+
+        throw new \Exception("enqueue failed");
+    }
+
+    public function removeRelatedResources(RequestInterface $request): ResponseInterface {
+        if($request->relationship() != "printq" || !Engine::session()->isAuth("m"))
+            throw new NotAllowedException('You are not allowed to modify the relationship ' . $request->relationship());
+
+        $tag = $request->id();
+        if(Engine::api(IEditor::class)->dequeueTag($tag, Engine::session()->getUser()))
+            return new EmptyResponse();
+
+        throw new \Exception("dequeue failed");
     }
 
     public function replaceRelatedResources(RequestInterface $request): ResponseInterface {

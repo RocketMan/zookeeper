@@ -479,6 +479,12 @@ class Validate implements IController {
             $this->showSuccess($success8);
         }
 
+        if($this->doTest("enqueue album", $success2)) {
+            $response = $this->client->post($album . "/printq");
+            $success12 = $response->getStatusCode() == 204;
+            $this->showSuccess($success12);
+        }
+
         if($this->doTest("create review", $success2)) {
             $airname = self::TEST_NAME." ".$this->testUser; // make unique
             $response = $this->client->post('api/v1/review', [
