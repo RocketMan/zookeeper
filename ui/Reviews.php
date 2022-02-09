@@ -372,7 +372,7 @@ class Reviews extends MenuItem {
                 Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
                 $review = mb_substr(trim($_REQUEST["review"]), 0, IReview::MAX_REVIEW_LENGTH);
                 $success = Engine::api(IReview::class)->insertReview($_REQUEST["tag"], $_REQUEST["private"], $airname, $review, $this->session->getUser());
-                if($success) {
+                if($success >= 1) {
                     if($_REQUEST["noise"])
                         $this->eMailReview($_REQUEST["tag"], $airname, $review);
                     echo "<B><FONT COLOR=\"#ffcc33\">Your review has been posted!</FONT></B>\n";
@@ -384,7 +384,7 @@ class Reviews extends MenuItem {
             case " Update Review ":
                 $review = substr(trim($_REQUEST["review"]), 0, 64000);
                 $success = Engine::api(IReview::class)->updateReview($_REQUEST["tag"], $_REQUEST["private"], $airname, $review, $this->session->getUser());
-                if($success) {
+                if($success >= 0) {
                     if($_REQUEST["noise"])
                         $this->eMailReview($_REQUEST["tag"], $airname, $review);
                     echo "<B><FONT COLOR=\"#ffcc33\">Your review has been updated.</FONT></B>\n";
@@ -395,7 +395,7 @@ class Reviews extends MenuItem {
                 break;
             case " Delete Review ":
                 $success = Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
-                if($success) {
+                if($success >= 1) {
                     echo "<B><FONT COLOR=\"#ffcc33\">Your review has been deleted.</FONT></B>\n";
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
