@@ -337,7 +337,7 @@ class LibraryImpl extends DBO implements ILibrary {
         }
 
         $ib = $includeBody?"":"null";
-        $query = "SELECT tag, a.airname, realname, r.id, r.created, " .
+        $query = "SELECT tag, a.airname, realname, r.id, r.created, r.private, " .
                  "$ib review FROM reviews r " .
                  "LEFT JOIN users u ON r.user = u.name " .
                  "LEFT JOIN airnames a ON r.airname = a.id WHERE " .
@@ -351,6 +351,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $review = [
                 "id" => $row['id'],
                 "airname" => self::displayName($row[1], $row[2]),
+                "private" => $row['private'],
                 "reviewed" => $row['created'],
                 "review" => $row['review']
             ];
