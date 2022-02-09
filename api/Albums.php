@@ -404,31 +404,38 @@ class Albums implements RequestHandlerInterface {
         // try to resolve the label by pubkey
         $id = $album->relationships()->get("label")->related()->first("label")->id();
         $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $id);
-        if(sizeof($rec))
-            $label = $rec[0];
-        else {
+        if(sizeof($rec)) {
+            $a["pubkey"] = $id;
+            $label = null;
+        } else {
             // if not found by pubkey, consult the included relation
             $lr = $request->requestBody()->included()->get("label", $id);
 
             // try to find by name
             $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_NAME, 0, 1, $lr->attributes()->getRequired("name"));
-            if(sizeof($rec))
-                $label = $rec[0];
-            else {
+            if(sizeof($rec)) {
+                $a["pubkey"] = $rec[0]["pubkey"];
+                $label = null;
+            } else {
                 $label = [];
                 $la = $lr->attributes();
                 foreach(Labels::FIELDS as $field)
                     if($la->has($field))
                         $label[$field] = $la->getOptional($field);
+
+                // normalize label fields
+                foreach(["name","attention","address","city","maillist"] as $field) {
+                    if(isset($label[$field]))
+                        $label[$field] = self::zkAlpha($label[$field], true);
+                }
+
+                $a["pubkey"] = $label["pubkey"] = 0;
+                $label["foreign"] = $label["international"] ?? false;
             }
         }
 
-        // normalize label fields
-        foreach(["name","attention","address","city","maillist"] as $field) {
-            if(isset($label[$field]))
-                $label[$field] = self::zkAlpha($label[$field], true);
-        }
-
+        $a["tag"] = 0;
+        $a["format"] = $a["size"];
         if(Engine::api(IEditor::class)->insertUpdateAlbum($a, $tracks, $label))
             return new CreatedResponse(Engine::getBaseUrl()."album/{$a['tag']}");
         throw new \Exception("creation failed");

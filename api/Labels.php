@@ -61,8 +61,17 @@ class Labels implements RequestHandlerInterface {
     public static function fromRecord($rec) {
         $res = new JsonResource("label", $rec["pubkey"]);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."label/".$rec["pubkey"]));
-        foreach(self::FIELDS as $field)
-            $res->attributes()->set($field, $rec[$field]);
+        foreach(self::FIELDS as $field) {
+            switch($field) {
+            case "international":
+                $value = $rec[$field] == 'T';
+                break;
+            default:
+                $value = $rec[$field];
+                break;
+            }
+            $res->attributes()->set($field, $value);
+        }
         return $res;
     }
 
@@ -188,6 +197,8 @@ class Labels implements RequestHandlerInterface {
             throw new NotAllowedException("label with this name already exists");
 
         $label = self::fromAttrs($attrs);
+        $label["pubkey"] = 0;
+        $label["foreign"] = $label["international"] ?? false;
 
         if(Engine::api(IEditor::class)->insertUpdateLabel($label))
             return new CreatedResponse(Engine::getBaseUrl()."label/{$label['pubkey']}");
@@ -220,6 +231,7 @@ class Labels implements RequestHandlerInterface {
         }
 
         $label = array_merge($label, self::fromAttrs($attrs));
+        $label["foreign"] = $label["international"];
 
         if(Engine::api(IEditor::class)->insertUpdateLabel($label))
             return new EmptyResponse();
