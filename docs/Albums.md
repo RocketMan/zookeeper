@@ -162,3 +162,25 @@ Delete the album with tag :id by sending a DELETE request to
 `api/v1/album/:id`.  Delete will fail if the album has reviews, or if
 it has ever been in the a-file or has charted.  X-APIKEY
 authentication required; you must belong to the 'm' group.
+
+## Print Queue
+
+The album printer queue can be accessed and managed via the 'printq'
+pseudo-relation.  Requests are as follows:
+
+* `GET api/v1/album/printq` - retrieves collection of albums in the user's print queue
+* `POST api/v1/album/:id/printq` - adds album with tag :id to the print queue
+* `DELETE api/v1/album/:id/printq` - removes album with tag :id from the print queue
+
+If you wish, you may also use the endpoint
+`api/v1/album/:id/relationships/printq` for the POST and DELETE
+methods.  The request and response semantics, as well as the server
+action are the same.
+
+All requests require X-APIKEY authentication, and you must belong to
+the 'm' group.
+
+Upon success, POST and DELETE return an HTTP `204 No Content` response.
+
+The POST request will fail if the album is already in the user's
+queue.

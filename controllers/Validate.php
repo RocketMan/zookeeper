@@ -62,7 +62,7 @@ class Validate implements IController {
         return $runTest;
     }
 
-    private function showSuccess($success, $critical = true) {
+    private function showSuccess($success, $response = null, $critical = true) {
         if($critical)
             $this->success &= $success;
 
@@ -72,6 +72,11 @@ class Validate implements IController {
             echo self::FAIL."FAILED!";
             if(!$critical)
                 echo " (soft failure)";
+            if($response)
+                echo self::NORMAL."  ".
+                    $response->getStatusCode()." ".
+                    $response->getReasonPhrase()." ".
+                    $response->getBody()->getContents();
         }
         echo self::NORMAL."\n";
     }
@@ -165,7 +170,8 @@ class Validate implements IController {
                     RequestOptions::HEADERS => [
                         'Accept' => 'application/json',
                         'X-APIKEY' => $apiKey
-                    ]
+                    ],
+                    RequestOptions::HTTP_ERRORS => false
                 ]);
             }
 
@@ -197,7 +203,7 @@ class Validate implements IController {
                 $pid = basename($list);
             }
 
-            $this->showSuccess($success);
+            $this->showSuccess($success, $response);
         }
 
         if($this->doTest("insert comment", $success)) {
@@ -222,7 +228,7 @@ class Validate implements IController {
                     $success2 = false;
             }
 
-            $this->showSuccess($success2);
+            $this->showSuccess($success2, $response);
         } else
             $success2 = false;
 
@@ -250,7 +256,7 @@ class Validate implements IController {
                 else
                     $success3 = false;
             }
-            $this->showSuccess($success3);
+            $this->showSuccess($success3, $response);
         } else
             $success3 = false;
 
@@ -265,7 +271,7 @@ class Validate implements IController {
             ]);
 
             $success4 = $response->getStatusCode() == 200;
-            $this->showSuccess($success4);
+            $this->showSuccess($success4, $response);
         } else
             $success4 = false;
 
@@ -288,7 +294,7 @@ class Validate implements IController {
             $trackPos = strpos($page, self::TEST_TRACK);
             $success5 = $commentPos !== false && $trackPos !== false &&
                     $commentPos > $trackPos;
-            $this->showSuccess($success5);
+            $this->showSuccess($success5, $response);
         }
 
         if($this->doTest("validate search", $success3)) {
@@ -316,13 +322,13 @@ class Validate implements IController {
                     break;
                 }
             }
-            $this->showSuccess($success6);
+            $this->showSuccess($success6, $response);
         }
 
         if($this->doTest("delete playlist", $success)) {
             $response = $this->client->delete($list);
             $success = $response->getStatusCode() == 204;
-            $this->showSuccess($success);
+            $this->showSuccess($success, $response);
         }
 
         if($this->doTest("purge playlists", $success)) {
@@ -386,7 +392,7 @@ class Validate implements IController {
                 $pubkey = basename($label);
             }
 
-            $this->showSuccess($success);
+            $this->showSuccess($success, $response);
         }
 
         if($this->doTest("create album", $success)) {
@@ -429,7 +435,7 @@ class Validate implements IController {
                 $tag = basename($album);
             }
 
-            $this->showSuccess($success2);
+            $this->showSuccess($success2, $response);
         }
 
         if($this->doTest("validate create", $success2)) {
@@ -454,7 +460,7 @@ class Validate implements IController {
             ]);
 
             $success3 = $response->getStatusCode() == 204;
-            $this->showSuccess($success3);
+            $this->showSuccess($success3, $response);
         }
 
         if($this->doTest("edit label", $success)) {
@@ -471,12 +477,18 @@ class Validate implements IController {
             ]);
 
             $success4 = $response->getStatusCode() == 204;
-            $this->showSuccess($success4);
+            $this->showSuccess($success4, $response);
         }
 
         if($this->doTest("validate edit", $success3 && $success4)) {
             $success8 = $this->searchAlbum($albumname2, "label", "city", "TEST City");
             $this->showSuccess($success8);
+        }
+
+        if($this->doTest("enqueue album", $success2)) {
+            $response = $this->client->post($album . "/printq");
+            $success12 = $response->getStatusCode() == 204;
+            $this->showSuccess($success12, $response);
         }
 
         if($this->doTest("create review", $success2)) {
@@ -505,7 +517,7 @@ class Validate implements IController {
             $success9 = $response->getStatusCode() == 201;
             if($success9)
                 $review = $response->getHeader('Location')[0];
-            $this->showSuccess($success9);
+            $this->showSuccess($success9, $response);
         }
 
         if($this->doTest("validate review", $success9)) {
@@ -516,19 +528,19 @@ class Validate implements IController {
         if($this->doTest("delete review", $success9)) {
             $response = $this->client->delete($review);
             $success11 = $response->getStatusCode() == 204;
-            $this->showSuccess($success11);
+            $this->showSuccess($success11, $response);
         }
 
         if($this->doTest("delete album", $success2)) {
             $response = $this->client->delete($album);
             $success5 = $response->getStatusCode() == 204;
-            $this->showSuccess($success5);
+            $this->showSuccess($success5, $response);
         }
 
         if($this->doTest("delete label", $success)) {
             $response = $this->client->delete($label);
             $success6 = $response->getStatusCode() == 204;
-            $this->showSuccess($success6);
+            $this->showSuccess($success6, $response);
         }
     }
 
