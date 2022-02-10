@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -771,7 +771,7 @@ class Editor extends MenuItem {
          echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH='100%'><TR><TD VALIGN=TOP WIDTH=220>\n";
          echo "<INPUT TYPE=HIDDEN NAME=seltag id='seltag' VALUE='".$_REQUEST["seltag"]."'>\n";
          echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH='100%'>";
-         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search Albums:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE='width:214px;' NAME=search id='search' VALUE='$osearch' autocomplete=off><BR>\n";
+         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Search Artists:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE='width:214px;' NAME=search id='search' VALUE='$osearch' autocomplete=off><BR>\n";
          echo "<SPAN CLASS='sub'>compilation?</SPAN><INPUT TYPE=CHECKBOX NAME=coll" . ($osearch&&$_REQUEST["coll"]?" CHECKED":"") . " id='coll'></TD><TD></TD></TR>\n";
          echo "<TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME='bup' id='bup' VALUE='&and;' TYPE='submit' CLASS='editorUp'><BR><SELECT class='editorChooser' NAME=list id='list' SIZE=$this->limit>\n";
 
