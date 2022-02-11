@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -91,7 +91,7 @@ class SSOCommon {
                     $response = $client->get($OAuth_tokeninfo_uri . "?id_token=" . urlencode($idToken));
 
                     $tokeninfo = json_decode($response->getBody()->getContents(), true);
-    
+
                     $userId = $tokeninfo["user_id"];
                     if($userId) {
                         // get the profile
