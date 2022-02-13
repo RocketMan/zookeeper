@@ -129,6 +129,10 @@ Linking in this way places a hyperlink in your playlist to the
 Zookeeper album.  As well, it ensures the spin counts toward charting,
 if the album is in the A-File.
 
+**Tip:** If you link to an album in this way, you need supply only the
+'type' and 'track' attributes; the artist, album, and label will be
+populated automatically based on the linkage.
+
 
 ### The server responds:
 ---
