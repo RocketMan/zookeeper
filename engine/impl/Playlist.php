@@ -834,7 +834,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue(2, $timestamp);
             $tracks = $stmt->iterate();
             while(($track = $tracks->fetch()) && $limit-- > 0) {
-                $track['artist'] = PlaylistEntry::swapNames($track['artist']);
+                $track['track_artist'] = PlaylistEntry::swapNames($track['track_artist']);
                 $this->injectImageData($track);
                 $res[] = $track;
             }
