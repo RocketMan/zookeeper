@@ -70,9 +70,8 @@ $().ready(function(){
         return card;
     }
 
-    function populateCards(target, before) {
-        if(target == null)
-            target = $(".recently-played");
+    function populateCards(otarget, before) {
+        var target = (otarget == null) ? $(".recently-played") : otarget;
 
         if(target.length == 0)
             return;
@@ -93,7 +92,14 @@ $().ready(function(){
                     var card = makeCard(spin);
                     target.append(card);
                 }
-            })
+            });
+
+            if(otarget != null) {
+                $(".recently-played").fadeOut('', function() {
+                    $(".recently-played").replaceWith(target);
+                    $(".recently-played").fadeIn('');
+                });
+            }
         });
     }
 
@@ -198,10 +204,6 @@ $().ready(function(){
 
             var time = $("#time").val();
             populateCards(target, time == 'now'?null:(date + " " + time));
-            $(".recently-played").fadeOut('', function() {
-                $(".recently-played").replaceWith(target);
-                $(".recently-played").fadeIn('');
-            });
         });
     });
 
@@ -213,10 +215,6 @@ $().ready(function(){
 
         var time = $(this).val();
         populateCards(target, time == 'now'?null:($("#date").val() + " " + time));
-        $(".recently-played").fadeOut('', function() {
-            $(".recently-played").replaceWith(target);
-            $(".recently-played").fadeIn('');
-        });
     });
 
     $("#more").click(function() {
