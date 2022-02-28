@@ -814,6 +814,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
 
         $query = "SELECT id, showdate, showtime FROM lists " .
                  "WHERE showdate <= DATE(?) " .
+                 "AND airname IS NOT NULL " .
                  "ORDER BY showdate DESC, showtime DESC " .
                  "LIMIT 20";
         $stmt = $this->prepare($query);
