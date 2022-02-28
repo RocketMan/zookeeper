@@ -211,6 +211,8 @@ class Home extends MenuItem {
             echo "<form><input type=hidden id='push-subscribe' value='" .
                 preg_replace("/^(http)/", "ws", UI::getBaseUrl()) . "push/onair'></form>\n";
             UI::emitJS('js/home.js');
+        } else if(Engine::param('discogs_apikey')) {
+            UI::emitJS('js/home.js');
         }
     }
 }
