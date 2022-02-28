@@ -2,7 +2,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -101,6 +101,49 @@ CREATE TABLE `apikeys` (
   PRIMARY KEY (`id`),
   KEY `user` (`user`),
   UNIQUE KEY `apikey` (`apikey`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `albummap`
+--
+
+CREATE TABLE `albummap` (
+  `tag` int(11) NOT NULL,
+  `artwork` int(11) DEFAULT NULL,
+  `cached` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`tag`),
+  KEY `artwork` (`artwork`),
+  KEY `cached` (`cached`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `artistmap`
+--
+
+CREATE TABLE `artistmap` (
+  `name` varchar(80) NOT NULL,
+  `artwork` int(11) DEFAULT NULL,
+  `cached` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`name`),
+  KEY `artwork` (`artwork`),
+  KEY `cached` (`cached`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `artwork`
+--
+
+CREATE TABLE `artwork` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `image_url` varchar(2083) DEFAULT NULL,
+  `info_url` varchar(2083) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------

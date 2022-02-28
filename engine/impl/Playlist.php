@@ -766,6 +766,81 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $stmt->executeAndFetchAll();
     }
 
+    /**
+     * inject image data from the cache
+     *
+     * We do not query discogs on cache miss, as in general, the
+     * cache will already be fully populated for the lookback period,
+     * and moreover, discogs imposes limits on rapid, sucessive queries.
+     */
+    protected function injectImageData(&$entry) {
+        $imageApi = Engine::api(IArtwork::class);
+        if($entry['track_tag']) {
+            // is the album already known to us?
+            $image = $imageApi->getAlbumArt($entry['track_tag']);
+            if($image) {
+                // if yes, reuse it...
+                $imageUrl = $image['image_url'];
+                $infoUrl = $image['info_url'];
+            }
+        }
+
+        if(!isset($imageUrl)) {
+            // is the artist already known to us?
+            $image = $imageApi->getArtistArt($entry['track_artist']);
+            if($image) {
+                // if yes, reuse it...
+                $imageUrl = $image['image_url'];
+                $infoUrl = $image['info_url'];
+            }
+        }
+
+        if(!isset($imageUrl)) {
+            // artist/album is unknown
+            $imageUrl = "img/blank.gif";
+            $infoUrl = null;
+        }
+
+        $entry['image_url'] = $imageUrl;
+        $entry['info_url'] = $infoUrl;
+    }
+
+    public function getPlaysBefore($timestamp, $limit) {
+        $res = [];
+        $dateTime = new \DateTime($timestamp ?? "now");
+        $date = $dateTime->format("Y-m-d");
+        $time = $dateTime->format("Hi");
+        $timestamp = $dateTime->format(IPlaylist::TIME_FORMAT_SQL);
+
+        $query = "SELECT id, showdate, showtime FROM lists " .
+                 "WHERE showdate <= DATE(?) " .
+                 "ORDER BY showdate DESC, showtime DESC " .
+                 "LIMIT 20";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $date);
+        $result = $stmt->iterate();
+        while(($list = $result->fetch()) && $limit > 0 ) {
+            if($list['showdate'] == $date && $list['showtime'] > $time)
+                continue;
+
+            $query = "SELECT id, artist track_artist, track track_title, album track_album, tag track_tag, created track_time " .
+                 "FROM tracks WHERE list = ? " .
+                 "AND created < ? " .
+                 "AND artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' " .
+                 "AND created IS NOT NULL ORDER BY created DESC";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $list['id']);
+            $stmt->bindValue(2, $timestamp);
+            $tracks = $stmt->iterate();
+            while(($track = $tracks->fetch()) && $limit-- > 0) {
+                $this->injectImageData($track);
+                $res[] = $track;
+            }
+        }
+
+        return $res;
+    }
+
     public function deletePlaylist($playlist) {
         // fetch the airname from the playlists table
         $row = $this->getPlaylist($playlist);

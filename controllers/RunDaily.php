@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -25,6 +25,7 @@
 namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
+use ZK\Engine\IArtwork;
 use ZK\Engine\IChart;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IUser;
@@ -47,6 +48,7 @@ class RunDaily implements IController {
         $this->runCharts();
         $this->purgeDeletedPlaylists();
         $this->purgeOldSessions();
+        $this->purgeArtworkCache();
 
         echo "Done ".date("Y-m-d H:i:s")."\n";
     }
@@ -108,6 +110,11 @@ class RunDaily implements IController {
     private function purgeOldSessions() {
         $ok = Engine::session()->purgeOldSessions();
         echo "Purging old sessions: ".($ok?"OK":"FAILED!")."\n";
+    }
+
+    private function purgeArtworkCache() {
+        $ok = Engine::api(IArtwork::class)->expireEmpty();
+        echo "Purging artwork cache: ".($ok?"OK":"FAILED!")."\n";
     }
 
     private static function weeklyChartDate($date) {

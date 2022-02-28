@@ -96,6 +96,11 @@ $config = [
     ],
 
     /**
+     * Discogs integration
+     */
+    'discogs_apikey' => '',
+
+    /**
      * database settings
      */
     'db' => [

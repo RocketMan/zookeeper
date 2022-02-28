@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2021 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     function localTime(date) {
@@ -31,6 +31,70 @@ $().ready(function(){
         if(hour > 12)
             hour -= 12;
         return hour + min + ampm;
+    }
+
+    var palette = [ '#bdd0c4', '#9ab7d3', '#f5d2d3', '#f7e1d3', '#dfccf1' ];
+
+    function makeCard(spin) {
+        var img = $("<DIV>").append($("<A>", {
+            href: spin.track_tag ?
+                "?s=byAlbumKey&n=" +
+                encodeURIComponent(spin.track_tag) +
+                "&action=search" :
+                spin.info_url,
+            target: spin.track_tag ? "_self" : "_blank"
+        }).append($("<IMG>", {
+            class: "artwork",
+            src: spin.image_url
+        }).css('background-color', palette[Math.floor((Math.random() * 5))])));
+
+        var info = $("<DIV>", {
+            class: "info"
+        }).append($("<P>", {
+            class: "artist details"
+        }).html(spin.track_artist));
+        info.append($("<P>", {
+            class: "album details"
+        }).html(spin.track_title));
+
+        var card = $("<DIV>", {
+            class: "card"
+        }).append(img);
+        card.attr("data-id", spin.id);
+        card.attr("data-time", spin.track_time);
+        card.append(info);
+        card.append($("<SPAN>", {
+            class: "time"
+        }).html(localTime(new Date(spin.track_time))));
+
+        return card;
+    }
+
+    function populateCards(target, before) {
+        if(target == null)
+            target = $(".recently-played");
+
+        if(target.length == 0)
+            return;
+
+        var url = '?subaction=recent';
+        if(before != null)
+            url += "&before=" + encodeURIComponent(before);
+
+        $("div.content").css("background-color", "#eee");
+        $.ajax({
+            dataType: 'json',
+            type: 'GET',
+            accept: 'application/json; charset=utf-8',
+            url: url
+        }).done(function (response) {
+            response.forEach(function(spin) {
+                if(target.find("div[data-id='" + spin.id + "']").length == 0) {
+                    var card = makeCard(spin);
+                    target.append(card);
+                }
+            })
+        });
     }
 
     $.fn.extend({
@@ -83,6 +147,14 @@ $().ready(function(){
                             break;
                         }
                     }, 5000);
+
+                    var time = $("#time").val();
+                    var nowPlaying = $(".recently-played");
+                    if(time == 'now' &&
+                            nowPlaying.find("div[data-id='" + onnow.id + "']").length == 0) {
+                        var card = makeCard(onnow);
+                        nowPlaying.prepend(card);
+                    }
                 }
             }
         }
@@ -108,5 +180,51 @@ $().ready(function(){
         };
     };
 
+    $("#date").change(function() {
+        var date = $(this).val();
+        var url = '?subaction=times&date=' + encodeURIComponent(date);
+
+        $.ajax({
+            dataType: 'json',
+            type: 'GET',
+            accept: 'application/json; charset=utf-8',
+            url: url
+        }).done(function (response) {
+            $("#time").empty().append(response.times);
+            var target = $("<DIV>", {
+                class: "recently-played",
+                display: "none"
+            });
+
+            var time = $("#time").val();
+            populateCards(target, time == 'now'?null:(date + " " + time));
+            $(".recently-played").fadeOut('', function() {
+                $(".recently-played").replaceWith(target);
+                $(".recently-played").fadeIn('');
+            });
+        });
+    });
+
+    $("#time").change(function() {
+        var target = $("<DIV>", {
+            class: "recently-played",
+            display: "none"
+        });
+
+        var time = $(this).val();
+        populateCards(target, time == 'now'?null:($("#date").val() + " " + time));
+        $(".recently-played").fadeOut('', function() {
+            $(".recently-played").replaceWith(target);
+            $(".recently-played").fadeIn('');
+        });
+    });
+
+    $("#more").click(function() {
+        var last = $(".card").last().data("time");
+        if(last)
+            populateCards(null, last);
+    });
+
+    populateCards(null, null);
     connect({ fader: null, open: false });
 });

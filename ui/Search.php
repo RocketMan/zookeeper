@@ -25,6 +25,7 @@
 namespace ZK\UI;
 
 use ZK\Engine\Engine;
+use ZK\Engine\IArtwork;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 
@@ -114,6 +115,14 @@ class Search extends MenuItem {
         echo "<TD>$titleLink</TD>";
     }
 
+    private function emitDiscogsHook($tag) {
+        $image = Engine::api(IArtwork::class)->getAlbumArt($tag);
+        if($image && $url = $image["info_url"]) {
+            echo "<div class='album-thumb'><A HREF='$url' TARGET='_blank'><IMG SRC='".
+                    $image["image_url"]."' title='view album in Discogs'></IMG></A></div>";
+        }
+    }
+
     public function searchByAlbumKey($key=0) {
         $opened = 0;
 
@@ -133,7 +142,9 @@ class Search extends MenuItem {
         if($isAuth)
             echo "&nbsp;&nbsp;(Tag #".$albums[0]["tag"].")";
         echo "</TH></TR>\n</TABLE>";
-        echo "<TABLE>\n";
+        //$this->emitDiscogsHook($this->searchText);
+        echo "<TABLE CLASS='album-info'>\n";
+
         echo "  <TR><TD ALIGN=RIGHT>Album:</TD><TD><B>";
     
         echo "<A HREF=\"".

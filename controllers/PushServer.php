@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -26,11 +26,14 @@ namespace ZK\Controllers;
 
 use ZK\Engine\DBO;
 use ZK\Engine\Engine;
+use ZK\Engine\IArtwork;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\OnNowFilter;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
 use Ratchet\Server\IoServer;
@@ -42,12 +45,18 @@ use Symfony\Component\Routing\RouteCollection;
 class NowAiringServer implements MessageComponentInterface {
     const TIME_FORMAT_INTERNAL = "Y-m-d Hi"; // eg, 2019-01-01 1234
 
+    const DISCOGS_BASE = "https://www.discogs.com";
+    const DISCOGS_SEARCH = "https://api.discogs.com/database/search";
+    const UA = "Zookeeper/2.0; (+https://zookeeper.ibinx.com/)";
+
     protected $clients;
     protected $loop;
     protected $timer;
 
     protected $current;
     protected $nextSpin;
+
+    protected $discogs;
 
     public static function toJson($show, $spin) {
         $val['name'] = $show?$show['description']:'';
@@ -75,12 +84,26 @@ class NowAiringServer implements MessageComponentInterface {
         $val['track_title'] = $spin?$spin['track']:'';
         $val['track_artist'] = $spin?$spin['artist']:'';
         $val['track_album'] = $spin?$spin['album']:'';
+        $val['track_tag'] = $spin?$spin['tag']:'';
+        $created = $spin?$spin['created']:null;
+        $val['track_time'] = $created?$created:'';
         return json_encode($val);
     }
 
     public function __construct($loop) {
         $this->clients = new \SplObjectStorage;
         $this->loop = $loop;
+
+        $apiKey = Engine::param('discogs_apikey');
+        if($apiKey) {
+            $this->discogs = new Client([
+                'base_uri' => self::DISCOGS_SEARCH,
+                RequestOptions::HEADERS => [
+                    'User-Agent' => self::UA,
+                    'Authorization' => 'Discogs token=' . $apiKey
+                ]
+            ]);
+        }
     }
 
     /*
@@ -160,6 +183,92 @@ class NowAiringServer implements MessageComponentInterface {
         echo "New connection {$conn->resourceId}\n";
     }
 
+    protected function queryDiscogs($artist, $album = null) {
+        $success = true;
+
+        try {
+            $query = $album ? [
+                "artist" => $artist,
+                "release_title" => $album,
+                "per_page" => 5
+            ] : [
+                "query" => $artist,
+                "type" => "artist",
+                "per_page" => 5
+            ];
+
+            $response = $this->discogs->get('', [
+                RequestOptions::QUERY => $query
+            ]);
+
+            $page = $response->getBody()->getContents();
+            $json = json_decode($page);
+
+            if($json->results && ($result = $json->results[0])) {
+                $imageUrl = $result->cover_image;
+                $infoUrl = self::DISCOGS_BASE . $result->uri;
+            }
+        } catch(\Exception $e) {
+            $success = false;
+            error_log("getImageData: ".$e->getMessage());
+        }
+
+        return [ $imageUrl ?? null, $infoUrl ?? null, $success ];
+    }
+
+    protected function injectImageData($msg) {
+        if($msg && $this->discogs) {
+            $entry = json_decode($msg, true);
+            if($entry['id']) {
+                $imageApi = Engine::api(IArtwork::class);
+
+                if($entry['track_tag']) {
+                    // is the album already known to us?
+                    $image = $imageApi->getAlbumArt($entry['track_tag']);
+                    if($image) {
+                        // if yes, reuse it...
+                        $imageUrl = $image['image_url'];
+                        $infoUrl = $image['info_url'];
+                    } else {
+                        // otherwise, query Discogs
+                        [ $imageUrl, $infoUrl, $success ] = $this->queryDiscogs($entry['track_artist'], $entry['track_album']);
+
+                        if($success)
+                            $imageApi->insertAlbumArt($entry['track_tag'], $imageUrl, $infoUrl);
+                    }
+                }
+
+                if(!isset($imageUrl)) {
+                    // is the artist already known to us?
+                    $image = $imageApi->getArtistArt($entry['track_artist']);
+                    if($image) {
+                        // if yes, reuse it...
+                        $imageUrl = $image['image_url'];
+                        $infoUrl = $image['info_url'];
+                    } else {
+                        // otherwise, query Discogs
+                        [ $imageUrl, $infoUrl, $success ] = $this->queryDiscogs($entry['track_artist']);
+
+                        if($success)
+                            $imageApi->insertArtistArt($entry['track_artist'], $imageUrl, $infoUrl);
+                    }
+                }
+
+                if(!isset($imageUrl)) {
+                    // artist/album is unknown
+                    $imageUrl = "img/blank.gif";
+                    $infoUrl = null;
+                }
+
+                $entry['image_url'] = $imageUrl;
+                $entry['info_url'] = $infoUrl;
+                $msg = json_encode($entry);
+            }
+        }
+
+        return $msg;
+    }
+
     public function sendNotification($msg = null, $client = null) {
         if($msg) {
             if($this->current != $msg)
@@ -168,6 +277,8 @@ class NowAiringServer implements MessageComponentInterface {
                 return;
         } else
             $msg = $this->current;
+
+        $msg = $this->injectImageData($msg);
 
         if($client)
             $client->send($msg);
