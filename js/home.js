@@ -46,7 +46,7 @@ $().ready(function(){
         }).append($("<IMG>", {
             class: "artwork",
             src: spin.image_url
-        }).css('background-color', palette[Math.floor((Math.random() * 5))])));
+        }).css('background-color', palette[Math.floor((Math.random() * palette.length))])));
 
         var info = $("<DIV>", {
             class: "info"
