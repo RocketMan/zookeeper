@@ -223,6 +223,24 @@ the composer.phar that you downloaded, though you may want to keep it
 around, as you will need it for each new release.
 
 
+### Discogs Integration (optional)
+
+Zookeeper can integrate with [Discogs](https://www.discogs.com/) to
+obtain artwork and links to album and artist information.  It uses
+this data to populate a 'Recently Played' song playlist on the home
+page.
+
+To enable Discogs integration, set the `discogs_apikey` parameter
+in config.php.  Obtain the Discogs API key through your Discogs
+developer account.
+
+**Note:** You must enable **and** run push notification (see below)
+for Discogs to work.  If you do not enable push notification, setting
+the `discogs_apikey` will have no effect.  If you enable push
+notification but do not run the push notification server, the
+'Recently Played' playlist will display but will include no artwork.
+
+
 ### Push Notification (optional)
 
 Zookeeper can send push notifications via websockets.  If you
