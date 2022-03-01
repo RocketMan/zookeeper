@@ -70,8 +70,12 @@ $().ready(function(){
         return card;
     }
 
-    function populateCards(otarget, before) {
-        var target = (otarget == null) ? $(".recently-played") : otarget;
+    function populateCards(replace, before) {
+        var target = replace ?
+            $("<DIV>", {
+                class: "recently-played"
+            }).css("display", "none") :
+            $(".recently-played");
 
         if(target.length == 0)
             return;
@@ -94,10 +98,10 @@ $().ready(function(){
                 }
             });
 
-            if(otarget != null) {
+            if(replace) {
                 $(".recently-played").fadeOut('', function() {
                     $(".recently-played").replaceWith(target);
-                    $(".recently-played").fadeIn('');
+                    $(".recently-played").fadeIn();
                 });
             }
         });
@@ -197,32 +201,21 @@ $().ready(function(){
             url: url
         }).done(function (response) {
             $("#time").empty().append(response.times);
-            var target = $("<DIV>", {
-                class: "recently-played",
-                display: "none"
-            });
-
-            var time = $("#time").val();
-            populateCards(target, time == 'now'?null:(date + " " + time));
+            populateCards(true, time == 'now' ? null : (date + " " + $("#time").val()));
         });
     });
 
     $("#time").change(function() {
-        var target = $("<DIV>", {
-            class: "recently-played",
-            display: "none"
-        });
-
         var time = $(this).val();
-        populateCards(target, time == 'now'?null:($("#date").val() + " " + time));
+        populateCards(true, time == 'now' ? null : ($("#date").val() + " " + time));
     });
 
     $("#more").click(function() {
         var last = $(".card").last().data("time");
         if(last)
-            populateCards(null, last);
+            populateCards(false, last);
     });
 
-    populateCards(null, null);
+    populateCards(false, null);
     connect({ fader: null, open: false });
 });
