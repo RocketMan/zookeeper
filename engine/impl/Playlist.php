@@ -24,7 +24,6 @@
 
 namespace ZK\Engine;
 
-use ZK\API\Albums;
 
 /**
  * Playlist operations
@@ -835,11 +834,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue(2, $timestamp);
             $tracks = $stmt->iterate();
             while(($track = $tracks->fetch()) && $limit-- > 0) {
-                // TBD refactor Albums::zkAlpha to engine
-                $track['track_artist'] = PlaylistEntry::swapNames($track['track_tag'] ?
-                        $track['track_artist'] :
-                        Albums::zkAlpha($track['track_artist']));
-                $track['track_title'] = Albums::zkAlpha($track['track_title'], true);
+                $track['track_artist'] = PlaylistEntry::swapNames($track['track_artist']);
                 $this->injectImageData($track);
                 $res[] = $track;
             }
