@@ -74,6 +74,7 @@ class Home extends MenuItem {
         }
 
         do {
+            if($hour % 3) continue;
             $h = sprintf("%02d", $hour);
             $ampm = $h >= 12?"pm":"am";
             $hx = $h > 12?$hour-12:$hour;
