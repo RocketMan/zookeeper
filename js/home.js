@@ -207,7 +207,8 @@ $().ready(function(){
             url: url
         }).done(function (response) {
             $("#time").empty().append(response.times);
-            populateCards(true, time == 'now' ? null : (date + " " + $("#time").val()));
+            var time = $("#time").val();
+            populateCards(true, time == 'now' ? null : (date + " " + time));
         });
     });
 
