@@ -224,6 +224,5 @@ $().ready(function(){
     });
 
     populateCards(null, null);
-    if($("#push-subscribe").length > 0)
-        connect({ fader: null, open: false });
+    connect({ fader: null, open: false });
 });

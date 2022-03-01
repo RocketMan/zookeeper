@@ -101,7 +101,8 @@ class Home extends MenuItem {
         echo "<div class='home-hdr'><label>Music Director:</label> <A HREF='mailto:$musicDirEmail'>$musicDirName</A></div>";
 
         $this->emitWhatsOnNow();
-        if(Engine::param('discogs_apikey'))
+        if(Engine::param('discogs_apikey') &&
+                Engine::param('push_enabled', true))
             $this->emitRecentlyPlayed();
         else
             $this->emitTopPlays();
@@ -210,8 +211,6 @@ class Home extends MenuItem {
         if(Engine::param('push_enabled', true)) {
             echo "<form><input type=hidden id='push-subscribe' value='" .
                 preg_replace("/^(http)/", "ws", UI::getBaseUrl()) . "push/onair'></form>\n";
-            UI::emitJS('js/home.js');
-        } else if(Engine::param('discogs_apikey')) {
             UI::emitJS('js/home.js');
         }
     }
