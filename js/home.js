@@ -85,6 +85,12 @@ $().ready(function(){
             url += "&before=" + encodeURIComponent(before);
 
         $("div.content").css("background-color", "#eee");
+
+        // hack to keep white body in sync
+        var color = $("body").css("background-color");
+        if(color == "rgb(255, 255, 255)")
+            $("body").css("background-color", "#eee");
+
         $.ajax({
             dataType: 'json',
             type: 'GET',
