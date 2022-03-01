@@ -94,6 +94,8 @@ $config = [
 
     /**
      * Discogs integration
+     *
+     * see INSTALLATION.md for details
      */
     'discogs_apikey' => '',
 
