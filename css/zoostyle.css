@@ -857,8 +857,8 @@ a:hover.copy {
 /* home page recently played */
 .recently-played {
     display: block;
-    margin-top: 0px;
-    padding-top: 0px;
+    margin-top: 0;
+    padding-top: 0;
     transition: all 1000ms ease-in-out;
 }
 
@@ -869,8 +869,7 @@ a:hover.copy {
     vertical-align: top;
     margin: 7px;
 
-    overflow-x: hidden;
-    overflow-y: hidden;
+    overflow: hidden;
     border-radius: 3px;
     background-color: #fff;
     box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 1px;
@@ -883,12 +882,9 @@ a:hover.copy {
     max-height: 120px;
     min-height: 120px;
     display: block;
-    top: 0px;
-    left: 0px;
-    transition-duration: 0.4s;
-    transition-timing-function: ease;
-    transition-delay: 0s;
-    transition-property: all;
+    top: 0;
+    left: 0;
+    transition: all 400ms ease 0s;
     opacity: 1;
     border: 0;
 }
@@ -899,27 +895,26 @@ a:hover.copy {
     height: 85.6px;
     display: block;
     text-align: left;
-    margin-top: 0px;
+    margin-top: 0;
     margin-left: 10px;
 }
 
 .recently-played .card .info .details {
     line-height: 1.4;
-    overflow-x: hidden;
-    overflow-y: hidden;
+    overflow: hidden;
     display: block;
     margin-top: 0;
     margin-bottom: 5px;
     padding-top: 0;
 }
 
-.recently-played .card .info .artist {
+.recently-played .card .info .track {
     font-size: 15px;
     max-height: 42px;
     color: #333;
 }
 
-.recently-played .card .info .album {
+.recently-played .card .info .artist {
     font-size: 12px;
     max-height: 33.6px;
     color: #555;
@@ -967,7 +962,7 @@ a:hover.copy {
 
 .album-thumb {
     display: inline-block;
-    padding: 2px 6px 2px 0px;
+    padding: 2px 6px 2px 0;
 }
 
 .album-thumb img {

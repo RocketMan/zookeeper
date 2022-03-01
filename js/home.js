@@ -51,11 +51,11 @@ $().ready(function(){
         var info = $("<DIV>", {
             class: "info"
         }).append($("<P>", {
+            class: "track details"
+        }).html(spin.track_title));
+        info.append($("<P>", {
             class: "artist details"
         }).html(spin.track_artist));
-        info.append($("<P>", {
-            class: "album details"
-        }).html(spin.track_title));
 
         var card = $("<DIV>", {
             class: "card"
