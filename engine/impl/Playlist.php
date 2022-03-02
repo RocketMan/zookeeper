@@ -795,14 +795,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
             }
         }
 
-        if(!isset($imageUrl)) {
-            // artist/album is unknown
-            $imageUrl = "img/blank.gif";
-            $infoUrl = null;
-        }
-
-        $entry['image_url'] = $imageUrl;
-        $entry['info_url'] = $infoUrl;
+        $entry['image_url'] = $imageUrl ?? "img/blank.gif";
+        $entry['info_url'] = $infoUrl ?? null;
     }
 
     public function getPlaysBefore($timestamp, $limit) {

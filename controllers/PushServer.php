@@ -205,7 +205,9 @@ class NowAiringServer implements MessageComponentInterface {
             $json = json_decode($page);
 
             if($json->results && ($result = $json->results[0])) {
-                $imageUrl = $result->cover_image;
+                if($result->cover_image &&
+                        !preg_match('/spacer.gif$/', $result->cover_image))
+                    $imageUrl = $result->cover_image;
                 $infoUrl = self::DISCOGS_BASE . $result->uri;
             }
         } catch(\Exception $e) {
@@ -254,14 +256,8 @@ class NowAiringServer implements MessageComponentInterface {
                     }
                 }
 
-                if(!isset($imageUrl)) {
-                    // artist/album is unknown
-                    $imageUrl = "img/blank.gif";
-                    $infoUrl = null;
-                }
-
-                $entry['image_url'] = $imageUrl;
-                $entry['info_url'] = $infoUrl;
+                $entry['image_url'] = $imageUrl ?? "img/blank.gif";
+                $entry['info_url'] = $infoUrl ?? null;
                 $msg = json_encode($entry);
             }
         }
