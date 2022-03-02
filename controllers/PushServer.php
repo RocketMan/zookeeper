@@ -206,7 +206,7 @@ class NowAiringServer implements MessageComponentInterface {
 
             if($json->results && ($result = $json->results[0])) {
                 if($result->cover_image &&
-                        !preg_match('/spacer.gif$/', $result->cover_image))
+                        !preg_match('|/spacer.gif$|', $result->cover_image))
                     $imageUrl = $result->cover_image;
                 $infoUrl = self::DISCOGS_BASE . $result->uri;
             }
