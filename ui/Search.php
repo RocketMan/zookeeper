@@ -117,9 +117,12 @@ class Search extends MenuItem {
 
     private function emitDiscogsHook($tag) {
         $image = Engine::api(IArtwork::class)->getAlbumArt($tag);
-        if($image && $url = $image["info_url"]) {
-            echo "<div class='album-thumb'><A HREF='$url' TARGET='_blank'><IMG SRC='".
-                    $image["image_url"]."' title='view album in Discogs'></IMG></A></div>";
+        if($image && ($url = $image["image_url"])) {
+            $target = ($info = $image["info_url"])?
+                "<A HREF='$info' TARGET='_blank'><IMG SRC='$url' title='view album in Discogs'></IMG></A>" :
+                "<IMG SRC='$url'></IMG>";
+            echo "<div class='album-thumb'>$target</div>";
+            return "style='max-width: 570px'";
         }
     }
 
@@ -142,8 +145,8 @@ class Search extends MenuItem {
         if($isAuth)
             echo "&nbsp;&nbsp;(Tag #".$albums[0]["tag"].")";
         echo "</TH></TR>\n</TABLE>";
-        //$this->emitDiscogsHook($this->searchText);
-        echo "<TABLE CLASS='album-info'>\n";
+        $extraAttrs = "";//$this->emitDiscogsHook($this->searchText);
+        echo "<TABLE CLASS='album-info' $extraAttrs>\n";
 
         echo "  <TR><TD ALIGN=RIGHT>Album:</TD><TD><B>";
     
