@@ -81,16 +81,16 @@ class Albums implements RequestHandlerInterface {
     public static function zkAlpha($val, $isTrack=false) {
         $words = preg_split(self::NONALNUM, $val);
         $newVal = join(" ", array_map(function(int $index, string $word) use($words) {
+            // words starting with caps are kept as-is
+            if(preg_match('/^[A-Z]+/', $word))
+                return $word;
+
             // stopwords are not capitalized, unless first or last
             if(preg_match(self::STOPWORDS, $word) &&
                         $index != 0 &&
                         $index != sizeof($words) - 1) {
                 return strtolower($word);
             }
-
-            // words starting with caps are kept as-is
-            if(preg_match('/^[A-Z]+/', $word))
-                return $word;
 
             // otherwise, capitalize the word
             return strtoupper(substr($word, 0, 1)) .
