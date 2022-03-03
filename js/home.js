@@ -48,6 +48,11 @@ $().ready(function(){
             src: spin.image_url
         }).css('background-color', palette[Math.floor((Math.random() * palette.length))])));
 
+        if(spin.track_tag || spin.info_url)
+            img.find("A").attr('title', spin.track_tag ?
+                               "View album in Zookeeper" :
+                               "View artist in Discogs");
+
         var info = $("<DIV>", {
             class: "info"
         }).append($("<P>", {

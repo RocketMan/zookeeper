@@ -119,7 +119,7 @@ class Search extends MenuItem {
         $image = Engine::api(IArtwork::class)->getAlbumArt($tag);
         if($image && ($url = $image["image_url"])) {
             $target = ($info = $image["info_url"])?
-                "<A HREF='$info' TARGET='_blank'><IMG SRC='$url' title='view album in Discogs'></IMG></A>" :
+                "<A HREF='$info' TARGET='_blank'><IMG SRC='$url' title='View album in Discogs'></IMG></A>" :
                 "<IMG SRC='$url'></IMG>";
             echo "<div class='album-thumb'>$target</div>";
             return "style='max-width: 570px'";
