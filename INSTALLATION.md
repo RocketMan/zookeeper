@@ -230,15 +230,17 @@ obtain artwork and links to album and artist information.  It uses
 this data to populate a 'Recently Played' song playlist on the home
 page.
 
-To enable Discogs integration, set the `discogs_apikey` parameter
-in config.php.  Obtain the Discogs API key through your Discogs
-developer account.
+To enable Discogs integration, set either the `apikey` parameter, or
+both the `client_id` and `client_secret` parameters in the `discogs`
+stanza of config.php.  Obtain a Discogs API key or Consumer Key/Secret
+through your Discogs developer account.
 
 **Note:** You must enable **and** run push notification (see below)
-for Discogs to work.  If you do not enable push notification, setting
-the `discogs_apikey` will have no effect.  If you enable push
-notification but do not run the push notification server, the
-'Recently Played' playlist will display but will include no artwork.
+for Discogs integration to work.  If you do not enable push
+notification, setting the parameters above will have no effect.  If
+you enable push notification but do not run the push notification
+server, the 'Recently Played' playlist will display but will include
+no artwork.
 
 
 ### Push Notification (optional)

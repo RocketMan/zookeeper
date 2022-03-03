@@ -97,7 +97,11 @@ $config = [
      *
      * see INSTALLATION.md for details
      */
-    'discogs_apikey' => '',
+    'discogs' => [
+        'apikey' => '',
+        'client_id' => '',
+        'client_secret' => '',
+    ],
 
     /**
      * database settings

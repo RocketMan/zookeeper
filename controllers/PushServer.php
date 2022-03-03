@@ -94,15 +94,23 @@ class NowAiringServer implements MessageComponentInterface {
         $this->clients = new \SplObjectStorage;
         $this->loop = $loop;
 
-        $apiKey = Engine::param('discogs_apikey');
-        if($apiKey) {
-            $this->discogs = new Client([
-                'base_uri' => self::DISCOGS_SEARCH,
-                RequestOptions::HEADERS => [
-                    'User-Agent' => self::UA,
-                    'Authorization' => 'Discogs token=' . $apiKey
-                ]
-            ]);
+        $config = Engine::param('discogs');
+        if($config) {
+            $apiKey = $config['apikey'];
+            $clientId = $config['client_id'];
+            $clientSecret = $config['client_secret'];
+
+            if($apiKey || $clientId && $clientSecret) {
+                $this->discogs = new Client([
+                    'base_uri' => self::DISCOGS_SEARCH,
+                    RequestOptions::HEADERS => [
+                        'User-Agent' => self::UA,
+                        'Authorization' => $apiKey ?
+                            "Discogs token=$apiKey" :
+                            "Discogs key=$clientId, secret=$clientSecret"
+                    ]
+                ]);
+            }
         }
     }
 
