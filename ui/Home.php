@@ -102,7 +102,8 @@ class Home extends MenuItem {
         echo "<div class='home-hdr'><label>Music Director:</label> <A HREF='mailto:$musicDirEmail'>$musicDirName</A></div>";
 
         $this->emitWhatsOnNow();
-        if(Engine::param('discogs_apikey') &&
+        if(($config = Engine::param('discogs')) &&
+                ($config['apikey'] || $config['client_id']) &&
                 Engine::param('push_enabled', true))
             $this->emitRecentlyPlayed();
         else
