@@ -237,35 +237,35 @@ class NowAiringServer implements MessageComponentInterface {
                     $image = $imageApi->getAlbumArt($entry['track_tag']);
                     if($image) {
                         // if yes, reuse it...
-                        $imageUrl = $image['image_url'];
+                        $imageUuid = $image['image_uuid'];
                         $infoUrl = $image['info_url'];
                     } else {
                         // otherwise, query Discogs
                         [ $imageUrl, $infoUrl, $success ] = $this->queryDiscogs($entry['track_artist'], $entry['track_album']);
 
                         if($success)
-                            $imageApi->insertAlbumArt($entry['track_tag'], $imageUrl, $infoUrl);
+                            $imageUuid = $imageApi->insertAlbumArt($entry['track_tag'], $imageUrl, $infoUrl);
                     }
                 }
 
-                if(!isset($imageUrl)) {
+                if(!isset($imageUuid)) {
                     // is the artist already known to us?
                     $image = $imageApi->getArtistArt($entry['track_artist']);
                     if($image) {
                         // if yes, reuse it...
-                        $imageUrl = $image['image_url'];
+                        $imageUuid = $image['image_uuid'];
                         $infoUrl = $image['info_url'];
                     } else {
                         // otherwise, query Discogs
                         [ $imageUrl, $infoUrl, $success ] = $this->queryDiscogs($entry['track_artist']);
 
                         if($success)
-                            $imageApi->insertArtistArt($entry['track_artist'], $imageUrl, $infoUrl);
+                            $imageUuid = $imageApi->insertArtistArt($entry['track_artist'], $imageUrl, $infoUrl);
                     }
                 }
 
                 $entry['info_url'] = $infoUrl ?? null;
-                $entry['image_url'] = $imageUrl ?? ($entry['info_url'] || $entry['track_tag'] ? "img/discogs.svg" : "img/blank.gif");
+                $entry['image_url'] = isset($imageUuid) ? "img/.cache/$imageUuid" : ($entry['info_url'] || $entry['track_tag'] ? "img/discogs.svg" : "img/blank.gif");
                 $msg = json_encode($entry);
             }
         }

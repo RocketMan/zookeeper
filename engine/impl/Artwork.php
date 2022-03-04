@@ -24,13 +24,51 @@
 
 namespace ZK\Engine;
 
+use GuzzleHttp\Client;
 
 /**
  * Artwork operations
  */
 class ArtworkImpl extends DBO implements IArtwork {
+    const CACHE_DIR = 'img/.cache/';
+
+    protected function fetchImage($url) {
+        $cacheDir = __DIR__ . "/../../" . self::CACHE_DIR;
+        if(!is_dir($cacheDir) && !mkdir($cacheDir))
+            return null;
+
+        $ofile = $file = sha1(uniqid(rand()));
+        $path = $cacheDir . $file;
+        $client = new Client();
+        try {
+            $client->get($url, [ 'sink' => $path ]);
+            switch(mime_content_type($path)) {
+            case "image/jpeg":
+                $file .= ".jpeg";
+                break;
+            case "image/png":
+                $file .= ".png";
+                break;
+            case "image/gif":
+                $file .= ".gif";
+                break;
+            case "image/svg+xml":
+                $file .= ".svg";
+                break;
+            }
+
+            if($ofile != $file)
+                rename($path, $cacheDir . $file);
+        } catch(\Exception $e) {
+            error_log("fetchImage: " . $e->getMessage());
+            $file = null;
+        }
+
+        return $file;
+    }
+
     public function getAlbumArt($tag) {
-        $query = "SELECT artwork image_id, image_url, info_url FROM albummap a " .
+        $query = "SELECT artwork image_id, image_uuid, info_url FROM albummap a " .
             "LEFT JOIN artwork i ON a.artwork = i.id WHERE tag = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
@@ -38,7 +76,7 @@ class ArtworkImpl extends DBO implements IArtwork {
     }
 
     public function getArtistArt($artist) {
-        $query = "SELECT artwork image_id, image_url, info_url FROM artistmap a " .
+        $query = "SELECT artwork image_id, image_uuid, info_url FROM artistmap a " .
             "LEFT JOIN artwork i ON a.artwork = i.id WHERE name = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $artist);
@@ -48,13 +86,14 @@ class ArtworkImpl extends DBO implements IArtwork {
     public function insertAlbumArt($tag, $imageUrl, $infoUrl) {
         $image = $this->getAlbumArt($tag);
         if($image)
-            $imageId = $image['image_id'];
+            $uuid = $image['image_uuid'];
         else {
-            $imageId = null;
+            $imageId = $uuid = null;
             if($imageUrl || $infoUrl) {
-                $query = "INSERT INTO artwork (image_url, info_url) VALUES (?,?)";
+                $uuid = $imageUrl ? $this->fetchImage($imageUrl) : null;
+                $query = "INSERT INTO artwork (image_uuid, info_url) VALUES (?,?)";
                 $stmt = $this->prepare($query);
-                $stmt->bindValue(1, $imageUrl);
+                $stmt->bindValue(1, $uuid);
                 $stmt->bindValue(2, $infoUrl);
                 if($stmt->execute())
                     $imageId = $this->lastInsertId();
@@ -67,19 +106,20 @@ class ArtworkImpl extends DBO implements IArtwork {
             $stmt->execute();
         }
 
-        return $imageId;
+        return $uuid;
     }
 
     public function insertArtistArt($artist, $imageUrl, $infoUrl) {
         $image = $this->getArtistArt($artist);
         if($image)
-            $imageId = $image['image_id'];
+            $uuid = $image['image_uuid'];
         else {
-            $imageId = null;
+            $imageId = $uuid = null;
             if($imageUrl || $infoUrl) {
-                $query = "INSERT INTO artwork (image_url, info_url) VALUES (?,?)";
+                $uuid = $imageUrl ? $this->fetchImage($imageUrl) : null;
+                $query = "INSERT INTO artwork (image_uuid, info_url) VALUES (?,?)";
                 $stmt = $this->prepare($query);
-                $stmt->bindValue(1, $imageUrl);
+                $stmt->bindValue(1, $uuid);
                 $stmt->bindValue(2, $infoUrl);
                 if($stmt->execute())
                     $imageId = $this->lastInsertId();
@@ -92,7 +132,7 @@ class ArtworkImpl extends DBO implements IArtwork {
             $stmt->execute();
         }
 
-        return $imageId;
+        return $uuid;
     }
 
     public function expireCache($days=7) {

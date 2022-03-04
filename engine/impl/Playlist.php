@@ -780,7 +780,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $image = $imageApi->getAlbumArt($entry['track_tag']);
             if($image) {
                 // if yes, reuse it...
-                $imageUrl = $image['image_url'];
+                $imageUuid = $image['image_uuid'];
                 $infoUrl = $image['info_url'];
             }
         }
@@ -790,13 +790,13 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $image = $imageApi->getArtistArt($entry['track_artist']);
             if($image) {
                 // if yes, reuse it...
-                $imageUrl = $image['image_url'];
+                $imageUuid = $image['image_uuid'];
                 $infoUrl = $image['info_url'];
             }
         }
 
         $entry['info_url'] = $infoUrl ?? null;
-        $entry['image_url'] = $imageUrl ?? ($entry['info_url'] || $entry['track_tag'] ? "img/discogs.svg" : "img/blank.gif");
+        $entry['image_url'] = isset($imageUuid) ? "img/.cache/$imageUuid" : ($entry['info_url'] || $entry['track_tag'] ? "img/discogs.svg" : "img/blank.gif");
     }
 
     public function getPlaysBefore($timestamp, $limit) {
