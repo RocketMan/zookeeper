@@ -91,6 +91,11 @@ class ArtworkImpl extends DBO implements IArtwork {
             $imageId = $uuid = null;
             if($imageUrl || $infoUrl) {
                 $uuid = $imageUrl ? $this->fetchImage($imageUrl) : null;
+                if($imageUrl && !$uuid) {
+                    // fetchImage failed; don't cache
+                    return null;
+                }
+
                 $query = "INSERT INTO artwork (image_uuid, info_url) VALUES (?,?)";
                 $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $uuid);
@@ -117,6 +122,11 @@ class ArtworkImpl extends DBO implements IArtwork {
             $imageId = $uuid = null;
             if($imageUrl || $infoUrl) {
                 $uuid = $imageUrl ? $this->fetchImage($imageUrl) : null;
+                if($imageUrl && !$uuid) {
+                    // fetchImage failed; don't cache
+                    return null;
+                }
+
                 $query = "INSERT INTO artwork (image_uuid, info_url) VALUES (?,?)";
                 $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $uuid);
