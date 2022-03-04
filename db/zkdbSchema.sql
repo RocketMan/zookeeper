@@ -144,7 +144,7 @@ CREATE TABLE `artwork` (
   `image_uuid` varchar(50) DEFAULT NULL,
   `info_url` varchar(2083) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `image_uuid` (`image_uuid`),
+  UNIQUE KEY `image_uuid` (`image_uuid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
