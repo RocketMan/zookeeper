@@ -828,6 +828,12 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue(2, $timestamp);
             $tracks = $stmt->iterate();
             while(($track = $tracks->fetch()) && $limit-- > 0) {
+                if(preg_match('/(\.gov|\.org|GED|Literacy|Ad\ Council)/', implode(' ', $track))) {
+                    // it's probably a PSA coded as a spin; let's skip it
+                    $limit++;
+                    continue;
+                }
+
                 $track['track_artist'] = PlaylistEntry::swapNames($track['track_artist']);
                 $this->injectImageData($track);
                 $res[] = $track;
