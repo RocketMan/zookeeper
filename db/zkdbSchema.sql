@@ -141,9 +141,10 @@ CREATE TABLE `artistmap` (
 
 CREATE TABLE `artwork` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `image_url` varchar(2083) DEFAULT NULL,
+  `image_uuid` varchar(50) DEFAULT NULL,
   `info_url` varchar(2083) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `image_uuid` (`image_uuid`),
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
