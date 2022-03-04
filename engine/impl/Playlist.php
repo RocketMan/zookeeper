@@ -785,7 +785,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
             }
         }
 
-        if(!isset($imageUrl)) {
+        if(!isset($imageUuid)) {
             // is the artist already known to us?
             $image = $imageApi->getArtistArt($entry['track_artist']);
             if($image) {
