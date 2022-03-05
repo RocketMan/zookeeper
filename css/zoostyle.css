@@ -968,6 +968,9 @@ a:hover.copy {
 }
 
 .album-thumb img {
-    max-height: 120px;
-    min-height: 120px;
+    max-height: 126px;
+    min-height: 126px;
+    width: 126px;
+    object-fit: cover;
+    object-position: center 10%;
 }

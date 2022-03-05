@@ -116,13 +116,15 @@ class Search extends MenuItem {
     }
 
     private function emitDiscogsHook($tag) {
-        $image = Engine::api(IArtwork::class)->getAlbumArt($tag);
-        if($image && ($url = $image["image_url"])) {
+        $imageApi = Engine::api(IArtwork::class);
+        $image = $imageApi->getAlbumArt($tag);
+        if($image && ($uuid = $image["image_uuid"])) {
+            $url = $imageApi->getCachePath($uuid);
             $target = ($info = $image["info_url"])?
                 "<A HREF='$info' TARGET='_blank'><IMG SRC='$url' title='View album in Discogs'></IMG></A>" :
                 "<IMG SRC='$url'></IMG>";
             echo "<div class='album-thumb'>$target</div>";
-            return "style='max-width: 570px'";
+            return "style='max-width: 564px'";
         }
     }
 
