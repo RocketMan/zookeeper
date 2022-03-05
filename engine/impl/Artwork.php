@@ -33,12 +33,15 @@ class ArtworkImpl extends DBO implements IArtwork {
     const CACHE_DIR = 'img/.cache/';
 
     protected function fetchImage($url) {
-        $cacheDir = __DIR__ . "/../../" . self::CACHE_DIR;
+        // realpath() won't work here if cacheDir doesn't already exist
+        $cacheDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . "img" .
+                DIRECTORY_SEPARATOR . ".cache";
+
         if(!is_dir($cacheDir) && !mkdir($cacheDir))
             return null;
 
-        $ofile = $file = sha1(uniqid(rand()));
-        $path = $cacheDir . $file;
+        $file = sha1(uniqid(rand()));
+        $path = $cacheDir . DIRECTORY_SEPARATOR . $file;
         $client = new Client();
         try {
             $client->get($url, [ 'sink' => $path ]);
@@ -57,8 +60,19 @@ class ArtworkImpl extends DBO implements IArtwork {
                 break;
             }
 
-            if($ofile != $file)
-                rename($path, $cacheDir . $file);
+            $target = $cacheDir . DIRECTORY_SEPARATOR . substr($file, 0, 2);
+            if(!is_dir($target))
+                mkdir($target);
+            $target .= DIRECTORY_SEPARATOR . substr($file, 2, 2);
+            if(!is_dir($target))
+                mkdir($target);
+            $target .= DIRECTORY_SEPARATOR . substr($file, 4);
+
+            if(!rename($path, $target)) {
+                error_log("fetchImage: rename failed src=$path, target=$target.");
+                unlink($path);
+                $file = null;
+            }
         } catch(\Exception $e) {
             error_log("fetchImage: " . $e->getMessage());
             $file = null;
@@ -143,6 +157,13 @@ class ArtworkImpl extends DBO implements IArtwork {
         }
 
         return $uuid;
+    }
+
+    public function getCachePath($key) {
+        return self::CACHE_DIR .
+            substr($key, 0, 2) . '/' .
+            substr($key, 2, 2) . '/' .
+            substr($key, 4);
     }
 
     public function expireCache($days=7) {

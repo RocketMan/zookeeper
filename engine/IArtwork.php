@@ -32,6 +32,7 @@ interface IArtwork {
     function getArtistArt($artist);
     function insertAlbumArt($tag, $imageUrl, $infoUrl);
     function insertArtistArt($artist, $imageUrl, $infoUrl);
+    function getCachePath($key);
     function expireCache($days=7);
     function expireEmpty($days=1);
 }
