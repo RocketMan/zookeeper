@@ -30,18 +30,19 @@ use GuzzleHttp\Client;
  * Artwork operations
  */
 class ArtworkImpl extends DBO implements IArtwork {
-    const CACHE_DIR = 'img/.cache/';
+    const CACHE_DIR = 'img/.cache/';  // must be slash-terminated
 
     protected function fetchImage($url) {
         // realpath() won't work here if cacheDir doesn't already exist
-        $cacheDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . "img" .
-                DIRECTORY_SEPARATOR . ".cache";
+        $cacheDir = dirname(__DIR__, 2);
+        foreach(explode('/', self::CACHE_DIR) as $dir)
+            $cacheDir .= DIRECTORY_SEPARATOR . $dir;
 
         if(!is_dir($cacheDir) && !mkdir($cacheDir))
             return null;
 
         $file = sha1(uniqid(rand()));
-        $path = $cacheDir . DIRECTORY_SEPARATOR . $file;
+        $path = $cacheDir . $file;
         $client = new Client();
         try {
             $client->get($url, [ 'sink' => $path ]);
@@ -60,7 +61,7 @@ class ArtworkImpl extends DBO implements IArtwork {
                 break;
             }
 
-            $target = $cacheDir . DIRECTORY_SEPARATOR . substr($file, 0, 2);
+            $target = $cacheDir . substr($file, 0, 2);
             if(!is_dir($target))
                 mkdir($target);
             $target .= DIRECTORY_SEPARATOR . substr($file, 2, 2);
