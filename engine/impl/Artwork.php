@@ -38,8 +38,10 @@ class ArtworkImpl extends DBO implements IArtwork {
         foreach(explode('/', self::CACHE_DIR) as $dir)
             $cacheDir .= DIRECTORY_SEPARATOR . $dir;
 
-        if(!is_dir($cacheDir) && !mkdir($cacheDir))
+        if(!is_dir($cacheDir) && !mkdir($cacheDir)) {
+            error_log("fetchImage: cannot create $cacheDir");
             return null;
+        }
 
         $file = sha1(uniqid(rand()));
         $path = $cacheDir . $file;
@@ -168,6 +170,16 @@ class ArtworkImpl extends DBO implements IArtwork {
     }
 
     public function expireCache($days=7) {
+        $cacheDir = dirname(__DIR__, 2);
+        foreach(explode('/', self::CACHE_DIR) as $dir)
+            $cacheDir .= DIRECTORY_SEPARATOR . $dir;
+
+        $query = "SELECT image_uuid FROM artwork " .
+                 "LEFT JOIN artistmap.artwork = artwork.id " .
+                 "WHERE ADDDATE(cached, ?) < NOW()";
+        $stmt->bindValue(1, $days);
+        $images = $stmt->executeAndFetchAll();
+
         $query = "DELETE FROM artistmap, artwork USING artistmap " .
                  "LEFT JOIN artwork ON artistmap.artwork = artwork.id " .
                  "WHERE ADDDATE(cached, ?) < NOW()";
@@ -175,12 +187,33 @@ class ArtworkImpl extends DBO implements IArtwork {
         $stmt->bindValue(1, $days);
         $success = $stmt->execute();
 
+        if($success) {
+            foreach($images as $image) {
+                $path = $cachePath . $this->getCachePath($image['image_uuid']);
+                unlink(realpath($path));
+            }
+        } else
+            return false;
+
+        $query = "SELECT image_uuid FROM artwork " .
+                 "LEFT JOIN albummap.artwork = artwork.id " .
+                 "WHERE ADDDATE(cached, ?) < NOW()";
+        $stmt->bindValue(1, $days);
+        $images = $stmt->executeAndFetchAll();
+
         $query = "DELETE FROM albummap, artwork USING albummap " .
                  "LEFT JOIN artwork ON albummap.artwork = artwork.id " .
                  "WHERE ADDDATE(cached, ?) < NOW()";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $days);
         $success &= $stmt->execute();
+
+        if($success) {
+            foreach($images as $image) {
+                $path = $cachePath . $this->getCachePath($image['image_uuid']);
+                unlink(realpath($path));
+            }
+        }
 
         return $success;
     }
