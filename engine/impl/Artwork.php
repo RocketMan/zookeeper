@@ -175,7 +175,7 @@ class ArtworkImpl extends DBO implements IArtwork {
             $cacheDir .= DIRECTORY_SEPARATOR . $dir;
 
         $query = "SELECT image_uuid FROM artwork " .
-                 "LEFT JOIN artistmap.artwork = artwork.id " .
+                 "LEFT JOIN artistmap ON artistmap.artwork = artwork.id " .
                  "WHERE ADDDATE(cached, ?) < NOW()";
         $stmt->bindValue(1, $days);
         $images = $stmt->executeAndFetchAll();
@@ -196,7 +196,7 @@ class ArtworkImpl extends DBO implements IArtwork {
             return false;
 
         $query = "SELECT image_uuid FROM artwork " .
-                 "LEFT JOIN albummap.artwork = artwork.id " .
+                 "LEFT JOIN albummap ON albummap.artwork = artwork.id " .
                  "WHERE ADDDATE(cached, ?) < NOW()";
         $stmt->bindValue(1, $days);
         $images = $stmt->executeAndFetchAll();
