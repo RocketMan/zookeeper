@@ -163,13 +163,14 @@ class ArtworkImpl extends DBO implements IArtwork {
     }
 
     public function getCachePath($key) {
+        // this is a URI-path, not a file path, so we use forward slash
         return self::CACHE_DIR .
             substr($key, 0, 2) . '/' .
             substr($key, 2, 2) . '/' .
             substr($key, 4);
     }
 
-    public function expireCache($days=7) {
+    public function expireCache($days=7, $expireAlbums=false) {
         $cacheDir = dirname(__DIR__, 2);
         foreach(explode('/', self::CACHE_DIR) as $dir)
             $cacheDir .= DIRECTORY_SEPARATOR . $dir;
@@ -192,26 +193,27 @@ class ArtworkImpl extends DBO implements IArtwork {
                 $path = $cachePath . $this->getCachePath($image['image_uuid']);
                 unlink(realpath($path));
             }
-        } else
-            return false;
+        }
 
-        $query = "SELECT image_uuid FROM artwork " .
-                 "LEFT JOIN albummap ON albummap.artwork = artwork.id " .
-                 "WHERE ADDDATE(cached, ?) < NOW()";
-        $stmt->bindValue(1, $days);
-        $images = $stmt->executeAndFetchAll();
+        if($success && $expireAlbums) {
+            $query = "SELECT image_uuid FROM artwork " .
+                     "LEFT JOIN albummap ON albummap.artwork = artwork.id " .
+                     "WHERE ADDDATE(cached, ?) < NOW()";
+            $stmt->bindValue(1, $days);
+            $images = $stmt->executeAndFetchAll();
 
-        $query = "DELETE FROM albummap, artwork USING albummap " .
-                 "LEFT JOIN artwork ON albummap.artwork = artwork.id " .
-                 "WHERE ADDDATE(cached, ?) < NOW()";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $days);
-        $success &= $stmt->execute();
+            $query = "DELETE FROM albummap, artwork USING albummap " .
+                     "LEFT JOIN artwork ON albummap.artwork = artwork.id " .
+                     "WHERE ADDDATE(cached, ?) < NOW()";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $days);
+            $success = $stmt->execute();
 
-        if($success) {
-            foreach($images as $image) {
-                $path = $cachePath . $this->getCachePath($image['image_uuid']);
-                unlink(realpath($path));
+            if($success) {
+                foreach($images as $image) {
+                    $path = $cachePath . $this->getCachePath($image['image_uuid']);
+                    unlink(realpath($path));
+                }
             }
         }
 
