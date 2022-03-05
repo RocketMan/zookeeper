@@ -235,6 +235,10 @@ both the `client_id` and `client_secret` parameters in the `discogs`
 stanza of config.php.  Obtain a Discogs API key or Consumer Key/Secret
 through your Discogs developer account.
 
+The `img` subdirectory must be writable by your webserver user, or at
+minimum, create a new subdirectory `img/.cache` and make that writable
+by the webserver.  `img/.cache` is where Zookeeper caches Discogs artwork.
+
 **Note:** You must enable **and** run push notification (see below)
 for Discogs integration to work.  If you do not enable push
 notification, setting the parameters above will have no effect.  If
