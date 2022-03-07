@@ -147,7 +147,7 @@ class Search extends MenuItem {
         if($isAuth)
             echo "&nbsp;&nbsp;(Tag #".$albums[0]["tag"].")";
         echo "</TH></TR>\n</TABLE>";
-        $extraAttrs = "";//$this->emitDiscogsHook($this->searchText);
+        $extraAttrs = $this->emitDiscogsHook($this->searchText);
         echo "<TABLE CLASS='album-info' $extraAttrs>\n";
 
         echo "  <TR><TD ALIGN=RIGHT>Album:</TD><TD><B>";
