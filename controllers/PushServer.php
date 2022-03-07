@@ -248,7 +248,8 @@ class NowAiringServer implements MessageComponentInterface {
                     }
                 }
 
-                if(!isset($imageUuid)) {
+                if(!isset($imageUuid) &&
+                        strlen(trim($entry['track_artist']))) {
                     // is the artist already known to us?
                     $image = $imageApi->getArtistArt($entry['track_artist']);
                     if($image) {
