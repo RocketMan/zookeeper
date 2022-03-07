@@ -49,6 +49,8 @@ class NowAiringServer implements MessageComponentInterface {
     const DISCOGS_SEARCH = "https://api.discogs.com/database/search";
     const UA = "Zookeeper/2.0; (+https://zookeeper.ibinx.com/)";
 
+    const QUERY_DELAY = 5;  // in seconds
+
     protected $clients;
     protected $loop;
     protected $timer;
@@ -57,6 +59,7 @@ class NowAiringServer implements MessageComponentInterface {
     protected $nextSpin;
 
     protected $discogs;
+    protected $imageQ;
 
     public static function toJson($show, $spin) {
         $val['name'] = $show?$show['description']:'';
@@ -92,6 +95,7 @@ class NowAiringServer implements MessageComponentInterface {
 
     public function __construct($loop) {
         $this->clients = new \SplObjectStorage;
+        $this->imageQ = new \SplQueue;
         $this->loop = $loop;
 
         $config = Engine::param('discogs');
@@ -274,6 +278,83 @@ class NowAiringServer implements MessageComponentInterface {
         return $msg;
     }
 
+    protected function processImageQueue() {
+        if(!$this->imageQ->isEmpty()) {
+            $imageApi = Engine::api(IArtwork::class);
+
+            $entry = $this->imageQ->dequeue();
+            $artist = $entry->getArtist();
+
+            if($entry->getTag()) {
+                [ $imageUrl, $infoUrl, $success ] = $this->queryDiscogs($artist, $entry->getAlbum());
+
+                if($success)
+                    $imageUuid = $imageApi->insertAlbumArt($entry->getTag(), $imageUrl, $infoUrl);
+            }
+
+            if(!isset($imageUuid)) {
+                [ $imageUrl, $infoUrl, $success ] = $this->queryDiscogs($artist);
+
+                 if($success)
+                     $imageUuid = $imageApi->insertArtistArt($artist, $imageUrl, $infoUrl);
+            }
+
+            if(!$this->imageQ->isEmpty()) {
+                $this->loop->addTimer(self::QUERY_DELAY, function() {
+                    $this->processImageQueue();
+                });
+            }
+        }
+    }
+
+    protected function enqueueEntry($entry, $imageApi) {
+        if(!$entry->getCreated()) {
+            // no timestamp, don't bother
+            return;
+        }
+
+        if(preg_match('/(\.gov|\.org|GED|Literacy|NIH|Ad\ Council)/', implode(' ', $entry->asArray())) || empty(trim($entry->getArtist()))) {
+            // it's probably a PSA coded as a spin; let's skip it
+            return;
+        }
+
+        // fixup artist name
+        $entry->setArtist(PlaylistEntry::swapNames($entry->getArtist()));
+
+        if($entry->getTag() &&
+                $imageApi->getAlbumArt($entry->getTag()) ||
+                $imageApi->getArtistArt($entry->getArtist())) {
+            // the album or artist is already known to us
+            return;
+        }
+
+        $this->imageQ->enqueue($entry);
+    }
+
+    public function loadImages($playlist, $track) {
+        $startWorker = $this->imageQ->isEmpty();
+
+        $imageApi = Engine::api(IArtwork::class);
+        $listApi = Engine::api(IPlaylist::class);
+
+        if($track) {
+            $entry = new PlaylistEntry($listApi->getTrack($track));
+            $this->enqueueEntry($entry, $imageApi);
+        } else {
+            $listApi->getTracksWithObserver($playlist,
+                (new PlaylistObserver())->onSpin(function($entry) use($imageApi) {
+                    $this->enqueueEntry($entry, $imageApi);
+                })
+            );
+        }
+
+        if($startWorker && !$this->imageQ->isEmpty()) {
+            $this->loop->futureTick(function() {
+                $this->processImageQueue();
+            });
+        }
+    }
+
     public function sendNotification($msg = null, $client = null) {
         if($msg) {
             if($this->current != $msg)
@@ -333,6 +414,18 @@ class PushServer implements IController {
         socket_close($socket);
     }
 
+    public static function lazyLoadImages($playlistId, $trackId = 0) {
+        if(!Engine::param('push_enabled', true))
+            return;
+
+        $data = "loadImages($playlistId, $trackId)";
+
+        $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+        socket_sendto($socket, $data, strlen($data), 0,
+                        PushServer::WSSERVER_HOST, PushServer::WSSERVER_PORT);
+        socket_close($socket);
+    }
+
     public function processRequest() {
         if(php_sapi_name() != "cli") {
             http_response_code(400);
@@ -368,10 +461,12 @@ class PushServer implements IController {
                 function(\React\Datagram\Socket $client) use($nas) {
                     $client->on('message', function($message, $addr, $client) use($nas) {
                         // echo "received $message from $addr\n";
-                        // empty message means poll database
-                        if($message)
+
+                        if(preg_match("/^loadImages\((\d+)(,\s*(\d+))?\)$/", $message, $matches))
+                            $nas->loadImages($matches[1], $matches[3] ?? 0);
+                        else if($message && $message[0] == '{')
                             $nas->sendNotification($message);
-                        else
+                        else // empty message means poll database
                             $nas->refreshOnNow();
                 });
             });

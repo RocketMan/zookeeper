@@ -179,6 +179,31 @@ class Playlists extends MenuItem {
         $p = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 0);
         return $p && $p['dj'] == $this->session->getUser();
     }
+
+    /**
+     * If the show is within the lookback period, asynchronously
+     * load any unknown artist and album art in the playlist.
+     *
+     * Note that only timestamped entries are loaded.
+     */
+    protected function lazyLoadImages($playlistId, $trackId = 0) {
+        $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId);
+
+        $startTime = substr($playlist['showtime'], 0, 2) . ":00:00";
+        $showStart = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT_SQL,
+            $playlist['showdate'] . " " . $startTime);
+        $now = new \DateTime();
+
+        // future show
+        if($showStart > $now)
+            return;
+
+        $now->modify("-7 day");
+        if($showStart > $now) {
+            // show is within the lookback period
+            PushServer::lazyLoadImages($playlistId, $trackId);
+        }
+    }
     
     // add track from an ajax post from client. return new track row
     // upon success else 400 response.
@@ -277,7 +302,8 @@ class Playlists extends MenuItem {
                     } else
                         $spin = null;
                     PushServer::sendAsyncNotification($playlist, $spin);
-                }
+                } else if(!$isLiveShow)
+                    $this->lazyLoadImages($playlistId, $entry->getId());
             }
         } else
             $updateStatus = 0; //failure
@@ -538,6 +564,9 @@ class Playlists extends MenuItem {
                 // update existing playlist
                 $success = $api->updatePlaylist(
                         $playlistId, $date, $showTime, $description, $aid, $duplicate);
+
+                if($success)
+                    $this->lazyLoadImages($playlistId);
 
                 $action = "editListEditor";
             } else {
@@ -1202,6 +1231,8 @@ class Playlists extends MenuItem {
                         if($list['airname'] &&
                                 $playlistApi->isNowWithinShow($list))
                             PushServer::sendAsyncNotification();
+
+                        $this->lazyLoadImages($playlist, $id);
                     }
                     $id = "";
                 } else
@@ -1520,6 +1551,8 @@ class Playlists extends MenuItem {
             $fd = null; // close
             unset($_POST["validate"]);
 
+            $this->lazyLoadImages($playlist);
+
             $_REQUEST["playlist"] = $playlist;
             $this->action = "newListEditor";
             $this->emitEditor();
@@ -1598,6 +1631,8 @@ class Playlists extends MenuItem {
                         }
                         $success = $papi->insertTrackEntry($playlist, $entry, $status);
                     }
+
+                    $this->lazyLoadImages($playlist);
 
                     // display the editor
                     $_REQUEST["playlist"] = $playlist;
