@@ -61,6 +61,9 @@ class ArtworkImpl extends DBO implements IArtwork {
             case "image/svg+xml":
                 $file .= ".svg";
                 break;
+            case "image/webp":
+                $file .= ".webp";
+                break;
             }
 
             $target = $cacheDir . substr($file, 0, 2);
