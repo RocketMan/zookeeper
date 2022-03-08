@@ -192,7 +192,7 @@ class NowAiringServer implements MessageComponentInterface {
             $this->scheduleWorker();
         }
         $this->sendNotification(null, $conn);
-        echo "New connection {$conn->resourceId}\n";
+        // echo "New connection {$conn->resourceId}\n";
     }
 
     protected function queryDiscogs($artist, $album = null) {
@@ -332,7 +332,7 @@ class NowAiringServer implements MessageComponentInterface {
     }
 
     public function loadImages($playlist, $track) {
-        $startWorker = $this->imageQ->isEmpty();
+        $start = $this->imageQ->count();
 
         $imageApi = Engine::api(IArtwork::class);
         $listApi = Engine::api(IPlaylist::class);
@@ -348,7 +348,10 @@ class NowAiringServer implements MessageComponentInterface {
             );
         }
 
-        if($startWorker && !$this->imageQ->isEmpty()) {
+        $queued = $this->imageQ->count() - $start;
+        echo "loadImages($playlist, $track): $queued queued\n";
+
+        if(!$start && $queued) {
             $this->loop->futureTick(function() {
                 $this->processImageQueue();
             });
@@ -385,7 +388,7 @@ class NowAiringServer implements MessageComponentInterface {
             $this->loop->cancelTimer($this->timer);
             $this->timer = null;
         }
-        echo "Connection {$conn->resourceId} disconnected\n";
+        // echo "Connection {$conn->resourceId} disconnected\n";
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e) {
@@ -415,7 +418,9 @@ class PushServer implements IController {
     }
 
     public static function lazyLoadImages($playlistId, $trackId = 0) {
-        if(!Engine::param('push_enabled', true))
+        if(!Engine::param('push_enabled', true) ||
+                !($config = Engine::param('discogs')) ||
+                !$config['apikey'] && !$config['client_id'])
             return;
 
         $data = "loadImages($playlistId, $trackId)";
