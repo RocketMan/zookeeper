@@ -189,6 +189,10 @@ class Playlists extends MenuItem {
     protected function lazyLoadImages($playlistId, $trackId = 0) {
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId);
 
+        // unpublished playlist
+        if(!$playlist['airname'])
+            return;
+
         $timeAr = explode("-", $playlist['showtime']);
         if(count($timeAr) != 2)
             return;
