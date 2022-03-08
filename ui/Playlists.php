@@ -189,9 +189,12 @@ class Playlists extends MenuItem {
     protected function lazyLoadImages($playlistId, $trackId = 0) {
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId);
 
-        $startTime = substr($playlist['showtime'], 0, 2) . ":00:00";
-        $showStart = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT_SQL,
-            $playlist['showdate'] . " " . $startTime);
+        $timeAr = explode("-", $playlist['showtime']);
+        if(count($timeAr) != 2)
+            return;
+
+        $showStart = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT,
+            $playlist['showdate'] . " " . $timeAr[0]);
         $now = new \DateTime();
 
         // future show
