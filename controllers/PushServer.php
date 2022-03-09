@@ -341,9 +341,14 @@ class NowAiringServer implements MessageComponentInterface {
             $entry = new PlaylistEntry($listApi->getTrack($track));
             $this->enqueueEntry($entry, $imageApi);
         } else {
+            $visited = [];
             $listApi->getTracksWithObserver($playlist,
-                (new PlaylistObserver())->onSpin(function($entry) use($imageApi) {
-                    $this->enqueueEntry($entry, $imageApi);
+                (new PlaylistObserver())->onSpin(function($entry) use($imageApi, &$visited) {
+                    $key = $entry->getArtist() . $entry->getTag();
+                    if(!key_exists($key, $visited)) {
+                        $this->enqueueEntry($entry, $imageApi);
+                        $visited[$key] = 1;
+                    }
                 })
             );
         }
