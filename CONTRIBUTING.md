@@ -94,6 +94,7 @@ The following is an overview of the source code directory structure:
             bindings are metadata driven, via config/engine_config.php.
 
             The Engine::api interfaces are:
+              • IArtwork - album and artist artwork
               • IChart - rotation and charting
               • IDJ - DJ airname management
               • IEditor - music library management

@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -33,7 +33,65 @@ use ZK\Engine\PlaylistEntry;
 use ZK\UI\UICommon as UI;
 
 class Home extends MenuItem {
+    private static $subactions = [
+        [ "", "emitHome" ],
+        [ "recent", "recentSpins" ],
+        [ "times", "getTimes" ],
+    ];
+
     public function processLocal($action, $subaction) {
+        return $this->dispatchAction($subaction, self::$subactions);
+    }
+
+    protected function recentSpins() {
+        $plays = Engine::api(IPlaylist::class)->getPlaysBefore($_REQUEST["before"] ?? null, 10);
+        echo json_encode($plays);
+    }
+
+    protected function makeDatePicker() {
+        $now = new \DateTime();
+        $result = "<option value='" . $now->format("Y-m-d") . "'>Today</option>";
+        $now->modify("-1 days");
+        $result .= "<option value='" . $now->format("Y-m-d") . "'>Yesterday</option>";
+        for($i=0; $i<5; $i++) {
+            $now->modify("-1 days");
+            $result .= "<option value='" . $now->format("Y-m-d") . "'>" .
+                $now->format("D M j") . "</option>";
+        }
+
+        return $result;
+    }
+
+    protected function makeTimePicker($date=null) {
+        $now = new \DateTime();
+        if(!$date || $now->format("Y-m-d") == $date) {
+            // today
+            $result = "<option value='now'>Recently Played</option>";
+            $hour = (int)$now->format("H");
+        } else {
+            $result = "<option value='23:59:59'>Before midnight</option>";
+            $hour = 23;
+        }
+
+        do {
+            if($hour % 3) continue;
+            $h = sprintf("%02d", $hour);
+            $ampm = $h >= 12?"pm":"am";
+            $hx = $h > 12?$hour-12:$hour;
+            $dh = $h == 12?"noon":($hx.$ampm);
+            $result .= "<option value='$h:00:00'>Before $dh</option>";
+        } while(--$hour > 0);
+
+        return $result;
+    }
+
+    protected function getTimes() {
+        $retVal = [];
+        $retVal['times'] = $this->makeTimePicker($_REQUEST["date"] ?? null);
+        echo json_encode($retVal);
+    }
+
+    public function emitHome() {
         echo "<H1>". Engine::param('station'). " Music :: " . Engine::param('application') . "</H1>\n";
         $requestLine = Engine::param('contact')['request'];
         if ($requestLine)
@@ -44,9 +102,25 @@ class Home extends MenuItem {
         echo "<div class='home-hdr'><label>Music Director:</label> <A HREF='mailto:$musicDirEmail'>$musicDirName</A></div>";
 
         $this->emitWhatsOnNow();
-        $this->emitTopPlays();
+        if(($config = Engine::param('discogs')) &&
+                ($config['apikey'] || $config['client_id']) &&
+                Engine::param('push_enabled', true))
+            $this->emitRecentlyPlayed();
+        else
+            $this->emitTopPlays();
         echo "<div style='border:0; position:absolute; bottom:0px' CLASS='subhead'>For complete album charting, see our ";
         echo "<A CLASS='subhead' HREF='?action=viewChart'><B>Airplay Charts</B></A></div>";
+    }
+
+    private function emitRecentlyPlayed() {
+        echo "<div class='recently-played-date-picker'><h3>Recently Played on ".Engine::param('station')."</h3>\n";
+        echo "<div><form><select id='date'>";
+        echo $this->makeDatePicker();
+        echo "</select><select id='time'>";
+        echo $this->makeTimePicker();
+        echo "</select></form></div></div>\n";
+        echo "<div class='recently-played'></div>\n";
+        echo "<div class='show-more'><form><input type=button id=more value='show more'></form></div>\n";
     }
 
     private function emitTopPlays($numweeks=1, $limit=10) {

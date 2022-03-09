@@ -93,6 +93,17 @@ $config = [
     ],
 
     /**
+     * Discogs integration
+     *
+     * see INSTALLATION.md for details
+     */
+    'discogs' => [
+        'apikey' => '',
+        'client_id' => '',
+        'client_secret' => '',
+    ],
+
+    /**
      * database settings
      */
     'db' => [

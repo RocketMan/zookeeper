@@ -853,3 +853,124 @@ a:hover.copy {
 .apikey {
     font-family: monospace;
 }
+
+/* home page recently played */
+.recently-played {
+    display: block;
+    margin-top: 0;
+    padding-top: 0;
+    transition: all 1000ms ease-in-out;
+}
+
+.recently-played .card {
+    display: inline-block;
+    width: calc(20% - 16px);
+    margin-top: 7.5px;
+    vertical-align: top;
+    margin: 7px;
+
+    overflow: hidden;
+    border-radius: 3px;
+    background-color: #fff;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 1px;
+    position: relative;
+    text-align: left;
+}
+
+.recently-played .card .artwork {
+    width: 100%;
+    max-height: 126px;
+    min-height: 126px;
+    display: block;
+    top: 0;
+    left: 0;
+    transition: all 400ms ease 0s;
+    opacity: 1;
+    border: 0;
+    object-fit: cover;
+    object-position: center 10%;
+}
+
+.recently-played .card .info {
+    padding-top: 10px;
+    box-sizing: content-box;
+    height: 85.6px;
+    display: block;
+    text-align: left;
+    margin-top: 0;
+    margin-left: 10px;
+}
+
+.recently-played .card .info .details {
+    line-height: 1.4;
+    overflow: hidden;
+    display: block;
+    margin-top: 0;
+    margin-bottom: 5px;
+    padding-top: 0;
+}
+
+.recently-played .card .info .track {
+    font-size: 15px;
+    max-height: 42px;
+    color: #333;
+}
+
+.recently-played .card .info .artist {
+    font-size: 12px;
+    max-height: 33.6px;
+    color: #555;
+}
+
+.recently-played .card .time {
+    display: block;
+    padding-top: 10px;
+    font-size: 12px;
+    border-top: 1px solid #f5f5f5;
+    color: #666;
+    margin: 0 0 10px 10px;
+}
+
+.recently-played-date-picker {
+    position: relative;
+}
+
+.recently-played-date-picker h3 {
+    display: inline-block;
+}
+
+.recently-played-date-picker div {
+    display: inline-block;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.recently-played-date-picker select {
+    margin-left: 10px;
+}
+
+.show-more {
+    text-align: center;
+    padding-bottom: 20px;
+}
+
+/* artwork on album details page */
+.album-info {
+    display: inline-block;
+    vertical-align: top;
+    padding-bottom: 10px;
+}
+
+.album-thumb {
+    display: inline-block;
+    padding: 2px 6px 2px 0;
+}
+
+.album-thumb img {
+    max-height: 126px;
+    min-height: 126px;
+    width: 126px;
+    object-fit: cover;
+    object-position: center 10%;
+}

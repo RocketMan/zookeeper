@@ -364,6 +364,9 @@ class Playlists implements RequestHandlerInterface {
                     ["showdate" => $date, "showtime" => $time]))
                 PushServer::sendAsyncNotification();
 
+            if($events)
+                PushServer::lazyLoadImages($playlist);
+
             return new CreatedResponse(Engine::getBaseUrl()."playlist/$playlist");
         }
 
@@ -510,6 +513,9 @@ class Playlists implements RequestHandlerInterface {
                 PushServer::sendAsyncNotification($list, $spin);
             } else if($api->isNowWithinShow($list))
                 PushServer::sendAsyncNotification();
+
+            if(!$autoTimestamp && isset($stamp))
+                PushServer::lazyLoadImages($key, $entry->getId());
         }
 
         return $success ?
@@ -569,6 +575,9 @@ class Playlists implements RequestHandlerInterface {
 
         if($success && $list['airname'] && $api->isNowWithinShow($list))
             PushServer::sendAsyncNotification();
+
+        if($success && isset($stamp))
+            PushServer::lazyLoadImages($key, $id);
 
         return $success ?
             new EmptyResponse() :
