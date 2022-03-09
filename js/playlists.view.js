@@ -64,8 +64,8 @@ $().ready(function(){
             url: url,
         }).done(function (respObj) {
             let options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
-            let date = new Date(isoDate  + 'T00:00:00');
-            prettyDate = date.toLocaleString('default', options);
+            let date = new Date(isoDate  + getNowTimeStr());
+            let prettyDate = date.toLocaleString('default', options);
             $('#playlist-list thead th').html(`Playlists for ${prettyDate}:`);
             $('#playlist-list tbody').html(respObj.tbody);
         });
@@ -78,6 +78,12 @@ $().ready(function(){
             localDate = `${dateAr[1]}/${dateAr[2]}/${dateAr[0]}`;
             
         $("#playlist-date").val(localDate);
+    }
+
+    function getNowTimeStr() {
+        let now = new Date();
+        let timeStr = `T${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+        return timeStr;
     }
 
     let locale = (new Intl.NumberFormat()).resolvedOptions().locale
