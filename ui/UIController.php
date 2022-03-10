@@ -206,6 +206,11 @@ class UIController implements IController {
         document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"><\/script>');
     }
 
+    // polyfill String.padStart as needed
+    if(!String.prototype.padStart) {
+        document.write('<script src="https://polyfill.io/v3/polyfill.min.js?features=String.prototype.padStart"><\/script>');
+    }
+
     document.write('<link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/base/jquery-ui.css" rel="stylesheet" type="text/css" />');
     document.write('<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js"><\/script>') 
 
