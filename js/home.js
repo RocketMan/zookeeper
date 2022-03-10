@@ -62,6 +62,10 @@ $().ready(function(){
             class: "artist details"
         }).html(spin.track_artist));
 
+        // hack for ES5 to parse as local time
+        var spinTime = new Date(spin.track_time.replace(' ','T') + 'Z');
+        spinTime.setMinutes(spinTime.getMinutes() + spinTime.getTimezoneOffset());
+
         var card = $("<DIV>", {
             class: "card"
         }).append(img);
@@ -70,7 +74,7 @@ $().ready(function(){
         card.append(info);
         card.append($("<SPAN>", {
             class: "time"
-        }).html(localTime(new Date(spin.track_time))));
+        }).html(localTime(spinTime)));
 
         return card;
     }
