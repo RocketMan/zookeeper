@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2020 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     // fetch the days with playlists for the selected month and enable the on the calendar.
@@ -64,7 +64,9 @@ $().ready(function(){
             url: url,
         }).done(function (respObj) {
             let options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
-            let date = new Date(isoDate  + 'T00:00:00');
+            // hack for ES5 to parse date as local time
+            let date = new Date(isoDate  + 'T00:00:00Z');
+            date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
             prettyDate = date.toLocaleString('default', options);
             $('#playlist-list thead th').html(`Playlists for ${prettyDate}:`);
             $('#playlist-list tbody').html(respObj.tbody);
