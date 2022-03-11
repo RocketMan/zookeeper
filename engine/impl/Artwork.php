@@ -193,7 +193,7 @@ class ArtworkImpl extends DBO implements IArtwork {
 
         if($success) {
             foreach($images as $image) {
-                $path = $cachePath . $this->getCachePath($image['image_uuid']);
+                $path = $cacheDir . $this->getCachePath($image['image_uuid']);
                 unlink(realpath($path));
             }
         }
@@ -214,7 +214,7 @@ class ArtworkImpl extends DBO implements IArtwork {
 
             if($success) {
                 foreach($images as $image) {
-                    $path = $cachePath . $this->getCachePath($image['image_uuid']);
+                    $path = $cacheDir . $this->getCachePath($image['image_uuid']);
                     unlink(realpath($path));
                 }
             }
