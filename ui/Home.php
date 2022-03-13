@@ -191,6 +191,7 @@ class Home extends MenuItem {
     private function emitWhatsOnNow() {
         echo "<div class='subhead'>On Now:<div class='home-onnow'>\n";
         echo "<div class='home-show'>";
+        $tz = date("T");
         $record = Engine::api(IPlaylist::class)->getWhatsOnNow();
         if($record && ($row = $record->fetch())) {
             $airId = $row["airid"];
@@ -202,7 +203,7 @@ class Home extends MenuItem {
             echo "<A HREF='$hrefPL' CLASS='nav'>$description</A>&nbsp;with&nbsp;";
             echo "<A HREF='$hrefAirName' CLASS='calNav'>$airName</A></div>";
             echo "<div class='home-showbox'>";
-            echo "<div class='home-datetime'>$showDateTime</div>";
+            echo "<div class='home-datetime'>$showDateTime $tz</div>";
         } else {
             echo "</div><div class='home-showbox'>";
             echo "<div class='home-datetime'>[No playlist available]</div>";
@@ -211,7 +212,8 @@ class Home extends MenuItem {
         echo "</div></div>\n";
 
         if(Engine::param('push_enabled', true)) {
-            echo "<form><input type=hidden id='push-subscribe' value='" .
+            echo "<form><input type=hidden id='tz' value='$tz'>";
+            echo "<input type=hidden id='push-subscribe' value='" .
                 preg_replace("/^(http)/", "ws", UI::getBaseUrl()) . "push/onair'></form>\n";
             UI::emitJS('js/home.js');
         }

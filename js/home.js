@@ -30,7 +30,15 @@ $().ready(function(){
         var min = m == 0?'':':' + String(m).padStart(2, '0');
         if(hour > 12)
             hour -= 12;
+        else if(hour == 0)
+            hour = 12;
         return hour + min + ampm;
+    }
+
+    function serverDate(s) {
+        var date = new Date(s.replace(/[+|-]\d+(:\d+)?$/, 'Z'));
+        date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+        return date;
     }
 
     var palette = [ '#bdd0c4', '#9ab7d3', '#f5d2d3', '#f7e1d3', '#dfccf1' ];
@@ -146,10 +154,10 @@ $().ready(function(){
                 $(".home-currenttrack").fadeout();
                 $(".home-datetime").html("[No playlist available]").fadein();
             } else {
-                var start = new Date(onnow.show_start);
-                var end = new Date(onnow.show_end);
+                var start = serverDate(onnow.show_start);
+                var end = serverDate(onnow.show_end);
                 $(".home-show").html("<A HREF='?action=viewDate&amp;seq=selList&amp;playlist=" + onnow.show_id + "' CLASS='nav'>" + onnow.name + "</A>&nbsp;with&nbsp;" + onnow.airname);
-                $(".home-datetime").html(start.toDateString() + " " + localTime(start) + " - " + localTime(end));
+                $(".home-datetime").html(start.toDateString() + " " + localTime(start) + " - " + localTime(end) + " " + $("#tz").val());
                 if(onnow.id == 0) {
                     $(".home-currenttrack").fadeout();
                     $(".home-datetime").fadein();
