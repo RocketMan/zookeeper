@@ -87,24 +87,38 @@ class ArtworkImpl extends DBO implements IArtwork {
         return $file;
     }
 
-    public function getAlbumArt($tag) {
+    public function getAlbumArt($tag, $newRef = false) {
         $query = "SELECT artwork image_id, image_uuid, info_url FROM albummap a " .
             "LEFT JOIN artwork i ON a.artwork = i.id WHERE tag = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
-        return $stmt->executeAndFetch();
+        $result = $stmt->executeAndFetch();
+        if($result && $newRef) {
+            $query = "UPDATE albummap SET cached = NOW() WHERE tag = ?";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $tag);
+            $stmt->execute();
+        }
+        return $result;
     }
 
-    public function getArtistArt($artist) {
+    public function getArtistArt($artist, $newRef = false) {
         $query = "SELECT artwork image_id, image_uuid, info_url FROM artistmap a " .
             "LEFT JOIN artwork i ON a.artwork = i.id WHERE name = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $artist);
-        return $stmt->executeAndFetch();
+        $result = $stmt->executeAndFetch();
+        if($result && $newRef) {
+            $query = "UPDATE artistmap SET cached = NOW() WHERE name = ?";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $artist);
+            $stmt->execute();
+        }
+        return $result;
     }
 
     public function insertAlbumArt($tag, $imageUrl, $infoUrl) {
-        $image = $this->getAlbumArt($tag);
+        $image = $this->getAlbumArt($tag, true);
         if($image)
             $uuid = $image['image_uuid'];
         else {
@@ -135,7 +149,7 @@ class ArtworkImpl extends DBO implements IArtwork {
     }
 
     public function insertArtistArt($artist, $imageUrl, $infoUrl) {
-        $image = $this->getArtistArt($artist);
+        $image = $this->getArtistArt($artist, true);
         if($image)
             $uuid = $image['image_uuid'];
         else {
