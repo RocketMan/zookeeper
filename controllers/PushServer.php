@@ -238,7 +238,7 @@ class NowAiringServer implements MessageComponentInterface {
 
                 if($entry['track_tag']) {
                     // is the album already known to us?
-                    $image = $imageApi->getAlbumArt($entry['track_tag']);
+                    $image = $imageApi->getAlbumArt($entry['track_tag'], true);
                     if($image) {
                         // if yes, reuse it...
                         $imageUuid = $image['image_uuid'];
@@ -255,7 +255,7 @@ class NowAiringServer implements MessageComponentInterface {
                 if(!isset($imageUuid) &&
                         strlen(trim($entry['track_artist']))) {
                     // is the artist already known to us?
-                    $image = $imageApi->getArtistArt($entry['track_artist']);
+                    $image = $imageApi->getArtistArt($entry['track_artist'], true);
                     if($image) {
                         // if yes, reuse it...
                         $imageUuid = $image['image_uuid'];
@@ -322,8 +322,8 @@ class NowAiringServer implements MessageComponentInterface {
         $entry->setArtist(PlaylistEntry::swapNames($entry->getArtist()));
 
         if($entry->getTag() &&
-                $imageApi->getAlbumArt($entry->getTag()) ||
-                $imageApi->getArtistArt($entry->getArtist())) {
+                $imageApi->getAlbumArt($entry->getTag(), true) ||
+                $imageApi->getArtistArt($entry->getArtist(), true)) {
             // the album or artist is already known to us
             return;
         }
