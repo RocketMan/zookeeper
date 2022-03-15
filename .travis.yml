@@ -1,5 +1,7 @@
 language: php
 
+dist: bionic
+
 php:
   - 7.4
   - 8.0
@@ -13,13 +15,13 @@ before_install:
 before_script:
   # Install Apache
   - sudo apt-get update
-  - sudo apt-get install apache2 libapache2-mod-fastcgi
+  - sudo apt-get install apache2 libapache2-mod-fcgid
   # Enable php-fpm
   - sudo cp ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf.default ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf
-  - sudo a2enmod rewrite actions fastcgi alias
+  - sudo a2enmod rewrite actions fcgid alias
   - echo "cgi.fix_pathinfo = 1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - sudo sed -i -e "s,www-data,travis,g" /etc/apache2/envvars
-  - sudo chown -R travis:travis /var/lib/apache2/fastcgi
+  - sudo chown -R travis:travis /var/lib/apache2/fcgid
   - ~/.phpenv/versions/$(phpenv version-name)/sbin/php-fpm
   # Fixup rewrites for php-fpm
   - cat build/php-fpm-redirect >> api/.htaccess
