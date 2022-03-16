@@ -7,20 +7,11 @@
     Options FollowSymLinks MultiViews ExecCGI
     AllowOverride All
     Require all granted
+    <IfModule mod_fcgid.c>
+      AddHandler fcgid-script .php
+      FCGIWrapper /usr/lib/cgi-bin/php5-fcgi .php
+    </IfModule>
   </Directory>
-
-  # Wire up Apache to use Travis CI's php-fpm.
-  <IfModule mod_fcgid.c>
-    AddHandler fcgid-script .php
-    AddType application/x-httpd-php .php
-    AddHandler application/x-httpd-php .php
-    Action php7-fcgi /php7-fcgi
-    Alias /php7-fcgi /usr/lib/cgi-bin/php7-fcgi
-
-    <Directory /usr/lib/cgi-bin>
-        Require all granted
-    </Directory>
-  </IfModule>
 
   # [...]
 </VirtualHost>
