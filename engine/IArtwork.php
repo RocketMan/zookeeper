@@ -28,8 +28,8 @@ namespace ZK\Engine;
  * Artwork operations
  */
 interface IArtwork {
-    function getAlbumArt($tag);
-    function getArtistArt($artist);
+    function getAlbumArt($tag, $newRef = false);
+    function getArtistArt($artist, $newRef = false);
     function insertAlbumArt($tag, $imageUrl, $infoUrl);
     function insertArtistArt($artist, $imageUrl, $infoUrl);
     function getCachePath($key);

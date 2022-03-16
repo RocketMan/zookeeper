@@ -113,8 +113,8 @@ class RunDaily implements IController {
     }
 
     private function purgeArtworkCache() {
-        $ok = Engine::api(IArtwork::class)->expireEmpty();
-        echo "Purging artwork cache: ".($ok?"OK":"FAILED!")."\n";
+        $count = Engine::api(IArtwork::class)->expireEmpty();
+        echo "Purging artwork cache: ".($count !== false?"OK ($count removed)":"FAILED!")."\n";
     }
 
     private static function weeklyChartDate($date) {
