@@ -188,6 +188,7 @@ class ArtworkImpl extends DBO implements IArtwork {
     }
 
     public function expireCache($days=7, $expireAlbums=false) {
+        $count = 0;
         $cacheDir = dirname(__DIR__, 2);
         foreach(explode('/', self::CACHE_DIR) as $dir)
             $cacheDir .= DIRECTORY_SEPARATOR . $dir;
@@ -206,6 +207,7 @@ class ArtworkImpl extends DBO implements IArtwork {
         $success = $stmt->execute();
 
         if($success) {
+            $count = $stmt->rowCount();
             foreach($images as $image) {
                 $path = $cacheDir . $this->getCachePath($image['image_uuid']);
                 unlink(realpath($path));
@@ -227,6 +229,7 @@ class ArtworkImpl extends DBO implements IArtwork {
             $success = $stmt->execute();
 
             if($success) {
+                $count += $stmt->rowCount();
                 foreach($images as $image) {
                     $path = $cacheDir . $this->getCachePath($image['image_uuid']);
                     unlink(realpath($path));
@@ -234,7 +237,7 @@ class ArtworkImpl extends DBO implements IArtwork {
             }
         }
 
-        return $success;
+        return $success ? $count : false;
     }
 
     public function expireEmpty($days=1) {
@@ -244,12 +247,14 @@ class ArtworkImpl extends DBO implements IArtwork {
         $stmt->bindValue(1, $days);
         $success = $stmt->execute();
 
+        $count = $success ? $stmt->rowCount() : 0;
+
         $query = "DELETE FROM albummap " .
                  "WHERE artwork IS NULL AND ADDDATE(cached, ?) < NOW()";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $days);
         $success &= $stmt->execute();
 
-        return $success;
+        return $success ? $stmt->rowCount() + $count : false;
     }
 }
