@@ -1,6 +1,6 @@
 language: php
 
-dist: bionic
+dist: xenial
 
 php:
   - 7.4
@@ -14,9 +14,9 @@ before_install:
 
 before_script:
   # Install Apache
-  # sudo apt-add-repository 'deb http://archive.ubuntu.com/ubuntu xenial main universe multiverse restricted'
+  - sudo apt-add-repository 'deb http://archive.ubuntu.com/ubuntu xenial main universe multiverse restricted'
   - sudo apt-get update
-  - sudo apt-get install apache2 libapache-mod-fastcgi
+  - sudo apt-get install apache2 libapache2-mod-fastcgi
   # Install mod_fastcgi which is no longer available in Ubuntu repositories
   # wget http://mirrors.kernel.org/ubuntu/pool/multiverse/liba/libapache-mod-fastcgi/libapache2-mod-fastcgi_2.4.7~0910052141-1.2_amd64.deb
   # sudo dpkg -i libapache2-mod-fastcgi_2.4.7~0910052141-1.2_amd64.deb
