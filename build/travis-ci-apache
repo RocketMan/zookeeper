@@ -10,11 +10,13 @@
   </Directory>
 
   # Wire up Apache to use Travis CI's php-fpm.
-  <IfModule mod_fastcgi.c>
-    AddHandler php5-fcgi .php
-    Action php5-fcgi /php5-fcgi
-    Alias /php5-fcgi /usr/lib/cgi-bin/php5-fcgi
-    FastCgiExternalServer /usr/lib/cgi-bin/php5-fcgi -host 127.0.0.1:9000 -pass-header Authorization
+  <IfModule mod_fcgid.c>
+    Options +ExecCGI
+    FcgidConnectTimeout 20
+    AddType application/x-httpd-php .php
+    AddHandler application/x-httpd-php .php
+    Alias /php7-fcgi /usr/lib/cgi-bin/php7-fcgi
+    ProxyPassMatch "^/(.*\.php(/.*)?)$" fcgi://127.0.0.1:9000
 
     <Directory /usr/lib/cgi-bin>
         Require all granted
