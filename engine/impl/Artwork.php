@@ -93,7 +93,7 @@ class ArtworkImpl extends DBO implements IArtwork {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
         $result = $stmt->executeAndFetch();
-        if($result && $newRef) {
+        if($result && $result['image_id'] && $newRef) {
             $query = "UPDATE albummap SET cached = NOW() WHERE tag = ?";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $tag);
@@ -108,7 +108,7 @@ class ArtworkImpl extends DBO implements IArtwork {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $artist);
         $result = $stmt->executeAndFetch();
-        if($result && $newRef) {
+        if($result && $result['image_id'] && $newRef) {
             $query = "UPDATE artistmap SET cached = NOW() WHERE name = ?";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $artist);
