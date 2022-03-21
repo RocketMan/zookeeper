@@ -354,13 +354,14 @@ class NowAiringServer implements MessageComponentInterface {
         }
 
         $queued = $this->imageQ->count() - $start;
-        if($queued)
+        if($queued) {
             echo "loadImages($playlist, $track): $queued queued\n";
 
-        if(!$start && $queued) {
-            $this->loop->futureTick(function() {
-                $this->processImageQueue();
-            });
+            if(!$start) {
+                $this->loop->futureTick(function() {
+                    $this->processImageQueue();
+                });
+            }
         }
     }
 
