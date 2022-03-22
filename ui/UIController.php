@@ -324,6 +324,7 @@ class UIController implements IController {
   <DIV CLASS="footer">
     <?php echo Engine::param('copyright'); ?><BR>
     <A HREF="#about">Zookeeper Online &copy; 1997-2022 J Mason. All rights reserved.</A>
+    <A HREF="PRIVACY.md" TARGET="_blank">Privacy policy</A>
   </DIV>
 </DIV>
 <DIV CLASS="lightbox" ID="about">
