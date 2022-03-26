@@ -187,15 +187,14 @@ class ArtworkImpl extends DBO implements IArtwork {
             substr($key, 4);
     }
 
-    public function expireCache($days=7, $expireAlbums=false) {
+    public function expireCache($days=10, $expireAlbums=false) {
         $count = 0;
-        $cacheDir = dirname(__DIR__, 2);
-        foreach(explode('/', self::CACHE_DIR) as $dir)
-            $cacheDir .= DIRECTORY_SEPARATOR . $dir;
+        $cacheDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
 
         $query = "SELECT image_uuid FROM artwork " .
                  "LEFT JOIN artistmap ON artistmap.artwork = artwork.id " .
                  "WHERE ADDDATE(cached, ?) < NOW()";
+        $stmt = $this->prepare($query);
         $stmt->bindValue(1, $days);
         $images = $stmt->executeAndFetchAll();
 
@@ -207,7 +206,7 @@ class ArtworkImpl extends DBO implements IArtwork {
         $success = $stmt->execute();
 
         if($success) {
-            $count = $stmt->rowCount();
+            $count = count($images);
             foreach($images as $image) {
                 $path = $cacheDir . $this->getCachePath($image['image_uuid']);
                 unlink(realpath($path));
@@ -218,6 +217,7 @@ class ArtworkImpl extends DBO implements IArtwork {
             $query = "SELECT image_uuid FROM artwork " .
                      "LEFT JOIN albummap ON albummap.artwork = artwork.id " .
                      "WHERE ADDDATE(cached, ?) < NOW()";
+            $stmt = $this->prepare($query);
             $stmt->bindValue(1, $days);
             $images = $stmt->executeAndFetchAll();
 
@@ -229,7 +229,7 @@ class ArtworkImpl extends DBO implements IArtwork {
             $success = $stmt->execute();
 
             if($success) {
-                $count += $stmt->rowCount();
+                $count += count($images);
                 foreach($images as $image) {
                     $path = $cacheDir . $this->getCachePath($image['image_uuid']);
                     unlink(realpath($path));
