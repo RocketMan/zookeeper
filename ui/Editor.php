@@ -711,7 +711,7 @@ class Editor extends MenuItem {
          return $tracks;
     }
     
-    private function getTitle($seq) {
+    public function getTitle($seq) {
         $albumLabel = htmlentities(stripslashes(($_REQUEST["coll"]?"":$_REQUEST["artist"] . " / ") . $_REQUEST["album"]));
         switch($seq) {
         case "search":
