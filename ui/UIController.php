@@ -140,7 +140,7 @@ class UIController implements IController {
             ob_start(function($buffer) {
                 if($this->menuItem instanceof MenuItem &&
                         ($title = $this->menuItem->getTitle()))
-                    $buffer = preg_replace("|<TITLE>(.*)</TITLE>|", "<TITLE>$title - $1</TITLE>", $buffer);
+                    $buffer = preg_replace("/<TITLE>/", "<TITLE>$title - ", $buffer, 1);
                 return $buffer;
             });
             $this->emitResponseHeader();
