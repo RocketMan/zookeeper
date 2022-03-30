@@ -141,11 +141,15 @@ class Search extends MenuItem {
 
         $artist = strcmp(substr($albums[0]["artist"], 0, 8), "[coll]: ")?
                       $albums[0]["artist"]:"Various Artists";
+
+        $this->title = $artist . " / " . $albums[0]["album"];
         echo "<TABLE WIDTH=\"100%\">\n  <TR><TH ALIGN=LEFT COLSPAN=5 CLASS=\"secdiv\">" .
                   $this->HTMLify($artist, 20) . " / " .
                   $this->HTMLify($albums[0]["album"], 20);
-        if($isAuth)
+        if($isAuth) {
             echo "&nbsp;&nbsp;(Tag #".$albums[0]["tag"].")";
+            $this->title .= " (#" . $albums[0]["tag"] . ")";
+        }
         echo "</TH></TR>\n</TABLE>";
         $extraAttrs = $this->emitDiscogsHook($this->searchText);
         echo "<TABLE CLASS='album-info' $extraAttrs>\n";

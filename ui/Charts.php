@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -160,6 +160,8 @@ class Charts extends MenuItem {
             $displayDate = date("j F Y", mktime(0,0,0,$month,$day,$year));
             echo "<P CLASS=\"header\">$station chart for the week ending $displayDate</P>\n";
         }
+
+        $this->title = "Chart for $displayDate";
     
     // weekly = hip hop, reggae/world, jazz, heavy shit, dance, classical/exp
     //     no limits

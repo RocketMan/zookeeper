@@ -56,6 +56,8 @@ class UIController implements IController {
     protected $session;
     protected $menu;
 
+    protected $menuItem;
+
     /**
      * return menu item that matches the specified action
      */
@@ -81,9 +83,9 @@ class UIController implements IController {
             $item = new MenuEntry($this->menu->default());
 
         $implClass = $item->implementation;
-        $menuItem = new $implClass();
-        if($menuItem instanceof MenuItem)
-            $menuItem->process($action, $subaction, $this->session);
+        $this->menuItem = new $implClass();
+        if($this->menuItem instanceof MenuItem)
+            $this->menuItem->process($action, $subaction, $this->session);
     }
 
     /**
@@ -135,8 +137,15 @@ class UIController implements IController {
             $subaction =  $_REQUEST["subaction"];
             $this->dispatch($action, $subaction);
         } else {
+            ob_start(function($buffer) {
+                if($this->menuItem instanceof MenuItem &&
+                        ($title = $this->menuItem->getTitle()))
+                    $buffer = preg_replace("/<TITLE>/", "<TITLE>$title - ", $buffer);
+                return $buffer;
+            });
             $this->emitResponseHeader();
             $this->emitBody();
+            ob_end_flush();
         }
     }
 
@@ -178,6 +187,10 @@ class UIController implements IController {
         $banner = Engine::param('application');
         $station = Engine::param('station');
         $station_full = Engine::param('station_full');
+
+        $banner .= " - " . $station;
+        if(!preg_match('/Radio$/', $banner))
+            $banner .= " Radio";
     ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
