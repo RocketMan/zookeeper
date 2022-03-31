@@ -140,7 +140,7 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function recentCharts() {
-       $station = Engine::param('station_title', Engine::param('station'));
+       $station = self::xmlentities(Engine::param('station_title', Engine::param('station')));
        $top = $_REQUEST["top"];
        $weeks = $_REQUEST["weeks"];
 
@@ -175,7 +175,7 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function recentReviews() {
-       $station = Engine::param('station_title', Engine::param('station'));
+       $station = self::xmlentities(Engine::param('station_title', Engine::param('station')));
        $limit = isset($_REQUEST["limit"])?$_REQUEST["limit"]:50;
 
        $title = "$station Music Reviews";
@@ -236,7 +236,7 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function composeAddRSS($addDate, &$title) {
-        $station = Engine::param('station');
+        $station = self::xmlentities(Engine::param('station'));
         $results = Engine::api(IChart::class)->getAdd($addDate);
         if($results) {
             $title = "$station Adds ";
@@ -304,7 +304,7 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function recentAdds() {
-       $station = Engine::param('station_title', Engine::param('station'));
+       $station = self::xmlentities(Engine::param('station_title', Engine::param('station')));
        $weeks = $_REQUEST["weeks"];
 
        if(!$weeks)
