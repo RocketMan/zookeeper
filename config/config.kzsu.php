@@ -15,6 +15,8 @@ $config = [
      */
     'station' => 'KZSU',
 
+    'station_title' => 'KZSU Radio',
+
     'station_medium' => 'KZSU 90.1FM',
 
     'station_full' => 'KZSU Radio 90.1 FM',

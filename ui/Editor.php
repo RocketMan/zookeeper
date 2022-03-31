@@ -185,7 +185,7 @@ class Editor extends MenuItem {
         for($i=0; $i<2; $i++) {
             if($i == 1) {
                 // Emit header
-                $title = $this->getTitle($_REQUEST["seq"]);
+                $title = $this->getPanelTitle($_REQUEST["seq"]);
                 echo "  <FORM ACTION=\"?\" METHOD=POST>\n";
                 echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n      <TR><TH ALIGN=LEFT>$title</TH><TH ALIGN=RIGHT CLASS=\"error\">";
                 if(!$this->subaction) {
@@ -233,7 +233,7 @@ class Editor extends MenuItem {
         for($i=0; $i<2; $i++) {
             if($i == 1) {
                 // Emit header
-                $title = $this->getTitle($_REQUEST["seq"]);
+                $title = $this->getPanelTitle($_REQUEST["seq"]);
                 echo "  <FORM ACTION=\"?\" METHOD=POST>\n";
                 echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n      <TR><TH ALIGN=LEFT>$title</TH></TR>\n      <TR><TD HEIGHT=130 VALIGN=MIDDLE>\n";
     
@@ -711,7 +711,7 @@ class Editor extends MenuItem {
          return $tracks;
     }
     
-    private function getTitle($seq) {
+    private function getPanelTitle($seq) {
         $albumLabel = htmlentities(stripslashes(($_REQUEST["coll"]?"":$_REQUEST["artist"] . " / ") . $_REQUEST["album"]));
         switch($seq) {
         case "search":

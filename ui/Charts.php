@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -160,6 +160,8 @@ class Charts extends MenuItem {
             $displayDate = date("j F Y", mktime(0,0,0,$month,$day,$year));
             echo "<P CLASS=\"header\">$station chart for the week ending $displayDate</P>\n";
         }
+
+        $this->title = "Chart for $displayDate";
     
     // weekly = hip hop, reggae/world, jazz, heavy shit, dance, classical/exp
     //     no limits
@@ -283,22 +285,26 @@ class Charts extends MenuItem {
             if($dend - $earliestYear < 10)
                 $name .= " (based on available data)";
             echo "<P CLASS=\"header\">$station Top 100 for the decennium $name</P>\n";
+            $this->title = "Chart for $name";
             $monthly = 0;
         } else if($cyear) {
             $startDate = $chartAPI->getMonthlyChartStart(1, $cyear);
             $endDate = $chartAPI->getMonthlyChartEnd(12, $cyear);
             echo "<P CLASS=\"header\">$station Top 100 for the year $cyear</P>\n";
+            $this->title = "Chart for $cyear";
             $monthly = 0;
         } else if($monthly) {
             $startDate = $chartAPI->getMonthlyChartStart($month, $year);
             $endDate = $chartAPI->getMonthlyChartEnd($month, $year);
             $displayDate = date("F Y", mktime(0,0,0,$month,1,$year));
             echo "<P CLASS=\"header\">$station chart for month of $displayDate</P>\n";
+            $this->title = "Chart for $displayDate";
         } else {
             $startDate = "";
             $endDate = "$year-$month-$day";
             $displayDate = date("j F Y", mktime(0,0,0,$month,$day,$year));
             echo "<P CLASS=\"header\">$station chart for the week ending $displayDate</P>\n";
+            $this->title = "Chart for $displayDate";
         }
     
     // weekly = hip hop, reggae/world, jazz, heavy shit, dance, classical/exp

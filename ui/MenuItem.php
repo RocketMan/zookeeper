@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -27,6 +27,17 @@ namespace ZK\UI;
 use ZK\Controllers\CommandTarget;
 
 abstract class MenuItem extends CommandTarget {
+    protected $title;
+
+    public function getTitle() { return $this->title; }
+
+    public function newEntity($entityClass) {
+        $obj = parent::newEntity($entityClass);
+        if($obj)
+            $obj->title = &$this->title;
+        return $obj;
+    }
+
     public function dispatchSubaction($action, $subaction, &$subactions, $extra=0) {
         // Emit the secondary navbar
         if($extra)
