@@ -186,11 +186,9 @@ class UIController implements IController {
     protected function emitResponseHeader() {
         $banner = Engine::param('application');
         $station = Engine::param('station');
-        $station_full = Engine::param('station_full');
+        $stationTitle = Engine::param('station_title', $station);
 
-        $banner .= " - " . $station;
-        if(!preg_match('/Radio$/', $banner))
-            $banner .= " Radio";
+        $banner .= " - " . $stationTitle;
     ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
@@ -231,9 +229,9 @@ class UIController implements IController {
   // -->
   </SCRIPT>
 
-  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Music Reviews" HREF="zkrss.php?feed=reviews">
-  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio Airplay Charts" HREF="zkrss.php?feed=charts">
-  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $station; ?> Radio A-File Adds" HREF="zkrss.php?feed=adds">
+  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $stationTitle; ?> Music Reviews" HREF="zkrss.php?feed=reviews">
+  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $stationTitle; ?> Airplay Charts" HREF="zkrss.php?feed=charts">
+  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $stationTitle; ?> A-File Adds" HREF="zkrss.php?feed=adds">
   <LINK REL="search" TYPE="application/opensearchdescription+xml" HREF="?target=opensearch" title="<?php echo $banner;?>">
 </HEAD>
 <?php 
@@ -306,11 +304,11 @@ class UIController implements IController {
 
     protected function emitBodyHeader() {
         $urls = Engine::param('urls');
-        $station_full = Engine::param('station_full');
+        $stationFull = Engine::param('station_full');
 ?>
     <DIV CLASS="headerLogo">
       <A HREF="<?php echo $urls['home']; ?>">
-        <IMG SRC="<?php echo Engine::param('logo'); ?>" ALT="<?php echo $station_full; ?>" TITLE="<?php echo $station_full; ?>">
+        <IMG SRC="<?php echo Engine::param('logo'); ?>" ALT="<?php echo $stationFull; ?>" TITLE="<?php echo $stationFull; ?>">
       </A>
     </DIV>
     <DIV CLASS="headerNavbar">

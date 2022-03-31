@@ -18,6 +18,8 @@ $config = [
      */
     'station' => 'Example Radio',
 
+    // 'station_title' => 'Example Radio',  // if omitted, uses 'station' value
+
     'station_medium' => 'Example Radio 99.9FM',
 
     'station_full' => 'Example Fictitious Radio 99.9 FM',

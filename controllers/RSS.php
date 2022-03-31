@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -140,7 +140,7 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function recentCharts() {
-       $station = Engine::param('station');
+       $station = Engine::param('station_title', Engine::param('station'));
        $top = $_REQUEST["top"];
        $weeks = $_REQUEST["weeks"];
 
@@ -149,11 +149,11 @@ class RSS extends CommandTarget implements IController {
        if(!$weeks)
           $weeks = 10;
     
-       $title = "$station Radio Airplay Charts";
+       $title = "$station Airplay Charts";
     
        echo "<channel>\n<title>$title</title>\n";
        echo "<link>".Engine::getBaseUrl()."?action=viewChart</link>\n";
-       echo "<description>$station Radio Airplay Charts</description>\n";
+       echo "<description>$station Airplay Charts</description>\n";
        echo "<managingEditor>".Engine::param('email')['md']."</managingEditor>\n";
        echo "<language>en-us</language>\n";
     
@@ -175,10 +175,10 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function recentReviews() {
-       $station = Engine::param('station');
+       $station = Engine::param('station_title', Engine::param('station'));
        $limit = isset($_REQUEST["limit"])?$_REQUEST["limit"]:50;
 
-       $title = "$station Radio Music Reviews";
+       $title = "$station Music Reviews";
     
        echo "<channel>\n<title>$title</title>\n";
        echo "<link>".Engine::getBaseUrl()."?action=viewRecent</link>\n";
@@ -304,17 +304,17 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function recentAdds() {
-       $station = Engine::param('station');
+       $station = Engine::param('station_title', Engine::param('station'));
        $weeks = $_REQUEST["weeks"];
 
        if(!$weeks)
           $weeks = 4;
     
-       $title = "$station Radio A-File Adds";
+       $title = "$station A-File Adds";
     
        echo "<channel>\n<title>$title</title>\n";
        echo "<link>".Engine::getBaseUrl()."?action=addmgr</link>\n";
-       echo "<description>$station Radio A-File Adds</description>\n";
+       echo "<description>$station A-File Adds</description>\n";
        echo "<managingEditor>".Engine::param('email')['md']."</managingEditor>\n";
        echo "<language>en-us</language>\n";
     
