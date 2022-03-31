@@ -140,7 +140,8 @@ class UIController implements IController {
             ob_start(function($buffer) {
                 if($this->menuItem instanceof MenuItem &&
                         ($title = $this->menuItem->getTitle()))
-                    $buffer = preg_replace("/<TITLE>/", "<TITLE>$title - ", $buffer, 1);
+                    $buffer = preg_replace("/<TITLE>/", "<TITLE>" .
+                                    htmlentities($title) . " - ", $buffer, 1);
                 return $buffer;
             });
             $this->emitResponseHeader();
@@ -184,9 +185,9 @@ class UIController implements IController {
     }
 
     protected function emitResponseHeader() {
-        $banner = Engine::param('application');
+        $banner = htmlentities(Engine::param('application'));
         $station = Engine::param('station');
-        $stationTitle = Engine::param('station_title', $station);
+        $stationTitle = htmlentities(Engine::param('station_title', $station));
 
         $banner .= " - " . $stationTitle;
     ?>
@@ -238,7 +239,7 @@ class UIController implements IController {
     }
     
     protected function emitNavbar($action) {
-        echo "    <P CLASS=\"zktitle\"><A HREF=\"?\">".Engine::param('application')."</A></P>\n";
+        echo "    <P CLASS=\"zktitle\"><A HREF=\"?\">".htmlentities(Engine::param('application'))."</A></P>\n";
         echo "    <TABLE CELLPADDING=0>\n";
         $menu = $this->composeMenu($action);
         foreach($menu as $item) {
@@ -304,7 +305,7 @@ class UIController implements IController {
 
     protected function emitBodyHeader() {
         $urls = Engine::param('urls');
-        $stationFull = Engine::param('station_full');
+        $stationFull = htmlentities(Engine::param('station_full'));
 ?>
     <DIV CLASS="headerLogo">
       <A HREF="<?php echo $urls['home']; ?>">
@@ -312,7 +313,7 @@ class UIController implements IController {
       </A>
     </DIV>
     <DIV CLASS="headerNavbar">
-      <SPAN><?php echo Engine::param('station_slogan'); ?></SPAN>
+      <SPAN><?php echo htmlentities(Engine::param('station_slogan')); ?></SPAN>
     </DIV>
 <?php
     }
@@ -374,7 +375,7 @@ class UIController implements IController {
             echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Your session has expired.  You must login again.</FONT></B></TD></TR>\n";
             break;
         case "ssoInvalidDomain":
-            echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Google login is supported only for ".Engine::param('station')." accounts.</FONT></B></TD></TR>\n";
+            echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Google login is supported only for ".htmlentities(Engine::param('station'))." accounts.</FONT></B></TD></TR>\n";
             break;
         case "ssoInvalidAssertion":
             echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Google authentication was not successful.</FONT></B></TD></TR>\n";
@@ -383,7 +384,7 @@ class UIController implements IController {
             echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">There was a problem accessing Google authentication.  Please try again later.</FONT></B></TD></TR>\n";
             break;
         case "cookiesDisabled":
-            echo "  <TR><TD>&nbsp;</TD><TD><P><B><FONT CLASS=\"error\">You must enable cookies to login to ".Engine::param('application').".</FONT></B></P>".
+            echo "  <TR><TD>&nbsp;</TD><TD><P><B><FONT CLASS=\"error\">You must enable cookies to login to ".htmlentities(Engine::param('application')).".</FONT></B></P>".
             "<P>Enable cookies in your browser for the website '".
             $_SERVER['REQUEST_SCHEME']."://".$_SERVER['SERVER_NAME'].
             "/' and try again.</P>".
@@ -417,18 +418,19 @@ class UIController implements IController {
     }
     
     protected function emitLoginHelp() {
+        $station = htmlentities(Engine::param('station'));
     ?>
     <DIV CLASS="subhead">login help</DIV>
     <P>Google single sign-on provides integrated access to your existing
-    <?php echo Engine::param('application'); ?> account.  Select the 'login' link in the
-    left-hand navigation and enter your <?php echo Engine::param('station'); ?> Google account credentials
+    <?php echo htmlentities(Engine::param('application')); ?> account.  Select the 'login' link in the
+    left-hand navigation and enter your <?php echo $station; ?> Google account credentials
     if challenged.</P>
-    <P>If you do not yet have a <?php echo Engine::param('station'); ?> Google account, contact the
+    <P>If you do not yet have a <?php echo $station; ?> Google account, contact the
     <A HREF="mailto:<?php echo Engine::param('email')['pd']; ?>">Program Director</A>.</P>
     <DIV CLASS="subhead">classic login</DIV>
-    <P>If you need immediate access but do not yet have a <?php echo Engine::param('station'); ?> Google account,
+    <P>If you need immediate access but do not yet have a <?php echo $station; ?> Google account,
     go to the <A HREF="?action=login">classic login</A> page and enter your
-    existing <?php echo Engine::param('application'); ?> user name and password.
+    existing <?php echo htmlentities(Engine::param('application')); ?> user name and password.
     <B>Classic login may be deprecated or restricted in future.</B></P>
 <?php 
     }
