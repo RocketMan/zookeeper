@@ -81,6 +81,8 @@ class ArtworkImpl extends DBO implements IArtwork {
             }
         } catch(\Exception $e) {
             error_log("fetchImage: " . $e->getMessage());
+            if(is_file($path))
+                unlink($path);
             $file = null;
         }
 
