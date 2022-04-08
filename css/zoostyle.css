@@ -865,7 +865,6 @@ a:hover.copy {
 .recently-played .card {
     display: inline-block;
     width: calc(20% - 16px);
-    margin-top: 7.5px;
     vertical-align: top;
     margin: 7px;
 
