@@ -125,9 +125,9 @@ class ArtworkImpl extends DBO implements IArtwork {
             $uuid = $image['image_uuid'];
         else {
             $imageId = $uuid = null;
-            if($imageUrl || $infoUrl) {
-                $uuid = $imageUrl ? $this->fetchImage($imageUrl) : null;
-                if($imageUrl && !$uuid) {
+            if($imageUrl) {
+                $uuid = $this->fetchImage($imageUrl);
+                if(!$uuid) {
                     // fetchImage failed; don't cache
                     return null;
                 }
