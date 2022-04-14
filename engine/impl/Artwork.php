@@ -90,8 +90,8 @@ class ArtworkImpl extends DBO implements IArtwork {
     }
 
     public function getAlbumArt($tag, $newRef = false) {
-        $query = "SELECT artwork image_id, image_uuid, info_url FROM albummap a " .
-            "LEFT JOIN artwork i ON a.artwork = i.id WHERE tag = ?";
+        $query = "SELECT image_id, image_uuid, info_url FROM albummap a " .
+            "LEFT JOIN artwork i ON a.image_id = i.id WHERE tag = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
         $result = $stmt->executeAndFetch();
@@ -105,8 +105,8 @@ class ArtworkImpl extends DBO implements IArtwork {
     }
 
     public function getArtistArt($artist, $newRef = false) {
-        $query = "SELECT artwork image_id, image_uuid, info_url FROM artistmap a " .
-            "LEFT JOIN artwork i ON a.artwork = i.id WHERE name = ?";
+        $query = "SELECT image_id, image_uuid, info_url FROM artistmap a " .
+            "LEFT JOIN artwork i ON a.image_id = i.id WHERE name = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $artist);
         $result = $stmt->executeAndFetch();
@@ -140,7 +140,7 @@ class ArtworkImpl extends DBO implements IArtwork {
                     $imageId = $this->lastInsertId();
             }
 
-            $query = "INSERT INTO albummap (tag, artwork) VALUES (?,?)";
+            $query = "INSERT INTO albummap (tag, image_id) VALUES (?,?)";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $tag);
             $stmt->bindValue(2, $imageId);
@@ -171,7 +171,7 @@ class ArtworkImpl extends DBO implements IArtwork {
                     $imageId = $this->lastInsertId();
             }
 
-            $query = "INSERT INTO artistmap (name, artwork) VALUES (?,?)";
+            $query = "INSERT INTO artistmap (name, image_id) VALUES (?,?)";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $artist);
             $stmt->bindValue(2, $imageId);
@@ -194,14 +194,14 @@ class ArtworkImpl extends DBO implements IArtwork {
         $cacheDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
 
         $query = "SELECT image_uuid FROM artwork " .
-                 "LEFT JOIN artistmap ON artistmap.artwork = artwork.id " .
+                 "LEFT JOIN artistmap ON artistmap.image_id = artwork.id " .
                  "WHERE ADDDATE(cached, ?) < NOW()";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $days);
         $images = $stmt->executeAndFetchAll();
 
         $query = "DELETE FROM artistmap, artwork USING artistmap " .
-                 "LEFT JOIN artwork ON artistmap.artwork = artwork.id " .
+                 "LEFT JOIN artwork ON artistmap.image_id = artwork.id " .
                  "WHERE ADDDATE(cached, ?) < NOW()";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $days);
@@ -219,14 +219,14 @@ class ArtworkImpl extends DBO implements IArtwork {
 
         if($success && $expireAlbums) {
             $query = "SELECT image_uuid FROM artwork " .
-                     "LEFT JOIN albummap ON albummap.artwork = artwork.id " .
+                     "LEFT JOIN albummap ON albummap.image_id = artwork.id " .
                      "WHERE ADDDATE(cached, ?) < NOW()";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $days);
             $images = $stmt->executeAndFetchAll();
 
             $query = "DELETE FROM albummap, artwork USING albummap " .
-                     "LEFT JOIN artwork ON albummap.artwork = artwork.id " .
+                     "LEFT JOIN artwork ON albummap.image_id = artwork.id " .
                      "WHERE ADDDATE(cached, ?) < NOW()";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $days);
@@ -248,7 +248,7 @@ class ArtworkImpl extends DBO implements IArtwork {
 
     public function expireEmpty($days=1) {
         $query = "DELETE FROM artistmap " .
-                 "WHERE artwork IS NULL AND ADDDATE(cached, ?) < NOW()";
+                 "WHERE image_id IS NULL AND ADDDATE(cached, ?) < NOW()";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $days);
         $success = $stmt->execute();
@@ -256,7 +256,7 @@ class ArtworkImpl extends DBO implements IArtwork {
         $count = $success ? $stmt->rowCount() : 0;
 
         $query = "DELETE FROM albummap " .
-                 "WHERE artwork IS NULL AND ADDDATE(cached, ?) < NOW()";
+                 "WHERE image_id IS NULL AND ADDDATE(cached, ?) < NOW()";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $days);
         $success &= $stmt->execute();

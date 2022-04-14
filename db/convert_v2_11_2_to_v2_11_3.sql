@@ -43,6 +43,9 @@ DELETE FROM albummap, artwork USING albummap
   INNER JOIN artwork ON albummap.artwork = artwork.id
   WHERE image_uuid IS NULL;
 
+ALTER TABLE `artistmap` CHANGE `artwork` `image_id` int(11);
+ALTER TABLE `albummap` CHANGE `artwork` `image_id` int(11);
+
 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT;
 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS;
 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION;
