@@ -309,7 +309,7 @@ class Playlists implements RequestHandlerInterface {
             if($origin) {
                 $row = $api->getPlaylist($origin, 1);
                 $row['list'] = $origin;
-                $rel = self::fromRecord($row, self::LINKS_NONE);
+                $rel = self::fromRecord($row, self::LINKS_ALL);
                 $relations->set($rel);
             }
             break;

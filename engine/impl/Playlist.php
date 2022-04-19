@@ -49,17 +49,13 @@ class PlaylistImpl extends DBO implements IPlaylist {
     public function getPlaylist($playlist, $withAirname=0) {
         if($withAirname)
             $query = "SELECT l.description, l.showdate, l.showtime, " .
-                     "       a.id, a.airname, l.dj, r.origin " .
+                     "       a.id, a.airname, l.dj, l.origin " .
                      "FROM lists l LEFT JOIN airnames a " .
                      "ON l.airname = a.id " .
-                     "LEFT JOIN lists_rebroadcast r " .
-                     "ON r.id = l.id " .
                      "WHERE l.id = ?";
         else
             $query = "SELECT description, showdate, showtime, airname, dj, origin " .
-                     "FROM lists l " .
-                     "LEFT JOIN lists_rebroadcast r ON r.id = l.id " .
-                     "WHERE l.id=?";
+                     "FROM lists WHERE id=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
         return $stmt->executeAndFetch(\PDO::FETCH_BOTH);
@@ -67,14 +63,12 @@ class PlaylistImpl extends DBO implements IPlaylist {
     
     public function getPlaylists($onlyPublished=0, $withAirname=0,
                                $showDate="", $airname="", $user="", $desc=1, $limit=null) {
-        $query = "SELECT l.id, l.showdate, l.showtime, l.description, r.origin ";
         if($withAirname)
-            $query .= ", a.id airid, a.airname FROM lists l " .
-                      "LEFT JOIN airnames a ON l.airname = a.id ";
+            $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
+                     "a.id airid, a.airname, l.origin FROM lists l " .
+                     "LEFT JOIN airnames a ON l.airname = a.id ";
         else
-            $query .= "FROM lists l ";
-
-        $query .= "LEFT JOIN lists_rebroadcast r ON l.id = r.id ";
+            $query = "SELECT id, showdate, showtime, description, origin FROM lists l ";
 
         if($user)
             $query .= "WHERE l.dj=? ";
@@ -154,9 +148,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
             //
             // Note:  This is an unceremonious, non-restorable delete, as
             // the empty playlist is deemed to have no value.
-            $query = "DELETE FROM lists, lists_del, lists_rebroadcast USING lists ".
+            $query = "DELETE FROM lists, lists_del USING lists ".
                      "LEFT OUTER JOIN lists_del ON lists_del.listid = lists.id ".
-                     "LEFT OUTER JOIN lists_rebroadcast ON lists_rebroadcast.id = lists.id ".
                      "WHERE lists.id = ?";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $result['lid']);
@@ -310,10 +303,10 @@ class PlaylistImpl extends DBO implements IPlaylist {
         if($success) {
             $newListId = $this->lastInsertId();
 
-            $query = "INSERT INTO lists_rebroadcast (id, origin) VALUES (?, ?)";
+            $query = "UPDATE lists SET origin = ? WHERE id = ?";
             $stmt = $this->prepare($query);
-            $stmt->bindValue(1, $newListId);
-            $stmt->bindValue(2, $playlist);
+            $stmt->bindValue(1, $playlist);
+            $stmt->bindValue(2, $newListId);
             $stmt->execute();
 
             $query = "INSERT INTO tracks " .
@@ -913,10 +906,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
 
     public function purgeDeletedPlaylists($days=30) {
-        $query = "DELETE FROM tracks, lists, lists_del, lists_rebroadcast USING lists_del " .
+        $query = "DELETE FROM tracks, lists, lists_del USING lists_del " .
                  "INNER JOIN lists " .
                  "LEFT OUTER JOIN tracks ON lists_del.listid = tracks.list " .
-                 "LEFT OUTER JOIN lists_rebroadcast ON lists_rebroadcast.id = lists.id " .
                  "WHERE lists_del.listid = lists.id ".
                  "AND ADDDATE(deleted, ?) < NOW()";
         $stmt = $this->prepare($query);

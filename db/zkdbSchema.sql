@@ -234,6 +234,7 @@ CREATE TABLE IF NOT EXISTS `lists` (
   `showtime` varchar(20) DEFAULT NULL,
   `description` varchar(80) DEFAULT NULL,
   `airname` int(11) DEFAULT NULL,
+  `origin` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `dj` (`dj`),
   KEY `showdate` (`showdate`),
@@ -254,19 +255,6 @@ CREATE TABLE IF NOT EXISTS `lists_del` (
   PRIMARY KEY (`listid`),
   KEY `deleted` (`deleted`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `lists_rebroadcast`
---
-
-CREATE TABLE `lists_rebroadcast` (
-  `id` int(11) NOT NULL,
-  `origin` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `origin` (`origin`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 

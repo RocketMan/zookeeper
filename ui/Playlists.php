@@ -2263,12 +2263,12 @@ class Playlists extends MenuItem {
         $count = 0;
         $href = '?action=viewListById&playlist';
         while($records && ($row = $records->fetch())) {
-            $timeRange = self::timeToAMPM($row['showtime']);
-            $title = htmlentities($row['description']);
-            $djs = htmlentities($row['airname']);
+            $timeRange = self::timeToAMPM($row[2]);
+            $title = htmlentities($row[3]);
+            $djs = htmlentities($row[5]);
             $tbody .= "<TR>" .
                  "<TD ALIGN='RIGHT' CLASS='sub time range'>$timeRange&nbsp;</TD>" .
-                 "<TD><A CLASS='nav' HREF='$href=${row['id']}'>$title</A>&nbsp;&nbsp;($djs)</TD>" .
+                 "<TD><A CLASS='nav' HREF='$href=$row[0]'>$title</A>&nbsp;&nbsp;($djs)</TD>" .
                  "</TR>\n";
             $count = $count + 1;
         }
