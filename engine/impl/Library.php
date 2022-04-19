@@ -56,7 +56,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY name" ],
          [ "playlists", "playlistrec", "tracks", "artist,album,track",
                   "SELECT list, description, a.airname, showdate, " .
-                  "artist, album, track, showtime FROM tracks t " .
+                  "artist, album, track, showtime, origin FROM tracks t " .
                   "LEFT JOIN lists l ON t.list = l.id " .
                   "LEFT JOIN airnames a ON l.airname = a.id " .
                   "WHERE l.airname IS NOT NULL AND " .
