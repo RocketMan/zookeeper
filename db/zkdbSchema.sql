@@ -111,10 +111,10 @@ CREATE TABLE `apikeys` (
 
 CREATE TABLE `albummap` (
   `tag` int(11) NOT NULL,
-  `artwork` int(11) DEFAULT NULL,
+  `image_id` int(11) DEFAULT NULL,
   `cached` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`tag`),
-  KEY `artwork` (`artwork`),
+  KEY `artwork` (`image_id`),
   KEY `cached` (`cached`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
@@ -126,10 +126,10 @@ CREATE TABLE `albummap` (
 
 CREATE TABLE `artistmap` (
   `name` varchar(80) NOT NULL,
-  `artwork` int(11) DEFAULT NULL,
+  `image_id` int(11) DEFAULT NULL,
   `cached` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`name`),
-  KEY `artwork` (`artwork`),
+  KEY `artwork` (`image_id`),
   KEY `cached` (`cached`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
