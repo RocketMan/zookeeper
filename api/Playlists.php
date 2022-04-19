@@ -112,7 +112,7 @@ class Playlists implements RequestHandlerInterface {
         $attrs->set("airname", $rec["airname"]);
 
         $origin = $rec["origin"];
-        $attrs->set("isRebroadcast", $origin ? true : false);
+        $attrs->set("rebroadcast", $origin ? true : false);
         if($origin) {
             if($flags & self::LINKS_ORIGIN) {
                 $row = Engine::api(IPlaylist::class)->getPlaylist($origin, 1);
