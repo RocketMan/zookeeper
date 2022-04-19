@@ -57,6 +57,7 @@ class Playlists implements RequestHandlerInterface {
     const LINKS_EVENTS = 1;
     const LINKS_ALBUMS = 2;
     const LINKS_ALBUMS_DETAILS = 4;
+    const LINKS_ORIGIN = 8;
     const LINKS_ALL = ~0;
 
     private static $paginateOps = [
@@ -109,6 +110,21 @@ class Playlists implements RequestHandlerInterface {
         $attrs->set("date", $rec["showdate"]);
         $attrs->set("time", $rec["showtime"]);
         $attrs->set("airname", $rec["airname"]);
+
+        $origin = $rec["origin"];
+        $attrs->set("isRebroadcast", $origin ? true : false);
+        if($origin) {
+            if($flags & self::LINKS_ORIGIN) {
+                $row = Engine::api(IPlaylist::class)->getPlaylist($origin, 1);
+                $row['list'] = $origin;
+                $rel = self::fromRecord($row, $flags);
+            } else
+                $rel = new JsonResource("show", $origin);
+
+            $relation = new Relationship("origin", $rel);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/origin"));
+            $res->relationships()->set($relation);
+        }
 
         if($flags & self::LINKS_EVENTS) {
             $relations = new ResourceCollection();
@@ -188,6 +204,8 @@ class Playlists implements RequestHandlerInterface {
             $flags |= self::LINKS_EVENTS | self::LINKS_ALBUMS;
         if($request->requestsInclude("albums"))
             $flags |= self::LINKS_ALBUMS_DETAILS;
+        if($request->requestsInclude("origin"))
+            $flags |= self::LINKS_ORIGIN;
 
         $resource = self::fromRecord($row, $flags);
 
@@ -203,6 +221,8 @@ class Playlists implements RequestHandlerInterface {
             $flags |= self::LINKS_EVENTS | self::LINKS_ALBUMS;
         if($request->requestsInclude("albums"))
             $flags |= self::LINKS_ALBUMS_DETAILS;
+        if($request->requestsInclude("origin"))
+            $flags |= self::LINKS_ORIGIN;
 
         $response = $this->paginateOffset($request, self::$paginateOps, $flags);
         $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
@@ -281,6 +301,17 @@ class Playlists implements RequestHandlerInterface {
 
                 $relations->set($e);
             }));
+            break;
+        case "origin":
+            $api = Engine::api(IPlaylist::class);
+            $list = $api->getPlaylist($id);
+            $origin = $list['origin'];
+            if($origin) {
+                $row = $api->getPlaylist($origin, 1);
+                $row['list'] = $origin;
+                $rel = self::fromRecord($row, self::LINKS_NONE);
+                $relations->set($rel);
+            }
             break;
         case "relationships":
             throw new NotAllowedException("unspecified relationship");

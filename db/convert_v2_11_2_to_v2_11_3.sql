@@ -46,6 +46,13 @@ DELETE FROM albummap, artwork USING albummap
 ALTER TABLE `artistmap` CHANGE `artwork` `image_id` int(11);
 ALTER TABLE `albummap` CHANGE `artwork` `image_id` int(11);
 
+CREATE TABLE `lists_rebroadcast` (
+  `id` int(11) NOT NULL,
+  `origin` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `origin` (`origin`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+
 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT;
 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS;
 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION;

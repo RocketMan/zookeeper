@@ -258,6 +258,19 @@ CREATE TABLE IF NOT EXISTS `lists_del` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lists_rebroadcast`
+--
+
+CREATE TABLE `lists_rebroadcast` (
+  `id` int(11) NOT NULL,
+  `origin` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `origin` (`origin`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `plays`
 --
 

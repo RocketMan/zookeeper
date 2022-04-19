@@ -49,13 +49,17 @@ class PlaylistImpl extends DBO implements IPlaylist {
     public function getPlaylist($playlist, $withAirname=0) {
         if($withAirname)
             $query = "SELECT l.description, l.showdate, l.showtime, " .
-                     "       a.id, a.airname, l.dj " .
+                     "       a.id, a.airname, l.dj, r.origin " .
                      "FROM lists l LEFT JOIN airnames a " .
                      "ON l.airname = a.id " .
+                     "LEFT JOIN lists_rebroadcast r " .
+                     "ON r.id = l.id " .
                      "WHERE l.id = ?";
         else
-            $query = "SELECT description, showdate, showtime, airname, dj " .
-                     "FROM lists WHERE id=?";
+            $query = "SELECT description, showdate, showtime, airname, dj, origin " .
+                     "FROM lists l " .
+                     "LEFT JOIN lists_rebroadcast r ON r.id = l.id " .
+                     "WHERE l.id=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
         return $stmt->executeAndFetch(\PDO::FETCH_BOTH);
@@ -63,12 +67,15 @@ class PlaylistImpl extends DBO implements IPlaylist {
     
     public function getPlaylists($onlyPublished=0, $withAirname=0,
                                $showDate="", $airname="", $user="", $desc=1, $limit=null) {
+        $query = "SELECT l.id, l.showdate, l.showtime, l.description, r.origin ";
         if($withAirname)
-            $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
-                     "a.id airid, a.airname FROM lists l LEFT JOIN airnames a " .
-                     "ON l.airname = a.id ";
+            $query .= ", a.id airid, a.airname FROM lists l " .
+                      "LEFT JOIN airnames a ON l.airname = a.id ";
         else
-            $query = "SELECT id, showdate, showtime, description FROM lists l ";
+            $query .= "FROM lists l ";
+
+        $query .= "LEFT JOIN lists_rebroadcast r ON l.id = r.id ";
+
         if($user)
             $query .= "WHERE l.dj=? ";
         else if($airname)
@@ -147,8 +154,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
             //
             // Note:  This is an unceremonious, non-restorable delete, as
             // the empty playlist is deemed to have no value.
-            $query = "DELETE FROM lists, lists_del USING lists ".
+            $query = "DELETE FROM lists, lists_del, lists_rebroadcast USING lists ".
                      "LEFT OUTER JOIN lists_del ON lists_del.listid = lists.id ".
+                     "LEFT OUTER JOIN lists_rebroadcast ON lists_rebroadcast.id = lists.id ".
                      "WHERE lists.id = ?";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $result['lid']);
@@ -301,6 +309,13 @@ class PlaylistImpl extends DBO implements IPlaylist {
                                      $from['airname']):false;
         if($success) {
             $newListId = $this->lastInsertId();
+
+            $query = "INSERT INTO lists_rebroadcast (id, origin) VALUES (?, ?)";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $newListId);
+            $stmt->bindValue(2, $playlist);
+            $stmt->execute();
+
             $query = "INSERT INTO tracks " .
                      "(list, tag, artist, track, album, label, created, seq) ".
                      "SELECT ?, tag, artist, track, album, label, created, seq ".
@@ -898,9 +913,10 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
 
     public function purgeDeletedPlaylists($days=30) {
-        $query = "DELETE FROM tracks, lists, lists_del USING lists_del " .
+        $query = "DELETE FROM tracks, lists, lists_del, lists_rebroadcast USING lists_del " .
                  "INNER JOIN lists " .
                  "LEFT OUTER JOIN tracks ON lists_del.listid = tracks.list " .
+                 "LEFT OUTER JOIN lists_rebroadcast ON lists_rebroadcast.id = lists.id " .
                  "WHERE lists_del.listid = lists.id ".
                  "AND ADDDATE(deleted, ?) < NOW()";
         $stmt = $this->prepare($query);
