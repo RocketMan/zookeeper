@@ -111,7 +111,7 @@ class Playlists implements RequestHandlerInterface {
         $attrs->set("time", $rec["showtime"]);
         $attrs->set("airname", $rec["airname"]);
 
-        $origin = $rec["origin"];
+        $origin = $rec["origin"] ?? null;
         $attrs->set("rebroadcast", $origin ? true : false);
         if($origin) {
             if($flags & self::LINKS_ORIGIN) {
