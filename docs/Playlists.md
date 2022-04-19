@@ -19,6 +19,7 @@ be found here.
 * date
 * time
 * airname
+* rebroadcast
 * events -- array of zero or more:
   * type (one of `break`, `comment`, `logEvent`, `spin`)
   * created
@@ -35,6 +36,7 @@ of the 'xa:relationships' attribute.)
 
 ### Relations
 
+* origin (to-one)
 * albums (to-many)
 * events (to-many)
 
