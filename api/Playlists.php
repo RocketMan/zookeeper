@@ -236,11 +236,20 @@ class Playlists implements RequestHandlerInterface {
 
         $id = $request->id();
 
+        $api = Engine::api(IPlaylist::class);
+        $list = $api->getPlaylist($id);
+        if(!$list || $api->isListDeleted($id))
+            throw new ResourceNotFoundException("show", $id);
+
+        // unpublished playlists are visible to owner only
+        if(!$list["airname"] && $list["dj"] != Engine::session()->getUser())
+            throw new ResourceNotFoundException("show", $id);
+
         $relations = new ResourceCollection();
 
         switch($request->relationship()) {
         case "albums":
-            Engine::api(IPlaylist::class)->getTracksWithObserver($id,
+            $api->getTracksWithObserver($id,
             (new PlaylistObserver())->onSpin(function($entry) use($relations, $flags) {
                 $tag = $entry->getTag();
                 if($tag) {
@@ -256,7 +265,7 @@ class Playlists implements RequestHandlerInterface {
         case "events":
             if(!$request->requestsInclude("album"))
                 $flags = Albums::LINKS_NONE;
-            Engine::api(IPlaylist::class)->getTracksWithObserver($id,
+            $api->getTracksWithObserver($id,
             (new PlaylistObserver())->onComment(function($entry) use($relations) {
                 $e = new JsonResource("event", $entry->getId());
                 $a = $e->attributes();
@@ -303,14 +312,14 @@ class Playlists implements RequestHandlerInterface {
             }));
             break;
         case "origin":
-            $api = Engine::api(IPlaylist::class);
-            $list = $api->getPlaylist($id);
             $origin = $list['origin'];
             if($origin) {
                 $row = $api->getPlaylist($origin, 1);
-                $row['list'] = $origin;
-                $rel = self::fromRecord($row, self::LINKS_ALL);
-                $relations->set($rel);
+                if($row) {
+                    $row['list'] = $origin;
+                    $rel = self::fromRecord($row, self::LINKS_ALL);
+                    $relations->set($rel);
+                }
             }
             break;
         case "relationships":
