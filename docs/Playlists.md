@@ -95,13 +95,13 @@ Content-Type: application/vnd.api+json
       "rebroadcast": true,
       "date": "2022-01-01",
       "time": "1800-2000"
-    }
-  },
-  "relationships": {
-    "origin": {
-      "data": {
-        "type": "show",
-        "id": "12345"
+    },
+    "relationships": {
+      "origin": {
+        "data": {
+          "type": "show",
+          "id": "12345"
+        }
       }
     }
   }
