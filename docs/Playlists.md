@@ -71,17 +71,20 @@ other users: You will own the list in these cases (i.e., can update or
 delete them), but they will display publicly under the other user's
 airname.
 
-### Duplicate
+### <a name="duplicate"></a>Duplicate
 
-You may duplicate an existing playlist.  Duplicate is identical to
-insert above, except that you must:
-* include an attribute `rebroadcast` with value `true`;
-* include a relationship `origin` whose data `id` specifies the
-identifier of the playlist you wish to duplicate.
+Duplicate is identical to Insert, except that in the request body,
+you must also:
+* include an attribute `rebroadcast` with value `true`; and
+* include a relationship `origin` to specify the id of the playlist
+you wish to duplicate.
+
+The date and time of rebroadcast must be specified in attributes `date`
+and `time`, respectively.  All other attributes are optional.
 
 Example:
 
-To duplicate playlist 12345 for rebroadcast on 2022-01-01 at 1800:
+To duplicate playlist 12345 for rebroadcast on 2022-01-01 from 1800-2000:
 
 ````
 POST /api/vi/playlist HTTP/1.1
@@ -108,12 +111,10 @@ Content-Type: application/vnd.api+json
 }
 ````
 
-In general, you may duplicate only your own playlists.  If you belong
+In general, you may only duplicate your own playlists.  If you belong
 to the 'v' group, you may also duplicate playlists of other users.
 You will own the list in these cases (i.e., can update or delete
 them), but they will display publicly under the other user's airname.
-
-
 
 ### Update
 
