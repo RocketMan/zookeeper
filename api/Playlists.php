@@ -407,7 +407,7 @@ class Playlists implements RequestHandlerInterface {
             $description .= $suffix;
 
             $name = $attrs->getOptional("name", $description);
-            $papi->updatePlaylist($playlist, $date, $time, mb_substr($name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $aid ?? $list["airname"], true);
+            $papi->updatePlaylist($playlist, $date, $time, mb_substr($name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $aid = $aid ?? $list["airname"], true);
         } else {
             // create a new playlist
             $name = $attrs->getRequired("name");
