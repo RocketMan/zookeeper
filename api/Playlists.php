@@ -60,6 +60,8 @@ class Playlists implements RequestHandlerInterface {
     const LINKS_ORIGIN = 8;
     const LINKS_ALL = ~0;
 
+    private const DUPLICATE_SUFFIX = " (rebroadcast from %M j, Y%)";
+
     private static $paginateOps = [
         "date" => "paginate",
         "id" => "paginate",
@@ -352,30 +354,66 @@ class Playlists implements RequestHandlerInterface {
         $attrs = $show->attributes();
 
         // validate the show's properties
-        $name = $attrs->getRequired("name");
-        $airname = $attrs->getRequired("airname");
+        $papi = Engine::api(IPlaylist::class);
+        $dup = $attrs->getOptional("rebroadcast", false);
+        if($dup) {
+            $origin = $show->relationships()->get("origin")->related()->first("show")->id();
+            $list = $papi->getPlaylist($origin);
+            if(!$list || !$session->isAuth("v") && $user != $list["dj"])
+                throw new \InvalidArgumentException("origin is invalid");
+        }
+
+        $airname = $dup ? $attrs->getOptional("airname") : $attrs->getRequired("airname");
         $time = $attrs->getRequired("time");
         list($year, $month, $day) = explode("-", $date = $attrs->getRequired("date"));
         if(!checkdate($month, $day, $year))
             throw new \InvalidArgumentException("date is invalid");
 
         // lookup the airname
-        $djapi = Engine::api(IDJ::class);
-        $aid = $djapi->getAirname($airname, $session->isAuth("v")?"":$user);
-        if(!$aid) {
-            // airname does not exist; try to create it
-            $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
-            if($success > 0) {
-                // success!
-                $aid = $djapi->lastInsertId();
-            } else
-                throw new \InvalidArgumentException("airname is invalid");
+        if($airname) {
+            $djapi = Engine::api(IDJ::class);
+            $aid = $djapi->getAirname($airname, $session->isAuth("v")?"":$user);
+            if(!$aid) {
+                // airname does not exist; try to create it
+                $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
+                if($success > 0) {
+                    // success!
+                    $aid = $djapi->lastInsertId();
+                } else
+                    throw new \InvalidArgumentException("airname is invalid");
+            }
         }
 
-        // create the playlist
-        $papi = Engine::api(IPlaylist::class);
-        $papi->insertPlaylist($user, $date, $time, mb_substr($name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $aid);
-        $playlist = $papi->lastInsertId();
+        if($dup) {
+            // duplicate an existing playlist
+            $playlist = $papi->duplicatePlaylist($origin);
+            if(!$playlist)
+                throw new \Exception("duplication failed");
+
+            if($session->isAuth("v") && $user != $list["dj"]) {
+                $papi->reparentPlaylist($playlist, $user);
+                $aid = null; // force original airname
+            }
+
+            $suffix = preg_replace_callback("/%([^%]*)%/",
+                function($matches) use ($list) {
+                    return \DateTime::createFromFormat(
+                        IPlaylist::TIME_FORMAT,
+                        $list["showdate"] . " 0000")->format($matches[1]);
+                }, self::DUPLICATE_SUFFIX);
+            $description = $list["description"];
+            if(mb_strlen($description) + mb_strlen($suffix) > IPlaylist::MAX_DESCRIPTION_LENGTH)
+                $description = mb_substr($description, 0, IPlaylist::MAX_DESCRIPTION_LENGTH - mb_strlen($suffix) - 3) . "...";
+            $description .= $suffix;
+
+            $name = $attrs->getOptional("name", $description);
+            $papi->updatePlaylist($playlist, $date, $time, mb_substr($name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $aid ?? $list["airname"], true);
+        } else {
+            // create a new playlist
+            $name = $attrs->getRequired("name");
+            $papi->insertPlaylist($user, $date, $time, mb_substr($name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $aid);
+            $playlist = $papi->lastInsertId();
+        }
 
         // insert the tracks
         $events = $attrs->getOptional("events");

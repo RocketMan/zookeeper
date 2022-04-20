@@ -297,6 +297,37 @@ class Validate implements IController {
             $this->showSuccess($success5, $response);
         }
 
+        if($this->doTest("duplicate playlist", $success4)) {
+            $response = $this->client->post('api/v1/playlist', [
+                RequestOptions::JSON => [
+                    'data' => [
+                        'type' => 'show',
+                        'attributes' => [
+                            'rebroadcast' => true,
+                            'date' => '2020-06-01',
+                            'time' => '1800-2000',
+                        ],
+                        'relationships' => [
+                            'origin' => [
+                                'data' => [
+                                    'type' => 'show',
+                                    'id' => $pid
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]);
+
+            $successd = $response->getStatusCode() == 201;
+            if($successd) {
+                $dlist = $response->getHeader('Location')[0];
+                $dpid = basename($dlist);
+            }
+
+            $this->showSuccess($successd, $response);
+        }
+
         if($this->doTest("validate search", $success3)) {
             $response = $this->client->get('api/v1/search', [
                 RequestOptions::QUERY => [
@@ -323,6 +354,12 @@ class Validate implements IController {
                 }
             }
             $this->showSuccess($success6, $response);
+        }
+
+        if($this->doTest("delete duplicate", $successd)) {
+            $response = $this->client->delete($dlist);
+            $successd = $response->getStatusCode() == 204;
+            $this->showSuccess($successd, $response);
         }
 
         if($this->doTest("delete playlist", $success)) {
