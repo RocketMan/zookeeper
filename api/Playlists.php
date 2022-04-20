@@ -442,7 +442,7 @@ class Playlists implements RequestHandlerInterface {
                     ["showdate" => $date, "showtime" => $time]))
                 PushServer::sendAsyncNotification();
 
-            if($events)
+            if($events || $dup)
                 PushServer::lazyLoadImages($playlist);
 
             return new CreatedResponse(Engine::getBaseUrl()."playlist/$playlist");
