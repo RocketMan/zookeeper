@@ -334,6 +334,7 @@ class Validate implements IController {
             $json = json_decode($page);
             $successd1 = $json->data->attributes->rebroadcast == true &&
                 preg_match('/rebroadcast/i', $json->data->attributes->name) &&
+                sizeof($json->data->attributes->events) == 3 &&
                 $json->data->relationships->origin->data->id = $pid;
             $this->showSuccess($successd1, $response);
         }
