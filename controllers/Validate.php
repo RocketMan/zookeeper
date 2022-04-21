@@ -181,7 +181,7 @@ class Validate implements IController {
 
     public function validatePlaylists() {
         $success = false;
-        if($this->doTest("create playlist", true)) {
+        if($this->doTest("create playlist", isset($this->apiKeyId))) {
             $airname = self::TEST_NAME." ".$this->testUser; // make unique
             $response = $this->client->post('api/v1/playlist', [
                 RequestOptions::JSON => [
