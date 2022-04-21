@@ -31,8 +31,6 @@ namespace ZK\Engine;
 class PlaylistImpl extends DBO implements IPlaylist {
     const GRACE_START = "-15 minutes";
     const GRACE_END = "+30 minutes";
-    const DUPLICATE_COMMENT =
-        "Rebroadcast of an episode originally aired on %F j, Y%.";
 
     public function getShowdates($year, $month) {
         $yearMonth = sprintf("%04d-%02d", $year, $month) . "-%";

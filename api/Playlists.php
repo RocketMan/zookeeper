@@ -60,8 +60,6 @@ class Playlists implements RequestHandlerInterface {
     const LINKS_ORIGIN = 8;
     const LINKS_ALL = ~0;
 
-    private const DUPLICATE_SUFFIX = " (rebroadcast from %M j, Y%)";
-
     private static $paginateOps = [
         "date" => "paginate",
         "id" => "paginate",
@@ -114,7 +112,7 @@ class Playlists implements RequestHandlerInterface {
         $attrs->set("airname", $rec["airname"]);
 
         $origin = $rec["origin"] ?? null;
-        $attrs->set("rebroadcast", $origin || preg_match("/rebroadcast/i", $rec["description"]));
+        $attrs->set("rebroadcast", $origin || preg_match(IPlaylist::DUPLICATE_REGEX, $rec["description"]));
         if($origin) {
             if($flags & self::LINKS_ORIGIN) {
                 $row = Engine::api(IPlaylist::class)->getPlaylist($origin, 1);
@@ -400,7 +398,7 @@ class Playlists implements RequestHandlerInterface {
                     return \DateTime::createFromFormat(
                         IPlaylist::TIME_FORMAT,
                         $list["showdate"] . " 0000")->format($matches[1]);
-                }, self::DUPLICATE_SUFFIX);
+                }, IPlaylist::DUPLICATE_SUFFIX);
             $description = $list["description"];
             if(mb_strlen($description) + mb_strlen($suffix) > IPlaylist::MAX_DESCRIPTION_LENGTH)
                 $description = mb_substr($description, 0, IPlaylist::MAX_DESCRIPTION_LENGTH - mb_strlen($suffix) - 3) . "...";
