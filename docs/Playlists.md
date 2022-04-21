@@ -76,11 +76,15 @@ airname.
 Duplicate is identical to Insert, except that in the request body,
 you must also:
 * include an attribute `rebroadcast` with value `true`; and
-* include a relationship `origin` to specify the id of the playlist
-you wish to duplicate.
+* include a relationship `origin` to specify the playlist you wish
+to duplicate.
 
 The date and time of rebroadcast must be specified in attributes `date`
 and `time`, respectively.  All other attributes are optional.
+
+The name of the duplicated playlist follows the same convention as
+playlists duplicated in the user interface.  If desired, an alternate
+name can be specified via the `name` attribute.
 
 Example:
 
