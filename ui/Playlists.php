@@ -828,7 +828,7 @@ class Playlists extends MenuItem {
 
                 <label>Type:</label>
                 <select id='track-type-pick'>
-                   <option value='manual-entry'>Manual</option>
+                   <option value='manual-entry'>Music</option>
                    <option value='comment-entry'>Comment</option>
                    <?php echo $nmeOpts; ?>
                 </select>
