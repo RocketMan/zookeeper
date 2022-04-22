@@ -333,9 +333,10 @@ class Validate implements IController {
             $page = $response->getBody()->getContents();
             $json = json_decode($page);
             $successd1 = $json->data->attributes->rebroadcast === true &&
+                $json->data->relationships->origin->data->id == $pid &&
                 preg_match(IPlaylist::DUPLICATE_REGEX, $json->data->attributes->name) &&
-                sizeof($json->data->attributes->events) == 3 &&
-                $json->data->relationships->origin->data->id == $pid;
+                $json->data->attributes->airname == $airname &&
+                sizeof($json->data->attributes->events) == 3;
             $this->showSuccess($successd1, $response);
         }
 
