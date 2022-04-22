@@ -52,7 +52,6 @@ $().ready(function(){
         $("#track-titles").empty();
         $("#error-msg").text('');
         $("#tag-status").text('');
-        $("#tag-artist").text('');
         $("#nme-entry input").val('');
         setAddButtonState(false);
 
@@ -168,8 +167,6 @@ $().ready(function(){
                     }
                 }
             }
-            $("#tag-artist").text(diskInfo.attributes.artist  + ' - ' + diskInfo.attributes.album);
-
         }).fail(function (jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
             if (json && json.errors) {
