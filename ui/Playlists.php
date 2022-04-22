@@ -828,30 +828,17 @@ class Playlists extends MenuItem {
 
                 <label>Type:</label>
                 <select id='track-type-pick'>
-                   <option value='tag-entry'>Tag ID</option>
                    <option value='manual-entry'>Manual</option>
                    <option value='comment-entry'>Comment</option>
                    <?php echo $nmeOpts; ?>
                 </select>
             </div>
             <div id='track-entry'>
-                <div id='tag-entry'>
-                    <div>
-                        <label>Tag:</label>
-                        <input id='track-tag' data-focus />
-                        <span class='track-info' id='tag-status'>Enter tag ID followed by Tab or Enter</span>
-                    </div>
-                    <div>
-                        <label>Track:</label>
-                        <select id='track-title-pick'>
-                        </select>
-                    </div>
-                </div>
- 
-                <div id='manual-entry' class='zk-hidden' >
+                <div id='manual-entry'>
                     <div>
                         <label>Artist:</label>
                         <input required id='track-artist' list='track-artists' autocomplete='off' maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> data-focus />
+                        <span class='track-info' id='tag-status'>Enter artist or tag number</span>
                         <datalist id='track-artists'>
                         </datalist>
                     </div>

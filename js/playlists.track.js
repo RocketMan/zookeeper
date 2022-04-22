@@ -26,10 +26,9 @@ $().ready(function(){
     const NME_ENTRY='nme-entry';
     const NME_PREFIX=$("#const-prefix").val();
     var tagId = "";
-    var trackList = []; //populated by ajax query
 
-    $("#track-type-pick").val('tag-entry');
-    $("#track-tag").focus();
+    $("#track-type-pick").val('manual-entry');
+    $("#track-artist").focus();
 
     function htmlify(s) {
         return s?s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\'/g, '&#39;'):"";
@@ -49,7 +48,7 @@ $().ready(function(){
         $("#manual-entry input").val('');
         $("#comment-entry textarea").val('');
         $("#track-artists").empty();
-        $("#track-title-pick").val('0');
+        $("#track-title").attr('list',''); // webkit hack
         $("#track-titles").empty();
         $("#error-msg").text('');
         $("#tag-status").text('');
@@ -58,9 +57,6 @@ $().ready(function(){
         setAddButtonState(false);
 
         if (clearTagInfo) {
-            $("#track-tag").val('').focus();
-            $("#track-title-pick").find('option').remove();
-            trackList = [];
             tagId = "";
         }
 
@@ -115,11 +111,10 @@ $().ready(function(){
     }
 
     function getDiskInfo(id, refArtist) {
-        $("#track-title-pick").find('option').remove();
         $("#track-title").attr('list',''); // webkit hack
         $("#track-titles").empty();
         clearUserInput(false);
-        tagId = ""
+        tagId = "";
         // chars [ and ] in the QS param name are supposed to be %-encoded.
         // It seems to work ok without and reads better in the server logs,
         // but this may need revisiting if there are problems.
@@ -132,12 +127,10 @@ $().ready(function(){
             url: url,
         }).done(function (response) { //TODO: success?
             tagId = id;
-            if($("#track-tag").val() != id)
-                $("#track-tag").val(id);
             var options = "<option value=''>Select Track</option>";
             var options2 = "";
             var diskInfo = response.data;
-            trackList = diskInfo.attributes.tracks;
+            var trackList = diskInfo.attributes.tracks;
             for (var i=0; i < trackList.length; i++) {
                 var track = trackList[i];
                 var artist = track.artist ? track.artist + ' - ' : '';
@@ -146,7 +139,6 @@ $().ready(function(){
                     "' data-artist='" + htmlify(track.artist) +
                     "' value='" + htmlify((i+1) + ". " + artist + track.track) + "'>";
             }
-            $("#track-title-pick").find('option').remove().end().append(options);
             $("#track-titles").html(options2);
             $("#track-title").attr('list','track-titles'); // webkit hack
             $("#track-artist").val(diskInfo.attributes.artist);
@@ -207,17 +199,6 @@ $().ready(function(){
                 setAddButtonState(true);
             }
         }
-    });
-
-    $("#track-title-pick").on('change', function() {
-        var index= parseInt(this.value);
-        var track = trackList[index];
-        $("#track-title").val(track.track);
-        // collections have an artist per track.
-        if (track.artist)
-            $("#track-artist").val(track.artist);
-
-        setAddButtonState(true);
     });
 
     $("#manual-entry input").on('input', function() {
@@ -441,7 +422,7 @@ $().ready(function(){
         var postData = {
             playlist: $("#track-playlist").val(),
             type: type,
-            tag: $("#track-tag").val(),
+            tag: tagId,
             artist: artist,
             label: label,
             time: spinTime,
@@ -514,14 +495,6 @@ $().ready(function(){
         submitTrack(true);
     });
 
-    $("#track-tag").on('keyup', function(e) {
-        showUserError('');
-        if (e.keyCode == 13) {
-            $(this).blur();
-            $('#track-title-pick').focus();
-        }
-    });
-
     function getArtist(node) {
         var name = node.artist;
         if(name.substr(0, 8) == '[coll]: ')
@@ -566,6 +539,43 @@ $().ready(function(){
         });
     }
 
+    function addTag(id) {
+        var url = "api/v1/album/" + id +
+            "?fields[album]=artist,album";
+
+        var results = $("#track-artists");
+        $.ajax({
+            dataType : 'json',
+            type: 'GET',
+            accept: "application/json; charset=utf-8",
+            url: url,
+            success: function(response) {
+                $("#track-artist").attr('list',''); // webkit hack
+                var entry = response.data;
+                var attrs = entry.attributes;
+                var row = htmlify(attrs.artist) + " - " +
+                    htmlify(attrs.album) + " (#" +
+                    entry.id + ")";
+                results.append("<option data-tag='" + entry.id +
+                               "' data-artist='" + htmlify(attrs.artist) +
+                               "' value='" + row + "'>");
+                $("#track-artist").attr('list','track-artists'); // webkit hack
+                $("#track-artist").focus(); // webkit hack
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                if(jqXHR.status == 404) {
+                    // tag does not exist; silently ignore
+                    return;
+                }
+
+                var json = JSON.parse(jqXHR.responseText);
+                var status = (json && json.errors)?
+                        json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
+                alert(status);
+            }
+        });
+    }
+
     $("#track-artist").on('input', function() {
         var artist = $(this).val();
         var opt = $("#track-artists option[value='" + escQuote(artist) + "']");
@@ -573,8 +583,8 @@ $().ready(function(){
             getDiskInfo(opt.data("tag"), opt.data("artist"));
         } else {
             // clear auto-filled album info
-            if($("#track-tag").val().length > 0) {
-                $("#track-tag").val("");
+            if(tagId.length > 0) {
+                tagId = "";
                 $("#track-title").val("");
                 $("#track-album").val("");
                 $("#track-label").val("");
@@ -583,6 +593,15 @@ $().ready(function(){
             $("#track-titles").empty();
             if(artist.length > 3) {
                 searchLibrary(artist);
+
+                // if artist is numeric with correct check digit,
+                // treat it as an album tag and add it to the result
+                var parseTag = artist.match(/^(\d+)(\d)$/);
+                if(parseTag != null && parseTag[1]
+                       .split('').map(Number)
+                       .reduce((a, b) => a + b, 0) % 10 == parseTag[2]) {
+                    addTag(artist);
+                }
             }
         }
     });
@@ -600,14 +619,8 @@ $().ready(function(){
         }
     });
 
-    $("#track-title-pick").on('focus', function() {
-        var newId = $("#track-tag").val()
-        if (newId.length > 0 && newId != tagId)
-            getDiskInfo(newId);
-    });
-
     $("#track-album, #track-label").on('change', function() {
-        $("#track-tag").val("");
+        tagId = "";
     });
 
     $(".playlistTable .grab").mousedown(grabStart);
