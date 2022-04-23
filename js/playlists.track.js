@@ -520,29 +520,6 @@ $().ready(function(){
         artist.focus(); // webkit hack
     }
 
-    function searchLibrary(key) {
-        var url = "api/v1/album?filter[artist]=" +
-            encodeURIComponent(key) + "*" +
-            "&page[size]=50&fields[album]=artist,album";
-
-        $.ajax({
-            dataType : 'json',
-            type: 'GET',
-            accept: "application/json; charset=utf-8",
-            url: url,
-            success: function(response) {
-                addArtists(response.links.first.meta.total > 0 ?
-                           response.data : [], true);
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                var json = JSON.parse(jqXHR.responseText);
-                var status = (json && json.errors)?
-                        json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
-                alert(status);
-            }
-        });
-    }
-
     function addTag(id) {
         var url = "api/v1/album/" + id +
             "?fields[album]=artist,album";
@@ -569,6 +546,39 @@ $().ready(function(){
         });
     }
 
+    function searchLibrary(key) {
+        var url = "api/v1/album?filter[artist]=" +
+            encodeURIComponent(key) + "*" +
+            "&page[size]=50&fields[album]=artist,album";
+
+        $.ajax({
+            dataType : 'json',
+            type: 'GET',
+            accept: "application/json; charset=utf-8",
+            url: url,
+            success: function(response) {
+                addArtists(response.links.first.meta.total > 0 ?
+                           response.data : [], true);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                var json = JSON.parse(jqXHR.responseText);
+                var status = (json && json.errors)?
+                        json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
+                alert(status);
+            },
+            complete: function(jqXHR, textStatus) {
+                // if artist is numeric with correct check digit,
+                // treat it as an album tag and add it to the result
+                var parseTag = key.match(/^(\d+)(\d)$/);
+                if(parseTag != null && parseTag[1]
+                       .split('').map(Number)
+                       .reduce((a, b) => a + b, 0) % 10 == parseTag[2]) {
+                    addTag(key);
+                }
+            }
+        });
+    }
+
     $("#track-artist").on('input', function() {
         var artist = $(this).val();
         var opt = $("#track-artists option[value='" + escQuote(artist) + "']");
@@ -589,15 +599,6 @@ $().ready(function(){
             $("#track-titles").empty();
             if(artist.length > 3) {
                 searchLibrary(artist);
-
-                // if artist is numeric with correct check digit,
-                // treat it as an album tag and add it to the result
-                var parseTag = artist.match(/^(\d+)(\d)$/);
-                if(parseTag != null && parseTag[1]
-                       .split('').map(Number)
-                       .reduce((a, b) => a + b, 0) % 10 == parseTag[2]) {
-                    addTag(artist);
-                }
             }
         }
     });
