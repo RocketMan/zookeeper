@@ -498,11 +498,14 @@ $().ready(function(){
         return htmlify(name);
     }
 
-    function addArtists(data) {
+    function addArtists(data, replace) {
         var artist = $("#track-artist");
         artist.attr('list', ''); // webkit hack
 
         var results = $("#track-artists");
+        if(replace)
+            results.empty();
+
         data.forEach(function(entry) {
             var attrs = entry.attributes;
             var row = htmlify(attrs.artist) + " - " +
@@ -529,7 +532,7 @@ $().ready(function(){
             url: url,
             success: function(response) {
                 addArtists(response.links.first.meta.total > 0 ?
-                           response.data : []);
+                           response.data : [], true);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 var json = JSON.parse(jqXHR.responseText);
@@ -550,7 +553,7 @@ $().ready(function(){
             accept: "application/json; charset=utf-8",
             url: url,
             success: function(response) {
-                addArtists([ response.data ]);
+                addArtists([ response.data ], false);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 if(jqXHR.status == 404) {
