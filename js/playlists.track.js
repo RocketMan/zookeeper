@@ -498,13 +498,12 @@ $().ready(function(){
         return htmlify(name);
     }
 
-    function addArtists(data, replace) {
+    function addArtists(data) {
         var artist = $("#track-artist");
         artist.attr('list', ''); // webkit hack
 
         var results = $("#track-artists");
-        if(replace)
-            results.empty();
+        results.empty();
 
         data.forEach(function(entry) {
             var attrs = entry.attributes;
@@ -520,32 +519,6 @@ $().ready(function(){
         artist.focus(); // webkit hack
     }
 
-    function addTag(id) {
-        var url = "api/v1/album/" + id +
-            "?fields[album]=artist,album";
-
-        $.ajax({
-            dataType : 'json',
-            type: 'GET',
-            accept: "application/json; charset=utf-8",
-            url: url,
-            success: function(response) {
-                addArtists([ response.data ], false);
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                if(jqXHR.status == 404) {
-                    // tag does not exist; silently ignore
-                    return;
-                }
-
-                var json = JSON.parse(jqXHR.responseText);
-                var status = (json && json.errors)?
-                        json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
-                alert(status);
-            }
-        });
-    }
-
     function searchLibrary(key) {
         var url = "api/v1/album?filter[artist]=" +
             encodeURIComponent(key) + "*" +
@@ -558,23 +531,39 @@ $().ready(function(){
             url: url,
             success: function(response) {
                 addArtists(response.links.first.meta.total > 0 ?
-                           response.data : [], true);
+                           response.data : []);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 var json = JSON.parse(jqXHR.responseText);
                 var status = (json && json.errors)?
                         json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
                 alert(status);
+            }
+        });
+    }
+
+    function searchTag(id) {
+        var url = "api/v1/album/" + id +
+            "?fields[album]=artist,album";
+
+        $.ajax({
+            dataType : 'json',
+            type: 'GET',
+            accept: "application/json; charset=utf-8",
+            url: url,
+            success: function(response) {
+                addArtists([ response.data ]);
             },
-            complete: function(jqXHR, textStatus) {
-                // if artist is numeric with correct check digit,
-                // treat it as an album tag and add it to the result
-                var parseTag = key.match(/^(\d+)(\d)$/);
-                if(parseTag != null && parseTag[1]
-                       .split('').map(Number)
-                       .reduce((a, b) => a + b, 0) % 10 == parseTag[2]) {
-                    addTag(key);
+            error: function(jqXHR, textStatus, errorThrown) {
+                if(jqXHR.status == 404) {
+                    // tag does not exist; silently ignore
+                    return;
                 }
+
+                var json = JSON.parse(jqXHR.responseText);
+                var status = (json && json.errors)?
+                        json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
+                alert(status);
             }
         });
     }
@@ -598,7 +587,13 @@ $().ready(function(){
             $("#track-artists").empty();
             $("#track-titles").empty();
             if(artist.length > 3) {
-                searchLibrary(artist);
+                // if artist is numeric with correct check digit,
+                // treat it as an album tag
+                var parseTag = artist.match(/^(\d+)(\d)$/);
+                parseTag != null && parseTag[1]
+                        .split('').map(Number)
+                        .reduce((a, b) => a + b, 0) % 10 == parseTag[2] ?
+                    searchTag(artist) : searchLibrary(artist);
             }
         }
     });
