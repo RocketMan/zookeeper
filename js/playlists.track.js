@@ -55,9 +55,8 @@ $().ready(function(){
         $("#nme-entry input").val('');
         setAddButtonState(false);
 
-        if (clearTagInfo) {
+        if (clearTagInfo)
             tagId = 0;
-        }
 
         switch(mode) {
         case 'manual-entry':
@@ -112,8 +111,8 @@ $().ready(function(){
     function getDiskInfo(id, refArtist) {
         $("#track-title").attr('list',''); // webkit hack
         $("#track-titles").empty();
-        clearUserInput(false);
-        tagId = 0;
+        clearUserInput(true);
+
         // chars [ and ] in the QS param name are supposed to be %-encoded.
         // It seems to work ok without and reads better in the server logs,
         // but this may need revisiting if there are problems.
