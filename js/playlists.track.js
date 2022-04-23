@@ -481,6 +481,14 @@ $().ready(function(){
             alert('A required field is missing');
             return;
         }
+
+        // don't allow submission of album tag in the artist field
+        if($("#track-artist").val().trim().match(/^\d+$/) && tagId == 0) {
+            alert('If you are entering an album tag, select it from the list.');
+            $("#track-artist").focus();
+            return;
+        }
+
         // check that the timestamp, if any, is valid
         if($("INPUT[data-date].invalid-input").length > 0)
             return;
@@ -583,8 +591,6 @@ $().ready(function(){
                 $("#track-album").val("");
                 $("#track-label").val("");
             }
-            $("#track-artist").attr('list', ''); // webkit hack
-            $("#track-artists").empty();
             $("#track-titles").empty();
             if(artist.length > 3) {
                 // if artist is numeric with correct check digit,
