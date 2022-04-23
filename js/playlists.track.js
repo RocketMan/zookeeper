@@ -25,7 +25,7 @@
 $().ready(function(){
     const NME_ENTRY='nme-entry';
     const NME_PREFIX=$("#const-prefix").val();
-    var tagId = "";
+    var tagId = 0;
 
     $("#track-type-pick").val('manual-entry');
     $("#track-artist").focus();
@@ -56,7 +56,7 @@ $().ready(function(){
         setAddButtonState(false);
 
         if (clearTagInfo) {
-            tagId = "";
+            tagId = 0;
         }
 
         switch(mode) {
@@ -113,7 +113,7 @@ $().ready(function(){
         $("#track-title").attr('list',''); // webkit hack
         $("#track-titles").empty();
         clearUserInput(false);
-        tagId = "";
+        tagId = 0;
         // chars [ and ] in the QS param name are supposed to be %-encoded.
         // It seems to work ok without and reads better in the server logs,
         // but this may need revisiting if there are problems.
@@ -499,33 +499,38 @@ $().ready(function(){
         return htmlify(name);
     }
 
+    function addArtists(data) {
+        var artist = $("#track-artist");
+        artist.attr('list', ''); // webkit hack
+
+        var results = $("#track-artists");
+        data.forEach(function(entry) {
+            var attrs = entry.attributes;
+            var row = htmlify(attrs.artist) + " - " +
+                htmlify(attrs.album) + " (#" +
+                entry.id + ")";
+            results.append("<option data-tag='" + entry.id +
+                           "' data-artist='" + htmlify(attrs.artist) +
+                           "' value='" + row + "'>");
+        });
+
+        artist.attr('list', 'track-artists'); // webkit hack
+        artist.focus(); // webkit hack
+    }
+
     function searchLibrary(key) {
         var url = "api/v1/album?filter[artist]=" +
             encodeURIComponent(key) + "*" +
             "&page[size]=50&fields[album]=artist,album";
 
-        var results = $("#track-artists");
         $.ajax({
             dataType : 'json',
             type: 'GET',
             accept: "application/json; charset=utf-8",
             url: url,
             success: function(response) {
-                $("#track-artist").attr('list',''); // webkit hack
-                results.empty();
-                if(response.links.first.meta.total > 0) {
-                    response.data.forEach(function(entry) {
-                        var attrs = entry.attributes;
-                        var row = htmlify(attrs.artist) + " - " +
-                            htmlify(attrs.album) + " (#" +
-                            entry.id + ")";
-                        results.append("<option data-tag='" + entry.id +
-                                       "' data-artist='" + htmlify(attrs.artist) +
-                                       "' value='" + row + "'>");
-                    });
-                    $("#track-artist").attr('list','track-artists'); // webkit hack
-                    $("#track-artist").focus(); // webkit hack
-                }
+                addArtists(response.links.first.meta.total > 0 ?
+                           response.data : []);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 var json = JSON.parse(jqXHR.responseText);
@@ -540,24 +545,13 @@ $().ready(function(){
         var url = "api/v1/album/" + id +
             "?fields[album]=artist,album";
 
-        var results = $("#track-artists");
         $.ajax({
             dataType : 'json',
             type: 'GET',
             accept: "application/json; charset=utf-8",
             url: url,
             success: function(response) {
-                $("#track-artist").attr('list',''); // webkit hack
-                var entry = response.data;
-                var attrs = entry.attributes;
-                var row = htmlify(attrs.artist) + " - " +
-                    htmlify(attrs.album) + " (#" +
-                    entry.id + ")";
-                results.append("<option data-tag='" + entry.id +
-                               "' data-artist='" + htmlify(attrs.artist) +
-                               "' value='" + row + "'>");
-                $("#track-artist").attr('list','track-artists'); // webkit hack
-                $("#track-artist").focus(); // webkit hack
+                addArtists([ response.data ]);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 if(jqXHR.status == 404) {
@@ -580,12 +574,15 @@ $().ready(function(){
             getDiskInfo(opt.data("tag"), opt.data("artist"));
         } else {
             // clear auto-filled album info
-            if(tagId.length > 0) {
-                tagId = "";
+            if(tagId > 0) {
+                tagId = 0;
                 $("#track-title").val("");
+                $("#track-title").attr('list',''); // webkit hack
+                $("#track-titles").empty();
                 $("#track-album").val("");
                 $("#track-label").val("");
             }
+            $("#track-artist").attr('list', ''); // webkit hack
             $("#track-artists").empty();
             $("#track-titles").empty();
             if(artist.length > 3) {
@@ -617,7 +614,7 @@ $().ready(function(){
     });
 
     $("#track-album, #track-label").on('change', function() {
-        tagId = "";
+        tagId = 0;
     });
 
     $(".playlistTable .grab").mousedown(grabStart);
