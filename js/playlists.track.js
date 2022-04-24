@@ -42,22 +42,27 @@ $().ready(function(){
         $("#track-submit").prop("disabled", !enableIt);
     }
 
-    function clearUserInput(clearTagInfo) {
-        var mode = $("#track-type-pick").val();
+    function clearUserInput(clearArtistList) {
         $("#track-time").val('');
         $("#manual-entry input").val('');
         $("#comment-entry textarea").val('');
-        $("#track-artists").empty();
         $("#track-title").attr('list',''); // webkit hack
         $("#track-titles").empty();
         $("#error-msg").text('');
         $("#tag-status").text('');
         $("#nme-entry input").val('');
+
+        if (clearArtistList) {
+            $("#track-artist").attr('list',''); // webkit hack
+            $("#track-artists").empty();
+            $("#track-artist").attr('list','track-artists'); // webkit hack
+        }
+
+        tagId = 0;
+
         setAddButtonState(false);
 
-        if (clearTagInfo)
-            tagId = 0;
-
+        var mode = $("#track-type-pick").val();
         switch(mode) {
         case 'manual-entry':
             $('#track-artist').focus();
@@ -111,7 +116,7 @@ $().ready(function(){
     function getDiskInfo(id, refArtist) {
         $("#track-title").attr('list',''); // webkit hack
         $("#track-titles").empty();
-        clearUserInput(true);
+        clearUserInput(false);
 
         // chars [ and ] in the QS param name are supposed to be %-encoded.
         // It seems to work ok without and reads better in the server logs,
@@ -524,7 +529,6 @@ $().ready(function(){
         });
 
         artist.attr('list', 'track-artists'); // webkit hack
-        artist.focus(); // webkit hack
     }
 
     function searchLibrary(key) {
@@ -576,7 +580,14 @@ $().ready(function(){
         });
     }
 
-    $("#track-artist").on('input', function() {
+    $("#track-artist").focusout(function() {
+        var opt, artist = $(this).val();
+        if(artist.match(/^\d+$/) &&
+               (opt = $("#track-artists option[data-tag='" + escQuote(artist) + "']")).length > 0) {
+            getDiskInfo(opt.data("tag"), opt.data("artist"));
+            $("#track-title").focus();
+        }
+    }).on('input', function() {
         var artist = $(this).val();
         var opt = $("#track-artists option[value='" + escQuote(artist) + "']");
         if(opt.length > 0) {
@@ -588,10 +599,11 @@ $().ready(function(){
                 $("#track-title").val("");
                 $("#track-title").attr('list',''); // webkit hack
                 $("#track-titles").empty();
+                $("#track-title").attr('list','track-titles'); // webkit hack
                 $("#track-album").val("");
                 $("#track-label").val("");
             }
-            $("#track-titles").empty();
+
             if(artist.length > 3) {
                 // if artist is numeric with correct check digit,
                 // treat it as an album tag
