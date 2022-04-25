@@ -44,7 +44,7 @@ $().ready(function(){
 
     function clearUserInput(clearArtistList) {
         $("#track-time").val('');
-        $("#manual-entry input").val('');
+        $("#manual-entry input").removeClass('invalid-input').val('');
         $("#comment-entry textarea").val('');
         $("#track-title").attr('list',''); // webkit hack
         $("#track-titles").empty();
