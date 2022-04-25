@@ -31,11 +31,11 @@ $().ready(function(){
     $("#track-artist").focus();
 
     function htmlify(s) {
-        return s?s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\'/g, '&#39;'):"";
+        return s?String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\'/g, '&#39;'):"";
     }
 
     function escQuote(s) {
-        return s.replace(/\'/g, '\\\'');
+        return String(s).replace(/\'/g, '\\\'');
     }
 
     function setAddButtonState(enableIt) {
