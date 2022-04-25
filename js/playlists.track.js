@@ -579,7 +579,7 @@ $().ready(function(){
     $("#track-artist").focusout(function() {
         $(this).removeClass('invalid-input');
         var artist = $(this).val();
-        if(artist.match(/^\d+$/)) {
+        if(artist.match(/^\d+$/) && tagId == 0) {
             var opt = $("#track-artists option[data-tag='" + escQuote(artist) + "']");
             if(opt.length > 0) {
                 getDiskInfo(opt.data("tag"), opt.data("artist"));
