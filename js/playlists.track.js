@@ -549,7 +549,7 @@ $().ready(function(){
                 var json = JSON.parse(jqXHR.responseText);
                 var status = (json && json.errors)?
                         json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
-                alert(status);
+                showUserError(status);
             }
         });
     }
@@ -575,7 +575,7 @@ $().ready(function(){
                 var json = JSON.parse(jqXHR.responseText);
                 var status = (json && json.errors)?
                         json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
-                alert(status);
+                showUserError(status);
             }
         });
     }
