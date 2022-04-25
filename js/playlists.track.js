@@ -114,8 +114,6 @@ $().ready(function(){
     }
 
     function getDiskInfo(id, refArtist) {
-        $("#track-title").attr('list',''); // webkit hack
-        $("#track-titles").empty();
         clearUserInput(false);
 
         // chars [ and ] in the QS param name are supposed to be %-encoded.
@@ -130,19 +128,17 @@ $().ready(function(){
             url: url,
         }).done(function (response) { //TODO: success?
             tagId = id;
-            var options = "<option value=''>Select Track</option>";
-            var options2 = "";
+            var options = "";
             var diskInfo = response.data;
             var trackList = diskInfo.attributes.tracks;
             for (var i=0; i < trackList.length; i++) {
                 var track = trackList[i];
                 var artist = track.artist ? track.artist + ' - ' : '';
-                options += `<option value='${i}' >${i+1}. ${artist} ${track.track}</option>`;
-                options2 += "<option data-track='" + htmlify(track.track) +
+                options += "<option data-track='" + htmlify(track.track) +
                     "' data-artist='" + htmlify(track.artist) +
                     "' value='" + htmlify((i+1) + ". " + artist + track.track) + "'>";
             }
-            $("#track-titles").html(options2);
+            $("#track-titles").html(options);
             $("#track-title").attr('list','track-titles'); // webkit hack
             $("#track-artist").val(diskInfo.attributes.artist);
             $("#track-label").val(diskInfo.relationships != null &&
