@@ -489,7 +489,7 @@ $().ready(function(){
 
         // don't allow submission of album tag in the artist field
         if($("#track-artist").val().trim().match(/^\d+$/) && tagId == 0) {
-            alert('If you are entering an album tag, select it from the list.');
+            alert('Album tag is invalid');
             $("#track-artist").focus();
             return;
         }
@@ -581,11 +581,15 @@ $().ready(function(){
     }
 
     $("#track-artist").focusout(function() {
-        var opt, artist = $(this).val();
-        if(artist.match(/^\d+$/) &&
-               (opt = $("#track-artists option[data-tag='" + escQuote(artist) + "']")).length > 0) {
-            getDiskInfo(opt.data("tag"), opt.data("artist"));
-            $("#track-title").focus();
+        $(this).removeClass('invalid-input');
+        var artist = $(this).val();
+        if(artist.match(/^\d+$/)) {
+            var opt = $("#track-artists option[data-tag='" + escQuote(artist) + "']");
+            if(opt.length > 0) {
+                getDiskInfo(opt.data("tag"), opt.data("artist"));
+                $("#track-title").focus();
+            } else
+                $(this).addClass('invalid-input');
         }
     }).on('input', function() {
         var artist = $(this).val();
