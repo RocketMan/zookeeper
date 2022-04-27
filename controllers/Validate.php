@@ -181,7 +181,7 @@ class Validate implements IController {
 
     public function validatePlaylists() {
         $success = false;
-        if($this->doTest("create playlist", true)) {
+        if($this->doTest("create playlist", isset($this->apiKeyId))) {
             $airname = self::TEST_NAME." ".$this->testUser; // make unique
             $response = $this->client->post('api/v1/playlist', [
                 RequestOptions::JSON => [
@@ -297,6 +297,49 @@ class Validate implements IController {
             $this->showSuccess($success5, $response);
         }
 
+        if($this->doTest("duplicate playlist", $success4)) {
+            $response = $this->client->post('api/v1/playlist', [
+                RequestOptions::JSON => [
+                    'data' => [
+                        'type' => 'show',
+                        'attributes' => [
+                            'rebroadcast' => true,
+                            'date' => '2020-06-01',
+                            'time' => '1800-2000',
+                        ],
+                        'relationships' => [
+                            'origin' => [
+                                'data' => [
+                                    'type' => 'show',
+                                    'id' => $pid
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]);
+
+            $successd = $response->getStatusCode() == 201;
+            if($successd) {
+                $dlist = $response->getHeader('Location')[0];
+                $dpid = basename($dlist);
+            }
+
+            $this->showSuccess($successd, $response);
+        }
+
+        if($this->doTest("validate duplicate", $successd)) {
+            $response = $this->client->get($dlist);
+            $page = $response->getBody()->getContents();
+            $json = json_decode($page);
+            $successd1 = $json->data->attributes->rebroadcast === true &&
+                $json->data->relationships->origin->data->id == $pid &&
+                preg_match(IPlaylist::DUPLICATE_REGEX, $json->data->attributes->name) &&
+                $json->data->attributes->airname == $airname &&
+                sizeof($json->data->attributes->events) == 3;
+            $this->showSuccess($successd1, $response);
+        }
+
         if($this->doTest("validate search", $success3)) {
             $response = $this->client->get('api/v1/search', [
                 RequestOptions::QUERY => [
@@ -323,6 +366,12 @@ class Validate implements IController {
                 }
             }
             $this->showSuccess($success6, $response);
+        }
+
+        if($this->doTest("delete duplicate", $successd)) {
+            $response = $this->client->delete($dlist);
+            $successd = $response->getStatusCode() == 204;
+            $this->showSuccess($successd, $response);
         }
 
         if($this->doTest("delete playlist", $success)) {

@@ -234,6 +234,7 @@ CREATE TABLE IF NOT EXISTS `lists` (
   `showtime` varchar(20) DEFAULT NULL,
   `description` varchar(80) DEFAULT NULL,
   `airname` int(11) DEFAULT NULL,
+  `origin` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `dj` (`dj`),
   KEY `showdate` (`showdate`),

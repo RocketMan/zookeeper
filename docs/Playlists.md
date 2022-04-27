@@ -19,6 +19,7 @@ be found here.
 * date
 * time
 * airname
+* rebroadcast
 * events -- array of zero or more:
   * type (one of `break`, `comment`, `logEvent`, `spin`)
   * created
@@ -35,6 +36,7 @@ of the 'xa:relationships' attribute.)
 
 ### Relations
 
+* origin (to-one)
 * albums (to-many)
 * events (to-many)
 
@@ -68,6 +70,55 @@ If you belong to 'v' group, you may insert playlists on behalf of
 other users: You will own the list in these cases (i.e., can update or
 delete them), but they will display publicly under the other user's
 airname.
+
+### <a name="duplicate"></a>Duplicate
+
+Duplicate is identical to Insert, except that in the request body,
+you must also:
+* include an attribute `rebroadcast` with value `true`; and
+* include a relationship `origin` to specify the playlist you wish
+to duplicate.
+
+The date and time of rebroadcast must be specified in attributes `date`
+and `time`, respectively.  All other attributes are optional.
+
+The name of the duplicated playlist follows the same convention as
+playlists duplicated in the user interface.  If desired, an alternate
+name can be specified via the `name` attribute.
+
+Example:
+
+To duplicate playlist 12345 for rebroadcast on 2022-01-01 from 1800-2000:
+
+````
+POST /api/vi/playlist HTTP/1.1
+X-APIKEY: eb5e0e0b42a84531af5f257ed61505050494788d
+Content-Type: application/vnd.api+json
+
+{
+  "data": {
+    "type": "show",
+    "attributes": {
+      "rebroadcast": true,
+      "date": "2022-01-01",
+      "time": "1800-2000"
+    },
+    "relationships": {
+      "origin": {
+        "data": {
+          "type": "show",
+          "id": "12345"
+        }
+      }
+    }
+  }
+}
+````
+
+In general, you may only duplicate your own playlists.  If you belong
+to the 'v' group, you may also duplicate playlists of other users.
+You will own the list in these cases (i.e., can update or delete
+them), but they will display publicly under the other user's airname.
 
 ### Update
 

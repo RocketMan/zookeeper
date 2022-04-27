@@ -28,6 +28,31 @@ namespace ZK\Engine;
  * Playlist operations
  */
 interface IPlaylist {
+    /**
+     * suffix appended to duplicate playlist name
+     *
+     * date format specifiers may be included inside %...%
+     */
+    const DUPLICATE_SUFFIX = " (rebroadcast from %M j, Y%)";
+
+    /**
+     * regular expression to match the name of a duplicate playlist
+     *
+     * should match (some substring of) DUPLICATE_SUFFIX
+     */
+    const DUPLICATE_REGEX = "/\Wrebroadcast\W/i";
+
+    /**
+     * comment inserted at beginning of duplicate playlist
+     *
+     * date format specifiers may be included inside %...%
+     */
+    const DUPLICATE_COMMENT =
+        "Rebroadcast of an episode originally aired on %F j, Y%.";
+
+    /**
+     * internal datetime formats (do not change)
+     */
     const TIME_FORMAT = "Y-m-d Hi"; // eg, 2019-01-01 1234
     const TIME_FORMAT_SQL = "Y-m-d H:i:s"; // 2019-01-01 12:34:56
 

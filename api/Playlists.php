@@ -57,6 +57,7 @@ class Playlists implements RequestHandlerInterface {
     const LINKS_EVENTS = 1;
     const LINKS_ALBUMS = 2;
     const LINKS_ALBUMS_DETAILS = 4;
+    const LINKS_ORIGIN = 8;
     const LINKS_ALL = ~0;
 
     private static $paginateOps = [
@@ -109,6 +110,21 @@ class Playlists implements RequestHandlerInterface {
         $attrs->set("date", $rec["showdate"]);
         $attrs->set("time", $rec["showtime"]);
         $attrs->set("airname", $rec["airname"]);
+
+        $origin = $rec["origin"] ?? null;
+        $attrs->set("rebroadcast", $origin || preg_match(IPlaylist::DUPLICATE_REGEX, $rec["description"]));
+        if($origin) {
+            if($flags & self::LINKS_ORIGIN) {
+                $row = Engine::api(IPlaylist::class)->getPlaylist($origin, 1);
+                $row['list'] = $origin;
+                $rel = self::fromRecord($row, $flags);
+            } else
+                $rel = new JsonResource("show", $origin);
+
+            $relation = new Relationship("origin", $rel);
+            $relation->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/origin"));
+            $res->relationships()->set($relation);
+        }
 
         if($flags & self::LINKS_EVENTS) {
             $relations = new ResourceCollection();
@@ -188,6 +204,8 @@ class Playlists implements RequestHandlerInterface {
             $flags |= self::LINKS_EVENTS | self::LINKS_ALBUMS;
         if($request->requestsInclude("albums"))
             $flags |= self::LINKS_ALBUMS_DETAILS;
+        if($request->requestsInclude("origin"))
+            $flags |= self::LINKS_ORIGIN;
 
         $resource = self::fromRecord($row, $flags);
 
@@ -203,6 +221,8 @@ class Playlists implements RequestHandlerInterface {
             $flags |= self::LINKS_EVENTS | self::LINKS_ALBUMS;
         if($request->requestsInclude("albums"))
             $flags |= self::LINKS_ALBUMS_DETAILS;
+        if($request->requestsInclude("origin"))
+            $flags |= self::LINKS_ORIGIN;
 
         $response = $this->paginateOffset($request, self::$paginateOps, $flags);
         $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
@@ -216,11 +236,20 @@ class Playlists implements RequestHandlerInterface {
 
         $id = $request->id();
 
+        $api = Engine::api(IPlaylist::class);
+        $list = $api->getPlaylist($id);
+        if(!$list || $api->isListDeleted($id))
+            throw new ResourceNotFoundException("show", $id);
+
+        // unpublished playlists are visible to owner only
+        if(!$list["airname"] && $list["dj"] != Engine::session()->getUser())
+            throw new ResourceNotFoundException("show", $id);
+
         $relations = new ResourceCollection();
 
         switch($request->relationship()) {
         case "albums":
-            Engine::api(IPlaylist::class)->getTracksWithObserver($id,
+            $api->getTracksWithObserver($id,
             (new PlaylistObserver())->onSpin(function($entry) use($relations, $flags) {
                 $tag = $entry->getTag();
                 if($tag) {
@@ -236,7 +265,7 @@ class Playlists implements RequestHandlerInterface {
         case "events":
             if(!$request->requestsInclude("album"))
                 $flags = Albums::LINKS_NONE;
-            Engine::api(IPlaylist::class)->getTracksWithObserver($id,
+            $api->getTracksWithObserver($id,
             (new PlaylistObserver())->onComment(function($entry) use($relations) {
                 $e = new JsonResource("event", $entry->getId());
                 $a = $e->attributes();
@@ -282,6 +311,17 @@ class Playlists implements RequestHandlerInterface {
                 $relations->set($e);
             }));
             break;
+        case "origin":
+            $origin = $list['origin'];
+            if($origin) {
+                $row = $api->getPlaylist($origin, 1);
+                if($row) {
+                    $row['list'] = $origin;
+                    $rel = self::fromRecord($row, self::LINKS_ALL);
+                    $relations->set($rel);
+                }
+            }
+            break;
         case "relationships":
             throw new NotAllowedException("unspecified relationship");
         default:
@@ -312,30 +352,66 @@ class Playlists implements RequestHandlerInterface {
         $attrs = $show->attributes();
 
         // validate the show's properties
-        $name = $attrs->getRequired("name");
-        $airname = $attrs->getRequired("airname");
+        $papi = Engine::api(IPlaylist::class);
+        $dup = $attrs->getOptional("rebroadcast", false);
+        if($dup) {
+            $origin = $show->relationships()->get("origin")->related()->first("show")->id();
+            $list = $papi->getPlaylist($origin);
+            if(!$list || !$session->isAuth("v") && $user != $list["dj"])
+                throw new \InvalidArgumentException("origin is invalid");
+        }
+
+        $airname = $dup ? $attrs->getOptional("airname") : $attrs->getRequired("airname");
         $time = $attrs->getRequired("time");
         list($year, $month, $day) = explode("-", $date = $attrs->getRequired("date"));
         if(!checkdate($month, $day, $year))
             throw new \InvalidArgumentException("date is invalid");
 
         // lookup the airname
-        $djapi = Engine::api(IDJ::class);
-        $aid = $djapi->getAirname($airname, $session->isAuth("v")?"":$user);
-        if(!$aid) {
-            // airname does not exist; try to create it
-            $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
-            if($success > 0) {
-                // success!
-                $aid = $djapi->lastInsertId();
-            } else
-                throw new \InvalidArgumentException("airname is invalid");
+        if($airname) {
+            $djapi = Engine::api(IDJ::class);
+            $aid = $djapi->getAirname($airname, $session->isAuth("v")?"":$user);
+            if(!$aid) {
+                // airname does not exist; try to create it
+                $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
+                if($success > 0) {
+                    // success!
+                    $aid = $djapi->lastInsertId();
+                } else
+                    throw new \InvalidArgumentException("airname is invalid");
+            }
         }
 
-        // create the playlist
-        $papi = Engine::api(IPlaylist::class);
-        $papi->insertPlaylist($user, $date, $time, mb_substr($name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $aid);
-        $playlist = $papi->lastInsertId();
+        if($dup) {
+            // duplicate an existing playlist
+            $playlist = $papi->duplicatePlaylist($origin);
+            if(!$playlist)
+                throw new \Exception("duplication failed");
+
+            if($session->isAuth("v") && $user != $list["dj"]) {
+                $papi->reparentPlaylist($playlist, $user);
+                $aid = null; // force original airname
+            }
+
+            $suffix = preg_replace_callback("/%([^%]*)%/",
+                function($matches) use ($list) {
+                    return \DateTime::createFromFormat(
+                        IPlaylist::TIME_FORMAT,
+                        $list["showdate"] . " 0000")->format($matches[1]);
+                }, IPlaylist::DUPLICATE_SUFFIX);
+            $description = $list["description"];
+            if(mb_strlen($description) + mb_strlen($suffix) > IPlaylist::MAX_DESCRIPTION_LENGTH)
+                $description = mb_substr($description, 0, IPlaylist::MAX_DESCRIPTION_LENGTH - mb_strlen($suffix) - 3) . "...";
+            $description .= $suffix;
+
+            $name = $attrs->getOptional("name", $description);
+            $papi->updatePlaylist($playlist, $date, $time, mb_substr($name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $aid ??= $list["airname"], true);
+        } else {
+            // create a new playlist
+            $name = $attrs->getRequired("name");
+            $papi->insertPlaylist($user, $date, $time, mb_substr($name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $aid);
+            $playlist = $papi->lastInsertId();
+        }
 
         // insert the tracks
         $events = $attrs->getOptional("events");
@@ -364,7 +440,7 @@ class Playlists implements RequestHandlerInterface {
                     ["showdate" => $date, "showtime" => $time]))
                 PushServer::sendAsyncNotification();
 
-            if($events)
+            if($events || $dup)
                 PushServer::lazyLoadImages($playlist);
 
             return new CreatedResponse(Engine::getBaseUrl()."playlist/$playlist");

@@ -159,6 +159,7 @@ The following are sample documents for each of the data types.
       "date": "2021-12-23",
       "time": "2100-2200",
       "airname": "DJ Away",
+      "rebroadcast": true,
       "events": [{
         "type": "comment",
         "comment": "Rebroadcast of an episode originally aired on May 20, 2021.",
@@ -284,6 +285,15 @@ The following are sample documents for each of the data types.
       }]
     },
     "relationships": {
+      "origin": {
+        "links": {
+          "related": "/api/v1/playlist/42667/origin"
+        },
+        "data": {
+          "type": "show",
+          "id": "41522"
+        }
+      },
       "albums": {
         "links": {
           "related": "/api/v1/playlist/42667/albums"

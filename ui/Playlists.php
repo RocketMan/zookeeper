@@ -43,7 +43,6 @@ use VStelmakh\UrlHighlight\UrlHighlight;
 
 class Playlists extends MenuItem {
     private const NME_PREFIX = "nme-";
-    private const DUPLICATE_SUFFIX = " (rebroadcast from %M j, Y%)";
 
     //NOTE: update ui_config.php when changing the actions.
     private static $actions = [
@@ -684,7 +683,7 @@ class Playlists extends MenuItem {
                         return \DateTime::createFromFormat(
                             IPlaylist::TIME_FORMAT,
                             $date . " 0000")->format($matches[1]);
-                    }, self::DUPLICATE_SUFFIX);
+                    }, IPlaylist::DUPLICATE_SUFFIX);
                 if(mb_strlen($description) + mb_strlen($suffix) > IPlaylist::MAX_DESCRIPTION_LENGTH)
                     $description = mb_substr($description, 0, IPlaylist::MAX_DESCRIPTION_LENGTH - mb_strlen($suffix) - 3) . "...";
                 $description .= $suffix;

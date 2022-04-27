@@ -31,8 +31,6 @@ namespace ZK\Engine;
 class PlaylistImpl extends DBO implements IPlaylist {
     const GRACE_START = "-15 minutes";
     const GRACE_END = "+30 minutes";
-    const DUPLICATE_COMMENT =
-        "Rebroadcast of an episode originally aired on %F j, Y%.";
 
     public function getShowdates($year, $month) {
         $yearMonth = sprintf("%04d-%02d", $year, $month) . "-%";
@@ -49,12 +47,12 @@ class PlaylistImpl extends DBO implements IPlaylist {
     public function getPlaylist($playlist, $withAirname=0) {
         if($withAirname)
             $query = "SELECT l.description, l.showdate, l.showtime, " .
-                     "       a.id, a.airname, l.dj " .
+                     "       a.id, a.airname, l.dj, l.origin " .
                      "FROM lists l LEFT JOIN airnames a " .
                      "ON l.airname = a.id " .
                      "WHERE l.id = ?";
         else
-            $query = "SELECT description, showdate, showtime, airname, dj " .
+            $query = "SELECT description, showdate, showtime, airname, dj, origin " .
                      "FROM lists WHERE id=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
@@ -65,10 +63,11 @@ class PlaylistImpl extends DBO implements IPlaylist {
                                $showDate="", $airname="", $user="", $desc=1, $limit=null) {
         if($withAirname)
             $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
-                     "a.id airid, a.airname FROM lists l LEFT JOIN airnames a " .
-                     "ON l.airname = a.id ";
+                     "a.id airid, a.airname, l.origin FROM lists l " .
+                     "LEFT JOIN airnames a ON l.airname = a.id ";
         else
-            $query = "SELECT id, showdate, showtime, description FROM lists l ";
+            $query = "SELECT id, showdate, showtime, description, origin FROM lists l ";
+
         if($user)
             $query .= "WHERE l.dj=? ";
         else if($airname)
@@ -301,6 +300,13 @@ class PlaylistImpl extends DBO implements IPlaylist {
                                      $from['airname']):false;
         if($success) {
             $newListId = $this->lastInsertId();
+
+            $query = "UPDATE lists SET origin = ? WHERE id = ?";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $playlist);
+            $stmt->bindValue(2, $newListId);
+            $stmt->execute();
+
             $query = "INSERT INTO tracks " .
                      "(list, tag, artist, track, album, label, created, seq) ".
                      "SELECT ?, tag, artist, track, album, label, created, seq ".
