@@ -601,7 +601,7 @@ table.recentAirplay td, .sub {
 .zk-hidden {
     display: none;
 }
-.track-info, .remaining {
+.track-info, .remaining, .given-name {
     color: gray;
 }
 .track-error {

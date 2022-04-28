@@ -45,6 +45,11 @@ class UserAdmin extends MenuItem {
     private function emitColumnHeader($header, $selected = false) {
         echo "    <TH" . ($selected?" class='initial-sort-col'":"").">$header</TH>\n";
     }
+
+    private function emitFullName($name) {
+        return preg_replace('/^(.*)(?= )/',
+                    "<span class='given-name'>$1</span>", $name);
+    }
     
     public function adminUsers() {
         $seq = $_REQUEST["seq"];
@@ -195,7 +200,7 @@ class UserAdmin extends MenuItem {
             else
                 $class = "hborder"; 
             echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?action=adminUsers&amp;seq=selUser&amp;uid=" . $user["name"] . "\">" . $user["name"] . "</A></TD><TD>" .
-                        $user["realname"] . "</TD><TD>" .
+                        $this->emitFullName($user["realname"]) . "</TD><TD>" .
                         $user["groups"] . "&nbsp;</TD><TD CLASS='date'>" .
                         $user["expires"] . "&nbsp;</TD><TD CLASS='date'>" .
                         $user["lastlogin"] . "&nbsp;</TD></TR>\n";
