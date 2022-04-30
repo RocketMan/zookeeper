@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -182,9 +182,10 @@ class AddManager extends MenuItem {
                 // A-File Numbers
                 echo "<TD>".$row["afile_number"]."</TD>";
         
-                $artistName = htmlentities($row["artist"]) ;
-                if($static && strlen($artistName) > 50)
-                    $artistName = substr($artistName, 0, 50) . "...";
+                $artistName = $row["artist"];
+                if($static && mb_strlen($artistName) > 50)
+                    $artistName = mb_substr($artistName, 0, 50) . "...";
+                $artistName = htmlentities($artistName) ;
         
                 // Artist/Album/Label names
                 echo "<TD>" . $artistName . "&nbsp;&nbsp;</TD>";
@@ -206,9 +207,10 @@ class AddManager extends MenuItem {
                     echo "</TD>";
                 }
         
-                $albumName = htmlentities($row["album"]);
-                if($static && strlen($albumName) > 50)
-                    $albumName = substr($albumName, 0, 50) . "...";
+                $albumName = $row["album"];
+                if($static && mb_strlen($albumName) > 50)
+                    $albumName = mb_substr($albumName, 0, 50) . "...";
+                $albumName = htmlentities($albumName);
 
                 $albumName .= $this->getMediumFormat($row["medium"]);
         

@@ -82,23 +82,23 @@ class Albums implements RequestHandlerInterface {
         $words = preg_split(self::NONALNUM, $val);
         $newVal = join(" ", array_map(function(int $index, string $word) use($words) {
             // words starting with caps are kept as-is
-            if(preg_match('/^[A-Z]+/', $word))
+            if(preg_match('/^\p{Lu}/u', $word))
                 return $word;
 
             // stopwords are not capitalized, unless first or last
             if(preg_match(self::STOPWORDS, $word) &&
                         $index != 0 &&
                         $index != sizeof($words) - 1) {
-                return strtolower($word);
+                return mb_strtolower($word);
             }
 
             // otherwise, capitalize the word
-            return strtoupper(substr($word, 0, 1)) .
-                    strtolower(substr($word, 1));
+            return mb_strtoupper(mb_substr($word, 0, 1)) .
+                    mb_strtolower(mb_substr($word, 1));
         }, array_keys($words), array_values($words)));
 
-        if(!$isTrack && substr($newVal, 0, 4) == 'The ')
-            $newVal = substr($newVal, 4) . ', The';
+        if(!$isTrack && mb_substr($newVal, 0, 4) == 'The ')
+            $newVal = mb_substr($newVal, 4) . ', The';
 
         return $newVal;
     }

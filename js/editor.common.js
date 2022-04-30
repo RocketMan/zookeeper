@@ -145,7 +145,7 @@ $().ready(function() {
         var track=control.data("zkalpha") === true;
         var newVal=val.split(NONALNUM).map(function(word, index, array) {
             // words starting with caps are kept as-is
-            if(word.search(/^[A-Z]+/) > -1)
+            if(word.search(/^\p{Lu}/u) > -1)
                 return word;
 
             // stopwords are not capitalized, unless first or last

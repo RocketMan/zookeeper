@@ -351,7 +351,7 @@ class Charts extends MenuItem {
                 // Get the chart categories
                 $cats = $chartAPI->getCategories();
     
-                echo strtoupper($cats[$category-1]["name"]);
+                echo mb_strtoupper($cats[$category-1]["name"]);
             } else {
                 echo ">";
                 echo "MAIN";
@@ -385,7 +385,7 @@ class Charts extends MenuItem {
     
                 echo "      <LI>";
                 // Artist
-                echo UI::HTMLify(strtoupper($artist), 20) . " <I>";
+                echo UI::HTMLify(mb_strtoupper($artist), 20) . " <I>";
                 // Album & Label
                 echo "<A CLASS=\"calNav\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($chart[$i]["tag"]).
@@ -407,7 +407,7 @@ class Charts extends MenuItem {
                 // Get the chart categories
                 $cats = $chartAPI->getCategories();
     
-                echo strtoupper($cats[$category-1]["name"]);
+                echo mb_strtoupper($cats[$category-1]["name"]);
             } else {
                 echo ">";
                 if($limit) echo "TOP $limit";
@@ -440,7 +440,7 @@ class Charts extends MenuItem {
     
                 echo "              ".(string)($i + 1).". ";
                 // Artist
-                echo UI::HTMLify(strtoupper($artist), 20) . " <I>";
+                echo UI::HTMLify(mb_strtoupper($artist), 20) . " <I>";
                 // Album & Label
                 echo "<A CLASS=\"calNav\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($chart[$i]["tag"]).
