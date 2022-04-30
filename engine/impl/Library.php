@@ -83,28 +83,31 @@ class LibraryImpl extends DBO implements ILibrary {
     ];
 
     private static function orderBy($sortBy) {
-        $query = $desc = "";
-        $sb = $sortBy;
-        if(substr($sb, -1) == "-") {
-            $sb = substr($sb, 0, -1);
-            $desc = " DESC" ;
-        }
-        switch($sb) {
-        case "Album":
-            $query .= "ORDER BY album$desc, artist$desc, tag ";
+        if(substr($sortBy, -1) == "-") {
+            $sortBy = substr($sortBy, 0, -1);
+            $desc = " DESC";
+        } else
+            $desc = "";
+
+        switch(strtolower($sortBy)) {
+        case "album":
+            $query = "ORDER BY album$desc, artist$desc, tag ";
             break;
-        case "Label":
-            $query .= "ORDER BY name$desc, album$desc, artist$desc ";
+        case "label":
+            $query = "ORDER BY name$desc, album$desc, artist$desc ";
             break;
-        case "Date":
-            $query .= "ORDER BY r.created$desc ";
+        case "created":
+            $query = "ORDER BY a.created$desc, artist$desc ";
             break;
-        case "Track":
-            $query .= "ORDER BY track$desc, artist$desc, album$desc ";
+        case "date":
+            $query = "ORDER BY r.created$desc, artist$desc ";
+            break;
+        case "track":
+            $query = "ORDER BY track$desc, artist$desc, album$desc ";
             break;
         default:
             // "Artist"
-            $query .= "ORDER BY artist$desc, album$desc, tag ";
+            $query = "ORDER BY artist$desc, album$desc, tag ";
             break;
         }
         return $query;
