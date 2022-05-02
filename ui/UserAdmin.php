@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -295,7 +295,7 @@ class UserAdmin extends MenuItem {
                 $class = "hborder"; 
             echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?subaction=airnames&amp;action=adminUsers&amp;seq=selAirname&amp;aid=" . $user["id"] . "\">" . $user["airname"] . "</A></TD><TD>" .
                         $user["name"] . "</TD><TD>" .
-                        $user["realname"] . "&nbsp;</TD></TR>\n";
+                        $this->emitFullName($user["realname"]) . "&nbsp;</TD></TR>\n";
         }
         echo "</TABLE>\n";
         echo "<FORM>\n";
