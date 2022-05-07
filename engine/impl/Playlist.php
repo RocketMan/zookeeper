@@ -110,7 +110,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
     public function getWhatsOnNow() {
         $hour = date("Hi");
         $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
-                 "a.id airid, a.airname FROM lists l LEFT JOIN airnames a " .
+                 "a.id airid, a.airname, l.dj FROM lists l LEFT JOIN airnames a " .
                  "ON l.airname = a.id ";
         $query .= "WHERE l.showdate=? ";
         $query .= "AND LEFT(l.showtime, 4) <= ? ";
@@ -503,7 +503,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
 
     // NOTE: this routine must be tolerant of improperly formatted dates.
-    public function getTimestampWindowInternal($playlist) {
+    public function getTimestampWindowInternal($playlist, $allowGrace = true) {
         $result = null;
         if($playlist && ($showtime = $playlist['showtime'])) {
             $timeAr = explode("-", $showtime);
@@ -512,7 +512,6 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 $start = \DateTime::createFromFormat(self::TIME_FORMAT, $timeStr);
                 if($start) {
                     $end = clone $start;
-                    $start->modify(self::GRACE_START);
 
                     // end time can be midnight or later
                     // in this case, adjust to the next day
@@ -521,7 +520,11 @@ class PlaylistImpl extends DBO implements IPlaylist {
 
                     $end->setTime(substr($timeAr[1], 0, 2),
                                   substr($timeAr[1], 2, 2));
-                    $end->modify(self::GRACE_END);
+
+                    if($allowGrace) {
+                        $start->modify(self::GRACE_START);
+                        $end->modify(self::GRACE_END);
+                    }
 
                     $result = [
                         "start" => $start,
@@ -539,10 +542,10 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
 
     // return true if dateTime is within the show time range or null.
-    public function isWithinShow($dateTime, $listRow) {
+    public function isWithinShow($dateTime, $listRow, $allowGrace = true) {
         $retVal = $dateTime == null;
         if ($dateTime != null) {
-            $window = $this->getTimestampWindowInternal($listRow);
+            $window = $this->getTimestampWindowInternal($listRow, $allowGrace);
             if($window) {
                 $retVal = $dateTime >= $window['start'] &&
                           $dateTime <= $window['end'];
@@ -552,9 +555,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
 
     // return true if "now" is within the show start/end time & date.
-    public function isNowWithinShow($listRow) {
+    public function isNowWithinShow($listRow, $allowGrace = true) {
         $nowDateTime = new \DateTime("now");
-        return $this->isWithinShow($nowDateTime, $listRow);
+        return $this->isWithinShow($nowDateTime, $listRow, $allowGrace);
     }
 
     public function isDateTimeWithinShow($timeStamp, $listRow) {

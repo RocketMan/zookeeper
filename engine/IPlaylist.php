@@ -70,6 +70,7 @@ interface IPlaylist {
     function getPlaylistsByUser($user, $onlyPublished=0, $withAirname=0);
     function getPlaylistsByDate($date);
     function getWhatsOnNow();
+    function isNowWithinShow($listRow, $allowGrace = true);
     function insertPlaylist($user, $date, $time, $description, $airname);
     function updatePlaylist($playlist, $date, $time, $description, $airname,
                                $deleteTracksPastEnd=0);

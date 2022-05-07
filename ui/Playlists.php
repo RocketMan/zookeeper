@@ -524,6 +524,21 @@ class Playlists extends MenuItem {
 
             $api = Engine::api(IPlaylist::class);
 
+            // if this DJ already has a live playlist in-progress,
+            // rejoin it rather than creating a new live playlist
+            if(!$update && $api->isNowWithinShow(
+                    ["showdate" => $date, "showtime" => $showTime], false)) {
+                $onnow = $api->getWhatsOnNow()->fetch();
+                if($onnow && $onnow['dj'] == $this->session->getUser()) {
+                    echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
+                         "\$().ready(function(){".
+                         "location.href='?action=newListEditor&playlist=".
+                         $onnow['id']."';});\n".
+                         "// -->\n</SCRIPT>\n";
+                    return;
+                }
+            }
+
             // process the airname
             if(!strcasecmp($airname, "None")) {
                 // unpublished playlist
@@ -719,6 +734,7 @@ class Playlists extends MenuItem {
             $this->restorePlaylist($playlistId);
             PushServer::sendAsyncNotification();
         }
+
         $this->emitEditListPicker();
     }
 
