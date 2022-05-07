@@ -815,11 +815,12 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $query = "SELECT id, showdate, showtime FROM lists " .
                  "WHERE showdate <= DATE(?) " .
                  "AND airname IS NOT NULL " .
-                 "ORDER BY showdate DESC, showtime DESC " .
+                 "ORDER BY showdate DESC, showtime DESC, id DESC " .
                  "LIMIT 20";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $date);
         $result = $stmt->iterate();
+        $nextShowStart = null;
         while(($list = $result->fetch()) && $limit > 0 ) {
             if($list['showdate'] == $date && $list['showtime'] > $time)
                 continue;
@@ -833,6 +834,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue(1, $list['id']);
             $stmt->bindValue(2, $timestamp);
             $tracks = $stmt->iterate();
+            $prevLimit = $limit;
             while(($track = $tracks->fetch()) && $limit-- > 0) {
                 if(preg_match('/(\.gov|\.org|GED|Literacy|NIH|Ad\ Council)/', implode(' ', $track)) || empty(trim($track['track_artist']))) {
                     // it's probably a PSA coded as a spin; let's skip it
@@ -840,9 +842,22 @@ class PlaylistImpl extends DBO implements IPlaylist {
                     continue;
                 }
 
+                // if spin overlaps later playlist, skip it
+                if($nextShowStart && $track['track_time'] >= $nextShowStart) {
+                    $limit++;
+                    continue;
+                }
+
                 $track['track_artist'] = PlaylistEntry::swapNames($track['track_artist']);
                 $this->injectImageData($track);
                 $res[] = $track;
+            }
+
+            if($prevLimit != $limit &&
+                    preg_match('/^(\d{2})(\d{2})\-\d{4}$/', $list['showtime'], $matches)) {
+                $matches[] = "00";
+                $nextShowStart = $list['showdate'] . " " .
+                    implode(':', array_slice($matches, 1));
             }
         }
 

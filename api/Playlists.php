@@ -500,6 +500,9 @@ class Playlists implements RequestHandlerInterface {
 
         $success = $api->updatePlaylist($key, $date, $time, $name, $airname);
 
+        if($success)
+            PushServer::sendAsyncNotification();
+
         return $success ?
             new EmptyResponse() :
             new BadRequestException("DB update error");
@@ -522,6 +525,8 @@ class Playlists implements RequestHandlerInterface {
             throw new NotAllowedException("not owner");
     
         $api->deletePlaylist($key);
+
+        PushServer::sendAsyncNotification();
 
         return new EmptyResponse();
     }

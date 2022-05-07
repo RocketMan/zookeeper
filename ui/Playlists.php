@@ -586,6 +586,8 @@ class Playlists extends MenuItem {
             }
 
             if($success) {
+                PushServer::sendAsyncNotification();
+
                 // force browser nav to new/edit playlist so subsequent
                 // reloads in the track editor work as expected
                 echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
@@ -703,15 +705,20 @@ class Playlists extends MenuItem {
 
     public function handleDeleteListPost() {
         $playlistId = $_POST["playlist"];
-        if(isset($playlistId) && $this->isOwner($playlistId))
+        if(isset($playlistId) && $this->isOwner($playlistId)) {
             Engine::api(IPlaylist::class)->deletePlaylist($playlistId);
+            PushServer::sendAsyncNotification();
+        }
+
         $this->emitEditListPicker();
     }
 
     public function handleRestoreListPost() {
         $playlistId = $_POST["playlist"];
-        if(isset($playlistId) && $this->isOwner($playlistId))
+        if(isset($playlistId) && $this->isOwner($playlistId)) {
             $this->restorePlaylist($playlistId);
+            PushServer::sendAsyncNotification();
+        }
         $this->emitEditListPicker();
     }
 
