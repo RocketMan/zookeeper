@@ -526,7 +526,7 @@ class Playlists extends MenuItem {
 
             // if this DJ already has a live playlist in-progress,
             // rejoin it rather than creating a new live playlist
-            if(!$update && $api->isNowWithinShow(
+            if(!$update && !$this->session->isAuth("v") && $api->isNowWithinShow(
                     ["showdate" => $date, "showtime" => $showTime], false)) {
                 $onnow = $api->getWhatsOnNow()->fetch();
                 if($onnow && $onnow['dj'] == $this->session->getUser()) {
