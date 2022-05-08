@@ -964,9 +964,9 @@ class AddManager extends MenuItem {
                                  $row["tag"] . "\r\n";
                     } else
                         $line = sprintf("%-2s %3d %-28s %-30s %-12s\r\n",
-                              $ac, $row["afile_number"], mb_substr(UI::deLatin1ify($row["artist"]), 0, 28),
-                              mb_substr(UI::deLatin1ify($row["album"]), 0, 30),
-                              mb_substr(UI::deLatin1ify($row["label"]), 0, 12));
+                              $ac, $row["afile_number"], substr(UI::deLatin1ify($row["artist"]), 0, 28),
+                              substr(UI::deLatin1ify($row["album"]), 0, 30),
+                              substr(UI::deLatin1ify($row["label"]), 0, 12));
                     $body .= $line;
                 }
                 if($format == "tab")
