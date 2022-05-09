@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -97,6 +97,8 @@ class UICommon {
         /*"\u{179}"*/ "\xc5\xb9"=>"Z",  /*"\u{17b}"*/ "\xc5\xbb"=>"Z",
         /*"\u{17d}"*/ "\xc5\xbd"=>"Z",  /*"\u{17e}"*/ "\xc5\xbe"=>"z",
         /*"\u{17a}"*/ "\xc5\xba"=>"z",  /*"\u{17c}"*/ "\xc5\xbc"=>"z",
+        /*"\u{2018}"*/ "\xe2\x80\x98"=>"'", /*"\u{2019}"*/ "\xe2\x80\x99"=>"'",
+        /*"\u{201c}"*/ "\xe2\x80\x9c"=>'"', /*"\u{201d}"*/ "\xe2\x80\x9d"=>'"',
     ];
 
     /**
