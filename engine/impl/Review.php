@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -30,7 +30,7 @@ namespace ZK\Engine;
  */
 class ReviewImpl extends DBO implements IReview {
     private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0) {
-        $query = "SELECT r.tag, a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed FROM reviews r ";
+        $query = "SELECT r.tag, a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id as rid FROM reviews r ";
         
         if($weeks < 0)
             $query .= "LEFT JOIN currents c ON c.tag = r.tag AND " .
@@ -62,14 +62,14 @@ class ReviewImpl extends DBO implements IReview {
             // avoiding a table scan, which MySQL would do otherwise.
             //
             // See: https://www.techfounder.net/2008/10/15/optimizing-or-union-operations-in-mysql/
-            $query = "SELECT z.tag, z.airname, z.user, z.reviewed FROM (";
+            $query = "SELECT z.tag, z.airname, z.user, z.reviewed, z.rid FROM (";
             $query .= $this->getRecentSubquery($user, $weeks, $loggedIn);
             $query .= "UNION ";
             $query .= $this->getRecentSubquery($user, -1, $loggedIn);
-            $query .= ") AS z GROUP BY z.tag ORDER BY z.reviewed DESC";
+            $query .= ") AS z GROUP BY z.tag ORDER BY z.reviewed DESC, z.rid DESC";
         } else {
             $query = $this->getRecentSubquery($user, 0, $loggedIn);
-            $query .= "GROUP BY r.tag ORDER BY reviewed DESC";
+            $query .= "GROUP BY r.tag ORDER BY reviewed DESC, rid DESC";
         }
             
         if($limit && $limit > 0)
@@ -112,7 +112,7 @@ class ReviewImpl extends DBO implements IReview {
             $query .= "AND user=? ";
         if(!$loggedIn)
             $query .= "AND private = 0 ";
-        $query .= "ORDER BY created DESC";
+        $query .= "ORDER BY created DESC, r.id DESC";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
         if($user)
