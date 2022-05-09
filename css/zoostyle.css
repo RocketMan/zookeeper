@@ -710,12 +710,17 @@ input[type="checkbox"]:checked:active {
     background-image: URL('../img/discicon.svg');
 }
 
+.tablesorter-default, .tablesorter-default .header, .tablesorter-default .tablesorter-header {
+    font: inherit;
+}
+
 /* tighten up tablesorter's spacing */
 .tablesorter-default td {
-    padding: 0;
+    padding: 2px 0;
 }
 
 .tablesorter-default  .header, .tablesorter-default .tablesorter-header {
+    font-weight: bold;
     padding: 0px 16px 0px 0px;
 }
 
