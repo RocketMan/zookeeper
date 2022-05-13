@@ -512,8 +512,8 @@ class Playlists extends MenuItem {
         $goodAirname = $airname !== '';
 
         if($goodDate && $goodTime && $goodDescription && $goodAirname) {
-            $playlistId = $_REQUEST["playlist"] ?? 0;
-            $update = $playlistId > 0;
+            $playlistId = $_REQUEST["playlist"];
+            $update = isset($playlistId) && $playlistId > 0;
             $duplicate = isset($_POST["duplicate"]) && $_POST["duplicate"];
             if($update &&
                     !($duplicate && $this->session->isAuth("v")) &&
@@ -591,30 +591,12 @@ class Playlists extends MenuItem {
 
                 $action = "editListEditor";
             } else {
-                // if the DJ already has a list at the same date and time,
-                // use it rather than creating a new playlist
-                $startTime = substr($showTime, 0, 4);
-                $lists = $api->getPlaylists(false, false, $date, false, $this->session->getUser());
-                while($list = $lists->fetch()) {
-                    if(substr($list['showtime'], 0, 4) == $startTime) {
-                        // update in case time, description, or airname changed
-                        $success = $api->updatePlaylist($list['id'],
-                                $date, $showTime, $description, $aid);
-
-                        $playlistId = $list['id'];
-                        break;
-                    }
-                }
-
                 // create new playlist
-                if(!$playlistId) {
-                    $success = $api->insertPlaylist(
-                            $this->session->getUser(),
-                            $date, $showTime, $description, $aid);
+                $success = $api->insertPlaylist(
+                         $this->session->getUser(),
+                         $date, $showTime, $description, $aid);
 
-                    $playlistId = $success?$api->lastInsertId():0;
-                }
-
+                $playlistId = $success?$api->lastInsertId():0;
                 $action = "newListEditor";
             }
 
