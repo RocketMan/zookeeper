@@ -29,6 +29,16 @@ namespace ZK\Engine;
  */
 interface IPlaylist {
     /**
+     * minimum show length (in minutes)
+     */
+    const MIN_SHOW_LEN = 15;
+
+    /**
+     * maximum show length (in minutes)
+     */
+    const MAX_SHOW_LEN = 6 * 60;
+
+    /**
      * suffix appended to duplicate playlist name
      *
      * date format specifiers may be included inside %...%

@@ -108,26 +108,46 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
     
     public function getWhatsOnNow() {
-        $hour = date("Hi");
+        // Incur the overhead of checking whether the show spans midnight
+        // only if we're within the max show time interval around midnight
+        $windowStartMin = 24 * 60 - self::MAX_SHOW_LEN;
+        $windowStart = sprintf("%02d%02d", floor($windowStartMin / 60), $windowStartMin % 60);
+        $windowEnd = sprintf("%02d%02d", floor(self::MAX_SHOW_LEN / 60), self::MAX_SHOW_LEN % 60);
+
+        $now = new \DateTime("now");
+        [$date, $hour] = explode(' ', $now->format(self::TIME_FORMAT));
+
         $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
                  "a.id airid, a.airname, l.dj FROM lists l LEFT JOIN airnames a " .
-                 "ON l.airname = a.id ";
-        $query .= "WHERE l.showdate=? ";
-        $query .= "AND LEFT(l.showtime, 4) <= ? ";
+                 "ON l.airname = a.id " .
+                 "WHERE l.showdate = ? " .
+                 "AND l.airname IS NOT NULL " .
+                 "AND LEFT(l.showtime, 4) <= ? " .
+                 "AND ( MID(l.showtime, 6, 4) > ? ";
 
-        // Incur the overhead of checking whether the show ends at midnight
-        // only if it's after 6pm.
-        if($hour >= 1800) {
-            $query .= "AND ( ( MID(l.showtime, 6, 2) = 0 ) OR ";
-            $query .= " ( MID(l.showtime, 6, 4) > ? ) ) ";
-        } else
-            $query .= "AND MID(l.showtime, 6, 4) > ? ";
-        $query .= "AND l.airname IS NOT NULL ";
-        $query .= "ORDER BY l.showtime DESC, l.id DESC LIMIT 1";
+        if($hour >= $windowStart) {
+            $query .= "OR MID(l.showtime, 6, 4) < LEFT(l.showtime, 4) ) ";
+        } else {
+            $query .= ") ";
+            if($hour <= $windowEnd) {
+                $query .= "OR l.showdate = ? " .
+                          "AND l.airname IS NOT NULL " .
+                          "AND MID(l.showtime, 6, 4) < LEFT(l.showtime, 4) " .
+                          "AND MID(l.showtime, 6, 4) > ? ";
+            }
+        }
+
+        $query .= "ORDER BY l.showdate DESC, l.showtime DESC, l.id DESC LIMIT 1";
+
         $stmt = $this->prepare($query);
-        $stmt->bindValue(1, date("Y-m-d"));
+        $stmt->bindValue(1, $date);
         $stmt->bindValue(2, $hour);
         $stmt->bindValue(3, $hour);
+        if($hour <= $windowEnd) {
+            $now->modify("-1 day");
+            $stmt->bindValue(4, $now->format("Y-m-d"));
+            $stmt->bindValue(5, $hour);
+        }
         return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     

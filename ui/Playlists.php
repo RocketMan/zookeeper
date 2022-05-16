@@ -119,16 +119,16 @@ class Playlists extends MenuItem {
     // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
     // returns empty string if invalid
     private function normalizeTime($t) {
-        // is time in H:MM or HH:MM format?
-        $d = \DateTime::createFromFormat("H:i", $t);
-        if($d)
-            $x = $d->format("Hi");
-        // ...or is time already in HHMM format?
-        else if(strlen($t) == 4 && preg_match('/^[0-9]+$/', $t))
+        // is time already in HHMM format?
+        if(preg_match('/^\d{4}$/', $t)) {
             $x = $t;
-        // ...if neither, it is invalid
-        else
-            $x = '';
+        } else {
+            // is time in H:MM or HH:MM format?
+            // ...otherwise, it is invalid
+            $d = \DateTime::createFromFormat("H:i", $t);
+            $x = $d ? $d->format("Hi") : '';
+        }
+
         return $x;
     }
  
@@ -146,16 +146,13 @@ class Playlists extends MenuItem {
     // convert HHMM or (H)H:MM pairs into ZK time range, eg HHMM-HHMM
     // return range string if valid else empty string.
     private function composeTime($fromTime, $toTime) {
-        $SHOW_MIN_LEN = 15; // 15 minutes
-        $SHOW_MAX_LEN = 6 * 60; // 6 hours
-        $TIME_FORMAT = "Y-m-d Gi"; // eg, 2019-01-01 1234
         $retVal = '';
 
         $fromTimeN = $this->normalizeTime($fromTime);
         $toTimeN = $this->normalizeTime($toTime);
 
-        $start = \DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $fromTimeN);
-        $end =  \DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $toTimeN);
+        $start = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT, "2019-01-01 " . $fromTimeN);
+        $end =  \DateTime::createFromFormat(IPlaylist::TIME_FORMAT, "2019-01-01 " . $toTimeN);
 
         $validRange = false;
         if ($start && $end) {
@@ -163,7 +160,7 @@ class Playlists extends MenuItem {
             if($end < $start)
                 $end->modify('+1 day');
             $minutes = ($end->getTimestamp() - $start->getTimestamp()) / 60;
-            $validRange = ($minutes > $SHOW_MIN_LEN) && ($minutes < $SHOW_MAX_LEN);
+            $validRange = ($minutes > IPlaylist::MIN_SHOW_LEN) && ($minutes < IPlaylist::MAX_SHOW_LEN);
         }
 
         if ($validRange)
