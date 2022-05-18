@@ -661,6 +661,7 @@ table.recentAirplay td, .sub {
     padding: 12px 22px;
     width: 300px;
     background-color: #fff;
+    border-radius: 4px 4px 0 0;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.8),0 6px 20px 0 rgba(0,0,0,0.2);
 }
 .zk-popup .zk-popup-content .zk-popup-actionarea {
