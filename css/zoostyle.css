@@ -672,6 +672,9 @@ table.recentAirplay td, .sub {
     width: 80px;
     margin-left: 5px;
 }
+.zk-popup-actionarea button.default {
+    font-weight: bold;
+}
 
 input[type="radio"], 
 input[type="checkbox"] {

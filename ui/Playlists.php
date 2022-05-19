@@ -918,7 +918,7 @@ class Playlists extends MenuItem {
         <hr>
         <div id="extend-show" class="zk-popup">
             <div class="zk-popup-content">
-                <h4>Your show's end time has been reached.</h4>
+                <h4>You have reached the end time of your show.</h4>
                 <p>Extend by:
                 <select id="extend-time">
                     <option value="5">5 minutes</option>
@@ -929,7 +929,7 @@ class Playlists extends MenuItem {
                 </select></p>
                 <div class="zk-popup-actionarea">
                     <button type="button">Cancel</button>
-                    <button type="button" id="extend">Extend</button>
+                    <button type="button" class="default" id="extend">Extend</button>
                 </div>
             </div>
         </div> <!-- extend-show -->
