@@ -305,6 +305,11 @@ class Playlists extends MenuItem {
                     } else
                         $spin = null;
                     PushServer::sendAsyncNotification($playlist, $spin);
+
+                    // track is in the grace period?
+                    $window = $playlistApi->getTimestampWindow($playlistId, false);
+                    if($spinDateTime >= $window['end'])
+                        $retVal['runsover'] = true;
                 } else if(!$isLiveShow)
                     $this->lazyLoadImages($playlistId, $entry->getId());
             }
@@ -834,6 +839,7 @@ class Playlists extends MenuItem {
     ?>
         <div class='pl-form-entry'>
             <input id='show-date' name='edate' type='hidden' value="<?php echo $playlist['showdate']; ?>" >
+            <input id='show-time' type='hidden' value="<?php echo $playlist['showtime']; ?>" >
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <input id='track-action' type='hidden' value='<?php echo $this->action; ?>'>
             <input id='const-prefix' type='hidden' value='<?php echo self::NME_PREFIX; ?>'>
@@ -910,6 +916,23 @@ class Playlists extends MenuItem {
             </div>
         </div> <!-- track-editor -->
         <hr>
+        <div id="extend-show" class="zk-popup">
+            <div class="zk-popup-content">
+                <h4>You have reached the end time of your show.</h4>
+                <p>Extend by:
+                <select id="extend-time">
+                    <option value="5">5 minutes</option>
+                    <option value="10">10 minutes</option>
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="60">1 hour</option>
+                </select></p>
+                <div class="zk-popup-actionarea">
+                    <button type="button">Cancel</button>
+                    <button type="button" class="default" id="extend">Extend</button>
+                </div>
+            </div>
+        </div> <!-- extend-show -->
     <?php
     }
     private function emitTrackField($tag, $seltrack, $id) {

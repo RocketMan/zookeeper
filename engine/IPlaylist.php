@@ -92,7 +92,7 @@ interface IPlaylist {
     function getTracks($playlist, $desc = 0);
     function getTracksWithObserver($playlist, PlaylistObserver $observer, $desc = 0, $filter = null);
     function getTrackCount($playlist);
-    function getTimestampWindow($playlistId);
+    function getTimestampWindow($playlistId, $allowGrace = true);
     function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTimestamp, &$id, &$status);
     function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label, $dateTime);
     function insertTrackEntry($playlistId, PlaylistEntry $entry, &$status);
