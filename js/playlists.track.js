@@ -655,21 +655,19 @@ $().ready(function(){
     }
 
     $(".zk-popup button#extend").click(function() {
-        var start, end, showTime = $("#show-time").val();
-        [ start, end ] = showTime.split('-');
+        var showTime = $("#show-time").val().split('-');
 
         var edate = new Date("2022-01-01T" +
-                           end.substring(0, 2) + ":" +
-                           end.substring(2, 4) + ":00Z");
+                           showTime[1].substring(0, 2) + ":" +
+                           showTime[1].substring(2, 4) + ":00Z");
         edate.setMinutes(edate.getMinutes() + edate.getTimezoneOffset());
 
         var extend = $("#extend-time").val();
-        edate = new Date(edate.getTime() + extend * 60 * 1000);
+        edate.setMinutes(edate.getMinutes() + extend*1);
 
-        end = String(edate.getHours()).padStart(2, '0') +
-              String(edate.getMinutes()).padStart(2, '0');
-
-        showTime = start + "-" + end;
+        showTime[1] = String(edate.getHours()).padStart(2, '0') +
+                      String(edate.getMinutes()).padStart(2, '0');
+        showTime = showTime.join('-');
 
         var playlistId = $("#track-playlist").val();
         var postData = {
