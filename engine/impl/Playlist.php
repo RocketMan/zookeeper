@@ -556,9 +556,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $result;
     }
 
-    public function getTimestampWindow($playlistId) {
+    public function getTimestampWindow($playlistId, $allowGrace = true) {
         $playlist = $this->getPlaylist($playlistId);
-        return $this->getTimestampWindowInternal($playlist);
+        return $this->getTimestampWindowInternal($playlist, $allowGrace);
     }
 
     // return true if dateTime is within the show time range or null.
