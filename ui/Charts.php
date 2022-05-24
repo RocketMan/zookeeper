@@ -161,6 +161,8 @@ class Charts extends MenuItem {
             $urls = Engine::param('urls');
             if($isOldestYear && array_key_exists('old_charts', $urls))
                 echo "  <P><A HREF=\"".$urls['old_charts']."\">Older airplay charts</A> are available here.</P>\n";
+
+            $this->title = "Weekly charts for $year";
             return;
         }
     
