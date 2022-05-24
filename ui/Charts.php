@@ -86,12 +86,14 @@ class Charts extends MenuItem {
   Weekly charts for
   <select name="year">
 <?php
+        $oldestYear = null;
         $years = Engine::api(IChart::class)->getChartYears();
         while($years && ($year = $years->fetch())) {
             echo "    <option value=\"{$year[0]}\"";
             if($year[0] == $currentYear)
                 echo " selected";
             echo ">{$year[0]}</option>\n";
+            $oldestYear = $year[0];
         }
         ?>
   </select>
@@ -104,6 +106,7 @@ class Charts extends MenuItem {
   // -->
   </script>
 <?php
+        return $oldestYear == $currentYear;
     }
     
     public function chartWeekly() {
@@ -138,7 +141,7 @@ class Charts extends MenuItem {
          our current new releases which received airplay during the charting
          week.</P-->
 <?php
-            $this->emitChartYearNav($year, 1);
+            $isOldestYear = $this->emitChartYearNav($year, 1);
             echo "  <TABLE WIDTH=\"100%\">\n";
             echo "    <TR><TD>\n      <UL>\n";
             $weeks = $chartAPI->getChartDatesByYear($year);
@@ -156,7 +159,7 @@ class Charts extends MenuItem {
             echo "  </TABLE>\n";
 
             $urls = Engine::param('urls');
-            if(array_key_exists('old_charts', $urls))
+            if($isOldestYear && array_key_exists('old_charts', $urls))
                 echo "  <P><A HREF=\"".$urls['old_charts']."\">Older airplay charts</A> are available here.</P>\n";
             return;
         }
