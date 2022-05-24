@@ -74,7 +74,7 @@ class Charts extends MenuItem {
             echo "      </TABLE>\n    </TD>\n";
         }
         echo "  </TR>\n</TABLE>\n";
-        UI::setFocus();
+        $this->title = "Airplay Top 30";
     }
     
     public function emitChartYearNav($currentYear, $header=0) {
@@ -289,7 +289,8 @@ class Charts extends MenuItem {
                     echo "    <TR><TD><A HREF=\"".$urls['old_charts']."\">Old airplay charts</A> are available here.</TD></TR>\n";
                 echo "  </TABLE>\n";
             }
-            UI::setFocus();
+
+            $this->title = "Amalgamated charts";
             return;
         }
 
