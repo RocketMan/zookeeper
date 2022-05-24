@@ -74,25 +74,39 @@ class Charts extends MenuItem {
             echo "      </TABLE>\n    </TD>\n";
         }
         echo "  </TR>\n</TABLE>\n";
-        UI::setFocus();
+        $this->title = "Airplay Top 30";
     }
     
     public function emitChartYearNav($currentYear, $header=0) {
-        echo "  <TABLE>\n    <TR><TH>View charts for:</TH>";
-        echo "<TD>&nbsp;&nbsp;</TD>";
+?>
+  <div class="chart-year-pick">
+  <form action="?" method="POST" autocomplete="off">
+  <input type="hidden" name="action" value="viewChart">
+  <input type="hidden" name="subaction" value="weekly">
+  Weekly charts for
+  <select name="year">
+<?php
+        $oldestYear = null;
         $years = Engine::api(IChart::class)->getChartYears();
         while($years && ($year = $years->fetch())) {
-            
+            echo "    <option value=\"{$year[0]}\"";
             if($year[0] == $currentYear)
-                echo "<TH>$currentYear</TH>";
-            else
-                echo "<TH><A CLASS=\"nav\" HREF=\"?action=viewChart&amp;subaction=weekly&amp;year=" . $year[0] . "\">" . $year[0] . "</A></TH>";
-            echo "<TD>&nbsp;&nbsp;&nbsp;</TD>";
+                echo " selected";
+            echo ">{$year[0]}</option>\n";
+            $oldestYear = $year[0];
         }
-        $urls = Engine::param('urls');
-        if(array_key_exists('old_charts', $urls))
-            echo "    <TD><A HREF=\"".$urls['old_charts']."\">Old airplay charts</A> are available here.</TD>";
-        echo "    </TR>\n  </TABLE>\n";
+        ?>
+  </select>
+  </form>
+  </div>
+  <script type="text/javascript"><!--
+  $("div.chart-year-pick select").change(function() {
+    $("div.chart-year-pick form").submit();
+  }).focus();
+  // -->
+  </script>
+<?php
+        return $oldestYear == $currentYear;
     }
     
     public function chartWeekly() {
@@ -126,8 +140,8 @@ class Charts extends MenuItem {
       <P>Note that the 'Main' section of our weekly charts now lists all of
          our current new releases which received airplay during the charting
          week.</P-->
-    <?php 
-            $this->emitChartYearNav($year, 1);
+<?php
+            $isOldestYear = $this->emitChartYearNav($year, 1);
             echo "  <TABLE WIDTH=\"100%\">\n";
             echo "    <TR><TD>\n      <UL>\n";
             $weeks = $chartAPI->getChartDatesByYear($year);
@@ -143,9 +157,12 @@ class Charts extends MenuItem {
             }
             echo "      </UL>\n    </TD></TR>\n";
             echo "  </TABLE>\n";
-    
-            $this->emitChartYearNav($year, 0);
-            UI::setFocus();
+
+            $urls = Engine::param('urls');
+            if($isOldestYear && array_key_exists('old_charts', $urls))
+                echo "  <P><A HREF=\"".$urls['old_charts']."\">Older airplay charts</A> are available here.</P>\n";
+
+            $this->title = "Weekly charts for $year";
             return;
         }
     
@@ -272,7 +289,8 @@ class Charts extends MenuItem {
                     echo "    <TR><TD><A HREF=\"".$urls['old_charts']."\">Old airplay charts</A> are available here.</TD></TR>\n";
                 echo "  </TABLE>\n";
             }
-            UI::setFocus();
+
+            $this->title = "Amalgamated charts";
             return;
         }
 

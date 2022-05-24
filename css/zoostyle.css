@@ -537,7 +537,7 @@ p.zktitle a {
     width: 100%;
 }
 
-.home-onnow, th {
+.home-onnow, .chart-year-pick, th {
     font-size: 11pt;
     font-weight: bold;
     color: #000000;
