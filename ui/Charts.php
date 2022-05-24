@@ -78,21 +78,32 @@ class Charts extends MenuItem {
     }
     
     public function emitChartYearNav($currentYear, $header=0) {
-        echo "  <TABLE>\n    <TR><TH>View charts for:</TH>";
-        echo "<TD>&nbsp;&nbsp;</TD>";
+?>
+  <div class="chart-year-pick">
+  <form action="?" method="POST" autocomplete="off">
+  <input type="hidden" name="action" value="viewChart">
+  <input type="hidden" name="subaction" value="weekly">
+  Weekly charts for
+  <select name="year">
+<?php
         $years = Engine::api(IChart::class)->getChartYears();
         while($years && ($year = $years->fetch())) {
-            
+            echo "    <option value=\"{$year[0]}\"";
             if($year[0] == $currentYear)
-                echo "<TH>$currentYear</TH>";
-            else
-                echo "<TH><A CLASS=\"nav\" HREF=\"?action=viewChart&amp;subaction=weekly&amp;year=" . $year[0] . "\">" . $year[0] . "</A></TH>";
-            echo "<TD>&nbsp;&nbsp;&nbsp;</TD>";
+                echo " selected";
+            echo ">{$year[0]}</option>\n";
         }
-        $urls = Engine::param('urls');
-        if(array_key_exists('old_charts', $urls))
-            echo "    <TD><A HREF=\"".$urls['old_charts']."\">Old airplay charts</A> are available here.</TD>";
-        echo "    </TR>\n  </TABLE>\n";
+        ?>
+  </select>
+  </form>
+  </div>
+  <script type="text/javascript"><!--
+  $("div.chart-year-pick select").change(function() {
+    $("div.chart-year-pick form").submit();
+  }).focus();
+  // -->
+  </script>
+<?php
     }
     
     public function chartWeekly() {
@@ -126,7 +137,7 @@ class Charts extends MenuItem {
       <P>Note that the 'Main' section of our weekly charts now lists all of
          our current new releases which received airplay during the charting
          week.</P-->
-    <?php 
+<?php
             $this->emitChartYearNav($year, 1);
             echo "  <TABLE WIDTH=\"100%\">\n";
             echo "    <TR><TD>\n      <UL>\n";
@@ -143,9 +154,10 @@ class Charts extends MenuItem {
             }
             echo "      </UL>\n    </TD></TR>\n";
             echo "  </TABLE>\n";
-    
-            $this->emitChartYearNav($year, 0);
-            UI::setFocus();
+
+            $urls = Engine::param('urls');
+            if(array_key_exists('old_charts', $urls))
+                echo "  <P><A HREF=\"".$urls['old_charts']."\">Older airplay charts</A> are available here.</P>\n";
             return;
         }
     
