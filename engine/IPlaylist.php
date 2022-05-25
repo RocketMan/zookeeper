@@ -29,6 +29,16 @@ namespace ZK\Engine;
  */
 interface IPlaylist {
     /**
+     * minimum show length (in minutes)
+     */
+    const MIN_SHOW_LEN = 15;
+
+    /**
+     * maximum show length (in minutes)
+     */
+    const MAX_SHOW_LEN = 6 * 60;
+
+    /**
      * suffix appended to duplicate playlist name
      *
      * date format specifiers may be included inside %...%
@@ -70,6 +80,7 @@ interface IPlaylist {
     function getPlaylistsByUser($user, $onlyPublished=0, $withAirname=0);
     function getPlaylistsByDate($date);
     function getWhatsOnNow();
+    function isNowWithinShow($listRow, $allowGrace = true);
     function insertPlaylist($user, $date, $time, $description, $airname);
     function updatePlaylist($playlist, $date, $time, $description, $airname,
                                $deleteTracksPastEnd=0);
@@ -81,7 +92,7 @@ interface IPlaylist {
     function getTracks($playlist, $desc = 0);
     function getTracksWithObserver($playlist, PlaylistObserver $observer, $desc = 0, $filter = null);
     function getTrackCount($playlist);
-    function getTimestampWindow($playlistId);
+    function getTimestampWindow($playlistId, $allowGrace = true);
     function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTimestamp, &$id, &$status);
     function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label, $dateTime);
     function insertTrackEntry($playlistId, PlaylistEntry $entry, &$status);

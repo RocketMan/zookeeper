@@ -108,26 +108,46 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
     
     public function getWhatsOnNow() {
-        $hour = date("Hi");
-        $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
-                 "a.id airid, a.airname FROM lists l LEFT JOIN airnames a " .
-                 "ON l.airname = a.id ";
-        $query .= "WHERE l.showdate=? ";
-        $query .= "AND LEFT(l.showtime, 4) <= ? ";
+        // Incur the overhead of checking whether the show spans midnight
+        // only if we're within the max show time interval around midnight
+        $windowStartMin = 24 * 60 - self::MAX_SHOW_LEN;
+        $windowStart = sprintf("%02d%02d", floor($windowStartMin / 60), $windowStartMin % 60);
+        $windowEnd = sprintf("%02d%02d", floor(self::MAX_SHOW_LEN / 60), self::MAX_SHOW_LEN % 60);
 
-        // Incur the overhead of checking whether the show ends at midnight
-        // only if it's after 6pm.
-        if($hour >= 1800) {
-            $query .= "AND ( ( MID(l.showtime, 6, 2) = 0 ) OR ";
-            $query .= " ( MID(l.showtime, 6, 4) > ? ) ) ";
-        } else
-            $query .= "AND MID(l.showtime, 6, 4) > ? ";
-        $query .= "AND l.airname IS NOT NULL ";
-        $query .= "ORDER BY l.showtime DESC, l.id DESC LIMIT 1";
+        $now = new \DateTime("now");
+        [$date, $hour] = explode(' ', $now->format(self::TIME_FORMAT));
+
+        $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
+                 "a.id airid, a.airname, l.dj FROM lists l LEFT JOIN airnames a " .
+                 "ON l.airname = a.id " .
+                 "WHERE l.showdate = ? " .
+                 "AND l.airname IS NOT NULL " .
+                 "AND LEFT(l.showtime, 4) <= ? " .
+                 "AND ( MID(l.showtime, 6, 4) > ? ";
+
+        if($hour >= $windowStart) {
+            $query .= "OR MID(l.showtime, 6, 4) < LEFT(l.showtime, 4) ) ";
+        } else {
+            $query .= ") ";
+            if($hour <= $windowEnd) {
+                $query .= "OR l.showdate = ? " .
+                          "AND l.airname IS NOT NULL " .
+                          "AND MID(l.showtime, 6, 4) < LEFT(l.showtime, 4) " .
+                          "AND MID(l.showtime, 6, 4) > ? ";
+            }
+        }
+
+        $query .= "ORDER BY l.showdate DESC, l.showtime DESC, l.id DESC LIMIT 1";
+
         $stmt = $this->prepare($query);
-        $stmt->bindValue(1, date("Y-m-d"));
+        $stmt->bindValue(1, $date);
         $stmt->bindValue(2, $hour);
         $stmt->bindValue(3, $hour);
+        if($hour <= $windowEnd) {
+            $now->modify("-1 day");
+            $stmt->bindValue(4, $now->format("Y-m-d"));
+            $stmt->bindValue(5, $hour);
+        }
         return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
@@ -503,7 +523,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
 
     // NOTE: this routine must be tolerant of improperly formatted dates.
-    public function getTimestampWindowInternal($playlist) {
+    public function getTimestampWindowInternal($playlist, $allowGrace = true) {
         $result = null;
         if($playlist && ($showtime = $playlist['showtime'])) {
             $timeAr = explode("-", $showtime);
@@ -512,7 +532,6 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 $start = \DateTime::createFromFormat(self::TIME_FORMAT, $timeStr);
                 if($start) {
                     $end = clone $start;
-                    $start->modify(self::GRACE_START);
 
                     // end time can be midnight or later
                     // in this case, adjust to the next day
@@ -521,7 +540,11 @@ class PlaylistImpl extends DBO implements IPlaylist {
 
                     $end->setTime(substr($timeAr[1], 0, 2),
                                   substr($timeAr[1], 2, 2));
-                    $end->modify(self::GRACE_END);
+
+                    if($allowGrace) {
+                        $start->modify(self::GRACE_START);
+                        $end->modify(self::GRACE_END);
+                    }
 
                     $result = [
                         "start" => $start,
@@ -533,16 +556,16 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $result;
     }
 
-    public function getTimestampWindow($playlistId) {
+    public function getTimestampWindow($playlistId, $allowGrace = true) {
         $playlist = $this->getPlaylist($playlistId);
-        return $this->getTimestampWindowInternal($playlist);
+        return $this->getTimestampWindowInternal($playlist, $allowGrace);
     }
 
     // return true if dateTime is within the show time range or null.
-    public function isWithinShow($dateTime, $listRow) {
+    public function isWithinShow($dateTime, $listRow, $allowGrace = true) {
         $retVal = $dateTime == null;
         if ($dateTime != null) {
-            $window = $this->getTimestampWindowInternal($listRow);
+            $window = $this->getTimestampWindowInternal($listRow, $allowGrace);
             if($window) {
                 $retVal = $dateTime >= $window['start'] &&
                           $dateTime <= $window['end'];
@@ -552,9 +575,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
 
     // return true if "now" is within the show start/end time & date.
-    public function isNowWithinShow($listRow) {
+    public function isNowWithinShow($listRow, $allowGrace = true) {
         $nowDateTime = new \DateTime("now");
-        return $this->isWithinShow($nowDateTime, $listRow);
+        return $this->isWithinShow($nowDateTime, $listRow, $allowGrace);
     }
 
     public function isDateTimeWithinShow($timeStamp, $listRow) {
@@ -815,11 +838,12 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $query = "SELECT id, showdate, showtime FROM lists " .
                  "WHERE showdate <= DATE(?) " .
                  "AND airname IS NOT NULL " .
-                 "ORDER BY showdate DESC, showtime DESC " .
+                 "ORDER BY showdate DESC, showtime DESC, id DESC " .
                  "LIMIT 20";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $date);
         $result = $stmt->iterate();
+        $nextShowStart = null;
         while(($list = $result->fetch()) && $limit > 0 ) {
             if($list['showdate'] == $date && $list['showtime'] > $time)
                 continue;
@@ -833,6 +857,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue(1, $list['id']);
             $stmt->bindValue(2, $timestamp);
             $tracks = $stmt->iterate();
+            $prevLimit = $limit;
             while(($track = $tracks->fetch()) && $limit-- > 0) {
                 if(preg_match('/(\.gov|\.org|GED|Literacy|NIH|Ad\ Council)/', implode(' ', $track)) || empty(trim($track['track_artist']))) {
                     // it's probably a PSA coded as a spin; let's skip it
@@ -840,9 +865,22 @@ class PlaylistImpl extends DBO implements IPlaylist {
                     continue;
                 }
 
+                // if spin overlaps later playlist, skip it
+                if($nextShowStart && $track['track_time'] >= $nextShowStart) {
+                    $limit++;
+                    continue;
+                }
+
                 $track['track_artist'] = PlaylistEntry::swapNames($track['track_artist']);
                 $this->injectImageData($track);
                 $res[] = $track;
+            }
+
+            if($prevLimit != $limit &&
+                    preg_match('/^(\d{2})(\d{2})\-\d{4}$/', $list['showtime'], $matches)) {
+                $matches[] = "00";
+                $nextShowStart = $list['showdate'] . " " .
+                    implode(':', array_slice($matches, 1));
             }
         }
 

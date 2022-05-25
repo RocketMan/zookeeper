@@ -467,7 +467,13 @@ $().ready(function(){
                     $(".playlistTable > tbody > tr").eq(index).find(".grab").mousedown(grabStart);
                     break;
                 }
+
                 clearUserInput(true);
+
+                if(respObj.runsover) {
+                    $("#extend-show").show();
+                    $("#extend-time").focus();
+                }
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 const msg = jqXHR.responseJSON ? jqXHR.responseJSON.status : errorThrown;
@@ -634,6 +640,73 @@ $().ready(function(){
     });
 
     $(".playlistTable .grab").mousedown(grabStart);
+
+    // from home.js
+    function localTime(date) {
+        var hour = date.getHours();
+        var ampm = hour >= 12?"pm":"am";
+        var m = date.getMinutes();
+        var min = m == 0?'':':' + String(m).padStart(2, '0');
+        if(hour > 12)
+            hour -= 12;
+        else if(hour == 0)
+            hour = 12;
+        return hour + min + ampm;
+    }
+
+    $(".zk-popup button#extend").click(function() {
+        var showTime = $("#show-time").val().split('-');
+
+        var edate = new Date("2022-01-01T" +
+                           showTime[1].substring(0, 2) + ":" +
+                           showTime[1].substring(2, 4) + ":00Z");
+        edate.setMinutes(edate.getMinutes() + edate.getTimezoneOffset());
+
+        var extend = $("#extend-time").val();
+        edate.setMinutes(edate.getMinutes() + extend*1);
+
+        showTime[1] = String(edate.getHours()).padStart(2, '0') +
+                      String(edate.getMinutes()).padStart(2, '0');
+        showTime = showTime.join('-');
+
+        var playlistId = $("#track-playlist").val();
+        var postData = {
+            data: {
+                type: 'show',
+                id: playlistId,
+                attributes: {
+                    time: showTime
+                }
+            }
+        };
+
+        $.ajax({
+            type: 'PATCH',
+            url: 'api/v1/playlist/' + playlistId,
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            accept: "application/json; charset=utf-8",
+            data: JSON.stringify(postData),
+            success: function(response) {
+                $("#show-time").val(showTime);
+
+                var banner = $(".playlistBanner > DIV");
+                var prefix = banner.html().split('-')[0];
+                banner.html(prefix + " - " + localTime(edate) + "&nbsp;");
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                var json = JSON.parse(jqXHR.responseText);
+                var status = (json && json.errors)?
+                        json.errors[0].title:('There was a problem extending the show time: ' + textStatus);
+                showUserError(status);
+            }
+        });
+    });
+
+    $(".zk-popup button").click(function() {
+        $(".zk-popup").hide();
+        $("*[data-focus]").focus();
+    });
 
     $("*[data-focus]").focus();
 });

@@ -537,7 +537,7 @@ p.zktitle a {
     width: 100%;
 }
 
-.home-onnow, th {
+.home-onnow, .chart-year-pick, th {
     font-size: 11pt;
     font-weight: bold;
     color: #000000;
@@ -643,6 +643,39 @@ table.recentAirplay td, .sub {
     width: 84px;
 }
 
+.zk-popup {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    padding-top: 200px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+.zk-popup .zk-popup-content {
+    position: relative;
+    margin: auto;
+    padding: 12px 22px;
+    width: 300px;
+    background-color: #fff;
+    border-radius: 4px 4px 0 0;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.8),0 6px 20px 0 rgba(0,0,0,0.2);
+}
+.zk-popup .zk-popup-content .zk-popup-actionarea {
+    padding-top: 22px;
+    text-align: right;
+}
+.zk-popup-actionarea button {
+    width: 80px;
+    margin-left: 5px;
+}
+.zk-popup-actionarea button.default {
+    font-weight: bold;
+}
+
 input[type="radio"], 
 input[type="checkbox"] {
     height: 15px;
@@ -710,12 +743,17 @@ input[type="checkbox"]:checked:active {
     background-image: URL('../img/discicon.svg');
 }
 
+.tablesorter-default, .tablesorter-default .header, .tablesorter-default .tablesorter-header {
+    font: inherit;
+}
+
 /* tighten up tablesorter's spacing */
 .tablesorter-default td {
-    padding: 0;
+    padding: 2px 0;
 }
 
 .tablesorter-default  .header, .tablesorter-default .tablesorter-header {
+    font-weight: bold;
     padding: 0px 16px 0px 0px;
 }
 

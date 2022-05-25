@@ -382,7 +382,7 @@ class Editor extends MenuItem {
         echo "    <P>Select up to <B><SPAN id=\"count\">$count</SPAN></B> labels:</P>\n";
         echo "    <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>\n";
         echo "    <TR><TD CLASS=\"label-form\">\n";
-        echo "    <SPAN CLASS=\"form-name\">".strtoupper($form["name"])." LABELS</SPAN><BR>\n";
+        echo "    <SPAN CLASS=\"form-name\">".mb_strtoupper($form["name"])." LABELS</SPAN><BR>\n";
         for($i=0; $i<$numRow; $i++) {
             echo "    ";
             for($j=0; $j<$numCol; $j++) {

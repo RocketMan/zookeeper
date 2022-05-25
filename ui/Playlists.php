@@ -119,16 +119,16 @@ class Playlists extends MenuItem {
     // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
     // returns empty string if invalid
     private function normalizeTime($t) {
-        // is time in H:MM or HH:MM format?
-        $d = \DateTime::createFromFormat("H:i", $t);
-        if($d)
-            $x = $d->format("Hi");
-        // ...or is time already in HHMM format?
-        else if(strlen($t) == 4 && preg_match('/^[0-9]+$/', $t))
+        // is time already in HHMM format?
+        if(preg_match('/^\d{4}$/', $t)) {
             $x = $t;
-        // ...if neither, it is invalid
-        else
-            $x = '';
+        } else {
+            // is time in H:MM or HH:MM format?
+            // ...otherwise, it is invalid
+            $d = \DateTime::createFromFormat("H:i", $t);
+            $x = $d ? $d->format("Hi") : '';
+        }
+
         return $x;
     }
  
@@ -146,16 +146,13 @@ class Playlists extends MenuItem {
     // convert HHMM or (H)H:MM pairs into ZK time range, eg HHMM-HHMM
     // return range string if valid else empty string.
     private function composeTime($fromTime, $toTime) {
-        $SHOW_MIN_LEN = 15; // 15 minutes
-        $SHOW_MAX_LEN = 6 * 60; // 6 hours
-        $TIME_FORMAT = "Y-m-d Gi"; // eg, 2019-01-01 1234
         $retVal = '';
 
         $fromTimeN = $this->normalizeTime($fromTime);
         $toTimeN = $this->normalizeTime($toTime);
 
-        $start = \DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $fromTimeN);
-        $end =  \DateTime::createFromFormat($TIME_FORMAT, "2019-01-01 " . $toTimeN);
+        $start = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT, "2019-01-01 " . $fromTimeN);
+        $end =  \DateTime::createFromFormat(IPlaylist::TIME_FORMAT, "2019-01-01 " . $toTimeN);
 
         $validRange = false;
         if ($start && $end) {
@@ -163,7 +160,7 @@ class Playlists extends MenuItem {
             if($end < $start)
                 $end->modify('+1 day');
             $minutes = ($end->getTimestamp() - $start->getTimestamp()) / 60;
-            $validRange = ($minutes > $SHOW_MIN_LEN) && ($minutes < $SHOW_MAX_LEN);
+            $validRange = ($minutes > IPlaylist::MIN_SHOW_LEN) && ($minutes < IPlaylist::MAX_SHOW_LEN);
         }
 
         if ($validRange)
@@ -308,6 +305,10 @@ class Playlists extends MenuItem {
                     } else
                         $spin = null;
                     PushServer::sendAsyncNotification($playlist, $spin);
+
+                    // track is in the grace period?
+                    $window = $playlistApi->getTimestampWindow($playlistId, false);
+                    $retVal['runsover'] = $spinDateTime >= $window['end'];
                 } else if(!$isLiveShow)
                     $this->lazyLoadImages($playlistId, $entry->getId());
             }
@@ -524,6 +525,21 @@ class Playlists extends MenuItem {
 
             $api = Engine::api(IPlaylist::class);
 
+            // if this DJ already has a live playlist in-progress,
+            // rejoin it rather than creating a new live playlist
+            if(!$update && !$this->session->isAuth("v") && $api->isNowWithinShow(
+                    ["showdate" => $date, "showtime" => $showTime], false)) {
+                $onnow = $api->getWhatsOnNow()->fetch();
+                if($onnow && $onnow['dj'] == $this->session->getUser()) {
+                    echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
+                         "\$().ready(function(){".
+                         "location.href='?action=newListEditor&playlist=".
+                         $onnow['id']."';});\n".
+                         "// -->\n</SCRIPT>\n";
+                    return;
+                }
+            }
+
             // process the airname
             if(!strcasecmp($airname, "None")) {
                 // unpublished playlist
@@ -586,6 +602,8 @@ class Playlists extends MenuItem {
             }
 
             if($success) {
+                PushServer::sendAsyncNotification();
+
                 // force browser nav to new/edit playlist so subsequent
                 // reloads in the track editor work as expected
                 echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
@@ -703,15 +721,21 @@ class Playlists extends MenuItem {
 
     public function handleDeleteListPost() {
         $playlistId = $_POST["playlist"];
-        if(isset($playlistId) && $this->isOwner($playlistId))
+        if(isset($playlistId) && $this->isOwner($playlistId)) {
             Engine::api(IPlaylist::class)->deletePlaylist($playlistId);
+            PushServer::sendAsyncNotification();
+        }
+
         $this->emitEditListPicker();
     }
 
     public function handleRestoreListPost() {
         $playlistId = $_POST["playlist"];
-        if(isset($playlistId) && $this->isOwner($playlistId))
+        if(isset($playlistId) && $this->isOwner($playlistId)) {
             $this->restorePlaylist($playlistId);
+            PushServer::sendAsyncNotification();
+        }
+
         $this->emitEditListPicker();
     }
 
@@ -814,6 +838,7 @@ class Playlists extends MenuItem {
     ?>
         <div class='pl-form-entry'>
             <input id='show-date' name='edate' type='hidden' value="<?php echo $playlist['showdate']; ?>" >
+            <input id='show-time' type='hidden' value="<?php echo $playlist['showtime']; ?>" >
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <input id='track-action' type='hidden' value='<?php echo $this->action; ?>'>
             <input id='const-prefix' type='hidden' value='<?php echo self::NME_PREFIX; ?>'>
@@ -890,6 +915,23 @@ class Playlists extends MenuItem {
             </div>
         </div> <!-- track-editor -->
         <hr>
+        <div id="extend-show" class="zk-popup">
+            <div class="zk-popup-content">
+                <h4>You have reached the end time of your show.</h4>
+                <p>Extend by:
+                <select id="extend-time">
+                    <option value="5">5 minutes</option>
+                    <option value="10">10 minutes</option>
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="60">1 hour</option>
+                </select></p>
+                <div class="zk-popup-actionarea">
+                    <button type="button">Cancel</button>
+                    <button type="button" class="default" id="extend">Extend</button>
+                </div>
+            </div>
+        </div> <!-- extend-show -->
     <?php
     }
     private function emitTrackField($tag, $seltrack, $id) {
