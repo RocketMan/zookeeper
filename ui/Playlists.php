@@ -132,13 +132,13 @@ class Playlists extends MenuItem {
         return $x;
     }
  
-    // return time portion of YYYY-MM-DD HH:MM:SS as HH:MM for use in HTML
+    // return time portion of YYYY-MM-DD HH:MM:SS as HH:MM:SS for use in HTML
     // timepicker.
     private function getTimepickerTime($isoTime) {
         $ISO_TIME_LENGTH = 19;
         $retVal = trim($isoTime);
         if (strlen($retVal) == $ISO_TIME_LENGTH)
-            $retVal = substr($isoTime, 11, 5);
+            $retVal = substr($isoTime, 11, 8);
 
         return $retVal;
     }
@@ -905,7 +905,7 @@ class Playlists extends MenuItem {
                 $window = Engine::api(IPlaylist::class)->getTimestampWindow($playlistId);
                 echo "<div>
                     <label>Time:</label>
-                    <input id='track-time' class='timepicker' step='60' type='time' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' />
+                    <input id='track-time' class='timepicker' step='1' type='time' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' />
                 </div>";
             }?>
             <div>
@@ -1071,7 +1071,7 @@ class Playlists extends MenuItem {
       <TR>
           <TD ALIGN=RIGHT>Time:</TD>
           <TD ALIGN=LEFT>
-              <INPUT class='<?php echo $timepickerClass; ?>' NAME=etime step='60' type='time' value="<?php echo $timepickerTime ?>" data-date='<?php echo $edate;?>' data-start='<?php echo $startTime->format('H:i');?>' data-end='<?php echo $endTime->format('H:i');?>'/> <span style='font-size:8pt;'>(<?php echo $showTimeRange ?>)</span>
+              <INPUT class='<?php echo $timepickerClass; ?>' NAME=etime step='1' type='time' value="<?php echo $timepickerTime ?>" data-date='<?php echo $edate;?>' data-start='<?php echo $startTime->format('H:i');?>' data-end='<?php echo $endTime->format('H:i');?>'/> <span style='font-size:8pt;'>(<?php echo $showTimeRange ?>)</span>
               <INPUT type='hidden' NAME='edate' value="<?php echo $edate;?>" />
           </TD>
         </TR>
@@ -1245,7 +1245,7 @@ class Playlists extends MenuItem {
                 if($id) {
                     $timestamp = null;
                     if ($_REQUEST["etime"])  //in case user blanked out the time
-                        $timestamp = $_REQUEST["edate"] . " " . $_REQUEST["etime"] . ":00";
+                        $timestamp = $_REQUEST["edate"] . " " . $_REQUEST["etime"];
 
                     if($nme) {
                         $entry = (new PlaylistEntry())->setId($id);
