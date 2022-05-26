@@ -101,7 +101,7 @@ class Charts extends MenuItem {
   </div>
   <script type="text/javascript"><!--
   $("div.chart-year-pick select").change(function() {
-    $("div.chart-year-pick form").submit();
+    $(this).closest("form").submit();
   }).focus();
   // -->
   </script>

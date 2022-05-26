@@ -132,17 +132,6 @@ class Playlists extends MenuItem {
         return $x;
     }
  
-    // return time portion of YYYY-MM-DD HH:MM:SS as HH:MM:SS for use in HTML
-    // timepicker.
-    private function getTimepickerTime($isoTime) {
-        $ISO_TIME_LENGTH = 19;
-        $retVal = trim($isoTime);
-        if (strlen($retVal) == $ISO_TIME_LENGTH)
-            $retVal = substr($isoTime, 11, 8);
-
-        return $retVal;
-    }
-
     // convert HHMM or (H)H:MM pairs into ZK time range, eg HHMM-HHMM
     // return range string if valid else empty string.
     private function composeTime($fromTime, $toTime) {
@@ -390,31 +379,6 @@ class Playlists extends MenuItem {
         } else {
             return date('h:i a', strtotime($time));
         }
-    }
-    
-    public static function timeToZulu($time) {
-        if(strlen($time) == 9 && $time[4] == '-') {
-            $d = getdate(time());
-            $day = $d["mday"];
-            $month = $d["mon"];
-            $year = $d["year"];
-            list($fromtime, $totime) = explode("-", $time);
-            $starttime = mktime(substr($fromtime, 0, 2), substr($fromtime, 2, 2), 0, $month, $day, $year);
-            $z = date("Z");
-            $zday = date("j", date("U", $starttime)-$z);
-    
-            $result = "<TH ALIGN=RIGHT VALIGN=BOTTOM CLASS=\"sub\">";
-            if($zday != $day)
-                $result .=  "(" . date("j M", date("U")-$z);
-            else
-                $openParen = "(";
-            $result .= "&nbsp;&nbsp;</TH>\n      <TH ALIGN=LEFT VALIGN=BOTTOM CLASS=\"sub\">$openParen";
-            $result .= date("Hi", $starttime-$z) . " - ";
-            $result .= date("Hi", mktime(substr($totime, 0, 2), substr($totime, 2, 2), 0, $month, $day, $year)-$z);
-            $result .= "&nbsp;UTC)</TH>";
-            return $result;
-        } else
-            return "";
     }
     
     public function viewDJReviews() {
@@ -983,7 +947,7 @@ class Playlists extends MenuItem {
           $entry->setCreated($nowTime->format(IPlaylist::TIME_FORMAT_SQL));
           $timepickerClass .= " prefilled-input";
       }
-      $timepickerTime = $this->getTimepickerTime($entry->getCreated());
+      $timepickerTime = $entry->getCreatedTime();
       $sep = $id && $entry->isType(PlaylistEntry::TYPE_SET_SEPARATOR);
       $event = $id && $entry->isType(PlaylistEntry::TYPE_LOG_EVENT);
       $comment = $id && $entry->isType(PlaylistEntry::TYPE_COMMENT);
@@ -1071,7 +1035,7 @@ class Playlists extends MenuItem {
       <TR>
           <TD ALIGN=RIGHT>Time:</TD>
           <TD ALIGN=LEFT>
-              <INPUT class='<?php echo $timepickerClass; ?>' NAME=etime step='1' type='time' value="<?php echo $timepickerTime ?>" data-date='<?php echo $edate;?>' data-start='<?php echo $startTime->format('H:i');?>' data-end='<?php echo $endTime->format('H:i');?>'/> <span style='font-size:8pt;'>(<?php echo $showTimeRange ?>)</span>
+              <INPUT class='<?php echo $timepickerClass; ?>' NAME=etime step='1' type='time' value="<?php echo $timepickerTime; ?>" data-date='<?php echo $edate;?>' data-start='<?php echo $startTime->format('H:i');?>' data-end='<?php echo $endTime->format('H:i');?>'/> <span style='font-size:8pt;'>(<?php echo $showTimeRange; ?>)</span>
               <INPUT type='hidden' NAME='edate' value="<?php echo $edate;?>" />
           </TD>
         </TR>
@@ -1162,12 +1126,7 @@ class Playlists extends MenuItem {
         echo "$row[0]</TH>\n      <TH ALIGN=RIGHT>$showDateTime</TH>\n";
         echo "      <TH ALIGN=RIGHT VALIGN=TOP><A CLASS=\"sub\" HREF=\"#top\" onClick='window.open(\"$script&amp;playlist=$playlist&amp;format=html\")'>Print</A></TH>\n    </TR>\n  </TABLE>\n";
     }
-    
-    private function insertSetSeparator($playlist) {
-        //WARNING: $this->insertTrackEntry() does not exist. is this dead code?
-        $this->insertTrackEntry($playlist, (new PlaylistEntry())->setSetSeparator(), null);
-    }
-    
+
     public function emitEditor() {
         $artist = $_REQUEST["artist"];
         $track = $_REQUEST["track"];
@@ -1193,24 +1152,6 @@ class Playlists extends MenuItem {
             $message = "access error";
         }
         switch ($seq) {
-        case "tagForm":
-            if($separator) {
-                $this->insertSetSeparator($playlist);
-                $this->emitTagForm($playlist, "");
-            } else if($tag != "") {
-                // Lookup tag
-                $albumrec = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
-                if(sizeof($albumrec) == 0) {
-                    // invalid tag
-                    $this->emitTagForm($playlist, "Invalid Tag");
-                } else {
-                    $albumrec[0]["label"] = isset($albumrec[0]["name"])?
-                          $albumrec[0]["name"]:"(Unknown)";
-                    $this->emitEditForm($playlist, $id, $albumrec[0], $track);
-                }
-            } else
-                $this->emitEditForm($playlist, $id, "", "");
-            break;
         case "editForm":
             $status = '';
             $nme = $separator || $logevent || $comment;
@@ -1270,8 +1211,7 @@ class Playlists extends MenuItem {
                         $this->lazyLoadImages($playlist, $id);
                     }
                     $id = "";
-                } else
-                    $this->insertTrack($playlist, $tag, $artist, $track, $album, $label, null);
+                }
                 $this->emitTagForm($playlist, "");
             }
             break;
