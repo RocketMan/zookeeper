@@ -636,8 +636,11 @@ $().ready(function(){
 
         var time = $("#track-time");
         if(time.data("live") && time.val().length == 0) {
-            var now = new Date().toTimeString().split(' ')[0];
-            time.val(now);
+            // calculate now relative to server timezone
+            var now = new Date();
+            now.setMinutes(now.getMinutes() - $("#timezone-offset").val()*1);
+            var nowTime = now.toISOString().match(/(\d{2}:?){3}/)[0];
+            time.val(nowTime);
         }
     });
 
