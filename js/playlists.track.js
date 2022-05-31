@@ -40,6 +40,15 @@ $().ready(function(){
 
     function setAddButtonState(enableIt) {
         $("#track-submit").prop("disabled", !enableIt);
+
+        var time = $("#track-time");
+        if(enableIt && time.data("live") && time.val().length == 0) {
+            // calculate timestamp relative to server timezone
+            var now = new Date();
+            now.setMinutes(now.getMinutes() - $("#timezone-offset").val()*1);
+            var nowTime = now.toISOString().match(/(\d{2}:?){3}/)[0];
+            time.val(nowTime);
+        }
     }
 
     function clearUserInput(clearArtistList) {
@@ -632,15 +641,6 @@ $().ready(function(){
             if(artist)
                 $("#track-artist").val(artist);
             $("#track-title").val(opt.data("track"));
-        }
-
-        var time = $("#track-time");
-        if(time.data("live") && time.val().length == 0) {
-            // calculate now relative to server timezone
-            var now = new Date();
-            now.setMinutes(now.getMinutes() - $("#timezone-offset").val()*1);
-            var nowTime = now.toISOString().match(/(\d{2}:?){3}/)[0];
-            time.val(nowTime);
         }
     });
 
