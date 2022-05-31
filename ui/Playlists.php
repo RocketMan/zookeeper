@@ -259,7 +259,7 @@ class Playlists extends MenuItem {
             $retMsg = 'success';
             $id = '';
             $status = '';
-            if ($isLiveShow) {
+            if ($isLiveShow && !$spinDateTime) {
                 $spinDateTime = new \DateTime("now");
             }
 
@@ -865,13 +865,13 @@ class Playlists extends MenuItem {
                     </div>
                 </div>
             </div> <!-- track-entry -->
-            <?php if (!$isLiveShow) {
+            <?php
                 $window = Engine::api(IPlaylist::class)->getTimestampWindow($playlistId);
                 echo "<div>
                     <label>Time:</label>
-                    <input id='track-time' class='timepicker' step='1' type='time' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' />
-                </div>";
-            }?>
+                    <input id='track-time' class='timepicker' step='1' type='time' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' />
+                </div>\n";
+            ?>
             <div>
                 <label></label>
                 <button DISABLED id='track-submit' >Add Item</button>

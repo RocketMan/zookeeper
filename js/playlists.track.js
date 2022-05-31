@@ -633,6 +633,12 @@ $().ready(function(){
                 $("#track-artist").val(artist);
             $("#track-title").val(opt.data("track"));
         }
+
+        var time = $("#track-time");
+        if(time.data("live") && time.val().length == 0) {
+            var now = new Date().toTimeString().split(' ')[0];
+            time.val(now);
+        }
     });
 
     $("#track-album, #track-label").on('change', function() {
