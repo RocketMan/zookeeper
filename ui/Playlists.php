@@ -632,9 +632,9 @@ class Playlists extends MenuItem {
         if(isset($playlistId) && $playlistId > 0) {
             $sourcePlaylist = $api->getPlaylist($playlistId, 1);
         } else {
-            $WEEK_SECONDS = 60 *60 * 24 * 7;
-            $nowDateStr =  (new \DateTime())->format("Y-m-d");
-            $nowDateTimestamp =  (new \DateTime($nowDateStr))->getTimestamp();
+            $now = new \DateTime("now");
+            $today = $now->format("Y-m-d");
+            $lastWeek = $now->modify("-7 day")->format("Y-m-d");
 
             // see if there is a PL on this day last week. if so use it.
             $playlists = $api->getPlaylists(1, 1, "", 1, $this->session->getUser(), 1, 10);
@@ -644,10 +644,10 @@ class Playlists extends MenuItem {
                 $aid = $djapi->getAirname($playlist['airname'], $this->session->getUser());
                 if(!$aid)
                     continue;
-                $showDate = new \DateTime($playlist['showdate']);
-                $dateInterval = $nowDateTimestamp - $showDate->getTimestamp();
-                if ($dateInterval == $WEEK_SECONDS) {
+
+                if ($playlist['showdate'] == $lastWeek) {
                     $sourcePlaylist = $playlist;
+                    $sourcePlaylist['showdate'] = $today;
                     break;
                 }
             }
