@@ -1011,3 +1011,18 @@ a:hover.copy {
     object-fit: cover;
     object-position: center 10%;
 }
+
+div.toggle-time-entry {
+    position: relative;
+    float: right;
+}
+div.toggle-time-entry div {
+    display: inline-block;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    cursor: pointer;
+    width: 17px;
+    height: 17px;
+    background-image: url('../img/clock-icon.png');
+}
