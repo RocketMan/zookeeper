@@ -712,8 +712,10 @@ $().ready(function(){
         var timeEntry = $("#time-entry");
         if(timeEntry.hasClass('zk-hidden'))
             timeEntry.removeClass('zk-hidden');
-        else
+        else {
+            $("#error-msg").text('');
             timeEntry.addClass('zk-hidden').find('input').val('');
+        }
     });
 
     $("*[data-focus]").focus();
