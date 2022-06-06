@@ -339,6 +339,7 @@ $().ready(function(){
                 // move succeeded, clear timestamp
                 tr.find("td").eq(1).html("");
                 $("#error-msg").text("");
+                updatePlayable();
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 // move failed; restore original sequence
@@ -429,6 +430,7 @@ $().ready(function(){
             eventType: eventType,
             eventCode: eventCode,
             comment: comment,
+            future: $("#future-entry").is(":checked") ? 1 : 0,
             size: $(".playlistTable > tbody > tr").length,
         };
 
@@ -468,6 +470,7 @@ $().ready(function(){
                     break;
                 }
 
+                updatePlayable();
                 clearUserInput(true);
 
                 if(respObj.runsover) {
@@ -718,5 +721,98 @@ $().ready(function(){
         }
     });
 
+    $("#future-entry").change(function() {
+        $("#track-time").prop('disabled', this.checked).val('');
+    });
+
+    function timestampTrack(row) {
+        var postData = {
+            playlist: $("#track-playlist").val(),
+            tid: $(row).find(".grab").data("id"),
+            oaction: $("#track-action").val(),
+            size: $(".playlistTable > tbody > tr").length,
+        };
+
+        $.ajax({
+            dataType : 'json',
+            type: 'POST',
+            accept: "application/json; charset=utf-8",
+            url: "?action=addTrack",
+            data: postData,
+            success: function(respObj) {
+                // *1 to coerce to int as switch uses strict comparison
+                switch(respObj.seq*1) {
+                case -1:
+                    // playlist is out of sync with table; reload
+                    location.href = "?action=" + $("#track-action").val() +
+                        "&playlist=" + $("#track-playlist").val();
+                    break;
+                default:
+                    // seq specifies the ordinal of the entry,
+                    // where 1 is the first (oldest).
+                    //
+                    // Calculate the zero-based row index from seq.
+                    // Table is ordered latest to oldest, which means
+                    // we must reverse the sense of seq.
+
+                    playable.detach();
+                    $(row).remove();
+
+                    var rows = $(".playlistTable > tbody > tr");
+                    var index = rows.length - respObj.seq + 1;
+                    if(index < rows.length)
+                        rows.eq(index).before(respObj.row);
+                    else
+                        rows.eq(rows.length - 1).after(respObj.row);
+
+                    $(".playlistTable > tbody > tr").eq(index).find(".grab").mousedown(grabStart);
+
+                    updatePlayable();
+                    break;
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                var json = JSON.parse(jqXHR.responseText);
+                var status = (json && json.errors)?
+                        json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
+                showUserError(status);
+            }
+        });
+    }
+
+    var playable = null;
+    function updatePlayable() {
+        if(!$("#track-time").data("live"))
+            return;
+
+        var highlight = null;
+        var rows = $(".playlistTable > tbody > tr");
+        rows.each(function() {
+            if($(this).find(".time").contents().filter(function() {
+                return this.nodeType == 3; // text nodes
+            }).text() === '')
+                highlight = this;
+            else
+                return false;
+        });
+
+        if(highlight != null) {
+            if(playable == null)
+                playable = $("<div>", {class: 'play-now'}).append($("<button>").text("play now"));
+
+            $(highlight).find('.time').append(playable);
+
+            // drag loses the event handler in some cases
+            // this ensures we always have exactly one handler bound
+            playable.off().click(function() {
+                timestampTrack(highlight);
+            });
+        } else if(playable != null) {
+            playable.remove();
+            playable = null;
+        }
+    }
+
+    updatePlayable();
     $("*[data-focus]").focus();
 });

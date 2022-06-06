@@ -214,21 +214,32 @@ class Playlists extends MenuItem {
 
         $isLiveShow = $playlistApi->isNowWithinShow($playlist);
 
-        $type = $_REQUEST["type"];
-        $size = $_REQUEST["size"];
-        if(isset($size) && $playlistId) {
+        $type = $_REQUEST["type"] ?? null;
+        if(isset($_REQUEST["size"]) && $playlistId) {
             $count = $playlistApi->getTrackCount($playlistId);
             // if size matches count, set to 0 (in sync) else -1 (out of sync)
-            $size = $count == $size?0:-1;
+            $size = $count == $_REQUEST["size"]?0:-1;
         }
 
         $spinDateTime = null;
-        $spinTime = $_REQUEST["time"]; // optional paramter, may be empty
-        $spinDate = $_REQUEST["date"];
+        $spinTime = $_REQUEST["time"] ?? ''; // optional paramter, may be empty
+        $spinDate = $_REQUEST["date"] ?? '';
         if ($spinTime != '')
             $spinDateTime = new \DateTime("${spinDate} ${spinTime}");
 
+        $isFuture = $_REQUEST["future"] ?? 0;
+
         $entry = null;
+        $tid = $_REQUEST["tid"] ?? null;
+        if($tid) {
+            $track = $playlistApi->getTrack($tid);
+            if(!$track || $track['list'] != $playlistId) {
+                $retMsg = 'access error';
+            } else {
+                $entry = new PlaylistEntry($track);
+                // TBD support field update
+            }
+        } else
         switch($type) {
         case PlaylistEntry::TYPE_SET_SEPARATOR:
             $entry = (new PlaylistEntry())->setSetSeparator();
@@ -259,14 +270,14 @@ class Playlists extends MenuItem {
             $retMsg = 'success';
             $id = '';
             $status = '';
-            if ($isLiveShow && !$spinDateTime) {
+            if ($isLiveShow && !$spinDateTime && !$isFuture) {
                 $spinDateTime = new \DateTime("now");
             }
 
             if ($spinDateTime != null)
                 $entry->setCreated($spinDateTime->format(IPlaylist::TIME_FORMAT_SQL));
 
-            $updateStatus = $playlistApi->insertTrackEntry($playlistId, $entry, $status);
+            $updateStatus = $tid ? $playlistApi->updateTrackEntry($playlistId, $entry) : $playlistApi->insertTrackEntry($playlistId, $entry, $status);
 
             if (!$updateStatus) {
                 $retMsg = $status == '' ? "DB update error" : $status;
@@ -869,8 +880,12 @@ class Playlists extends MenuItem {
                 $window = Engine::api(IPlaylist::class)->getTimestampWindow($playlistId);
                 echo "<div id='time-entry'".($isLiveShow?" class='zk-hidden'":"").">
                     <label>Time:</label>
-                    <input id='track-time' class='timepicker' step='1' type='time' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' />
+                    <input id='track-time' class='timepicker' step='1' type='time' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' />
                     <span class='track-info".($isLiveShow?"":" zk-hidden")."'>Leave blank for current time</span>
+                    <div class='".($isLiveShow?"":"zk-hidden")."'>
+                        <label></label>
+                        <span><input id='future-entry' type='checkbox' /> Future entry</span>
+                    </div>
                 </div>\n";
             ?>
             <div>
