@@ -708,5 +708,15 @@ $().ready(function(){
         $("*[data-focus]").focus();
     });
 
+    $("div.toggle-time-entry").click(function() {
+        var timeEntry = $("#time-entry");
+        if(timeEntry.hasClass('zk-hidden'))
+            timeEntry.slideDown().removeClass('zk-hidden');
+        else {
+            $("#error-msg").text('');
+            timeEntry.slideUp().addClass('zk-hidden').find('input').val('');
+        }
+    });
+
     $("*[data-focus]").focus();
 });

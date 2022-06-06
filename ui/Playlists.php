@@ -259,7 +259,7 @@ class Playlists extends MenuItem {
             $retMsg = 'success';
             $id = '';
             $status = '';
-            if ($isLiveShow) {
+            if ($isLiveShow && !$spinDateTime) {
                 $spinDateTime = new \DateTime("now");
             }
 
@@ -865,18 +865,20 @@ class Playlists extends MenuItem {
                     </div>
                 </div>
             </div> <!-- track-entry -->
-            <?php if (!$isLiveShow) {
+            <?php
                 $window = Engine::api(IPlaylist::class)->getTimestampWindow($playlistId);
-                echo "<div>
+                echo "<div id='time-entry'".($isLiveShow?" class='zk-hidden'":"").">
                     <label>Time:</label>
                     <input id='track-time' class='timepicker' step='1' type='time' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' />
-                </div>";
-            }?>
+                    <span class='track-info".($isLiveShow?"":" zk-hidden")."'>Leave blank for current time</span>
+                </div>\n";
+            ?>
             <div>
                 <label></label>
                 <button DISABLED id='track-submit' >Add Item</button>
                 <button style='margin-left:17px;' id='track-separator'>Add Separator</button>
             </div>
+            <div class='toggle-time-entry<?php if (!$isLiveShow) echo " zk-hidden"; ?>'><div><!--&#x1f551;--></div></div>
         </div> <!-- track-editor -->
         <hr>
         <div id="extend-show" class="zk-popup">
