@@ -304,7 +304,9 @@ class Playlists extends MenuItem {
                         $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
                     } else
                         $spin = null;
-                    PushServer::sendAsyncNotification($playlist, $spin);
+
+                    if(!$isFuture)
+                        PushServer::sendAsyncNotification($playlist, $spin);
 
                     // track is in the grace period?
                     $window = $playlistApi->getTimestampWindow($playlistId, false);
@@ -882,12 +884,13 @@ class Playlists extends MenuItem {
                     <label>Time:</label>
                     <input id='track-time' class='timepicker' step='1' type='time' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' />
                     <span class='track-info".($isLiveShow?"":" zk-hidden")."'>Leave blank for current time</span>
-                    <div class='".($isLiveShow?"":"zk-hidden")."'>
-                        <label></label>
-                        <span><input id='future-entry' type='checkbox' /> Future entry</span>
-                    </div>
                 </div>\n";
             ?>
+            <div class='<?php if(!$isLiveShow) echo "zk-hidden"; ?>'>
+                <label>Cue Item:</label>
+                <input id='future-entry' type='checkbox' />
+                <span>Select for upcoming airplay</span>
+            </div>
             <div>
                 <label></label>
                 <button DISABLED id='track-submit' >Add Item</button>
