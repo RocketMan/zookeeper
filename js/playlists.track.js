@@ -723,6 +723,7 @@ $().ready(function(){
 
     $("#future-entry").change(function() {
         $("#track-time").prop('disabled', this.checked).val('');
+        localStorage.setItem('future-entry', this.checked?1:0);
     });
 
     function timestampTrack(row) {
@@ -816,5 +817,6 @@ $().ready(function(){
     }
 
     updatePlayable();
+    $("#future-entry").prop('checked', localStorage.getItem('future-entry')*1);
     $("*[data-focus]").focus();
 });
