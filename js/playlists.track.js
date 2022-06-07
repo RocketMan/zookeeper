@@ -834,5 +834,8 @@ $().ready(function(){
     $("#future-entry").prop('checked',
                             getPending() != null ||
                             localStorage.getItem('future-entry')*1);
+    $("#track-time").prop('disabled',
+                          $("#track-time").data("live") &&
+                          $("#future-entry").is(":checked"));
     $("*[data-focus]").focus();
 });
