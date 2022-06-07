@@ -721,7 +721,31 @@ $().ready(function(){
         }
     });
 
+    function getPending() {
+        var highlight = null;
+
+        $(".playlistTable > tbody > tr").each(function() {
+            if($(this).find(".time").contents().filter(function() {
+                return this.nodeType == 3; // text node
+            }).text() === '')
+                highlight = this;
+            else
+                return false;
+        });
+
+        return highlight;
+    }
+
     $("#future-entry").change(function() {
+        if(!this.checked) {
+            // check to see if any entries are pending
+            if(getPending() != null) {
+                alert("You have cued tracks.  Play or delete them.");
+                $(this).prop('checked', true);
+                return;
+            }
+        }
+
         $("#track-time").prop('disabled', this.checked).val('');
         localStorage.setItem('future-entry', this.checked?1:0);
     });
@@ -788,17 +812,7 @@ $().ready(function(){
         if(!$("#track-time").data("live"))
             return;
 
-        var highlight = null;
-        var rows = $(".playlistTable > tbody > tr");
-        rows.each(function() {
-            if($(this).find(".time").contents().filter(function() {
-                return this.nodeType == 3; // text nodes
-            }).text() === '')
-                highlight = this;
-            else
-                return false;
-        });
-
+        var highlight = getPending();
         if(highlight != null) {
             if(playable == null)
                 playable = $("<div>", {class: 'play-now'}).append($("<button>").text("play now"));
@@ -817,6 +831,8 @@ $().ready(function(){
     }
 
     updatePlayable();
-    $("#future-entry").prop('checked', localStorage.getItem('future-entry')*1);
+    $("#future-entry").prop('checked',
+                            getPending() != null ||
+                            localStorage.getItem('future-entry')*1);
     $("*[data-focus]").focus();
 });
