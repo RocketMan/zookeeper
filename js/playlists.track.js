@@ -760,7 +760,9 @@ $().ready(function(){
 
                     var rows = $(".playlistTable > tbody > tr");
                     var index = rows.length - respObj.seq + 1;
-                    if(index < rows.length)
+                    if(index == 0)
+                        $(".playlistTable > tbody").prepend(respObj.row);
+                    else if(index < rows.length)
                         rows.eq(index).before(respObj.row);
                     else
                         rows.eq(rows.length - 1).after(respObj.row);
