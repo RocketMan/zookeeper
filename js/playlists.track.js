@@ -39,7 +39,10 @@ $().ready(function(){
     }
 
     function setAddButtonState(enableIt) {
-        $("#track-submit").prop("disabled", !enableIt);
+        var hasPending = getPending() != null;
+        $("#track-add").prop("disabled", !enableIt);
+        $("#track-play").prop("disabled", !enableIt || hasPending);
+        $("#track-time").prop("disabled", $("#track-time").data("live") && hasPending);
     }
 
     function clearUserInput(clearArtistList) {
@@ -70,6 +73,9 @@ $().ready(function(){
         case 'comment-entry':
             $("#remaining").html("(0/" + $("#comment-max").val() + " characters)");
             $('#comment-data').focus();
+            break;
+        case 'set-separator':
+            setAddButtonState(true);
             break;
         }
     }
@@ -147,8 +153,8 @@ $().ready(function(){
                                   "(Unknown)");
             $("#track-album").val(diskInfo.attributes.album);
             $("#track-title").val("");
-            $("#track-submit").attr("disabled");
-            $("#track-submit").prop("disabled", true);
+            $(".track-submit").attr("disabled");
+            $(".track-submit").prop("disabled", true);
             if(refArtist) {
                 var tracks = $("#track-titles option[data-artist='" +
                                escQuote(refArtist) + "']");
@@ -393,12 +399,12 @@ $().ready(function(){
         $(document).mousemove(move).mouseup(up);
     }
 
-    function submitTrack(addSeparator) {
+    function submitTrack(id) {
         console.log("enter submitTrack");
         var showDate, spinTime, artist, label, album, track, type, eventType, eventCode, comment;
         var trackType =  $("#track-type-pick").val();
 
-        if (addSeparator) {
+        if (trackType == 'set-separator') {
             type = $("#const-set-separator").val();
         } else if (isNmeType(trackType)) {
             type = $("#const-log-event").val();
@@ -430,7 +436,7 @@ $().ready(function(){
             eventType: eventType,
             eventCode: eventCode,
             comment: comment,
-            future: $("#future-entry").is(":checked") ? 1 : 0,
+            future: id == 'track-add' ? 1 : 0,
             size: $(".playlistTable > tbody > tr").length,
         };
 
@@ -485,7 +491,7 @@ $().ready(function(){
         });
     }
 
-    $("#track-submit").click(function(e) {
+    $(".track-submit").click(function(e) {
         // double check that we have everything.
         if (haveAllUserInput() == false) {
             alert('A required field is missing');
@@ -499,14 +505,14 @@ $().ready(function(){
             return;
         }
 
+        if($("#track-time").data("live") && this.id == 'track-add')
+            $("#track-time").removeClass('invalid-input').val('');
+
         // check that the timestamp, if any, is valid
         if($("INPUT[data-date].invalid-input").length > 0)
             return;
-        submitTrack(false);
-    });
 
-    $("#track-separator").click(function(e) {
-        submitTrack(true);
+        submitTrack(this.id);
     });
 
     function getArtist(node) {
@@ -736,20 +742,6 @@ $().ready(function(){
         return highlight;
     }
 
-    $("#future-entry").change(function() {
-        if(!this.checked) {
-            // check to see if any entries are pending
-            if(getPending() != null) {
-                alert("You have cued tracks.  Play or delete them.");
-                $(this).prop('checked', true);
-                return;
-            }
-        }
-
-        $("#track-time").prop('disabled', this.checked).val('');
-        localStorage.setItem('future-entry', this.checked?1:0);
-    });
-
     function timestampTrack(row) {
         var postData = {
             playlist: $("#track-playlist").val(),
@@ -828,14 +820,16 @@ $().ready(function(){
             playable.remove();
             playable = null;
         }
+
+        $("#track-time").prop("disabled", highlight != null);
+        $("#track-play").prop("disabled", !$("#track-add").is(":enabled") || highlight != null);
     }
 
     updatePlayable();
-    $("#future-entry").prop('checked',
-                            getPending() != null ||
-                            localStorage.getItem('future-entry')*1);
-    $("#track-time").prop('disabled',
-                          $("#track-time").data("live") &&
-                          $("#future-entry").is(":checked"));
+    $("#track-type-pick").html($("#track-type-pick option").sort(function(a, b) {
+        return b.value == 'manual-entry' || a.value != 'manual-entry' && 
+            a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1;
+    }));
+
     $("*[data-focus]").focus();
 });

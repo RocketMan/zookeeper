@@ -831,6 +831,7 @@ class Playlists extends MenuItem {
                 <select id='track-type-pick'>
                    <option value='manual-entry'>Music</option>
                    <option value='comment-entry'>Comment</option>
+                   <option value='set-separator'>Mic Break (separator)</option>
                    <?php echo $nmeOpts; ?>
                 </select>
             </div>
@@ -886,15 +887,10 @@ class Playlists extends MenuItem {
                     <span class='track-info".($isLiveShow?"":" zk-hidden")."'>Leave blank for current time</span>
                 </div>\n";
             ?>
-            <div class='<?php if(!$isLiveShow) echo "zk-hidden"; ?>'>
-                <label>Cue Item:</label>
-                <input id='future-entry' type='checkbox' />
-                <span>Select for upcoming airplay</span>
-            </div>
             <div>
                 <label></label>
-                <button DISABLED id='track-submit' >Add Item</button>
-                <button style='margin-left:17px;' id='track-separator'>Add Separator</button>
+                <button disabled id='track-add' class='track-submit'>Add</button>
+                <button disabled style='margin-left:17px;' id='track-play' class='track-submit<?php if(!$isLiveShow) echo " zk-hidden"; ?>'>Add and Play</button>
             </div>
             <div class='toggle-time-entry<?php if (!$isLiveShow) echo " zk-hidden"; ?>'><div><!--&#x1f551;--></div></div>
         </div> <!-- track-editor -->
