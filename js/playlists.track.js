@@ -284,11 +284,17 @@ $().ready(function(){
                 val.setTime(val.getTime() + 86400000);
         }
 
+        // for live shows, restrict end time to 'now'
+        if($(this).data("live")) {
+            end = new Date();
+            end.setMinutes(end.getMinutes() - end.getTimezoneOffset());
+        }
+
         if(isNaN(val) || val < start || val > end) {
             $(this).removeClass('prefilled-input');
             $(this).addClass('invalid-input');
             $(this).val("").focus();
-            showUserError('Spin time is outside of show start/end times.');
+            showUserError('Spin time is invalid.');
         } else {
             // if we massaged time for webkit, set canonical value
             if($(this).val() != v)
@@ -501,9 +507,6 @@ $().ready(function(){
             $("#track-artist").focus();
             return;
         }
-
-        if($("#track-time").data("live") && this.id == 'track-add')
-            $("#track-time").removeClass('invalid-input').val('');
 
         // check that the timestamp, if any, is valid
         if($("INPUT[data-date].invalid-input").length > 0)
