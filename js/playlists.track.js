@@ -287,7 +287,7 @@ $().ready(function(){
         // for live shows, restrict end time to 'now'
         if($(this).data("live")) {
             end = new Date();
-            end.setMinutes(end.getMinutes() - end.getTimezoneOffset());
+            end.setMinutes(end.getMinutes() - $("#timezone-offset").val()*1);
         }
 
         if(isNaN(val) || val < start || val > end) {
