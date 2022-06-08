@@ -27,9 +27,6 @@ $().ready(function(){
     const NME_PREFIX=$("#const-prefix").val();
     var tagId = 0;
 
-    $("#track-type-pick").val('manual-entry');
-    $("#track-artist").focus();
-
     function htmlify(s) {
         return s?String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\'/g, '&#39;'):"";
     }
@@ -826,10 +823,11 @@ $().ready(function(){
     }
 
     updatePlayable();
+
     $("#track-type-pick").html($("#track-type-pick option").sort(function(a, b) {
-        return b.value == 'manual-entry' || a.value != 'manual-entry' && 
+        return b.value == 'manual-entry' || a.value != 'manual-entry' &&
             a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1;
-    }));
+    })).val('manual-entry');
 
     $("*[data-focus]").focus();
 });
