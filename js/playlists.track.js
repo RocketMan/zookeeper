@@ -294,7 +294,7 @@ $().ready(function(){
             $(this).removeClass('prefilled-input');
             $(this).addClass('invalid-input');
             $(this).val("").focus();
-            showUserError('Spin time is invalid.');
+            showUserError('Time is invalid');
         } else {
             // if we massaged time for webkit, set canonical value
             if($(this).val() != v)
