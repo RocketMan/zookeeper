@@ -809,7 +809,7 @@ class Playlists extends MenuItem {
         $nmePrefix = self::NME_PREFIX;
         if ($nmeAr) {
             foreach ($nmeAr as $nme)
-                $nmeOpts = $nmeOpts . "<option data-args='" . $nme['args'] . "' value='" . $nmePrefix . strtoupper($nme['name']) . "'>" . $nme['name'] . "</option>";
+                $nmeOpts = $nmeOpts . "<option data-args='" . $nme['args'] . "' value='" . $nmePrefix . $nme['name'] . "'>" . $nme['name'] . "</option>";
         }
 
     ?>
