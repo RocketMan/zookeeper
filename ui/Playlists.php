@@ -227,7 +227,7 @@ class Playlists extends MenuItem {
         if ($spinTime != '')
             $spinDateTime = new \DateTime("${spinDate} ${spinTime}");
 
-        $isFuture = $_REQUEST["future"] ?? 0;
+        $isCue = $_REQUEST["cue"] ?? 0;
 
         $entry = null;
         $tid = $_REQUEST["tid"] ?? null;
@@ -270,7 +270,7 @@ class Playlists extends MenuItem {
             $retMsg = 'success';
             $id = '';
             $status = '';
-            if ($isLiveShow && !$spinDateTime && !$isFuture) {
+            if ($isLiveShow && !$spinDateTime && !$isCue) {
                 $spinDateTime = new \DateTime("now");
             }
 
@@ -305,7 +305,7 @@ class Playlists extends MenuItem {
                     } else
                         $spin = null;
 
-                    if(!$isFuture)
+                    if($spinDateTime)
                         PushServer::sendAsyncNotification($playlist, $spin);
 
                     // track is in the grace period?

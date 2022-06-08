@@ -439,7 +439,7 @@ $().ready(function(){
             eventType: eventType,
             eventCode: eventCode,
             comment: comment,
-            future: id == 'track-add' ? 1 : 0,
+            cue: id == 'track-add' ? 1 : 0,
             size: $(".playlistTable > tbody > tr").length,
         };
 
