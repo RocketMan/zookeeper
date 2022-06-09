@@ -959,11 +959,6 @@ class Playlists extends MenuItem {
       $edate = $startTime->format('Y-m-d');
       $showTimeRange = "$startAMPM - $endAMPM";
       $timepickerClass = "timepicker";
-      if($isLive && !$entry->getCreated()) {
-          // pre-fill empty time in live playlist with 'now'
-          $entry->setCreated($nowTime->format(IPlaylist::TIME_FORMAT_SQL));
-          $timepickerClass .= " prefilled-input";
-      }
       $timepickerTime = $entry->getCreatedTime();
       $sep = $id && $entry->isType(PlaylistEntry::TYPE_SET_SEPARATOR);
       $event = $id && $entry->isType(PlaylistEntry::TYPE_LOG_EVENT);
@@ -985,7 +980,6 @@ class Playlists extends MenuItem {
           break;
       } ?></DIV>
       <FORM ACTION="?" id='edit' METHOD=POST>
-      <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
       <TABLE>
     <?php if($sep) { ?>
       <INPUT TYPE=HIDDEN NAME=separator VALUE="true">
@@ -1060,14 +1054,15 @@ class Playlists extends MenuItem {
           <TD>&nbsp;</TD>
           <TD>
     <?php if($id) { ?>
-              <INPUT TYPE=BUTTON NAME=button id='edit-save' VALUE="  Save  ">&nbsp;&nbsp;&nbsp;
+              <INPUT TYPE=BUTTON NAME=button id='edit-save' VALUE="  Save  ">
               <INPUT TYPE=BUTTON NAME=button id='edit-delete' VALUE=" Delete ">
+              <INPUT TYPE=BUTTON NAME=button id='edit-cancel' VALUE=" Cancel ">
               <INPUT TYPE=HIDDEN NAME=id VALUE="<?php echo $id;?>">
     <?php } else { ?>
               <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
     <?php } ?>
-              <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
-              <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action;?>">
+              <INPUT TYPE=HIDDEN id='track-playlist' NAME=playlist VALUE="<?php echo $playlistId;?>">
+              <INPUT TYPE=HIDDEN id='track-action' NAME=action VALUE="<?php echo $this->action;?>">
               <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $album["tag"];?>">
               <INPUT TYPE=HIDDEN NAME=seq VALUE="editForm">
           </TD>

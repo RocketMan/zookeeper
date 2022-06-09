@@ -325,6 +325,11 @@ $().ready(function(){
         }
     });
 
+    $("#edit-cancel").click(function(){
+        location.href = "?action=" + $("#track-action").val() +
+            "&playlist=" + $("#track-playlist").val();
+    });
+
     // display highlight on track edit
     if($("FORM#edit").length > 0) {
         var id = $("FORM#edit INPUT[name=id]").val();
