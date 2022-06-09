@@ -792,6 +792,11 @@ $().ready(function(){
                     $(".playlistTable > tbody > tr").eq(index).find(".grab").mousedown(grabStart);
 
                     updatePlayable();
+
+                    if(respObj.runsover) {
+                        $("#extend-show").show();
+                        $("#extend-time").focus();
+                    }
                     break;
                 }
             },
