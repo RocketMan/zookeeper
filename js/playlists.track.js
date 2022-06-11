@@ -27,9 +27,6 @@ $().ready(function(){
     const NME_PREFIX=$("#const-prefix").val();
     var tagId = 0;
 
-    $("#track-type-pick").val('manual-entry');
-    $("#track-artist").focus();
-
     function htmlify(s) {
         return s?String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\'/g, '&#39;'):"";
     }
@@ -39,7 +36,10 @@ $().ready(function(){
     }
 
     function setAddButtonState(enableIt) {
-        $("#track-submit").prop("disabled", !enableIt);
+        var hasPending = getPending() != null;
+        $("#track-add").prop("disabled", !enableIt);
+        $("#track-play").prop("disabled", !enableIt || hasPending);
+        $("#track-time").prop("disabled", $("#track-time").data("live") && hasPending);
     }
 
     function clearUserInput(clearArtistList) {
@@ -70,6 +70,9 @@ $().ready(function(){
         case 'comment-entry':
             $("#remaining").html("(0/" + $("#comment-max").val() + " characters)");
             $('#comment-data').focus();
+            break;
+        case 'set-separator':
+            setAddButtonState(true);
             break;
         }
     }
@@ -147,8 +150,8 @@ $().ready(function(){
                                   "(Unknown)");
             $("#track-album").val(diskInfo.attributes.album);
             $("#track-title").val("");
-            $("#track-submit").attr("disabled");
-            $("#track-submit").prop("disabled", true);
+            $(".track-submit").attr("disabled");
+            $(".track-submit").prop("disabled", true);
             if(refArtist) {
                 var tracks = $("#track-titles option[data-artist='" +
                                escQuote(refArtist) + "']");
@@ -281,11 +284,17 @@ $().ready(function(){
                 val.setTime(val.getTime() + 86400000);
         }
 
+        // for live shows, restrict end time to 'now'
+        if($(this).data("live")) {
+            end = new Date();
+            end.setMinutes(end.getMinutes() - $("#timezone-offset").val()*1);
+        }
+
         if(isNaN(val) || val < start || val > end) {
             $(this).removeClass('prefilled-input');
             $(this).addClass('invalid-input');
             $(this).val("").focus();
-            showUserError('Spin time is outside of show start/end times.');
+            showUserError('Time is invalid');
         } else {
             // if we massaged time for webkit, set canonical value
             if($(this).val() != v)
@@ -316,6 +325,11 @@ $().ready(function(){
         }
     });
 
+    $("#edit-cancel").click(function(){
+        location.href = "?action=" + $("#track-action").val() +
+            "&playlist=" + $("#track-playlist").val();
+    });
+
     // display highlight on track edit
     if($("FORM#edit").length > 0) {
         var id = $("FORM#edit INPUT[name=id]").val();
@@ -339,6 +353,7 @@ $().ready(function(){
                 // move succeeded, clear timestamp
                 tr.find("td").eq(1).html("");
                 $("#error-msg").text("");
+                updatePlayable();
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 // move failed; restore original sequence
@@ -392,12 +407,12 @@ $().ready(function(){
         $(document).mousemove(move).mouseup(up);
     }
 
-    function submitTrack(addSeparator) {
+    function submitTrack(id) {
         console.log("enter submitTrack");
         var showDate, spinTime, artist, label, album, track, type, eventType, eventCode, comment;
         var trackType =  $("#track-type-pick").val();
 
-        if (addSeparator) {
+        if (trackType == 'set-separator') {
             type = $("#const-set-separator").val();
         } else if (isNmeType(trackType)) {
             type = $("#const-log-event").val();
@@ -429,6 +444,7 @@ $().ready(function(){
             eventType: eventType,
             eventCode: eventCode,
             comment: comment,
+            cue: id == 'track-add' ? 1 : 0,
             size: $(".playlistTable > tbody > tr").length,
         };
 
@@ -468,6 +484,7 @@ $().ready(function(){
                     break;
                 }
 
+                updatePlayable();
                 clearUserInput(true);
 
                 if(respObj.runsover) {
@@ -482,7 +499,7 @@ $().ready(function(){
         });
     }
 
-    $("#track-submit").click(function(e) {
+    $(".track-submit").click(function(e) {
         // double check that we have everything.
         if (haveAllUserInput() == false) {
             alert('A required field is missing');
@@ -499,11 +516,8 @@ $().ready(function(){
         // check that the timestamp, if any, is valid
         if($("INPUT[data-date].invalid-input").length > 0)
             return;
-        submitTrack(false);
-    });
 
-    $("#track-separator").click(function(e) {
-        submitTrack(true);
+        submitTrack(this.id);
     });
 
     function getArtist(node) {
@@ -717,6 +731,116 @@ $().ready(function(){
             timeEntry.slideUp().addClass('zk-hidden').find('input').val('');
         }
     });
+
+    function getPending() {
+        var highlight = null;
+
+        $(".playlistTable > tbody > tr").each(function() {
+            if($(this).find(".time").contents().filter(function() {
+                return this.nodeType == 3; // text node
+            }).text() === '')
+                highlight = this;
+            else
+                return false;
+        });
+
+        return highlight;
+    }
+
+    function timestampTrack(row) {
+        var postData = {
+            playlist: $("#track-playlist").val(),
+            tid: $(row).find(".grab").data("id"),
+            oaction: $("#track-action").val(),
+            size: $(".playlistTable > tbody > tr").length,
+        };
+
+        $.ajax({
+            dataType : 'json',
+            type: 'POST',
+            accept: "application/json; charset=utf-8",
+            url: "?action=addTrack",
+            data: postData,
+            success: function(respObj) {
+                // *1 to coerce to int as switch uses strict comparison
+                switch(respObj.seq*1) {
+                case -1:
+                    // playlist is out of sync with table; reload
+                    location.href = "?action=" + $("#track-action").val() +
+                        "&playlist=" + $("#track-playlist").val();
+                    break;
+                default:
+                    // seq specifies the ordinal of the entry,
+                    // where 1 is the first (oldest).
+                    //
+                    // Calculate the zero-based row index from seq.
+                    // Table is ordered latest to oldest, which means
+                    // we must reverse the sense of seq.
+
+                    playable.detach();
+                    $(row).remove();
+
+                    var rows = $(".playlistTable > tbody > tr");
+                    var index = rows.length - respObj.seq + 1;
+                    if(index == 0)
+                        $(".playlistTable > tbody").prepend(respObj.row);
+                    else if(index < rows.length)
+                        rows.eq(index).before(respObj.row);
+                    else
+                        rows.eq(rows.length - 1).after(respObj.row);
+
+                    $(".playlistTable > tbody > tr").eq(index).find(".grab").mousedown(grabStart);
+
+                    updatePlayable();
+
+                    if(respObj.runsover) {
+                        $("#extend-show").show();
+                        $("#extend-time").focus();
+                    }
+                    break;
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                var json = JSON.parse(jqXHR.responseText);
+                var status = (json && json.errors)?
+                        json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
+                showUserError(status);
+            }
+        });
+    }
+
+    var playable = null;
+    function updatePlayable() {
+        if(!$("#track-time").data("live"))
+            return;
+
+        var highlight = getPending();
+        if(highlight != null) {
+            if(playable == null)
+                playable = $("<div>", {class: 'play-now'}).append($("<button>").text("play now"));
+
+            $(highlight).find('.time').append(playable);
+
+            // drag loses the event handler in some cases
+            // this ensures we always have exactly one handler bound
+            playable.off().click(function() {
+                timestampTrack(highlight);
+            });
+        } else if(playable != null) {
+            playable.remove();
+            playable = null;
+        }
+
+        $("#track-time").prop("disabled", highlight != null);
+        $("#track-play").prop("disabled", !$("#track-add").is(":enabled") || highlight != null);
+    }
+
+    updatePlayable();
+
+    $("#track-type-pick").html($("#track-type-pick option").sort(function(a, b) {
+        return b.value == 'manual-entry' || a.value != 'manual-entry' &&
+            a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1;
+    })).val('manual-entry');
 
     $("*[data-focus]").focus();
 });

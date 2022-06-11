@@ -214,21 +214,32 @@ class Playlists extends MenuItem {
 
         $isLiveShow = $playlistApi->isNowWithinShow($playlist);
 
-        $type = $_REQUEST["type"];
-        $size = $_REQUEST["size"];
-        if(isset($size) && $playlistId) {
+        $type = $_REQUEST["type"] ?? null;
+        if(isset($_REQUEST["size"]) && $playlistId) {
             $count = $playlistApi->getTrackCount($playlistId);
             // if size matches count, set to 0 (in sync) else -1 (out of sync)
-            $size = $count == $size?0:-1;
+            $size = $count == $_REQUEST["size"]?0:-1;
         }
 
         $spinDateTime = null;
-        $spinTime = $_REQUEST["time"]; // optional paramter, may be empty
-        $spinDate = $_REQUEST["date"];
+        $spinTime = $_REQUEST["time"] ?? ''; // optional paramter, may be empty
+        $spinDate = $_REQUEST["date"] ?? '';
         if ($spinTime != '')
             $spinDateTime = new \DateTime("${spinDate} ${spinTime}");
 
+        $isCue = $_REQUEST["cue"] ?? 0;
+
         $entry = null;
+        $tid = $_REQUEST["tid"] ?? null;
+        if($tid) {
+            $track = $playlistApi->getTrack($tid);
+            if(!$track || $track['list'] != $playlistId) {
+                $retMsg = 'access error';
+            } else {
+                $entry = new PlaylistEntry($track);
+                // TBD support field update
+            }
+        } else
         switch($type) {
         case PlaylistEntry::TYPE_SET_SEPARATOR:
             $entry = (new PlaylistEntry())->setSetSeparator();
@@ -259,14 +270,14 @@ class Playlists extends MenuItem {
             $retMsg = 'success';
             $id = '';
             $status = '';
-            if ($isLiveShow && !$spinDateTime) {
+            if ($isLiveShow && !$spinDateTime && !$isCue) {
                 $spinDateTime = new \DateTime("now");
             }
 
             if ($spinDateTime != null)
                 $entry->setCreated($spinDateTime->format(IPlaylist::TIME_FORMAT_SQL));
 
-            $updateStatus = $playlistApi->insertTrackEntry($playlistId, $entry, $status);
+            $updateStatus = $tid ? $playlistApi->updateTrackEntry($playlistId, $entry) : $playlistApi->insertTrackEntry($playlistId, $entry, $status);
 
             if (!$updateStatus) {
                 $retMsg = $status == '' ? "DB update error" : $status;
@@ -293,7 +304,9 @@ class Playlists extends MenuItem {
                         $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
                     } else
                         $spin = null;
-                    PushServer::sendAsyncNotification($playlist, $spin);
+
+                    if($spinDateTime)
+                        PushServer::sendAsyncNotification($playlist, $spin);
 
                     // track is in the grace period?
                     $window = $playlistApi->getTimestampWindow($playlistId, false);
@@ -803,6 +816,7 @@ class Playlists extends MenuItem {
         <div class='pl-form-entry'>
             <input id='show-date' name='edate' type='hidden' value="<?php echo $playlist['showdate']; ?>" >
             <input id='show-time' type='hidden' value="<?php echo $playlist['showtime']; ?>" >
+            <input id='timezone-offset' type='hidden' value="<?php echo round(date('Z')/-60, 2); /* server TZ equivalent of javascript Date.getTimezoneOffset() */ ?>" >
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <input id='track-action' type='hidden' value='<?php echo $this->action; ?>'>
             <input id='const-prefix' type='hidden' value='<?php echo self::NME_PREFIX; ?>'>
@@ -818,6 +832,7 @@ class Playlists extends MenuItem {
                 <select id='track-type-pick'>
                    <option value='manual-entry'>Music</option>
                    <option value='comment-entry'>Comment</option>
+                   <option value='set-separator'>Mic Break (separator)</option>
                    <?php echo $nmeOpts; ?>
                 </select>
             </div>
@@ -869,14 +884,14 @@ class Playlists extends MenuItem {
                 $window = Engine::api(IPlaylist::class)->getTimestampWindow($playlistId);
                 echo "<div id='time-entry'".($isLiveShow?" class='zk-hidden'":"").">
                     <label>Time:</label>
-                    <input id='track-time' class='timepicker' step='1' type='time' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' />
+                    <input id='track-time' class='timepicker' step='1' type='time' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' />
                     <span class='track-info".($isLiveShow?"":" zk-hidden")."'>Leave blank for current time</span>
                 </div>\n";
             ?>
             <div>
                 <label></label>
-                <button DISABLED id='track-submit' >Add Item</button>
-                <button style='margin-left:17px;' id='track-separator'>Add Separator</button>
+                <button disabled id='track-add' class='track-submit'>Add</button>
+                <button disabled style='margin-left:17px;' id='track-play' class='track-submit<?php if(!$isLiveShow) echo " zk-hidden"; ?>'>Add and Play</button>
             </div>
             <div class='toggle-time-entry<?php if (!$isLiveShow) echo " zk-hidden"; ?>'><div><!--&#x1f551;--></div></div>
         </div> <!-- track-editor -->
@@ -944,11 +959,6 @@ class Playlists extends MenuItem {
       $edate = $startTime->format('Y-m-d');
       $showTimeRange = "$startAMPM - $endAMPM";
       $timepickerClass = "timepicker";
-      if($isLive && !$entry->getCreated()) {
-          // pre-fill empty time in live playlist with 'now'
-          $entry->setCreated($nowTime->format(IPlaylist::TIME_FORMAT_SQL));
-          $timepickerClass .= " prefilled-input";
-      }
       $timepickerTime = $entry->getCreatedTime();
       $sep = $id && $entry->isType(PlaylistEntry::TYPE_SET_SEPARATOR);
       $event = $id && $entry->isType(PlaylistEntry::TYPE_LOG_EVENT);
@@ -970,7 +980,6 @@ class Playlists extends MenuItem {
           break;
       } ?></DIV>
       <FORM ACTION="?" id='edit' METHOD=POST>
-      <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
       <TABLE>
     <?php if($sep) { ?>
       <INPUT TYPE=HIDDEN NAME=separator VALUE="true">
@@ -1045,14 +1054,15 @@ class Playlists extends MenuItem {
           <TD>&nbsp;</TD>
           <TD>
     <?php if($id) { ?>
-              <INPUT TYPE=BUTTON NAME=button id='edit-save' VALUE="  Save  ">&nbsp;&nbsp;&nbsp;
+              <INPUT TYPE=BUTTON NAME=button id='edit-save' VALUE="  Save  ">
               <INPUT TYPE=BUTTON NAME=button id='edit-delete' VALUE=" Delete ">
+              <INPUT TYPE=BUTTON NAME=button id='edit-cancel' VALUE=" Cancel ">
               <INPUT TYPE=HIDDEN NAME=id VALUE="<?php echo $id;?>">
     <?php } else { ?>
               <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
     <?php } ?>
-              <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
-              <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action;?>">
+              <INPUT TYPE=HIDDEN id='track-playlist' NAME=playlist VALUE="<?php echo $playlistId;?>">
+              <INPUT TYPE=HIDDEN id='track-action' NAME=action VALUE="<?php echo $this->action;?>">
               <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $album["tag"];?>">
               <INPUT TYPE=HIDDEN NAME=seq VALUE="editForm">
           </TD>

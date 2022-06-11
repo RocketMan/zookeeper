@@ -148,7 +148,7 @@ $config = [
      */
     'nme' => [
         ['name' => 'LID', 'args'  => 0],
-        ['name' => 'PROMO','args' => 1],
+        ['name' => 'Promo','args' => 1],
         ['name' => 'PSA',  'args'  => 1]
      ],
 

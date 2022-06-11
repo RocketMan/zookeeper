@@ -1026,3 +1026,21 @@ div.toggle-time-entry div {
     height: 17px;
     background-image: url('../img/clock-icon.png');
 }
+
+.play-now {
+    z-index: 9;
+}
+.play-now button {
+    font-size: 10px;
+    border: none;
+    color: #fff;
+    background-color: #2b547e;
+    border-radius: 4px;
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+.play-now button:hover {
+    background-color: #3b648e;
+}
+.play-now button:active {
+    transform: translate(1px, 1px);
+}
