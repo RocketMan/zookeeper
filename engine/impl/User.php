@@ -172,23 +172,6 @@ class UserImpl extends DBO implements IUser {
         $stmt->bindValue(1, $user);
         $result = $stmt->executeAndFetch();
         if($result) {
-            /*
-            if(!$result["password"]) {
-                // Authenticate with legacy password
-                if(ZKCrypt($password) == $result["legacypass"]) {
-                    $salt = substr(md5(uniqid(rand())), 0, 2);
-    
-                    // Replace legacy password with new password
-                    $query = "UPDATE users SET password=?, legacypass=NULL";
-                    if($updateTimestamp)
-                        $query .= ", lastlogin=now()";
-                    $query .= " WHERE name=?";
-                    $stmt = $this->prepare($query);
-                    $stmt->bindValue(1, $salt.md5($salt.$password));
-                    $stmt->execute();
-                    $success = 1;
-                }
-            } else */
             if(md5(substr($result["password"], 0, 2).$password) ==
                           substr($result["password"], 2)) {
                 if($updateTimestamp) {
@@ -209,7 +192,7 @@ class UserImpl extends DBO implements IUser {
         $comma = "";
         $query = "UPDATE users SET";
         if($password) {
-            $query .= " password=?, legacypass=NULL";
+            $query .= " password=?";
             $comma = ",";
         }
         if($realname != "XXZZ") {

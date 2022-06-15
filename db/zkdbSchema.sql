@@ -454,7 +454,6 @@ CREATE TABLE IF NOT EXISTS `users` (
   `groups` varchar(12) DEFAULT NULL,
   `realname` varchar(128) DEFAULT NULL,
   `expires` date DEFAULT NULL,
-  `legacypass` varchar(8) DEFAULT NULL,
   `lastlogin` date DEFAULT NULL,
   `ssoaccount` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`id`),

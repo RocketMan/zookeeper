@@ -60,6 +60,7 @@ ALTER TABLE `tracks` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
 ALTER TABLE `users` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 ALTER TABLE `categories` ADD COLUMN `email` varchar(80) DEFAULT NULL;
+ALTER TABLE `users` DROP COLUMN `legacypass`;
 
 UPDATE `categories` SET email='reggae@kzsu.stanford.edu' WHERE id = 9;
 UPDATE `categories` SET email='classical@kzsu.stanford.edu' WHERE id = 8;
