@@ -235,7 +235,7 @@ class UserImpl extends DBO implements IUser {
         if($groups != "XXZZ")
             $stmt->bindValue($p++, $groups);
         if($expiration != "XXZZ")
-            $stmt->bindValue($p++, $expiration);
+            $stmt->bindValue($p++, $expiration ? $expiration : NULL);
         $stmt->bindValue($p++, $user);
         $stmt->execute();
         return ($stmt->rowCount() >= 0);
@@ -249,7 +249,7 @@ class UserImpl extends DBO implements IUser {
         $stmt->bindValue(2, $salt.md5($salt.$password));
         $stmt->bindValue(3, $realname);
         $stmt->bindValue(4, $groups);
-        $stmt->bindValue(5, $expiration?$expiration:NULL);
+        $stmt->bindValue(5, $expiration ? $expiration : NULL);
         $stmt->execute();
         return ($stmt->rowCount() > 0);
     }
