@@ -94,9 +94,13 @@ function paginateAlbums(op, url) {
 
 function onSearchNow() {
     var search = $("#search").val();
-    if(search.lastIndexOf('.') == search.length-1 && search.length > 3)
-        getAlbums('filter[id]=' + encodeURIComponent(search));
-    else
+    // if artist is numeric with correct check digit,
+    // treat it as an album tag
+    var parseTag = search.match(/^(\d+)(\d)$/);
+    search.length > 3 && parseTag != null && parseTag[1]
+            .split('').map(Number)
+            .reduce((a, b) => a + b, 0) % 10 == parseTag[2] ?
+        getAlbums('filter[id]=' + search) :
         getAlbums('filter[artist]=' + ($("#coll").is(':checked')?"[coll]: ":"") + encodeURIComponent(search));
 }
 
