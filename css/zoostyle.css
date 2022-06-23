@@ -102,6 +102,11 @@ div.subhead {
     border-bottom: 1px solid gray;
 }
    
+.subhead2.coming-up {
+    color: gray;
+    font-size: 12pt;
+}
+
 li {
     display: list-item;
 }

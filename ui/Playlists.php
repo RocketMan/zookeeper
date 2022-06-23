@@ -1960,7 +1960,8 @@ class Playlists extends MenuItem {
         echo "<TABLE class='playlistTable' CELLPADDING=1>\n";
         echo "<THEAD>" . $header . "</THEAD>";
 
-        $entries = Engine::api(IPlaylist::class)->getTracks($playlist, $editMode)->asArray();
+        $api = Engine::api(IPlaylist::class);
+        $entries = $api->getTracks($playlist, $editMode)->asArray();
         Engine::api(ILibrary::class)->markAlbumsReviewed($entries);
 
         $observer = $this->makePlaylistObserver($playlist, $editMode);
@@ -1972,6 +1973,11 @@ class Playlists extends MenuItem {
 
         if($editMode)
             UI::emitJS('js/playlists.track.js');
+        else {
+            $show = $api->getPlaylist($playlist);
+            if($api->isNowWithinShow($show))
+                UI::emitJS('js/playlists.live.js');
+        }
     }
 
     public static function makeShowDateAndTime($row) {
