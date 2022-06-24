@@ -36,10 +36,10 @@ $().ready(function(){
     }
 
     function setAddButtonState(enableIt) {
-        var hasPending = getPending() != null;
+        var hasPending = $("#track-time").data("live") && getPending() != null;
         $("#track-add").prop("disabled", !enableIt);
         $("#track-play").prop("disabled", !enableIt || hasPending);
-        $("#track-time").prop("disabled", $("#track-time").data("live") && hasPending);
+        $("#track-time").prop("disabled", hasPending);
     }
 
     function clearUserInput(clearArtistList) {
@@ -486,6 +486,8 @@ $().ready(function(){
 
                 updatePlayable();
                 clearUserInput(true);
+
+                $("#track-type-pick").val('manual-entry').trigger('change');
 
                 if(respObj.runsover) {
                     $("#extend-show").show();

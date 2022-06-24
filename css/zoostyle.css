@@ -635,8 +635,11 @@ table.recentAirplay td, .sub {
 }
 
 .pl-form-entry button {
-    width: 140px;
+    width: 148px;
+    padding-left: 0;
+    padding-right: 0;
     box-sizing: border-box;
+    white-space: nowrap;
 }
 
 .form-entry label, .pl-form-entry label {
@@ -1048,4 +1051,23 @@ div.toggle-time-entry div {
 }
 .play-now button:active {
     transform: translate(1px, 1px);
+}
+
+.track-submit:disabled {
+    color: gray;
+}
+.track-submit:disabled img {
+    opacity: 0.5;
+}
+.track-submit img {
+    margin-bottom: -1px;
+    padding-left: 5px;
+}
+.track-submit#track-play img {
+    width: 8px;
+    height: 11px;
+}
+.track-submit#track-add img {
+    width: 20px;
+    height: 10px;
 }
