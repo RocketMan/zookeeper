@@ -36,10 +36,9 @@ $().ready(function(){
     }
 
     function setAddButtonState(enableIt) {
-        var hasPending = getPending() != null;
+        var hasPending = $("#track-time").data("live") && getPending() != null;
         $("#track-add").prop("disabled", !enableIt);
         $("#track-play").prop("disabled", !enableIt || hasPending);
-        $("#track-time").prop("disabled", $("#track-time").data("live") && hasPending);
     }
 
     function clearUserInput(clearArtistList) {
@@ -284,12 +283,6 @@ $().ready(function(){
                 val.setTime(val.getTime() + 86400000);
         }
 
-        // for live shows, restrict end time to 'now'
-        if($(this).data("live")) {
-            end = new Date();
-            end.setMinutes(end.getMinutes() - $("#timezone-offset").val()*1);
-        }
-
         if(isNaN(val) || val < start || val > end) {
             $(this).removeClass('prefilled-input');
             $(this).addClass('invalid-input');
@@ -351,7 +344,7 @@ $().ready(function(){
             data: postData,
             success: function(respObj) {
                 // move succeeded, clear timestamp
-                tr.find("td").eq(1).html("");
+                tr.find("td").eq(1).data('utc','').html('');
                 $("#error-msg").text("");
                 updatePlayable();
             },
@@ -486,6 +479,8 @@ $().ready(function(){
 
                 updatePlayable();
                 clearUserInput(true);
+
+                $("#track-type-pick").val('manual-entry').trigger('change');
 
                 if(respObj.runsover) {
                     $("#extend-show").show();
@@ -734,13 +729,13 @@ $().ready(function(){
 
     function getPending() {
         var highlight = null;
+        var now = Date.now() / 1000;
 
         $(".playlistTable > tbody > tr").each(function() {
-            if($(this).find(".time").contents().filter(function() {
-                return this.nodeType == 3; // text node
-            }).text() === '')
+            var timestamp = $(this).find(".time").data("utc");
+            if(!timestamp)
                 highlight = this;
-            else
+            else if(timestamp < now)
                 return false;
         });
 
@@ -831,7 +826,6 @@ $().ready(function(){
             playable = null;
         }
 
-        $("#track-time").prop("disabled", highlight != null);
         $("#track-play").prop("disabled", !$("#track-add").is(":enabled") || highlight != null);
     }
 

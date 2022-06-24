@@ -635,8 +635,11 @@ table.recentAirplay td, .sub {
 }
 
 .pl-form-entry button {
-    width: 140px;
+    width: 148px;
+    padding-left: 0;
+    padding-right: 0;
     box-sizing: border-box;
+    white-space: nowrap;
 }
 
 .form-entry label, .pl-form-entry label {
@@ -1029,7 +1032,7 @@ div.toggle-time-entry div {
     cursor: pointer;
     width: 17px;
     height: 17px;
-    background-image: url('../img/clock-icon.png');
+    background-image: url('../img/clock-icon.svg');
 }
 
 .play-now {
@@ -1039,6 +1042,7 @@ div.toggle-time-entry div {
     font-size: 10px;
     border: none;
     color: #fff;
+    cursor: pointer;
     background-color: #2b547e;
     border-radius: 4px;
     box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
@@ -1048,4 +1052,23 @@ div.toggle-time-entry div {
 }
 .play-now button:active {
     transform: translate(1px, 1px);
+}
+
+.track-submit:disabled {
+    color: gray;
+}
+.track-submit:disabled img {
+    opacity: 0.5;
+}
+.track-submit img {
+    margin-bottom: -1px;
+    padding-left: 5px;
+}
+.track-submit#track-play img {
+    width: 8px;
+    height: 11px;
+}
+.track-submit#track-add img {
+    width: 20px;
+    height: 10px;
 }

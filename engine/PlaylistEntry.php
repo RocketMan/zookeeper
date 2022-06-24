@@ -365,6 +365,16 @@ class PlaylistEntry {
     }
 
     /**
+     * return seconds since the epoch UTC for 'created' timestamp
+     *
+     * @return timestamp if created is set, false otherwise
+     */
+    public function getCreatedTimestamp() {
+        $datetime = $this->getCreated();
+        return $datetime ? strtotime($datetime) : false;
+    }
+
+    /**
      * get the value of the PlaylistEntry as an associative array
      *
      * CAUTION: the values returned by this method are undefined
