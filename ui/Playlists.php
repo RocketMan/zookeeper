@@ -951,9 +951,6 @@ class Playlists extends MenuItem {
       $window = Engine::api(IPlaylist::class)->getTimestampWindow($playlistId);
       $startTime = $window['start'];
       $endTime = $window['end'];
-      $nowTime = new \DateTime("now");
-      $isLive = $nowTime >= $startTime && $nowTime <= $endTime;
-      $endTime = $isLive ? $nowTime : $endTime;
       $startAMPM = $startTime->format('g:i a');
       $endAMPM = $endTime->format('g:i a');
       $edate = $startTime->format('Y-m-d');
