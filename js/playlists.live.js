@@ -26,14 +26,16 @@ $().ready(function(){
     if(typeof $.fn.reverse === "undefined")
         $.fn.reverse = [].reverse;
 
-    var highlight = null;
+    var nextup = null;
+    var now = Date.now() / 1000;
     $(".playlistTable > tbody > tr").reverse().each(function() {
-        if($(this).find(".time").text() === '')
-            highlight = this;
+        var timestamp = $(this).find(".time").data("utc");
+        if(!timestamp || timestamp > now)
+            nextup = this;
         else
             return false;
     });
 
-    if(highlight)
-        $(highlight).before("<tr><td colspan='5' class='subhead2 coming-up'>Coming Up:</td></tr>");
+    if(nextup)
+        $(nextup).before("<tr><td colspan='5' class='subhead2 coming-up'>Coming Up:</td></tr>");
 });

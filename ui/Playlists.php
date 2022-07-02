@@ -386,14 +386,10 @@ class Playlists extends MenuItem {
         }
     }
 
-    public static function timestampToAMPM($time) {
-        if ($time == null || $time == '') {
-            return "";
-        } else {
-            return date('h:i a', strtotime($time));
-        }
+    private static function timestampToAMPM($timestamp) {
+        return $timestamp ? date('h:i a', $timestamp) : '';
     }
-    
+
     public function viewDJReviews() {
         $this->newEntity(Search::class)->doSearch();
     }
@@ -1900,48 +1896,52 @@ class Playlists extends MenuItem {
         return (new PlaylistObserver())->onComment(function($entry) use($playlist, $editMode, &$break) {
                 $editCell = $editMode ? "<TD>" .
                     $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
-                $timeplayed = self::timestampToAMPM($entry->getCreated());
+                $created = $entry->getCreatedTimestamp();
+                $timeplayed = self::timestampToAMPM($created);
                 echo "<TR class='commentRow".($editMode?"Edit":"")."'>" . $editCell .
-                     "<TD class='time'>$timeplayed</TD>" .
+                     "<TD class='time' data-utc='$created'>$timeplayed</TD>" .
                      "<TD COLSPAN=4>".UI::markdown($entry->getComment()).
                      "</TD></TR>\n";
                 $break = false;
             })->onLogEvent(function($entry) use($playlist, $editMode, &$break) {
-                $timeplayed = self::timestampToAMPM($entry->getCreated());
+                $created = $entry->getCreatedTimestamp();
+                $timeplayed = self::timestampToAMPM($created);
                 if($this->session->isAuth("u")) {
                     // display log entries only for authenticated users
                     $editCell = $editMode ? "<TD>" .
                         $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                     echo "<TR class='logEntry".($editMode?"Edit":"")."'>" . $editCell .
-                         "<TD class='time'>$timeplayed</TD>" .
+                         "<TD class='time' data-utc='$created'>$timeplayed</TD>" .
                          "<TD>".$entry->getLogEventType()."</TD>" .
                          "<TD COLSPAN=3>".$entry->getLogEventCode()."</TD>" .
                          "</TR>\n";
                     $break = false;
                 } else if(!$break) {
                     echo "<TR class='songDivider'>" . $editCell .
-                         "<TD class='time'>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
+                         "<TD class='time' data-utc='$created'>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
                     $break = true;
                 }
             })->onSetSeparator(function($entry) use($playlist, $editMode, &$break) {
                 if($editMode || !$break) {
                     $editCell = $editMode ? "<TD>" .
                         $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
-                    $timeplayed = self::timestampToAMPM($entry->getCreated());
+                    $created = $entry->getCreatedTimestamp();
+                    $timeplayed = self::timestampToAMPM($created);
                     echo "<TR class='songDivider'>" . $editCell .
-                         "<TD class='time'>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
+                         "<TD class='time' data-utc='$created'>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
                     $break = true;
                 }
             })->onSpin(function($entry) use($playlist, $editMode, &$break) {
                 $editCell = $editMode ? "<TD>" .
                     $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
-                $timeplayed = self::timestampToAMPM($entry->getCreated());
+                $created = $entry->getCreatedTimestamp();
+                $timeplayed = self::timestampToAMPM($created);
                 $reviewCell = $entry->getReviewed() ? "<div class='albumReview'></div>" : "";
                 $artistName = PlaylistEntry::swapNames($entry->getArtist());
 
                 $albumLink = $this->makeAlbumLink($entry, true);
                 echo "<TR class='songRow'>" . $editCell .
-                     "<TD class='time'>$timeplayed</TD>" .
+                     "<TD class='time' data-utc='$created'>$timeplayed</TD>" .
                      "<TD>" . $this->smartURL($artistName) . "</TD>" .
                      "<TD>" . $this->smartURL($entry->getTrack()) . "</TD>" .
                      "<TD>$reviewCell</TD>" .

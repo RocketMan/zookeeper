@@ -39,7 +39,6 @@ $().ready(function(){
         var hasPending = $("#track-time").data("live") && getPending() != null;
         $("#track-add").prop("disabled", !enableIt);
         $("#track-play").prop("disabled", !enableIt || hasPending);
-        $("#track-time").prop("disabled", hasPending);
     }
 
     function clearUserInput(clearArtistList) {
@@ -345,7 +344,7 @@ $().ready(function(){
             data: postData,
             success: function(respObj) {
                 // move succeeded, clear timestamp
-                tr.find("td").eq(1).html("");
+                tr.find("td").eq(1).data('utc','').html('');
                 $("#error-msg").text("");
                 updatePlayable();
             },
@@ -730,13 +729,13 @@ $().ready(function(){
 
     function getPending() {
         var highlight = null;
+        var now = Date.now() / 1000;
 
         $(".playlistTable > tbody > tr").each(function() {
-            if($(this).find(".time").contents().filter(function() {
-                return this.nodeType == 3; // text node
-            }).text() === '')
+            var timestamp = $(this).find(".time").data("utc");
+            if(!timestamp)
                 highlight = this;
-            else
+            else if(timestamp < now)
                 return false;
         });
 
@@ -827,7 +826,6 @@ $().ready(function(){
             playable = null;
         }
 
-        $("#track-time").prop("disabled", highlight != null);
         $("#track-play").prop("disabled", !$("#track-add").is(":enabled") || highlight != null);
     }
 
