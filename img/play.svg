@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<!-- License: CC0, Source: adapted from https://https://uxwing.com/play-pause-icon/ -->
+<!-- License: CC0, Source: adapted from https://uxwing.com/play-pause-icon/ -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 57.12 74.82">
-<path style="fill-rule:evenodd;" d="M51.93,43.9c5.49-3.55,5.47-7.5,0-10.64L9,1.86C4.55-.94-.12.71,0,6.55L.18,68.23c.38,6.34,4,8.07,9.33,5.14L51.93,43.9Z"/>
+<path fill-rule="evenodd" d="M51.93,43.9c5.49-3.55,5.47-7.5,0-10.64L9,1.86C4.55-.94-.12.71,0,6.55L.18,68.23c.38,6.34,4,8.07,9.33,5.14L51.93,43.9Z"/>
 </svg>
