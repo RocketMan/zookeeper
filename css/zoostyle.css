@@ -1032,7 +1032,7 @@ div.toggle-time-entry div {
     cursor: pointer;
     width: 17px;
     height: 17px;
-    background-image: url('../img/clock-icon.png');
+    background-image: url('../img/clock-icon.svg');
 }
 
 .play-now {
