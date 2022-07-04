@@ -1042,6 +1042,7 @@ div.toggle-time-entry div {
     font-size: 10px;
     border: none;
     color: #fff;
+    cursor: pointer;
     background-color: #2b547e;
     border-radius: 4px;
     box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
