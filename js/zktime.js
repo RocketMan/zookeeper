@@ -70,6 +70,11 @@
     }
 
     function setValue(ctl, val) {
+        if(val == null || val == '') {
+            ctl.val('--:--:-- AM');
+            return;
+        }
+
         var xval = val.split(':');
         if(xval.length == 3) {
             var numh = xval[0].match(/^\d+$/);
@@ -354,7 +359,7 @@
             break;
         default:
             this.each(function() {
-                $(this).data('zktime', { idx: false, seg: false, blur: [] }).val('--:--:-- AM');
+                $(this).data('zktime', { idx: false, seg: false, blur: [] }).zktime('val', null);
             });
             this.select(function(e) {
                 if(this.selectionStart != this.selectionEnd - 2)

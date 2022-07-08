@@ -727,7 +727,11 @@ $().ready(function(){
             timeEntry.slideDown().removeClass('zk-hidden');
         else {
             $("#error-msg").text('');
-            timeEntry.slideUp().addClass('zk-hidden').find('input').val('');
+            var input = timeEntry.slideUp().addClass('zk-hidden').find('input');
+            if(input.hasClass('zktime'))
+                input.zktime('seg', 1, null).zktime('seg', 2, 0);
+            else
+                input.val('');
         }
     });
 
