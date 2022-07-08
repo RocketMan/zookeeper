@@ -42,7 +42,7 @@ $().ready(function(){
     }
 
     function clearUserInput(clearArtistList) {
-        $("#track-time").val('');
+        $("#track-time").zktime('seg', 1, null).zktime('seg', 2, 0);
         $("#manual-entry input").removeClass('invalid-input').val('');
         $("#comment-entry textarea").val('');
         $("#track-title").attr('list',''); // webkit hack
@@ -229,8 +229,9 @@ $().ready(function(){
 
     $("INPUT[data-date]").focusout(function() {
         // if field is blank, apply no validation
-        var v = $(this).val();
-        if(v.length == 0) {
+        var zktime = $(this).hasClass('zktime');
+        var v = zktime ? $(this).zktime('val') : $(this).val();
+        if(v == null || v.length == 0) {
             $(this).removeClass('invalid-input');
             return;
         }
@@ -286,11 +287,14 @@ $().ready(function(){
         if(isNaN(val) || val < start || val > end) {
             $(this).removeClass('prefilled-input');
             $(this).addClass('invalid-input');
-            $(this).val("").focus();
+            if(zktime)
+                $(this).data('last-min', false).focus();
+            else
+                $(this).val("").focus();
             showUserError('Time is invalid');
         } else {
             // if we massaged time for webkit, set canonical value
-            if($(this).val() != v)
+            if(!zktime && $(this).val() != v)
                 $(this).val(v);
 
             // if time is after midnight, set edate field to correct date
@@ -422,7 +426,7 @@ $().ready(function(){
             track =  $("#track-title").val();
         }
         showDate =  $("#show-date").val();
-        spinTime =  $("#track-time").val();
+        spinTime =  $("#track-time").zktime('val');
 
         var postData = {
             playlist: $("#track-playlist").val(),
@@ -835,6 +839,21 @@ $().ready(function(){
         return b.value == 'manual-entry' || a.value != 'manual-entry' &&
             a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1;
     })).val('manual-entry');
+
+    $("#track-time").zktime('val', $("#track-time").data('init-val')).
+        zktime('seg', 1, null).
+        zktime('seg', 2, 0).
+        zktime('blur', function(seg) {
+            if(seg == 1) {
+                var now = $(this).zktime('seg', 1);
+                if(now.match(/^\d+$/)) {
+                    var last = $(this).data('last-min');
+                    if(last !== false && now < last)
+                        $(this).zktime('inc', 0);
+                    $(this).data('last-min', now);
+                }
+            }
+        });
 
     $("*[data-focus]").focus();
 });

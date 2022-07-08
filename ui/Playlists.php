@@ -809,6 +809,7 @@ class Playlists extends MenuItem {
         }
 
     ?>
+        <form>
         <div class='pl-form-entry'>
             <input id='show-date' name='edate' type='hidden' value="<?php echo $playlist['showdate']; ?>" >
             <input id='show-time' type='hidden' value="<?php echo $playlist['showtime']; ?>" >
@@ -877,10 +878,32 @@ class Playlists extends MenuItem {
                 </div>
             </div> <!-- track-entry -->
             <?php
-                $window = Engine::api(IPlaylist::class)->getTimestampWindow($playlistId);
+                $api = Engine::api(IPlaylist::class);
+                $window = $api->getTimestampWindow($playlistId);
+                $time = null;
+                $observer = (new PlaylistObserver())->onComment(function($entry) use(&$time) {
+                    $created = $entry->getCreatedTime();
+                    if($created) $time = $created;
+                })->onLogEvent(function($entry) use(&$time) {
+                    $created = $entry->getCreatedTime();
+                    if($created) $time = $created;
+                })->onSetSeparator(function($entry) use(&$time) {
+                    $created = $entry->getCreatedTime();
+                    if($created) $time = $created;
+                })->onSpin(function($entry) use(&$time) {
+                    $created = $entry->getCreatedTime();
+                    if($created) $time = $created;
+                });
+                $api->getTracksWithObserver($playlistId, $observer);
+                if(!$time) {
+                    $startTime = $api->getTimestampWindow($playlistId, false)['start'];
+                    $time = $startTime->format('H:i:s');
+                }
+                $min = explode(":", $time)[1];
+
                 echo "<div id='time-entry'".($isLiveShow?" class='zk-hidden'":"").">
                     <label>Time:</label>
-                    <input id='track-time' class='timepicker' step='1' type='time' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' />
+                    <input id='track-time' class='zktime' type='text' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-init-val='$time' data-last-min='$min' />
                     <span class='track-info".($isLiveShow?"":" zk-hidden")."'>Leave blank for current time</span>
                 </div>\n";
             ?>
@@ -891,6 +914,7 @@ class Playlists extends MenuItem {
             </div>
             <div class='toggle-time-entry<?php if (!$isLiveShow) echo " zk-hidden"; ?>'><div><!--&#x1f551;--></div></div>
         </div> <!-- track-editor -->
+        </form>
         <hr>
         <div id="extend-show" class="zk-popup">
             <div class="zk-popup-content">
@@ -1968,9 +1992,10 @@ class Playlists extends MenuItem {
                 $observer->observe(new PlaylistEntry($entry));
         echo "</TBODY></TABLE>\n";
 
-        if($editMode)
+        if($editMode) {
+            UI::emitJS('js/zktime.js');
             UI::emitJS('js/playlists.track.js');
-        else {
+        } else {
             $show = $api->getPlaylist($playlist);
             if($api->isNowWithinShow($show))
                 UI::emitJS('js/playlists.live.js');
