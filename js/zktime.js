@@ -268,12 +268,12 @@
                 (this.selectionStart + 3);
             if(newStart < 0) {
                 if(tab) {
-                    var inputs = $(this).closest('form').find('input:visible:not([type=hidden]), button:visible');
+                    var inputs = $(this).closest('form').find('input:visible, textarea:visible, button:visible');
                     inputs.filter(':lt(' + inputs.index(this) + '):last').focus();
                 }
             } else if(newStart > 11) {
                 if(tab) {
-                    var inputs = $(this).closest('form').find('input:visible:not([type=hidden]), button:visible');
+                    var inputs = $(this).closest('form').find('input:visible, textarea:visible, button:visible');
                     inputs.filter(':gt(' + inputs.index(this) + '):first').focus();
                 }
             } else
