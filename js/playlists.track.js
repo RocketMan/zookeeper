@@ -42,7 +42,6 @@ $().ready(function(){
     }
 
     function clearUserInput(clearArtistList) {
-        $("#track-time").zktime('seg', 1, null).zktime('seg', 2, 0);
         $("#manual-entry input").removeClass('invalid-input').val('');
         $("#comment-entry textarea").val('');
         $("#track-title").attr('list',''); // webkit hack
@@ -483,6 +482,7 @@ $().ready(function(){
 
                 updatePlayable();
                 clearUserInput(true);
+                $("#track-time").zktime('seg', 1, null).zktime('seg', 2, 0);
 
                 $("#track-type-pick").val('manual-entry').trigger('change');
 
