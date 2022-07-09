@@ -852,7 +852,7 @@ $().ready(function(){
                 var now = $(this).zktime('seg', 1);
                 if(now.match(/^\d+$/)) {
                     var last = $(this).data('last-min');
-                    if(last !== false && now < last)
+                    if(last !== false && now < last && last - now > 30)
                         $(this).zktime('inc', 0);
                     $(this).data('last-min', now);
                 }
