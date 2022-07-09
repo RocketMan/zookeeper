@@ -809,7 +809,6 @@ class Playlists extends MenuItem {
         }
 
     ?>
-        <form>
         <div class='pl-form-entry'>
             <input id='show-date' name='edate' type='hidden' value="<?php echo $playlist['showdate']; ?>" >
             <input id='show-time' type='hidden' value="<?php echo $playlist['showtime']; ?>" >
@@ -914,7 +913,6 @@ class Playlists extends MenuItem {
             </div>
             <div class='toggle-time-entry<?php if (!$isLiveShow) echo " zk-hidden"; ?>'><div><!--&#x1f551;--></div></div>
         </div> <!-- track-editor -->
-        </form>
         <hr>
         <div id="extend-show" class="zk-popup">
             <div class="zk-popup-content">
