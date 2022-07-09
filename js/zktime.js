@@ -48,21 +48,28 @@
  *       fires when a segment blurs.  handler receives segment number.
  */
 (function($) {
+    const intl = new Date().toLocaleTimeString().match(/am|pm/i) == null;
+
+    const max = [ intl ? 23 : 12, 59, 59 ];
+    const min = [ intl ? 0 : 1, 0, 0 ];
+
     function getValue(ctl) {
         var val = null;
         var xval = ctl.val().split(' ');
-        if(xval.length == 2) {
+        if(xval.length == (intl ? 1 : 2)) {
             var oval = xval[0].split(':');
             if(oval.length == 3 &&
                    oval.every(function(val) {
                        return val.match(/^\d+$/);
                    })) {
                 var h = oval[0]*1;
-                var ampm = xval[1].toUpperCase();
-                if(ampm == 'PM' && h < 12)
-                    oval[0] = h + 12;
-                else if(ampm == 'AM' && h == 12)
-                    oval[0] = '00';
+                if(!intl) {
+                    var ampm = xval[1].toUpperCase();
+                    if(ampm == 'PM' && h < 12)
+                        oval[0] = h + 12;
+                    else if(ampm == 'AM' && h == 12)
+                        oval[0] = '00';
+                }
                 val = oval.join(':');
             }
         }
@@ -71,7 +78,7 @@
 
     function setValue(ctl, val) {
         if(val == null || val == '') {
-            ctl.val('--:--:-- AM');
+            ctl.val(intl ? '--:--:--' : '--:--:-- AM');
             return;
         }
 
@@ -79,14 +86,14 @@
         if(xval.length == 3) {
             var numh = xval[0].match(/^\d+$/);
             var ampm = !numh || xval[0]*1 < 12 ? 'AM' : 'PM';
-            if(numh) {
+            if(numh && !intl) {
                 var h = xval[0]*1;
                 if(h == 0)
                     xval[0] = '12';
                 else if(h > 12)
                     xval[0] = String(h - 12);
             }
-            ctl.val(xval.map(x => x.padStart(2, '0')).join(':') + ' ' + ampm);
+            ctl.val(xval.map(x => x.padStart(2, '0')).join(':') + (intl ? '' : ' ' + ampm));
         }
     }
 
@@ -128,7 +135,8 @@
             oval[seg] = val == null ? '--' : String(val).padStart(2, '0');
             break;
         case 3:
-            xval[1] = val;
+            if(!intl)
+                xval[1] = val;
             break;
         }
         xval[0] = oval.join(':');
@@ -178,18 +186,15 @@
         }
     }
 
-    var max = [ 12, 59, 59 ];
-    var min = [ 1, 0, 0 ];
     function inputSegment(ctl, val) {
         var start = ctl.selectionStart;
         var oval, xval = $(ctl).val().split(' ');
         var inst, seg;
         switch(val) {
         case 'A':
-            xval[1] = 'AM';
-            break;
         case 'P':
-            xval[1] = 'PM';
+            if(!intl)
+                xval[1] = val == 'A' ? 'AM' : 'PM';
             break;
         default:
             oval = xval[0].split(':');
@@ -213,7 +218,7 @@
                 tab.which = tab.keyCode = 0x09;
                 setTimeout(function() {
                     $(ctl).trigger(tab);
-                }, 0);
+                }, 50);
             } else
                 inst.seg = seg;
 
@@ -244,7 +249,7 @@
             else if(val < min[seg])
                 val = max[seg];
 
-            if(seg == 0 && val == (up ? max[0] : max[0] - 1)) {
+            if(!intl && seg == 0 && val == (up ? max[0] : max[0] - 1)) {
                 setTimeout(function() {
                     upDownSegment(ctl, up, 3);
                 }, 0);
@@ -271,7 +276,7 @@
                     var inputs = $('input:visible, textarea:visible, button:visible');
                     inputs.filter(':lt(' + inputs.index(this) + '):last').focus();
                 }
-            } else if(newStart > 11) {
+            } else if(newStart > (intl ? 8 : 11)) {
                 if(tab) {
                     var inputs = $('input:visible, textarea:visible, button:visible');
                     inputs.filter(':gt(' + inputs.index(this) + '):first').focus();
@@ -319,6 +324,7 @@
                     e.which -= 0x30;
                 inputSegment(this, String.fromCharCode(e.which));
             }
+            break;
         }
         e.preventDefault();
     }
