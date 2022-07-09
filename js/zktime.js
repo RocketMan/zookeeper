@@ -136,7 +136,7 @@
             break;
         case 3:
             if(!intl)
-                xval[1] = val;
+                xval[1] = val == null ? 'AM' : val;
             break;
         }
         xval[0] = oval.join(':');
@@ -297,24 +297,9 @@
         case 0x08: // backspace
         case 0x7f: // delete
         case 0x2e: // delete fx
-            switch(this.selectionStart) {
-            case 0:
-            case 1:
-                $(this).val('--:' + $(this).val().substring(3));
-                this.selectionStart = 0;
-                this.selectionEnd = 2;
-                break;
-            case 3:
-            case 4:
-                $(this).val($(this).val().substring(0, 3) + '--:' + $(this).val().substring(6));
-                this.selectionStart = 3;
-                break;
-            case 6:
-            case 7:
-                $(this).val($(this).val().substring(0, 6) + '--' + $(this).val().substring(8));
-                this.selectionStart = 6;
-                break;
-            }
+            var seg = getSegment(this);
+            setSegment($(this), seg, null);
+            focusSegment(this, seg);
             break;
         default:
             if(e.which >= 0x30 && e.which <= 0x39 ||
@@ -365,16 +350,33 @@
             break;
         default:
             this.each(function() {
-                $(this).data('zktime', { idx: false, seg: false, blur: [] }).zktime('val', null);
+                $(this).data('zktime', { idx: false, seg: false, focus: false, blur: [] }).zktime('val', null);
             });
             this.select(function(e) {
                 if(this.selectionStart != this.selectionEnd - 2)
                     focusCurrent(this);
             }).on("click", function(e) {
-                focusCurrent(this);
+                // data.focus is a short-lived state used to synchronize
+                // click-initiated focus
+                //
+                // the idea is that click comes some moments after focus;
+                // we don't want the first click to change the default
+                // segment, but subsequent clicks may well do.
+                var data = $(this).data('zktime');
+                if(data.focus !== false) {
+                    focusSegment(this, data.focus);
+                    data.focus = false;
+                } else
+                    focusCurrent(this);
             }).on("focus", function(e) {
                 setTimeout(function(ctl) {
                     initialFocus(ctl);
+
+                    var data = $(ctl).data('zktime');
+                    data.focus = getSegment(ctl);
+                    setTimeout(function(data) {
+                        data.focus = false;
+                    }, 250, data);
                 }, 0, this);
             }).on("blur", function(e) {
                 blurSeg(this);
