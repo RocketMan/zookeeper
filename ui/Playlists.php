@@ -900,9 +900,16 @@ class Playlists extends MenuItem {
                 }
                 $min = explode(":", $time)[1];
 
+                // this is probably unnecessary, as desktop browsers *should*
+                // degrade 'tel' to 'text', *but* as this is a hack to
+                // deal with the lack of keyDown support in mobile input
+                // type=text, we'll include 'tel' only for mobile devices...
+                $ttype = preg_match('/tablet|mobile|android/i',
+                        $_SERVER['HTTP_USER_AGENT'] ?? '') ? "tel" : "text";
+
                 echo "<div id='time-entry'".($isLiveShow?" class='zk-hidden'":"").">
                     <label>Time:</label>
-                    <input id='track-time' class='zktime' type='text' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-init-val='$time' data-last-min='$min' />
+                    <input id='track-time' class='zktime' type='$ttype' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-init-val='$time' data-last-min='$min' />
                     <span class='track-info".($isLiveShow?"":" zk-hidden")."'>Leave blank for current time</span>
                 </div>\n";
             ?>
