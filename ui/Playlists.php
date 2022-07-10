@@ -909,7 +909,7 @@ class Playlists extends MenuItem {
 
                 echo "<div id='time-entry'".($isLiveShow?" class='zk-hidden'":"").">
                     <label>Time:</label>
-                    <input id='track-time' class='zktime' type='$ttype' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-init-val='$time' data-last-min='$min' />
+                    <input id='track-time' class='fxtime' type='$ttype' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-init-val='$time' data-last-min='$min' />
                     <span class='track-info".($isLiveShow?"":" zk-hidden")."'>Leave blank for current time</span>
                 </div>\n";
             ?>
@@ -1998,7 +1998,7 @@ class Playlists extends MenuItem {
         echo "</TBODY></TABLE>\n";
 
         if($editMode) {
-            UI::emitJS('js/zktime.js');
+            UI::emitJS('js/fxtime.js');
             UI::emitJS('js/playlists.track.js');
         } else {
             $show = $api->getPlaylist($playlist);

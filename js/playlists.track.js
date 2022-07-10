@@ -228,8 +228,8 @@ $().ready(function(){
 
     $("INPUT[data-date]").focusout(function() {
         // if field is blank, apply no validation
-        var zktime = $(this).hasClass('zktime');
-        var v = zktime ? $(this).zktime('val') : $(this).val();
+        var fxtime = $(this).hasClass('fxtime');
+        var v = fxtime ? $(this).fxtime('val') : $(this).val();
         if(v == null || v.length == 0) {
             $(this).removeClass('invalid-input');
             return;
@@ -286,14 +286,14 @@ $().ready(function(){
         if(isNaN(val) || val < start || val > end) {
             $(this).removeClass('prefilled-input');
             $(this).addClass('invalid-input');
-            if(zktime)
+            if(fxtime)
                 $(this).data('last-min', false).focus();
             else
                 $(this).val("").focus();
             showUserError('Time is invalid');
         } else {
             // if we massaged time for webkit, set canonical value
-            if(!zktime && $(this).val() != v)
+            if(!fxtime && $(this).val() != v)
                 $(this).val(v);
 
             // if time is after midnight, set edate field to correct date
@@ -425,7 +425,7 @@ $().ready(function(){
             track =  $("#track-title").val();
         }
         showDate =  $("#show-date").val();
-        spinTime =  $("#track-time").zktime('val');
+        spinTime =  $("#track-time").fxtime('val');
 
         var postData = {
             playlist: $("#track-playlist").val(),
@@ -482,7 +482,7 @@ $().ready(function(){
 
                 updatePlayable();
                 clearUserInput(true);
-                $("#track-time").zktime('seg', 1, null).zktime('seg', 2, 0);
+                $("#track-time").fxtime('seg', 1, null).fxtime('seg', 2, 0);
 
                 $("#track-type-pick").val('manual-entry').trigger('change');
 
@@ -728,8 +728,8 @@ $().ready(function(){
         else {
             $("#error-msg").text('');
             var input = timeEntry.slideUp().addClass('zk-hidden').find('input');
-            if(input.hasClass('zktime'))
-                input.zktime('seg', 1, null).zktime('seg', 2, 0);
+            if(input.hasClass('fxtime'))
+                input.fxtime('seg', 1, null).fxtime('seg', 2, 0);
             else
                 input.val('');
         }
@@ -844,16 +844,17 @@ $().ready(function(){
             a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1;
     })).val('manual-entry');
 
-    $("#track-time").zktime('val', $("#track-time").data('init-val')).
-        zktime('seg', 1, null).
-        zktime('seg', 2, 0).
-        zktime('blur', function(seg) {
+    $("input.fxtime").fxtime();
+    $("#track-time").fxtime('val', $("#track-time").data('init-val')).
+        fxtime('seg', 1, null).
+        fxtime('seg', 2, 0).
+        fxtime('blur', function(seg) {
             if(seg == 1) {
-                var now = $(this).zktime('seg', 1);
+                var now = $(this).fxtime('seg', 1);
                 if(now.match(/^\d+$/)) {
                     var last = $(this).data('last-min');
                     if(last !== false && now < last && last - now > 30)
-                        $(this).zktime('inc', 0);
+                        $(this).fxtime('inc', 0);
                     $(this).data('last-min', now);
                 }
             }

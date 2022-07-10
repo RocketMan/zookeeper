@@ -1,50 +1,65 @@
 //
-// Zookeeper Online
+// fxtime -- Firefox-like time element for jQuery
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
-// @link https://zookeeper.ibinx.com/
-// @license GPL-3.0
+// @copyright Copyright (C) 2022 Jim Mason <jmason@ibinx.com>
+// @link https://www.ibinx.com/
+// @license MIT
 //
-// This code is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License, version 3,
-// as published by the Free Software Foundation.
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
 //
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
 //
-// You should have received a copy of the GNU General Public License,
-// version 3, along with this program.  If not, see
-// http://www.gnu.org/licenses/
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// Firefox is a trademark of the Mozilla Foundation in the U.S. and
+// other countries.  This work incorporates no source code from
+// Firefox or the Mozilla Foundation, and is not affiliated with
+// nor endorsed by the Mozilla Foundation.
 //
 
-/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! fxtime (C) 2022 Jim Mason <jmason@ibinx.com> | @source: https://www.ibinx.com/ | @license: magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt MIT/Expat */
+
 
 /**
- * zktime - Zookeeper Online time element
+ * fxtime -- Firefox-like time element for jQuery
  *
- * To install, add class 'zktime' to text input element.
+ * To install, invoke $.fxtime on the desired elements; e.g.,
+ *
+ *   $(selector).fxtime();
+ *
  *
  * The following methods are available:
  *
- *   $(selector).zktime('val') - get 24-hour time value
+ *   $(selector).fxtime('val') - get 24-hour time value
  *       returns null if time is not set
  *
- *   $(selector).zktime('val', value) - set 24-hour time value
- *       value format is hh:mm:ss, where 0 <= hh <= 23
+ *   $(selector).fxtime('val', value) - set 24-hour time value
+ *       value format is hh:mm:ss, where 0 <= hh <= 23, or null
  *
- *   $(selector).zktime('seg', seg) - get specified segment value
+ *   $(selector).fxtime('seg', seg) - get specified segment value
  *       seg:  0 = hours, 1 = minutes, 2 = seconds, 3 = AM/PM
  *
- *   $(selector).zktime('seg', seg, value) - set specified segment
- *   $(selector).zktime('seg', seg, null) - clear specified segment
+ *   $(selector).fxtime('seg', seg, value) - set specified segment
+ *   $(selector).fxtime('seg', seg, null) - clear specified segment
  *
- *   $(selector).zktime('inc', seg) - increment specified segment
- *   $(selector).zktime('inc', seg, -1) - decrement specified segment
+ *   $(selector).fxtime('inc', seg) - increment specified segment
+ *   $(selector).fxtime('inc', seg, -1) - decrement specified segment
  *
- *   $(selector).zktime('blur', function(seg) {}) - install blur event handler
+ *   $(selector).fxtime('blur', function(seg) {}) - install blur event handler
  *       fires when a segment blurs.  handler receives segment number.
  */
 (function($) {
@@ -162,7 +177,7 @@
     function focusCurrent(ctl) {
         ctl.selectionEnd = ctl.selectionStart;
         var seg = getSegment(ctl);
-        var inst = $(ctl).data('zktime');
+        var inst = $(ctl).data('fxtime');
         if(inst.idx !== false && inst.idx != seg)
             blurSeg(ctl, inst.idx);
         inst.idx = seg;
@@ -202,7 +217,7 @@
             if(seg >= 3)
                 break;
 
-            inst = $(ctl).data('zktime');
+            inst = $(ctl).data('fxtime');
             if(inst.seg === seg && oval[seg].match(/^\d+$/)) {
                 var n = oval[seg]*10 + val*1;
                 if(n <= max[seg])
@@ -315,7 +330,7 @@
     }
 
     function blurSeg(ctl, seg) {
-        var inst = $(ctl).data('zktime');
+        var inst = $(ctl).data('fxtime');
         inst.seg = false;
         if(typeof seg === 'undefined') {
             seg = getSegment(ctl);
@@ -327,7 +342,7 @@
         });
     }
 
-    $.fn.zktime = function(action, value, value2) {
+    $.fn.fxtime = function(action, value, value2) {
         switch(action) {
         case 'val':
             if(typeof value === 'undefined')
@@ -346,11 +361,11 @@
             break;
         case 'blur':
             if(typeof value === 'function')
-                this.data('zktime').blur.push(value);
+                this.data('fxtime').blur.push(value);
             break;
         default:
             this.each(function() {
-                $(this).data('zktime', { idx: false, seg: false, focus: false, blur: [] }).zktime('val', null);
+                $(this).data('fxtime', { idx: false, seg: false, focus: false, blur: [] }).fxtime('val', null);
             });
             this.select(function(e) {
                 if(this.selectionStart != this.selectionEnd - 2)
@@ -362,7 +377,7 @@
                 // the idea is that click comes some moments after focus;
                 // we don't want the first click to change the default
                 // segment, but subsequent clicks may well do.
-                var data = $(this).data('zktime');
+                var data = $(this).data('fxtime');
                 if(data.focus !== false) {
                     focusSegment(this, data.focus);
                     data.focus = false;
@@ -372,7 +387,7 @@
                 setTimeout(function(ctl) {
                     initialFocus(ctl);
 
-                    var data = $(ctl).data('zktime');
+                    var data = $(ctl).data('fxtime');
                     data.focus = getSegment(ctl);
                     setTimeout(function(data) {
                         data.focus = false;
@@ -387,8 +402,4 @@
         };
         return this;
     }
-
-    $().ready(function() {
-        $("input.zktime").zktime();
-    });
 }(jQuery));
