@@ -1,5 +1,5 @@
 //
-// fxtime -- Firefox-like time element for jQuery
+// jquery.fxtime -- Firefox-like time element for jQuery
 //
 // @author Jim Mason <jmason@ibinx.com>
 // @copyright Copyright (C) 2022 Jim Mason <jmason@ibinx.com>
@@ -25,17 +25,16 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-// Firefox is a trademark of the Mozilla Foundation in the U.S. and
-// other countries.  This work incorporates no source code from
-// Firefox or the Mozilla Foundation, and is not affiliated with
-// nor endorsed by the Mozilla Foundation.
+// Firefox is a trademark of the Mozilla Foundation ('Mozilla').
+// This work incorporates no source code from Firefox or Mozilla,
+// and is neither affiliated with nor endorsed by Mozilla.
 //
 
-/*! fxtime (C) 2022 Jim Mason <jmason@ibinx.com> | @source: https://www.ibinx.com/ | @license: magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt MIT/Expat */
+/*! jquery.fxtime (C) 2022 Jim Mason <jmason@ibinx.com> | @source: https://www.ibinx.com/ | @license: magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt MIT/Expat */
 
 
 /**
- * fxtime -- Firefox-like time element for jQuery
+ * jquery.fxtime -- Firefox-like time element for jQuery
  *
  * To install, invoke $.fxtime on the desired elements; e.g.,
  *
@@ -112,35 +111,13 @@
         }
     }
 
-    function getSegment(ctl) {
-        return Math.floor(ctl.selectionStart / 3);
-    }
-
-    function focusSegment(ctl, seg) {
-        switch(seg) {
-        case 0:
-            ctl.selectionStart = 1;
-            break;
-        case 1:
-            ctl.selectionStart = 3;
-            break;
-        case 2:
-            ctl.selectionStart = 6;
-            break;
-        case 3:
-            ctl.selectionStart = 9;
-            break;
-        }
-        focusCurrent(ctl);
-    }
-
     function getSegmentValue(ctl, seg) {
         var xval = ctl.val().split(' ');
         var oval = xval[0].split(':');
         return seg < 3 ? oval[seg] : xval[1];
     }
 
-    function setSegment(ctl, seg, val) {
+    function setSegmentValue(ctl, seg, val) {
         var xval = ctl.val().split(' ');
         var oval = xval[0].split(':');
         switch(seg*1) {
@@ -159,19 +136,21 @@
         return this;
     }
 
-    function initialFocus(ctl) {
-        var set = false;
-        var xval = $(ctl).val().split(' ');
-        var val = xval[0].split(':');
-        $.each(val, function(index, value) {
-            if(!set && !value.match(/^\d+$/)) {
-                set = true;
-                focusSegment(ctl, index);
-            }
-        });
+    function getSegment(ctl) {
+        return Math.floor(ctl.selectionStart / 3);
+    }
 
-        if(!set)
-            focusCurrent(ctl);
+    function blurSegment(ctl, seg) {
+        var inst = $(ctl).data('fxtime');
+        inst.seg = false;
+        if(typeof seg === 'undefined') {
+            seg = getSegment(ctl);
+            inst.idx = false;
+        }
+
+        $.each(inst.blur, function(index, callback) {
+            callback.call(ctl, seg);
+        });
     }
 
     function focusCurrent(ctl) {
@@ -179,7 +158,7 @@
         var seg = getSegment(ctl);
         var inst = $(ctl).data('fxtime');
         if(inst.idx !== false && inst.idx != seg)
-            blurSeg(ctl, inst.idx);
+            blurSegment(ctl, inst.idx);
         inst.idx = seg;
         switch(seg) {
         case 0:
@@ -201,48 +180,37 @@
         }
     }
 
-    function inputSegment(ctl, val) {
-        var start = ctl.selectionStart;
-        var oval, xval = $(ctl).val().split(' ');
-        var inst, seg;
-        switch(val) {
-        case 'A':
-        case 'P':
-            if(!intl)
-                xval[1] = val == 'A' ? 'AM' : 'PM';
+    function focusSegment(ctl, seg) {
+        switch(seg) {
+        case 0:
+            ctl.selectionStart = 1;
             break;
-        default:
-            oval = xval[0].split(':');
-            seg = getSegment(ctl);
-            if(seg >= 3)
-                break;
-
-            inst = $(ctl).data('fxtime');
-            if(inst.seg === seg && oval[seg].match(/^\d+$/)) {
-                var n = oval[seg]*10 + val*1;
-                if(n <= max[seg])
-                    val = n;
-            }
-
-            // use fx semantics -- move focus to next segment when full
-            if(inst.seg === seg || val > Math.floor(max[seg] / 10)) {
-                if(val < min[seg])
-                    val = min[seg];
-
-                var tab = $.Event('keydown');
-                tab.which = tab.keyCode = 0x09;
-                setTimeout(function() {
-                    $(ctl).trigger(tab);
-                }, 50);
-            } else
-                inst.seg = seg;
-
-            oval[seg] = String(val).padStart(2, '0');
-            xval[0] = oval.join(':');
+        case 1:
+            ctl.selectionStart = 3;
+            break;
+        case 2:
+            ctl.selectionStart = 6;
+            break;
+        case 3:
+            ctl.selectionStart = 9;
             break;
         }
-        $(ctl).val(xval.join(' '));
-        ctl.selectionEnd = ctl.selectionStart = start;
+        focusCurrent(ctl);
+    }
+
+    function initialFocus(ctl) {
+        var set = false;
+        var xval = $(ctl).val().split(' ');
+        var val = xval[0].split(':');
+        $.each(val, function(index, value) {
+            if(!set && !value.match(/^\d+$/)) {
+                set = true;
+                focusSegment(ctl, index);
+            }
+        });
+
+        if(!set)
+            focusCurrent(ctl);
     }
 
     function upDownSegment(ctl, up, seg) {
@@ -272,6 +240,49 @@
 
             oval[seg] = String(val).padStart(2, '0');
             xval[0] = oval.join(':');
+        }
+        $(ctl).val(xval.join(' '));
+        ctl.selectionEnd = ctl.selectionStart = start;
+    }
+
+    function inputSegment(ctl, val) {
+        var start = ctl.selectionStart;
+        var xval = $(ctl).val().split(' ');
+        switch(val) {
+        case 'A':
+        case 'P':
+            if(!intl)
+                xval[1] = val == 'A' ? 'AM' : 'PM';
+            break;
+        default:
+            var oval = xval[0].split(':');
+            var seg = getSegment(ctl);
+            if(seg >= 3)
+                break;
+
+            var inst = $(ctl).data('fxtime');
+            if(inst.seg === seg && oval[seg].match(/^\d+$/)) {
+                var n = oval[seg]*10 + val*1;
+                if(n <= max[seg])
+                    val = n;
+            }
+
+            // use fx semantics -- move focus to next segment when full
+            if(inst.seg === seg || val > Math.floor(max[seg] / 10)) {
+                if(val < min[seg])
+                    val = min[seg];
+
+                var tab = $.Event('keydown');
+                tab.which = tab.keyCode = 0x09;
+                setTimeout(function() {
+                    $(ctl).trigger(tab);
+                }, 50);
+            } else
+                inst.seg = seg;
+
+            oval[seg] = String(val).padStart(2, '0');
+            xval[0] = oval.join(':');
+            break;
         }
         $(ctl).val(xval.join(' '));
         ctl.selectionEnd = ctl.selectionStart = start;
@@ -313,13 +324,13 @@
         case 0x7f: // delete
         case 0x2e: // delete fx
             var seg = getSegment(this);
-            setSegment($(this), seg, null);
+            setSegmentValue($(this), seg, null);
             focusSegment(this, seg);
             break;
         default:
-            if(e.which >= 0x30 && e.which <= 0x39 ||
-                    e.which >= 0x60 && e.which <= 0x69 ||
-                    e.which == 0x41 || e.which == 0x50) {
+            if(e.which >= 0x30 && e.which <= 0x39 ||       // numeric
+                    e.which >= 0x60 && e.which <= 0x69 ||  // numeric keypad
+                    e.which == 0x41 || e.which == 0x50) {  // A, P
                 if(e.which >= 0x60)
                     e.which -= 0x30;
                 inputSegment(this, String.fromCharCode(e.which));
@@ -327,19 +338,6 @@
             break;
         }
         e.preventDefault();
-    }
-
-    function blurSeg(ctl, seg) {
-        var inst = $(ctl).data('fxtime');
-        inst.seg = false;
-        if(typeof seg === 'undefined') {
-            seg = getSegment(ctl);
-            inst.idx = false;
-        }
-
-        $.each(inst.blur, function(index, callback) {
-            callback.call(ctl, seg);
-        });
     }
 
     $.fn.fxtime = function(action, value, value2) {
@@ -354,7 +352,7 @@
             if(typeof value2 === 'undefined')
                 return getSegmentValue(this, value);
             else
-                setSegment(this, value, value2);
+                setSegmentValue(this, value, value2);
             break;
         case 'inc':
             upDownSegment(this, typeof value2 == 'undefined' || value2 >= 0, value);
@@ -367,6 +365,7 @@
             this.each(function() {
                 $(this).data('fxtime', { idx: false, seg: false, focus: false, blur: [] }).fxtime('val', null);
             });
+
             this.select(function(e) {
                 if(this.selectionStart != this.selectionEnd - 2)
                     focusCurrent(this);
@@ -394,7 +393,7 @@
                     }, 250, data);
                 }, 0, this);
             }).on("blur", function(e) {
-                blurSeg(this);
+                blurSegment(this);
             }).on("cut copy paste", function(e) {
                 e.preventDefault();
             }).keydown(handleKeydown).attr("ondrop", "return false;");
