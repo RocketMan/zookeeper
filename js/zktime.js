@@ -273,12 +273,12 @@
                 (this.selectionStart + 3);
             if(newStart < 0) {
                 if(tab) {
-                    var inputs = $('input:visible, textarea:visible, button:visible');
+                    var inputs = $('input:visible, textarea:visible, select:visible, button:visible');
                     inputs.filter(':lt(' + inputs.index(this) + '):last').focus();
                 }
             } else if(newStart > (intl ? 8 : 11)) {
                 if(tab) {
-                    var inputs = $('input:visible, textarea:visible, button:visible');
+                    var inputs = $('input:visible, textarea:visible, select:visible, button:visible');
                     inputs.filter(':gt(' + inputs.index(this) + '):first').focus();
                 }
             } else
