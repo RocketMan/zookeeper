@@ -1998,7 +1998,7 @@ class Playlists extends MenuItem {
         echo "</TBODY></TABLE>\n";
 
         if($editMode) {
-            UI::emitJS('js/fxtime.js');
+            UI::emitJS('js/jquery.fxtime.js');
             UI::emitJS('js/playlists.track.js');
         } else {
             $show = $api->getPlaylist($playlist);
