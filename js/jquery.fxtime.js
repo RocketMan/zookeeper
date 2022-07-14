@@ -362,9 +362,10 @@
                 this.data('fxtime').blur.push(value);
             break;
         default:
+            // each selected element gets its own unique instance data
             this.each(function() {
-                $(this).data('fxtime', { idx: false, seg: false, focus: false, blur: [] }).fxtime('val', null);
-            });
+                $(this).data('fxtime', { idx: false, seg: false, focus: false, blur: [] });
+            }).attr('autocomplete', 'off').fxtime('val', null);
 
             this.select(function(e) {
                 if(this.selectionStart != this.selectionEnd - 2)
