@@ -1068,3 +1068,7 @@ div.toggle-time-entry div {
     width: 20px;
     height: 10px;
 }
+
+.fxtime {
+    font-family: monospace;
+}
