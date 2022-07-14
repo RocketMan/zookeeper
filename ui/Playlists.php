@@ -877,17 +877,45 @@ class Playlists extends MenuItem {
                 </div>
             </div> <!-- track-entry -->
             <?php
-                $window = Engine::api(IPlaylist::class)->getTimestampWindow($playlistId);
+                $api = Engine::api(IPlaylist::class);
+                $window = $api->getTimestampWindow($playlistId);
+                $time = null;
+                $observer = (new PlaylistObserver())->onComment(function($entry) use(&$time) {
+                    $created = $entry->getCreatedTime();
+                    if($created) $time = $created;
+                })->onLogEvent(function($entry) use(&$time) {
+                    $created = $entry->getCreatedTime();
+                    if($created) $time = $created;
+                })->onSetSeparator(function($entry) use(&$time) {
+                    $created = $entry->getCreatedTime();
+                    if($created) $time = $created;
+                })->onSpin(function($entry) use(&$time) {
+                    $created = $entry->getCreatedTime();
+                    if($created) $time = $created;
+                });
+                $api->getTracksWithObserver($playlistId, $observer);
+                if(!$time) {
+                    $startTime = $api->getTimestampWindow($playlistId, false)['start'];
+                    $time = $startTime->format('H:i:s');
+                }
+
+                // this is probably unnecessary, as desktop browsers *should*
+                // degrade 'tel' to 'text', *but* as this is a hack to
+                // deal with the lack of keyDown support in mobile input
+                // type=text, we'll include 'tel' only for mobile devices...
+                $ttype = preg_match('/tablet|mobile|android/i',
+                        $_SERVER['HTTP_USER_AGENT'] ?? '') ? "tel" : "text";
+
                 echo "<div id='time-entry'".($isLiveShow?" class='zk-hidden'":"").">
                     <label>Time:</label>
-                    <input id='track-time' class='timepicker' step='1' type='time' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' />
+                    <input id='track-time' class='fxtime' type='$ttype' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-last-val='$time' />
                     <span class='track-info".($isLiveShow?"":" zk-hidden")."'>Leave blank for current time</span>
                 </div>\n";
             ?>
             <div>
                 <label></label>
-                <button disabled id='track-play' class='track-submit'>Add <?php echo $isLiveShow?"(Playing Now)<img src='img/play.svg' />":"Item";?></button>
-                <button disabled id='track-add' class='track-submit<?php if(!$isLiveShow) echo " zk-hidden"; ?>'>Add (Upcoming)<img src='img/play-pause.svg' /></button>
+                <button type='button' disabled id='track-play' class='track-submit'>Add <?php echo $isLiveShow?"(Playing Now)<img src='img/play.svg' />":"Item";?></button>
+                <button type='button' disabled id='track-add' class='track-submit<?php if(!$isLiveShow) echo " zk-hidden"; ?>'>Add (Upcoming)<img src='img/play-pause.svg' /></button>
             </div>
             <div class='toggle-time-entry<?php if (!$isLiveShow) echo " zk-hidden"; ?>'><div><!--&#x1f551;--></div></div>
         </div> <!-- track-editor -->
@@ -1968,9 +1996,10 @@ class Playlists extends MenuItem {
                 $observer->observe(new PlaylistEntry($entry));
         echo "</TBODY></TABLE>\n";
 
-        if($editMode)
+        if($editMode) {
+            UI::emitJS('js/jquery.fxtime.js');
             UI::emitJS('js/playlists.track.js');
-        else {
+        } else {
             $show = $api->getPlaylist($playlist);
             if($api->isNowWithinShow($show))
                 UI::emitJS('js/playlists.live.js');
