@@ -287,7 +287,7 @@ $().ready(function(){
             $(this).removeClass('prefilled-input');
             $(this).addClass('invalid-input');
             if(fxtime)
-                $(this).data('last-min', false).focus();
+                $(this).data('last-val', '').focus();
             else
                 $(this).val("").focus();
             showUserError('Time is invalid');
@@ -844,18 +844,23 @@ $().ready(function(){
             a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1;
     })).val('manual-entry');
 
-    $("input.fxtime").fxtime();
-    $("#track-time").fxtime('val', $("#track-time").data('init-val')).
+    $("#track-time").fxtime().
+        fxtime('val', $("#track-time").data('last-val')).
         fxtime('seg', 1, null).
         fxtime('seg', 2, 0).
         fxtime('blur', function(seg) {
             if(seg == 1) {
-                var now = $(this).fxtime('seg', 1);
-                if(now.match(/^\d+$/)) {
-                    var last = $(this).data('last-min');
-                    if(last !== false && now < last && last - now > 30)
+                // auto-bump hour if new minute is well less than current
+                var h = $(this).fxtime('seg', 0);
+                var m = $(this).fxtime('seg', 1);
+                if(m.match(/^\d+$/)) {
+                    // user may have already bumped hour; if so, don't do it
+                    var last = $(this).data('last-val').split(':');
+                    if(last.length == 3 && last[0] == h && last[1] - m > 30)
                         $(this).fxtime('inc', 0);
-                    $(this).data('last-min', now);
+
+                    // bumping doesn't care about seconds, so dummy up to 00
+                    $(this).data('last-val', [ h, m, '00' ].join(':'));
                 }
             }
         });

@@ -898,7 +898,6 @@ class Playlists extends MenuItem {
                     $startTime = $api->getTimestampWindow($playlistId, false)['start'];
                     $time = $startTime->format('H:i:s');
                 }
-                $min = explode(":", $time)[1];
 
                 // this is probably unnecessary, as desktop browsers *should*
                 // degrade 'tel' to 'text', *but* as this is a hack to
@@ -909,7 +908,7 @@ class Playlists extends MenuItem {
 
                 echo "<div id='time-entry'".($isLiveShow?" class='zk-hidden'":"").">
                     <label>Time:</label>
-                    <input id='track-time' class='fxtime' type='$ttype' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-init-val='$time' data-last-min='$min' />
+                    <input id='track-time' class='fxtime' type='$ttype' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-last-val='$time' />
                     <span class='track-info".($isLiveShow?"":" zk-hidden")."'>Leave blank for current time</span>
                 </div>\n";
             ?>
