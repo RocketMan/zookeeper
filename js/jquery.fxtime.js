@@ -36,9 +36,14 @@
 /**
  * jquery.fxtime -- Firefox-like time element for jQuery
  *
- * To install, invoke $.fxtime on the desired elements; e.g.,
+ * To install, invoke $.fn.fxtime on the desired elements; e.g.,
  *
  *   $(selector).fxtime();
+ *
+ * The element uses a 12- or 24-hour format depending on the current locale.
+ *
+ * By default, only hours and minutes are shown.  To show seconds, on
+ * the input element, specify attribute 'step' with value less than 60.
  *
  *
  * The following methods are available:
@@ -47,7 +52,7 @@
  *       returns null if time is not set
  *
  *   $(selector).fxtime('val', value) - set 24-hour time value
- *       value format is hh:mm:ss, where 0 <= hh <= 23, or null
+ *       value format is hh:mm[:ss], where 0 <= hh <= 23, or null
  *
  *   $(selector).fxtime('seg', seg) - get specified segment value
  *       seg:  0 = hours, 1 = minutes, 2 = seconds, 3 = AM/PM
@@ -67,81 +72,104 @@
     const max = [ intl ? 23 : 12, 59, 59 ];
     const min = [ intl ? 0 : 1, 0, 0 ];
 
-    function getValue(ctl) {
-        var val = null;
-        var xval = ctl.val().split(' ');
-        if(xval.length == (intl ? 1 : 2)) {
-            var oval = xval[0].split(':');
-            if(oval.length == 3 &&
-                   oval.every(function(val) {
-                       return val.match(/^\d+$/);
-                   })) {
-                var h = oval[0]*1;
-                if(!intl) {
-                    var ampm = xval[1].toUpperCase();
-                    if(ampm == 'PM' && h < 12)
-                        oval[0] = h + 12;
-                    else if(ampm == 'AM' && h == 12)
-                        oval[0] = '00';
+    var fxdata = new WeakMap();
+
+    function getValue(jqctl) {
+        if(jqctl.length > 0) {
+            var val = null;
+            var ctl = jqctl[0]; // like $.fn.val(), use only the first one
+            var xval = ctl.value.split(' ');
+            if(xval.length == (intl ? 1 : 2)) {
+                var oval = xval[0].split(':');
+                if(oval.length == fxdata.get(ctl).count &&
+                       oval.every(function(val) {
+                           return val.match(/^\d+$/);
+                       })) {
+                    var h = oval[0]*1;
+                    if(!intl) {
+                        var ampm = xval[1].toUpperCase();
+                        if(ampm == 'PM' && h < 12)
+                            oval[0] = h + 12;
+                        else if(ampm == 'AM' && h == 12)
+                            oval[0] = '00';
+                    }
+                    val = oval.join(':');
                 }
-                val = oval.join(':');
             }
+            return val;
         }
-        return val;
     }
 
-    function setValue(ctl, val) {
-        if(val == null || val == '') {
-            ctl.val(intl ? '--:--:--' : '--:--:-- AM');
-            return;
-        }
-
-        var xval = val.split(':');
-        if(xval.length == 3) {
-            var numh = xval[0].match(/^\d+$/);
-            var ampm = !numh || xval[0]*1 < 12 ? 'AM' : 'PM';
-            if(numh && !intl) {
-                var h = xval[0]*1;
-                if(h == 0)
-                    xval[0] = '12';
-                else if(h > 12)
-                    xval[0] = String(h - 12);
+    function setValue(jqctl, val) {
+        jqctl.each(function() {
+            var segCount = fxdata.get(this).count;
+            if(val == null || val == '') {
+                var segs = Array(segCount).fill('--').join(':');
+                this.value = segs + (intl ? '' : ' AM');
+                return;
             }
-            ctl.val(xval.map(x => x.padStart(2, '0')).join(':') + (intl ? '' : ' ' + ampm));
+
+            var xval = val.split(':');
+            if(xval.length >= segCount) {
+                var numh = xval[0].match(/^\d+$/);
+                var ampm = !numh || xval[0]*1 < 12 ? 'AM' : 'PM';
+                if(numh && !intl) {
+                    var h = xval[0]*1;
+                    if(h == 0)
+                        xval[0] = '12';
+                    else if(h > 12)
+                        xval[0] = String(h - 12);
+                }
+
+                this.value = xval.slice(0, segCount)
+                        .map(x => x.padStart(2, '0'))
+                        .join(':') + (intl ? '' : ' ' + ampm);
+            }
+        });
+    }
+
+    function getSegmentValue(jqctl, seg) {
+        if(jqctl.length > 0) {
+            var ctl = jqctl[0]; // like $.fn.val(), use only the first one
+            var xval = ctl.value.split(' ');
+            var oval = xval[0].split(':');
+            return seg < 3 ? oval[seg] : xval[1];
         }
     }
 
-    function getSegmentValue(ctl, seg) {
-        var xval = ctl.val().split(' ');
-        var oval = xval[0].split(':');
-        return seg < 3 ? oval[seg] : xval[1];
-    }
-
-    function setSegmentValue(ctl, seg, val) {
-        var xval = ctl.val().split(' ');
-        var oval = xval[0].split(':');
-        switch(seg*1) {
-        case 0:
-        case 1:
-        case 2:
-            oval[seg] = val == null ? '--' : String(val).padStart(2, '0');
-            break;
-        case 3:
-            if(!intl)
-                xval[1] = val == null ? 'AM' : val;
-            break;
-        }
-        xval[0] = oval.join(':');
-        ctl.val(xval.join(' '));
-        return this;
+    function setSegmentValue(jqctl, seg, val) {
+        jqctl.each(function() {
+            var xval = this.value.split(' ');
+            var oval = xval[0].split(':');
+            switch(seg*1) {
+            case 0:
+            case 1:
+            case 2:
+                if(seg < oval.length)
+                    oval[seg] = val == null ? '--' : String(val).padStart(2, '0');
+                break;
+            case 3:
+                if(!intl)
+                    xval[1] = val == null ? 'AM' : val;
+                break;
+            }
+            xval[0] = oval.join(':');
+            this.value = xval.join(' ');
+        });
     }
 
     function getSegment(ctl) {
-        return Math.floor(ctl.selectionStart / 3);
+        var seg = Math.floor(ctl.selectionStart / 3);
+
+        // AM/PM is always segment number 3
+        if(seg == 2 && fxdata.get(ctl).count == 2)
+            seg++;
+
+        return seg;
     }
 
     function blurSegment(ctl, seg) {
-        var inst = $(ctl).data('fxtime');
+        var inst = fxdata.get(ctl);
         inst.seg = false;
         if(typeof seg === 'undefined') {
             seg = getSegment(ctl);
@@ -156,7 +184,7 @@
     function focusCurrent(ctl) {
         ctl.selectionEnd = ctl.selectionStart;
         var seg = getSegment(ctl);
-        var inst = $(ctl).data('fxtime');
+        var inst = fxdata.get(ctl);
         if(inst.idx !== false && inst.idx != seg)
             blurSegment(ctl, inst.idx);
         inst.idx = seg;
@@ -174,8 +202,9 @@
             ctl.selectionEnd = 8;
             break;
         case 3:
-            ctl.selectionStart = 9;
-            ctl.selectionEnd = 11;
+            var hasSeconds = inst.count == 3;
+            ctl.selectionStart = hasSeconds ? 9 : 6;
+            ctl.selectionEnd = hasSeconds ? 11 : 8;
             break;
         }
     }
@@ -192,7 +221,8 @@
             ctl.selectionStart = 6;
             break;
         case 3:
-            ctl.selectionStart = 9;
+            var hasSeconds = fxdata.get(ctl).count == 3;
+            ctl.selectionStart = hasSeconds ? 9 : 6;
             break;
         }
         focusCurrent(ctl);
@@ -200,7 +230,7 @@
 
     function initialFocus(ctl) {
         var set = false;
-        var xval = $(ctl).val().split(' ');
+        var xval = ctl.value.split(' ');
         var val = xval[0].split(':');
         $.each(val, function(index, value) {
             if(!set && !value.match(/^\d+$/)) {
@@ -215,7 +245,7 @@
 
     function upDownSegment(ctl, up, seg) {
         var start = ctl.selectionStart;
-        var xval = $(ctl).val().split(' ');
+        var xval = ctl.value.split(' ');
         var val, oval = xval[0].split(':');
         if(typeof seg === 'undefined')
             seg = getSegment(ctl);
@@ -241,13 +271,14 @@
             oval[seg] = String(val).padStart(2, '0');
             xval[0] = oval.join(':');
         }
-        $(ctl).val(xval.join(' '));
-        ctl.selectionEnd = ctl.selectionStart = start;
+        ctl.value = xval.join(' ');
+        if(ctl == document.activeElement)
+            ctl.selectionEnd = ctl.selectionStart = start;
     }
 
     function inputSegment(ctl, val) {
         var start = ctl.selectionStart;
-        var xval = $(ctl).val().split(' ');
+        var xval = ctl.value.split(' ');
         switch(val) {
         case 'A':
         case 'P':
@@ -260,7 +291,7 @@
             if(seg >= 3)
                 break;
 
-            var inst = $(ctl).data('fxtime');
+            var inst = fxdata.get(ctl);
             if(inst.seg === seg && oval[seg].match(/^\d+$/)) {
                 var n = oval[seg]*10 + val*1;
                 if(n <= max[seg])
@@ -284,7 +315,7 @@
             xval[0] = oval.join(':');
             break;
         }
-        $(ctl).val(xval.join(' '));
+        ctl.value = xval.join(' ');
         ctl.selectionEnd = ctl.selectionStart = start;
     }
 
@@ -297,28 +328,39 @@
             var newStart = e.which == 0x25 || tab && e.shiftKey ?
                 (this.selectionStart - 3) :
                 (this.selectionStart + 3);
+
+            var limit = 5;
+            if(fxdata.get(this).count == 3)
+                limit += 3; // has seconds
+            if(!intl)
+                limit += 3; // has AM/PM
+
             if(newStart < 0) {
                 if(tab) {
                     var inputs = $('input:visible, textarea:visible, select:visible, button:visible');
                     inputs.filter(':lt(' + inputs.index(this) + '):last').focus();
                 }
-            } else if(newStart > (intl ? 8 : 11)) {
+            } else if(newStart > limit) {
                 if(tab) {
                     var inputs = $('input:visible, textarea:visible, select:visible, button:visible');
                     inputs.filter(':gt(' + inputs.index(this) + '):first').focus();
                 }
-            } else
+            } else {
                 this.selectionStart = newStart;
+                focusCurrent(this);
+            }
             break;
         case 0x26: // up
         case 0xbb: // +
         case 0x3d: // + fx
             upDownSegment(this, true);
+            focusCurrent(this);
             break;
         case 0x28: // down
         case 0xbd: // -
         case 0xad: // - fx
             upDownSegment(this, false);
+            focusCurrent(this);
             break;
         case 0x08: // backspace
         case 0x7f: // delete
@@ -334,6 +376,7 @@
                 if(e.which >= 0x60)
                     e.which -= 0x30;
                 inputSegment(this, String.fromCharCode(e.which));
+                focusCurrent(this);
             }
             break;
         }
@@ -343,41 +386,50 @@
     $.fn.fxtime = function(action, value, value2) {
         switch(action) {
         case 'val':
-            if(typeof value === 'undefined')
+            if(arguments.length == 1)
                 return getValue(this);
             else
                 setValue(this, value);
             break;
         case 'seg':
-            if(typeof value2 === 'undefined')
+            if(arguments.length == 2)
                 return getSegmentValue(this, value);
-            else
+            else if(arguments.length == 3)
                 setSegmentValue(this, value, value2);
             break;
         case 'inc':
-            upDownSegment(this, typeof value2 == 'undefined' || value2 >= 0, value);
+            if(arguments.length >= 2)
+                this.each(function() {
+                    upDownSegment(this, typeof value2 === 'undefined' || value2 >= 0, value);
+                });
             break;
         case 'blur':
             if(typeof value === 'function')
-                this.data('fxtime').blur.push(value);
+                this.each(function() {
+                    fxdata.get(this).blur.push(value);
+                });
             break;
         default:
             // each selected element gets its own unique instance data
             this.each(function() {
-                $(this).data('fxtime', { idx: false, seg: false, focus: false, blur: [] });
-            }).attr('autocomplete', 'off').fxtime('val', null);
+                var step = this.getAttribute('step');
+                var count = step && step < 60 ? 3 : 2;
+                fxdata.set(this, { count: count, idx: false, seg: false, focus: false, blur: [] });
+            }).attr('autocomplete', 'off')
+                .css('caret-color', 'transparent')
+                .fxtime('val', null);
 
             this.select(function(e) {
                 if(this.selectionStart != this.selectionEnd - 2)
                     focusCurrent(this);
             }).on("click", function(e) {
-                // data.focus is a short-lived state used to synchronize
+                // fxdata.focus is a short-lived state used to synchronize
                 // click-initiated focus
                 //
                 // the idea is that click comes some moments after focus;
                 // we don't want the first click to change the default
                 // segment, but subsequent clicks may well do.
-                var data = $(this).data('fxtime');
+                var data = fxdata.get(this);
                 if(data.focus !== false) {
                     focusSegment(this, data.focus);
                     data.focus = false;
@@ -387,7 +439,7 @@
                 setTimeout(function(ctl) {
                     initialFocus(ctl);
 
-                    var data = $(ctl).data('fxtime');
+                    var data = fxdata.get(ctl);
                     data.focus = getSegment(ctl);
                     setTimeout(function(data) {
                         data.focus = false;
