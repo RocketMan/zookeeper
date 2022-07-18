@@ -335,16 +335,9 @@
             if(!intl)
                 limit += 3; // has AM/PM
 
-            if(newStart < 0) {
-                if(tab) {
-                    var inputs = $('input:visible, textarea:visible, select:visible, button:visible');
-                    inputs.filter(':lt(' + inputs.index(this) + '):last').focus();
-                }
-            } else if(newStart > limit) {
-                if(tab) {
-                    var inputs = $('input:visible, textarea:visible, select:visible, button:visible');
-                    inputs.filter(':gt(' + inputs.index(this) + '):first').focus();
-                }
+            if(newStart < 0 || newStart > limit) {
+                if(tab)
+                    return true;
             } else {
                 this.selectionStart = newStart;
                 focusCurrent(this);
