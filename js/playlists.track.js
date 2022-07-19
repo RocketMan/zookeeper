@@ -862,6 +862,16 @@ $().ready(function(){
                         $(this).fxtime('inc', 0);
                 }
             }
+        }).keydown(function(e) {
+            if(e.which == 0x0d && // Enter key
+                    $(this).fxtime('val') &&
+                    $('#track-play').is(':enabled')) {
+                // focus before click to trigger time validation
+                $('#track-play').focus().click();
+
+                if($(this).hasClass('invalid-input'))
+                    $(this).focus();
+            }
         });
 
     $("*[data-focus]").focus();
