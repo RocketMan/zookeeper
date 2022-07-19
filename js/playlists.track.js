@@ -26,6 +26,7 @@ $().ready(function(){
     const NME_ENTRY='nme-entry';
     const NME_PREFIX=$("#const-prefix").val();
     var tagId = 0;
+    var seq = 0;
 
     function htmlify(s) {
         return s?String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\'/g, '&#39;'):"";
@@ -558,9 +559,12 @@ $().ready(function(){
             type: 'GET',
             accept: "application/json; charset=utf-8",
             url: url,
+            seq: ++seq,
             success: function(response) {
-                addArtists(response.links.first.meta.total > 0 ?
-                           response.data : []);
+                // process only the last-issued search{Library,Tag} request
+                if(this.seq == seq)
+                    addArtists(response.links.first.meta.total > 0 ?
+                               response.data : []);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 var json = JSON.parse(jqXHR.responseText);
@@ -580,8 +584,11 @@ $().ready(function(){
             type: 'GET',
             accept: "application/json; charset=utf-8",
             url: url,
+            seq: ++seq,
             success: function(response) {
-                addArtists([ response.data ]);
+                // process only the last-issued search{Library,Tag} request
+                if(this.seq == seq)
+                    addArtists([ response.data ]);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 if(jqXHR.status == 404) {
