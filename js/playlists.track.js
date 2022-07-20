@@ -249,6 +249,7 @@ $().ready(function(){
         var v = fxtime ? $(this).fxtime('val') : $(this).val();
         if(v == null || v.length == 0) {
             $(this).removeClass('invalid-input');
+            showUserError('');
             return;
         }
 
