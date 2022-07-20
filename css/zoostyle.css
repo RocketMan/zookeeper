@@ -632,6 +632,7 @@ table.recentAirplay td, .sub {
 
 .pl-form-entry button:not(.edit-mode) {
     width: 148px;
+    height: 24px;
     padding-left: 0;
     padding-right: 0;
     box-sizing: border-box;
@@ -640,6 +641,7 @@ table.recentAirplay td, .sub {
 
 .pl-form-entry button.edit-mode {
     width: 97px;
+    height: 24px;
     color: #000;
     background-color: #f4f4f4;
     border-radius: 4px;
