@@ -987,6 +987,10 @@ class Playlists extends MenuItem {
     }
     
     private function emitEditForm($playlistId, $id, $album, $track) {
+    ?>
+      <DIV class='playlistBanner'>&nbsp;Editing Highlighted Item</DIV>
+      <input type='hidden' id='track-id' value='<?php echo $id; ?>'>
+    <?php
         $entry = new PlaylistEntry($album);
         switch($entry->getType()) {
         case PlaylistEntry::TYPE_SET_SEPARATOR:
@@ -1011,10 +1015,7 @@ class Playlists extends MenuItem {
         }
         echo "<input type='hidden' id='old-created' value='" . $entry->getCreatedTime() . "' />\n";
         echo "<input type='hidden' id='edit-type' value='$type' />\n";
-    ?>
-      <DIV class='playlistBanner'>&nbsp;Editing Highlighted Item</DIV>
-      <input type='hidden' id='track-id' value='<?php echo $id; ?>'>
-    <?php
+
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId);
         $this->emitTrackAdder($playlistId, $playlist, true);
     }
