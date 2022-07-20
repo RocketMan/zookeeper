@@ -798,8 +798,8 @@ class Playlists extends MenuItem {
         $this->emitTrackAdder($playlistId, $playlist);
     }
     
-    private function emitTrackAdder($playlistId, $playlist) {
-        $isLiveShow = Engine::api(IPlaylist::class)->isNowWithinShow($playlist);
+    private function emitTrackAdder($playlistId, $playlist, $editMode = false) {
+        $isLiveShow = !$editMode && Engine::api(IPlaylist::class)->isNowWithinShow($playlist);
         $nmeAr = Engine::param('nme');
         $nmeOpts = '';
         $nmePrefix = self::NME_PREFIX;
@@ -879,24 +879,26 @@ class Playlists extends MenuItem {
             <?php
                 $api = Engine::api(IPlaylist::class);
                 $window = $api->getTimestampWindow($playlistId);
-                $time = null;
-                $observer = (new PlaylistObserver())->onComment(function($entry) use(&$time) {
-                    $created = $entry->getCreatedTime();
-                    if($created) $time = $created;
-                })->onLogEvent(function($entry) use(&$time) {
-                    $created = $entry->getCreatedTime();
-                    if($created) $time = $created;
-                })->onSetSeparator(function($entry) use(&$time) {
-                    $created = $entry->getCreatedTime();
-                    if($created) $time = $created;
-                })->onSpin(function($entry) use(&$time) {
-                    $created = $entry->getCreatedTime();
-                    if($created) $time = $created;
-                });
-                $api->getTracksWithObserver($playlistId, $observer);
-                if(!$time) {
-                    $startTime = $api->getTimestampWindow($playlistId, false)['start'];
-                    $time = $startTime->format('H:i:s');
+                if(!$editMode) {
+                    $time = null;
+                    $observer = (new PlaylistObserver())->onComment(function($entry) use(&$time) {
+                        $created = $entry->getCreatedTime();
+                        if($created) $time = $created;
+                    })->onLogEvent(function($entry) use(&$time) {
+                        $created = $entry->getCreatedTime();
+                        if($created) $time = $created;
+                    })->onSetSeparator(function($entry) use(&$time) {
+                        $created = $entry->getCreatedTime();
+                        if($created) $time = $created;
+                    })->onSpin(function($entry) use(&$time) {
+                        $created = $entry->getCreatedTime();
+                        if($created) $time = $created;
+                    });
+                    $api->getTracksWithObserver($playlistId, $observer);
+                    if(!$time) {
+                        $startTime = $api->getTimestampWindow($playlistId, false)['start'];
+                        $time = $startTime->format('H:i:s');
+                    }
                 }
 
                 // this is probably unnecessary, as desktop browsers *should*
@@ -906,16 +908,29 @@ class Playlists extends MenuItem {
                 $ttype = preg_match('/tablet|mobile|android/i',
                         $_SERVER['HTTP_USER_AGENT'] ?? '') ? "tel" : "text";
 
+                if($editMode) {
+                    $startAMPM = $window['start']->format('g:i a');
+                    $endAMPM = $window['end']->format('g:i a');
+                    $timeMsg = "($startAMPM - $endAMPM)";
+                } else
+                    $timeMsg = "Leave blank for current time";
+
                 echo "<div id='time-entry'".($isLiveShow?" class='zk-hidden'":"").">
                     <label>Time:</label>
-                    <input id='track-time' class='fxtime' type='$ttype' step='1' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-last-val='$time' />
-                    <span class='track-info".($isLiveShow?"":" zk-hidden")."'>Leave blank for current time</span>
+                    <input id='".($editMode ? "edit" : "track")."-time' class='fxtime' type='$ttype' step='1' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-last-val='$time' />
+                    <span class='track-info".($isLiveShow||$editMode?"":" zk-hidden")."'>$timeMsg</span>
                 </div>\n";
             ?>
             <div>
-                <label></label>
+                <label></label><?php
+                if($editMode) { ?>
+                <button type='button' id='edit-save' class='edit-mode'>Save</button>
+                <button type='button' id='edit-delete' class='edit-mode'>Delete</button>
+                <button type='button' id='edit-cancel' class='edit-mode'>Cancel</button>
+                <?php } else { ?>
                 <button type='button' disabled id='track-play' class='track-submit'>Add <?php echo $isLiveShow?"(Playing Now)<img src='img/play.svg' />":"Item";?></button>
                 <button type='button' disabled id='track-add' class='track-submit<?php if(!$isLiveShow) echo " zk-hidden"; ?>'>Add (Upcoming)<img src='img/play-pause.svg' /></button>
+                <?php } ?>
             </div>
             <div class='toggle-time-entry<?php if (!$isLiveShow) echo " zk-hidden"; ?>'><div><!--&#x1f551;--></div></div>
         </div> <!-- track-editor -->
@@ -939,6 +954,7 @@ class Playlists extends MenuItem {
         </div> <!-- extend-show -->
     <?php
     }
+
     private function emitTrackField($tag, $seltrack, $id) {
         $matched = 0;
         $track = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 100, $tag);
@@ -971,139 +987,38 @@ class Playlists extends MenuItem {
     }
     
     private function emitEditForm($playlistId, $id, $album, $track) {
-      $entry = new PlaylistEntry($album);
-      $window = Engine::api(IPlaylist::class)->getTimestampWindow($playlistId);
-      $startTime = $window['start'];
-      $endTime = $window['end'];
-      $startAMPM = $startTime->format('g:i a');
-      $endAMPM = $endTime->format('g:i a');
-      $edate = $startTime->format('Y-m-d');
-      $showTimeRange = "$startAMPM - $endAMPM";
-      $timepickerClass = "timepicker";
-      $timepickerTime = $entry->getCreatedTime();
-      $sep = $id && $entry->isType(PlaylistEntry::TYPE_SET_SEPARATOR);
-      $event = $id && $entry->isType(PlaylistEntry::TYPE_LOG_EVENT);
-      $comment = $id && $entry->isType(PlaylistEntry::TYPE_COMMENT);
+        $entry = new PlaylistEntry($album);
+        switch($entry->getType()) {
+        case PlaylistEntry::TYPE_SET_SEPARATOR:
+            $type = "set-separator";
+            break;
+        case PlaylistEntry::TYPE_COMMENT:
+            $type = "comment-entry";
+            echo "<input type='hidden' id='old-comment-data' value='" .
+                    $entry->getComment() . "' />\n";
+            break;
+        case PlaylistEntry::TYPE_LOG_EVENT:
+            $type = self::NME_PREFIX . $entry->getLogEventType();
+            echo "<input type='hidden' id='old-event-code' value='" .
+                    $entry->getLogEventCode() . "' />\n";
+            break;
+        default:
+            $type = "manual-entry";
+            foreach (['tag', 'artist', 'album', 'label', 'title'] as $field)
+                echo "<input type='hidden' id='old-track-$field' value='" .
+                    $album[$field == 'title' ? 'track' : $field] . "' />\n";
+            break;
+        }
+        echo "<input type='hidden' id='old-created' value='" . $entry->getCreatedTime() . "' />\n";
+        echo "<input type='hidden' id='edit-type' value='$type' />\n";
     ?>
-      <DIV class='playlistBanner'><?php echo $id?"Editing highlighted":"Adding";?> <?php
-      switch($entry->getType()) {
-      case PlaylistEntry::TYPE_SET_SEPARATOR:
-          echo "set separator";
-          break;
-      case PlaylistEntry::TYPE_LOG_EVENT:
-          echo "program log entry";
-          break;
-          case PlaylistEntry::TYPE_COMMENT:
-          echo "comment";
-          break;
-      default:
-          echo "track";
-          break;
-      } ?></DIV>
-      <FORM ACTION="?" id='edit' METHOD=POST>
-      <TABLE>
-    <?php if($sep) { ?>
-      <INPUT TYPE=HIDDEN NAME=separator VALUE="true">
-    <?php } else if($comment) { ?>
-      <INPUT TYPE=HIDDEN NAME=comment VALUE="true">
-        <TR>
-          <TD ALIGN=RIGHT STYLE='vertical-align: top'>Comment:</TD>
-          <TD ALIGN=LEFT><TEXTAREA WRAP=VIRTUAL NAME=ctext id=ctext ROWS=4 MAXLENGTH=<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> STYLE='width: 280px !important' REQUIRED data-focus><?php
-              $comment = $entry->getComment();
-              $len = mb_strlen(str_replace("\r\n", "\n", $comment));
-              echo htmlentities($comment); ?></TEXTAREA><div style='display: inline-block;'><span class='remaining' id='remaining'>(<?php echo $len."/".PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)</span><br/><a id='markdown-help-link' href='#'>formatting help</a></div>
-</TD>
-        </TR>
-    <?php } else if($event) { ?>
-      <INPUT TYPE=HIDDEN NAME=logevent VALUE="true">
-        <TR>
-          <TD ALIGN=RIGHT>Type:</TD><TD ALIGN=LEFT><SELECT NAME=etype STYLE='width: 290px !important' data-focus>
-<?php
-          $current = $entry->getLogEventType();
-          $nmeAr = Engine::param('nme');
-          if ($nmeAr) {
-              foreach ($nmeAr as $nme) {
-                  $selected = ($nme['name'] == $current)?" SELECTED":"";
-                  echo "            <OPTION VALUE='" . $nme['name'] . "'$selected>" . $nme['name'] . "</OPTION>\n";
-               }
-          }
-?>
-          </SELECT></TD>
-        </TR>
-        <TR>
-          <TD ALIGN=RIGHT>Name/ID:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=ecode MAXLENGTH=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> required VALUE="<?php echo htmlentities($entry->getLogEventCode());?>" CLASS=input STYLE='width: 280px !important' data-focus></TD>
-        </TR>
-    <?php } else if($album == "" || $album["tag"] == "") { ?>
-        <TR>
-          <TD ALIGN=RIGHT>Artist:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=artist MAXLENGTH=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> VALUE="<?php echo htmlentities($album?$album["artist"]:"");?>" CLASS=input SIZE=40 REQUIRED data-focus></TD>
-        </TR>
-        <TR>
-          <TD ALIGN=RIGHT>Track:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=track MAXLENGTH=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> VALUE="<?php echo htmlentities($track);?>" CLASS=input SIZE=40 REQUIRED></TD>
-        </TR>
-        <TR>
-          <TD ALIGN=RIGHT>Album:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=album MAXLENGTH=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> VALUE="<?php echo htmlentities($album?$album["album"]:"");?>" CLASS=input SIZE=40></TD>
-        </TR>
-        <TR>
-          <TD ALIGN=RIGHT>Label:</TD>
-          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=label MAXLENGTH=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> VALUE="<?php echo htmlentities($album?$album["label"]:"");?>" CLASS=input SIZE=40></TD>
-        </TR>
-    <?php } else { ?>
-      <INPUT TYPE=HIDDEN NAME=artist VALUE="<?php echo htmlentities($album["artist"]);?>">
-      <INPUT TYPE=HIDDEN NAME=album VALUE="<?php echo htmlentities($album["album"]);?>">
-      <INPUT TYPE=HIDDEN NAME=otrack VALUE="<?php echo htmlentities(stripslashes($track));?>">
-      <INPUT TYPE=HIDDEN NAME=label VALUE="<?php echo htmlentities($album["label"]);?>">
-        <TR><TD ALIGN=RIGHT>Artist:</TD>
-            <TH ALIGN=LEFT><?php echo htmlentities($album["artist"]); ?></TH></TR>
-        <TR><TD ALIGN=RIGHT>Album:</TD>
-            <TH ALIGN=LEFT><?php echo htmlentities($album["album"]); ?></TH></TR>
-        <TR><TD ALIGN=RIGHT>Track:</TD>
-            <TD ALIGN=LEFT><?php $this->emitTrackField($album["tag"], $track, $id); ?></TD>
-        </TR>
-    <?php } ?>
-      <TR>
-          <TD ALIGN=RIGHT>Time:</TD>
-          <TD ALIGN=LEFT>
-              <INPUT class='<?php echo $timepickerClass; ?>' NAME=etime step='1' type='time' value="<?php echo $timepickerTime; ?>" data-date='<?php echo $edate;?>' data-start='<?php echo $startTime->format('H:i');?>' data-end='<?php echo $endTime->format('H:i');?>'/> <span style='font-size:8pt;'>(<?php echo $showTimeRange; ?>)</span>
-              <INPUT type='hidden' NAME='edate' value="<?php echo $edate;?>" />
-          </TD>
-        </TR>
-        <TR>
-          <TD>&nbsp;</TD>
-          <TD>
-    <?php if($id) { ?>
-              <INPUT TYPE=BUTTON NAME=button id='edit-save' VALUE="  Save  ">
-              <INPUT TYPE=BUTTON NAME=button id='edit-delete' VALUE=" Delete ">
-              <INPUT TYPE=BUTTON NAME=button id='edit-cancel' VALUE=" Cancel ">
-              <INPUT TYPE=HIDDEN NAME=id VALUE="<?php echo $id;?>">
-    <?php } else { ?>
-              <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
-    <?php } ?>
-              <INPUT TYPE=HIDDEN id='track-playlist' NAME=playlist VALUE="<?php echo $playlistId;?>">
-              <INPUT TYPE=HIDDEN id='track-action' NAME=action VALUE="<?php echo $this->action;?>">
-              <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $album["tag"];?>">
-              <INPUT TYPE=HIDDEN NAME=seq VALUE="editForm">
-          </TD>
-      </TR>
-      </TABLE>
-      <HR>
-    <?php UI::markdownHelp(); ?>
-      </FORM>
-      <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([JSMin::class, 'minify']); ?>
-            $("#ctext").on('input', function(e) {
-                var len = this.value.length;
-                $("#remaining").html("(" + len + "/<?php echo PlaylistEntry::MAX_COMMENT_LENGTH; ?> characters)");
-            });
-    <?php ob_end_flush(); ?>
-      // -->
-      </SCRIPT>
-    <?php 
+      <DIV class='playlistBanner'>&nbsp;Editing Highlighted Item</DIV>
+      <input type='hidden' id='track-id' value='<?php echo $id; ?>'>
+    <?php
+        $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId);
+        $this->emitTrackAdder($playlistId, $playlist, true);
     }
-    
+
     private function emitTrackForm($playlist, $id, $album, $track) {
     ?>
       <DIV class='playlistBanner'><?php echo $id?"Editing highlighted":"Adding";?> track</DIV>
@@ -1185,69 +1100,6 @@ class Playlists extends MenuItem {
             $message = "access error";
         }
         switch ($seq) {
-        case "editForm":
-            $status = '';
-            $nme = $separator || $logevent || $comment;
-            if(($button == " Delete ") && $id) {
-                $this->deleteTrack($id);
-                $id = "";
-                $this->emitTagForm($playlist, "");
-            } else if(!$nme && $artist == "") {
-                $albuminfo = ["tag"=>$tag,
-                              "artist"=>stripslashes($artist),
-                              "album"=>stripslashes($album),
-                              "label"=>stripslashes($label)];
-                $this->emitEditForm($playlist, $id, $albuminfo, stripslashes($track));
-            } else if(!$nme &&
-                          ($track == "") && ($ctrack == "")) {
-                $albuminfo = ["tag"=>$tag,
-                              "artist"=>stripslashes($artist),
-                              "album"=>stripslashes($album),
-                              "label"=>stripslashes($label)];
-                $this->emitTrackForm($playlist, $id, $albuminfo, stripslashes($otrack));
-            } else {
-                if($ctrack) {
-                    $track = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 100, $tag);
-                    for($i = 0; $i < sizeof($track); $i++) {
-                        if($track[$i]["seq"] == $ctrack) {
-                            $artist = $track[$i]["artist"];
-                            $track = $track[$i]["track"];
-                            break;
-                        }
-                    }
-                }
-                if($id) {
-                    $timestamp = null;
-                    if ($_REQUEST["etime"])  //in case user blanked out the time
-                        $timestamp = $_REQUEST["edate"] . " " . $_REQUEST["etime"];
-
-                    if($nme) {
-                        $entry = (new PlaylistEntry())->setId($id);
-                        if($logevent)
-                            $entry->setLogEvent($_REQUEST["etype"], $_REQUEST["ecode"]);
-                        else if($comment)
-                            $entry->setComment(mb_substr(trim(str_replace("\r\n", "\n", $_REQUEST["ctext"])), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
-                        else
-                            $entry->setSetSeparator();
-
-                        $entry->setCreated($timestamp);
-                        Engine::api(IPlaylist::class)->updateTrackEntry($playlist,
-                                $entry);
-                    } else {
-                        $playlistApi = Engine::api(IPlaylist::class);
-                        $playlistApi->updateTrack($playlist, $id, $tag, $artist, $track, $album, $label, $timestamp);
-                        $list = $playlistApi->getPlaylist($playlist);
-                        if($list['airname'] &&
-                                $playlistApi->isNowWithinShow($list))
-                            PushServer::sendAsyncNotification();
-
-                        $this->lazyLoadImages($playlist, $id);
-                    }
-                    $id = "";
-                }
-                $this->emitTagForm($playlist, "");
-            }
-            break;
         case "editTrack":
             // Run the query
             $albuminfo = Engine::api(IPlaylist::class)->getTrack($id);

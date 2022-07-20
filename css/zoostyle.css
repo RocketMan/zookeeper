@@ -630,12 +630,46 @@ table.recentAirplay td, .sub {
     margin-bottom: 4px;
 }
 
-.pl-form-entry button {
+.pl-form-entry button:not(.edit-mode) {
     width: 148px;
     padding-left: 0;
     padding-right: 0;
     box-sizing: border-box;
     white-space: nowrap;
+}
+
+.pl-form-entry button.edit-mode {
+    width: 97px;
+    color: #000;
+    background-color: #f4f4f4;
+    border-radius: 4px;
+    border: 1px solid #cdcdcd;
+}
+.pl-form-entry button.edit-mode:hover {
+    background-color: #f8f8f8;
+}
+.pl-form-entry button.edit-mode:active {
+    background-color: #d6d6d6;
+}
+.pl-form-entry button#edit-save {
+    color: #fff;
+    border: 1px solid #5796ed;
+    background-color: #5897ee;
+}
+.pl-form-entry button#edit-save:disabled {
+    color: gray;
+    border: 1px solid #ccc;
+    background-color: #ccc;
+}
+.pl-form-entry button#edit-save:hover:not(:disabled) {
+    background-color: #5ba4fc;
+}
+.pl-form-entry button#edit-save:active:not(:disabled) {
+    background-color: #5897ee;
+}
+.pl-form-entry button#edit-delete {
+    color: #e33437;
+    border-color: #e33437;
 }
 
 .form-entry label, .pl-form-entry label {
