@@ -117,7 +117,7 @@ $().ready(function(){
         $('#error-msg').text(msg);
     }
 
-    function getDiskInfo(id, refArtist) {
+    function getDiskInfo(id, refArtist, refTitle) {
         clearUserInput(false);
 
         // chars [ and ] in the QS param name are supposed to be %-encoded.
@@ -150,7 +150,7 @@ $().ready(function(){
                                   diskInfo.relationships.label.meta.name :
                                   "(Unknown)");
             $("#track-album").val(diskInfo.attributes.album);
-            $("#track-title").val("");
+            $("#track-title").val(refTitle);
             $(".track-submit").attr("disabled");
             $(".track-submit").prop("disabled", true);
             if(refArtist) {
@@ -171,6 +171,9 @@ $().ready(function(){
                     }
                 }
             }
+
+            if(refTitle)
+                setAddButtonState(true);
         }).fail(function (jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
             if (json && json.errors) {
@@ -207,7 +210,7 @@ $().ready(function(){
             });
             var tag = $("#old-track-tag").val();
             if(tag)
-                tagId = tag;
+                getDiskInfo(tag, $("#old-track-artist").val(), $("#old-track-title").val());
             $("#comment-data").val($("#old-comment-data").val());
             $("#nme-id").val($("#old-event-code").val());
 
