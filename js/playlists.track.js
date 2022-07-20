@@ -210,7 +210,6 @@ $().ready(function(){
                 tagId = tag;
             $("#comment-data").val($("#old-comment-data").val());
             $("#nme-id").val($("#old-event-code").val());
-            $("#edit-time").fxtime('val', $("#old-created").val());
 
             var haveAll = haveAllUserInput();
             setAddButtonState(haveAll);
@@ -1005,9 +1004,16 @@ $().ready(function(){
 
     $("#edit-time").fxtime();
     if($("#edit-type").length > 0) {
-
         var type = $("#edit-type").val();
         $("#track-type-pick").val(type).trigger('change');
+
+        var created = $("#old-created").val();
+        if(created)
+            $("#edit-time").fxtime('val', created);
+        else
+            $("#edit-time").fxtime('val', $("#edit-time").data('last-val'))
+                .fxtime('seg', 1, null)
+                .fxtime('seg', 2, 0);
     }
 
     $("*[data-focus]").focus();

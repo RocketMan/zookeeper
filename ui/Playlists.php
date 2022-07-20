@@ -879,26 +879,24 @@ class Playlists extends MenuItem {
             <?php
                 $api = Engine::api(IPlaylist::class);
                 $window = $api->getTimestampWindow($playlistId);
-                if(!$editMode) {
-                    $time = null;
-                    $observer = (new PlaylistObserver())->onComment(function($entry) use(&$time) {
-                        $created = $entry->getCreatedTime();
-                        if($created) $time = $created;
-                    })->onLogEvent(function($entry) use(&$time) {
-                        $created = $entry->getCreatedTime();
-                        if($created) $time = $created;
-                    })->onSetSeparator(function($entry) use(&$time) {
-                        $created = $entry->getCreatedTime();
-                        if($created) $time = $created;
-                    })->onSpin(function($entry) use(&$time) {
-                        $created = $entry->getCreatedTime();
-                        if($created) $time = $created;
-                    });
-                    $api->getTracksWithObserver($playlistId, $observer);
-                    if(!$time) {
-                        $startTime = $api->getTimestampWindow($playlistId, false)['start'];
-                        $time = $startTime->format('H:i:s');
-                    }
+                $time = null;
+                $observer = (new PlaylistObserver())->onComment(function($entry) use(&$time) {
+                    $created = $entry->getCreatedTime();
+                    if($created) $time = $created;
+                })->onLogEvent(function($entry) use(&$time) {
+                    $created = $entry->getCreatedTime();
+                    if($created) $time = $created;
+                })->onSetSeparator(function($entry) use(&$time) {
+                    $created = $entry->getCreatedTime();
+                    if($created) $time = $created;
+                })->onSpin(function($entry) use(&$time) {
+                    $created = $entry->getCreatedTime();
+                    if($created) $time = $created;
+                });
+                $api->getTracksWithObserver($playlistId, $observer);
+                if(!$time) {
+                    $startTime = $api->getTimestampWindow($playlistId, false)['start'];
+                    $time = $startTime->format('H:i:s');
                 }
 
                 // this is probably unnecessary, as desktop browsers *should*
