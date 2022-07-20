@@ -414,7 +414,7 @@ $().ready(function(){
     });
 
     $("#edit-delete").click(function(){
-        if(confirm("Delete this entry?")) {
+        if(confirm("Delete this item?")) {
             var playlistId = $('#track-playlist').val();
             var postData = {
                 data: {
