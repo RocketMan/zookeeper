@@ -1072,6 +1072,7 @@ div.toggle-time-entry div {
 }
 .play-now button {
     font-size: 10px;
+    height: 16px;
     border: none;
     color: #fff;
     cursor: pointer;
