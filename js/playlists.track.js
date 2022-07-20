@@ -334,113 +334,115 @@ $().ready(function(){
             return;
         }
 
-        // save only if time field is valid/empty
-        if($("INPUT[data-date].invalid-input").length == 0) {
-            var itemType, comment, eventType, eventCode;
-            var artist, label, album, track;
-            var trackType = $('#track-type-pick').val();
-            switch(trackType) {
-            case 'manual-entry':
-                itemType = 'spin';
-                artist = $("#track-artist").val();
-                label =  $("#track-label").val();
-                album =  $("#track-album").val();
-                track =  $("#track-title").val();
-                break;
-            case 'comment-entry':
-                itemType = 'comment';
-                comment = $("#comment-data").val();
-                break;
-            case 'set-separator':
-                itemType = 'break';
-                break;
-            default:
-                itemType = 'logEvent';
-                eventType = getEventType(trackType);
-                eventCode = $("#nme-id").val();
-                break;
-            }
+        // check that the timestamp, if any, is valid
+        if($("INPUT[data-date].invalid-input").length > 0)
+            return;
 
-            var playlistId = $('#track-playlist').val();
-            var postData = {
-                data: {
-                    type: 'event',
-                    id: $('#track-id').val(),
-                    attributes: {
-                        type: itemType,
-                        artist: artist,
-                        album: album,
-                        track: track,
-                        label: label,
-                        comment: comment,
-                        event: eventType,
-                        code: eventCode,
-                        created: $("#edit-time").fxtime('val')
+        var itemType, comment, eventType, eventCode;
+        var artist, label, album, track;
+        var trackType = $('#track-type-pick').val();
+        switch(trackType) {
+        case 'manual-entry':
+            itemType = 'spin';
+            artist = $("#track-artist").val();
+            label =  $("#track-label").val();
+            album =  $("#track-album").val();
+            track =  $("#track-title").val();
+            break;
+        case 'comment-entry':
+            itemType = 'comment';
+            comment = $("#comment-data").val();
+            break;
+        case 'set-separator':
+            itemType = 'break';
+            break;
+        default:
+            itemType = 'logEvent';
+            eventType = getEventType(trackType);
+            eventCode = $("#nme-id").val();
+            break;
+        }
+
+        var playlistId = $('#track-playlist').val();
+        var postData = {
+            data: {
+                type: 'event',
+                id: $('#track-id').val(),
+                attributes: {
+                    type: itemType,
+                    artist: artist,
+                    album: album,
+                    track: track,
+                    label: label,
+                    comment: comment,
+                    event: eventType,
+                    code: eventCode,
+                    created: $("#edit-time").fxtime('val')
+                }
+            }
+        };
+
+        if(trackType == 'manual-entry' && tagId) {
+            postData.data.relationships = {
+                album: {
+                    data: {
+                        type: 'album',
+                        id: tagId
                     }
                 }
             };
-
-            if(trackType == 'manual-entry' && tagId) {
-                postData.data.relationships = {
-                    album: {
-                        data: {
-                            type: 'album',
-                            id: tagId
-                        }
-                    }
-                };
-            }
-
-            $.ajax({
-                type: 'PATCH',
-                url: 'api/v1/playlist/' + playlistId + '/events',
-                dataType: 'json',
-                contentType: "application/json; charset=utf-8",
-                accept: "application/json; charset=utf-8",
-                data: JSON.stringify(postData),
-                success: function(response) {
-                    location.href = "?action=" + $("#track-action").val() +
-                        "&playlist=" + playlistId;
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    var json = JSON.parse(jqXHR.responseText);
-                    var status = (json && json.errors)?
-                        json.errors[0].title:('There was a problem extending the show time: ' + textStatus);
-                    showUserError(status);
-                }
-            });
         }
+
+        $.ajax({
+            type: 'PATCH',
+            url: 'api/v1/playlist/' + playlistId + '/events',
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            accept: "application/json; charset=utf-8",
+            data: JSON.stringify(postData),
+            success: function(response) {
+                location.href = "?action=" + $("#track-action").val() +
+                    "&playlist=" + playlistId;
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                var json = JSON.parse(jqXHR.responseText);
+                var status = (json && json.errors)?
+                    json.errors[0].title:('There was a problem extending the show time: ' + textStatus);
+                showUserError(status);
+            }
+        });
     });
 
     $("#edit-delete").click(function(){
-        if(confirm("Delete this item?")) {
-            var playlistId = $('#track-playlist').val();
-            var postData = {
-                data: {
-                    type: 'event',
-                    id: $('#track-id').val()
-                }
-            };
+        if(!confirm("Delete this item?"))
+            return;
 
-            $.ajax({
-                type: 'DELETE',
-                url: 'api/v1/playlist/' + playlistId + '/events',
-                dataType: 'json',
-                contentType: "application/json; charset=utf-8",
-                accept: "application/json; charset=utf-8",
-                data: JSON.stringify(postData),
-                success: function(response) {
-                    location.href = "?action=" + $("#track-action").val() +
-                        "&playlist=" + playlistId;
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    var json = JSON.parse(jqXHR.responseText);
-                    var status = (json && json.errors)?
-                        json.errors[0].title:('There was a problem extending the show time: ' + textStatus);
-                    showUserError(status);
-                }
-            });
-        }
+        var playlistId = $('#track-playlist').val();
+        var postData = {
+            data: {
+                type: 'event',
+                id: $('#track-id').val()
+            }
+        };
+
+        $.ajax({
+            type: 'DELETE',
+            url: 'api/v1/playlist/' + playlistId + '/events',
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            accept: "application/json; charset=utf-8",
+            data: JSON.stringify(postData),
+            success: function(response) {
+                location.href = "?action=" + $("#track-action").val() +
+                    "&playlist=" + playlistId;
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                var json = JSON.parse(jqXHR.responseText);
+                var status = (json && json.errors)?
+                    json.errors[0].title:('There was a problem extending the show time: ' + textStatus);
+                showUserError(status);
+            }
+        });
     });
 
     $("#edit-cancel").click(function(){

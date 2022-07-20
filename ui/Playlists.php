@@ -920,8 +920,8 @@ class Playlists extends MenuItem {
                 </div>\n";
             ?>
             <div>
-                <label></label><?php
-                if($editMode) { ?>
+                <label></label>
+                <?php if($editMode) { ?>
                 <button type='button' id='edit-save' class='edit-mode'>Save</button>
                 <button type='button' id='edit-delete' class='edit-mode'>Delete</button>
                 <button type='button' id='edit-cancel' class='edit-mode'>Cancel</button>
