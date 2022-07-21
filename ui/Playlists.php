@@ -822,8 +822,9 @@ class Playlists extends MenuItem {
             <input id='const-spin' type='hidden' value='<?php echo PlaylistEntry::TYPE_SPIN; ?>'>
             <label></label><span id='error-msg' class='error'></span>
             <div>
+            <?php if(!$editMode) { ?>
                 <a style='padding-right:4px;' href='#' class='nav pull-right' onClick=window.open('?target=export&amp;playlist=<?php echo $playlistId ?>&amp;format=html')>Print View</a>
-
+            <?php } ?>
                 <label>Type:</label>
                 <select id='track-type-pick'>
                    <option value='manual-entry'>Music</option>
