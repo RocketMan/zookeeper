@@ -798,8 +798,8 @@ class Playlists extends MenuItem {
         $this->emitTrackAdder($playlistId, $playlist);
     }
     
-    private function emitTrackAdder($playlistId, $playlist, $editMode = false) {
-        $isLiveShow = !$editMode && Engine::api(IPlaylist::class)->isNowWithinShow($playlist);
+    private function emitTrackAdder($playlistId, $playlist, $editTrack = false) {
+        $isLiveShow = !$editTrack && Engine::api(IPlaylist::class)->isNowWithinShow($playlist);
         $nmeAr = Engine::param('nme');
         $nmeOpts = '';
         $nmePrefix = self::NME_PREFIX;
@@ -822,7 +822,7 @@ class Playlists extends MenuItem {
             <input id='const-spin' type='hidden' value='<?php echo PlaylistEntry::TYPE_SPIN; ?>'>
             <label></label><span id='error-msg' class='error'></span>
             <div>
-            <?php if(!$editMode) { ?>
+            <?php if(!$editTrack) { ?>
                 <a style='padding-right:4px;' href='#' class='nav pull-right' onClick=window.open('?target=export&amp;playlist=<?php echo $playlistId ?>&amp;format=html')>Print View</a>
             <?php } ?>
                 <label>Type:</label>
@@ -883,7 +883,7 @@ class Playlists extends MenuItem {
                 $time = [
                     "created" => null,
                     "break" => false,
-                    "id" => $editMode
+                    "id" => $editTrack
                 ];
                 $observer = (new PlaylistObserver())->onComment(function($entry) use(&$time) {
                     if($time['break']) return;
@@ -921,7 +921,7 @@ class Playlists extends MenuItem {
                 $ttype = preg_match('/tablet|mobile|android/i',
                         $_SERVER['HTTP_USER_AGENT'] ?? '') ? "tel" : "text";
 
-                if($editMode) {
+                if($editTrack) {
                     $startAMPM = $window['start']->format('g:i a');
                     $endAMPM = $window['end']->format('g:i a');
                     $timeMsg = "($startAMPM - $endAMPM)";
@@ -930,13 +930,13 @@ class Playlists extends MenuItem {
 
                 echo "<div id='time-entry'".($isLiveShow?" class='zk-hidden'":"").">
                     <label>Time:</label>
-                    <input id='".($editMode ? "edit" : "track")."-time' class='fxtime' type='$ttype' step='1' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-last-val='$time' />
-                    <span class='track-info".($isLiveShow||$editMode?"":" zk-hidden")."'>$timeMsg</span>
+                    <input id='".($editTrack ? "edit" : "track")."-time' class='fxtime' type='$ttype' step='1' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-last-val='$time' />
+                    <span class='track-info".($isLiveShow||$editTrack?"":" zk-hidden")."'>$timeMsg</span>
                 </div>\n";
             ?>
             <div>
                 <label></label>
-                <?php if($editMode) { ?>
+                <?php if($editTrack) { ?>
                 <button type='button' id='edit-save' class='edit-mode default'>Save</button>
                 <button type='button' id='edit-delete' class='edit-mode'>Delete</button>
                 <button type='button' id='edit-cancel' class='edit-mode'>Cancel</button>
