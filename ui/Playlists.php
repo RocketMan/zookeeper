@@ -1033,50 +1033,12 @@ class Playlists extends MenuItem {
         $this->emitTrackAdder($playlistId, $playlist, $id);
     }
 
-    private function emitTrackForm($playlist, $id, $album, $track) {
-    ?>
-      <DIV class='playlistBanner'><?php echo $id?"Editing highlighted":"Adding";?> track</DIV>
-      <FORM ACTION="?" id='edit' METHOD=POST>
-      <INPUT TYPE=HIDDEN NAME=artist VALUE="<?php echo htmlentities($album["artist"]);?>">
-      <INPUT TYPE=HIDDEN NAME=album VALUE="<?php echo htmlentities($album["album"]);?>">
-      <INPUT TYPE=HIDDEN NAME=label VALUE="<?php echo htmlentities($album["label"]);?>">
-      <INPUT TYPE=HIDDEN NAME=etime VALUE="<?php echo $_REQUEST["etime"]; ?>">
-      <INPUT TYPE=HIDDEN NAME=edate VALUE="<?php echo $_REQUEST["edate"]; ?>">
-      <TABLE>
-        <TR><TD ALIGN=RIGHT>Artist:</TD>
-            <TH ALIGN=LEFT><?php echo htmlentities($album["artist"]); ?></TH></TR>
-        <TR><TD ALIGN=RIGHT>Album:</TD>
-            <TH ALIGN=LEFT><?php echo htmlentities($album["album"]); ?></TH></TR>
-        <TR><TD ALIGN=RIGHT>Track:</TD>
-            <TD><INPUT TYPE=TEXT NAME=track MAXLENGTH=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> CLASS=input VALUE="<?php echo htmlentities($track);?>" data-focus></TD></TR>
-        <TR><TD></TD><TD>
-    <?php if($id) { ?>
-          <INPUT TYPE=SUBMIT VALUE="  Save  ">
-          <INPUT TYPE=HIDDEN NAME=id VALUE="<?php echo $id;?>">
-    <?php } else { ?>
-          <INPUT TYPE=SUBMIT VALUE="  Next &gt;&gt;  ">
-    <?php } ?>
-          <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $album["tag"];?>">
-          <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action;?>">
-          <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
-          <INPUT TYPE=HIDDEN NAME=seq VALUE="editForm">
-        </TD></TR>
-      </TABLE>
-      </FORM>
-    <?php 
-    }
-    
     private function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTime) {
         $id = 0;
         $status = '';
         // Run the query
         $success = Engine::api(IPlaylist::class)->insertTrack($playlistId,
                      $tag, $artist, $track, $album, $label, $spinTime, $id, $status);    
-    }
-    
-    private function deleteTrack($id) {
-        // Run the query
-        $success = Engine::api(IPlaylist::class)->deleteTrack($id);
     }
     
     private function emitPlaylistTitle($playlist) {
