@@ -211,7 +211,7 @@ $().ready(function(){
             var tag = $("#old-track-tag").val();
             if(tag)
                 getDiskInfo(tag, $("#old-track-artist").val(), $("#old-track-title").val());
-            $("#comment-data").val($("#old-comment-data").val());
+            $("#comment-data").val($("#old-comment-data").val()).trigger('input');
             $("#nme-id").val($("#old-event-code").val());
 
             var haveAll = haveAllUserInput();
