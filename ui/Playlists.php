@@ -1029,7 +1029,7 @@ class Playlists extends MenuItem {
         echo "<input type='hidden' id='old-created' value='" . $entry->getCreatedTime() . "' />\n";
         echo "<input type='hidden' id='edit-type' value='$type' />\n";
 
-        $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId);
+        $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
         $showName = $playlist['description'];
         $djName = $playlist['airname'];
         $showDateTime = self::makeShowDateAndTime($playlist);
