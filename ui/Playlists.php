@@ -1012,18 +1012,18 @@ class Playlists extends MenuItem {
         case PlaylistEntry::TYPE_COMMENT:
             $type = "comment-entry";
             echo "<input type='hidden' id='old-comment-data' value='" .
-                    $entry->getComment() . "' />\n";
+                    htmlentities($entry->getComment(), ENT_QUOTES, 'UTF-8') . "' />\n";
             break;
         case PlaylistEntry::TYPE_LOG_EVENT:
             $type = self::NME_PREFIX . $entry->getLogEventType();
             echo "<input type='hidden' id='old-event-code' value='" .
-                    $entry->getLogEventCode() . "' />\n";
+                    htmlentities($entry->getLogEventCode(), ENT_QUOTES, 'UTF-8') . "' />\n";
             break;
         default:
             $type = "manual-entry";
             foreach (['tag', 'artist', 'album', 'label', 'title'] as $field)
                 echo "<input type='hidden' id='old-track-$field' value='" .
-                    $album[$field == 'title' ? 'track' : $field] . "' />\n";
+                    htmlentities($album[$field == 'title' ? 'track' : $field], ENT_QUOTES, 'UTF-8') . "' />\n";
             break;
         }
         echo "<input type='hidden' id='old-created' value='" . $entry->getCreatedTime() . "' />\n";
