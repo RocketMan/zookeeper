@@ -1030,6 +1030,11 @@ class Playlists extends MenuItem {
         echo "<input type='hidden' id='edit-type' value='$type' />\n";
 
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId);
+        $showName = $playlist['description'];
+        $djName = $playlist['airname'];
+        $showDateTime = self::makeShowDateAndTime($playlist);
+
+        $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
         $this->emitTrackAdder($playlistId, $playlist, $id);
     }
 
