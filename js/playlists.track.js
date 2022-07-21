@@ -40,6 +40,8 @@ $().ready(function(){
         var hasPending = $("#track-time").data("live") && getPending() != null;
         $("#track-add").prop("disabled", !enableIt);
         $("#track-play").prop("disabled", !enableIt || hasPending);
+
+        $("#edit-save").prop("disabled", !enableIt);
     }
 
     function clearUserInput(clearArtistList) {
@@ -115,7 +117,7 @@ $().ready(function(){
         $('#error-msg').text(msg);
     }
 
-    function getDiskInfo(id, refArtist) {
+    function getDiskInfo(id, refArtist, refTitle) {
         clearUserInput(false);
 
         // chars [ and ] in the QS param name are supposed to be %-encoded.
@@ -148,7 +150,7 @@ $().ready(function(){
                                   diskInfo.relationships.label.meta.name :
                                   "(Unknown)");
             $("#track-album").val(diskInfo.attributes.album);
-            $("#track-title").val("");
+            $("#track-title").val(refTitle);
             $(".track-submit").attr("disabled");
             $(".track-submit").prop("disabled", true);
             if(refArtist) {
@@ -169,6 +171,9 @@ $().ready(function(){
                     }
                 }
             }
+
+            if(refTitle)
+                setAddButtonState(true);
         }).fail(function (jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
             if (json && json.errors) {
@@ -197,6 +202,20 @@ $().ready(function(){
                 $("#nme-id").val($(option).text());
                 setAddButtonState(true);
             }
+        }
+
+        if($("#edit-type").length > 0) {
+            ['artist','album','label','title'].forEach(function(field) {
+                $("#track-" + field).val($("#old-track-" + field).val());
+            });
+            var tag = $("#old-track-tag").val();
+            if(tag)
+                getDiskInfo(tag, $("#old-track-artist").val(), $("#old-track-title").val());
+            $("#comment-data").val($("#old-comment-data").val()).trigger('input');
+            $("#nme-id").val($("#old-event-code").val());
+
+            var haveAll = haveAllUserInput();
+            setAddButtonState(haveAll);
         }
     });
 
@@ -233,6 +252,7 @@ $().ready(function(){
         var v = fxtime ? $(this).fxtime('val') : $(this).val();
         if(v == null || v.length == 0) {
             $(this).removeClass('invalid-input');
+            showUserError('');
             return;
         }
 
@@ -305,21 +325,128 @@ $().ready(function(){
     });
 
     $("#edit-save").click(function(){
-        // submit form only if time field is valid/empty
-        if($("INPUT[data-date].invalid-input").length == 0)
-            $(this).closest("FORM").submit();
+        // double check that we have everything.
+        if (haveAllUserInput() == false) {
+            showUserError('A required field is missing');
+            return;
+        }
+
+        // don't allow submission of album tag in the artist field
+        if($("#track-artist").val().trim().match(/^\d+$/) && tagId == 0) {
+            showUserError('Album tag is invalid');
+            $("#track-artist").focus();
+            return;
+        }
+
+        // check that the timestamp, if any, is valid
+        if($("INPUT[data-date].invalid-input").length > 0)
+            return;
+
+        var itemType, comment, eventType, eventCode;
+        var artist, label, album, track;
+        var trackType = $('#track-type-pick').val();
+        switch(trackType) {
+        case 'manual-entry':
+            itemType = 'spin';
+            artist = $("#track-artist").val();
+            label =  $("#track-label").val();
+            album =  $("#track-album").val();
+            track =  $("#track-title").val();
+            break;
+        case 'comment-entry':
+            itemType = 'comment';
+            comment = $("#comment-data").val();
+            break;
+        case 'set-separator':
+            itemType = 'break';
+            break;
+        default:
+            itemType = 'logEvent';
+            eventType = getEventType(trackType);
+            eventCode = $("#nme-id").val();
+            break;
+        }
+
+        var playlistId = $('#track-playlist').val();
+        var postData = {
+            data: {
+                type: 'event',
+                id: $('#track-id').val(),
+                attributes: {
+                    type: itemType,
+                    artist: artist,
+                    album: album,
+                    track: track,
+                    label: label,
+                    comment: comment,
+                    event: eventType,
+                    code: eventCode,
+                    created: $("#edit-time").fxtime('val')
+                }
+            }
+        };
+
+        if(trackType == 'manual-entry' && tagId) {
+            postData.data.relationships = {
+                album: {
+                    data: {
+                        type: 'album',
+                        id: tagId
+                    }
+                }
+            };
+        }
+
+        $.ajax({
+            type: 'PATCH',
+            url: 'api/v1/playlist/' + playlistId + '/events',
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            accept: "application/json; charset=utf-8",
+            data: JSON.stringify(postData),
+            success: function(response) {
+                location.href = "?action=" + $("#track-action").val() +
+                    "&playlist=" + playlistId;
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                var json = JSON.parse(jqXHR.responseText);
+                var status = (json && json.errors)?
+                    json.errors[0].title:('There was a problem extending the show time: ' + textStatus);
+                showUserError(status);
+            }
+        });
     });
 
     $("#edit-delete").click(function(){
-        if(confirm("Delete this entry?")) {
-            // we need to indicate that the ' Delete ' button was pressed
-            var input = $("<INPUT>").attr({
-                type: 'hidden',
-                name: 'button',
-                value: ' Delete '
-            });
-            $(this).closest("FORM").append(input).submit();
-        }
+        if(!confirm("Delete this item?"))
+            return;
+
+        var playlistId = $('#track-playlist').val();
+        var postData = {
+            data: {
+                type: 'event',
+                id: $('#track-id').val()
+            }
+        };
+
+        $.ajax({
+            type: 'DELETE',
+            url: 'api/v1/playlist/' + playlistId + '/events',
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            accept: "application/json; charset=utf-8",
+            data: JSON.stringify(postData),
+            success: function(response) {
+                location.href = "?action=" + $("#track-action").val() +
+                    "&playlist=" + playlistId;
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                var json = JSON.parse(jqXHR.responseText);
+                var status = (json && json.errors)?
+                    json.errors[0].title:('There was a problem extending the show time: ' + textStatus);
+                showUserError(status);
+            }
+        });
     });
 
     $("#edit-cancel").click(function(){
@@ -328,8 +455,8 @@ $().ready(function(){
     });
 
     // display highlight on track edit
-    if($("FORM#edit").length > 0) {
-        var id = $("FORM#edit INPUT[name=id]").val();
+    if($("#track-id").length > 0) {
+        var id = $("#track-id").val();
         $("DIV[data-id=" + id + "]").closest("TR").addClass("highlight");
     }
 
@@ -504,13 +631,13 @@ $().ready(function(){
     $(".track-submit").click(function(e) {
         // double check that we have everything.
         if (haveAllUserInput() == false) {
-            alert('A required field is missing');
+            showUserError('A required field is missing');
             return;
         }
 
         // don't allow submission of album tag in the artist field
         if($("#track-artist").val().trim().match(/^\d+$/) && tagId == 0) {
-            alert('Album tag is invalid');
+            showUserError('Album tag is invalid');
             $("#track-artist").focus();
             return;
         }
@@ -853,10 +980,7 @@ $().ready(function(){
             a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1;
     })).val('manual-entry');
 
-    $("#track-time").fxtime()
-        .fxtime('val', $("#track-time").data('last-val'))
-        .fxtime('seg', 1, null)
-        .fxtime('seg', 2, 0)
+    $(".fxtime").fxtime()
         .fxtime('blur', function(seg) {
             if(seg == 1) {
                 // auto-bump hour if new minute is well less than previous
@@ -872,14 +996,32 @@ $().ready(function(){
         }).keydown(function(e) {
             if(e.which == 0x0d && // Enter key
                     $(this).fxtime('val') &&
-                    $('#track-play').is(':enabled')) {
+                    $('button.default:visible').is(':enabled')) {
                 // focus before click to trigger time validation
-                $('#track-play').focus().click();
+                $('button.default:visible').focus().click();
 
                 if($(this).hasClass('invalid-input'))
                     $(this).focus();
             }
         });
+
+    $("#track-time")
+        .fxtime('val', $("#track-time").data('last-val'))
+        .fxtime('seg', 1, null)
+        .fxtime('seg', 2, 0);
+
+    if($("#edit-type").length > 0) {
+        var type = $("#edit-type").val();
+        $("#track-type-pick").val(type).trigger('change');
+
+        var created = $("#old-created").val();
+        if(created)
+            $("#edit-time").fxtime('val', created);
+        else
+            $("#edit-time").fxtime('val', $("#edit-time").data('last-val'))
+                .fxtime('seg', 1, null)
+                .fxtime('seg', 2, 0);
+    }
 
     $("*[data-focus]").focus();
 });
