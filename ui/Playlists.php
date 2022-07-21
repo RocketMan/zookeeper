@@ -1000,7 +1000,7 @@ class Playlists extends MenuItem {
     
     private function emitEditForm($playlistId, $id, $album, $track) {
     ?>
-      <DIV class='playlistBanner'>&nbsp;Editing Highlighted Item</DIV>
+      <DIV class='playlistBanner'>&nbsp;Editing highlighted item</DIV>
       <input type='hidden' id='track-id' value='<?php echo $id; ?>'>
     <?php
         $entry = new PlaylistEntry($album);
