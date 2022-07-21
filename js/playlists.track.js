@@ -980,11 +980,8 @@ $().ready(function(){
             a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1;
     })).val('manual-entry');
 
-    $("#track-time").fxtime().
-        fxtime('val', $("#track-time").data('last-val')).
-        fxtime('seg', 1, null).
-        fxtime('seg', 2, 0).
-        fxtime('blur', function(seg) {
+    $(".fxtime").fxtime()
+        .fxtime('blur', function(seg) {
             if(seg == 1) {
                 // auto-bump hour if new minute is well less than previous
                 var current = $(this).fxtime('val');
@@ -999,16 +996,20 @@ $().ready(function(){
         }).keydown(function(e) {
             if(e.which == 0x0d && // Enter key
                     $(this).fxtime('val') &&
-                    $('#track-play').is(':enabled')) {
+                    $('button.default:visible').is(':enabled')) {
                 // focus before click to trigger time validation
-                $('#track-play').focus().click();
+                $('button.default:visible').focus().click();
 
                 if($(this).hasClass('invalid-input'))
                     $(this).focus();
             }
         });
 
-    $("#edit-time").fxtime();
+    $("#track-time")
+        .fxtime('val', $("#track-time").data('last-val'))
+        .fxtime('seg', 1, null)
+        .fxtime('seg', 2, 0);
+
     if($("#edit-type").length > 0) {
         var type = $("#edit-type").val();
         $("#track-type-pick").val(type).trigger('change');

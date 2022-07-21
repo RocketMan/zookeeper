@@ -879,22 +879,36 @@ class Playlists extends MenuItem {
             <?php
                 $api = Engine::api(IPlaylist::class);
                 $window = $api->getTimestampWindow($playlistId);
-                $time = null;
+                $time = [
+                    "created" => null,
+                    "break" => false,
+                    "id" => $editMode
+                ];
                 $observer = (new PlaylistObserver())->onComment(function($entry) use(&$time) {
+                    if($time['break']) return;
+                    $time['break'] = $time['id'] === $entry->getId();
                     $created = $entry->getCreatedTime();
-                    if($created) $time = $created;
+                    if($created) $time['created'] = $created;
                 })->onLogEvent(function($entry) use(&$time) {
+                    if($time['break']) return;
+                    $time['break'] = $time['id'] === $entry->getId();
                     $created = $entry->getCreatedTime();
-                    if($created) $time = $created;
+                    if($created) $time['created'] = $created;
                 })->onSetSeparator(function($entry) use(&$time) {
+                    if($time['break']) return;
+                    $time['break'] = $time['id'] === $entry->getId();
                     $created = $entry->getCreatedTime();
-                    if($created) $time = $created;
+                    if($created) $time['created'] = $created;
                 })->onSpin(function($entry) use(&$time) {
+                    if($time['break']) return;
+                    $time['break'] = $time['id'] === $entry->getId();
                     $created = $entry->getCreatedTime();
-                    if($created) $time = $created;
+                    if($created) $time['created'] = $created;
                 });
                 $api->getTracksWithObserver($playlistId, $observer);
-                if(!$time) {
+                if($time['created'])
+                    $time = $time['created'];
+                else {
                     $startTime = $api->getTimestampWindow($playlistId, false)['start'];
                     $time = $startTime->format('H:i:s');
                 }
@@ -922,11 +936,11 @@ class Playlists extends MenuItem {
             <div>
                 <label></label>
                 <?php if($editMode) { ?>
-                <button type='button' id='edit-save' class='edit-mode'>Save</button>
+                <button type='button' id='edit-save' class='edit-mode default'>Save</button>
                 <button type='button' id='edit-delete' class='edit-mode'>Delete</button>
                 <button type='button' id='edit-cancel' class='edit-mode'>Cancel</button>
                 <?php } else { ?>
-                <button type='button' disabled id='track-play' class='track-submit'>Add <?php echo $isLiveShow?"(Playing Now)<img src='img/play.svg' />":"Item";?></button>
+                <button type='button' disabled id='track-play' class='track-submit default'>Add <?php echo $isLiveShow?"(Playing Now)<img src='img/play.svg' />":"Item";?></button>
                 <button type='button' disabled id='track-add' class='track-submit<?php if(!$isLiveShow) echo " zk-hidden"; ?>'>Add (Upcoming)<img src='img/play-pause.svg' /></button>
                 <?php } ?>
             </div>
@@ -1015,7 +1029,7 @@ class Playlists extends MenuItem {
         echo "<input type='hidden' id='edit-type' value='$type' />\n";
 
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId);
-        $this->emitTrackAdder($playlistId, $playlist, true);
+        $this->emitTrackAdder($playlistId, $playlist, $id);
     }
 
     private function emitTrackForm($playlist, $id, $album, $track) {
