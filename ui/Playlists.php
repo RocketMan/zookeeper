@@ -772,7 +772,7 @@ class Playlists extends MenuItem {
     private function makeEditDiv($entry, $playlist) {
         $href = "?playlist=" . $playlist . "&amp;id=" .
                 $entry->getId() . "&amp;action=" . $this->action . "&amp;";
-        $editLink = "<A CLASS='songEdit' HREF='" . $href ."seq=editTrack'>&#x270f;</a>";
+        $editLink = "<A CLASS='songEdit nav' HREF='" . $href ."seq=editTrack'>&#x270f;</a>";
         //NOTE: in edit mode the list is ordered new to old, so up makes it 
         //newer in time order & vice-versa.
         $dnd = "<DIV class='grab' data-id='".$entry->getId()."'>&#x2630;</DIV>";
