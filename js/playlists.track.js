@@ -193,7 +193,7 @@ $().ready(function(){
                 else
                     status = json.errors[0].title;
             } else
-                status = 'There was a problem retrieving the data: ' + textStatus;
+                status = 'Error retrieving the data: ' + textStatus;
             showUserError(status);
         });
     }
@@ -422,7 +422,7 @@ $().ready(function(){
             error: function(jqXHR, textStatus, errorThrown) {
                 var json = JSON.parse(jqXHR.responseText);
                 var status = (json && json.errors)?
-                    json.errors[0].title:('There was a problem extending the show time: ' + textStatus);
+                    json.errors[0].title:('Error updating the item: ' + textStatus);
                 showUserError(status);
             }
         });
@@ -454,7 +454,7 @@ $().ready(function(){
             error: function(jqXHR, textStatus, errorThrown) {
                 var json = JSON.parse(jqXHR.responseText);
                 var status = (json && json.errors)?
-                    json.errors[0].title:('There was a problem extending the show time: ' + textStatus);
+                    json.errors[0].title:('Error deleting the item: ' + textStatus);
                 showUserError(status);
             }
         });
@@ -707,7 +707,7 @@ $().ready(function(){
             error: function(jqXHR, textStatus, errorThrown) {
                 var json = JSON.parse(jqXHR.responseText);
                 var status = (json && json.errors)?
-                        json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
+                        json.errors[0].title:('Error retrieving the data: ' + textStatus);
                 showUserError(status);
             }
         });
@@ -736,7 +736,7 @@ $().ready(function(){
 
                 var json = JSON.parse(jqXHR.responseText);
                 var status = (json && json.errors)?
-                        json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
+                        json.errors[0].title:('Error retrieving the data: ' + textStatus);
                 showUserError(status);
             }
         });
@@ -857,7 +857,7 @@ $().ready(function(){
             error: function(jqXHR, textStatus, errorThrown) {
                 var json = JSON.parse(jqXHR.responseText);
                 var status = (json && json.errors)?
-                        json.errors[0].title:('There was a problem extending the show time: ' + textStatus);
+                        json.errors[0].title:('Error extending the show time: ' + textStatus);
                 showUserError(status);
             }
         });
@@ -953,7 +953,7 @@ $().ready(function(){
             error: function(jqXHR, textStatus, errorThrown) {
                 var json = JSON.parse(jqXHR.responseText);
                 var status = (json && json.errors)?
-                        json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
+                        json.errors[0].title:('Error updating the track: ' + textStatus);
                 showUserError(status);
             }
         });
