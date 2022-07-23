@@ -307,12 +307,12 @@ class Playlists extends MenuItem {
 
                     if($spinDateTime)
                         PushServer::sendAsyncNotification($playlist, $spin);
-
-                    // track is in the grace period?
-                    $window = $playlistApi->getTimestampWindow($playlistId, false);
-                    $retVal['runsover'] = $spinDateTime >= $window['end'];
                 } else if(!$isLiveShow)
                     $this->lazyLoadImages($playlistId, $entry->getId());
+
+                // track is in the grace period?
+                $window = $playlistApi->getTimestampWindow($playlistId, false);
+                $retVal['runsover'] = $spinDateTime >= $window['end'];
             }
         } else
             $updateStatus = 0; //failure
