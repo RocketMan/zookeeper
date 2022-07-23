@@ -410,9 +410,10 @@
                 fxdata.set(this, { count: count, idx: false, seg: false, focus: false, blur: [] });
             }).attr('autocomplete', 'off')
                 .css('caret-color', 'transparent')
+                .css('cursor', 'default')
                 .fxtime('val', null);
 
-            this.select(function(e) {
+            this.on("select", function(e) {
                 if(this.selectionStart != this.selectionEnd - 2)
                     focusCurrent(this);
             }).on("click", function(e) {
@@ -442,7 +443,7 @@
                 blurSegment(this);
             }).on("cut copy paste", function(e) {
                 e.preventDefault();
-            }).keydown(handleKeydown).attr("ondrop", "return false;");
+            }).on("keydown", handleKeydown).attr("ondrop", "return false;");
             break;
         };
         return this;
