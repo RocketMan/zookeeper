@@ -144,6 +144,17 @@ $().ready(function(){
             }
             $("#track-titles").html(options);
             $("#track-title").attr('list','track-titles'); // webkit hack
+            if(navigator.userAgent.match(/firefox/i) &&
+                    $("#track-title").is(":focus")) {
+                // fx hack for Bugzilla 1351483
+                //
+                // if focused, we have to lose and regain focus for
+                // the element to pick up the refreshed datalist
+                //
+                // probably safe everywhere, but scope to firefox
+                // for now, to avoid surprises with other browsers
+                $("#track-title").blur().focus();
+            }
             $("#track-artist").val(diskInfo.attributes.artist);
             $("#track-label").val(diskInfo.relationships != null &&
                                   diskInfo.relationships.label != null ?
