@@ -336,6 +336,9 @@ td.label-form {
     overflow: hidden;
     scrollbar-width: none;
 }
+.editorChooser:focus {
+    outline: 0;
+}
 
 .trackEditor {
     width: 100%;
