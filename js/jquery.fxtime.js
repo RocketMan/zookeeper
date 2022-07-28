@@ -102,10 +102,11 @@
 
     function setValue(jqctl, val) {
         jqctl.each(function() {
-            var segCount = fxdata.get(this).count;
+            var inst = fxdata.get(this);
+            var segCount = inst.count;
             if(val == null || val == '') {
                 var segs = Array(segCount).fill('--').join(':');
-                this.value = segs + (intl ? '' : ' AM');
+                this.value = inst.value = segs + (intl ? '' : ' AM');
                 return;
             }
 
@@ -121,7 +122,7 @@
                         xval[0] = String(h - 12);
                 }
 
-                this.value = xval.slice(0, segCount)
+                this.value = inst.value = xval.slice(0, segCount)
                         .map(x => x.padStart(2, '0'))
                         .join(':') + (intl ? '' : ' ' + ampm);
             }
@@ -154,7 +155,7 @@
                 break;
             }
             xval[0] = oval.join(':');
-            this.value = xval.join(' ');
+            this.value = fxdata.get(this).value = xval.join(' ');
         });
     }
 
@@ -271,7 +272,7 @@
             oval[seg] = String(val).padStart(2, '0');
             xval[0] = oval.join(':');
         }
-        ctl.value = xval.join(' ');
+        ctl.value = fxdata.get(ctl).value = xval.join(' ');
         if(ctl == document.activeElement)
             ctl.selectionEnd = ctl.selectionStart = start;
     }
@@ -279,6 +280,7 @@
     function inputSegment(ctl, val) {
         var start = ctl.selectionStart;
         var xval = ctl.value.split(' ');
+        var inst = fxdata.get(ctl);
         switch(val) {
         case 'A':
         case 'P':
@@ -291,7 +293,6 @@
             if(seg >= 3)
                 break;
 
-            var inst = fxdata.get(ctl);
             if(inst.seg === seg && oval[seg].match(/^\d+$/)) {
                 var n = oval[seg]*10 + val*1;
                 if(n <= max[seg])
@@ -315,7 +316,7 @@
             xval[0] = oval.join(':');
             break;
         }
-        ctl.value = xval.join(' ');
+        ctl.value = inst.value = xval.join(' ');
         ctl.selectionEnd = ctl.selectionStart = start;
     }
 
@@ -374,6 +375,58 @@
             break;
         }
         e.preventDefault();
+    }
+
+    /**
+     * failsafe to filter input delivered by some means other
+     * than keydown, such as from a touch device, browser emoji
+     * insert, etc.
+     */
+    function filterInput(e) {
+        var c, inst = fxdata.get(this);
+        switch(Math.abs(inst.value.length - this.value.length)) {
+        case 1: // one character was inserted
+            c = this.value.charCodeAt(this.selectionStart - 1);
+            switch(c) {
+            case 0x41:
+            case 0x61:
+                c = 0x41; // A
+                break;
+            case 0x50:
+            case 0x70:
+                c = 0x50; // P
+                break;
+            case 0x2b:
+            case 0x3d:
+                c = 0x26; // +
+                break;
+            case 0x2d:
+            case 0x5f:
+                c = 0x28; // -
+                break;
+            default:
+                if(c < 0x30 || c > 0x39) // non-numeric
+                    c = false;
+                break;
+            }
+            break;
+        case 2: // one character was deleted
+            c = 0x7f; // delete
+            break;
+        default: // multiple characters were added/deleted
+            c = false;
+            break;
+        }
+
+        // wipe out whatever the user just did and let the
+        // keydown handler process the input as needed
+        this.value = inst.value;
+        focusSegment(this, inst.idx);
+
+        if(c !== false) {
+            e.which = e.keyCode = c;
+            handleKeydown.call(this, e);
+        }
     }
 
     $.fn.fxtime = function(action, value, value2) {
@@ -443,7 +496,9 @@
                 blurSegment(this);
             }).on("cut copy paste", function(e) {
                 e.preventDefault();
-            }).on("keydown", handleKeydown).attr("ondrop", "return false;");
+            }).on("keydown", handleKeydown)
+                .on("input", filterInput)
+                .attr("ondrop", "return false;");
             break;
         };
         return this;
