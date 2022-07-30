@@ -906,7 +906,7 @@ input[type="checkbox"]:checked:active {
     cursor: move !important;
 }
 
-.invalid-input {
+.invalid-input, .fxtime:invalid {
     padding: 2px 3px 2px 3px ;
     border: 2px solid #f88;
     border-radius: 2px;

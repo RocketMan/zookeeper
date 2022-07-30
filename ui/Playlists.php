@@ -223,9 +223,17 @@ class Playlists extends MenuItem {
 
         $spinDateTime = null;
         $spinTime = $_REQUEST["time"] ?? ''; // optional paramter, may be empty
-        $spinDate = $_REQUEST["date"] ?? '';
-        if ($spinTime != '')
-            $spinDateTime = new \DateTime("${spinDate} ${spinTime}");
+        if ($spinTime != '') {
+            $window = $playlistApi->getTimestampWindow($playlistId);
+            $spinDateTime = PlaylistEntry::scrubTimestamp(
+                                         new \DateTime($spinTime), $window);
+            if($spinDateTime == null) {
+                $retVal['status'] = "Time is outside show start/end times";
+                http_response_code(400);
+                echo json_encode($retVal);
+                return;
+            }
+        }
 
         $isCue = $_REQUEST["cue"] ?? 0;
 
@@ -810,7 +818,6 @@ class Playlists extends MenuItem {
 
     ?>
         <div class='pl-form-entry'>
-            <input id='show-date' name='edate' type='hidden' value="<?php echo $playlist['showdate']; ?>" >
             <input id='show-time' type='hidden' value="<?php echo $playlist['showtime']; ?>" >
             <input id='timezone-offset' type='hidden' value="<?php echo round(date('Z')/-60, 2); /* server TZ equivalent of javascript Date.getTimezoneOffset() */ ?>" >
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
@@ -921,17 +928,14 @@ class Playlists extends MenuItem {
                 $ttype = preg_match('/tablet|mobile|android/i',
                         $_SERVER['HTTP_USER_AGENT'] ?? '') ? "tel" : "text";
 
-                if($editTrack) {
-                    $startAMPM = $window['start']->format('g:i a');
-                    $endAMPM = $window['end']->format('g:i a');
-                    $timeMsg = "($startAMPM - $endAMPM)";
-                } else
-                    $timeMsg = "Leave blank for current time";
+                $startAMPM = $window['start']->format('g:i a');
+                $endAMPM = $window['end']->format('g:i a');
+                $timeMsg = "($startAMPM - $endAMPM)";
 
                 echo "<div id='time-entry'".($isLiveShow?" class='zk-hidden'":"").">
                     <label>Time:</label>
-                    <input id='".($editTrack ? "edit" : "track")."-time' class='fxtime' type='$ttype' step='1' data-date='".$window['start']->format('Y-m-d')."' data-start='".$window['start']->format('H:i')."' data-end='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-last-val='$time' />
-                    <span class='track-info".($isLiveShow||$editTrack?"":" zk-hidden")."'>$timeMsg</span>
+                    <input id='".($editTrack ? "edit" : "track")."-time' class='fxtime' type='$ttype' step='1' min='".$window['start']->format('H:i')."' max='".$window['end']->format('H:i')."' data-live='".($isLiveShow?1:0)."' data-last-val='$time' />
+                    <span class='track-info'>$timeMsg</span>
                 </div>\n";
             ?>
             <div>

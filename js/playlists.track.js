@@ -257,84 +257,6 @@ $().ready(function(){
         setAddButtonState(haveAll);
     });
 
-    $("INPUT[data-date]").focusout(function() {
-        // if field is blank, apply no validation
-        var fxtime = $(this).hasClass('fxtime');
-        var v = fxtime ? $(this).fxtime('val') : $(this).val();
-        if(v == null || v.length == 0) {
-            $(this).removeClass('invalid-input');
-            showUserError('');
-            return;
-        }
-
-        // no time picker in webkit; be flexible in accepting input...
-        // ...accept am/pm time
-        var ampm = true;
-        var offset = 0;
-        var vlc = v.toLowerCase();
-        var am = vlc.indexOf('am');
-        var pm = vlc.indexOf('pm');
-        if(am > 0)
-            v = v.substring(0, am);
-        else if(pm > 0) {
-            v = v.substring(0, pm);
-            offset = 12;
-        } else
-            ampm = false;
-
-        // ...accept time without separator (e.g., 1234)
-        if(v.length > 2 && v.indexOf(':') < 0)
-            v = v.substr(0, v.length-2) + ':' + v.substr(v.length-2);
-
-        // ...accept time without leading zero (e.g., 2:34)
-        v = v.trim().padStart(5, '0');
-
-        // ...fix special case of 12am/pm
-        var hour = v.substr(0, 2)*1;
-        if(ampm && hour == 12)
-            offset -= 12;
-
-        // ...coerce am/pm to 24 hour time
-        if(offset != 0)
-            v = (hour + offset).toString().padStart(2, '0') + v.substr(2);
-
-        var d = $(this).data("date");
-        var s = $(this).data("start");
-        var e = $(this).data("end");
-
-        var start = new Date(d + "T" + s + "Z");
-        var end = new Date(d + "T" + e + "Z");
-        var val = new Date(d + "T" + v + "Z");
-
-        if(!isNaN(val)) {
-            // val or end time can be midnight or later
-            // in this case, adjust to the next day
-            if(e < s)
-                end.setTime(end.getTime() + 86400000);
-            if(v < s)
-                val.setTime(val.getTime() + 86400000);
-        }
-
-        if(isNaN(val) || val < start || val > end) {
-            $(this).removeClass('prefilled-input');
-            $(this).addClass('invalid-input');
-            if(fxtime)
-                $(this).focus();
-            else
-                $(this).val("").focus();
-            showUserError('Time is invalid');
-        } else {
-            // if we massaged time for webkit, set canonical value
-            if(!fxtime && $(this).val() != v)
-                $(this).val(v);
-
-            // if time is after midnight, set edate field to correct date
-            $("INPUT[name=edate]").val(val.toISOString().split('T')[0]);
-            $(this).removeClass('invalid-input');
-            showUserError('');
-        }
-    });
-
     $("#edit-save").click(function(){
         // double check that we have everything.
         if (haveAllUserInput() == false) {
@@ -350,8 +272,11 @@ $().ready(function(){
         }
 
         // check that the timestamp, if any, is valid
-        if($("INPUT[data-date].invalid-input").length > 0)
+        if($(".fxtime").is(":invalid")) {
+            showUserError('Time is outside show start/end times');
+            $(".fxtime").focus();
             return;
+        }
 
         var itemType, comment, eventType, eventCode;
         var artist, label, album, track;
@@ -544,7 +469,7 @@ $().ready(function(){
 
     function submitTrack(id) {
         console.log("enter submitTrack");
-        var showDate, spinTime, artist, label, album, track, type, eventType, eventCode, comment;
+        var spinTime, artist, label, album, track, type, eventType, eventCode, comment;
         var trackType =  $("#track-type-pick").val();
 
         if (trackType == 'set-separator') {
@@ -563,7 +488,6 @@ $().ready(function(){
             album =  $("#track-album").val();
             track =  $("#track-title").val();
         }
-        showDate =  $("#show-date").val();
         spinTime =  $("#track-time").fxtime('val');
 
         var postData = {
@@ -573,7 +497,6 @@ $().ready(function(){
             artist: artist,
             label: label,
             time: spinTime,
-            date: showDate,
             album: album,
             track: track,
             eventType: eventType,
@@ -654,8 +577,11 @@ $().ready(function(){
         }
 
         // check that the timestamp, if any, is valid
-        if($("INPUT[data-date].invalid-input").length > 0)
+        if($(".fxtime").is(":invalid")) {
+            showUserError('Time is outside show start/end times');
+            $(".fxtime").focus();
             return;
+        }
 
         submitTrack(this.id);
     });
@@ -743,6 +669,7 @@ $().ready(function(){
     }
 
     $("#track-artist").focusout(function() {
+        $("#error-msg").text('');
         $(this).removeClass('invalid-input');
         var artist = $(this).val();
         if(artist.match(/^\d+$/) && tagId == 0) {
@@ -875,10 +802,7 @@ $().ready(function(){
         else {
             $("#error-msg").text('');
             var input = timeEntry.slideUp().addClass('zk-hidden').find('input');
-            if(input.hasClass('fxtime'))
-                input.fxtime('seg', 1, null).fxtime('seg', 2, 0);
-            else
-                input.val('');
+            input.fxtime('seg', 1, null).fxtime('seg', 2, 0);
         }
     });
 
@@ -1011,9 +935,12 @@ $().ready(function(){
                 // focus before click to trigger time validation
                 $('button.default:visible').focus().click();
 
-                if($(this).hasClass('invalid-input'))
-                    $(this).focus();
+                if(this.matches(":invalid"))
+                    this.focus();
             }
+        }).on('blur', function() {
+            if(this.matches(":valid"))
+                $("#error-msg").text("");
         });
 
     $("#track-time")

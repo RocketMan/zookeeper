@@ -41,9 +41,23 @@
  *   $(selector).fxtime();
  *
  * The element uses a 12- or 24-hour format depending on the current locale.
+ * By default, only hours and minutes are displayed.
  *
- * By default, only hours and minutes are shown.  To show seconds, on
- * the input element, specify attribute 'step' with value less than 60.
+ *
+ * The following optional attributes are recognized on the input element:
+ *
+ *   - step='integer'
+ *         to display seconds, specify a step value less than 60
+ *
+ *   - min='hh:mm[:ss]'
+ *         minimum time value (in 24-hour format)
+ *
+ *   - max='hh:mm[:ss]'
+ *         maximum time value (in 24-hour format)
+ *
+ *   If 'min' and/or 'max' are specified, validation will be
+ *   performed against the time value, and the pseudo-classes :valid
+ *   and :invalid will be set on the element as appropriate.
  *
  *
  * The following methods are available:
@@ -73,6 +87,11 @@
     const min = [ intl ? 0 : 1, 0, 0 ];
 
     var fxdata = new WeakMap();
+
+    function triggerChange(ctl) {
+        var event = new Event('change', { bubbles: true });
+        ctl.dispatchEvent(event);
+    }
 
     function getValue(jqctl) {
         if(jqctl.length > 0) {
@@ -156,6 +175,7 @@
             }
             xval[0] = oval.join(':');
             this.value = fxdata.get(this).value = xval.join(' ');
+            triggerChange(this);
         });
     }
 
@@ -275,6 +295,7 @@
         ctl.value = fxdata.get(ctl).value = xval.join(' ');
         if(ctl == document.activeElement)
             ctl.selectionEnd = ctl.selectionStart = start;
+        triggerChange(ctl);
     }
 
     function inputSegment(ctl, val) {
@@ -318,6 +339,7 @@
         }
         ctl.value = inst.value = xval.join(' ');
         ctl.selectionEnd = ctl.selectionStart = start;
+        triggerChange(ctl);
     }
 
     function handleKeydown(e) {
@@ -429,6 +451,33 @@
         }
     }
 
+    function newTime(str) {
+        var date = str ?
+            new Date('2022-01-01T' + str +
+                     (str.length < 8 ? ':00' : '') + 'Z') : NaN;
+        return isNaN(date) ? null : date;
+    }
+
+    function validate(ctl) {
+        var time = newTime(getValue([ctl]));
+        if(!time) {
+            ctl.setCustomValidity('');
+            return;
+        }
+
+        var inst = fxdata.get(ctl);
+        if(inst.start && time < inst.start) {
+            if(!inst.end) {
+                ctl.setCustomValidity('out of bounds');
+                return;
+            } else
+                time.setDate(time.getDate() + 1);
+        }
+
+        ctl.setCustomValidity(inst.end &&
+                              inst.end < time ? 'out of bounds' : '');
+    }
+
     $.fn.fxtime = function(action, value, value2) {
         switch(action) {
         case 'val':
@@ -458,9 +507,23 @@
         default:
             // each selected element gets its own unique instance data
             this.each(function() {
+                var start = newTime(this.getAttribute('min'));
+                var end = newTime(this.getAttribute('max'));
+                if(start && end && end < start)
+                    end.setDate(end.getDate() + 1);
+
                 var step = this.getAttribute('step');
                 var count = step && step < 60 ? 3 : 2;
-                fxdata.set(this, { count: count, idx: false, seg: false, focus: false, blur: [] });
+
+                fxdata.set(this, {
+                    start: start,
+                    end: end,
+                    count: count,
+                    idx: false,
+                    seg: false,
+                    focus: false,
+                    blur: []
+                });
             }).attr('autocomplete', 'off')
                 .css('caret-color', 'transparent')
                 .css('cursor', 'default')
@@ -469,6 +532,8 @@
             this.on("select", function(e) {
                 if(this.selectionStart != this.selectionEnd - 2)
                     focusCurrent(this);
+            }).on("change", function(e) {
+                validate(this);
             }).on("click", function(e) {
                 // fxdata.focus is a short-lived state used to synchronize
                 // click-initiated focus
