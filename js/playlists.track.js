@@ -916,8 +916,18 @@ $().ready(function(){
     })).val('manual-entry');
 
     $(".fxtime").fxtime()
-        .fxtime('blur', function(seg) {
-            if(seg == 1) {
+        .keydown(function(e) {
+            if(e.which == 0x0d && // Enter key
+                    $(this).fxtime('val') &&
+                    $('button.default:visible').is(':enabled')) {
+                // focus before click to trigger time validation
+                $('button.default:visible').focus().click();
+
+                if(this.matches(":invalid"))
+                    this.focus();
+            }
+        }).on('segblur', function(e) {
+            if(e.detail.seg == 1) {
                 // auto-bump hour if new minute is well less than previous
                 var current = $(this).fxtime('val');
                 if(current != null) {
@@ -927,16 +937,6 @@ $().ready(function(){
                     if(last[0] == now[0] && last[1] - now[1] > 30)
                         $(this).fxtime('inc', 0);
                 }
-            }
-        }).keydown(function(e) {
-            if(e.which == 0x0d && // Enter key
-                    $(this).fxtime('val') &&
-                    $('button.default:visible').is(':enabled')) {
-                // focus before click to trigger time validation
-                $('button.default:visible').focus().click();
-
-                if(this.matches(":invalid"))
-                    this.focus();
             }
         }).on('blur', function() {
             if(this.matches(":valid"))

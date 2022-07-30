@@ -77,8 +77,15 @@
  *   $(selector).fxtime('inc', seg) - increment specified segment
  *   $(selector).fxtime('inc', seg, -1) - decrement specified segment
  *
- *   $(selector).fxtime('blur', function(seg) {}) - install blur event handler
- *       fires when a segment blurs.  handler receives segment number.
+ *
+ * The element fires the following custom events:
+ *
+ *   segblur - fires when a segment blurs
+ *       segment number is supplied in the detail.seg property of the event
+ *
+ * NB: If you want to be notified of changes to the element, listen for
+ * 'change' events.  'change' is fired when a user changes the time value,
+ * before focus is lost.  The element does NOT fire 'input' events.
  */
 (function($) {
     const intl = new Date().toLocaleTimeString().match(/am|pm/i) == null;
@@ -197,9 +204,8 @@
             inst.idx = false;
         }
 
-        $.each(inst.blur, function(index, callback) {
-            callback.call(ctl, seg);
-        });
+        var event = new CustomEvent('segblur', { detail: { seg: seg } });
+        ctl.dispatchEvent(event);
     }
 
     function focusCurrent(ctl) {
@@ -498,12 +504,6 @@
                     upDownSegment(this, typeof value2 === 'undefined' || value2 >= 0, value);
                 });
             break;
-        case 'blur':
-            if(typeof value === 'function')
-                this.each(function() {
-                    fxdata.get(this).blur.push(value);
-                });
-            break;
         default:
             // each selected element gets its own unique instance data
             this.each(function() {
@@ -521,8 +521,7 @@
                     count: count,
                     idx: false,
                     seg: false,
-                    focus: false,
-                    blur: []
+                    focus: false
                 });
             }).attr('autocomplete', 'off')
                 .css('caret-color', 'transparent')
