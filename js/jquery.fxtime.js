@@ -259,7 +259,7 @@
         var set = false;
         var xval = ctl.value.split(' ');
         var val = xval[0].split(':');
-        $.each(val, function(index, value) {
+        val.forEach(function(value, index) {
             if(!set && !value.match(/^\d+$/)) {
                 set = true;
                 focusSegment(ctl, index);
@@ -331,10 +331,11 @@
                 if(val < min[seg])
                     val = min[seg];
 
-                var tab = $.Event('keydown');
-                tab.which = tab.keyCode = 0x09;
                 setTimeout(function() {
-                    $(ctl).trigger(tab);
+                    var tab = new KeyboardEvent('keydown',
+                                        { bubbles: true, cancelable: true,
+                                          which: 0x09, keyCode: 0x09 });
+                    ctl.dispatchEvent(tab);
                 }, 50);
             } else
                 inst.seg = seg;
@@ -528,7 +529,7 @@
                 .css('cursor', 'default')
                 .fxtime('val', null);
 
-            this.on("select", function(e) {
+            this.off().on("select", function(e) {
                 if(this.selectionStart != this.selectionEnd - 2)
                     focusCurrent(this);
             }).on("change", function(e) {
