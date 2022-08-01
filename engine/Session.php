@@ -136,10 +136,22 @@ class Session extends DBO {
     }
 
     public function purgeOldSessions() {
+        $query = "DELETE FROM ssoredirect WHERE ".
+                 "DATE_ADD(created, INTERVAL 1 DAY) < NOW()";
+        $stmt = $this->prepare($query);
+        $success = $stmt->execute();
+
+        $query = "DELETE FROM ssosetup WHERE ".
+                 "DATE_ADD(created, INTERVAL 1 DAY) < NOW()";
+        $stmt = $this->prepare($query);
+        $success &= $stmt->execute();
+
         $query = "DELETE FROM sessions WHERE ".
                  "DATE_ADD(logon, INTERVAL 2 DAY) < NOW()";
         $stmt = $this->prepare($query);
-        return $stmt->execute();
+        $success &= $stmt->execute();
+
+        return $success;
     }
 
     public function create($sessionID, $user, $auth) {
