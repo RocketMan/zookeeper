@@ -256,17 +256,13 @@
     }
 
     function initialFocus(ctl) {
-        var set = false;
         var xval = ctl.value.split(' ');
         var val = xval[0].split(':');
-        val.forEach(function(value, index) {
-            if(!set && !value.match(/^\d+$/)) {
-                set = true;
-                focusSegment(ctl, index);
-            }
+        var valid = val.every(function(value, index) {
+            return value.match(/^\d+$/) || focusSegment(ctl, index);
         });
 
-        if(!set)
+        if(valid)
             focusCurrent(ctl);
     }
 
