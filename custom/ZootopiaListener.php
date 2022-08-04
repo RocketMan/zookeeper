@@ -107,7 +107,8 @@ class ZootopiaListener {
 
     public function logTrack($event) {
         if(($event["type"] ?? null) != "schedule" ||
-                !preg_match("/zootopia/i", $event["name"]))
+                !preg_match("/zootopia/i", $event["name"]) ||
+                !$event["track_title"])
             return;
 
         try {
