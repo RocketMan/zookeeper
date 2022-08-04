@@ -114,7 +114,8 @@ class ZootopiaListener {
         try {
             $response = $this->zk->get('api/v1/playlist', [
                 RequestOptions::QUERY => [
-                    "filter[date]" => "onnow"
+                    "filter[date]" => "onnow",
+                    "fields[show]" => "-events"
                 ]
             ]);
         } catch(\Exception $e) {
