@@ -544,7 +544,7 @@ class Playlists implements RequestHandlerInterface {
             throw new BadRequestException("must specify id");
 
         $api = Engine::api(IPlaylist::class);
-        $list = $api->getPlaylist($key);
+        $list = $api->getPlaylist($key, 1);
         if(!$list || $api->isListDeleted($key))
             throw new ResourceNotFoundException("show", $key);
 
