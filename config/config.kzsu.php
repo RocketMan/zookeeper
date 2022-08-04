@@ -166,10 +166,21 @@ $config = [
      */
     'push_proxy' => [
         [
-             'proxy' => ZK\PushNotification\PushHttpProxy::class,
+             'proxy' => ZK\PushNotification\ZootopiaPushFilter::class,
              'ws_endpoint' => 'ws://127.0.0.1:32080/push/onair',
              'http_endpoints' => [ ]
         ]
+        [
+             'proxy' => ZK\PushNotification\ZootopiaListener::class,
+             'ws_endpoint' => 'ws://kzsu.stanford.edu/socket.io/?EIO=4&transport=websocket',
+             'http_endpoints' => [
+                 'apikey' => '',
+                 'base_url' => 'https://zookeeper.stanford.edu/',
+                 'airname' => 'Team KZSU',
+                 'title' => 'Zootopia',
+                 'tz' => null,
+             ],
+        ],
     ],
 
     /**
