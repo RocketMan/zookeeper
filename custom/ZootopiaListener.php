@@ -47,6 +47,7 @@ use GuzzleHttp\RequestOptions;
  *                'airname' => 'airname',
  *                'title' => 'show title',
  *                'tz' => 'tzName',
+ *                'caption' => 'caption',
  *            ]
  *        ],
  *        ...repeat for additional proxies...
@@ -60,7 +61,8 @@ use GuzzleHttp\RequestOptions;
  *    'airname' airname for playlists;
  *    'title' title for playlists;
  *    'tz' specifies the timezone of the ws_endpoint, if different to
- *         the Zookeeper server, or null if they are the same.
+ *         the Zookeeper server, or null if they are the same;
+ *    'caption' comment to lead the playlist, or null if none.
  *
  * See INSTALLATION.md for details on installing and configuring push
  * notifications.
@@ -173,6 +175,27 @@ class ZootopiaListener {
                         " $date $time\n";
 
             $show = $response->getHeader('Location')[0];
+
+            if(isset($this->config["caption"])) {
+                $response = $this->zk->post($show . '/events', [
+                    RequestOptions::JSON => [
+                        'data' => [
+                            'type' => 'event',
+                            'attributes' => [
+                                'type' => 'comment',
+                                'comment' => $this->config["caption"],
+                            ]
+                        ]
+                    ]
+                ]);
+
+                $success = $response->getStatusCode() == 200;
+                if(!$success) {
+                    echo "logTrack: could not insert caption for show '" .
+                                    $this->config["title"] . "' " .
+                                    $date . " " . $time . "\n";
+                }
+            }
         }
 
         // lookup album

@@ -179,6 +179,7 @@ $config = [
                  'airname' => 'Team KZSU',
                  'title' => 'Zootopia',
                  'tz' => null,
+                 'caption' => "This playlist was automatically generated from notable music of the past 20 years, curated by the KZSU Music Department and selected for airplay by KZSU DJs.\n\nVisit Zootopia at http://kzsu.rocks/\n",
              ],
         ],
     ],
