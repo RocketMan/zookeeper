@@ -28,6 +28,7 @@ use ZK\Engine\Engine;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
+use ZK\Engine\PlaylistEntry;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
@@ -216,7 +217,7 @@ class ZootopiaListener {
             $json = json_decode($page);
             $album = null;
             foreach($json->data as $data) {
-                if(!strcasecmp($data->attributes->artist, $event["track_artist"])) {
+                if(!strcasecmp(PlaylistEntry::swapNames($data->attributes->artist), $event["track_artist"])) {
                     $album = $data;
                     break;
                 }
