@@ -307,7 +307,7 @@ class Playlists extends MenuItem {
 
                 if($isLiveShow && $playlist['airname']) {
                     $playlist['id'] = $playlistId;
-                    if($type == PlaylistEntry::TYPE_SPIN) {
+                    if($entry->isType(PlaylistEntry::TYPE_SPIN)) {
                         $spin = $entry->asArray();
                         $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
                     } else
