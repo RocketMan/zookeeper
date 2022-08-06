@@ -304,10 +304,7 @@ class ZootopiaListener {
                 // no socket.io ping in 2 minutes
                 $this->lastPing = null;
                 $this->loop->cancelTimer($timer);
-                $conn->close(1000, 'abort');
-
-                $this->log("Connection timed out, reconnecting");
-                $this->reconnect();
+                $conn->close(1006, 'Underlying connection timed out');
             }
         });
 
@@ -334,9 +331,6 @@ class ZootopiaListener {
         });
 
         $conn->on('close', function ($code = null, $reason = null) {
-            if($reason == 'abort')
-                return;
-
             $this->log("Connection closed: $reason ($code), reconnecting");
 
             // try to reconnect in 10 seconds
