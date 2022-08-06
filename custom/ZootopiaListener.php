@@ -74,16 +74,22 @@ class ZootopiaListener {
     protected $wsEndpoint;
     protected $config;
     protected $zk;
+    protected $lastPing;
 
     public function __construct(\React\EventLoop\LoopInterface $loop) {
         $this->loop = $loop;
         $this->subscriber = new \Ratchet\Client\Connector($loop);
     }
 
+    protected function log($msg) {
+        $logName = (new \ReflectionClass($this))->getShortName();
+        echo "$logName: $msg\n";
+    }
+
     protected function reconnect() {
         ($this->subscriber)($this->wsEndpoint)->then([$this, 'proxy'], function ($e) {
             $firstLine = trim(strtok($e->getMessage(), "\n"));
-            echo "Could not connect: $firstLine, retrying\n";
+            $this->log("Could not connect: $firstLine, retrying");
 
             // try again in 60 seconds
             $this->loop->addTimer(60, function () {
@@ -120,7 +126,7 @@ class ZootopiaListener {
                 ]
             ]);
         } catch(\Exception $e) {
-            echo "logTrack: onnow failed: " . $e->getMessage() . "\n";
+            $this->log("get onnow failed: " . $e->getMessage());
             return;
         }
 
@@ -161,21 +167,21 @@ class ZootopiaListener {
                     ]
                 ]);
             } catch(\Exception $e) {
-                echo "logTrack: create show failed: " . $e->getMessage() . "\n";
+                $this->log("create show failed: " . $e->getMessage());
                 return;
             }
 
             $success = $response->getStatusCode() == 201;
             if(!$success) {
-                echo "logTrack: could not create show '" .
+                $this->log("could not create show '" .
                                 $this->config["title"] . "' " .
-                                $date . " " . $time . "\n";
+                                $date . " " . $time);
                 return;
             }
 
-            echo "logTrack: created " . $this->config["title"] .
+            $this->log("created " . $this->config["title"] .
                         " with " . $this->config["airname"] .
-                        " $date $time\n";
+                        " $date $time");
 
             $show = $response->getHeader('Location')[0];
 
@@ -194,9 +200,9 @@ class ZootopiaListener {
 
                 $success = $response->getStatusCode() == 200;
                 if(!$success) {
-                    echo "logTrack: could not insert caption for show '" .
+                    $this->log("could not insert caption for show '" .
                                     $this->config["title"] . "' " .
-                                    $date . " " . $time . "\n";
+                                    $date . " " . $time);
                 }
             }
         }
@@ -223,7 +229,7 @@ class ZootopiaListener {
                 }
             }
         } catch(\Exception $e) {
-            echo "logTrack: get tracks failed: " . $e->getMessage() . "\n";
+            $this->log("get tracks failed: " . $e->getMessage());
         }
 
         // add track
@@ -268,19 +274,43 @@ class ZootopiaListener {
                 ]);
             }
         } catch(\Exception $e) {
-            echo "logTrack: insert track failed: " . $e->getMessage() . "\n";
+            $this->log("insert track failed: " . $e->getMessage());
             return;
         }
 
         $success = $response->getStatusCode() == 200;
         if(!$success)
-            echo "logTrack: could not insert track: " .
+            $this->log("could not insert track: " .
                     $response->getStatusCode() . " " .
                     $response->getReasonPhrase() . " " .
-                    $response->getBody()->getContents() . "\n";
+                    $response->getBody()->getContents());
     }
 
     public function proxy(\Ratchet\Client\WebSocket $conn) {
+        // The WebSocket server may not have its keepalive correctly
+        // configured, in which case it will quietly stop sending data
+        // after a certain period of inactivity.
+        //
+        // The socket.io pings on top of WebSockets *should* keep the
+        // underlying connection alive, but experientially, this seems
+        // not always to be the case.
+        //
+        // To ensure the connection has not quietly gone away, we
+        // examine the socket.io ping times:  If a ping has not been
+        // received within 2 minutes, we'll restart the connection.
+
+        $this->loop->addPeriodicTimer(120, function($timer) use ($conn) {
+            if($this->lastPing && time() - $this->lastPing > 120) {
+                // no socket.io ping in 2 minutes
+                $this->lastPing = null;
+                $this->loop->cancelTimer($timer);
+                $conn->close(1000, 'abort');
+
+                $this->log("Connection timed out, reconnecting");
+                $this->reconnect();
+            }
+        });
+
         $conn->on('message', function($msg) use($conn) {
             if(preg_match("/^(\d+)(.+)?$/", $msg, $matches)) {
                 switch($matches[1]) {
@@ -291,6 +321,7 @@ class ZootopiaListener {
                 case 2:
                     // ping
                     $conn->send('3');
+                    $this->lastPing = time();
                     break;
                 case 42:
                     // message
@@ -303,7 +334,10 @@ class ZootopiaListener {
         });
 
         $conn->on('close', function ($code = null, $reason = null) {
-            echo "Connection closed: $reason ($code), reconnecting\n";
+            if($reason == 'abort')
+                return;
+
+            $this->log("Connection closed: $reason ($code), reconnecting");
 
             // try to reconnect in 10 seconds
             $this->loop->addTimer(10, function () {
