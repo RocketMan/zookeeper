@@ -125,7 +125,7 @@ class ZootopiaListener {
         // we must use Closure, as handler->handles is private
         $this->loop->addPeriodicTimer(0, \Closure::bind(function($timer) {
             $this->tick();
-            if(empty($this->handles) && Promise\queue()->isEmpty())
+            if(empty($this->handles) && Promise\Utils::queue()->isEmpty())
                 \React\EventLoop\Loop::cancelTimer($timer);
         }, $this->handler, $this->handler));
     }
