@@ -31,6 +31,10 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Handler\CurlMultiHandler;
+use GuzzleHttp\Promise;
+use GuzzleHttp\Promise\RejectedPromise;
 use GuzzleHttp\RequestOptions;
 
 /**
@@ -73,12 +77,14 @@ class ZootopiaListener {
     protected $subscriber;
     protected $wsEndpoint;
     protected $config;
+    protected $handler;
     protected $zk;
     protected $lastPing;
 
     public function __construct(\React\EventLoop\LoopInterface $loop) {
         $this->loop = $loop;
         $this->subscriber = new \Ratchet\Client\Connector($loop);
+        $this->handler = new CurlMultiHandler();
     }
 
     protected function log($msg) {
@@ -102,14 +108,26 @@ class ZootopiaListener {
         $this->wsEndpoint = $wsEndpoint;
         $this->config = $httpEndpoints;
         $this->zk = new Client([
+            'handler' => HandlerStack::create($this->handler),
             'base_uri' => $this->config["base_url"],
             RequestOptions::HEADERS => [
                 'Accept' => 'application/json',
                 'X-APIKEY' => $this->config["apikey"]
-            ],
-            RequestOptions::HTTP_ERRORS => false
+            ]
         ]);
         $this->reconnect();
+    }
+
+    /*
+     * run pending Guzzle promises on the React event loop
+     */
+    protected function unpackPromisesAsync() {
+        // we must use Closure, as handler->handles is private
+        $this->loop->addPeriodicTimer(0, \Closure::bind(function($timer) {
+            $this->tick();
+            if(empty($this->handles) && Promise\queue()->isEmpty())
+                \React\EventLoop\Loop::cancelTimer($timer);
+        }, $this->handler, $this->handler));
     }
 
     public function logTrack($event) {
@@ -118,42 +136,42 @@ class ZootopiaListener {
                 !$event["track_title"])
             return;
 
-        try {
-            $response = $this->zk->get('api/v1/playlist', [
-                RequestOptions::QUERY => [
-                    "filter[date]" => "onnow",
-                    "fields[show]" => "-events"
-                ]
-            ]);
-        } catch(\Exception $e) {
-            $this->log("get onnow failed: " . $e->getMessage());
-            return;
-        }
+        $show = null;
+        $trackName = null;
 
-        $page = $response->getBody()->getContents();
-        $json = json_decode($page);
-        if(sizeof($json->data) &&
-                !preg_match("/" .
-                    preg_quote($this->config["title"]) . "/i",
-                    $json->data[0]->attributes->name))
-            return;
+        // get 'on now'
+        $this->zk->getAsync('api/v1/playlist', [
+            RequestOptions::QUERY => [
+                "filter[date]" => "onnow",
+                "fields[show]" => "-events"
+            ]
+        ])->then(function($response) use($event, &$show) {
+            $page = $response->getBody()->getContents();
+            $json = json_decode($page);
+            if(sizeof($json->data) &&
+                    !preg_match("/" .
+                        preg_quote($this->config["title"]) . "/i",
+                        $json->data[0]->attributes->name))
+                return new RejectedPromise("DJ On Air");
 
-        $now = new \DateTime();
-        if(sizeof($json->data)) {
-            $show = $json->data[0]->links->self;
-        } else {
-            $date = $now->format("Y-m-d");
-            $time = $now->format("Hi");
+            $now = new \DateTime();
+            if(sizeof($json->data)) {
+                // join existing show
+                $show = $json->data[0]->links->self;
+            } else {
+                // create new show
+                $date = $now->format("Y-m-d");
+                $time = $now->format("Hi");
 
-            $tz = $this->config["tz"];
-            $end = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT_SQL,
-                        $event["show_end"], $tz ? new \DateTimeZone($tz) : null);
-            if($tz)
-                $end->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-            $time .= "-" . $end->format("Hi");
+                $tz = $this->config["tz"];
+                $end = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT_SQL,
+                            $event["show_end"], $tz ? new \DateTimeZone($tz) : null);
+                if($tz)
+                    $end->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+                $time .= "-" . $end->format("Hi");
 
-            try {
-                $response = $this->zk->post('api/v1/playlist', [
+                // create new show
+                return $this->zk->postAsync('api/v1/playlist', [
                     RequestOptions::JSON => [
                         'data' => [
                             'type' => 'show',
@@ -165,77 +183,65 @@ class ZootopiaListener {
                             ]
                         ]
                     ]
-                ]);
-            } catch(\Exception $e) {
-                $this->log("create show failed: " . $e->getMessage());
-                return;
-            }
+                ])->then(function($response) use($date, $time, &$show) {
+                    $this->log("created " . $this->config["title"] .
+                                " with " . $this->config["airname"] .
+                                " $date $time");
+                    $show = $response->getHeader('Location')[0];
 
-            $success = $response->getStatusCode() == 201;
-            if(!$success) {
-                $this->log("could not create show '" .
-                                $this->config["title"] . "' " .
-                                $date . " " . $time);
-                return;
-            }
-
-            $this->log("created " . $this->config["title"] .
-                        " with " . $this->config["airname"] .
-                        " $date $time");
-
-            $show = $response->getHeader('Location')[0];
-
-            if(isset($this->config["caption"])) {
-                $response = $this->zk->post($show . '/events', [
-                    RequestOptions::JSON => [
-                        'data' => [
-                            'type' => 'event',
-                            'attributes' => [
-                                'type' => 'comment',
-                                'comment' => $this->config["caption"],
+                    // add caption
+                    if(isset($this->config["caption"])) {
+                        return $this->zk->postAsync($show . '/events', [
+                            RequestOptions::JSON => [
+                                'data' => [
+                                    'type' => 'event',
+                                    'attributes' => [
+                                        'type' => 'comment',
+                                        'comment' => $this->config["caption"],
+                                    ]
+                                ]
                             ]
-                        ]
-                    ]
-                ]);
-
-                $success = $response->getStatusCode() == 200;
-                if(!$success) {
-                    $this->log("could not insert caption for show '" .
-                                    $this->config["title"] . "' " .
-                                    $date . " " . $time);
-                }
+                        ])->then(null, function($e) use($date, $time) {
+                            $this->log("could not insert caption for show '" .
+                                            $this->config["title"] . "' " .
+                                            $date . " " . $time);
+                            // continue with remaining fulfilled callbacks
+                        });
+                    }
+                });
             }
-        }
+        })->then(function() use($event, &$trackName) {
+            // lookup album by track name
+            $trackName = preg_match("/^(.+)( \(\d+\))$/", $event["track_title"], $matches) ? $matches[1] : $event["track_title"];
 
-        // lookup album
-        $album = null;
-        $trackName = preg_match("/^(.+)( \(\d+\))$/", $event["track_title"], $matches) ? $matches[1] : $event["track_title"];
-
-        try {
-            $response = $this->zk->get('api/v1/album', [
+            return $this->zk->getAsync('api/v1/album', [
                 RequestOptions::QUERY => [
                     "filter[track]" => $trackName,
                     "page[size]" => 200
                 ]
-            ]);
-
-            $page = $response->getBody()->getContents();
-            $json = json_decode($page);
-            $album = null;
-            foreach($json->data as $data) {
-                if(!strcasecmp(PlaylistEntry::swapNames($data->attributes->artist), $event["track_artist"])) {
-                    $album = $data;
-                    break;
+            ])->then(function($response) use($event) {
+                // filter by artist
+                $page = $response->getBody()->getContents();
+                $json = json_decode($page);
+                $album = null;
+                foreach($json->data as $data) {
+                    if(!strcasecmp(PlaylistEntry::swapNames($data->attributes->artist), $event["track_artist"])) {
+                        $album = $data;
+                        break;
+                    }
                 }
-            }
-        } catch(\Exception $e) {
-            $this->log("get tracks failed: " . $e->getMessage());
-        }
 
-        // add track
-        try {
+                return $album;
+            }, function($e) {
+                $this->log("get tracks failed: " . $e->getMessage());
+
+                // continue with remaining fulfilled callbacks
+                return null;
+            });
+        })->then(function($album) use($event, &$show, &$trackName) {
+            // add track
             if($album) {
-                $response = $this->zk->post($show . '/events', [
+                return $this->zk->postAsync($show . '/events', [
                     RequestOptions::JSON => [
                         'data' => [
                             'type' => 'event',
@@ -258,7 +264,7 @@ class ZootopiaListener {
                     ]
                 ]);
             } else {
-                $response = $this->zk->post($show . '/events', [
+                return $this->zk->postAsync($show . '/events', [
                     RequestOptions::JSON => [
                         'data' => [
                             'type' => 'event',
@@ -273,17 +279,12 @@ class ZootopiaListener {
                     ]
                 ]);
             }
-        } catch(\Exception $e) {
-            $this->log("insert track failed: " . $e->getMessage());
-            return;
-        }
+        })->then(null, function($e) {
+            if($e instanceof \Exception)
+                $this->log($e->getMessage());
+        });
 
-        $success = $response->getStatusCode() == 200;
-        if(!$success)
-            $this->log("could not insert track: " .
-                    $response->getStatusCode() . " " .
-                    $response->getReasonPhrase() . " " .
-                    $response->getBody()->getContents());
+        $this->unpackPromisesAsync();
     }
 
     public function proxy(\Ratchet\Client\WebSocket $conn) {
