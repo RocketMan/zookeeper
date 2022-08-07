@@ -148,18 +148,19 @@ class ZootopiaListener {
         ])->then(function($response) use($event, &$show) {
             $page = $response->getBody()->getContents();
             $json = json_decode($page);
-            if(sizeof($json->data) &&
-                    !preg_match("/" .
-                        preg_quote($this->config["title"]) . "/i",
-                        $json->data[0]->attributes->name))
+            $count = sizeof($json->data);
+
+            // If there is already a show on-air that is not ours,
+            // let it continue.
+            if($count && !preg_match("/" .
+                            preg_quote($this->config["title"]) . "/i",
+                            $json->data[0]->attributes->name))
                 return new RejectedPromise("DJ On Air");
 
             $now = new \DateTime();
-            if(sizeof($json->data)) {
-                // join existing show
-                $show = $json->data[0]->links->self;
-            } else {
-                // create new show
+            switch($count) {
+            case 0:
+                // No show is currently on-air; create a new show
                 $date = $now->format("Y-m-d");
                 $time = $now->format("Hi");
 
@@ -209,6 +210,36 @@ class ZootopiaListener {
                         });
                     }
                 });
+                break;
+            case 1:
+                // We are already on-air; use the existing show.
+                $show = $json->data[0]->links->self;
+                break;
+            default:
+                // An older show is also on-air.  This could be a show
+                // that got extended, or a previously scheduled show
+                // that just started.
+                //
+                // End our show now so the other show will go on-air.
+                $time = explode('-', $json->data[0]->attributes->time);
+                $now->modify("-1 minutes");
+                $time[1] = $now->format("Hi");
+                $id = $json->data[0]->id;
+                return $this->zk->patchAsync('api/v1/playlist/' . $id, [
+                    RequestOptions::JSON => [
+                        'data' => [
+                            'type' => 'show',
+                            'id' => $id,
+                            'attributes' => [
+                                'time' => implode('-', $time)
+                            ]
+                        ]
+                    ]
+                ])->then(function() {
+                    $this->log("another show detected, ending our show");
+                    return new RejectedPromise("DJ On Air");
+                });
+                break;
             }
         })->then(function() use($event, &$trackName) {
             // lookup album by track name
