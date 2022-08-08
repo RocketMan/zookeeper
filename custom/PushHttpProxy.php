@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -84,13 +84,18 @@ class PushHttpProxy {
     }
 
     public function message(\Ratchet\RFC6455\Messaging\Message $msg) {
-        foreach($this->httpEndpoints as $endpoint)
-            $this->httpClient->post($endpoint,
-                        ['Content-Type' => 'application/json'], $msg);
+        foreach($this->httpEndpoints as $key => $endpoint)
+            if(!is_string($key))
+                $this->httpClient->post($endpoint,
+                            ['Content-Type' => 'application/json'], $msg);
     }
 
     public function proxy(\Ratchet\Client\WebSocket $conn) {
-        $conn->on('message', [$this, 'message']);
+        $closure = array_key_exists("filter", $this->httpEndpoints) ?
+            \Closure::bind($this->httpEndpoints["filter"], $this, $this) :
+            [ $this, 'message' ];
+
+        $conn->on('message', $closure);
 
         $conn->on('close', function ($code = null, $reason = null) {
             echo "Connection closed: $reason ($code), reconnecting\n";
