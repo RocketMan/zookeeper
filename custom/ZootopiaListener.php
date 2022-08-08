@@ -130,7 +130,7 @@ class ZootopiaListener {
         }, $this->handler, $this->handler));
     }
 
-    public function logTrack($event) {
+    public function addTrack($event) {
         if(($event["type"] ?? null) != "schedule" ||
                 !preg_match("/zootopia/i", $event["name"]) ||
                 !$event["track_title"])
@@ -331,7 +331,7 @@ class ZootopiaListener {
         // examine the socket.io ping times:  If a ping has not been
         // received within 2 minutes, we'll restart the connection.
 
-        $this->loop->addPeriodicTimer(120, function($timer) use ($conn) {
+        $this->loop->addPeriodicTimer(120, function($timer) use($conn) {
             if($this->lastPing && time() - $this->lastPing > 120) {
                 // no socket.io ping in 2 minutes
                 $this->lastPing = null;
@@ -356,7 +356,7 @@ class ZootopiaListener {
                     // message
                     if(preg_match("/^\[\"(.+)\",(?={)(.+)\]$/", $matches[2], $matches) &&
                             $matches[1] == "newtrack")
-                        $this->logTrack(json_decode($matches[2], true));
+                        $this->addTrack(json_decode($matches[2], true));
                     break;
                 }
             }

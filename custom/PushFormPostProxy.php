@@ -28,8 +28,9 @@ class PushFormPostProxy extends PushHttpProxy {
     public function message(\Ratchet\RFC6455\Messaging\Message $msg) {
         $val = json_decode($msg, true);
         $qs = http_build_query($val);
-        foreach($this->httpEndpoints as $endpoint)
-            $this->httpClient->post($endpoint,
-                ['Content-Type' => 'application/x-www-form-urlencoded'], $qs);
+        foreach($this->httpEndpoints as $key => $endpoint)
+            if(!is_string($key))
+                $this->httpClient->post($endpoint,
+                    ['Content-Type' => 'application/x-www-form-urlencoded'], $qs);
     }
 }

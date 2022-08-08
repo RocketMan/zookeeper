@@ -45,6 +45,15 @@ namespace ZK\PushNotification;
  *        generally, this will be your Zookeeper Online ws endpoint
  *        (e.g., wss://example.org/push/onair);
  *    'http_endpoints' is an array of targets to receive the HTTP requests
+ *        In addition, you may include a key `filter`, the value of
+ *        which is a function that will be called for each event; e.g.,
+ *               'filter' => function($event) {
+ *                   // apply any desired processing here
+ *
+ *                   // call the instance method `message` to send
+ *                   // the event to the endpoints
+ *                   $this->message($event);
+ *               }
  *
  * This class POSTs the raw json data to the HTTP endpoint.  If you
  * want a conventional FORM POST, use the subclass PushFormPostProxy.
