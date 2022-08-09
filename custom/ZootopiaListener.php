@@ -311,7 +311,7 @@ class ZootopiaListener {
                 ]);
             }
         })->then(null, function($e) {
-            if($e instanceof \Exception)
+            if($e instanceof \Throwable)
                 $this->log($e->getMessage());
         });
 
