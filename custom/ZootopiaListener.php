@@ -223,22 +223,33 @@ class ZootopiaListener {
                 // End our show now so the other show will go on-air.
                 $time = explode('-', $json->data[0]->attributes->time);
                 $now->modify("-1 minutes");
-                $time[1] = $now->format("Hi");
+                $end = $now->format("Hi");
+                // delete if new end time is at or before start time,
+                // or if new end time rolled to previous day
+                $delete = $end > $time[1] || $end <= $time[0];
                 $id = $json->data[0]->id;
-                return $this->zk->patchAsync('api/v1/playlist/' . $id, [
-                    RequestOptions::JSON => [
-                        'data' => [
-                            'type' => 'show',
-                            'id' => $id,
-                            'attributes' => [
-                                'time' => implode('-', $time)
+                if($delete) {
+                    return $this->zk->deleteAsync('api/v1/playlist/' . $id)->then(function() {
+                        $this->log("another show detected, deleting our show");
+                        return new RejectedPromise("DJ On Air");
+                    });
+                } else {
+                    $time[1] = $end;
+                    return $this->zk->patchAsync('api/v1/playlist/' . $id, [
+                        RequestOptions::JSON => [
+                            'data' => [
+                                'type' => 'show',
+                                'id' => $id,
+                                'attributes' => [
+                                    'time' => implode('-', $time)
+                                ]
                             ]
                         ]
-                    ]
-                ])->then(function() {
-                    $this->log("another show detected, ending our show");
-                    return new RejectedPromise("DJ On Air");
-                });
+                    ])->then(function() {
+                        $this->log("another show detected, ending our show");
+                        return new RejectedPromise("DJ On Air");
+                    });
+                }
                 break;
             }
         })->then(function() use($event, &$trackName) {
