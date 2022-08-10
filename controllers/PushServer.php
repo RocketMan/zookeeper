@@ -91,6 +91,9 @@ class NowAiringServer implements MessageComponentInterface {
         $val['track_tag'] = $tag?$tag:null; // null for empty/zero tag
         $created = $spin?$spin['created']:null;
         $val['track_time'] = $created?$created:'';
+        $val['type'] = 'zookeeper';
+        $val['event'] = $val['id'] ? 'track' :
+                            ($val['show_id'] ? 'show' : 'none');
         return json_encode($val);
     }
 
