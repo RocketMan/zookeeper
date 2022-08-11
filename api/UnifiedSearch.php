@@ -56,10 +56,9 @@ class UnifiedSearch implements RequestHandlerInterface {
         } else
             throw new NotAllowedException("Must specify filter.  May be one of: *");
 
-        $limit = $request->hasPagination("size")?
-                $request->paginationValue("size"):null;
-        if(!$limit || $limit > ApiServer::MAX_LIMIT)
-            $limit = ApiServer::MAX_LIMIT;
+        $limit = $request->hasPagination("size") ?
+                min($request->paginationValue("size"), ApiServer::MAX_LIMIT) :
+                ApiServer::DEFAULT_LIMIT;
 
         $results = Engine::api(ILibrary::class)->searchFullText("", $key, $limit, "");
         $total = $results[0];

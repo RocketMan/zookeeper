@@ -34,7 +34,8 @@ use Enm\JsonApi\Server\JsonApiServer;
  * Zookeeper custom implementation of JsonApiServer
  */
 class ApiServer extends JsonApiServer {
-    const MAX_LIMIT = 35;
+    const DEFAULT_LIMIT = 35;
+    const MAX_LIMIT = 200;
 
     // 'ext' media type parameter must be quoted (JSON:API v1.1 sec 5.4)
     const CONTENT_TYPE = JsonApi::CONTENT_TYPE .

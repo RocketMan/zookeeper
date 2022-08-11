@@ -301,10 +301,9 @@ class Albums implements RequestHandlerInterface {
         } else
             throw new NotAllowedException("must specify filter or page");
 
-        $limit = $request->hasPagination("size")?
-                $request->paginationValue("size"):null;
-        if(!$limit || $limit > ApiServer::MAX_LIMIT)
-            $limit = ApiServer::MAX_LIMIT;
+        $limit = $request->hasPagination("size") ?
+                min($request->paginationValue("size"), ApiServer::MAX_LIMIT) :
+                ApiServer::DEFAULT_LIMIT;
 
         $records = Engine::api(ILibrary::class)->listAlbums($op, $key, $limit);
         $wantTracks = $request->requestsField("album", "tracks")?self::LINKS_TRACKS:0;
