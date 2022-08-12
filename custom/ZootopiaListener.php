@@ -267,7 +267,15 @@ class ZootopiaListener {
                 $json = json_decode($page);
                 $album = null;
                 foreach($json->data as $data) {
-                    if(!strcasecmp(PlaylistEntry::swapNames($data->attributes->artist), $event["track_artist"])) {
+                    if($data->attributes->coll) {
+                        foreach($data->attributes->tracks as $track) {
+                            if(!strcasecmp(PlaylistEntry::swapNames($track->artist), $event["track_artist"])) {
+                                $album = $data;
+                                $album->attributes->artist = $track->artist;
+                                break 2;
+                            }
+                        }
+                    } else if(!strcasecmp(PlaylistEntry::swapNames($data->attributes->artist), $event["track_artist"])) {
                         $album = $data;
                         break;
                     }
