@@ -300,7 +300,9 @@ class ZootopiaListener {
                                 'artist' => $album->attributes->artist,
                                 'album' => $album->attributes->album,
                                 'track' => $trackName,
-                                'label' => $album->relationships->label->meta->name
+                                'label' => isset($album->relationships->label) ?
+                                    $album->relationships->label->meta->name :
+                                    "(Unknown)"
                             ],
                             'relationships' => [
                                 'album' => [
