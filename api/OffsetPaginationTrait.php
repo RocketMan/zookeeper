@@ -50,7 +50,11 @@ trait OffsetPaginationTrait {
         $result = [];
         $map = [];
         foreach($records as $record) {
-            $tag = $record["tag"];
+            $tag = $record["tag"] ?? null;
+            if(!$tag) {
+                error_log("Warning: skipping orphaned track: " . $record["track"]);
+                continue;
+            }
             if(array_key_exists($tag, $map)) {
                 $resource = $map[$tag];
                 $tracks = $resource->attributes()->getOptional("tracks");
