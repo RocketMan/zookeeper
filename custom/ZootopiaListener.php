@@ -350,13 +350,11 @@ class ZootopiaListener {
         //
         // To ensure the connection has not quietly gone away, we
         // examine the socket.io ping times:  If a ping has not been
-        // received within 2 minutes, we'll restart the connection.
+        // received within 60 seconds, we'll restart the connection.
 
-        $this->loop->addPeriodicTimer(120, function($timer) use($conn) {
-            if($this->lastPing && time() - $this->lastPing > 120) {
-                // no socket.io ping in 2 minutes
-                $this->lastPing = null;
-                $this->loop->cancelTimer($timer);
+        $timer = $this->loop->addPeriodicTimer(60, function() use($conn) {
+            if($this->lastPing && time() - $this->lastPing > 60) {
+                // no socket.io ping in 60 seconds
                 $conn->close(1006, 'Underlying connection timed out');
             }
         });
@@ -383,7 +381,10 @@ class ZootopiaListener {
             }
         });
 
-        $conn->on('close', function ($code = null, $reason = null) {
+        $conn->on('close', function($code = null, $reason = null) use($timer) {
+            $this->lastPing = null;
+            $this->loop->cancelTimer($timer);
+
             $this->log("Connection closed: $reason ($code), reconnecting");
 
             // try to reconnect in 10 seconds
