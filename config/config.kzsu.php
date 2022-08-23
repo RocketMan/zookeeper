@@ -171,10 +171,17 @@ $config = [
              'http_endpoints' => [
                  "filter" => function($msg) {
                      // don't proxy Zootopia events
-                     if(preg_match('/zootopia/i', $msg))
-                         return;
+                     if(preg_match('/zootopia/i', $msg)) {
+                         if($this->zootopia ?? false)
+                             return;
 
-                     $this->message($msg);
+                         // proxy event:none on first Zootopia event
+                         $msg = self::newMessage();
+                         $this->zootopia = true;
+                     } else
+                         $this->zootopia = false;
+
+                     $this->dispatch($msg);
                  },
              ]
         ],

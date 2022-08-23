@@ -24,6 +24,10 @@
 
 namespace ZK\PushNotification;
 
+use ZK\Controllers\NowAiringServer;
+
+use Ratchet\RFC6455\Messaging\Frame;
+
 /**
  * PushHttpProxy transforms a websocket push event stream into server-
  * initiated HTTP requests
@@ -50,9 +54,9 @@ namespace ZK\PushNotification;
  *               'filter' => function($event) {
  *                   // apply any desired processing here
  *
- *                   // call the instance method `message` to send
+ *                   // call the instance method `dispatch` to send
  *                   // the event to the endpoints
- *                   $this->message($event);
+ *                   $this->dispatch($event);
  *               }
  *
  * This class POSTs the raw json data to the HTTP endpoint.  If you
@@ -67,6 +71,7 @@ class PushHttpProxy {
     protected $httpClient;
     protected $wsEndpoint;
     protected $httpEndpoints;
+    protected $current;
 
     public function __construct(\React\EventLoop\LoopInterface $loop) {
         $this->loop = $loop;
@@ -92,6 +97,16 @@ class PushHttpProxy {
         $this->reconnect();
     }
 
+    protected static function newMessage(string $json = null) :
+            \Ratchet\RFC6455\Messaging\Message {
+        if($json === null)
+            $json = NowAiringServer::toJson(null, null);
+
+        $msg = new \Ratchet\RFC6455\Messaging\Message();
+        $msg->addFrame(new Frame($json, false, Frame::OP_TEXT));
+        return $msg;
+    }
+
     public function message(\Ratchet\RFC6455\Messaging\Message $msg) {
         foreach($this->httpEndpoints as $key => $endpoint)
             if(!is_string($key))
@@ -99,10 +114,17 @@ class PushHttpProxy {
                             ['Content-Type' => 'application/json'], $msg);
     }
 
+    public function dispatch(\Ratchet\RFC6455\Messaging\Message $msg) {
+        if(strcmp($this->current, $msg)) {
+            $this->current = $msg;
+            $this->message($msg);
+        }
+    }
+
     public function proxy(\Ratchet\Client\WebSocket $conn) {
         $closure = array_key_exists("filter", $this->httpEndpoints) ?
             \Closure::bind($this->httpEndpoints["filter"], $this, $this) :
-            [ $this, 'message' ];
+            [ $this, 'dispatch' ];
 
         $conn->on('message', $closure);
 
