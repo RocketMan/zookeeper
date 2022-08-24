@@ -186,7 +186,7 @@ trait OffsetPaginationTrait {
             $ops = [ -1, null ];
         } else if($ops[1]) {
             [$total, $retval] = $libraryAPI->searchFullText($ops[1], $key, $limit, $offset);
-            $records = $retval[0]["result"];
+            $records = $total ? $retval[0]["result"] : [];
             $offset += $limit;
             if($offset >= $total)
                 $offset = 0;
