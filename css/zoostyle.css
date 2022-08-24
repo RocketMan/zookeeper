@@ -1111,3 +1111,19 @@ div.toggle-time-entry div {
 .fxtime {
     font-family: monospace;
 }
+
+.ui-autocomplete {
+    height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* try to make autocomplete ui more consistent with browser defaults */
+.ui-autocomplete.ui-widget {
+    font-family: sans-serif;
+}
+.ui-autocomplete .ui-menu-item-wrapper.ui-state-active {
+    color: #000;
+    background: #ccc;
+    border-color: transparent;
+}

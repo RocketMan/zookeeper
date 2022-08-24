@@ -53,11 +53,8 @@ $().ready(function(){
         $("#tag-status").text('');
         $("#nme-entry input").val('');
 
-        if (clearArtistList) {
-            $("#track-artist").attr('list',''); // webkit hack
+        if (clearArtistList)
             $("#track-artists").empty();
-            $("#track-artist").attr('list','track-artists'); // webkit hack
-        }
 
         tagId = 0;
 
@@ -593,10 +590,7 @@ $().ready(function(){
         return htmlify(name);
     }
 
-    function addArtists(data) {
-        var artist = $("#track-artist");
-        artist.attr('list', ''); // webkit hack
-
+    function addArtists(data, qlist) {
         var results = $("#track-artists");
         results.empty();
 
@@ -610,11 +604,13 @@ $().ready(function(){
                            "' value='" + row + "'>");
         });
 
-        artist.attr('list', 'track-artists'); // webkit hack
+        qlist(results.children().map(function() {
+            return this.value;
+        }));
     }
 
-    function searchLibrary(key) {
-        var url = "api/v1/album?filter[artist]=" +
+    function searchLibrary(key, qlist) {
+        var url = "api/v1/album?filter[match(artist,album)]=" +
             encodeURIComponent(key) + "*" +
             "&page[size]=50&fields[album]=artist,album";
 
@@ -628,7 +624,7 @@ $().ready(function(){
                 // process only the last-issued search{Library,Tag} request
                 if(this.seq == seq)
                     addArtists(response.links.first.meta.total > 0 ?
-                               response.data : []);
+                               response.data : [], qlist);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 var json = JSON.parse(jqXHR.responseText);
@@ -639,7 +635,7 @@ $().ready(function(){
         });
     }
 
-    function searchTag(id) {
+    function searchTag(id, qlist) {
         var url = "api/v1/album/" + id +
             "?fields[album]=artist,album";
 
@@ -652,7 +648,7 @@ $().ready(function(){
             success: function(response) {
                 // process only the last-issued search{Library,Tag} request
                 if(this.seq == seq)
-                    addArtists([ response.data ]);
+                    addArtists([ response.data ], qlist);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 if(jqXHR.status == 404) {
@@ -683,9 +679,7 @@ $().ready(function(){
     }).on('input', function() {
         var artist = $(this).val();
         var opt = $("#track-artists option[value='" + escQuote(artist) + "']");
-        if(opt.length > 0) {
-            getDiskInfo(opt.data("tag"), opt.data("artist"));
-        } else {
+        if(opt.length == 0) {
             // clear auto-filled album info
             if(tagId > 0) {
                 tagId = 0;
@@ -696,16 +690,25 @@ $().ready(function(){
                 $("#track-album").val("");
                 $("#track-label").val("");
             }
+        }
+    }).autocomplete({
+        minLength: 3,
+        source: function(rq, rs) {
+            var artist = rq.term;
 
-            if(artist.length > 3) {
-                // if artist is numeric with correct check digit,
-                // treat it as an album tag
-                var parseTag = artist.match(/^(\d+)(\d)$/);
-                parseTag != null && parseTag[1]
-                        .split('').map(Number)
-                        .reduce((a, b) => a + b, 0) % 10 == parseTag[2] ?
-                    searchTag(artist) : searchLibrary(artist);
-            }
+            // if artist is numeric with correct check digit,
+            // treat it as an album tag
+            var parseTag = artist.match(/^(\d+)(\d)$/);
+            parseTag != null && parseTag[1]
+                    .split('').map(Number)
+                    .reduce((a, b) => a + b, 0) % 10 == parseTag[2] ?
+                searchTag(artist, rs) : searchLibrary(artist, rs);
+        },
+        select: function(event, ui) {
+            var artist = ui.item.value;
+            var opt = $("#track-artists option[value='" + escQuote(artist) + "']");
+            if(opt.length > 0)
+                getDiskInfo(opt.data("tag"), opt.data("artist"));
         }
     });
 
