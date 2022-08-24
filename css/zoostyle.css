@@ -1113,7 +1113,7 @@ div.toggle-time-entry div {
 }
 
 .ui-autocomplete {
-    height: 200px;
+    max-height: 200px;
     max-width: 400px;
     overflow-y: auto;
     overflow-x: hidden;
