@@ -607,6 +607,8 @@ $().ready(function(){
         qlist(results.children().map(function() {
             return this.value;
         }));
+
+        $(".ui-menu").scrollTop(0);
     }
 
     function searchLibrary(key, qlist) {
