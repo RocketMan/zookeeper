@@ -29,7 +29,8 @@ namespace ZK\Engine;
  * Library operations
  */
 class LibraryImpl extends DBO implements ILibrary {
-    const MAX_FT_LIMIT = 35;
+    const DEFAULT_FT_LIMIT = 35;
+    const MAX_FT_LIMIT = 200;
 
     private static $ftSearch = [
          //   elt name   rec name    table    index    fields     query
@@ -772,8 +773,8 @@ class LibraryImpl extends DBO implements ILibrary {
         $loggedIn = Engine::session()->isAuth("u");
 
         // Limit maximum number of results
-        if(!$size || $size > LibraryImpl::MAX_FT_LIMIT)
-            $size = LibraryImpl::MAX_FT_LIMIT;
+        $size = $size ? min($size, self::MAX_FT_LIMIT) :
+                            self::DEFAULT_FT_LIMIT;
 
         // Construct full text query string
         if(substr($key, 0, 2) == "\\\"") {
