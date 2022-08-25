@@ -45,6 +45,7 @@ form `filter[_field_]=_value_`.  Possible fields are listed below.
   * track
   * label.id
   * reviews.airname.id
+  * match(artist)
   * match(artist,album)
   * match(artist,track)
   * match(track)

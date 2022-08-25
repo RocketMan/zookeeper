@@ -85,7 +85,8 @@ CREATE TABLE IF NOT EXISTS `albumvol` (
   KEY `album` (`album`),
   KEY `pubkey` (`pubkey`),
   KEY `aat` (`artist`,`album`,`tag`),
-  FULLTEXT KEY `artist_2` (`artist`,`album`)
+  FULLTEXT KEY `artist_2` (`artist`,`album`),
+  FULLTEXT KEY `artist_3` (`artist`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
@@ -196,7 +197,8 @@ CREATE TABLE IF NOT EXISTS `colltracknames` (
   KEY `artist` (`artist`),
   KEY `tag_2` (`tag`,`seq`),
   KEY `tag_3` (`tag`,`url`(1)),
-  FULLTEXT KEY `artist_2` (`artist`,`track`)
+  FULLTEXT KEY `artist_2` (`artist`,`track`),
+  FULLTEXT KEY `artist_3` (`artist`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------

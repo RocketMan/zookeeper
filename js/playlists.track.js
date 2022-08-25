@@ -612,7 +612,7 @@ $().ready(function(){
     }
 
     function searchLibrary(key, qlist) {
-        var url = "api/v1/album?filter[match(artist,album)]=" +
+        var url = "api/v1/album?filter[match(artist)]=" +
             encodeURIComponent(key) + "*" +
             "&page[size]=50&fields[album]=artist,album";
 

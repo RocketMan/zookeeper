@@ -44,6 +44,26 @@ class LibraryImpl extends DBO implements ILibrary {
                   "WHERE MATCH (artist,album) AGAINST(? IN BOOLEAN MODE) ".
                   "AND location != 'U' " .
                   "ORDER BY artist, album, tag" ],
+         [ "artists", "albumrec", "albumvol", "artist",
+                  "SELECT tag, artist, album, category, medium, " .
+                  "created, updated, a.pubkey, location, bin, iscoll, " .
+                  "name, address, city, state, zip, attention, phone, fax, " .
+                  "international, pcreated, modified, p.url, email " .
+                  "FROM albumvol a " .
+                  "LEFT JOIN publist p ON a.pubkey = p.pubkey " .
+                  "WHERE MATCH (artist) AGAINST(? IN BOOLEAN MODE) " .
+                  "AND location != 'U' " .
+                  "AND iscoll = 0 " .
+                  "UNION SELECT c.tag, c.artist, album, category, medium, " .
+                  "created, updated, a.pubkey, location, bin, iscoll, " .
+                  "name, address, city, state, zip, attention, phone, fax, " .
+                  "international, pcreated, modified, p.url, email " .
+                  "FROM colltracknames c " .
+                  "LEFT JOIN albumvol a ON a.tag = c.tag " .
+                  "LEFT JOIN publist p ON a.pubkey = p.pubkey " .
+                  "WHERE MATCH (c.artist) AGAINST(? IN BOOLEAN MODE) " .
+                  "AND location != 'U' " .
+                  "ORDER BY artist, album, tag" ],
          [ "compilations", "albumrec", "colltracknames", "artist,track",
                   "SELECT c.tag, c.artist, album, category, medium, size, ".
                   "location, bin, created, updated, track, seq, url, pubkey, 1 iscoll FROM colltracknames c " .
@@ -800,13 +820,28 @@ class LibraryImpl extends DBO implements ILibrary {
             if($type && self::$ftSearch[$i][0] != $type)
                 continue;
             $query = self::$ftSearch[$i][4];
-            $from = strpos($query, "FROM");
-            $query = "SELECT COUNT(*) " . substr($query, $from);
+
             $ob = strpos($query, " ORDER BY");
             if($ob)
                 $query = substr($query, 0, $ob);
+
+            // For UNION queries, we must count number of aggregate rows.
+            //
+            // This will work also for simple queries, but in that
+            // case, we just do a count, as it's a tad more efficient.
+            if(strpos($query, " UNION SELECT ")) {
+                $query = "SELECT COUNT(*) FROM (" . $query . ") x";
+                $paramCount = 2;
+            } else {
+                $from = strpos($query, "FROM");
+                $query = "SELECT COUNT(*) " . substr($query, $from);
+                $paramCount = 1;
+            }
+
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $i?$search:$key);
+            if($paramCount == 2)
+                $stmt->bindValue(2, $search);
             $stmt->execute();
             $result = $stmt->fetchAll();
             // for GROUP BY expressions, there is one COUNT row per result row
@@ -836,6 +871,8 @@ class LibraryImpl extends DBO implements ILibrary {
                     $query = self::$ftSearch[$i][4].$l;
                     $stmt = $this->prepare($query);
                     $stmt->bindValue(1, $i?$search:$key);
+                    if(strpos($query, " UNION SELECT "))
+                        $stmt->bindValue(2, $search);
                     $stmt->execute();
                     $result = $stmt->fetchAll();
                     $more = ($l && $rsize[$i] > 0)?$rsize[$i]:0;
