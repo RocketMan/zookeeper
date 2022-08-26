@@ -700,13 +700,12 @@ class Editor extends MenuItem {
 
          for($i=1; array_key_exists("track".$i, $_POST); $i++) {
              $track = $_POST["track". $i];
-             if ($track['track'] == '') {
+             if ($track === '')
                  break;
-             } else {
-                 $url = $_POST["trackUrl". $i];
-                 $artist = $isColl ? $_POST["artist".$i] : "";
-                 $tracks[$i] = ["track" => $track, "url" => $url, "artist" => $artist];                 
-            }
+
+             $url = $_POST["trackUrl". $i];
+             $artist = $isColl ? $_POST["artist".$i] : "";
+             $tracks[$i] = ["track" => $track, "url" => $url, "artist" => $artist];
          }
          return $tracks;
     }
