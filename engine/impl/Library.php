@@ -44,7 +44,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "WHERE MATCH (artist,album) AGAINST(? IN BOOLEAN MODE) ".
                   "AND location != 'U' " .
                   "ORDER BY artist, album, tag" ],
-         [ "artists", "albumrec", "albumvol", "artist",
+         [ "artists", "albumrec", null, "artist",
                   "SELECT tag, artist, album, category, medium, " .
                   "created, updated, a.pubkey, location, bin, iscoll, " .
                   "name, address, city, state, zip, attention, phone, fax, " .
@@ -63,6 +63,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "LEFT JOIN publist p ON a.pubkey = p.pubkey " .
                   "WHERE MATCH (c.artist) AGAINST(? IN BOOLEAN MODE) " .
                   "AND location != 'U' " .
+                  "GROUP BY tag " .
                   "ORDER BY artist, album, tag" ],
          [ "compilations", "albumrec", "colltracknames", "artist,track",
                   "SELECT c.tag, c.artist, album, category, medium, size, ".
@@ -817,7 +818,8 @@ class LibraryImpl extends DBO implements ILibrary {
         // Count results
         $total = 0;
         for($i=($loggedIn?0:1); $i<sizeof(self::$ftSearch); $i++) {
-            if($type && self::$ftSearch[$i][0] != $type)
+            if($type && self::$ftSearch[$i][0] != $type ||
+                    !$type && !self::$ftSearch[$i][2])
                 continue;
             $query = self::$ftSearch[$i][4];
 

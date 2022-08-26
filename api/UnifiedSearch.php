@@ -78,6 +78,7 @@ class UnifiedSearch implements RequestHandlerInterface {
             case "tags":
                 // fall through...
             case "albums":
+            case "artists":
                 $related = Albums::fromArray($records, Albums::LINKS_LABEL);
                 $rel = new Relationship("album", $related);
                 $filter = $type == "tags" ? "album/" :
