@@ -182,6 +182,12 @@ $().ready(function(){
 
             if(refTitle)
                 setAddButtonState(true);
+            else
+                setTimeout(function() {
+                    // change focus asynchronously to avoid double tab
+                    // on tab-initiated focus change
+                    $("#track-title").focus();
+                }, 0);
         }).fail(function (jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
             if (json && json.errors) {
@@ -672,11 +678,14 @@ $().ready(function(){
         var artist = $(this).val();
         if(artist.match(/^\d+$/) && tagId == 0) {
             var opt = $("#track-artists option[data-tag='" + escQuote(artist) + "']");
-            if(opt.length > 0) {
+            if(opt.length > 0)
                 getDiskInfo(opt.data("tag"), opt.data("artist"));
-                $("#track-title").focus();
-            } else
+            else
                 $(this).addClass('invalid-input');
+        } else {
+            var opt = $("#track-artists option[value='" + escQuote(artist) + "']");
+            if(opt.length > 0)
+                getDiskInfo(opt.data("tag"), opt.data("artist"));
         }
     }).on('input', function() {
         var artist = $(this).val();

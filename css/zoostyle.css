@@ -1113,6 +1113,7 @@ div.toggle-time-entry div {
 }
 
 .ui-autocomplete {
+    min-height: 23px; /* ensure no scrollbar on single item list */
     max-height: 200px;
     max-width: 400px;
     overflow-y: auto;
