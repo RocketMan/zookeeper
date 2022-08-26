@@ -819,7 +819,7 @@ class LibraryImpl extends DBO implements ILibrary {
         $total = 0;
         for($i=($loggedIn?0:1); $i<sizeof(self::$ftSearch); $i++) {
             if($type && self::$ftSearch[$i][0] != $type ||
-                    !$type && !self::$ftSearch[$i][2])
+                    !$type && is_null(self::$ftSearch[$i][2]))
                 continue;
             $query = self::$ftSearch[$i][4];
 
@@ -858,7 +858,8 @@ class LibraryImpl extends DBO implements ILibrary {
         if($total) {
             // Fetch results
             for($i=($loggedIn?0:1); $i<sizeof(self::$ftSearch); $i++) {
-                if($type && self::$ftSearch[$i][0] != $type)
+                if($type && self::$ftSearch[$i][0] != $type ||
+                        !$type && is_null(self::$ftSearch[$i][2]))
                     continue;
                 if($rsize[$i]) {
                     if($offset != "") {
