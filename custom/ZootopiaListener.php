@@ -225,8 +225,10 @@ class ZootopiaListener {
                 $now->modify("-1 minutes");
                 $end = $now->format("Hi");
                 // delete if new end time is at or before start time,
-                // or if new end time rolled to previous day
-                $delete = $end > $time[1] || $end <= $time[0];
+                // if new end time rolled to previous day, or if the
+                // resulting truncated show is less than 15 min long
+                $delete = $end > $time[1] ||
+                            $end - time[0] < IPlaylist::MIN_SHOW_LEN;
                 $id = $json->data[0]->id;
                 if($delete) {
                     return $this->zk->deleteAsync('api/v1/playlist/' . $id)->then(function() {
