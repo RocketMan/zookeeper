@@ -24,9 +24,6 @@
 
 namespace ZK\PushNotification;
 
-use ZK\Engine\Engine;
-use ZK\Engine\IDJ;
-use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 
@@ -226,7 +223,7 @@ class ZootopiaListener {
                 $end = $now->format("Hi");
                 // delete if new end time is at or before start time,
                 // if new end time rolled to previous day, or if the
-                // resulting truncated show is less than 15 min long
+                // resulting truncated show is less than the minimum
                 $delete = $end > $time[1] ||
                             $end - time[0] < IPlaylist::MIN_SHOW_LEN;
                 $id = $json->data[0]->id;
