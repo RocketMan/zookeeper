@@ -251,6 +251,8 @@ class AddManager extends MenuItem {
         var $sortTable = $('.sortable-table');
         $sortTable.tablesorter({});
         $sortTable.find('th.initial-sort-col').trigger('sort');
+
+        $("*[data-focus]").focus();
     });
     // -->
     </SCRIPT>
@@ -272,7 +274,6 @@ class AddManager extends MenuItem {
                 $results = Engine::api(IChart::class)->getCurrents(date("Y-m-d"));
 
             $this->addManagerEmitAlbums($results, "", $this->session->isAuth("n"), true, false, true);
-            UI::setFocus();
         }
     }
     
@@ -284,7 +285,7 @@ class AddManager extends MenuItem {
           <TH ALIGN=LEFT>
             <FORM ACTION="" METHOD=POST>
               Adds for:
-              <SELECT NAME=date onChange='this.form.submit()'>
+              <SELECT NAME=date data-focus onChange='this.form.submit()'>
     <?php 
         $records = Engine::api(IChart::class)->getAddDates(52);
         $datevalid = false;
@@ -323,7 +324,6 @@ class AddManager extends MenuItem {
             $records = Engine::api(IChart::class)->getAdd($date);
             $this->addManagerEmitAlbums($records, "adds", $this->session->isAuth("n"), true);
         }
-        UI::setFocus();
         if($this->session->isAuth("n")) {
     ?>
 
