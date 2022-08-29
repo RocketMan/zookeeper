@@ -278,11 +278,8 @@ class Playlists extends MenuItem {
             $retMsg = 'success';
             $id = '';
             $status = '';
-            $autostamp = false;
-
             if ($isLiveShow && !$spinDateTime && !$isCue) {
                 $spinDateTime = new \DateTime("now");
-                $autostamp = true;
             }
 
             if ($spinDateTime != null)
@@ -308,7 +305,6 @@ class Playlists extends MenuItem {
                 //   > 0    ordinal of inserted entry
                 $retVal['seq'] = $size ? $size : $playlistApi->getSeq(0, $entry->getId());
 
-                $window = $playlistApi->getTimestampWindow($playlistId, false);
                 if($isLiveShow && $playlist['airname']) {
                     $playlist['id'] = $playlistId;
                     if($entry->isType(PlaylistEntry::TYPE_SPIN)) {
@@ -317,12 +313,13 @@ class Playlists extends MenuItem {
                     } else
                         $spin = null;
 
-                    if($autostamp && $spinDateTime >= $window['start'])
+                    if($spinDateTime)
                         PushServer::sendAsyncNotification($playlist, $spin);
                 } else if(!$isLiveShow)
                     $this->lazyLoadImages($playlistId, $entry->getId());
 
                 // track is in the grace period?
+                $window = $playlistApi->getTimestampWindow($playlistId, false);
                 $retVal['runsover'] = $spinDateTime >= $window['end'];
             }
         } else
