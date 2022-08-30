@@ -94,8 +94,8 @@ particulars, then read on.
    then change its value per the above.
 
    **IMPORTANT:** If you omit this step, some Zookeeper Online functions,
-   such as artist prefill in the playlist editor, may not function as
-   expected.
+   such as artist autocomplete in the playlist editor, may not function
+   as expected.
 
 2. From a shell, launch the mysql client and login using the root
    password you setup when you installed MySQL/MariaDB:
