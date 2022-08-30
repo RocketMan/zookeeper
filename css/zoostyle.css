@@ -912,6 +912,11 @@ input[type="checkbox"]:checked:active {
     box-shadow: 0px 0px 2px #f88, inset 0px 0px 2px #f88;
 }
 
+/* hack for fx not to display red border on empty field */
+*:required:invalid:not(.fxtime) {
+    box-shadow: none;
+}
+
 .prefilled-input {
     padding: 2px 3px 2px 3px ;
     border: 2px solid #0c0;
@@ -1113,7 +1118,7 @@ div.toggle-time-entry div {
 }
 
 .ui-autocomplete {
-    max-height: 300px;
+    max-height: 250px;
     max-width: 400px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -1122,7 +1127,7 @@ div.toggle-time-entry div {
 /* try to make autocomplete ui more consistent with browser defaults */
 .ui-autocomplete.ui-widget {
     font-family: sans-serif;
-    padding-bottom: 1px;
+    padding: 1px;
 }
 .ui-autocomplete.ui-widget .ui-menu-item {
     cursor: default;
