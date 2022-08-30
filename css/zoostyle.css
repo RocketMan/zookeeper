@@ -1113,7 +1113,6 @@ div.toggle-time-entry div {
 }
 
 .ui-autocomplete {
-    min-height: 23px; /* ensure no scrollbar on single item list */
     max-height: 300px;
     max-width: 400px;
     overflow-y: auto;
@@ -1123,6 +1122,10 @@ div.toggle-time-entry div {
 /* try to make autocomplete ui more consistent with browser defaults */
 .ui-autocomplete.ui-widget {
     font-family: sans-serif;
+    padding-bottom: 1px;
+}
+.ui-autocomplete.ui-widget .ui-menu-item {
+    cursor: default;
 }
 .ui-autocomplete .ui-menu-item-wrapper.ui-state-active {
     color: #000;
