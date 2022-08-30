@@ -77,6 +77,10 @@ particulars, then read on.
 
 1. Optimise the database for full-text searching (optional)
 
+   **IMPORTANT:** If you omit this step, some Zookeeper Online functions,
+   such as artist autocomplete in the playlist editor, may not function
+   as expected.
+
    Zookeeper Online uses several full-text indices.  By default,
    MySQL only indexes words which are 4 characters or longer, and
    in addition, excludes a number of useful 'stop' words.
@@ -93,9 +97,7 @@ particulars, then read on.
    If `ft_min_word_len` or `ft_stopword_file` is already in the file,
    then change its value per the above.
 
-   **IMPORTANT:** If you omit this step, some Zookeeper Online functions,
-   such as artist autocomplete in the playlist editor, may not function
-   as expected.
+   After you have made the above changes, restart the MySQL server.
 
 2. From a shell, launch the mysql client and login using the root
    password you setup when you installed MySQL/MariaDB:
