@@ -12,7 +12,7 @@ A snapshot of the master branch is maintained at
 https://zookeeper.ibinx.com/master/
 
 
-### Requirements
+### Requirements 
 
 * PHP 7.2.5 or later with MySQL PDO driver
 * MySQL/MariaDB
