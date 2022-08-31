@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -23,6 +23,10 @@
  */
 
 namespace ZK\PushNotification;
+
+use ZK\Controllers\NowAiringServer;
+
+use Ratchet\RFC6455\Messaging\Frame;
 
 /**
  * PushHttpProxy transforms a websocket push event stream into server-
@@ -45,6 +49,15 @@ namespace ZK\PushNotification;
  *        generally, this will be your Zookeeper Online ws endpoint
  *        (e.g., wss://example.org/push/onair);
  *    'http_endpoints' is an array of targets to receive the HTTP requests
+ *        In addition, you may include a key `filter`, the value of
+ *        which is a function that will be called for each event; e.g.,
+ *               'filter' => function($event) {
+ *                   // apply any desired processing here
+ *
+ *                   // call the instance method `dispatch` to send
+ *                   // the event to the endpoints
+ *                   $this->dispatch($event);
+ *               }
  *
  * This class POSTs the raw json data to the HTTP endpoint.  If you
  * want a conventional FORM POST, use the subclass PushFormPostProxy.
@@ -58,6 +71,7 @@ class PushHttpProxy {
     protected $httpClient;
     protected $wsEndpoint;
     protected $httpEndpoints;
+    protected $current;
 
     public function __construct(\React\EventLoop\LoopInterface $loop) {
         $this->loop = $loop;
@@ -83,14 +97,36 @@ class PushHttpProxy {
         $this->reconnect();
     }
 
+    protected static function newMessage(string $json = null) :
+            \Ratchet\RFC6455\Messaging\Message {
+        if($json === null)
+            $json = NowAiringServer::toJson(null, null);
+
+        $msg = new \Ratchet\RFC6455\Messaging\Message();
+        $msg->addFrame(new Frame($json, false, Frame::OP_TEXT));
+        return $msg;
+    }
+
     public function message(\Ratchet\RFC6455\Messaging\Message $msg) {
-        foreach($this->httpEndpoints as $endpoint)
-            $this->httpClient->post($endpoint,
-                        ['Content-Type' => 'application/json'], $msg);
+        foreach($this->httpEndpoints as $key => $endpoint)
+            if(!is_string($key))
+                $this->httpClient->post($endpoint,
+                            ['Content-Type' => 'application/json'], $msg);
+    }
+
+    public function dispatch(\Ratchet\RFC6455\Messaging\Message $msg) {
+        if(strcmp($this->current, $msg)) {
+            $this->current = $msg;
+            $this->message($msg);
+        }
     }
 
     public function proxy(\Ratchet\Client\WebSocket $conn) {
-        $conn->on('message', [$this, 'message']);
+        $closure = array_key_exists("filter", $this->httpEndpoints) ?
+            \Closure::bind($this->httpEndpoints["filter"], $this, $this) :
+            [ $this, 'dispatch' ];
+
+        $conn->on('message', $closure);
 
         $conn->on('close', function ($code = null, $reason = null) {
             echo "Connection closed: $reason ($code), reconnecting\n";

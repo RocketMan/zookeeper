@@ -168,8 +168,35 @@ $config = [
         [
              'proxy' => ZK\PushNotification\PushHttpProxy::class,
              'ws_endpoint' => 'ws://127.0.0.1:32080/push/onair',
-             'http_endpoints' => [ ]
-        ]
+             'http_endpoints' => [
+                 "filter" => function($msg) {
+                     // don't proxy Zootopia events
+                     $zootopia = preg_match('/zootopia/i', $msg);
+                     if($zootopia) {
+                         if($this->zootopia ?? false)
+                             return;
+
+                         // proxy event:none on first Zootopia event
+                         $msg = self::newMessage();
+                     }
+
+                     $this->zootopia = $zootopia;
+                     $this->dispatch($msg);
+                 },
+             ]
+        ],
+        [
+             'proxy' => ZK\PushNotification\ZootopiaListener::class,
+             'ws_endpoint' => 'ws://kzsu.stanford.edu/socket.io/?EIO=4&transport=websocket',
+             'http_endpoints' => [
+                 'apikey' => '',
+                 'base_url' => 'https://zookeeper.stanford.edu/',
+                 'airname' => 'Team KZSU',
+                 'title' => 'Zootopia',
+                 'tz' => null,
+                 'caption' => "This playlist was automatically generated from notable music of the past 20 years, curated by the KZSU Music Department and selected for airplay by KZSU DJs.\n\nVisit Zootopia at http://kzsu.rocks/\n",
+             ],
+        ],
     ],
 
     /**

@@ -137,7 +137,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
             }
         }
 
-        $query .= "ORDER BY l.showdate DESC, l.showtime DESC, l.id DESC LIMIT 1";
+        $query .= "ORDER BY l.showdate DESC, l.showtime DESC, l.id DESC";
 
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $date);

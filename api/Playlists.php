@@ -544,7 +544,7 @@ class Playlists implements RequestHandlerInterface {
             throw new BadRequestException("must specify id");
 
         $api = Engine::api(IPlaylist::class);
-        $list = $api->getPlaylist($key);
+        $list = $api->getPlaylist($key, 1);
         if(!$list || $api->isListDeleted($key))
             throw new ResourceNotFoundException("show", $key);
 
@@ -560,7 +560,8 @@ class Playlists implements RequestHandlerInterface {
             if(sizeof($albumrec)) {
                 // don't allow modification of album info if tag is set
                 $entry->setTag($album->id());
-                $entry->setArtist(PlaylistEntry::swapNames($albumrec[0]["artist"]));
+                if(!$albumrec[0]["iscoll"])
+                    $entry->setArtist(PlaylistEntry::swapNames($albumrec[0]["artist"]));
                 $entry->setAlbum($albumrec[0]["album"]);
                 $entry->setLabel($albumrec[0]["name"]);
             }
