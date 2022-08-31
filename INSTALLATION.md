@@ -75,7 +75,31 @@ username and password with full access rights to that database.
 If you are hosting on your own server and are unfamiliar with MySQL
 particulars, then read on.
 
-1. From a shell, launch the mysql client and login using the root
+1. Optimise the database for full-text searching (optional)
+
+   **IMPORTANT:** If you omit this step, some Zookeeper Online functions,
+   such as artist autocomplete in the playlist editor, may not function
+   as expected.
+
+   Zookeeper Online uses several full-text indices.  By default,
+   MySQL only indexes words which are 4 characters or longer, and
+   in addition, excludes a number of useful 'stop' words.
+
+   To optimise full-text searching for Zookeeper Online,
+   edit the MySQL configuration file, which can be found at
+   `/etc/mysql/mysql.conf.d/mysqld.cnf` (Debian).  Other distributions
+   may locate and/or name the file differently.  In the `[mysqld]`
+   section, add the lines:
+
+        ft_min_word_len = 3
+        ft_stopword_file = ''
+
+   If `ft_min_word_len` or `ft_stopword_file` is already in the file,
+   then change its value per the above.
+
+   After you have made the above changes, restart the MySQL server.
+
+2. From a shell, launch the mysql client and login using the root
    password you setup when you installed MySQL/MariaDB:
 
     `mysql -u root -p`
@@ -83,7 +107,7 @@ particulars, then read on.
     You will be prompted for the password. Once logged in execute the
     following commands.
 
-2. Create a mysql user and database for zookeeper:
+3. Create a mysql user and database for zookeeper:
 
     `CREATE DATABASE example_db;`
     `CREATE USER example_user;`
@@ -91,7 +115,7 @@ particulars, then read on.
     where *example_db* and *example_user* can be any names you choose
     for the database.
 
-3. Setup credentials for the database you created above:
+4. Setup credentials for the database you created above:
 
     `GRANT USAGE ON *.* TO 'example_user'@'localhost' IDENTIFIED BY 'example_pass';`
     
@@ -104,7 +128,7 @@ particulars, then read on.
 
     Pay close attention to the single tick marks ('); they are required.
 
-4. Populate the new database.  You may populate the database from a backup,
+5. Populate the new database.  You may populate the database from a backup,
    or install a clean database instance.
 
     a. Populate the database from a backup:

@@ -29,7 +29,8 @@ namespace ZK\Engine;
  * Library operations
  */
 class LibraryImpl extends DBO implements ILibrary {
-    const MAX_FT_LIMIT = 35;
+    const DEFAULT_FT_LIMIT = 35;
+    const MAX_FT_LIMIT = 200;
 
     private static $ftSearch = [
          //   elt name   rec name    table    index    fields     query
@@ -42,6 +43,27 @@ class LibraryImpl extends DBO implements ILibrary {
                   "LEFT JOIN publist ON albumvol.pubkey = publist.pubkey " .
                   "WHERE MATCH (artist,album) AGAINST(? IN BOOLEAN MODE) ".
                   "AND location != 'U' " .
+                  "ORDER BY artist, album, tag" ],
+         [ "artists", "albumrec", null, "artist",
+                  "SELECT tag, artist, album, category, medium, " .
+                  "created, updated, a.pubkey, location, bin, iscoll, " .
+                  "name, address, city, state, zip, attention, phone, fax, " .
+                  "international, pcreated, modified, p.url, email " .
+                  "FROM albumvol a " .
+                  "LEFT JOIN publist p ON a.pubkey = p.pubkey " .
+                  "WHERE MATCH (artist) AGAINST(? IN BOOLEAN MODE) " .
+                  "AND location != 'U' " .
+                  "AND iscoll = 0 " .
+                  "UNION SELECT c.tag, c.artist, album, category, medium, " .
+                  "created, updated, a.pubkey, location, bin, iscoll, " .
+                  "name, address, city, state, zip, attention, phone, fax, " .
+                  "international, pcreated, modified, p.url, email " .
+                  "FROM colltracknames c " .
+                  "LEFT JOIN albumvol a ON a.tag = c.tag " .
+                  "LEFT JOIN publist p ON a.pubkey = p.pubkey " .
+                  "WHERE MATCH (c.artist) AGAINST(? IN BOOLEAN MODE) " .
+                  "AND location != 'U' " .
+                  "GROUP BY tag " .
                   "ORDER BY artist, album, tag" ],
          [ "compilations", "albumrec", "colltracknames", "artist,track",
                   "SELECT c.tag, c.artist, album, category, medium, size, ".
@@ -772,8 +794,8 @@ class LibraryImpl extends DBO implements ILibrary {
         $loggedIn = Engine::session()->isAuth("u");
 
         // Limit maximum number of results
-        if(!$size || $size > LibraryImpl::MAX_FT_LIMIT)
-            $size = LibraryImpl::MAX_FT_LIMIT;
+        $size = $size ? min($size, self::MAX_FT_LIMIT) :
+                            self::DEFAULT_FT_LIMIT;
 
         // Construct full text query string
         if(substr($key, 0, 2) == "\\\"") {
@@ -796,16 +818,32 @@ class LibraryImpl extends DBO implements ILibrary {
         // Count results
         $total = 0;
         for($i=($loggedIn?0:1); $i<sizeof(self::$ftSearch); $i++) {
-            if($type && self::$ftSearch[$i][0] != $type)
+            if($type && self::$ftSearch[$i][0] != $type ||
+                    !$type && is_null(self::$ftSearch[$i][2]))
                 continue;
             $query = self::$ftSearch[$i][4];
-            $from = strpos($query, "FROM");
-            $query = "SELECT COUNT(*) " . substr($query, $from);
+
             $ob = strpos($query, " ORDER BY");
             if($ob)
                 $query = substr($query, 0, $ob);
+
+            // For UNION queries, we must count number of aggregate rows.
+            //
+            // This will work also for simple queries, but in that
+            // case, we just do a count, as it's a tad more efficient.
+            if(strpos($query, " UNION SELECT ")) {
+                $query = "SELECT COUNT(*) FROM (" . $query . ") x";
+                $paramCount = 2;
+            } else {
+                $from = strpos($query, "FROM");
+                $query = "SELECT COUNT(*) " . substr($query, $from);
+                $paramCount = 1;
+            }
+
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $i?$search:$key);
+            if($paramCount == 2)
+                $stmt->bindValue(2, $search);
             $stmt->execute();
             $result = $stmt->fetchAll();
             // for GROUP BY expressions, there is one COUNT row per result row
@@ -820,7 +858,8 @@ class LibraryImpl extends DBO implements ILibrary {
         if($total) {
             // Fetch results
             for($i=($loggedIn?0:1); $i<sizeof(self::$ftSearch); $i++) {
-                if($type && self::$ftSearch[$i][0] != $type)
+                if($type && self::$ftSearch[$i][0] != $type ||
+                        !$type && is_null(self::$ftSearch[$i][2]))
                     continue;
                 if($rsize[$i]) {
                     if($offset != "") {
@@ -835,6 +874,8 @@ class LibraryImpl extends DBO implements ILibrary {
                     $query = self::$ftSearch[$i][4].$l;
                     $stmt = $this->prepare($query);
                     $stmt->bindValue(1, $i?$search:$key);
+                    if(strpos($query, " UNION SELECT "))
+                        $stmt->bindValue(2, $search);
                     $stmt->execute();
                     $result = $stmt->fetchAll();
                     $more = ($l && $rsize[$i] > 0)?$rsize[$i]:0;
