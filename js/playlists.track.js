@@ -47,7 +47,6 @@ $().ready(function(){
     function clearUserInput(clearArtistList) {
         $("#manual-entry input").removeClass('invalid-input').val('');
         $("#comment-entry textarea").val('');
-        $("#track-title").attr('list',''); // webkit hack
         $("#track-titles").empty();
         $("#error-msg").text('');
         $("#tag-status").text('');
@@ -140,18 +139,6 @@ $().ready(function(){
                     "' value='" + htmlify((i+1) + ". " + artist + track.track) + "'>";
             }
             $("#track-titles").html(options);
-            $("#track-title").attr('list','track-titles'); // webkit hack
-            if(navigator.userAgent.match(/firefox/i) &&
-                    $("#track-title").is(":focus")) {
-                // fx hack for Bugzilla 1351483
-                //
-                // if focused, we have to lose and regain focus for
-                // the element to pick up the refreshed datalist
-                //
-                // probably safe everywhere, but scope to firefox
-                // for now, to avoid surprises with other browsers
-                $("#track-title").blur().focus();
-            }
             $("#track-artist").val(diskInfo.attributes.artist);
             $("#track-label").val(diskInfo.relationships != null &&
                                   diskInfo.relationships.label != null ?
@@ -233,7 +220,7 @@ $().ready(function(){
         }
     });
 
-    $("#manual-entry input").on('input', function() {
+    $("#manual-entry input").on('input autocomplete', function() {
         var haveAll = haveAllUserInput();
         setAddButtonState(haveAll);
     });
@@ -695,9 +682,7 @@ $().ready(function(){
             if(tagId > 0) {
                 tagId = 0;
                 $("#track-title").val("");
-                $("#track-title").attr('list',''); // webkit hack
                 $("#track-titles").empty();
-                $("#track-title").attr('list','track-titles'); // webkit hack
                 $("#track-album").val("");
                 $("#track-label").val("");
             }
@@ -724,8 +709,8 @@ $().ready(function(){
     });
 
     $("#track-title").click(function() {
-        $("#track-titles").show().hide();
-    }).on('change textInput input', function() {
+        $(this).autocomplete('search', '');
+    }).on('change textInput input autocomplete', function() {
         var title = $("#track-title").val();
         var opt = $("#track-titles option[value='" + escQuote(title) + "']");
         if(opt.length > 0) {
@@ -733,6 +718,20 @@ $().ready(function(){
             if(artist)
                 $("#track-artist").val(artist);
             $("#track-title").val(opt.data("track"));
+        }
+    }).autocomplete({
+        minLength: 0,
+        source: function(rq, rs) {
+            rs($("#track-titles option").map(function() {
+                return this.value;
+            }));
+        },
+        select: function(event, ui) {
+            $(this).val(ui.item.value).trigger('autocomplete');
+            event.preventDefault();
+        },
+        open: function() {
+            $(".ui-menu").scrollTop(0);
         }
     });
 
