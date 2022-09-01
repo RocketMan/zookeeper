@@ -848,7 +848,7 @@ class Playlists extends MenuItem {
                     <div>
                         <label>Artist / Tag:</label>
                         <input required id='track-artist' autocomplete='off' maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> data-focus />
-                        <span class='track-info' id='tag-status'>Artist (last name, first name) or tag number</span>
+                        <span class='track-info' id='tag-status'>Artist name or tag number</span>
                         <datalist id='track-artists'>
                         </datalist>
                     </div>
