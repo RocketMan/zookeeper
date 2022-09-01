@@ -1148,10 +1148,10 @@ div.toggle-time-entry div {
     }
     .ui-autocomplete.ui-widget.ui-widget-content {
         border-radius: 8px;
-        font-size: 24px;
+        font-size: 16px;
     }
     .ui-autocomplete.ui-widget .ui-menu-item {
-        padding: 15px;
+        padding: 8px;
         border-top: 1px solid gray;
     }
 }
