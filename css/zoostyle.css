@@ -1140,3 +1140,18 @@ div.toggle-time-entry div {
     background: #ccc;
     border-color: transparent;
 }
+@media (max-width: 1000px) {
+    .ui-autocomplete {
+        max-height: max-content;
+        max-width: 100%;
+        /*left: auto !important;*/
+    }
+    .ui-autocomplete.ui-widget.ui-widget-content {
+        border-radius: 8px;
+        font-size: 24px;
+    }
+    .ui-autocomplete.ui-widget .ui-menu-item {
+        padding: 15px;
+        border-top: 1px solid gray;
+    }
+}
