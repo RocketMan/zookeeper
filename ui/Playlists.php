@@ -854,7 +854,7 @@ class Playlists extends MenuItem {
                     </div>
                     <div>
                         <label>Track:</label>
-                        <input required id='track-title' list='track-titles' maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> autocomplete='off'/>
+                        <input required id='track-title' maxlength=<?php echo PlaylistEntry::MAX_FIELD_LENGTH;?> autocomplete='off'/>
                         <datalist id='track-titles'>
                         </datalist>
                     </div>
