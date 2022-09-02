@@ -169,12 +169,6 @@ $().ready(function(){
 
             if(refTitle)
                 setAddButtonState(true);
-            else
-                setTimeout(function() {
-                    // change focus asynchronously to avoid double tab
-                    // on tab-initiated focus change
-                    $("#track-title").focus();
-                }, 0);
         }).fail(function (jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
             if (json && json.errors) {
@@ -710,9 +704,6 @@ $().ready(function(){
 
     $("#track-title").on('click', function() {
         $(this).autocomplete('search', '');
-    }).on('focus', function() {
-        if(this.value.length == 0)
-            $(this).autocomplete('search', '');
     }).on('change textInput input autocomplete', function() {
         var title = this.value;
         var opt = $("#track-titles option[value='" + escQuote(title) + "']");
