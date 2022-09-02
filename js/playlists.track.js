@@ -704,7 +704,7 @@ $().ready(function(){
 
     $("#track-title").on('click', function() {
         $(this).autocomplete('search', '');
-    }).on('change textInput input autocomplete', function() {
+    }).on('blur autocomplete', function() {
         var title = this.value;
         var opt = $("#track-titles option[value='" + escQuote(title) + "']");
         if(opt.length > 0) {
@@ -716,8 +716,11 @@ $().ready(function(){
     }).autocomplete({
         minLength: 0,
         source: function(rq, rs) {
+            var term = rq.term.toLowerCase();
             rs($("#track-titles option").map(function() {
                 return this.value;
+            }).filter(function() {
+                return this.toLowerCase().includes(term);
             }));
         },
         select: function(event, ui) {
