@@ -708,10 +708,13 @@ $().ready(function(){
         }
     });
 
-    $("#track-title").click(function() {
+    $("#track-title").on('click', function() {
         $(this).autocomplete('search', '');
+    }).on('focus', function() {
+        if(this.value.length == 0)
+            $(this).autocomplete('search', '');
     }).on('change textInput input autocomplete', function() {
-        var title = $("#track-title").val();
+        var title = this.value;
         var opt = $("#track-titles option[value='" + escQuote(title) + "']");
         if(opt.length > 0) {
             var artist = opt.data("artist");

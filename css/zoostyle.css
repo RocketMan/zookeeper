@@ -1140,11 +1140,11 @@ div.toggle-time-entry div {
     background: #ccc;
     border-color: transparent;
 }
-@media (max-width: 1000px) {
+/* make autocomplete mobile ui more consistent with mobile datalist */
+@media (max-width: 1024px) {
     .ui-autocomplete {
         max-height: max-content;
         max-width: 100%;
-        /*left: auto !important;*/
     }
     .ui-autocomplete.ui-widget.ui-widget-content {
         border-radius: 8px;
