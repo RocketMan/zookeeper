@@ -1141,7 +1141,7 @@ div.toggle-time-entry div {
     border-color: transparent;
 }
 /* make autocomplete mobile ui more consistent with mobile datalist */
-/*@media (max-width: 1024px) {*/
+@media (max-width: 1024px) {
     .ui-autocomplete {
         max-height: 500px;
         max-width: 100%;
@@ -1154,4 +1154,4 @@ div.toggle-time-entry div {
         padding: 8px;
         border-top: 1px solid gray;
     }
-/*}*/
+}
