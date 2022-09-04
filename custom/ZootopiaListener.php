@@ -225,7 +225,7 @@ class ZootopiaListener {
                 // if new end time rolled to previous day, or if the
                 // resulting truncated show is less than the minimum
                 $delete = $end > $time[1] ||
-                            $end - time[0] < IPlaylist::MIN_SHOW_LEN;
+                            $end - $time[0] < IPlaylist::MIN_SHOW_LEN;
                 $id = $json->data[0]->id;
                 if($delete) {
                     return $this->zk->deleteAsync('api/v1/playlist/' . $id)->then(function() {
