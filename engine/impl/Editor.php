@@ -53,9 +53,11 @@ class EditorImpl extends DBO implements IEditor {
         if($album["location"] != "G")
            $album["bin"] = "";
     
-        $newLabel = $label && !$label["pubkey"] &&
-                                   array_key_exists("name", $label);
-    
+        $name = $label && array_key_exists("name", $label) ?
+            mb_substr(trim($label["name"]), 0, PlaylistEntry::MAX_FIELD_LENGTH) : null;
+
+        $newLabel = $name && !$label["pubkey"];
+
         // Label
         do {
             if($newLabel) {
@@ -69,7 +71,7 @@ class EditorImpl extends DBO implements IEditor {
                         "now(), now())";
                 $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $label["pubkey"]);
-                $stmt->bindValue(2, trim($label["name"]));
+                $stmt->bindValue(2, $name);
                 $stmt->bindValue(3, $label["attention"] ?? "");
                 $stmt->bindValue(4, $label["address"] ?? "");
                 $stmt->bindValue(5, $label["city"] ?? "");
@@ -88,7 +90,7 @@ class EditorImpl extends DBO implements IEditor {
                          "phone=?, fax=?, email=?, url=?, mailcount=?, " .
                          "maillist=?, modified=now() WHERE pubkey=?";
                 $stmt = $this->prepare($query);
-                $stmt->bindValue(1, trim($label["name"]));
+                $stmt->bindValue(1, $name);
                 $stmt->bindValue(2, $label["attention"]);
                 $stmt->bindValue(3, $label["address"]);
                 $stmt->bindValue(4, $label["city"]);
@@ -127,6 +129,9 @@ class EditorImpl extends DBO implements IEditor {
             $artist = "[coll]: $title";
             $iscoll = "1";
         }
+
+        $title = mb_substr($title, 0, PlaylistEntry::MAX_FIELD_LENGTH);
+        $artist = mb_substr($artist, 0, PlaylistEntry::MAX_FIELD_LENGTH);
     
         $newAlbum = !$album["tag"];
     
@@ -191,7 +196,7 @@ class EditorImpl extends DBO implements IEditor {
 
             for($i=1; $tracks && array_key_exists($i, $tracks); $i++) {
                 $trackRow = $tracks[$i];
-                $trackName = trim($trackRow['track']);
+                $trackName = mb_substr(trim($trackRow['track']), 0, PlaylistEntry::MAX_FIELD_LENGTH);
                 $trackUrl = trim($trackRow['url'] ?? "");
                 $query = "INSERT INTO tracknames (tag, seq, track, url) VALUES (?, ?, ?, ?)";
                 if ($iscoll)
@@ -203,7 +208,7 @@ class EditorImpl extends DBO implements IEditor {
                 $stmt->bindValue(3, $trackName);
                 $stmt->bindValue(4, $trackUrl);
                 if ($iscoll)
-                    $stmt->bindValue(5, trim($trackRow["artist"]));
+                    $stmt->bindValue(5, mb_substr(trim($trackRow["artist"]), 0, PlaylistEntry::MAX_FIELD_LENGTH));
 
                 $stmt->execute();
             }
