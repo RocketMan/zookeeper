@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2019 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -45,6 +45,16 @@ namespace ZK\Engine;
  *       onSpin
  *
  * One or more onXXX functions may be chained to the PlaylistObserver instance.
+ *
+ * Alternatively, you may use the form:
+ *
+ *    on(types, function)
+ *
+ * where 'types' is a space-separated string of entry types; e.g.,
+ *
+ *    on('comment logEvent', function($entry) {...})...
+ *
+ * In this case, the function will be installed for all the specified types.
  * 
  */
 class PlaylistObserver {
@@ -58,7 +68,7 @@ class PlaylistObserver {
         if(isset($this->$method) && $this->$method instanceof \Closure)
             return call_user_func_array($this->$method, $args);
     }
-    
+
     /**
      * install lambda function to handle comment entries
      */
@@ -82,12 +92,22 @@ class PlaylistObserver {
         $this->setSeparator = $setSeparator;
         return $this;
     }
-    
+
     /**
      * install lambda function to handle spin entries
      */
     public function onSpin($spin) {
         $this->spin = $spin;
+        return $this;
+    }
+
+    /**
+     * install lambda function to handle one or more entry types
+     */
+    public function on($types, $fn) {
+        foreach(explode(' ', $types) as $type)
+            $this->$type = $fn;
+
         return $this;
     }
     

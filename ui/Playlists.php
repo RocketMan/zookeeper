@@ -895,22 +895,7 @@ class Playlists extends MenuItem {
                     "break" => false,
                     "id" => $editTrack
                 ];
-                $observer = (new PlaylistObserver())->onComment(function($entry) use(&$time) {
-                    if($time['break']) return;
-                    $time['break'] = $time['id'] === $entry->getId();
-                    $created = $entry->getCreatedTime();
-                    if($created) $time['created'] = $created;
-                })->onLogEvent(function($entry) use(&$time) {
-                    if($time['break']) return;
-                    $time['break'] = $time['id'] === $entry->getId();
-                    $created = $entry->getCreatedTime();
-                    if($created) $time['created'] = $created;
-                })->onSetSeparator(function($entry) use(&$time) {
-                    if($time['break']) return;
-                    $time['break'] = $time['id'] === $entry->getId();
-                    $created = $entry->getCreatedTime();
-                    if($created) $time['created'] = $created;
-                })->onSpin(function($entry) use(&$time) {
+                $observer = (new PlaylistObserver())->on('comment logEvent setSeparator spin', function($entry) use(&$time) {
                     if($time['break']) return;
                     $time['break'] = $time['id'] === $entry->getId();
                     $created = $entry->getCreatedTime();
