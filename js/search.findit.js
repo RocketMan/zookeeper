@@ -441,6 +441,9 @@ $().ready(function() {
         sync.Timer = setTimeout(onSearchNow, 500);
     }).keypress(function(e) {
         return e.keyCode != 13;
+    }).on('cut paste', function() {
+        // run on next tick, as pasted data is not yet in the field
+        setTimeout(onSearchNow, 0);
     });
 
     field.focus();
