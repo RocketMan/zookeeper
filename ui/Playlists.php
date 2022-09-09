@@ -892,14 +892,12 @@ class Playlists extends MenuItem {
                 $window = $api->getTimestampWindow($playlistId);
                 $time = [
                     "created" => null,
-                    "break" => false,
                     "id" => $editTrack
                 ];
                 $observer = (new PlaylistObserver())->on('comment logEvent setSeparator spin', function($entry) use(&$time) {
-                    if($time['break']) return;
-                    $time['break'] = $time['id'] === $entry->getId();
                     $created = $entry->getCreatedTime();
                     if($created) $time['created'] = $created;
+                    return $time['id'] === $entry->getId();
                 });
                 $api->getTracksWithObserver($playlistId, $observer);
                 if($time['created'])
