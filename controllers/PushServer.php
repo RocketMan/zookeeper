@@ -137,11 +137,7 @@ class NowAiringServer implements MessageComponentInterface {
                     $spin = $entry->asArray();
                     $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
                     $event = $spin;
-                })->onComment(function($entry) use(&$event) {
-                    $event = null;
-                })->onLogEvent(function($entry) use(&$event) {
-                    $event = null;
-                })->onSetSeparator(function($entry) use(&$event) {
+                })->on('comment logEvent setSeparator', function($entry) use(&$event) {
                     $event = null;
                 }), 0, OnNowFilter::class);
         }

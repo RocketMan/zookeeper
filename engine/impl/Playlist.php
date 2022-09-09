@@ -509,8 +509,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $tracks = $this->getTracks($playlist, $desc);
         if($tracks && $filter)
             $tracks = new $filter($tracks);
-        while($tracks && ($track = $tracks->fetch()))
-            $observer->observe(new PlaylistEntry($track));
+        while($tracks && ($track = $tracks->fetch()) &&
+                !$observer->observe(new PlaylistEntry($track)));
         return $tracks;
     }
 
