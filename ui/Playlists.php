@@ -890,19 +890,15 @@ class Playlists extends MenuItem {
             <?php
                 $api = Engine::api(IPlaylist::class);
                 $window = $api->getTimestampWindow($playlistId);
-                $time = [
-                    "created" => null,
-                    "id" => $editTrack
-                ];
-                $observer = (new PlaylistObserver())->on('comment logEvent setSeparator spin', function($entry) use(&$time) {
-                    $created = $entry->getCreatedTime();
-                    if($created) $time['created'] = $created;
-                    return $time['id'] === $entry->getId();
-                });
-                $api->getTracksWithObserver($playlistId, $observer);
-                if($time['created'])
-                    $time = $time['created'];
-                else {
+                $time = null;
+                $api->getTracksWithObserver($playlistId,
+                    (new PlaylistObserver())->on('comment logEvent setSeparator spin', function($entry) use(&$time, $editTrack) {
+                        $created = $entry->getCreatedTime();
+                        if($created) $time = $created;
+                        return $editTrack === $entry->getId();
+                    })
+                );
+                if(!$time) {
                     $startTime = $api->getTimestampWindow($playlistId, false)['start'];
                     $time = $startTime->format('H:i:s');
                 }
