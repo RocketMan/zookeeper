@@ -222,7 +222,7 @@ $config = [
                 'code' => 'DK-1201',
                 'rows' => 1,
                 'cols' => 1,
-                'message' => 'Select <B>kzsu-labeler</B> as your printer.  It should be using its default “paper” setting of <B>standard address labels</B> (3.5x1.1 in.)'
+                'message' => '<B>IMPORTANT:</B> If you are trying to print to the kzsu label printer, please choose <B>[&nbsp;&lt;&nbsp;Back&nbsp;]</B> below and then press the <B>[&nbsp;Print&nbsp;]</B> button instead of Print to PDF.'
             ],
             '5161' => [
                 'name' => 'Avery 5161',
