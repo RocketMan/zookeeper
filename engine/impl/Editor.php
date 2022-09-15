@@ -180,7 +180,7 @@ class EditorImpl extends DBO implements IEditor {
                                      $album["tag"] != $this->getNextTag());
     
         // Tracks
-        if($tracks || $newAlbum) {
+        if($tracks) {
             // We delete from both tracknames and colltracknames
             // because someone could have toggled the 'compilation'
             // checkbox; this ensures no stale track names remain
@@ -194,17 +194,17 @@ class EditorImpl extends DBO implements IEditor {
             $stmt->bindValue(1, $album["tag"]);
             $stmt->execute();
 
-            for($i=1; $tracks && array_key_exists($i, $tracks); $i++) {
-                $trackRow = $tracks[$i];
+            $query = $iscoll ?
+                "INSERT INTO colltracknames (tag, seq, track, url, artist) VALUES (?, ?, ?, ?, ?)" :
+                "INSERT INTO tracknames (tag, seq, track, url) VALUES (?, ?, ?, ?)";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $album["tag"]);
+
+            foreach($tracks as $seq => $trackRow) {
                 $trackName = mb_substr(trim($trackRow['track']), 0, PlaylistEntry::MAX_FIELD_LENGTH);
                 $trackUrl = trim($trackRow['url'] ?? "");
-                $query = "INSERT INTO tracknames (tag, seq, track, url) VALUES (?, ?, ?, ?)";
-                if ($iscoll)
-                    $query = "INSERT INTO colltracknames (tag, seq, track, url, artist) VALUES (?, ?, ?, ?, ?)";
 
-                $stmt = $this->prepare($query);
-                $stmt->bindValue(1, $album["tag"]);
-                $stmt->bindValue(2, $i);
+                $stmt->bindValue(2, $seq);
                 $stmt->bindValue(3, $trackName);
                 $stmt->bindValue(4, $trackUrl);
                 if ($iscoll)
