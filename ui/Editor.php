@@ -500,6 +500,7 @@ class Editor extends MenuItem {
         for($i=1; isset($_POST["track" . $i]); $i++) {
             $this->skipVar("track" . $i);
             $this->skipVar("artist" . $i);
+            $this->skipVar("trackUrl" . $i);
         }
     }
            
@@ -1043,7 +1044,7 @@ class Editor extends MenuItem {
                 $this->skipVar("artist".$trackNum);
             }
 
-            $url = $_POST["url$trackNum"];
+            $url = $_POST["trackUrl$trackNum"];
             echo "<TD COLSPAN=2><INPUT class='urlValue' style='$cellWidth' value='${url}' NAME='trackUrl$trackNum' TYPE='url' maxlength=" . IEditor::MAX_PLAYABLE_URL_LENGTH . " data-track='$trackNum' /></TD>";
 
             echo "</TR>\n";
@@ -1058,8 +1059,9 @@ class Editor extends MenuItem {
             $tracks = Engine::api(ILibrary::class)->search($isCollection?ILibrary::COLL_KEY:ILibrary::TRACK_KEY, 0, 2000, $_REQUEST["seltag"]);
             foreach($tracks as $row) {
                 $this->emitHidden("track".$row["seq"], $row["track"]);
-                $_POST["url".$row["seq"]] = $row["url"];
+                $this->emitHidden("trackUrl".$row["seq"], $row["url"]);
                 $_POST["track".$row["seq"]] = $row["track"];
+                $_POST["trackUrl".$row["seq"]] = $row["url"];
                 if($isCollection) {
                     $this->emitHidden("artist" . $row["seq"], $row["artist"]);
                     $_POST["artist".$row["seq"]] = $row["artist"];
