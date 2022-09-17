@@ -166,6 +166,10 @@ class ZootopiaListener {
                             $event["show_end"], $tz ? new \DateTimeZone($tz) : null);
                 if($tz)
                     $end->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+
+                if($end->getTimestamp() - $now->getTimestamp() < IPlaylist::MIN_SHOW_LEN * 60)
+                    return new RejectedPromise("show too short");
+
                 $time .= "-" . $end->format("Hi");
 
                 // create new show
