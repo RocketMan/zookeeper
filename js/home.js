@@ -157,7 +157,7 @@ $().ready(function(){
                 var start = serverDate(onnow.show_start);
                 var end = serverDate(onnow.show_end);
                 $(".home-show").html("<A HREF='?action=viewDate&amp;seq=selList&amp;playlist=" + onnow.show_id + "' CLASS='nav'>" + onnow.name + "</A>&nbsp;with&nbsp;" + onnow.airname);
-                $(".home-datetime").html(start.toDateString() + " " + localTime(start) + " - " + localTime(end) + " " + $("#tz").val());
+                $(".home-datetime").html(start.toLocaleString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) + " " + localTime(start) + " - " + localTime(end) + " " + $("#tz").val());
                 if(onnow.id == 0) {
                     $(".home-currenttrack").fadeout();
                     $(".home-datetime").fadein();
