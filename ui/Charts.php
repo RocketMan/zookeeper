@@ -54,7 +54,8 @@ class Charts extends MenuItem {
         while($weeks && ($week = $weeks->fetch())) {
             $endDate = $week["week"];
             list($y, $m, $d) = explode("-", $endDate);
-            $formatDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
+            $dateSpec = UI::getClientLocale() == 'en_US' ? 'l, F j, Y' : 'l, j F Y';
+            $formatDate = date($dateSpec, mktime(0,0,0,$m,$d,$y));
             echo "    <TD ALIGN=LEFT VALIGN=TOP CLASS=\"top30\">\n";
             echo "      <TABLE CELLPADDING=5 CELLSPACING=0 BORDER=0>\n";
             echo "        <TR><TH ALIGN=RIGHT COLSPAN=2>Week ending $formatDate</TH></TR>\n";
@@ -116,7 +117,9 @@ class Charts extends MenuItem {
         $year = $_REQUEST["year"];
         $month = $_REQUEST["month"];
         $day = $_REQUEST["day"];
-    
+
+        $dateSpec = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
+
         if(!$month) {
             if(!$year) {
                 // current year
@@ -153,7 +156,7 @@ class Charts extends MenuItem {
                     echo "      </UL><UL>\n";
                     $month = $m;
                 }
-                echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=weekly&amp;year=$y&amp;month=$m&amp;day=$d\">Week ending ".date("j F Y", mktime(0,0,0,$m,$d,$y))."</A>\n";
+                echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=weekly&amp;year=$y&amp;month=$m&amp;day=$d\">Week ending ".date($dateSpec, mktime(0,0,0,$m,$d,$y))."</A>\n";
             }
             echo "      </UL>\n    </TD></TR>\n";
             echo "  </TABLE>\n";
@@ -174,7 +177,7 @@ class Charts extends MenuItem {
         } else {
             $startDate = "";
             $endDate = "$year-$month-$day";
-            $displayDate = date("j F Y", mktime(0,0,0,$month,$day,$year));
+            $displayDate = date($dateSpec, mktime(0,0,0,$month,$day,$year));
             echo "<P CLASS=\"header\">$station chart for the week ending $displayDate</P>\n";
         }
 
@@ -320,7 +323,8 @@ class Charts extends MenuItem {
         } else {
             $startDate = "";
             $endDate = "$year-$month-$day";
-            $displayDate = date("j F Y", mktime(0,0,0,$month,$day,$year));
+            $dateSpec = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
+            $displayDate = date($dateSpec, mktime(0,0,0,$month,$day,$year));
             echo "<P CLASS=\"header\">$station chart for the week ending $displayDate</P>\n";
             $this->title = "Chart for $displayDate";
         }
