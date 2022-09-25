@@ -1,5 +1,6 @@
 AddDefaultCharset UTF-8
 AddType image/webp .webp
+Options -Indexes
 
 # set php error reporting to E_ALL & ~E_NOTICE (=32759)
 # for PHP 7:
