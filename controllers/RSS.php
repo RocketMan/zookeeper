@@ -336,7 +336,7 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function emitError() {
-       $message = "Invalid feed: ".$_REQUEST["feed"];
+       $message = "Invalid feed: ".self::xmlentities($_REQUEST["feed"]);
        echo "<channel>\n<title>$message</title>\n<link>".Engine::getBaseUrl()."</link>\n<description>$message</description>\n</channel>\n";
     }
 }
