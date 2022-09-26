@@ -358,6 +358,7 @@ class Charts extends MenuItem {
     }
     
     private function emitChart($startDate, $endDate, $limit="", $category="") {
+        $chart = [];
         $chartAPI = Engine::api(IChart::class);
         $chartAPI->getChart($chart, $startDate, $endDate, $limit, $category);
         Engine::api(ILibrary::class)->markAlbumsReviewed($chart);
@@ -416,6 +417,7 @@ class Charts extends MenuItem {
     }
     
     private function emitChart2($startDate, $endDate, $limit="", $category="") {
+        $chart = [];
         $chartAPI = Engine::api(IChart::class);
         $chartAPI->getChart($chart, $startDate, $endDate, $limit, $category);
         if(sizeof($chart)) {

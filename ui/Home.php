@@ -131,7 +131,8 @@ class Home extends MenuItem {
     
        if(! isset($y) || !$y)
           return;    // No charts!  bail.
-    
+
+       $topPlays = [];
        if(!$numweeks || $numweeks == 1)
           Engine::api(IChart::class)->getChart($topPlays, "", $lastWeek["week"], $limit);
        else {
