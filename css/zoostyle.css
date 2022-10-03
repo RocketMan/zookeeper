@@ -1164,7 +1164,7 @@ div.toggle-time-entry div {
 .playlist-grid th {
     text-align: left;
     font-size: 14px;
-    padding-left: 3px;
+    padding-left: 4px;
 }
 .playlist-grid th {
     border-color: gray;
@@ -1178,7 +1178,7 @@ div.toggle-time-entry div {
     vertical-align: middle;
 }
 .playlist-grid td > span {
-    padding-left: 2px;
+    padding-left: 3px;
     height: 16px;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
