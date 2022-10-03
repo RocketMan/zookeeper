@@ -127,7 +127,8 @@ class Playlists implements RequestHandlerInterface {
         $attrs->set("date", $rec["showdate"]);
         $attrs->set("time", $rec["showtime"]);
         $attrs->set("airname", $rec["airname"] ?? "None");
-        $attrs->set("fairname", (boolean)$rec["fairname"]);
+        if(isset($rec["fairname"]))
+            $attrs->set("fairname", (boolean)$rec["fairname"]);
         if(isset($rec["expires"]))
             $attrs->set("expires", $rec["expires"]);
 
