@@ -672,11 +672,11 @@ $().ready(function(){
         var artist = $(this).val();
         var opt = $("#track-artists option[value='" + escQuote(artist) + "']");
         if(opt.length == 0) {
+            $("#track-titles").empty();
             // clear auto-filled album info
             if(tagId > 0) {
                 tagId = 0;
                 $("#track-title").val("");
-                $("#track-titles").empty();
                 $("#track-album").val("");
                 $("#track-label").val("");
             }
@@ -970,6 +970,9 @@ $().ready(function(){
                 .fxtime('seg', 1, null)
                 .fxtime('seg', 2, 0);
     }
+
+    // stretch track-play if track-add is hidden
+    $("#track-add.zk-hidden").prev().outerWidth($("#track-type-pick").outerWidth());
 
     $("*[data-focus]").focus();
 });

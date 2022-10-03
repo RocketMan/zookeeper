@@ -47,7 +47,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
     public function getPlaylist($playlist, $withAirname=0) {
         if($withAirname)
             $query = "SELECT l.description, l.showdate, l.showtime, " .
-                     "       a.id, a.airname, l.dj, l.origin " .
+                     "       a.id, a.airname, l.dj, l.origin, " .
+                     "       IF(l.airname IS NULL OR l.dj = a.dj, false, true) fairname " .
                      "FROM lists l LEFT JOIN airnames a " .
                      "ON l.airname = a.id " .
                      "WHERE l.id = ?";
@@ -63,7 +64,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
                                $showDate="", $airname="", $user="", $desc=1, $limit=null) {
         if($withAirname)
             $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
-                     "a.id airid, a.airname, l.origin FROM lists l " .
+                     "a.id airid, a.airname, l.origin, " .
+                     "IF(l.airname IS NULL OR l.dj = a.dj, false, true) fairname " .
+                     "FROM lists l " .
                      "LEFT JOIN airnames a ON l.airname = a.id ";
         else
             $query = "SELECT id, showdate, showtime, description, origin FROM lists l ";
@@ -118,7 +121,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
         [$date, $hour] = explode(' ', $now->format(self::TIME_FORMAT));
 
         $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
-                 "a.id airid, a.airname, l.dj FROM lists l LEFT JOIN airnames a " .
+                 "a.id airid, a.airname, l.dj, " .
+                 "IF(l.airname IS NULL OR l.dj = a.dj, false, true) fairname " .
+                 "FROM lists l LEFT JOIN airnames a " .
                  "ON l.airname = a.id " .
                  "WHERE l.showdate = ? " .
                  "AND l.airname IS NOT NULL " .
@@ -952,35 +957,55 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $stmt->execute();
     }
 
+    public function getNormalPlaylistCount($user) {
+        $query = "SELECT COUNT(*) count FROM lists ".
+                 "LEFT JOIN lists_del ON lists.id = lists_del.listid ".
+                 "WHERE dj=? AND deleted IS NULL";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        $row = $stmt->executeAndFetch();
+        return $row["count"];
+    }
+
     public function getDeletedPlaylistCount($user) {
-        $query = "SELECT COUNT(*) FROM lists ".
+        $query = "SELECT COUNT(*) count FROM lists ".
                  "LEFT JOIN lists_del ON lists.id = lists_del.listid ".
                  "WHERE dj=? AND deleted IS NOT NULL";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
-        $stmt->execute();
-        while($row = $stmt->fetch())
-            $count = $row[0];
-        return $count;
+        $row = $stmt->executeAndFetch();
+        return $row["count"];
     }
 
-    public function getListsSelNormal($user) {
-        $query = "SELECT id, showdate, showtime, description FROM lists " .
-                 "LEFT JOIN lists_del ON lists.id = lists_del.listid ".
-                 "WHERE dj=? AND deleted IS NULL ".
-                 "ORDER BY showdate DESC, showtime DESC";
+    public function getListsSelNormal($user, $pos = 0, $count = 10000) {
+        $query = "SELECT l.id, showdate, showtime, description, a.airname, origin, ".
+                 "IF(l.airname IS NULL OR l.dj = a.dj, false, true) fairname FROM lists l " .
+                 "LEFT JOIN lists_del ON l.id = lists_del.listid ".
+                 "LEFT JOIN airnames a ON l.airname = a.id ".
+                 "WHERE l.dj=? AND deleted IS NULL ".
+                 "ORDER BY showdate DESC, showtime DESC ".
+                 "LIMIT ?, ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
+        $stmt->bindValue(2, $pos, \PDO::PARAM_INT);
+        $stmt->bindValue(3, $count, \PDO::PARAM_INT);
         return $stmt->iterate(\PDO::FETCH_BOTH);
     }
 
-    public function getListsSelDeleted($user) {
-        $query = "SELECT id, showdate, showtime, description, ADDDATE(deleted, 30) FROM lists " .
-                 "LEFT JOIN lists_del ON lists.id = lists_del.listid ".
-                 "WHERE dj=? AND deleted IS NOT NULL ".
-                 "ORDER BY showdate DESC, showtime DESC";
+    public function getListsSelDeleted($user, $pos = 0, $count = 10000) {
+        $query = "SELECT l.id, showdate, showtime, description, ".
+                 "ADDDATE(deleted, 30) expires, a.airname, origin, ".
+                 "IF(l.airname IS NULL OR l.dj = a.dj, false, true) fairname ".
+                 "FROM lists l " .
+                 "LEFT JOIN lists_del ON l.id = lists_del.listid ".
+                 "LEFT JOIN airnames a ON lists_del.airname = a.id ".
+                 "WHERE l.dj=? AND deleted IS NOT NULL ".
+                 "ORDER BY showdate DESC, showtime DESC ".
+                 "LIMIT ?, ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
+        $stmt->bindValue(2, $pos, \PDO::PARAM_INT);
+        $stmt->bindValue(3, $count, \PDO::PARAM_INT);
         return $stmt->iterate(\PDO::FETCH_BOTH);
     }
 
