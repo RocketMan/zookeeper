@@ -1328,21 +1328,22 @@ a.listEdit {
 /* desktop */
 @media (min-width: 1024px) {
     .playlist-grid tbody tr {
-	line-height: 30px;
+        line-height: 30px;
     }
 }
 /*@media (max-width: 9999px) {*/
 /* mobile */
 @media (max-width: 1024px) {
     .playlist-grid tbody tr {
-	line-height: 40px;
+        line-height: 40px;
     }
     .playlist-grid input,
     .playlist-accordion.ui-accordion .ui-accordion-content input {
-	height: 20px;
+        height: 20px;
     }
-    .playlist-grid button {
-	height: 30px;
+    .playlist-grid button,
+    .newPlaylist button {
+        height: 30px;
     }
 }
 
