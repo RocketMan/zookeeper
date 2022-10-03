@@ -63,10 +63,11 @@ class Playlists implements RequestHandlerInterface {
     private static $paginateOps = [
         "date" => "paginate",
         "id" => "paginate",
+        "user" => "paginate",
         "match(event)" => [ self::PLAYLIST_SEARCH, "playlists" ],
     ];
 
-    private static function paginate(RequestInterface $request, $type, $key, &$offset): array {
+    private static function paginate(RequestInterface $request, $type, $key, &$offset, $limit): array {
         switch($type) {
         case "date":
             if(strtolower($key) == "onnow") {
@@ -94,6 +95,22 @@ class Playlists implements RequestHandlerInterface {
                     $result[] = $row;
             }
             break;
+        case "user":
+            if(!$key || $key == "self")
+                $key = Engine::session()->getUser();
+            if(!$key)
+                throw new \InvalidArgumentException("Must supply value for user filter");
+            $api = Engine::api(IPlaylist::class);
+            if($_GET["deleted"] ?? 0) {
+                $rows = $api->getListsSelDeleted($key, $offset, $limit);
+                $count = $api->getDeletedPlaylistCount($key);
+            } else {
+                $rows = $api->getListsSelNormal($key, $offset, $limit);
+                $count = $api->getNormalPlaylistCount($key);
+            }
+            $result = $rows->asArray();
+            $offset += sizeof($result);
+            return [ $count, $result ];
         }
 
         $size = sizeof($result);
@@ -109,7 +126,10 @@ class Playlists implements RequestHandlerInterface {
         $attrs->set("name", $rec["description"]);
         $attrs->set("date", $rec["showdate"]);
         $attrs->set("time", $rec["showtime"]);
-        $attrs->set("airname", $rec["airname"]);
+        $attrs->set("airname", $rec["airname"] ?? "None");
+        $attrs->set("fairname", (boolean)$rec["fairname"]);
+        if(isset($rec["expires"]))
+            $attrs->set("expires", $rec["expires"]);
 
         $origin = $rec["origin"] ?? null;
         $attrs->set("rebroadcast", $origin || preg_match(IPlaylist::DUPLICATE_REGEX, $rec["description"]));
@@ -341,6 +361,21 @@ class Playlists implements RequestHandlerInterface {
         return $response;
     }
 
+    private function validateTime($time) {
+        $timeAr = explode('-', $time);
+        if(sizeof($timeAr) != 2)
+            throw new \InvalidArgumentException("time is invalid");
+
+        $start = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT, "2019-01-01 " . $timeAr[0]);
+        $end =  \DateTime::createFromFormat(IPlaylist::TIME_FORMAT, "2019-01-01 " . $timeAr[1]);
+        if(!$start || !$end)
+            throw new \InvalidArgumentException("time is invalid");
+        if($end < $start)
+            $end->modify('+1 day');
+        $minutes = ($end->getTimestamp() - $start->getTimestamp()) / 60;
+        if($minutes < IPlaylist::MIN_SHOW_LEN || $minutes > IPlaylist::MAX_SHOW_LEN)
+            throw new \InvalidArgumentException("Invalid time range (min 1/4 hour, max 6 hours) " . $timeAr[0] . " - " . $timeAr[1]);
+    }
     public function createResource(RequestInterface $request): ResponseInterface {
         $session = Engine::session();
         if(!$session->isAuth("u"))
@@ -359,18 +394,26 @@ class Playlists implements RequestHandlerInterface {
             $list = $papi->getPlaylist($origin);
             if(!$list || !$session->isAuth("v") && $user != $list["dj"])
                 throw new \InvalidArgumentException("origin is invalid");
-        }
 
+            // ascend the origin list
+            $topOrigin = $list;
+            while($topOrigin && $topOrigin['origin'])
+                $topOrigin = $papi->getPlaylist($topOrigin['origin']);
+        }
+        $foreign = $dup && $topOrigin && $topOrigin['dj'] != $user;
         $airname = $dup ? $attrs->getOptional("airname") : $attrs->getRequired("airname");
         $time = $attrs->getRequired("time");
+        $this->validateTime($time); // raises exception on invalid
+
         list($year, $month, $day) = explode("-", $date = $attrs->getRequired("date"));
         if(!checkdate($month, $day, $year))
             throw new \InvalidArgumentException("date is invalid");
 
         // lookup the airname
-        if($airname) {
+        $aid = null;
+        if($airname && strcasecmp($airname, "none") && !$foreign) {
             $djapi = Engine::api(IDJ::class);
-            $aid = $djapi->getAirname($airname, $session->isAuth("v")?"":$user);
+            $aid = $djapi->getAirname($airname, $user);
             if(!$aid) {
                 // airname does not exist; try to create it
                 $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
@@ -472,6 +515,7 @@ class Playlists implements RequestHandlerInterface {
         // validate the show's properties
         $name = $attrs->has("name")?$attrs->getRequired("name"):$list['description'];
         $time = $attrs->has("time")?$attrs->getRequired("time"):$list['showtime'];
+        $this->validateTime($time); // raises exception on invalid
 
         if($attrs->has("date")) {
             list($year, $month, $day) = explode("-", $date = $attrs->getRequired("date"));
@@ -483,22 +527,30 @@ class Playlists implements RequestHandlerInterface {
         if($attrs->has("airname")) {
             // lookup the airname
             $airname = $attrs->getRequired("airname");
-            $djapi = Engine::api(IDJ::class);
-            $user = $session->getUser();
-            $airname = $djapi->getAirname($airname, $session->isAuth("v")?"":$user);
-            if(!$airname) {
-                // airname does not exist; try to create it
-                $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
-                if($success > 0) {
-                    // success!
-                    $airname = $djapi->lastInsertId();
-                } else
-                    throw new \InvalidArgumentException("airname is invalid");
+            $aid = null;
+            if(!empty($airname) && strcasecmp($airname, "none")) {
+                $djapi = Engine::api(IDJ::class);
+                $user = $session->getUser();
+                $aid = $djapi->getAirname($airname, $user);
+                if(!$aid) {
+                    // if foreign and unchanged, keep it
+                    if($djapi->getAirname($airname, "") == $list['airname'])
+                        $aid = $list['airname'];
+                    else {
+                        // airname does not exist; try to create it
+                        $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
+                        if($success > 0) {
+                            // success!
+                            $aid = $djapi->lastInsertId();
+                        } else
+                            throw new \InvalidArgumentException("airname is invalid");
+                    }
+                }
             }
         } else
-            $airname = $list['airname'];
+            $aid = $list['airname'];
 
-        $success = $api->updatePlaylist($key, $date, $time, $name, $airname);
+        $success = $api->updatePlaylist($key, $date, $time, $name, $aid);
 
         if($success)
             PushServer::sendAsyncNotification();

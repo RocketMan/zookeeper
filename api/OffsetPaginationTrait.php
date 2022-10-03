@@ -181,7 +181,7 @@ trait OffsetPaginationTrait {
 
         $libraryAPI = Engine::api(ILibrary::class);
         if(!is_array($ops)) {
-            [$total, $records] = self::$ops($request, $type, $key, $offset);
+            [$total, $records] = self::$ops($request, $type, $key, $offset, $limit);
             $ops = [ -1, null ];
         } else if($ops[1]) {
             [$total, $retval] = $libraryAPI->searchFullText($ops[1], $key, $limit, $offset);
