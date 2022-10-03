@@ -279,6 +279,13 @@ $().ready(function(){
                 body.append(row);
             });
             emitMore(body, response, deleted);
+
+            var dup = $("#duplicate");
+            if(!deleted && dup.length > 0) {
+                fdup(dup.val());
+                dup.remove();
+            }
+
             editing = null;
         }).fail(function (jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
@@ -730,12 +737,6 @@ $().ready(function(){
 
     loadLists(maxresults, 0, 0);
     loadLists(maxresults, 0, 1);
-
-    var dup = $("#duplicate");
-    if(dup.length > 0) {
-        fdup(dup.val());
-        dup.remove();
-    }
 
     // the following are for Edit Profile
 
