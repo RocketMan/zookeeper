@@ -133,6 +133,7 @@
             if(val == null || val == '') {
                 var segs = Array(segCount).fill('--').join(':');
                 this.value = inst.value = segs + (intl ? '' : ' AM');
+                this.setCustomValidity(this.required ? 'required' : '');
                 return;
             }
 
@@ -151,6 +152,7 @@
                 this.value = inst.value = xval.slice(0, segCount)
                         .map(x => x.padStart(2, '0'))
                         .join(':') + (intl ? '' : ' ' + ampm);
+                validate(this);
             }
         });
     }
@@ -464,7 +466,7 @@
     function validate(ctl) {
         var time = newTime(getValue([ctl]));
         if(!time) {
-            ctl.setCustomValidity('');
+            ctl.setCustomValidity(ctl.required ? 'required' : '');
             return;
         }
 
