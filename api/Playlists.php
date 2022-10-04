@@ -377,6 +377,7 @@ class Playlists implements RequestHandlerInterface {
         if($minutes < IPlaylist::MIN_SHOW_LEN || $minutes > IPlaylist::MAX_SHOW_LEN)
             throw new \InvalidArgumentException("Invalid time range (min 1/4 hour, max 6 hours) " . $timeAr[0] . " - " . $timeAr[1]);
     }
+
     public function createResource(RequestInterface $request): ResponseInterface {
         $session = Engine::session();
         if(!$session->isAuth("u"))
