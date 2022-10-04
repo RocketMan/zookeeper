@@ -593,7 +593,7 @@ $().ready(function(){
         var edit = makeEditRow(true);
         setEditRow(edit, data);
         row.after(edit);
-        edit.css('background-color', '#eee').find("td input").first().focus();
+        edit.css('background-color', '#eee');
         edit.find("button#save").on('click', function() {
             newPlaylist($(this).closest('tr'));
         });
@@ -659,7 +659,7 @@ $().ready(function(){
             var edit = makeEditRow(true);
             setEditRow(edit, response.data);
             $(".active-grid tbody").prepend(edit);
-            edit.css('background-color', '#eee').find("td input").first().focus();
+            edit.css('background-color', '#eee');
             edit.find("button#save").on('click', function() {
                 newPlaylist($(this).closest('tr'));
             });
