@@ -405,7 +405,7 @@ class Playlists extends MenuItem {
     ?>
       <h1>New Playlist has moved!</h1>
       <p>The playlist menu items have been consolidated into one screen.</p>
-      <p>Go to the <b>My Playlists</b> link at the top left for this and other playlist functions.</p>
+      <p>Go to the <b>My Playlists</b> link for this and other playlist functions.</p>
       <p class='sub'>(This message will be removed in the future.)</p>
     <?php
     }
