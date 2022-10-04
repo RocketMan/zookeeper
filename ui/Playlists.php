@@ -411,8 +411,8 @@ class Playlists extends MenuItem {
     }
 
     public function listManagerRestore() {
-        $playlistId = $_POST["playlist"];
-        if(isset($playlistId) && $this->isOwner($playlistId)) {
+        $playlistId = $_POST["playlist"] ?? null;
+        if($playlistId && $this->isOwner($playlistId)) {
             Engine::api(IPlaylist::class)->restorePlaylist($playlistId);
             PushServer::sendAsyncNotification();
         }
