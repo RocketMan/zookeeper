@@ -32,13 +32,14 @@
 $menu = [
 //  access, action,        menu label,              implementation class
     [ 'a', 'home',         0,                       ZK\UI\Home::class ],
+    [ 'u', 'editList%',    'My Playlists',          ZK\UI\Playlists::class ],
     [ 'a', 'find%',        'Find It!',              ZK\UI\Search::class ],
     [ 'a', 'search',       'Classic Search',        ZK\UI\Search::class ],
     [ 'm', 'editor',       'Library Editor',        ZK\UI\Editor::class ],
     [ 'a', 'viewRecent%',  'Recent Reviews',        ZK\UI\Reviews::class ],
     [ 'a', 'searchReview%', 0,                      ZK\UI\Reviews::class ],
     [ 'a', 'addmgr',       'A-File',                ZK\UI\AddManager::class ],
-    [ 'u', 'editList%',    'My Playlists',          ZK\UI\Playlists::class ],
+    [ 'u', 'newList%',     'New Playlist',          ZK\UI\Playlists::class ],
     [ 'u', 'importExport', 'Import/Export',         ZK\UI\Playlists::class ],
     [ 'u', 'showLink',     'Link to Playlist',      ZK\UI\Playlists::class ],
     [ 'u', 'updateDJInfo', 'Edit Profile',          ZK\UI\Playlists::class ],
