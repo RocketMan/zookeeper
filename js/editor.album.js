@@ -133,7 +133,11 @@ $().ready(function() {
     }
 
     $("#search").keyup(function(e) { onSearch(document.forms[0], e); }).
-        keypress(function(e) { return e.keyCode != 13; });
+        keypress(function(e) { return e.keyCode != 13; }).
+        on('cut paste', function() {
+            // run on next tick, as pasted data is not yet in the field
+            setTimeout(onSearchNow, 0);
+        });
     $("#coll").click(function(e) { onSearch(document.forms[0], e); });
     $("#bup").click(scrollUp);
     $("#bdown").click(scrollDown);
