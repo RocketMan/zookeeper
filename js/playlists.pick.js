@@ -146,7 +146,9 @@ $().ready(function(){
     }
 
     function makeEditRow(isNew = 0) {
-        var tr = $("<tr>");
+        var tr = $("<tr>", {
+            class: 'selected'
+        });
         tr.append($("<td>"));
         tr.append($("<td>").append($("<input>", {
             class: 'description',
@@ -551,7 +553,7 @@ $().ready(function(){
         var edit = makeEditRow();
         setEditRow(edit, data);
         row.replaceWith(edit);
-        edit.css('background-color', '#eee').find("td input").first().focus();
+        edit.find("td input").first().focus();
         edit.find("button#save").on('click', function() {
             updatePlaylist($(this).closest('tr'));
         });
@@ -593,7 +595,7 @@ $().ready(function(){
         var edit = makeEditRow(true);
         setEditRow(edit, data);
         row.after(edit);
-        edit.css('background-color', '#eee').find("td input.time#start").focus().select();
+        edit.find("td input.time#start").focus().select();
         edit.find("button#save").on('click', function() {
             newPlaylist($(this).closest('tr'));
         });
@@ -659,7 +661,7 @@ $().ready(function(){
             var edit = makeEditRow(true);
             setEditRow(edit, response.data);
             $(".active-grid tbody").prepend(edit);
-            edit.css('background-color', '#eee').find("td input.time#start").focus().select();
+            edit.find("td input.time#start").focus().select();
             edit.find("button#save").on('click', function() {
                 newPlaylist($(this).closest('tr'));
             });
@@ -717,7 +719,6 @@ $().ready(function(){
         var row = makeEditRow(true);
         // prefill based on historical hint
         getHint(row);
-        row.css('background-color', '#eee');
         $(".active-grid tbody").prepend(row);
         row.find("td input").first().focus();
         row.find("button#save").on('click', function() {

@@ -1161,6 +1161,9 @@ div.toggle-time-entry div {
     outline: 0;
     margin: 0;
 }
+.playlist-grid tr.selected {
+    background-color: #eee;
+}
 .playlist-grid th {
     text-align: left;
     font-size: 14px;
