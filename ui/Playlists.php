@@ -454,7 +454,7 @@ class Playlists extends MenuItem {
         UI::emitJS("js/jquery.fxtime.js");
         UI::emitJS("js/playlists.pick.js");
         ?>
-        <div class='playlist-accordion'>
+        <div class='playlist-accordion' style='display: none'>
         <h3 style='margin-top: 0; padding-top: 0'>My Playlists</h2>
         <div class='active-playlist-container'>
         <div class='float-error'></div>
