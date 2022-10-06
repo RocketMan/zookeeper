@@ -1130,6 +1130,7 @@ div.toggle-time-entry div {
     color: #d83d04;
     font-size: 14pt;
     font-weight: bold;
+    margin-top: 0;
     margin-bottom: 5px;
     text-align: left;
     background-color: transparent;

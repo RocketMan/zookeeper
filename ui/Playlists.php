@@ -455,7 +455,7 @@ class Playlists extends MenuItem {
         UI::emitJS("js/playlists.pick.js");
         ?>
         <div class='playlist-accordion' style='display: none'>
-        <h3 style='margin-top: 0; padding-top: 0'>My Playlists</h2>
+        <h3>My Playlists</h3>
         <div class='active-playlist-container'>
         <div class='float-error'></div>
         <div class='newPlaylist'><button><span>+ Add New Playlist</span></button></div>
@@ -488,7 +488,7 @@ class Playlists extends MenuItem {
         </table>
         </div>
         </div>
-        <h3 style='margin-top: 0; padding-top: 0'>Deleted Playlists</h2>
+        <h3>Deleted Playlists</h3>
         <div class='deleted-playlist-container'>
         <table class='playlist-grid deleted-grid'>
         <colgroup>
