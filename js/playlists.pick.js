@@ -603,6 +603,7 @@ $().ready(function(){
             showUserError('');
             $(this).closest('tr').remove();
             if($('.active-grid tbody tr').length == 0) {
+                // hiding the header affects alignment, so just make it transparent
                 $('.active-grid thead th').css('color', 'transparent').css('border-color', 'transparent');
                 $('.active-grid tbody').append(makeNoneRow(0));
             }
@@ -669,6 +670,7 @@ $().ready(function(){
                 showUserError('');
                 $(this).closest('tr').remove();
                 if($('.active-grid tbody tr').length == 0) {
+                    // hiding the header affects alignment, so just make it transparent
                     $('.active-grid thead th').css('color', 'transparent').css('border-color', 'transparent');
                     $('.active-grid tbody').append(makeNoneRow(0));
                 }
@@ -728,7 +730,8 @@ $().ready(function(){
             showUserError('');
             $(this).closest('tr').remove();
             if($('.active-grid tbody tr').length == 0) {
-                $('.active-grid thead th').css('color', 'transparent');
+                // hiding the header affects alignment, so just make it transparent
+                $('.active-grid thead th').css('color', 'transparent').css('border-color', 'transparent');
                 $('.active-grid tbody').append(makeNoneRow(0));
             }
             editing = null;
