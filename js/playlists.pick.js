@@ -708,7 +708,7 @@ $().ready(function(){
         });
     }
 
-    $(".playlist-accordion").accordion({ heightStyle: 'fill' }).show();
+    $(".playlist-accordion").accordion({ heightStyle: 'fill' }).show().accordion('refresh');
     $(".newPlaylist button").on('click', function() {
         if (isEditing(true)) return;
 
