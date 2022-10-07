@@ -1197,6 +1197,12 @@ div.toggle-time-entry div {
     text-overflow: ellipsis;
     max-width: 160px;
 }
+.playlist-grid .airname, .playlist-grid .airname span {
+    white-space: nowrap;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+    max-width: 90px;
+}
 .playlist-grid input,
 .playlist-accordion.ui-accordion .ui-accordion-content input {
     font-size: 10pt;
