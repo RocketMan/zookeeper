@@ -100,18 +100,6 @@ class Playlists extends MenuItem {
             return false;
     }
     
-    // split ZK time range into an array of start/end ISO times.
-    private function zkTimeRangeToISOTimeAr($zkTimeRange) {
-        $retVal = ['',''];
-        $timeAr = explode("-", $zkTimeRange);
-        if (count($timeAr) == 2) {
-            $retVal[0] = substr($timeAr[0], 0, 2) . ':' . substr($timeAr[0], 2,4);
-            $retVal[1] = substr($timeAr[1], 0, 2) . ':' . substr($timeAr[1], 2,4);
-        }
-        
-        return $retVal;
-    }
-
     // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
     // returns empty string if invalid
     private function normalizeTime($t) {
@@ -702,37 +690,6 @@ class Playlists extends MenuItem {
     <?php
     }
 
-    private function emitTrackField($tag, $seltrack, $id) {
-        $matched = 0;
-        $track = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 100, $tag);
-        if(sizeof($track)>0) {
-            echo "      <SELECT NAME=ctrack>\n";
-            for($i = 0; $i < sizeof($track); $i++) {
-                if($track[$i]["track"] == $seltrack) {
-                    $matched = 1;
-                    $selected = " SELECTED";
-                } else
-                    $selected = "";
-                echo "        <OPTION VALUE=\"".$track[$i]["seq"]."\"$selected>".$track[$i]["seq"].". ".htmlentities($track[$i]["artist"])." - ".htmlentities($track[$i]["track"])."\n";
-            }
-        } else {
-            echo "      <SELECT NAME=track data-focus>\n";
-            $track = Engine::api(ILibrary::class)->search(ILibrary::TRACK_KEY, 0, 100, $tag);
-            for($i = 0; $i < sizeof($track); $i++) {
-                if($track[$i]["track"] == $seltrack) {
-                    $matched = 1;
-                    $selected = " SELECTED";
-                } else
-                    $selected = "";
-                echo "        <OPTION VALUE=\"".htmlentities($track[$i]["track"])."\"$selected>".$track[$i]["seq"].". ".htmlentities($track[$i]["track"])."\n";
-            }
-        }
-    
-        $selected = (($matched==0) && ($id!=0))?" SELECTED":"";
-        echo "        <OPTION VALUE=\"\"$selected> -- Enter Custom Track Title -- \n";
-        echo "      </SELECT>\n";
-    }
-    
     private function emitEditForm($playlistId, $id, $album, $track) {
     ?>
       <DIV class='playlistBanner'>&nbsp;Editing highlighted item</DIV>
@@ -1612,10 +1569,6 @@ class Playlists extends MenuItem {
         $this->emitPlaylistBody($playlistId, false);
     }
     
-    private function emitViewDJSortFn($a, $b) {
-        return strcasecmp($a["sort"], $b["sort"]);
-    }
-    
     private function emitViewDJAlbum(&$result, $class="", $count=0, $labelField="label") {
         for($i=0; $i < sizeof($result); $i++) {
             echo "  <TR><TD VALIGN=TOP ALIGN=\"right\"$class>";
@@ -1781,7 +1734,9 @@ class Playlists extends MenuItem {
         }
     
         if(isset($dj))
-            usort($dj, array($this, "emitViewDJSortFn"));
+            usort($dj, function($a, $b) {
+                return strcasecmp($a["sort"], $b["sort"]);
+            });
     
         for($j = 0; $j < $i; $j++) {
             $row = $dj[$j];
