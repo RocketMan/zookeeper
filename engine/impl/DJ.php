@@ -43,6 +43,14 @@ class DJImpl extends DBO implements IDJ {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
         $stmt->execute();
+
+        // remove reference to purged airnames in deleted playlists
+        $query = "UPDATE lists_del l " .
+                 "LEFT JOIN airnames a ON a.id = l.airname " .
+                 "SET l.airname = NULL " .
+                 "WHERE a.airname IS NULL";
+        $stmt = $this->prepare($query);
+        $stmt->execute();
     }
 
     public function getAirnames($user=0, $id=0, $noPrune=0) {
