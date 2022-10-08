@@ -442,12 +442,12 @@ class Playlists extends MenuItem {
         UI::emitJS("js/jquery.fxtime.js");
         UI::emitJS("js/playlists.pick.js");
         ?>
-        <div class='playlist-accordion' style='display: none'>
-        <h3>My Playlists</h3>
-        <div class='active-playlist-container'>
-        <div class='float-error'></div>
-        <div class='newPlaylist'><button><span>+ Add New Playlist</span></button></div>
-        <div>
+  <div class='playlist-accordion' style='display: none'>
+    <h3>My Playlists</h3>
+    <div class='active-playlist-container'>
+      <div class='float-error'></div>
+      <div class='newPlaylist'><button><span>+ Add New Playlist</span></button></div>
+      <div>
         <datalist class='airnames'>
         <?php echo $this->getDJAirNames(); ?>
         </datalist>
@@ -458,46 +458,44 @@ class Playlists extends MenuItem {
         <input type='hidden' id='max-airname-length' value='<?php
         echo IDJ::MAX_AIRNAME_LENGTH; ?>' />
         <table class='playlist-grid active-grid'>
+          <colgroup>
+            <col style='width: 55px'>
+            <col style='width: 170px'>
+            <col style='width: 100px'>
+            <col style='width: 90px'>
+            <col style='width: 70px'>
+            <col style='width: 12px'>
+            <col style='width: 70px'>
+            <col>
+          </colgroup>
+          <thead><tr>
+            <th></th><th>Show</th><th>DJ</th><th>Date</th><th>Start</th><th></th><th>End</th><th></th>
+            </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <h3>Deleted Playlists</h3>
+    <div class='deleted-playlist-container'>
+      <table class='playlist-grid deleted-grid'>
         <colgroup>
-                <col style='width: 55px'>
-                <col style='width: 170px'>
-                <col style='width: 100px'>
-                <col style='width: 90px'>
-                <col style='width: 70px'>
-                <col style='width: 12px'>
-                <col style='width: 70px'>
-                <col>
+          <col style='width: 65px'>
+          <col style='width: 170px'>
+          <col style='width: 100px'>
+          <col style='width: 90px'>
+          <col style='width: 70px'>
+          <col style='width: 12px'>
+          <col style='width: 70px'>
+          <col style='width: 90px'>
         </colgroup>
         <thead><tr>
-        <th></th><th>Show</th><th>DJ</th><th>Date</th><th>Start</th><th></th><th>End</th><th></th>
-        </tr></thead>
-        <tbody>
-        </tbody>
-        </table>
-        </div>
-        </div>
-        <h3>Deleted Playlists</h3>
-        <div class='deleted-playlist-container'>
-        <table class='playlist-grid deleted-grid'>
-        <colgroup>
-                <col style='width: 65px'>
-                <col style='width: 170px'>
-                <col style='width: 100px'>
-                <col style='width: 90px'>
-                <col style='width: 70px'>
-                <col style='width: 12px'>
-                <col style='width: 70px'>
-                <col style='width: 90px'>
-        </colgroup>
-        <thead><tr>
-        <th></th><th>Show</th><th>DJ</th><th>Date</th><th>Start</th><th></th><th>End</th><th>Expires</th>
-        </tr></thead>
-        <tbody>
-        </tbody>
-        </table>
-        </div>
-        </div>
-        <?php
+          <th></th><th>Show</th><th>DJ</th><th>Date</th><th>Start</th><th></th><th>End</th><th>Expires</th>
+          </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <?php
         if(isset($_POST["duplicate"]) && $_POST["duplicate"]) {
             echo "<input type='hidden' id='duplicate' value='" .
                     $_POST["playlist"] . "' />\n";
