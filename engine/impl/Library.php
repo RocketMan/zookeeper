@@ -180,6 +180,7 @@ class LibraryImpl extends DBO implements ILibrary {
                      "FROM colltracknames c, albumvol a LEFT JOIN publist p ".
                      "ON a.pubkey = p.pubkey WHERE c.tag = a.tag ".
                      "AND c.artist LIKE ? ".
+                     "GROUP BY c.tag ".
                      self::orderBy($sortBy).
                      "LIMIT ?, ?";
             $bindType = 4;
