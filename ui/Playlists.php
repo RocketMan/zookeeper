@@ -720,7 +720,7 @@ class Playlists extends MenuItem {
 
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
         $showName = $playlist['description'];
-        $djName = $playlist['airname'];
+        $djName = $playlist['airname'] ?? "None";
         $showDateTime = self::makeShowDateAndTime($playlist);
 
         $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
@@ -1536,7 +1536,7 @@ class Playlists extends MenuItem {
     private function emitPlaylistBanner($playlistId, $playlist, $editMode) {
         $showName = $playlist['description'];
         $djId = $playlist['id'];
-        $djName = $playlist['airname'];
+        $djName = $playlist['airname'] ?? "None";
         $showDateTime = self::makeShowDateAndTime($playlist);
 
         $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
@@ -1545,7 +1545,7 @@ class Playlists extends MenuItem {
             $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='action' VALUE='editList'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
 
         $dateDiv = "<DIV>".$showDateTime."&nbsp;</DIV>";
-        $djLink = "<A HREF='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' CLASS='nav2'>$djName</A>";
+        $djLink = $djId ? "<A HREF='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' CLASS='nav2'>$djName</A>" : $djName;
 
         echo "<DIV CLASS='playlistBanner'>&nbsp;" . $showName . " with " . $djLink.$dateDiv . "</DIV>\n";
     }
