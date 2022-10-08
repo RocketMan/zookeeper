@@ -536,7 +536,8 @@ class Playlists implements RequestHandlerInterface {
                 $aid = $djapi->getAirname($airname, $user);
                 if(!$aid) {
                     // if foreign and unchanged, keep it
-                    if($djapi->getAirname($airname, "") == $list['airname'])
+                    if($list['airname'] &&
+		            $djapi->getAirname($airname, "") == $list['airname'])
                         $aid = $list['airname'];
                     else {
                         // airname does not exist; try to create it
