@@ -55,9 +55,14 @@
  *   - max='hh:mm[:ss]'
  *         maximum time value (in 24-hour format)
  *
+ *   - required
+ *
  *   If 'min' and/or 'max' are specified, validation will be
  *   performed against the time value, and the pseudo-classes :valid
  *   and :invalid will be set on the element as appropriate.
+ *
+ *   If 'required' is specified, :valid will be set if and only
+ *   if a valid time value has been entered.
  *
  *
  * The following methods are available:
