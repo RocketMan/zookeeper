@@ -710,7 +710,15 @@ $().ready(function(){
         });
     }
 
+    $("div.content").css('overflow', 'visible');
     $(".playlist-accordion").accordion({ heightStyle: 'fill' }).show().accordion('refresh');
+    // 'overflow: visible' lets the popup menu render outside the parent;
+    // we have to do this after refresh, as accordion sets overflow style
+    // on the content element.
+    //
+    // 'padding-top' is a hack to prevent accordion shifting layout when
+    // opening and closing the content.
+    $(".active-playlist-container").css('overflow', 'visible').css('padding-top', '2px');
     $(".newPlaylist button").on('click', function() {
         if (isEditing(true)) return;
 
