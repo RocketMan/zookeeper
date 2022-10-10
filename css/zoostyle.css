@@ -1280,6 +1280,12 @@ div.toggle-time-entry div {
     text-align: center;
     border: none;
 }
+.playlist-grid-tooltip {
+    border: 1px solid #000 !important;
+    padding: 6px !important;
+    color: #000 !important;
+    background-color: #ffffe0 !important;
+}
 .mobileMenu {
     position: relative;
     display: inline-block;

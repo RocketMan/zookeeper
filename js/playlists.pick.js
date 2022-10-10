@@ -762,6 +762,18 @@ $().ready(function(){
     loadLists(maxresults, 0, 0);
     loadLists(maxresults, 0, 1);
 
+    $(document).tooltip({
+        items: 'td',
+        position: {
+            my: 'center top',
+            at: 'right bottom'
+        },
+        classes: {
+            'ui-tooltip': 'playlist-grid-tooltip'
+        },
+        show: true
+    });
+
     // the following are for Edit Profile
 
     $("#name").blur(function() {
