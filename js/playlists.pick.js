@@ -93,13 +93,13 @@ $().ready(function(){
         }).append($("<span>").html("Open"))));
         tr.append($("<td>", {
             class: 'description'
-        }).on('mouseover', function() {
+        }).on('mouseenter', function() {
             if(this.offsetWidth < this.scrollWidth)
                 this.setAttribute('title', list.attributes.name);
         }).append($("<span>").html(list.attributes.name)));
         tr.append($("<td>", {
             class: 'airname'
-        }).on('mouseover', function() {
+        }).on('mouseenter', function() {
             if(this.offsetWidth < this.scrollWidth)
                 this.setAttribute('title', list.attributes.airname);
         }).data('foreign', list.attributes.fairname).append($("<span>").html(list.attributes.airname)));
