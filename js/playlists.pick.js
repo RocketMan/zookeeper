@@ -120,7 +120,7 @@ $().ready(function(){
         }).append($("<a>", {
             class: 'listEdit nav action',
             title: 'Actions'
-        }).html('&#x2699')).append($("<div>", {
+        }).html('&#x2699;')).append($("<div>", {
             class: 'mobileMenuContent'
         }).append($("<button>", {
             class: 'pedit'
