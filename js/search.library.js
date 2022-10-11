@@ -381,8 +381,12 @@ function search(size, offset) {
     if(type != 'tracks')
         url += "&fields[album]=-tracks";
 
+    // For track search, limit the max results for the initial page,
+    // as the JSON:API counts track search results by track and not by
+    // album.  Thus, we are unable to slice a bigger result to size.
     if(size >= 0)
-        url += "&page[size]=" + size;
+        url += "&page[size]=" +
+                (type == 'tracks' ? Math.min(size, chunksize) : size);
 
     if(offset >= 0)
         url += "&page[offset]=" + offset;
