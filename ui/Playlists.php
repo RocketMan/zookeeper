@@ -50,7 +50,6 @@ class Playlists extends MenuItem {
         [ "viewListById", "emitViewPlaylist" ],
         [ "viewListDaysByDate", "handlePlaylistDaysByDate" ],
         [ "viewListsByDate", "handlePlaylistsByDate" ],
-        [ "newList", "emitNewListDeprecation" ],
         [ "editList", "emitListManager" ],
         [ "editListRestore", "listManagerRestore" ],
         [ "editListGetHint", "listManagerGetHint" ],
@@ -388,15 +387,6 @@ class Playlists extends MenuItem {
 
     public function viewDJReviews() {
         $this->newEntity(Search::class)->doSearch();
-    }
-
-    public function emitNewListDeprecation() {
-    ?>
-      <h1>New Playlist has moved!</h1>
-      <p>The playlist menu items have been consolidated into one screen.</p>
-      <p>Go to the <b>My Playlists</b> link at left for this and other playlist functions.</p>
-      <p class='sub'>(This message will be removed in the future.)</p>
-    <?php
     }
 
     public function listManagerRestore() {

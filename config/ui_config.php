@@ -38,7 +38,6 @@ $menu = [
     [ 'a', 'viewRecent%',  'Recent Reviews',        ZK\UI\Reviews::class ],
     [ 'a', 'searchReview%', 0,                      ZK\UI\Reviews::class ],
     [ 'a', 'addmgr',       'A-File',                ZK\UI\AddManager::class ],
-    [ 'u', 'newList%',     'New Playlist',          ZK\UI\Playlists::class ],
     [ 'u', 'editList%',    'My Playlists',          ZK\UI\Playlists::class ],
     [ 'u', 'importExport', 'Import/Export',         ZK\UI\Playlists::class ],
     [ 'u', 'showLink',     'Link to Playlist',      ZK\UI\Playlists::class ],
