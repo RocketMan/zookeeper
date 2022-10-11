@@ -55,9 +55,14 @@
  *   - max='hh:mm[:ss]'
  *         maximum time value (in 24-hour format)
  *
+ *   - required
+ *
  *   If 'min' and/or 'max' are specified, validation will be
  *   performed against the time value, and the pseudo-classes :valid
  *   and :invalid will be set on the element as appropriate.
+ *
+ *   If 'required' is specified, :valid will be set if and only
+ *   if a valid time value has been entered.
  *
  *
  * The following methods are available:
@@ -133,6 +138,7 @@
             if(val == null || val == '') {
                 var segs = Array(segCount).fill('--').join(':');
                 this.value = inst.value = segs + (intl ? '' : ' AM');
+                this.setCustomValidity(this.required ? 'required' : '');
                 return;
             }
 
@@ -151,6 +157,7 @@
                 this.value = inst.value = xval.slice(0, segCount)
                         .map(x => x.padStart(2, '0'))
                         .join(':') + (intl ? '' : ' ' + ampm);
+                validate(this);
             }
         });
     }
@@ -464,7 +471,7 @@
     function validate(ctl) {
         var time = newTime(getValue([ctl]));
         if(!time) {
-            ctl.setCustomValidity('');
+            ctl.setCustomValidity(ctl.required ? 'required' : '');
             return;
         }
 

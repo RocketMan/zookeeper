@@ -50,15 +50,11 @@ class Playlists extends MenuItem {
         [ "viewListById", "emitViewPlaylist" ],
         [ "viewListDaysByDate", "handlePlaylistDaysByDate" ],
         [ "viewListsByDate", "handlePlaylistsByDate" ],
-        [ "newList", "emitEditList" ],
-        [ "newListEditor", "emitEditor" ],
-        [ "newListPost", "handleListPost" ],
-        [ "editList", "emitEditListPicker" ],
-        [ "editListDelete", "handleDeleteListPost" ],
-        [ "editListDetails", "emitEditList" ],
-        [ "editListDetailsPost", "handleListPost" ],
+        [ "newList", "emitNewListDeprecation" ],
+        [ "editList", "emitListManager" ],
+        [ "editListRestore", "listManagerRestore" ],
+        [ "editListGetHint", "listManagerGetHint" ],
         [ "editListEditor", "emitEditor" ],
-        [ "editListRestore", "handleRestoreListPost" ],
         [ "importExport", "emitImportExportList" ],
         [ "showLink", "emitShowLink" ],
         [ "viewDJ", "emitViewDJ" ],
@@ -104,18 +100,6 @@ class Playlists extends MenuItem {
             return false;
     }
     
-    // split ZK time range into an array of start/end ISO times.
-    private function zkTimeRangeToISOTimeAr($zkTimeRange) {
-        $retVal = ['',''];
-        $timeAr = explode("-", $zkTimeRange);
-        if (count($timeAr) == 2) {
-            $retVal[0] = substr($timeAr[0], 0, 2) . ':' . substr($timeAr[0], 2,4);
-            $retVal[1] = substr($timeAr[1], 0, 2) . ':' . substr($timeAr[1], 2,4);
-        }
-        
-        return $retVal;
-    }
-
     // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
     // returns empty string if invalid
     private function normalizeTime($t) {
@@ -405,234 +389,125 @@ class Playlists extends MenuItem {
     public function viewDJReviews() {
         $this->newEntity(Search::class)->doSearch();
     }
-    
-    // emits the html & javascript to edit & create a new playlist.
-    // TODO: show error message if post was incorrect
-    private function emitEditListForm($airName, $description, $zkTimeRange, $date, $playlistId, $errorMsg) {
-        $isoDate = $date ? str_replace("/", "-", $date) : '';
-        $isoTimeAr = $this->zkTimeRangeToISOTimeAr($zkTimeRange);
-        $airNames = $this->getDJAirNames();
-        $foreignAirname = !empty($airName) && !preg_match("/\'$airName\'/", $airNames);
-        $duplicate = isset($_POST["duplicate"]) && $_POST["duplicate"];
-        $userAction = $duplicate ? "Create Duplicate " : ($playlistId ? "Edit " : "Create ");
-        ?>
 
-        <DIV CLASS='playlistBanner'>&nbsp; <?php echo $userAction;?> Playlist</DIV>
-        <span class='error'><?php echo $errorMsg; ?></span>
-
-        <FORM id='new-show' class='pl-form-entry' ACTION="?" METHOD=POST>
-            <div>
-                <label>Show Name:</label>
-                <input id='show-description' required name='description' size=30 maxlength=<?php echo IPlaylist::MAX_DESCRIPTION_LENGTH;?> value="<?php echo htmlentities(stripslashes($description));?>" data-focus/>
-            </div>
-            <div>
-                <label>Show Date:</label>
-                <INPUT id='show-date-picker' required type='date' value="<?php echo $duplicate?"":$isoDate;?>" />
-            </div>
-            <div>
-                <label>Start Time:</label>
-                <INPUT id='show-start' class='timepicker' step='60' required type='time' value="<?php echo $duplicate?"":$isoTimeAr[0]; ?>" NAME='fromtime' />
-            </div>
-            <div>
-                <label>End Time:</label>
-                <INPUT id='show-end' step='60' class='timepicker' required type='time' value="<?php echo $duplicate?"":$isoTimeAr[1]; ?>" NAME='totime' />
-            </div>
-            <div>
-                <label>Air Name:</label>
-                <INPUT id='show-airname' TYPE='text' LIST='airnames' NAME='airname' required autocomplete="off" maxlength=<?php echo IDJ::MAX_AIRNAME_LENGTH;?> VALUE='<?php
-                      echo (!is_null($airName)?
-                              $airName:($description?"None":"")) . "'";
-
-                      // disable airname field when reparenting
-                      //
-                      // we could use 'readonly', but it doesn't grey out
-                      // and is still focusable.  'disabled' gives what
-                      // we want, but as it does not submit its value, we
-                      // include the airname in an extra hidden field.
-                      if($foreignAirname)
-                          echo " disabled /><INPUT name='airname' type='hidden' value='$airName'"; ?> />
-                <DATALIST id='airnames'>
-                  <?php
-                      // if a vaultkeeper has reparented a playlist,
-                      // allow it to keep the existing airname
-                      if($foreignAirname)
-                          echo "<OPTION VALUE='$airName'>";
-                      echo $airNames; ?>
-                </DATALIST>
-            </div>
-            <div>
-                <label></label>
-                <INPUT id='edit-submit-but' TYPE=SUBMIT NAME=button VALUE="Create">
-            </div>
-
-            <INPUT id='show-date' TYPE=HIDDEN NAME='date' VALUE="">
-            <?php
-                if($duplicate)
-                    echo "<INPUT TYPE=HIDDEN NAME=duplicate id='duplicate' VALUE=1>\n";
-                // if action does not already end in 'Post', append it
-                $suffix = substr_compare($this->action, "Post", -4)?"Post":"";
-            ?>
-            <INPUT TYPE=HIDDEN NAME=action VALUE="<?php echo $this->action.$suffix; ?>">
-            <INPUT id='playlist-id' TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlistId;?>">
-            <INPUT id='timezone-offset' type=hidden value='<?php echo round(date('Z')/-60, 2); /* server TZ equivalent of javascript now.getTimezoneOffset() */ ?>'>
-        </FORM>
-
+    public function emitNewListDeprecation() {
+    ?>
+      <h1>New Playlist has moved!</h1>
+      <p>The playlist menu items have been consolidated into one screen.</p>
+      <p>Go to the <b>My Playlists</b> link at left for this and other playlist functions.</p>
+      <p class='sub'>(This message will be removed in the future.)</p>
     <?php
-        UI::emitJS('js/playlists.info.js');
     }
-    
-    // handles post for playlist creation and edit
-    public function handleListPost() {
-        $description = mb_substr(trim($_POST["description"]), 0, IPlaylist::MAX_DESCRIPTION_LENGTH);
-        $date = $_REQUEST["date"];
-        $fromtime = substr($_REQUEST["fromtime"], 0, 5);
-        $totime   = substr($_REQUEST["totime"], 0, 5);
-        $showTime = $this->composeTime($fromtime, $totime);
-        list($year, $month, $day) = explode("-", $date);
 
-        $goodDate = checkdate($month, $day, $year);
-        $goodTime = $showTime !== '';
-        $goodDescription = $description !== '';
-
-        $airname = mb_substr(trim($_REQUEST["airname"]), 0, IDJ::MAX_AIRNAME_LENGTH);
-        $goodAirname = $airname !== '';
-
-        if($goodDate && $goodTime && $goodDescription && $goodAirname) {
-            $playlistId = $_REQUEST["playlist"];
-            $update = isset($playlistId) && $playlistId > 0;
-            $duplicate = isset($_POST["duplicate"]) && $_POST["duplicate"];
-            if($update &&
-                    !($duplicate && $this->session->isAuth("v")) &&
-                    !$this->isOwner($playlistId)) {
-                $this->emitEditListError('access error');
-                return;
-            }
-
-            $api = Engine::api(IPlaylist::class);
-
-            // if this DJ already has a live playlist in-progress,
-            // rejoin it rather than creating a new live playlist
-            if(!$update && !$this->session->isAuth("v") && $api->isNowWithinShow(
-                    ["showdate" => $date, "showtime" => $showTime], false)) {
-                $onnow = $api->getWhatsOnNow()->fetch();
-                if($onnow && $onnow['dj'] == $this->session->getUser()) {
-                    echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
-                         "\$().ready(function(){".
-                         "location.href='?action=newListEditor&playlist=".
-                         $onnow['id']."';});\n".
-                         "// -->\n</SCRIPT>\n";
-                    return;
-                }
-            }
-
-            // process the airname
-            if(!strcasecmp($airname, "None")) {
-                // unpublished playlist
-                $aid = 0;
-            } else {
-                // if airname is unchanged, use it as-is
-                //
-                // this allows a vaultkeeper who has reparented another
-                // user's playlist to keep the existing airname on the list
-                if($update) {
-                    $playlist = $api->getPlaylist($playlistId, 1);
-                    if($playlist["airname"] == $airname)
-                        $aid = $playlist["id"];
-                }
-
-                // lookup airname for this DJ
-                $djapi = Engine::api(IDJ::class);
-                if(!isset($aid))
-                    $aid = $djapi->getAirname($airname, $this->session->getUser());
-                if(!$aid) {
-                    // airname does not exist; try to create it
-                    $success = $djapi->insertAirname($airname, $this->session->getUser());
-                    if($success > 0) {
-                        // success!
-                        $aid = $djapi->lastInsertId();
-                    } else {
-                        // airname creation failed
-                        // alert the user and re-display the form
-                        $errorMessage = "'$airname' is invalid or already exists.";
-                        $this->emitEditListError($errorMessage);
-                        return;
-                    }
-                }
-            }
-
-            if($update) {
-                if($duplicate) {
-                    $playlistId = $_REQUEST["playlist"] = $api->duplicatePlaylist($playlistId);
-                    $playlist = $api->getPlaylist($playlistId, 1);
-                    if($this->session->isAuth("v") && $this->session->getUser() != $playlist["dj"])
-                        $api->reparentPlaylist($playlistId, $this->session->getUser());
-                }
-
-                // update existing playlist
-                $success = $api->updatePlaylist(
-                        $playlistId, $date, $showTime, $description, $aid, $duplicate);
-
-                if($success)
-                    $this->lazyLoadImages($playlistId);
-
-                $action = "editListEditor";
-            } else {
-                // create new playlist
-                $success = $api->insertPlaylist(
-                         $this->session->getUser(),
-                         $date, $showTime, $description, $aid);
-
-                $playlistId = $success?$api->lastInsertId():0;
-                $action = "newListEditor";
-            }
-
-            if($success) {
-                PushServer::sendAsyncNotification();
-
-                // force browser nav to new/edit playlist so subsequent
-                // reloads in the track editor work as expected
-                echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
-                     "\$().ready(function(){".
-                     "location.href='?action=$action&playlist=".
-                     $playlistId."';});\n".
-                     "// -->\n</SCRIPT>\n";
-                return;
-            } else {
-                $this->emitEditListError("Internal error.  Try again.");
-            }
-        } else {
-            $errMsg = "Missing field";
-            if ($goodDate == false)
-                $errMsg = "Invalid date " . $date;
-            else if ($goodTime == false)
-                $errMsg = "Invalid time range (min 1/4 hour, max 6 hours) " . $fromtime . " - " . $totime;
-
-            $this->emitEditListError($errMsg);
+    public function listManagerRestore() {
+        $playlistId = $_POST["playlist"] ?? null;
+        if($playlistId && $this->isOwner($playlistId)) {
+            Engine::api(IPlaylist::class)->restorePlaylist($playlistId);
+            PushServer::sendAsyncNotification();
         }
     }
 
-    // emitEditList functionality if there are errors
-    protected function emitEditListError($errMsg="") {
-        $description = $_REQUEST["description"];
-        $date = $_REQUEST["date"];
-        $airname = $_REQUEST["airname"];
-        $playlistId = $_REQUEST["playlist"];
-        $button = $_REQUEST["button"];
-        $fromtime = substr($_REQUEST["fromtime"], 0, 5);
-        $totime   = substr($_REQUEST["totime"], 0, 5);
-        $showTime = $this->composeTime($fromtime, $totime);
+    public function listManagerGetHint() {
+        $hint = null;
+        $now = new \DateTime("now");
+        $today = $now->format("Y-m-d");
+        $lastWeek = $now->modify("-7 day")->format("Y-m-d");
 
-        if($errMsg)
-            $errMsg = "<B><FONT CLASS='error'>$errMsg</FONT></B>";
+        // see if there is a PL on this day last week. if so use it.
+        $playlists = Engine::api(IPlaylist::class)->getPlaylists(1, 1, "", 1, $this->session->getUser(), 1, 10);
+        $djapi = Engine::api(IDJ::class);
+        while ($playlists && ($playlist = $playlists->fetch())) {
+            // skip duplicated lists with foreign airnames
+            $aid = $djapi->getAirname($playlist['airname'], $this->session->getUser());
+            if(!$aid)
+                continue;
 
-        $this->emitEditListForm($airname, $description, $showTime, $date, $playlistId, $errMsg);
+            if ($playlist['showdate'] == $lastWeek) {
+                $sourcePlaylist = $playlist;
+                $sourcePlaylist['showdate'] = $today;
+                $hint = [
+                    "attributes" => [
+                        "name" => $sourcePlaylist["description"],
+                        "airname" => $sourcePlaylist["airname"],
+                        "date" => $sourcePlaylist["showdate"],
+                        "time" => $sourcePlaylist["showtime"]
+                    ]
+                ];
+                break;
+            }
+        }
+        echo $hint ? json_encode($hint) : "{}";
+    }
+
+    public function emitListManager() {
+        UI::emitJS("js/jquery.fxtime.js");
+        UI::emitJS("js/playlists.pick.js");
+        ?>
+  <div class='playlist-accordion' style='display: none'>
+    <h3>My Playlists</h3>
+    <div class='active-playlist-container'>
+      <div class='float-error'></div>
+      <div class='newPlaylist'><button><span>+ Add New Playlist</span></button></div>
+      <div>
+        <datalist class='airnames'>
+        <?php echo $this->getDJAirNames(); ?>
+        </datalist>
+        <input type='hidden' id='duplicate-suffix' value='<?php
+        echo IPlaylist::DUPLICATE_SUFFIX; ?>' />
+        <input type='hidden' id='max-description-length' value='<?php
+        echo IPlaylist::MAX_DESCRIPTION_LENGTH; ?>' />
+        <input type='hidden' id='max-airname-length' value='<?php
+        echo IDJ::MAX_AIRNAME_LENGTH; ?>' />
+        <table class='playlist-grid active-grid'>
+          <colgroup>
+            <col style='width: 55px'>
+            <col style='width: 170px'>
+            <col style='width: 100px'>
+            <col style='width: 90px'>
+            <col style='width: 70px'>
+            <col style='width: 12px'>
+            <col style='width: 70px'>
+            <col>
+          </colgroup>
+          <thead><tr>
+            <th></th><th>Show</th><th>DJ</th><th>Date</th><th>Start</th><th></th><th>End</th><th></th>
+            </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <h3>Deleted Playlists</h3>
+    <div class='deleted-playlist-container'>
+      <table class='playlist-grid deleted-grid'>
+        <colgroup>
+          <col style='width: 65px'>
+          <col style='width: 170px'>
+          <col style='width: 100px'>
+          <col style='width: 90px'>
+          <col style='width: 70px'>
+          <col style='width: 12px'>
+          <col style='width: 70px'>
+          <col style='width: 90px'>
+        </colgroup>
+        <thead><tr>
+          <th></th><th>Show</th><th>DJ</th><th>Date</th><th>Start</th><th></th><th>End</th><th>Expires</th>
+          </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <?php
+        if(isset($_POST["duplicate"]) && $_POST["duplicate"]) {
+            echo "<input type='hidden' id='duplicate' value='" .
+                    $_POST["playlist"] . "' />\n";
+        }
     }
 
     private function getDJAirNames() {
         $airNames = '';
-        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
+        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, 1);
         while ($records && ($row = $records->fetch())) {
-           $newItem = "<OPTION VALUE='".$row['airname']."'>";
+           $newItem = "<OPTION VALUE='".htmlentities($row['airname'], ENT_QUOTES, 'UTF-8')."'>";
            $airNames .= $newItem;
         }
 
@@ -640,147 +515,6 @@ class Playlists extends MenuItem {
         return $airNames."\n";
     }
 
-    // build the form used to add/modify playlist meta data
-    public function emitEditList() {
-        $playlistId = $_REQUEST["playlist"];
-        $description = '';
-        $date = '';
-        $time = '';
-        $airName = '';
-
-        $sourcePlaylist = null;
-        $api = Engine::api(IPlaylist::class);
-        if(isset($playlistId) && $playlistId > 0) {
-            $sourcePlaylist = $api->getPlaylist($playlistId, 1);
-        } else {
-            $now = new \DateTime("now");
-            $today = $now->format("Y-m-d");
-            $lastWeek = $now->modify("-7 day")->format("Y-m-d");
-
-            // see if there is a PL on this day last week. if so use it.
-            $playlists = $api->getPlaylists(1, 1, "", 1, $this->session->getUser(), 1, 10);
-            $djapi = Engine::api(IDJ::class);
-            while ($playlists && ($playlist = $playlists->fetch())) {
-                // skip duplicated lists with foreign airnames
-                $aid = $djapi->getAirname($playlist['airname'], $this->session->getUser());
-                if(!$aid)
-                    continue;
-
-                if ($playlist['showdate'] == $lastWeek) {
-                    $sourcePlaylist = $playlist;
-                    $sourcePlaylist['showdate'] = $today;
-                    break;
-                }
-            }
-        }
-
-        if ($sourcePlaylist) {
-            $description = $sourcePlaylist['description'];
-            $date = $sourcePlaylist['showdate'];
-            $time = $sourcePlaylist['showtime'];
-            $airName = $sourcePlaylist['airname'];
-
-            if(isset($_POST["duplicate"]) && $_POST["duplicate"]) {
-                $suffix = preg_replace_callback("/%([^%]*)%/",
-                    function($matches) use ($date) {
-                        return \DateTime::createFromFormat(
-                            IPlaylist::TIME_FORMAT,
-                            $date . " 0000")->format($matches[1]);
-                    }, IPlaylist::DUPLICATE_SUFFIX);
-                if(mb_strlen($description) + mb_strlen($suffix) > IPlaylist::MAX_DESCRIPTION_LENGTH)
-                    $description = mb_substr($description, 0, IPlaylist::MAX_DESCRIPTION_LENGTH - mb_strlen($suffix) - 3) . "...";
-                $description .= $suffix;
-            }
-        }
-
-        $this->emitEditListForm($airName, $description, $time, $date, $playlistId, null);
-    }
-
-    private function restorePlaylist($playlist) {
-        Engine::api(IPlaylist::class)->restorePlaylist($playlist);
-    }
-    
-    private function getDeletedPlaylistCount() {
-        return Engine::api(IPlaylist::class)->getDeletedPlaylistCount($this->session->getUser());
-    }
-
-    public function handleDeleteListPost() {
-        $playlistId = $_POST["playlist"];
-        if(isset($playlistId) && $this->isOwner($playlistId)) {
-            Engine::api(IPlaylist::class)->deletePlaylist($playlistId);
-            PushServer::sendAsyncNotification();
-        }
-
-        $this->emitEditListPicker();
-    }
-
-    public function handleRestoreListPost() {
-        $playlistId = $_POST["playlist"];
-        if(isset($playlistId) && $this->isOwner($playlistId)) {
-            $this->restorePlaylist($playlistId);
-            PushServer::sendAsyncNotification();
-        }
-
-        $this->emitEditListPicker();
-    }
-
-    // emit form for selecting a playlist for editing, deletion or undelete.
-    public function emitEditListPicker() {
-        UI::emitJS("js/playlists.pick.js");
-        $activePlaylists = Engine::api(IPlaylist::class)->getListsSelNormal($this->session->getUser());
-        $playlists = "";
-        $activeCount = 0;
-        while($activePlaylists && ($row = $activePlaylists->fetch())) {
-            $playlists = $playlists . "<OPTION VALUE='$row[0]'>$row[1] -- $row[3]</OPTION>";
-
-           $activeCount++;
-        }
-
-        $deletedPlaylists = Engine::api(IPlaylist::class)->getListsSelDeleted($this->session->getUser());
-        $deletedOptions = '';
-        $deletedCount = 0;
-        while($deletedPlaylists && ($row = $deletedPlaylists->fetch())) {
-            $deletedOptions .= "<OPTION VALUE='$row[0]'>$row[1] -- $row[3] (expires $row[4])";
-            $deletedCount++;
-        }
-        $typeVisibility = strlen($deletedOptions) == 0 ? 'zk-hidden' : '';
-        ?>
-
-        <div CLASS='playlistBanner'>&nbsp; Select Playlist</div>
-        <div class='form-entry <?php echo $typeVisibility; ?>' >
-            <label>Type:</label>
-            <select id='list-type-picker'>
-                <option value='active-type'>Active</option>
-                <option value='deleted-type'>Deleted</option>
-            </select>
-        </div>
-
-        <form class='pl-form zk-hidden' id='deleted-form' ACTION="?" METHOD=POST>
-        <B>Deleted Playlists (<?php echo $deletedCount; ?>):</B><BR>
-        <select sytle='width:400px' name=playlist size=10>
-            <?php echo $deletedOptions; ?>
-        </select>
-        <div style='margin-top:4px'>
-            <input TYPE=SUBMIT VALUE=" Restore ">
-        </div>
-        <input TYPE=hidden name=action VALUE="editListRestore">
-        </form>
-      
-        <form class='pl-form' id='active-form' ACTION="?" METHOD=POST>
-            <B>Active Playlists (<?php echo $activeCount; ?>):</B><BR>
-            <select id='active-list-picker' style='width:400px' name=playlist SIZE=10 data-focus>
-                <?php echo $playlists; ?>
-            </select>
-            <div style='margin-top:4px'>
-                <input TYPE=SUBMIT VALUE=" Edit ">&nbsp;&nbsp;&nbsp;
-                <input TYPE=SUBMIT NAME="duplicate" VALUE="Duplicate">&nbsp;&nbsp;&nbsp;
-                <input id='delete-list' TYPE=BUTTON VALUE="Delete">
-            </div>
-            <input id='action-type' TYPE=hidden name=action VALUE="editListDetails">
-        </form>
-        <?php
-    }
-    
     private function makeEditDiv($entry, $playlist) {
         $href = "?playlist=" . $playlist . "&amp;id=" .
                 $entry->getId() . "&amp;action=" . $this->action . "&amp;";
@@ -955,37 +689,6 @@ class Playlists extends MenuItem {
     <?php
     }
 
-    private function emitTrackField($tag, $seltrack, $id) {
-        $matched = 0;
-        $track = Engine::api(ILibrary::class)->search(ILibrary::COLL_KEY, 0, 100, $tag);
-        if(sizeof($track)>0) {
-            echo "      <SELECT NAME=ctrack>\n";
-            for($i = 0; $i < sizeof($track); $i++) {
-                if($track[$i]["track"] == $seltrack) {
-                    $matched = 1;
-                    $selected = " SELECTED";
-                } else
-                    $selected = "";
-                echo "        <OPTION VALUE=\"".$track[$i]["seq"]."\"$selected>".$track[$i]["seq"].". ".htmlentities($track[$i]["artist"])." - ".htmlentities($track[$i]["track"])."\n";
-            }
-        } else {
-            echo "      <SELECT NAME=track data-focus>\n";
-            $track = Engine::api(ILibrary::class)->search(ILibrary::TRACK_KEY, 0, 100, $tag);
-            for($i = 0; $i < sizeof($track); $i++) {
-                if($track[$i]["track"] == $seltrack) {
-                    $matched = 1;
-                    $selected = " SELECTED";
-                } else
-                    $selected = "";
-                echo "        <OPTION VALUE=\"".htmlentities($track[$i]["track"])."\"$selected>".$track[$i]["seq"].". ".htmlentities($track[$i]["track"])."\n";
-            }
-        }
-    
-        $selected = (($matched==0) && ($id!=0))?" SELECTED":"";
-        echo "        <OPTION VALUE=\"\"$selected> -- Enter Custom Track Title -- \n";
-        echo "      </SELECT>\n";
-    }
-    
     private function emitEditForm($playlistId, $id, $album, $track) {
     ?>
       <DIV class='playlistBanner'>&nbsp;Editing highlighted item</DIV>
@@ -1018,7 +721,7 @@ class Playlists extends MenuItem {
 
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
         $showName = $playlist['description'];
-        $djName = $playlist['airname'];
+        $djName = $playlist['airname'] ?? "None";
         $showDateTime = self::makeShowDateAndTime($playlist);
 
         $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
@@ -1382,7 +1085,7 @@ class Playlists extends MenuItem {
             $this->lazyLoadImages($playlist);
 
             $_REQUEST["playlist"] = $playlist;
-            $this->action = "newListEditor";
+            $this->action = "editListEditor";
             $this->emitEditor();
         }
     }
@@ -1464,7 +1167,7 @@ class Playlists extends MenuItem {
 
                     // display the editor
                     $_REQUEST["playlist"] = $playlist;
-                    $this->action = "newListEditor";
+                    $this->action = "editListEditor";
                     $this->emitEditor();
                     $displayForm = false;
                 } else
@@ -1834,16 +1537,16 @@ class Playlists extends MenuItem {
     private function emitPlaylistBanner($playlistId, $playlist, $editMode) {
         $showName = $playlist['description'];
         $djId = $playlist['id'];
-        $djName = $playlist['airname'];
+        $djName = $playlist['airname'] ?? "None";
         $showDateTime = self::makeShowDateAndTime($playlist);
 
         $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
 
         if(!$editMode && $this->session->isAuth("v"))
-            $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='action' VALUE='editListDetails'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
+            $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='action' VALUE='editList'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
 
         $dateDiv = "<DIV>".$showDateTime."&nbsp;</DIV>";
-        $djLink = "<A HREF='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' CLASS='nav2'>$djName</A>";
+        $djLink = $djId ? "<A HREF='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' CLASS='nav2'>$djName</A>" : $djName;
 
         echo "<DIV CLASS='playlistBanner'>&nbsp;" . $showName . " with " . $djLink.$dateDiv . "</DIV>\n";
     }
@@ -1863,10 +1566,6 @@ class Playlists extends MenuItem {
 
         $this->emitPlaylistBanner($playlistId, $row, false);
         $this->emitPlaylistBody($playlistId, false);
-    }
-    
-    private function emitViewDJSortFn($a, $b) {
-        return strcasecmp($a["sort"], $b["sort"]);
     }
     
     private function emitViewDJAlbum(&$result, $class="", $count=0, $labelField="label") {
@@ -2034,7 +1733,9 @@ class Playlists extends MenuItem {
         }
     
         if(isset($dj))
-            usort($dj, array($this, "emitViewDJSortFn"));
+            usort($dj, function($a, $b) {
+                return strcasecmp($a["sort"], $b["sort"]);
+            });
     
         for($j = 0; $j < $i; $j++) {
             $row = $dj[$j];

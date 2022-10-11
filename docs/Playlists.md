@@ -19,6 +19,8 @@ be found here.
 * date
 * time
 * airname
+* fairname (true if airname does not belong to playlist owner, false otherwise)
+* expires (expiration date, present only for deleted playlists)
 * rebroadcast
 * events -- array of zero or more:
   * type (one of `break`, `comment`, `logEvent`, `spin`)
@@ -52,11 +54,17 @@ form `filter[_field_]=_value_`.  Possible fields are listed below.
 
   * date
   * id
+  * user
   * match(event)
 
 `date` may have the value 'onNow', which returns the curently on-air
-playlist, if any.  The 'match' keyword indicates a full-text search
-against artist, album, or label of any spin.
+playlist, if any.  `user` may have the value 'self' for the
+currently authenticated user.  The 'match' keyword indicates a
+full-text search against artist, album, or label of any spin.
+
+The query string parameter `deleted=1` may be supplied to return only
+deleted but not yet purged playlists.  In this case, the `expires`
+property will be set for each playlist in the response.
 
 Pagination is supported only for match.  Sorting is not supported.
 

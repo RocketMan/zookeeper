@@ -208,16 +208,8 @@ class UIController implements IController {
   <?php UI::emitJS('js/jquery.min.js'); ?>
   <?php UI::emitJS('js/jquery.tablesorter.min.js'); ?>
 
-  <!-- pull down date & time pickers if browser is stupid -->
   <SCRIPT TYPE="text/javascript"><!--
     <?php ob_start([JSMin::class, 'minify']); ?>
-    var datefield=document.createElement("input");
-    datefield.setAttribute("type", "date");
-    if (datefield.type!="date") {
-        document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css" />');
-        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"><\/script>');
-    }
-
     // polyfill String.padStart as needed
     if(!String.prototype.padStart) {
         document.write('<script src="https://polyfill.io/v3/polyfill.min.js?features=String.prototype.padStart"><\/script>');

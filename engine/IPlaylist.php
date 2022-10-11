@@ -105,8 +105,9 @@ interface IPlaylist {
     function deletePlaylist($playlist);
     function restorePlaylist($playlist);
     function purgeDeletedPlaylists($days=30);
+    function getNormalPlaylistCount($user);
     function getDeletedPlaylistCount($user);
-    function getListsSelNormal($user);
-    function getListsSelDeleted($user);
+    function getListsSelNormal($user, $pos = 0, $count = 10000);
+    function getListsSelDeleted($user, $pos = 0, $count = 10000);
     function isListDeleted($id);
 }
