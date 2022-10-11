@@ -768,9 +768,6 @@ $().ready(function(){
             my: 'center top',
             at: 'right bottom'
         },
-        classes: {
-            'ui-tooltip': 'playlist-grid-tooltip'
-        },
         show: true
     });
 

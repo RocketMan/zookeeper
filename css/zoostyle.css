@@ -1280,12 +1280,6 @@ div.toggle-time-entry div {
     text-align: center;
     border: none;
 }
-.playlist-grid-tooltip {
-    border: 1px solid #000 !important;
-    padding: 6px !important;
-    color: #000 !important;
-    background-color: #ffffe0 !important;
-}
 .mobileMenu {
     position: relative;
     display: inline-block;
@@ -1360,6 +1354,16 @@ a.listEdit {
 
 .fxtime {
     font-family: monospace;
+}
+
+/* try to make tooltip ui more consistent with browser defaults */
+.ui-tooltip {
+    border: 1px solid #000 !important;
+    border-radius: 0 !important;
+    padding: 6px !important;
+    color: #000 !important;
+    background-color: #ffffe0 !important;
+    box-shadow: none !important;
 }
 
 .ui-autocomplete {
