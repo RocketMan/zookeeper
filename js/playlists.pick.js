@@ -367,10 +367,9 @@ $().ready(function(){
         var more = meta.total;
         if(more > 0) {
             var offset = meta.offset;
-            var tr = $("<TR>");
-            var td = $("<TD>", {
-                colSpan: 8
-            }).append("&nbsp;&nbsp;");
+            var ul = $("<ul>", {
+                class: 'pagination'
+            });
 
             var count = data.data.length;
             if(count < more) {
@@ -379,7 +378,6 @@ $().ready(function(){
                 var start = ((page / numchunks) | 0) * numchunks;
                 if(start == 0) start = 1;
 
-                td.append('&nbsp;&nbsp;');
                 for(var i=0; i<=numchunks+1; i++) {
                     var cur = (start + i);
                     var low = (cur - 1) * chunksize; // scope for closure
@@ -387,25 +385,27 @@ $().ready(function(){
                     if(low >= more)
                         break;
                     if(offset >= low && offset < hi)
-                        td.append('<B>' + cur + '</B>&nbsp;&nbsp;');
+                        ul.append($("<li>").text(cur));
                     else {
-                        var a = $("<A>", {
+                        var a = $("<a>", {
                             class: 'nav',
                             href: '#'
-                        }).append('<B>' + cur + '</B>').click((function(low) {
+                        }).text(cur).click((function(low) {
                             return function() {
                                 loadLists(chunksize, low, deleted);
                                 return false;
                             }
                         })(low));
-                        td.append(a).append('&nbsp;&nbsp;');
+                        ul.append($("<li>").append(a));
                     }
                 }
                 if((start + i - 1) * chunksize < more)
-                    td.append("<B>...</B>");
+                    ul.append($("<li>").text("..."));
             }
-            tr.append(td);
-            table.append(tr);
+
+            table.append($("<tr>").append($("<td>", {
+                colSpan: 8
+            }).append(ul)));
         }
     }
 

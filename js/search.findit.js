@@ -34,10 +34,9 @@ function emitMore(table, response, data, type) {
                     links.meta.more : links.meta.total;
     if(more > 0) {
         var offset = links.meta.offset;
-        var tr = $("<TR>").append(indent());
-        var td = $("<TD>", {
-            colSpan: 3
-        });
+        var ul = $("<ul>", {
+            class: 'pagination'
+        }).css('margin', 'auto');
 
         if(!response.all) {
             var chunksize = 15, numchunks = 10;
@@ -45,7 +44,6 @@ function emitMore(table, response, data, type) {
             var start = ((page / numchunks) | 0) * numchunks;
             if(start == 0) start = 1;
 
-            td.append('&nbsp;&nbsp;');
             for(var i=0; i<=numchunks+1; i++) {
                 var cur = (start + i);
                 var low = (cur - 1) * chunksize; // scope for closure
@@ -53,41 +51,42 @@ function emitMore(table, response, data, type) {
                 if(low >= more)
                     break;
                 if(offset >= low && offset < hi)
-                    td.append('<B>' + cur + '</B>&nbsp;&nbsp;');
+                    ul.append($("<li>").text(cur));
                 else {
-                    var a = $("<A>", {
+                    var a = $("<a>", {
                         class: 'nav',
                         href: '#'
-                    }).append('<B>' + cur + '</B>').click((function(low) {
+                    }).text(cur).click((function(low) {
                         return function() {
                             search(type, links.href, chunksize, low);
                             return false;
                         }
                     })(low));
-                    td.append(a).append('&nbsp;&nbsp;');
+                    ul.append($("<li>").append(a));
                 }
             }
             if((start + i - 1) * chunksize < more)
-                td.append("<B>...</B>");
+                ul.append($("<li>").text("..."));
         } else {
             var offset = -1, size = -1; // scope for closure
             if(more > 25) {
                 offset = 0;
                 size = 15;
             }
-            var a = $("<A>", {
+            var a = $("<a>", {
                 class: 'nav',
-                href: '#'
-            }).append('<B>' + more + ' more...</B>').click((function(size, offset) {
+                href: '#',
+            }).text(more + ' more...').click((function(size, offset) {
                 return function() {
                     search(type, links.href, size, offset);
                     return false;
                 }
             })(size, offset));
-            td.append(a);
+            ul.append($("<li>").css('width', 'auto').append(a));
         }
-        tr.append(td);
-        table.append(tr);
+        table.append($("<tr>").append(indent()).append($("<td>", {
+            colSpan: 3
+        }).append(ul)));
     }
 }
 
