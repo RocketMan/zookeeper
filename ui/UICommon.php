@@ -193,6 +193,36 @@ class UICommon {
     }
 
     /**
+     * polyfill for intl `Locale::acceptFromHttp`
+     *
+     * @param $header HTTP Accept-Language header
+     * @return best available locale from the header
+     */
+    public static function acceptFromHttp($header) {
+        $locales = [];
+        foreach(explode(',', $header) as $locale) {
+            $parts = explode(';', $locale);
+            $weight = count($parts) == 2 ? explode('=', $parts[1])[1] : 1;
+            $locales[] = [ $parts[0], $weight ];
+        }
+
+        usort($locales, function($a, $b) {
+            return $b[1] <=> $a[1];
+        });
+
+        // Accept-Language encodes locales with a hyphen (RFC 4646),
+        // whilst PHP Locale functions return an underscore
+        return str_replace('-', '_', $locales[0][0]);
+    }
+
+    /**
+     * convenience method to get best locale from the current request
+     */
+    public static function getClientLocale() {
+        return self::acceptFromHttp($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en-US');
+    }
+
+    /**
      * decorate the specified asset for cache control
      *
      * @param asset path to target asset

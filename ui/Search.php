@@ -213,9 +213,8 @@ class Search extends MenuItem {
             echo htmlentities($artist) . "</B></TD>";
         echo "<TD>&nbsp;</TD>" .
              "<TD ALIGN=RIGHT>Added:</TD><TD class='date'><B>";
-        list ($year, $month, $day) = explode("-", $albums[0]["created"]);
-    
-        echo "$month/$year</B></TD></TR>\n";
+        $created = new \DateTime($albums[0]["created"]);
+        echo $created->format("M Y") . "</B></TD></TR>\n";
         echo "  <TR><TD ALIGN=RIGHT>Label:</TD><TD><B>";
         if($albums[0]["pubkey"]) {
             echo "<A HREF=\"".

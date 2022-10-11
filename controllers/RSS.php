@@ -93,7 +93,8 @@ class RSS extends CommandTarget implements IController {
             }
     
             list($y, $m, $d) = explode("-", $endDate);
-            $formatDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
+            $dateSpec = UI::getClientLocale() == 'en_US' ? 'l, F j, Y' : 'l, j F Y';
+            $formatDate = date($dateSpec, mktime(0,0,0,$m,$d,$y));
             $title .= "for the week ending $formatDate";
     
             $output = "<p>Rank. ARTIST <i>ALBUM</i> (LABEL)</p>\n";
@@ -180,6 +181,8 @@ class RSS extends CommandTarget implements IController {
 
        $title = "$station Music Reviews";
     
+       $dateSpec = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
+
        echo "<channel>\n<title>$title</title>\n";
        echo "<link>".Engine::getBaseUrl()."?action=viewRecent</link>\n";
        echo "<description>Recent album reviews by $station DJs</description>\n";
@@ -230,7 +233,7 @@ class RSS extends CommandTarget implements IController {
           echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=reviews\">$title</source>\n";
           $time = strtotime($row[3]);
           echo "<pubDate>".date("r", $time)."</pubDate>\n";
-          echo "<zk:subtitle>Reviewed ".date("F j, Y", $time)."</zk:subtitle>\n</item>\n";
+          echo "<zk:subtitle>Reviewed ".date($dateSpec, $time)."</zk:subtitle>\n</item>\n";
        }
        echo "</channel>\n";
     }
@@ -242,7 +245,8 @@ class RSS extends CommandTarget implements IController {
             $title = "$station Adds ";
     
             list($y, $m, $d) = explode("-", $addDate);
-            $formatDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
+            $dateSpec = UI::getClientLocale() == 'en_US' ? 'l, F j, Y' : 'l, j F Y';
+            $formatDate = date($dateSpec, mktime(0,0,0,$m,$d,$y));
             $title .= "for $formatDate";
     
             $output = "<p>Num (Charts) ARTIST <i>Album</i> (Label)</p>\n";

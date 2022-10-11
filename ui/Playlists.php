@@ -393,7 +393,8 @@ class Playlists extends MenuItem {
         if ($time == null || $time == '') {
             return "";
         } else {
-            return date('D M d, Y ', strtotime($time));
+            $dateSpec = UI::getClientLocale() == 'en_US' ? 'D M d, Y ' : 'D d M Y ';
+            return date($dateSpec, strtotime($time));
         }
     }
 
@@ -2113,10 +2114,8 @@ class Playlists extends MenuItem {
     
             echo "<TABLE class='recentAirplay' CELLPADDING=2 CELLSPACING=0 BORDER=0>\n";
     
-            // Setup date format differently if plays extend into another year
-            $now = getdate(time());
-            list($y,$m,$d) = explode("-", $plays[sizeof($plays)-1]["showdate"]);
-            $dateSpec = ($y == $now["year"])?"D, d M":"D, d M y";
+            // Setup date format based on locale
+            $dateSpec = UI::getClientLocale() == 'en_US' ? 'M d, Y' : 'd M Y';
     
             // Ensure we have an even number of plays
             if(sizeof($plays)%2)
@@ -2133,7 +2132,7 @@ class Playlists extends MenuItem {
                 $play = $plays[$idx];
     
                 if($play["description"]) {
-                    $showDate = date('M d, Y', strtotime($play["showdate"]));
+                    $showDate = date($dateSpec, strtotime($play["showdate"]));
                     $showLink = "<A HREF='".
                          "?action=viewDJ&amp;playlist=".$play["id"].
                          "&amp;seq=selList'>".$play["description"]."</A>";
