@@ -331,7 +331,7 @@ td.label-form {
     background-color: #2530a7;
 }
 .editorChooser {
-    width: 220px;
+    width: 218px;
     border-width: 1px;
     overflow: hidden;
     scrollbar-width: none;
@@ -1369,6 +1369,22 @@ ul.pagination li a {
     display: block;
 }
 
+ul.listbox {
+    list-style-type: none;
+    border: 1px solid #ccc;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    cursor: default;
+}
+ul.listbox li {
+    margin: 0;
+    padding: 2px;
+    white-space: nowrap;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+}
+
 .fxtime {
     font-family: monospace;
 }
@@ -1398,6 +1414,7 @@ ul.pagination li a {
 .ui-autocomplete.ui-widget .ui-menu-item {
     cursor: default;
 }
+ul.listbox .state-active,
 .ui-autocomplete .ui-menu-item-wrapper.ui-state-active {
     color: #000;
     background: #ccc;

@@ -35,15 +35,24 @@
  *
  */
 
-var items, links;
+var items, links, timer;
 
 function htmlify(s) {
     return s != null?s.replace(/&/g, '&amp;').replace(/</g, '&lt;'):'';
 }
 
-function changeList() {
-    var list = $("#list");
-    var index = list.prop('selectedIndex');
+function getSelectedIndex(list) {
+    return list.find('.state-active').index();
+}
+
+function setSelectedIndex(list, idx) {
+    list.find('li')
+        .removeClass('state-active')
+        .eq(idx).addClass('state-active');
+}
+
+function changeList(list) {
+    var index = getSelectedIndex(list);
     changeSel(index);
     for(var key in items[0].attributes) {
         var field = $("#"+key);
@@ -67,10 +76,9 @@ function changeList() {
     }
 }
 
-function upDown(e) {
-    var list = $("#list");
-    var index = list.prop('selectedIndex');
-    var length = list.find("option").length;
+function upDown(list, e) {
+    var index = getSelectedIndex(list);
+    var length = list.find('li').length;
     if(e.keyCode == 33 && index == 0) {
         // page up
         scrollUp();
@@ -87,52 +95,54 @@ function upDown(e) {
     return true;
 }
 
-function onSearch(sync, e) {
+function onSearch(list, e) {
     if(e.type == 'keyup' && (e.keyCode == 33 || e.keyCode == 34 ||
                              e.keyCode == 38 || e.keyCode == 40)) {
+        var length = list.find('li').length;
         switch(e.keyCode) {
         case 33:
             // page up
-            if(sync.list.selectedIndex == 0) {
-                upDown(e);
+            if(getSelectedIndex(list) == 0) {
+                upDown(list, e);
                 return;
             }
-            sync.list.selectedIndex = 0;
+            setSelectedIndex(list, 0);
             break;
         case 38:
             // line up
-            if(sync.list.selectedIndex == 0) {
-                upDown(e);
+            if(getSelectedIndex(list) == 0) {
+                upDown(list, e);
                 return;
             }
-            sync.list.selectedIndex--;
+            setSelectedIndex(list, getSelectedIndex(list) - 1);
             break;
         case 34:
             // page down
-            if(sync.list.selectedIndex == sync.list.length-1) {
-                upDown(e);
+            if(getSelectedIndex(list) == length - 1) {
+                upDown(list, e);
                 return;
             }
-            sync.list.selectedIndex = sync.list.length-1;
+            setSelectedIndex(list, length - 1);
             break;
         case 40:
             // line down
-            if(sync.list.selectedIndex == sync.list.length-1) {
-                upDown(e);
+            if(getSelectedIndex(list) == length - 1) {
+                upDown(list, e);
                 return;
             }
-            sync.list.selectedIndex++;
+            setSelectedIndex(list, getSelectedIndex(list) + 1);
             break;
         }
-        changeList();
+        changeList(list);
+        e.preventDefault();
         return;
     }
 
-    if(sync.Timer) {
-        clearTimeout(sync.Timer);
-        sync.Timer = null;
+    if(timer) {
+        clearTimeout(timer);
+        timer = null;
     }
-    sync.Timer = setTimeout('onSearchNow()', 250);
+    timer = setTimeout(onSearchNow, 250);
 }
 
 $().ready(function() {

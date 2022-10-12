@@ -47,8 +47,12 @@ function paginateAlbums(op, url) {
             links = response.links;
             items = response.data;
             items.forEach(function(obj) {
-                var option = $('<option/>');
-                option.val(obj.id).text(obj.attributes.artist);
+                var option = $('<li>');
+                option.text(obj.attributes.artist)
+                    .on('click', function() {
+                        setSelectedIndex(list, $(this).index());
+                        changeList(list);
+                    });
                 list.append(option);
                 obj.attributes.tag = obj.id;
                 if(obj.relationships != null) {
@@ -70,18 +74,18 @@ function paginateAlbums(op, url) {
             switch(op) {
             case 'prevLine':
             case 'prevPage':
-                list.prop('selectedIndex', 0);
+                setSelectedIndex(list, 0);
                 break;
             case 'nextLine':
             case 'nextPage':
-                list.prop('selectedIndex', items.length - 1);
+                setSelectedIndex(list, items.length - 1);
                 break;
             default:
-                list.prop('selectedIndex', items.length / 2);
+                setSelectedIndex(list, items.length / 2);
                 break;
             }
 
-            changeList();
+            changeList(list);
         },
         error: function (jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
@@ -132,14 +136,20 @@ $().ready(function() {
         $("#search").focus();
     }
 
-    $("#search").keyup(function(e) { onSearch(document.forms[0], e); }).
-        keypress(function(e) { return e.keyCode != 13; }).
-        on('cut paste', function() {
-            // run on next tick, as pasted data is not yet in the field
-            setTimeout(onSearchNow, 0);
-        });
-    $("#coll").click(function(e) { onSearch(document.forms[0], e); });
+    var list = $("#list").on('keyup', function(e) {
+        onSearch(list, e);
+    });
+    $("#search").on('keyup', function(e) {
+        onSearch(list, e);
+    }).on('keypress', function(e) {
+        return e.keyCode != 13;
+    }).on('cut paste', function() {
+        // run on next tick, as pasted data is not yet in the field
+        setTimeout(onSearchNow, 0);
+    });
+    $("#coll").click(function(e) {
+        onSearch(list, e);
+    });
     $("#bup").click(scrollUp);
     $("#bdown").click(scrollDown);
-    $("#list").keydown(upDown).change(changeList);
 });

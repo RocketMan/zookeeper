@@ -478,7 +478,6 @@ class Editor extends MenuItem {
         $this->skipVar("go");
         $this->skipVar("search");
         $this->skipVar("coll");
-        $this->skipVar("list");
         $this->skipVar("up");
         $this->skipVar("down");
         $this->skipVar("seltag");
@@ -532,7 +531,6 @@ class Editor extends MenuItem {
         $this->skipVar("format");
         $this->skipVar("location");
         $this->skipVar("bin");
-        $this->skipVar("list");
         $this->skipVar("up");
         $this->skipVar("down");
         $this->skipVar("edit");
@@ -562,7 +560,6 @@ class Editor extends MenuItem {
         $this->skipVar("bdown_y");
         $this->skipVar("go");
         $this->skipVar("search");
-        $this->skipVar("list");
         $this->skipVar("up");
         $this->skipVar("down");
         $this->skipVar("lnew");
@@ -599,7 +596,6 @@ class Editor extends MenuItem {
         $this->skipVar("attention");
         $this->skipVar("maillist");
         $this->skipVar("mailcount");
-        $this->skipVar("list");
         $this->skipVar("up");
         $this->skipVar("down");
         $this->skipVar("edit");
@@ -612,7 +608,6 @@ class Editor extends MenuItem {
         $this->trackForm();
         $this->skipVar("nextTrack");
         $this->skipVar("more");
-        $this->skipVar("list");
         $this->skipVar("up");
         $this->skipVar("down");
         $this->skipVar("edit");
@@ -773,12 +768,10 @@ class Editor extends MenuItem {
          echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH='100%'>";
          echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Artist or Tag number:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE='width:214px;' NAME=search id='search' VALUE='$osearch' autocomplete=off><BR>\n";
          echo "<SPAN CLASS='sub'>compilation?</SPAN><INPUT TYPE=CHECKBOX NAME=coll" . ($osearch&&$_REQUEST["coll"]?" CHECKED":"") . " id='coll'></TD><TD></TD></TR>\n";
-         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME='bup' id='bup' VALUE='&and;' TYPE='submit' CLASS='editorUp'><BR><SELECT class='editorChooser' NAME=list id='list' SIZE=$this->limit>\n";
-
+         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME='bup' id='bup' VALUE='&and;' TYPE='submit' CLASS='editorUp'><UL tabindex='0' class='listbox editorChooser' id='list'>\n";
          for($i=0; $i<$this->limit; $i++)
-              echo "  <OPTION VALUE=''>\n";
-
-         echo "</SELECT><BR><INPUT NAME='bdown' id='bdown' VALUE='&or;' TYPE='submit' CLASS='editorDown' ></TD>\n";
+             echo "  <LI>&nbsp;\n";
+         echo "</UL><INPUT NAME='bdown' id='bdown' VALUE='&or;' TYPE='submit' CLASS='editorDown' ></TD>\n";
          echo "</TR></TABLE>\n";
          echo "  <INPUT TYPE=HIDDEN id='list-size' VALUE='$this->limit'>\n";
     ?>
@@ -921,14 +914,14 @@ class Editor extends MenuItem {
     private function emitLabelSel() {
          UI::emitJS('js/editor.label.js');
     
-        echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH='100%'><TR><TD VALIGN=TOP WIDTH=230>\n";
+        echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH='100%'><TR><TD VALIGN=TOP WIDTH=220>\n";
         echo "  <INPUT TYPE=HIDDEN NAME=selpubkey id='selpubkey' VALUE='".$_REQUEST["selpubkey"]."'>\n";
         echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH='100%'>";
         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Label Name:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE='width:214px;' NAME=search id='search' VALUE='$osearch' autocomplete=off></TD></TR>\n";
-        echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME='bup' id='bup' VALUE='&and;' TYPE='submit' CLASS='editorUp'><BR><SELECT class='editorChooser' NAME=list id='list' SIZE=$this->limit>\n";
+        echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME='bup' id='bup' VALUE='&and;' TYPE='submit' CLASS='editorUp'><UL tabindex='0' class='listbox editorChooser' id='list'>\n";
         for($i=0; $i<$this->limit; $i++)
-            echo "  <OPTION VALUE=''>\n";
-        echo "</SELECT><BR><INPUT NAME='bdown' id='bdown' VALUE='&or;' TYPE='submit' CLASS='editorDown'></TD>\n";
+            echo "  <LI>&nbsp;\n";
+        echo "</UL><INPUT NAME='bdown' id='bdown' VALUE='&or;' TYPE='submit' CLASS='editorDown'></TD>\n";
         echo "</TR></TABLE>\n";
         echo "  <INPUT TYPE=HIDDEN id='list-size' VALUE='$this->limit'>\n";
         echo "  <INPUT TYPE=HIDDEN id='seltag' VALUE='".$_REQUEST["seltag"]."'>\n";
