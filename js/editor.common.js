@@ -78,17 +78,16 @@ function changeList(list) {
 
 function upDown(list, e) {
     var index = getSelectedIndex(list);
-    var length = list.find('li').length;
     if(e.keyCode == 33 && index == 0) {
         // page up
         scrollUp();
-    } else if(e.keyCode == 34 && index == length-1) {
+    } else if(e.keyCode == 34 && index == items.length - 1) {
         // page down
         scrollDown();
     } else if(e.keyCode == 38 && index == 0) {
         // line up
         lineUp();
-    } else if(e.keyCode == 40 && index == length-1) {
+    } else if(e.keyCode == 40 && index == items.length - 1) {
         // line down
         lineDown();
     }
@@ -98,7 +97,6 @@ function upDown(list, e) {
 function onSearch(list, e) {
     if(e.type == 'keyup' && (e.keyCode == 33 || e.keyCode == 34 ||
                              e.keyCode == 38 || e.keyCode == 40)) {
-        var length = list.find('li').length;
         switch(e.keyCode) {
         case 33:
             // page up
@@ -118,15 +116,15 @@ function onSearch(list, e) {
             break;
         case 34:
             // page down
-            if(getSelectedIndex(list) == length - 1) {
+            if(getSelectedIndex(list) == items.length - 1) {
                 upDown(list, e);
                 return;
             }
-            setSelectedIndex(list, length - 1);
+            setSelectedIndex(list, items.length - 1);
             break;
         case 40:
             // line down
-            if(getSelectedIndex(list) == length - 1) {
+            if(getSelectedIndex(list) == items.length - 1) {
                 upDown(list, e);
                 return;
             }
