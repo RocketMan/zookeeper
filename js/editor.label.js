@@ -54,6 +54,10 @@ function paginateLabels(op, url) {
                 obj.attributes.pubkey = obj.id;
             });
 
+            var delta = $("#list-size").val() - items.length;
+            for(var i=0; i<delta; i++)
+                list.append($("<li>").html("&nbsp;"));
+
             switch(op) {
             case 'prevLine':
             case 'prevPage':
