@@ -336,7 +336,8 @@ td.label-form {
     overflow: hidden;
     scrollbar-width: none;
 }
-.editorChooser:focus {
+.editorChooser:focus-visible {
+    box-shadow: -2px -18px 0 0 #536779, 2px 18px 0 0 #536779, -2px 18px 0 0 #536779, 2px -18px 0 0 #536779;
     outline: 0;
 }
 
