@@ -55,7 +55,6 @@ class Playlists extends MenuItem {
         [ "editListGetHint", "listManagerGetHint" ],
         [ "editListEditor", "emitEditor" ],
         [ "importExport", "emitImportExportList" ],
-        [ "showLink", "emitShowLink" ],
         [ "viewDJ", "emitViewDJ" ],
         [ "viewDJReviews", "viewDJReviews" ],
         [ "updateDJInfo", "updateDJInfo" ],
@@ -1327,87 +1326,6 @@ class Playlists extends MenuItem {
     <?php 
             break;
         }
-    }
-    public function emitShowLink() {
-        UI::emitJS("js/playlists.pick.js");
-
-        $validate = $_POST["validate"];
-        $playlist = $_REQUEST["playlist"];
-        $airname = $_REQUEST["airname"];
-    
-        if($validate && ($playlist == "all" || $airname)) {
-            $airnames = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), $airname)->asArray();
-            if(sizeof($airnames) == 1) {
-                // User has only one airname; show the link now
-                $row = $airnames[0];
-    ?>
-    <B>Here is the URL to access all of <?php echo $row[1];?>'s playlists:</B>
-    <P CLASS="sub"><B>
-    <?php echo UI::getBaseUrl();?>?action=viewDJ&amp;seq=selUser&amp;viewuser=<?php echo $row[0];?>
-    </B></P>
-    <P>Cut-and-paste the above URL to provide direct access to your playlists.</P>
-    <?php 
-           } else {
-                // User has multiple airnames; let them pick one
-    ?>
-    <FORM ACTION="?" METHOD=POST>
-    <B>Select Airname:</B><BR>
-    <TABLE CELLPADDING=0 BORDER=0><TR><TD>
-    <SELECT NAME=airname SIZE=10 data-focus>
-    <?php 
-                foreach($airnames as $row) {
-                    echo "  <OPTION VALUE=\"$row[0]\">$row[1]\n";
-                }
-    ?>
-    </SELECT></TD></TR>
-    <TR><TD>
-    <INPUT TYPE=SUBMIT VALUE=" Show URL ">
-    <INPUT TYPE=HIDDEN NAME=action VALUE="showLink">
-    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
-    </TD></TR></TABLE>
-    </FORM>
-    <?php 
-           }
-           return;
-        } else if($validate && $playlist) {
-    ?>
-    <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
-    <TR><TD VALIGN=TOP>
-    <B>Here is the URL for this playlist:</B>
-    <P CLASS="sub"><B>
-    <?php echo UI::getBaseUrl();?>?action=viewDJ&amp;seq=selList&amp;playlist=<?php echo $playlist;?>
-    </B></P>
-    <P>Cut-and-paste the above URL to provide direct access to this playlist.</P>
-    </TD></TR>
-    <TR><TD>&nbsp;</TD></TR>
-    <TR><TD>
-    <HR>
-    <?php      $this->viewList($playlist, "showLink"); ?>
-    </TD></TR>
-    </TABLE>
-    <?php 
-            return;
-        }
-    ?>
-    <FORM ACTION="?" METHOD=POST>
-    <B>Select Playlist:</B><BR>
-    <TABLE CELLPADDING=0 BORDER=0><TR><TD>
-    <SELECT NAME=playlist SIZE=10 data-focus>
-      <OPTION VALUE="all"> -- URL for all of my playlists --
-    <?php 
-        // Run the query
-        $records = Engine::api(IPlaylist::class)->getPlaylists(1, 0, 0, 0, $this->session->getUser());
-        while($records && ($row = $records->fetch()))
-            echo "  <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3]\n";
-    ?>
-    </SELECT></TD></TR>
-    <TR><TD>
-    <INPUT TYPE=SUBMIT VALUE=" Show URL ">
-    <INPUT TYPE=HIDDEN NAME=action VALUE="showLink">
-    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
-    </TD></TR></TABLE>
-    </FORM>
-    <?php 
     }
     
     private function makeAlbumLink($entry, $includeLabel) {
