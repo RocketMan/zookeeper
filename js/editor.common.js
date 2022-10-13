@@ -136,11 +136,13 @@ function onSearch(list, e) {
         return;
     }
 
-    if(timer) {
+    if(timer)
         clearTimeout(timer);
+
+    timer = setTimeout(function() {
         timer = null;
-    }
-    timer = setTimeout(onSearchNow, 250);
+        onSearchNow();
+    }, 250);
 }
 
 $().ready(function() {
