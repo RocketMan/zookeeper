@@ -131,6 +131,12 @@ $().ready(function() {
         // run on next tick, as pasted data is not yet in the field
         setTimeout(onSearchNow, 0);
     });
-    $("#bup").click(scrollUp);
-    $("#bdown").click(scrollDown);
+    $("#bup").on('click', function() {
+        $("#list").focus();
+        return scrollUp();
+    });
+    $("#bdown").on('click', function() {
+        $("#list").focus();
+        return scrollDown();
+    });
 });

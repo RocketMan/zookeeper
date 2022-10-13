@@ -154,6 +154,12 @@ $().ready(function() {
     $("#coll").click(function(e) {
         onSearch(list, e);
     });
-    $("#bup").click(scrollUp);
-    $("#bdown").click(scrollDown);
+    $("#bup").on('click', function() {
+        $("#list").focus();
+        return scrollUp();
+    });
+    $("#bdown").on('click', function() {
+        $("#list").focus();
+        return scrollDown();
+    });
 });
