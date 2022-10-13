@@ -768,7 +768,7 @@ class Editor extends MenuItem {
          echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH='100%'>";
          echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Artist or Tag number:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE='width:214px;' NAME=search id='search' VALUE='$osearch' autocomplete=off><BR>\n";
          echo "<SPAN CLASS='sub'>compilation?</SPAN><INPUT TYPE=CHECKBOX NAME=coll" . ($osearch&&$_REQUEST["coll"]?" CHECKED":"") . " id='coll'></TD><TD></TD></TR>\n";
-         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME='bup' id='bup' VALUE='&and;' TYPE='submit' CLASS='editorUp'><UL tabindex='0' class='listbox editorChooser' id='list'>\n";
+         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME='bup' id='bup' VALUE='&and;' TYPE='submit' CLASS='editorUp'><UL tabindex='0' class='listbox editorChooser no-text-select' id='list'>\n";
          for($i=0; $i<$this->limit; $i++)
              echo "  <LI>&nbsp;\n";
          echo "</UL><INPUT NAME='bdown' id='bdown' VALUE='&or;' TYPE='submit' CLASS='editorDown' ></TD>\n";
@@ -918,7 +918,7 @@ class Editor extends MenuItem {
         echo "  <INPUT TYPE=HIDDEN NAME=selpubkey id='selpubkey' VALUE='".$_REQUEST["selpubkey"]."'>\n";
         echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH='100%'>";
         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Label Name:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE='width:214px;' NAME=search id='search' VALUE='$osearch' autocomplete=off></TD></TR>\n";
-        echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME='bup' id='bup' VALUE='&and;' TYPE='submit' CLASS='editorUp'><UL tabindex='0' class='listbox editorChooser' id='list'>\n";
+        echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT NAME='bup' id='bup' VALUE='&and;' TYPE='submit' CLASS='editorUp'><UL tabindex='0' class='listbox editorChooser no-text-select' id='list'>\n";
         for($i=0; $i<$this->limit; $i++)
             echo "  <LI>&nbsp;\n";
         echo "</UL><INPUT NAME='bdown' id='bdown' VALUE='&or;' TYPE='submit' CLASS='editorDown'></TD>\n";

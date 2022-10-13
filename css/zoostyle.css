@@ -1117,14 +1117,17 @@ div.toggle-time-entry div {
     height: 10px;
 }
 
-.playlist-accordion.ui-accordion {
-    height: 520px;
+.no-text-select {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+.playlist-accordion.ui-accordion {
+    height: 520px;
 }
 .playlist-accordion.ui-accordion .ui-accordion-header {
     color: #d83d04;
