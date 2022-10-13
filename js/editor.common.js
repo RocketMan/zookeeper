@@ -96,8 +96,13 @@ function upDown(list, e) {
 
 function onSearch(list, e) {
     if(e.type == 'keyup' && (e.keyCode == 33 || e.keyCode == 34 ||
-                             e.keyCode == 38 || e.keyCode == 40)) {
+                             e.keyCode == 38 || e.keyCode == 40 ||
+                             e.keyCode == 9 || e.keyCode == 16)) {
         switch(e.keyCode) {
+        case 9:
+        case 16:
+            // tab/shift
+            return;
         case 33:
             // page up
             if(getSelectedIndex(list) == 0) {
