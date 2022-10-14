@@ -35,15 +35,24 @@
  *
  */
 
-var items, links;
+var items, links, timer;
 
 function htmlify(s) {
     return s != null?s.replace(/&/g, '&amp;').replace(/</g, '&lt;'):'';
 }
 
-function changeList() {
-    var list = $("#list");
-    var index = list.prop('selectedIndex');
+function getSelectedIndex(list) {
+    return list.find('.state-active').index();
+}
+
+function setSelectedIndex(list, idx) {
+    list.find('li')
+        .removeClass('state-active')
+        .eq(idx).addClass('state-active');
+}
+
+function changeList(list) {
+    var index = getSelectedIndex(list);
     changeSel(index);
     for(var key in items[0].attributes) {
         var field = $("#"+key);
@@ -67,72 +76,81 @@ function changeList() {
     }
 }
 
-function upDown(e) {
-    var list = $("#list");
-    var index = list.prop('selectedIndex');
-    var length = list.find("option").length;
+function upDown(list, e) {
+    var index = getSelectedIndex(list);
     if(e.keyCode == 33 && index == 0) {
         // page up
         scrollUp();
-    } else if(e.keyCode == 34 && index == length-1) {
+    } else if(e.keyCode == 34 && index == items.length - 1) {
         // page down
         scrollDown();
     } else if(e.keyCode == 38 && index == 0) {
         // line up
         lineUp();
-    } else if(e.keyCode == 40 && index == length-1) {
+    } else if(e.keyCode == 40 && index == items.length - 1) {
         // line down
         lineDown();
     }
     return true;
 }
 
-function onSearch(sync, e) {
-    if(e.type == 'keyup' && (e.keyCode == 33 || e.keyCode == 34 ||
-                             e.keyCode == 38 || e.keyCode == 40)) {
-        switch(e.keyCode) {
-        case 33:
-            // page up
-            if(sync.list.selectedIndex == 0) {
-                upDown(e);
-                return;
-            }
-            sync.list.selectedIndex = 0;
-            break;
-        case 38:
-            // line up
-            if(sync.list.selectedIndex == 0) {
-                upDown(e);
-                return;
-            }
-            sync.list.selectedIndex--;
-            break;
-        case 34:
-            // page down
-            if(sync.list.selectedIndex == sync.list.length-1) {
-                upDown(e);
-                return;
-            }
-            sync.list.selectedIndex = sync.list.length-1;
-            break;
-        case 40:
-            // line down
-            if(sync.list.selectedIndex == sync.list.length-1) {
-                upDown(e);
-                return;
-            }
-            sync.list.selectedIndex++;
-            break;
-        }
-        changeList();
-        return;
+/**
+ * returns true if key changes input value, undefined otherwise
+ */
+function onKeyDown(list, e) {
+    if(timer) {
+        clearTimeout(timer);
+        timer = null;
     }
 
-    if(sync.Timer) {
-        clearTimeout(sync.Timer);
-        sync.Timer = null;
+    switch(e.keyCode) {
+    case 33:
+        // page up
+        if(getSelectedIndex(list) == 0) {
+            upDown(list, e);
+            return;
+        }
+        setSelectedIndex(list, 0);
+        break;
+    case 38:
+        // line up
+        if(getSelectedIndex(list) == 0) {
+            upDown(list, e);
+            return;
+        }
+        setSelectedIndex(list, getSelectedIndex(list) - 1);
+        break;
+    case 34:
+        // page down
+        if(getSelectedIndex(list) == items.length - 1) {
+            upDown(list, e);
+            return;
+        }
+        setSelectedIndex(list, items.length - 1);
+        break;
+    case 40:
+        // line down
+        if(getSelectedIndex(list) == items.length - 1) {
+            upDown(list, e);
+            return;
+        }
+        setSelectedIndex(list, getSelectedIndex(list) + 1);
+        break;
+    case 9:  // tab
+    case 16: // shift
+    case 35: // end
+    case 36: // home
+    case 37: // arrow left
+    case 39: // arrow right
+        // key does not change the input
+        return;
+    default:
+        // all keys not otherwise handled change the input
+        return true;
     }
-    sync.Timer = setTimeout('onSearchNow()', 250);
+
+    changeList(list);
+    e.preventDefault();
 }
 
 $().ready(function() {
@@ -323,6 +341,40 @@ $().ready(function() {
                 }
             }
         }
+    });
+
+    var list = $("#list").on('keydown', function(e) {
+        onKeyDown(list, e);
+    });
+
+    $("#search").on('keydown', function(e) {
+        if(onKeyDown(list, e)) {
+            // input has changed; schedule a search
+            timer = setTimeout(function() {
+                timer = null;
+                onSearchNow();
+            }, 250);
+        }
+    }).on('keypress', function(e) {
+        return e.keyCode != 13;
+    }).on('cut paste', function() {
+        if(!timer) {
+            // run on next tick, as pasted data is not yet in the field
+            setTimeout(onSearchNow, 0);
+        }
+    });
+
+    $("#coll").click(function() {
+        onSearchNow();
+    });
+
+    $("#bup").on('click', function() {
+        list.focus();
+        return scrollUp();
+    });
+    $("#bdown").on('click', function() {
+        list.focus();
+        return scrollDown();
     });
 
     $("*[data-focus]").focus();

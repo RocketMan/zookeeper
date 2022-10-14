@@ -331,12 +331,13 @@ td.label-form {
     background-color: #2530a7;
 }
 .editorChooser {
-    width: 220px;
+    width: 218px;
     border-width: 1px;
     overflow: hidden;
     scrollbar-width: none;
 }
-.editorChooser:focus {
+.editorChooser:focus-visible {
+    box-shadow: -2px -18px 0 0 #536779, 2px 18px 0 0 #536779, -2px 18px 0 0 #536779, 2px -18px 0 0 #536779;
     outline: 0;
 }
 
@@ -1117,14 +1118,17 @@ div.toggle-time-entry div {
     height: 10px;
 }
 
-.playlist-accordion.ui-accordion {
-    height: 520px;
+.no-text-select {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+.playlist-accordion.ui-accordion {
+    height: 520px;
 }
 .playlist-accordion.ui-accordion .ui-accordion-header {
     color: #d83d04;
@@ -1369,6 +1373,22 @@ ul.pagination li a {
     display: block;
 }
 
+ul.listbox {
+    list-style-type: none;
+    border: 1px solid #ccc;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    cursor: default;
+}
+ul.listbox li {
+    margin: 0;
+    padding: 1px 2px;
+    white-space: nowrap;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+}
+
 .fxtime {
     font-family: monospace;
 }
@@ -1398,6 +1418,7 @@ ul.pagination li a {
 .ui-autocomplete.ui-widget .ui-menu-item {
     cursor: default;
 }
+ul.listbox .state-active,
 .ui-autocomplete .ui-menu-item-wrapper.ui-state-active {
     color: #000;
     background: #ccc;

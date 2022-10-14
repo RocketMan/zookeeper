@@ -44,27 +44,35 @@ function paginateLabels(op, url) {
             links = response.links;
             items = response.data;
             items.forEach(function(obj) {
-                var option = $('<option/>');
-                option.val(obj.id).text(obj.attributes.name);
+                var option = $('<li>');
+                option.text(obj.attributes.name)
+                    .on('mousedown', function() {
+                        setSelectedIndex(list, $(this).index());
+                        changeList(list);
+                    });
                 list.append(option);
                 obj.attributes.pubkey = obj.id;
             });
 
+            var delta = $("#list-size").val() - items.length;
+            for(var i=0; i<delta; i++)
+                list.append($("<li>").html("&nbsp;"));
+
             switch(op) {
             case 'prevLine':
             case 'prevPage':
-                list.prop('selectedIndex', 0);
+                setSelectedIndex(list, 0);
                 break;
             case 'nextLine':
             case 'nextPage':
-                list.prop('selectedIndex', items.length - 1);
+                setSelectedIndex(list, items.length - 1);
                 break;
             default:
-                list.prop('selectedIndex', items.length / 2);
+                setSelectedIndex(list, items.length / 2);
                 break;
             }
 
-            changeList();
+            changeList(list);
         },
         error: function (jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
@@ -111,14 +119,4 @@ $().ready(function() {
         getLabels('page[before]=');
         $("#search").focus();
     }
-
-    $("#search").keyup(function(e) { onSearch(document.forms[0], e); }).
-        keypress(function(e) { return e.keyCode != 13; }).
-        on('cut paste', function() {
-            // run on next tick, as pasted data is not yet in the field
-            setTimeout(onSearchNow, 0);
-        });
-    $("#bup").click(scrollUp);
-    $("#bdown").click(scrollDown);
-    $("#list").keydown(upDown).change(changeList);
 });
