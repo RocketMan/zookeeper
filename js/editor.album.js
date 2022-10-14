@@ -139,27 +139,4 @@ $().ready(function() {
         getAlbums('page[before]=');
         $("#search").focus();
     }
-
-    var list = $("#list").on('keyup', function(e) {
-        onSearch(list, e);
-    });
-    $("#search").on('keyup', function(e) {
-        onSearch(list, e);
-    }).on('keypress', function(e) {
-        return e.keyCode != 13;
-    }).on('cut paste', function() {
-        // run on next tick, as pasted data is not yet in the field
-        setTimeout(onSearchNow, 0);
-    });
-    $("#coll").click(function(e) {
-        onSearch(list, e);
-    });
-    $("#bup").on('click', function() {
-        $("#list").focus();
-        return scrollUp();
-    });
-    $("#bdown").on('click', function() {
-        $("#list").focus();
-        return scrollDown();
-    });
 });

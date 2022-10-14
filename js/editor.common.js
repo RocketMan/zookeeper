@@ -94,60 +94,60 @@ function upDown(list, e) {
     return true;
 }
 
-function onSearch(list, e) {
-    if(e.type == 'keyup' && (e.keyCode == 33 || e.keyCode == 34 ||
-                             e.keyCode == 38 || e.keyCode == 40 ||
-                             e.keyCode == 9 || e.keyCode == 16)) {
-        switch(e.keyCode) {
-        case 9:
-        case 16:
-            // tab/shift
-            return;
-        case 33:
-            // page up
-            if(getSelectedIndex(list) == 0) {
-                upDown(list, e);
-                return;
-            }
-            setSelectedIndex(list, 0);
-            break;
-        case 38:
-            // line up
-            if(getSelectedIndex(list) == 0) {
-                upDown(list, e);
-                return;
-            }
-            setSelectedIndex(list, getSelectedIndex(list) - 1);
-            break;
-        case 34:
-            // page down
-            if(getSelectedIndex(list) == items.length - 1) {
-                upDown(list, e);
-                return;
-            }
-            setSelectedIndex(list, items.length - 1);
-            break;
-        case 40:
-            // line down
-            if(getSelectedIndex(list) == items.length - 1) {
-                upDown(list, e);
-                return;
-            }
-            setSelectedIndex(list, getSelectedIndex(list) + 1);
-            break;
-        }
-        changeList(list);
-        e.preventDefault();
-        return;
+/**
+ * returns true if key changes input value, undefined otherwise
+ */
+function onKeyDown(list, e) {
+    if(timer) {
+        clearTimeout(timer);
+        timer = null;
     }
 
-    if(timer)
-        clearTimeout(timer);
+    switch(e.keyCode) {
+    case 33:
+        // page up
+        if(getSelectedIndex(list) == 0) {
+            upDown(list, e);
+            return;
+        }
+        setSelectedIndex(list, 0);
+        break;
+    case 38:
+        // line up
+        if(getSelectedIndex(list) == 0) {
+            upDown(list, e);
+            return;
+        }
+        setSelectedIndex(list, getSelectedIndex(list) - 1);
+        break;
+    case 34:
+        // page down
+        if(getSelectedIndex(list) == items.length - 1) {
+            upDown(list, e);
+            return;
+        }
+        setSelectedIndex(list, items.length - 1);
+        break;
+    case 40:
+        // line down
+        if(getSelectedIndex(list) == items.length - 1) {
+            upDown(list, e);
+            return;
+        }
+        setSelectedIndex(list, getSelectedIndex(list) + 1);
+        break;
+    case 9:
+    case 16:
+    case 37:
+    case 39:
+        // arrow left, arrow right, tab, shift
+        return;
+    default:
+        return true;
+    }
 
-    timer = setTimeout(function() {
-        timer = null;
-        onSearchNow();
-    }, 250);
+    changeList(list);
+    e.preventDefault();
 }
 
 $().ready(function() {
@@ -338,6 +338,40 @@ $().ready(function() {
                 }
             }
         }
+    });
+
+    var list = $("#list").on('keydown', function(e) {
+        onKeyDown(list, e);
+    });
+
+    $("#search").on('keydown', function(e) {
+        if(onKeyDown(list, e)) {
+            // input has changed; schedule a search
+            timer = setTimeout(function() {
+                timer = null;
+                onSearchNow();
+            }, 250);
+        }
+    }).on('keypress', function(e) {
+        return e.keyCode != 13;
+    }).on('cut paste', function() {
+        if(!timer) {
+            // run on next tick, as pasted data is not yet in the field
+            setTimeout(onSearchNow, 0);
+        }
+    });
+
+    $("#coll").click(function() {
+        onSearchNow();
+    });
+
+    $("#bup").on('click', function() {
+        list.focus();
+        return scrollUp();
+    });
+    $("#bdown").on('click', function() {
+        list.focus();
+        return scrollDown();
     });
 
     $("*[data-focus]").focus();
