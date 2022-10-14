@@ -136,13 +136,16 @@ function onKeyDown(list, e) {
         }
         setSelectedIndex(list, getSelectedIndex(list) + 1);
         break;
-    case 9:
-    case 16:
-    case 37:
-    case 39:
-        // arrow left, arrow right, tab, shift
+    case 9:  // tab
+    case 16: // shift
+    case 35: // end
+    case 36: // home
+    case 37: // arrow left
+    case 39: // arrow right
+        // key does not change the input
         return;
     default:
+        // all keys not otherwise handled change the input
         return true;
     }
 
