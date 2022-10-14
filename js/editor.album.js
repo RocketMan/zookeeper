@@ -49,7 +49,7 @@ function paginateAlbums(op, url) {
             items.forEach(function(obj) {
                 var option = $('<li>');
                 option.text(obj.attributes.artist)
-                    .on('click', function() {
+                    .on('mousedown', function() {
                         setSelectedIndex(list, $(this).index());
                         changeList(list);
                     });

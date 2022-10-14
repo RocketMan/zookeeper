@@ -46,7 +46,7 @@ function paginateLabels(op, url) {
             items.forEach(function(obj) {
                 var option = $('<li>');
                 option.text(obj.attributes.name)
-                    .on('click', function() {
+                    .on('mousedown', function() {
                         setSelectedIndex(list, $(this).index());
                         changeList(list);
                     });
