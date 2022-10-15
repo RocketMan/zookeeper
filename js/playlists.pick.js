@@ -151,6 +151,18 @@ $().ready(function(){
         return tr;
     }
 
+    function fixupAMPM() {
+        if(intl || $(this).fxtime('val'))
+            return;
+
+        var start = $("#start").fxtime('val');
+        if(!start)
+            return;
+
+        var hour = start.split(':')[0];
+        $(this).fxtime('seg', 3, hour < 11 || hour > 22 ? 'AM' : 'PM').select();
+    }
+
     function makeEditRow(isNew = 0) {
         var tr = $("<tr>", {
             class: 'selected'
@@ -189,7 +201,7 @@ $().ready(function(){
         tr.find(".date").datepicker({
             dateFormat: intl ? 'dd-mm-yy' : 'mm/dd/yy'
         });
-        tr.find(".time").fxtime();
+        tr.find(".time").fxtime().last().on('focus', fixupAMPM);
         tr.find(".airname").autocomplete({
             minLength: 0,
             source: function(rq, rs) {
