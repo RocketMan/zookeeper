@@ -1062,7 +1062,8 @@ class AddManager extends MenuItem {
                 echo "  <TR><TD ALIGN=RIGHT CLASS=\"sub\">Week Ending:</TD>";
                 for($j=0; $j<$i; $j++) {
                     list($y,$m,$d) = explode("-", $week[$j][0]);
-                    $displayDate = date("j M", mktime(0,0,0,$m,$d,$y));
+                    $dateSpec = UI::getClientLocale() == 'en_US' ? 'M j' : 'j M';
+                    $displayDate = date($dateSpec, mktime(0,0,0,$m,$d,$y));
                     echo "<TD ALIGN=CENTER CLASS='currentsTop date'>$displayDate</TD>";
                 }
                 echo "</TR>\n";
