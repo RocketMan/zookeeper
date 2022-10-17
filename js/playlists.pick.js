@@ -343,15 +343,15 @@ $().ready(function(){
         }).append($("<span>").html("Restore"))));
         tr.append($("<td>", {
             class: 'description'
-        }).on('mouseover', function() {
-            if(this.offsetWidth < this.scrollWidth)
-                this.setAttribute('title', list.attributes.name);
+        }).on('mouseenter', function() {
+            if(this.offsetWidth < this.scrollWidth && !this.title)
+                this.title = list.attributes.name;
         }).append($("<span>").html(list.attributes.name)));
         tr.append($("<td>", {
             class: 'airname'
-        }).on('mouseover', function() {
-            if(this.offsetWidth < this.scrollWidth)
-                this.setAttribute('title', list.attributes.airname);
+        }).on('mouseenter', function() {
+            if(this.offsetWidth < this.scrollWidth && !this.title)
+                this.title = list.attributes.airname;
         }).append($("<span>").html(list.attributes.airname)));
         tr.append($("<td>", {
             class: 'date'
