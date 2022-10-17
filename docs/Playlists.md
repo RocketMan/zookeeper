@@ -99,7 +99,7 @@ Example:
 To duplicate playlist 12345 for rebroadcast on 2022-01-01 from 1800-2000:
 
 ````
-POST /api/vi/playlist HTTP/1.1
+POST /api/v1/playlist HTTP/1.1
 X-APIKEY: eb5e0e0b42a84531af5f257ed61505050494788d
 Content-Type: application/vnd.api+json
 
@@ -144,6 +144,24 @@ may be added, updated, or deleted via the [Events Relationship](#events) (see be
 Delete playlist with :id by issuing a DELETE request to
 `api/v1/playlist/:id`.  X-APIKEY authentication required.
 Delete will fail if you do not own the playlist.
+
+### Restore
+
+DELETE soft-deletes a playlist for 30 days prior to its being deleted
+permanently.  During this period, a deleted playlist with id :id can
+be restored by sending a PATCH request to `api/v1/playlist/:id`.
+
+The request body must include a single request object with at minimum
+`type` and `id` members, per [section
+9.2](https://jsonapi.org/format/#crud-updating) of the JSON:API
+specification.
+
+It is NOT necessary to specify attributes in the request body.
+However, as with any PATCH request, you may provide one or more
+attributes to modify the playlist at the same time as the restore.
+
+X-APIKEY is authentication required.  Restore will fail if you do not
+own the playlist.
 
 <a name="events"></a>
 ## Events Relationship

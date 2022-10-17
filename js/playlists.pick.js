@@ -320,12 +320,17 @@ $().ready(function(){
     function prestore(id) {
         showUserError('');
 
-        $.ajax({
-            type: 'POST',
-            url: '?action=editListRestore',
+        var postData = {
             data: {
-                playlist: id
+                type: 'show',
+                id: id
             }
+        };
+
+        $.ajax({
+            type: 'PATCH',
+            url: 'api/v1/playlist/' + id,
+            data: JSON.stringify(postData)
         }).done(function(response) {
             loadLists(maxresults, 0, 0);
             loadLists(maxresults, 0, 1);

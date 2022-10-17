@@ -51,7 +51,6 @@ class Playlists extends MenuItem {
         [ "viewListDaysByDate", "handlePlaylistDaysByDate" ],
         [ "viewListsByDate", "handlePlaylistsByDate" ],
         [ "editList", "emitListManager" ],
-        [ "editListRestore", "listManagerRestore" ],
         [ "editListGetHint", "listManagerGetHint" ],
         [ "editListEditor", "emitEditor" ],
         [ "importExport", "emitImportExportList" ],
@@ -386,14 +385,6 @@ class Playlists extends MenuItem {
 
     public function viewDJReviews() {
         $this->newEntity(Search::class)->doSearch();
-    }
-
-    public function listManagerRestore() {
-        $playlistId = $_POST["playlist"] ?? null;
-        if($playlistId && $this->isOwner($playlistId)) {
-            Engine::api(IPlaylist::class)->restorePlaylist($playlistId);
-            PushServer::sendAsyncNotification();
-        }
     }
 
     public function listManagerGetHint() {

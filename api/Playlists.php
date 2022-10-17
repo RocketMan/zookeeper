@@ -505,7 +505,7 @@ class Playlists implements RequestHandlerInterface {
 
         $api = Engine::api(IPlaylist::class);
         $list = $api->getPlaylist($key);
-        if(!$list || $api->isListDeleted($key))
+        if(!$list)
             throw new ResourceNotFoundException("show", $key);
 
         if($list['dj'] != $session->getUser())
@@ -537,7 +537,7 @@ class Playlists implements RequestHandlerInterface {
                 if(!$aid) {
                     // if foreign and unchanged, keep it
                     if($list['airname'] &&
-		            $djapi->getAirname($airname, "") == $list['airname'])
+                            $djapi->getAirname($airname, "") == $list['airname'])
                         $aid = $list['airname'];
                     else {
                         // airname does not exist; try to create it
@@ -553,7 +553,19 @@ class Playlists implements RequestHandlerInterface {
         } else
             $aid = $list['airname'];
 
-        $success = $api->updatePlaylist($key, $date, $time, $name, $aid);
+        if($api->isListDeleted($key)) {
+            $api->restorePlaylist($key);
+
+            // if caller is doing a restore AND update, and has not
+            // specified the airname, we must fetch it after the restore
+            if(!$attrs->isEmpty() && !$aid) {
+                $list = $api->getPlaylist($key);
+                $aid = $list['airname'];
+            }
+        }
+
+        $success = $attrs->isEmpty() ? true :
+                        $api->updatePlaylist($key, $date, $time, $name, $aid);
 
         if($success)
             PushServer::sendAsyncNotification();
