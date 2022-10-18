@@ -306,6 +306,9 @@ want to support the optional push notification service, you will need to:
    create a file `/etc/systemd/system/zkpush.service` using the
    example file below.
 
+   Finally, run the command `sudo systemctl enable zkpush` to start
+   the notification server automatically at boot time.
+
 3. (Optional) Configure the HTTP push notification proxy
 
    If you want to send push notifications via HTTP, add the following
