@@ -532,6 +532,13 @@ p.zktitle a {
     line-height: 24px;
     margin-bottom: 4px;
 }
+.playlistBanner span {
+    display: inline-block;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    vertical-align: top;
+}
 .playlistBanner > div {
     font-size: 11pt;
     float: right;

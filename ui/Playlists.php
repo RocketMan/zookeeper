@@ -1453,10 +1453,26 @@ class Playlists extends MenuItem {
         if(!$editMode && $this->session->isAuth("v"))
             $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='action' VALUE='editList'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
 
-        $dateDiv = "<DIV>".$showDateTime."&nbsp;</DIV>";
-        $djLink = $djId ? "<A HREF='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' CLASS='nav2'>$djName</A>" : $djName;
+        $djLink = $djId ? "<a href='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' class='nav2'>$djName</a>" : $djName;
 
-        echo "<DIV CLASS='playlistBanner'>&nbsp;" . $showName . " with " . $djLink.$dateDiv . "</DIV>\n";
+        echo "<div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>$showName</span> <span id='banner-dj'>with $djLink</span></span><div>{$showDateTime}&nbsp;</div></div>\n";
+?>
+    <SCRIPT TYPE="text/javascript"><!--
+    <?php ob_start([JSMin::class, 'minify']); ?>
+    // Truncate the show name (banner-description) so that the combined
+    // show name, DJ name, and date/time fit on one line.
+    $().ready(function() {
+        var maxWidth = $(".playlistBanner").outerWidth();
+        var dateWidth = $(".playlistBanner div").outerWidth();
+        if($("#banner-caption").outerWidth() + dateWidth > maxWidth) {
+            var width = maxWidth - $("#banner-dj").outerWidth() - dateWidth - 12;
+            $("#banner-description").outerWidth(width);
+        }
+    });
+    <?php ob_end_flush(); ?>
+    // -->
+    </SCRIPT>
+    <?php
     }
 
     public  function emitViewPlayList() {
