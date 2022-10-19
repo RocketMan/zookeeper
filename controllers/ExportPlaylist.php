@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -30,6 +30,7 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
 
+use ZK\UI\Playlists;
 use ZK\UI\UICommon as UI;
 
 class ExportPlaylist extends CommandTarget implements IController {
@@ -190,7 +191,10 @@ class ExportPlaylist extends CommandTarget implements IController {
     
     public function emitHTML() {
         list($y,$m,$d) = explode("-", $this->date);
-        $displayDate = date("D, j M Y", mktime(0,0,0,$m,$d,$y));
+        $usLocale = UI::getClientLocale() == 'en_US';
+        $dateSpec = $usLocale ? 'D M d, Y ' : 'D d M Y ';
+        $displayDate = date($dateSpec, mktime(0,0,0,$m,$d,$y));
+        $displayTime = $usLocale ? Playlists::timeToAMPM($this->time) : $this->time;
     ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
@@ -222,7 +226,7 @@ class ExportPlaylist extends CommandTarget implements IController {
     <?php 
         echo "    <TR><TD VALIGN=BOTTOM ALIGN=LEFT><H3>$this->show</H3></TD>\n";
         echo "        <TD VALIGN=BOTTOM ALIGN=RIGHT><H3>DJ: ".$this->dj."</H3></TD>\n";
-        echo "        <TD VALIGN=BOTTOM ALIGN=RIGHT><H3>$displayDate / $this->time</H3></TD></TR>\n";
+        echo "        <TD VALIGN=BOTTOM ALIGN=RIGHT><H3>$displayDate / $displayTime</H3></TD></TR>\n";
     ?>
       </TABLE>
     </TD></TR>
