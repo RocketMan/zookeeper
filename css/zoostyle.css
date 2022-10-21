@@ -1365,7 +1365,7 @@ div.toggle-time-entry div {
     left: 36px;
     border-left: 9px solid transparent;
     border-right: 9px solid transparent;
-    border-bottom: 9px solid #fff;
+    border-bottom: 9px solid #f8f8f8;
     z-index: 1;
 }
 .dot-menu-content,
