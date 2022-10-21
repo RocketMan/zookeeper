@@ -788,6 +788,11 @@ $().ready(function(){
         show: true
     });
 
+    window.addEventListener('pageshow', function() {
+        if(editing)
+            loadLists(maxresults, 0, 0);
+    });
+
     // the following are for Edit Profile
 
     $("#name").blur(function() {
