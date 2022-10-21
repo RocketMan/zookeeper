@@ -47,8 +47,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
     public function getPlaylist($playlist, $withAirname=0) {
         if($withAirname)
             $query = "SELECT l.description, l.showdate, l.showtime, " .
-                     "       a.id, a.airname, l.dj, l.origin, " .
-                     "       IF(l.airname IS NULL OR l.dj = a.dj, false, true) fairname " .
+                     "       a.id, a.airname, l.dj, l.origin " .
                      "FROM lists l LEFT JOIN airnames a " .
                      "ON l.airname = a.id " .
                      "WHERE l.id = ?";
@@ -64,8 +63,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
                                $showDate="", $airname="", $user="", $desc=1, $limit=null) {
         if($withAirname)
             $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
-                     "a.id airid, a.airname, l.origin, " .
-                     "IF(l.airname IS NULL OR l.dj = a.dj, false, true) fairname " .
+                     "a.id airid, a.airname, l.origin " .
                      "FROM lists l " .
                      "LEFT JOIN airnames a ON l.airname = a.id ";
         else
@@ -121,8 +119,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         [$date, $hour] = explode(' ', $now->format(self::TIME_FORMAT));
 
         $query = "SELECT l.id, l.showdate, l.showtime, l.description, " .
-                 "a.id airid, a.airname, l.dj, " .
-                 "IF(l.airname IS NULL OR l.dj = a.dj, false, true) fairname " .
+                 "a.id airid, a.airname, l.dj " .
                  "FROM lists l LEFT JOIN airnames a " .
                  "ON l.airname = a.id " .
                  "WHERE l.showdate = ? " .
@@ -978,8 +975,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
 
     public function getListsSelNormal($user, $pos = 0, $count = 10000) {
-        $query = "SELECT l.id, showdate, showtime, description, a.airname, origin, ".
-                 "IF(l.airname IS NULL OR l.dj = a.dj, false, true) fairname FROM lists l " .
+        $query = "SELECT l.id, showdate, showtime, description, a.airname, origin ".
+                 "FROM lists l ".
                  "LEFT JOIN lists_del ON l.id = lists_del.listid ".
                  "LEFT JOIN airnames a ON l.airname = a.id ".
                  "WHERE l.dj=? AND deleted IS NULL ".
@@ -994,9 +991,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
 
     public function getListsSelDeleted($user, $pos = 0, $count = 10000) {
         $query = "SELECT l.id, showdate, showtime, description, ".
-                 "ADDDATE(deleted, 30) expires, a.airname, origin, ".
-                 "IF(l.airname IS NULL OR l.dj = a.dj, false, true) fairname ".
-                 "FROM lists l " .
+                 "ADDDATE(deleted, 30) expires, a.airname, origin ".
+                 "FROM lists l ".
                  "LEFT JOIN lists_del ON l.id = lists_del.listid ".
                  "LEFT JOIN airnames a ON lists_del.airname = a.id ".
                  "WHERE l.dj=? AND deleted IS NOT NULL ".

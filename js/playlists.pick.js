@@ -102,7 +102,7 @@ $().ready(function(){
         }).on('mouseenter', function() {
             if(this.offsetWidth < this.scrollWidth && !this.title)
                 this.title = list.attributes.airname;
-        }).data('foreign', list.attributes.fairname).append($("<span>").text(list.attributes.airname)));
+        }).append($("<span>").text(list.attributes.airname)));
         tr.append($("<td>", {
             class: 'date'
         }).data('date', list.attributes.date).append($("<span>").html(localDate(list.attributes.date))));
@@ -223,7 +223,7 @@ $().ready(function(){
         row.data('id', list.id);
         row.find('input.description').val(list.attributes.name);
         row.find('input.airname')
-            .prop('disabled', list.attributes.fairname)
+            .prop('disabled', list.attributes.airname && $(".airnames option[value='" + escQuote(list.attributes.airname) + "' i]").length == 0)
             .val(list.attributes.airname);
         row.find('input.date').val(localDate(list.attributes.date));
         row.find('input.time#start').fxtime('val', time ? localTimeIntl(time[0]) : null);
@@ -243,7 +243,6 @@ $().ready(function(){
             attributes: {
                 name: row.find('input.description').val(),
                 airname: airname.val(),
-                fairname: airname.prop('disabled'),
                 date: date.toISOString().split('T')[0],
                 time: start + '-' + end
             }
@@ -574,7 +573,6 @@ $().ready(function(){
             attributes: {
                 name: row.find('.description span').text(),
                 airname: row.find('.airname span').text(),
-                fairname: row.find('.airname').data('foreign'),
                 date: row.find('.date').data('date'),
                 time: row.find('.start').data('start') + '-' + row.find('.end').data('end')
             }
@@ -616,7 +614,6 @@ $().ready(function(){
             attributes: {
                 name: row.find('.description span').text() + suffix,
                 airname: row.find('.airname span').text(),
-                fairname: row.find('.airname').data('foreign'),
                 date: now[0],
                 time: now[1].replace(':','') + '-'
             }
@@ -687,7 +684,6 @@ $().ready(function(){
             response.data.attributes.name += suffix;
             response.data.attributes.date = now[0];
             response.data.attributes.time = now[1].replace(':','') + '-';
-            response.data.attributes.fairname = $(".airnames option[value='" + escQuote(response.data.attributes.airname) + "']").length == 0;
             var edit = makeEditRow(true);
             setEditRow(edit, response.data);
             $(".active-grid tbody").prepend(edit);
