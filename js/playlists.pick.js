@@ -96,13 +96,13 @@ $().ready(function(){
         }).on('mouseenter', function() {
             if(this.offsetWidth < this.scrollWidth && !this.title)
                 this.title = list.attributes.name;
-        }).append($("<span>").html(list.attributes.name)));
+        }).append($("<span>").text(list.attributes.name)));
         tr.append($("<td>", {
             class: 'airname'
         }).on('mouseenter', function() {
             if(this.offsetWidth < this.scrollWidth && !this.title)
                 this.title = list.attributes.airname;
-        }).data('foreign', list.attributes.fairname).append($("<span>").html(list.attributes.airname)));
+        }).data('foreign', list.attributes.fairname).append($("<span>").text(list.attributes.airname)));
         tr.append($("<td>", {
             class: 'date'
         }).data('date', list.attributes.date).append($("<span>").html(localDate(list.attributes.date))));
@@ -351,13 +351,13 @@ $().ready(function(){
         }).on('mouseenter', function() {
             if(this.offsetWidth < this.scrollWidth && !this.title)
                 this.title = list.attributes.name;
-        }).append($("<span>").html(list.attributes.name)));
+        }).append($("<span>").text(list.attributes.name)));
         tr.append($("<td>", {
             class: 'airname'
         }).on('mouseenter', function() {
             if(this.offsetWidth < this.scrollWidth && !this.title)
                 this.title = list.attributes.airname;
-        }).append($("<span>").html(list.attributes.airname)));
+        }).append($("<span>").text(list.attributes.airname)));
         tr.append($("<td>", {
             class: 'date'
         }).append($("<span>").html(localDate(list.attributes.date))));
@@ -572,8 +572,8 @@ $().ready(function(){
         var data = {
             id: row.data('id'),
             attributes: {
-                name: row.find('.description span').html(),
-                airname: row.find('.airname span').html(),
+                name: row.find('.description span').text(),
+                airname: row.find('.airname span').text(),
                 fairname: row.find('.airname').data('foreign'),
                 date: row.find('.date').data('date'),
                 time: row.find('.start').data('start') + '-' + row.find('.end').data('end')
@@ -614,8 +614,8 @@ $().ready(function(){
         var data = {
             id: row.data('id'),
             attributes: {
-                name: row.find('.description span').html() + suffix,
-                airname: row.find('.airname span').html(),
+                name: row.find('.description span').text() + suffix,
+                airname: row.find('.airname span').text(),
                 fairname: row.find('.airname').data('foreign'),
                 date: now[0],
                 time: now[1].replace(':','') + '-'

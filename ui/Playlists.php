@@ -1454,9 +1454,10 @@ class Playlists extends MenuItem {
         if(!$editMode && $this->session->isAuth("v"))
             $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='action' VALUE='editList'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
 
+        $djName = htmlentities($djName, ENT_QUOTES, 'UTF-8');
         $djLink = $djId ? "<a href='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' class='nav2'>$djName</a>" : $djName;
 
-        echo "<div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>$showName</span> <span id='banner-dj'>with $djLink</span></span><div>{$showDateTime}&nbsp;</div></div>\n";
+        echo "<div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>".htmlentities($showName, ENT_QUOTES, 'UTF-8')."</span> <span id='banner-dj'>with $djLink</span></span><div>{$showDateTime}&nbsp;</div></div>\n";
 ?>
     <SCRIPT TYPE="text/javascript"><!--
     <?php ob_start([JSMin::class, 'minify']); ?>
@@ -1609,7 +1610,7 @@ class Playlists extends MenuItem {
             // Run the query
             $records = Engine::api(IPlaylist::class)->getPlaylists(0, 0, 0, $viewuser);
             while($row = $records->fetch())
-                echo "        <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3]\n";
+                echo "        <OPTION VALUE=\"$row[0]\">$row[1] -- ".htmlentities($row[3], ENT_QUOTES, 'UTF-8')."\n";
     ?>
         </SELECT></TD></TR>
       <TR><TD>
