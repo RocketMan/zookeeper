@@ -548,7 +548,17 @@ class Playlists extends MenuItem {
             <label></label><span id='error-msg' class='error'></span>
             <div>
             <?php if(!$editTrack) { ?>
-                <a style='padding-right:4px;' href='#' class='nav pull-right' onClick=window.open('?target=export&amp;playlist=<?php echo $playlistId ?>&amp;format=html')>Print View</a>
+                <div class='dot-menu pull-right' tabindex='-1'>
+                  <div class='dot-menu-dots no-text-select'>&#x22ee;</div>
+                  <div class='dot-menu-content'>
+                    <ul>
+                      <li><a href='#' class='nav' data-link='<?php echo Engine::getBaseURL()."?action=viewListById&amp;playlist=$playlistId"; ?>' id='copy-link' title='copy playlist URL to the clipboard'>Link to Playlist</a>
+                      <li><a href='?target=export&amp;playlist=<?php echo $playlistId; ?>&amp;format=csv' class='nav' download='playlist.csv' title='export playlist as CSV'>Export CSV</a>
+                      <li><a href='api/v1/playlist/<?php echo $playlistId; ?>' class='nav' download='playlist.json' title='export playlist as JSON'>Export JSON</a>
+                      <li><a href='?target=export&amp;playlist=<?php echo $playlistId; ?>&amp;format=html' class='nav' target='_blank' title='printable playlist (opens in new window)'>Print View</a>
+                    </ul>
+                  </div>
+                </div>
             <?php } ?>
                 <label>Type:</label>
                 <select id='track-type-pick'>

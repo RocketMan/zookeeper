@@ -531,6 +531,8 @@ p.zktitle a {
     background-color: #2530A7;
     line-height: 24px;
     margin-bottom: 4px;
+    display: inline-block;
+    width: 710px;
 }
 .playlistBanner span {
     display: inline-block;
@@ -543,6 +545,7 @@ p.zktitle a {
     font-size: 11pt;
     float: right;
     font-size: 10px;
+    max-height: 24px;
 }
 
 .playlistHdr {
@@ -695,6 +698,54 @@ table.recentAirplay td, .sub {
 
 .pl-form-entry label {
     width: 84px;
+}
+
+.dot-menu-dots {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bolder;
+    height: 24px;
+    width: 24px;
+    line-height: 24px;
+    text-align: center;
+    vertical-align: middle;
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 50%;
+}
+.dot-menu-dots:hover {
+    cursor: pointer;
+    text-decoration: none;
+    background-color: rgba(0,0,0,0.2);
+}
+.dot-menu:focus div.dot-menu-content {
+    opacity: 1;
+    z-index: 1;
+}
+.dot-menu-content ul {
+    list-style-type: none;
+    margin: 0;
+    white-space: nowrap;
+}
+.dot-menu-content li {
+    margin: 0;
+    padding: 4px;
+}
+.pl-form-entry .dot-menu-content:before {
+    left: auto;
+    right: 3px;
+}
+.pl-form-entry .dot-menu-content:after {
+    left: auto;
+    right: 4px;
+}
+.pl-form-entry .dot-menu-content {
+    margin-top: 5px;
+    margin-left: -86px;
+    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.2);
+    opacity: 0;
+    display: inherit;
+    z-index: -1;
+    transition: all 0.5s ease-out;
 }
 
 .zk-popup {
@@ -1291,10 +1342,12 @@ div.toggle-time-entry div {
     text-align: center;
     border: none;
 }
+.dot-menu,
 .mobileMenu {
     position: relative;
     display: inline-block;
 }
+.dot-menu-content:before,
 .mobileMenuContent:before {
     content: '';
     position: absolute;
@@ -1304,6 +1357,7 @@ div.toggle-time-entry div {
     border-right: 10px solid transparent;
     border-bottom: 10px solid #ccc;
 }
+.dot-menu-content:after,
 .mobileMenuContent:after {
     content: '';
     position: absolute;
@@ -1314,6 +1368,7 @@ div.toggle-time-entry div {
     border-bottom: 9px solid #fff;
     z-index: 1;
 }
+.dot-menu-content,
 .mobileMenuContent {
     background-color: #f8f8f8;
     border: 1px solid #ccc;
