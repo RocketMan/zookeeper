@@ -19,7 +19,6 @@ be found here.
 * date
 * time
 * airname
-* fairname (true if airname does not belong to playlist owner, false otherwise)
 * expires (expiration date, present only for deleted playlists)
 * rebroadcast
 * events -- array of zero or more:
