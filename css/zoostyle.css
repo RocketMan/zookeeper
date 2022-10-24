@@ -313,8 +313,9 @@ td.label-form {
 .editorUp {
     top: 0px;
     width: 220px;
-    height: 16px;
+    height: 18px;
     border: 0px;
+    border-radius: 3px 3px 0 0;
     color: #ffffff;
     font-family: courier;
     font-weight: 900;
@@ -323,8 +324,9 @@ td.label-form {
 .editorDown {
     top: 0px;
     width: 220px;
-    height: 16px;
+    height: 18px;
     border: 0px;
+    border-radius: 0 0 3px 3px;
     font-family: courier;
     font-weight: 900;
     color: #ffffff;
@@ -337,7 +339,8 @@ td.label-form {
     scrollbar-width: none;
 }
 .editorChooser:focus-visible {
-    box-shadow: -2px -18px 0 0 #536779, 2px 18px 0 0 #536779, -2px 18px 0 0 #536779, 2px -18px 0 0 #536779;
+    border-radius: 2px;
+    box-shadow: -1px -19px 0 1px #637789, 1px 19px 0 1px #637789, -1px 19px 0 1px #637789, 1px -19px 0 1px #637789;
     outline: 0;
 }
 
@@ -602,19 +605,38 @@ table.recentAirplay td, .sub {
     color: #ffffff;
     background-color: #5863da;
     border-width: 1px;
-    border-color: #3843ba;
+    border-color: #5863da;
+    border-radius: 3px;
+    padding: 3px 8px;
+    border-style: solid;
+}
+.editorUp:hover, .editorDown:hover,
+.submit:hover {
+    filter: brightness(110%);
+}
+.editorUp:active, .editorDown:active,
+.submit:active {
+    filter: brightness(90%);
 }
 .success {
     color: #006600;
 }
 .text, .urlValue {
     padding: 2px;
-    border: 1px solid #2833aa;
+    border: 1px solid #666;
+    border-radius: 3px;
 }
 .textsp {
-    padding: 1px;
-    border: 1px solid #2833aa;
+    border: 1px solid #666;
+    border-radius: 3px;
     width: 120px;
+}
+@-moz-document url-prefix() {
+    /* combo is a tad gaunt on fx */
+    .textsp {
+        margin: 1px 0;
+        padding: 3px 0;
+    }
 }
 .zk-hidden {
     display: none;
