@@ -527,8 +527,7 @@
                     seg: false,
                     focus: false
                 });
-            }).attr('autocomplete', 'off')
-                .css('caret-color', 'transparent')
+            }).css('caret-color', 'transparent')
                 .css('cursor', 'default')
                 .fxtime('val', null);
 
