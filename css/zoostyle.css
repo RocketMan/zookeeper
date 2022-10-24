@@ -1485,6 +1485,7 @@ ul.listbox li {
     color: #000 !important;
     background-color: #ffffe0 !important;
     box-shadow: none !important;
+    overflow-wrap: break-word;
 }
 
 .ui-autocomplete {
