@@ -65,6 +65,8 @@ class Playlists extends MenuItem {
     private $subaction;
     private $urlHighlighter;
 
+    private static bool $usLocale;
+
     public function processLocal($action, $subaction) {
         $this->action = $action;
         $this->subaction = $subaction;
@@ -340,9 +342,15 @@ class Playlists extends MenuItem {
         echo json_encode($retVal);
     }
 
-    public static function hourToAMPM($hour, $full=0) {
+    private static function isUsLocale() : bool {
+        if(!isset(self::$usLocale))
+            self::$usLocale = UI::getClientLocale() == 'en_US';
+        return self::$usLocale;
+    }
+
+    private static function hourToLocale($hour, $full=0) {
         // account for legacy, free-format time encoding
-        if(!is_numeric($hour))
+        if(!is_numeric($hour) || !self::isUsLocale())
             return $hour;
 
         $h = (int)floor($hour/100);
@@ -362,10 +370,10 @@ class Playlists extends MenuItem {
         }
     }
     
-    public static function timeToAMPM($time) {
+    public static function timeToLocale($time) {
         if(strlen($time) == 9 && $time[4] == '-') {
             list($fromtime, $totime) = explode("-", $time);
-            return self::hourToAMPM($fromtime) . " - " . self::hourToAMPM($totime);
+            return self::hourToLocale($fromtime) . " - " . self::hourToLocale($totime);
         } else
             return strtolower(htmlentities($time));
     }
@@ -374,13 +382,15 @@ class Playlists extends MenuItem {
         if ($time == null || $time == '') {
             return "";
         } else {
-            $dateSpec = UI::getClientLocale() == 'en_US' ? 'D M d, Y ' : 'D d M Y ';
+            $dateSpec = self::isUsLocale() ? 'D M d, Y ' : 'D d M Y ';
             return date($dateSpec, strtotime($time));
         }
     }
 
-    private static function timestampToAMPM($timestamp) {
-        return $timestamp ? date('h:i a', $timestamp) : '';
+    private static function timestampToLocale($timestamp) {
+        // colon is included in 24hr format for symmetry with fxtime
+        $timeSpec = self::isUsLocale() ? 'h:i a' : 'H:i';
+        return $timestamp ? date($timeSpec, $timestamp) : '';
     }
 
     public function viewDJReviews() {
@@ -635,8 +645,11 @@ class Playlists extends MenuItem {
                 $ttype = preg_match('/tablet|mobile|android/i',
                         $_SERVER['HTTP_USER_AGENT'] ?? '') ? "tel" : "text";
 
-                $startAMPM = $window['start']->format('g:i a');
-                $endAMPM = $window['end']->format('g:i a');
+                // colon is included in 24hr format for symmetry with fxtime,
+                // which it is referencing
+                $timeSpec = self::isUsLocale() ? 'g:i a' : 'H:i';
+                $startAMPM = $window['start']->format($timeSpec);
+                $endAMPM = $window['end']->format($timeSpec);
                 $timeMsg = "($startAMPM - $endAMPM)";
 
                 echo "<div id='time-entry'".($isLiveShow?" class='zk-hidden'":"").">
@@ -712,7 +725,6 @@ class Playlists extends MenuItem {
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
         $showName = $playlist['description'];
         $djName = $playlist['airname'] ?? "None";
-        $showDateTime = self::makeShowDateAndTime($playlist);
 
         $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
         $this->emitTrackAdder($playlistId, $playlist, $id);
@@ -1357,7 +1369,7 @@ class Playlists extends MenuItem {
                 $editCell = $editMode ? "<TD>" .
                     $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                 $created = $entry->getCreatedTimestamp();
-                $timeplayed = self::timestampToAMPM($created);
+                $timeplayed = self::timestampToLocale($created);
                 echo "<TR class='commentRow".($editMode?"Edit":"")."'>" . $editCell .
                      "<TD class='time' data-utc='$created'>$timeplayed</TD>" .
                      "<TD COLSPAN=4>".UI::markdown($entry->getComment()).
@@ -1365,7 +1377,7 @@ class Playlists extends MenuItem {
                 $break = false;
             })->onLogEvent(function($entry) use($playlist, $editMode, &$break) {
                 $created = $entry->getCreatedTimestamp();
-                $timeplayed = self::timestampToAMPM($created);
+                $timeplayed = self::timestampToLocale($created);
                 if($this->session->isAuth("u")) {
                     // display log entries only for authenticated users
                     $editCell = $editMode ? "<TD>" .
@@ -1386,7 +1398,7 @@ class Playlists extends MenuItem {
                     $editCell = $editMode ? "<TD>" .
                         $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                     $created = $entry->getCreatedTimestamp();
-                    $timeplayed = self::timestampToAMPM($created);
+                    $timeplayed = self::timestampToLocale($created);
                     echo "<TR class='songDivider'>" . $editCell .
                          "<TD class='time' data-utc='$created'>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
                     $break = true;
@@ -1395,7 +1407,7 @@ class Playlists extends MenuItem {
                 $editCell = $editMode ? "<TD>" .
                     $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
                 $created = $entry->getCreatedTimestamp();
-                $timeplayed = self::timestampToAMPM($created);
+                $timeplayed = self::timestampToLocale($created);
                 $reviewCell = $entry->getReviewed() ? "<div class='albumReview'></div>" : "";
                 $artistName = PlaylistEntry::swapNames($entry->getArtist());
 
@@ -1440,7 +1452,7 @@ class Playlists extends MenuItem {
 
     public static function makeShowDateAndTime($row) {
         return self::timestampToDate($row['showdate']) . " " .
-               self::timeToAMPM($row['showtime']);
+               self::timeToLocale($row['showtime']);
     }
 
     private function emitPlaylistBanner($playlistId, $playlist, $editMode) {
@@ -1722,7 +1734,7 @@ class Playlists extends MenuItem {
         $count = 0;
         $href = '?action=viewListById&playlist';
         while($records && ($row = $records->fetch())) {
-            $timeRange = self::timeToAMPM($row[2]);
+            $timeRange = self::timeToLocale($row[2]);
             $title = htmlentities($row[3]);
             $djs = htmlentities($row[5]);
             $tbody .= "<TR>" .
@@ -1742,7 +1754,7 @@ class Playlists extends MenuItem {
             echo "<TABLE class='recentAirplay' CELLPADDING=2 CELLSPACING=0 BORDER=0>\n";
     
             // Setup date format based on locale
-            $dateSpec = UI::getClientLocale() == 'en_US' ? 'M d, Y' : 'd M Y';
+            $dateSpec = self::isUsLocale() ? 'M d, Y' : 'd M Y';
     
             // Ensure we have an even number of plays
             if(sizeof($plays)%2)

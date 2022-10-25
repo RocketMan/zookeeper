@@ -194,7 +194,7 @@ class ExportPlaylist extends CommandTarget implements IController {
         $usLocale = UI::getClientLocale() == 'en_US';
         $dateSpec = $usLocale ? 'D M d, Y ' : 'D d M Y ';
         $displayDate = date($dateSpec, mktime(0,0,0,$m,$d,$y));
-        $displayTime = $usLocale ? Playlists::timeToAMPM($this->time) : $this->time;
+        $displayTime = Playlists::timeToLocale($this->time);
     ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
