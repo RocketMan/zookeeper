@@ -354,6 +354,12 @@
 
     function handleKeydown(e) {
         switch(e.which) {
+        case 0xba: // :
+        case 0x3b: // : fx
+            // allow colon to advance only if we've been typing in this segment
+            if(fxdata.get(this).seg !== getSegment(this))
+                break;
+            // fall through...
         case 0x09: // tab
         case 0x25: // left
         case 0x27: // right
@@ -435,6 +441,9 @@
             case 0x2d:
             case 0x5f:
                 c = 0x28; // -
+                break;
+            case 0x3a:
+                c = 0x3b; // :
                 break;
             default:
                 if(c < 0x30 || c > 0x39) // non-numeric
