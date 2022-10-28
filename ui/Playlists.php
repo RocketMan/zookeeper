@@ -738,16 +738,6 @@ class Playlists extends MenuItem {
                      $tag, $artist, $track, $album, $label, $spinTime, $id, $status);    
     }
     
-    private function emitPlaylistTitle($playlist) {
-        // Print the header
-        $script = "?target=export";
-        $row = Engine::api(IPlaylist::class)->getPlaylist($playlist);
-        $showDateTime = self::makeShowDateAndTime($row);
-        echo "<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%\">\n    <TR>\n      <TH ALIGN=LEFT>";
-        echo "$row[0]</TH>\n      <TH ALIGN=RIGHT>$showDateTime</TH>\n";
-        echo "      <TH ALIGN=RIGHT VALIGN=TOP><A CLASS=\"sub\" HREF=\"#top\" onClick='window.open(\"$script&amp;playlist=$playlist&amp;format=html\")'>Print</A></TH>\n    </TR>\n  </TABLE>\n";
-    }
-
     public function emitEditor() {
         $artist = $_REQUEST["artist"];
         $track = $_REQUEST["track"];
