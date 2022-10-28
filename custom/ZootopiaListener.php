@@ -77,6 +77,7 @@ class ZootopiaListener {
     protected $handler;
     protected $zk;
     protected $lastPing;
+    protected $onAir;
 
     private const TIDY_START = 3; // number of minutes past top of hour to round start time
 
@@ -130,9 +131,11 @@ class ZootopiaListener {
     }
 
     public function addTrack($event) {
-        if(($event["type"] ?? null) != "schedule" ||
-                !preg_match("/zootopia/i", $event["name"]) ||
-                !$event["track_title"])
+        $event["zootopia"] = ($event["type"] ?? null) == "schedule" &&
+                preg_match("/zootopia/i", $event["name"]) &&
+                $event["track_title"];
+
+        if(!$this->onAir && !$event["zootopia"])
             return;
 
         $show = null;
@@ -149,16 +152,14 @@ class ZootopiaListener {
             $json = json_decode($page);
             $count = sizeof($json->data);
 
-            // If there is already a show on-air that is not ours,
-            // let it continue.
-            if($count && !preg_match("/" .
-                            preg_quote($this->config["title"]) . "/i",
-                            $json->data[0]->attributes->name))
-                return new RejectedPromise("DJ On Air");
-
             $now = new \DateTime();
             switch($count) {
             case 0:
+                if(!$event["zootopia"]) {
+                    $this->onAir = false;
+                    return new RejectedPromise("Zootopia signed off");
+                }
+
                 // No show is currently on-air; create a new show
                 $date = $now->format("Y-m-d");
                 $min = intval($now->format("i"));
@@ -199,6 +200,7 @@ class ZootopiaListener {
                                 " with " . $this->config["airname"] .
                                 " $date $time");
                     $show = $response->getHeader('Location')[0];
+                    $this->onAir = true;
 
                     // add caption
                     if(isset($this->config["caption"])) {
@@ -223,16 +225,37 @@ class ZootopiaListener {
                 });
                 break;
             case 1:
+                if(!$event["zootopia"] || !preg_match("/" .
+                        preg_quote($this->config["title"]) . "/i",
+                        $json->data[0]->attributes->name)) {
+                    $this->onAir = false;
+                    return new RejectedPromise("DJ On Air");
+                }
+
                 // We are already on-air; use the existing show.
                 $show = $json->data[0]->links->self;
+                $this->onAir = true;
                 break;
             default:
-                // An older show is also on-air.  This could be a show
-                // that got extended, or a previously scheduled show
-                // that just started.
-                //
-                // End our show now so the other show will go on-air.
-                $time = explode('-', $json->data[0]->attributes->time);
+                // Another show is also on-air
+                $zootopia = null;
+                foreach($json->data as $data) {
+                     if(preg_match("/" .
+                            preg_quote($this->config["title"]) . "/i",
+                            $data->attributes->name)) {
+                        $zootopia = $data;
+                        break;
+                    }
+                }
+
+                if(!$zootopia) {
+                    // Multiple shows are on, but none of them ours.
+                    $this->onAir = false;
+                    return new RejectedPromise("DJ On Air");
+                }
+
+                // End our show now
+                $time = explode('-', $zootopia->attributes->time);
                 $now->modify("-1 minutes");
                 $end = $now->format("Hi");
                 // delete if new end time is at or before start time,
@@ -240,10 +263,11 @@ class ZootopiaListener {
                 // resulting truncated show is less than the minimum
                 $delete = $end > $time[1] ||
                             $end - $time[0] < IPlaylist::MIN_SHOW_LEN;
-                $id = $json->data[0]->id;
+                $id = $zootopia->id;
                 if($delete) {
                     return $this->zk->deleteAsync('api/v1/playlist/' . $id)->then(function() {
                         $this->log("another show detected, deleting our show");
+                        $this->onAir = false;
                         return new RejectedPromise("DJ On Air");
                     });
                 } else {
@@ -260,6 +284,7 @@ class ZootopiaListener {
                         ]
                     ])->then(function() {
                         $this->log("another show detected, ending our show");
+                        $this->onAir = false;
                         return new RejectedPromise("DJ On Air");
                     });
                 }
