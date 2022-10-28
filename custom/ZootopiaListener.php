@@ -78,6 +78,8 @@ class ZootopiaListener {
     protected $zk;
     protected $lastPing;
 
+    private const TIDY_START = 3; // number of minutes past top of hour to round start time
+
     public function __construct(\React\EventLoop\LoopInterface $loop) {
         $this->loop = $loop;
         $this->subscriber = new \Ratchet\Client\Connector($loop);
@@ -159,6 +161,9 @@ class ZootopiaListener {
             case 0:
                 // No show is currently on-air; create a new show
                 $date = $now->format("Y-m-d");
+                $min = intval($now->format("i"));
+                if($min && $min <= self::TIDY_START)
+                    $now->modify("-$min minutes");
                 $time = $now->format("Hi");
 
                 $tz = $this->config["tz"];
@@ -204,6 +209,7 @@ class ZootopiaListener {
                                     'attributes' => [
                                         'type' => 'comment',
                                         'comment' => $this->config["caption"],
+                                        'created' => explode('-', $time)[0],
                                     ]
                                 ]
                             ]
