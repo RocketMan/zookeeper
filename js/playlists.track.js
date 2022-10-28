@@ -249,7 +249,7 @@ $().ready(function(){
         }
 
         // don't allow submission of album tag in the artist field
-        if($("#track-artist").val().trim().match(/^\d+$/) && tagId == 0) {
+        if($("#track-artist").val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
             showUserError('Album tag is invalid');
             $("#track-artist").focus();
             return;
@@ -554,7 +554,7 @@ $().ready(function(){
         }
 
         // don't allow submission of album tag in the artist field
-        if($("#track-artist").val().trim().match(/^\d+$/) && tagId == 0) {
+        if($("#track-artist").val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
             showUserError('Album tag is invalid');
             $("#track-artist").focus();
             return;
@@ -657,8 +657,9 @@ $().ready(function(){
         $("#error-msg").text('');
         $(this).removeClass('invalid-input');
         var artist = $(this).val();
-        if(artist.match(/^\d+$/) && tagId == 0) {
-            var opt = $("#track-artists option[data-tag='" + escQuote(artist) + "']");
+        var scrub = artist.replace(/\s+/g, '');
+        if(scrub.match(/^\d+$/) && tagId == 0) {
+            var opt = $("#track-artists option[data-tag='" + escQuote(scrub) + "']");
             if(opt.length > 0)
                 getDiskInfo(opt.data("tag"), opt.data("artist"));
             else
@@ -688,11 +689,12 @@ $().ready(function(){
 
             // if artist is numeric with correct check digit,
             // treat it as an album tag
-            var parseTag = artist.match(/^(\d+)(\d)$/);
+            var scrub = artist.replace(/\s+/g, '');
+            var parseTag = scrub.match(/^(\d+)(\d)$/);
             parseTag != null && parseTag[1]
                     .split('').map(Number)
                     .reduce((a, b) => a + b, 0) % 10 == parseTag[2] ?
-                searchTag(artist, rs) : searchLibrary(artist, rs);
+                searchTag(scrub, rs) : searchLibrary(artist, rs);
         },
         select: function(event, ui) {
             var artist = ui.item.value;
