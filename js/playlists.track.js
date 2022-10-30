@@ -682,6 +682,8 @@ $().ready(function(){
                 $("#track-label").val("");
             }
         }
+    }).on('click', function() {
+        $(this).autocomplete('search', this.value);
     }).autocomplete({
         minLength: 3,
         source: function(rq, rs) {
@@ -689,12 +691,11 @@ $().ready(function(){
 
             // if artist is numeric with correct check digit,
             // treat it as an album tag
-            var scrub = artist.replace(/\s+/g, '');
-            var parseTag = scrub.match(/^(\d+)(\d)$/);
+            var parseTag = artist.replace(/\s+/g, '').match(/^(\d+)(\d)$/);
             parseTag != null && parseTag[1]
                     .split('').map(Number)
                     .reduce((a, b) => a + b, 0) % 10 == parseTag[2] ?
-                searchTag(scrub, rs) : searchLibrary(artist, rs);
+                searchTag(parseTag[0], rs) : searchLibrary(artist, rs);
         },
         select: function(event, ui) {
             var artist = ui.item.value;
