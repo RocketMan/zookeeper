@@ -876,6 +876,8 @@ class Playlists extends MenuItem {
         $userfile = $_FILES['userfile']['tmp_name'];
         $fromtime = $_REQUEST["fromtime"];
         $totime = $_REQUEST["totime"];
+        $delimiter = $_REQUEST["delimiter"] ?? "";
+        $enclosure = $_REQUEST["enclosure"] ?? "\"";
     
         if($button == " Setup New Airname... ") {
             $displayForm = 1;
@@ -915,6 +917,8 @@ class Playlists extends MenuItem {
     <INPUT TYPE=HIDDEN NAME=time VALUE="<?php echo htmlentities(stripslashes($time));?>">
     <INPUT TYPE=HIDDEN NAME=fromtime VALUE="<?php echo htmlentities(stripslashes($fromtime));?>">
     <INPUT TYPE=HIDDEN NAME=totime VALUE="<?php echo htmlentities(stripslashes($totime));?>">
+    <INPUT TYPE=HIDDEN NAME=delimiter VALUE="<?php echo htmlentities(stripslashes($delimiter), ENT_QUOTES);?>">
+    <INPUT TYPE=HIDDEN NAME=enclosure VALUE="<?php echo htmlentities(stripslashes($enclosure), ENT_QUOTES);?>">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </FORM>
     <?php 
@@ -986,6 +990,12 @@ class Playlists extends MenuItem {
     ?>
                 </SELECT><INPUT TYPE=SUBMIT NAME=button VALUE=" Setup New Airname... "></TD>
           </TR><TR>
+          </TR><TR>
+            <TD ALIGN=RIGHT>Delimiter:</TD>
+            <TD><INPUT TYPE=text NAME=delimiter SIZE=2 MAXLENGTH=1 VALUE="<?php echo htmlentities($delimiter, ENT_QUOTES); ?>"> (empty for tab)
+            <span style="display: inline-block;min-width: 35px"></span>
+            Field enclosure: <INPUT TYPE=text NAME=enclosure SIZE=2 MAXLENGTH=1 VALUE="<?php echo htmlentities($enclosure, ENT_QUOTES); ?>">
+          </TR><TR>
             <TD ALIGN=RIGHT>Import from file:</TD><TD><INPUT NAME=userfile TYPE=file></TD>
           </TR><TR>
             <TD>&nbsp;</TD>
@@ -994,12 +1004,12 @@ class Playlists extends MenuItem {
             <TD>&nbsp;</TD>
             <TD CLASS="sub"><div class='user-tip' style='display: block; max-width: 550px;'>
                 <h4>CSV Format</h4>
-                <p>File must be UTF-8 encoded and tab delimited, with one
+                <p>File must be UTF-8 encoded, with one
                 track per line.  Each line may contain 4, 5, or 6 columns:</p>
                 <p>&nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; label</B> &nbsp;or<BR><BR>
                 &nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label</B> &nbsp;or<BR><BR>
                 &nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label&nbsp; timestamp</B>,</p>
-                <p>where each column is separated by a tab character.</p>
+                <p>where each column is optionally enclosed by the specified field enclosure character, and separated by a delimiter character.  If no Delimiter is specified, tab is used.</p>
                 <p>Any file data not in this format will be ignored.</p></div></TD>
           </TR>
         </TABLE>
@@ -1010,13 +1020,17 @@ class Playlists extends MenuItem {
             $api = Engine::api(IPlaylist::class);
             $success = $api->insertPlaylist($this->session->getUser(), $date, $time, $description, $airname);
             $playlist = $api->lastInsertId();
-    
+
+            // empty delimiter is tab
+            if(strlen(trim($delimiter)) == 0)
+                $delimiter = "\t";
+
             // Insert the tracks
             $count = 0;
             $fd = new \SplFileObject($userfile, "r");
             $window = $api->getTimestampWindow($playlist);
             while($fd->valid()) {
-                $line = $fd->fgetcsv("\t");
+                $line = $fd->fgetcsv($delimiter, $enclosure);
                 switch(count($line)) {
                 case 4:
                     // artist track album label
