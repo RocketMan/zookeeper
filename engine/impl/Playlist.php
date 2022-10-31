@@ -761,8 +761,20 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $stmt->executeAndFetchAll();
     }
     
-    public function getLastPlays($tag, $count=0) {
+    private function getZootopiaAirname() {
+        $proxies = Engine::param('push_proxy');
+        if($proxies) {
+            foreach($proxies as $proxy) {
+                if($proxy['proxy'] ==
+                        \ZK\PushNotification\ZootopiaListener::class)
+                    return $proxy['http_endpoints']['airname'] ?? null;
+            }
+        }
+    }
+
+    public function getLastPlays($tag, $count=0, $excludeAutomation=true) {
         settype($tag, "integer");
+        $zootopia = $excludeAutomation ? $this->getZootopiaAirname() : null;
         $query = "SELECT l.id, l.showdate, l.description, a.airname," .
                  "  count(*) plays," .
                  "  group_concat(t.track ORDER BY t.seq DESC, t.id DESC SEPARATOR 0x1e) tracks" .
@@ -770,13 +782,17 @@ class PlaylistImpl extends DBO implements IPlaylist {
                  " JOIN lists l ON t.list = l.id " .
                  " LEFT JOIN airnames a ON l.airname = a.id" .
                  " WHERE t.tag = ? AND l.airname IS NOT NULL" .
+                 ($zootopia ? " AND a.airname <> ?" : "") .
                  " GROUP BY t.tag, l.id ORDER BY l.showdate DESC, l.showtime DESC";
         if($count)
             $query .= " LIMIT ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
+        $param = 2;
+        if($zootopia)
+            $stmt->bindValue($param++, $zootopia);
         if($count)
-            $stmt->bindValue(2, (int)$count, \PDO::PARAM_INT);
+            $stmt->bindValue($param++, (int)$count, \PDO::PARAM_INT);
     
         $spins = $stmt->executeAndFetchAll();
         foreach($spins as &$spin) {
