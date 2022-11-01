@@ -1198,6 +1198,44 @@ div.toggle-time-entry div {
     height: 10px;
 }
 
+.import-csv input {
+    width: 260px;
+    box-sizing: border-box;
+    height: 24px;
+    margin-bottom: 6px;
+}
+.import-csv span {
+    display: inline-block;
+}
+.import-csv span.date-spacer {
+    min-width: 16px;
+}
+.import-csv span.time-spacer {
+    min-width: 4px;
+    text-align: center;
+}
+.import-csv span.delimiter-spacer {
+    min-width: 27px;
+}
+.import-csv input.date {
+    width: 88px;
+}
+.import-csv input.time {
+    width: 68px;
+}
+.import-csv input[type=file] {
+    margin-left: 0;
+    width: auto;
+}
+.import-csv input.delimiter {
+    width: 20px;
+}
+.import-csv label {
+    font-weight: bold;
+    width: 84px;
+    display: inline-block;
+}
+
 .no-text-select {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
