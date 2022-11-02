@@ -1198,24 +1198,24 @@ div.toggle-time-entry div {
     height: 10px;
 }
 
+.import-csv .group,
 .import-csv input {
+    display: inline-block;
     width: 260px;
     box-sizing: border-box;
     height: 24px;
     margin-bottom: 6px;
 }
+.import-csv .group div {
+    display: inline-block;
+    float: right;
+}
 .import-csv span {
     display: inline-block;
-}
-.import-csv span.date-spacer {
-    min-width: 16px;
 }
 .import-csv span.time-spacer {
     min-width: 4px;
     text-align: center;
-}
-.import-csv span.delimiter-spacer {
-    min-width: 27px;
 }
 .import-csv input.date {
     width: 88px;

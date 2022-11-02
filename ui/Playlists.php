@@ -933,47 +933,54 @@ class Playlists extends MenuItem {
         <?php echo $this->getDJAirNames(); ?>
         </datalist>
         <div>
-            <label>Show Name:</label>
-            <input type='text' name='description' value='<?php echo stripslashes($description);?>' maxlength='<?php echo IPlaylist::MAX_DESCRIPTION_LENGTH;?>' required>
+          <label>Show Name:</label>
+          <input type='text' name='description' value='<?php echo stripslashes($description);?>' maxlength='<?php echo IPlaylist::MAX_DESCRIPTION_LENGTH;?>' required>
         </div>
         <div>
-            <label>DJ:</label>
-            <input type='text' id='airname' name='airname' value='<?php echo $airname; ?>' required>
+          <label>DJ:</label>
+          <input type='text' id='airname' name='airname' value='<?php echo $airname; ?>' required>
         </div>
         <div>
-            <label>Date / Time:</label>
+          <label>Date / Time:</label>
+          <div class='group'>
             <input type='text' class='date' required>
-            <span class="date-spacer"></span>
-            <input type='text' id='fromtime-entry' class='time' required>
-            <span class="time-spacer">-</span>
-            <input type='text' id='totime-entry' class='time' required>
-        </div>
-        <div>
-            <label>Import from:</label>
-            <input type='file' name='userfile' required>
-        </div>
-        <div>
-            <label>Delimiter:</label>
-            <input type='text' class='delimiter' name='delimiter' maxlength='1' value='<?php echo htmlentities($delimiter, ENT_QUOTES); ?>'> (empty for tab)
-            <span class="delimiter-spacer"></span>
-            Field enclosure: <input type='text' class='delimiter' name='enclosure' maxlength='1' value='<?php echo htmlentities($enclosure, ENT_QUOTES); ?>'>
-        </div>
-        <div>
-            <label></label>
-            <input type='submit' value=' Import Playlist '>
-        </div>
-        <div>
-            <label></label>
-            <div class='user-tip sub' style='display: inline-block; max-width: 550px;'>
-                <h4>CSV Format</h4>
-                <p>File must be UTF-8 encoded, with one
-                track per line.  Each line may contain 4, 5, or 6 columns:</p>
-                <pre style='padding-left: 20px; white-space: normal;'><b>artist&nbsp; track&nbsp; album&nbsp; label</b> &nbsp;or<br>
-                <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label</b> &nbsp;or<br>
-                <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label&nbsp; timestamp</b></pre>
-                <p>where each column is optionally enclosed by the specified field enclosure character, and separated by a delimiter character.  If no delimiter is specified, tab is used.</p>
-                <p>Any file data not in this format will be ignored.</p>
+            <div>
+              <input type='text' id='fromtime-entry' class='time' required>
+              <span class="time-spacer">-</span>
+              <input type='text' id='totime-entry' class='time' required>
             </div>
+          </div>
+        </div>
+        <div>
+          <label>Import from:</label>
+          <input type='file' name='userfile' required>
+        </div>
+        <div>
+          <label>Delimiter:</label>
+          <div class='group'>
+            <input type='text' class='delimiter' name='delimiter' maxlength='1' value='<?php echo htmlentities($delimiter, ENT_QUOTES); ?>'> (empty for tab)
+            <div>
+              Field enclosure:
+              <input type='text' class='delimiter' name='enclosure' maxlength='1' value='<?php echo htmlentities($enclosure, ENT_QUOTES); ?>'>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label></label>
+          <input type='submit' value=' Import Playlist '>
+        </div>
+        <div>
+          <label></label>
+          <div class='user-tip sub' style='display: inline-block; max-width: 550px;'>
+            <h4>CSV Format</h4>
+            <p>File must be UTF-8 encoded, with one
+            track per line.  Each line may contain 4, 5, or 6 columns:</p>
+            <pre style='padding-left: 20px; white-space: normal;'><b>artist&nbsp; track&nbsp; album&nbsp; label</b> &nbsp;or<br>
+            <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label</b> &nbsp;or<br>
+            <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label&nbsp; timestamp</b></pre>
+            <p>where each column is optionally enclosed by the specified field enclosure character, and separated by a delimiter character.  If no delimiter is specified, tab is used.</p>
+            <p>Any file data not in this format will be ignored.</p>
+          </div>
         </div>
       </form>
     <?php 
