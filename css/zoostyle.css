@@ -1210,7 +1210,7 @@ div.toggle-time-entry div {
     display: inline-block;
 }
 .import-csv div.time-spacer {
-    min-width: 4px;
+    min-width: 5px;
     text-align: center;
 }
 .import-csv input.date {

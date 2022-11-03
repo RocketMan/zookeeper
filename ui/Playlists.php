@@ -980,10 +980,12 @@ class Playlists extends MenuItem {
             <h4>CSV Format</h4>
             <p>File must be UTF-8 encoded, with one
             track per line.  Each line may contain 4, 5, or 6 columns:</p>
-            <pre style='padding-left: 20px; white-space: normal;'><b>artist&nbsp; track&nbsp; album&nbsp; label</b> &nbsp;or<br>
-            <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label</b> &nbsp;or<br>
+            <pre style='padding-left: 20px; white-space: normal;'><b>artist&nbsp; track&nbsp; album&nbsp; label</b> &nbsp;<i>or</i><br>
+            <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label</b> &nbsp;<i>or</i><br>
             <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label&nbsp; timestamp</b></pre>
             <p>where each column is optionally enclosed by the specified field enclosure character, and separated by a delimiter character.  If no delimiter is specified, tab is used.</p>
+            <p>If you do not have a tag or label but want to supply a timestamp,
+            leave the tag and/or label column empty.</p>
             <p>Any file data not in this format will be ignored.</p>
           </div>
         </div>
