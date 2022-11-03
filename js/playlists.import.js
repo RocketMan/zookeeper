@@ -41,7 +41,14 @@ $().ready(function() {
 
     $(".time").fxtime();
     $("#fromtime-entry").fxtime('val', localTimeIntl($("#fromtime").val()));
-    $("#totime-entry").fxtime('val', localTimeIntl($("#totime").val()));
+    $("#totime-entry").fxtime('val', localTimeIntl($("#totime").val())).on('focus', function() {
+        var start = $("#fromtime-entry").fxtime('val');
+        if(!start || $(this).fxtime('val'))
+            return;
+
+        var hour = start.split(':')[0];
+        $(this).fxtime('seg', 3, hour < 11 || hour > 22 ? 'AM' : 'PM').select();
+    });
 
     $("#airname").on('click', function() {
         $(this).autocomplete('search', '');
