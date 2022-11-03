@@ -864,9 +864,6 @@ class Playlists extends MenuItem {
     }
 
     public function emitImportList() {
-        UI::emitJS('js/jquery.fxtime.js');
-        UI::emitJS('js/playlists.import.js');
-
         $validate = $_POST["validate"];
         $description = mb_substr(trim($_REQUEST["description"]), 0, IPlaylist::MAX_DESCRIPTION_LENGTH);
         $date = $_REQUEST["date"];
@@ -881,6 +878,10 @@ class Playlists extends MenuItem {
         $totime = $_REQUEST["totime"];
         $delimiter = $_REQUEST["delimiter"] ?? "";
         $enclosure = $_REQUEST["enclosure"] ?? "\"";
+
+        $empty = $_POST["empty"] ?? 0;
+        if($empty)
+            $errorMessage = "<b><font class='error'>Import file contains no data.  Check the format and try again.</font></b>";
     
         if(!$date)
             $date = date("Y-m-d");
@@ -916,7 +917,11 @@ class Playlists extends MenuItem {
                 $description == "" ||
                 $time == '' ||
                 $aid === false ||
+                $empty ||
                 !checkdate($month, $day, $year)) {
+            UI::emitJS('js/jquery.fxtime.js');
+            UI::emitJS('js/playlists.import.js');
+
             if($validate == "edit")
                 echo $errorMessage ?? "<b><font class='error'>Ensure fields are not blank and date is valid.</font></b><br>\n";
     ?>
@@ -944,7 +949,7 @@ class Playlists extends MenuItem {
           <label>Date / Time:</label>
           <div class='group'>
             <input type='text' class='date' required>
-            <div>
+            <div class='pull-right'>
               <input type='text' id='fromtime-entry' class='time' required>
               <span class="time-spacer">-</span>
               <input type='text' id='totime-entry' class='time' required>
@@ -959,7 +964,7 @@ class Playlists extends MenuItem {
           <label>Delimiter:</label>
           <div class='group'>
             <input type='text' class='delimiter' name='delimiter' maxlength='1' value='<?php echo htmlentities($delimiter, ENT_QUOTES); ?>'> (empty for tab)
-            <div>
+            <div class='pull-right'>
               Field enclosure:
               <input type='text' class='delimiter' name='enclosure' maxlength='1' value='<?php echo htmlentities($enclosure, ENT_QUOTES); ?>'>
             </div>
@@ -1055,13 +1060,21 @@ class Playlists extends MenuItem {
             }
             // echo "<B>Imported $count tracks.</B>\n";
             $fd = null; // close
-            unset($_POST["validate"]);
+
+            if($count == 0) {
+                $api->deletePlaylist($playlist);
+                $_POST["empty"] = 1;
+                $this->emitImportList();
+                return;
+            }
 
             $this->lazyLoadImages($playlist);
-
-            $_REQUEST["playlist"] = $playlist;
-            $this->action = "editListEditor";
-            $this->emitEditor();
+?>
+    <SCRIPT TYPE="text/javascript"><!--
+        window.open("?action=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
+    // -->
+    </SCRIPT>
+<?php
         }
     }
     
@@ -1119,6 +1132,7 @@ class Playlists extends MenuItem {
                     $playlist = $papi->lastInsertId();
 
                     // insert the tracks
+                    $count = 0;
                     $status = '';
                     $window = $papi->getTimestampWindow($playlist);
                     $data = isset($json->attributes)?$attrs->events:$json->data;
@@ -1136,15 +1150,25 @@ class Playlists extends MenuItem {
                             }
                         }
                         $success = $papi->insertTrackEntry($playlist, $entry, $status);
+                        $count++;
                     }
 
-                    $this->lazyLoadImages($playlist);
+                    if($count == 0) {
+                        $papi->deletePlaylist($playlist);
+                        echo "<b><font class='error'>Import file contains no entries.</font></b><br>\n";
+                    } else {
+                        // success
+                        $this->lazyLoadImages($playlist);
 
-                    // display the editor
-                    $_REQUEST["playlist"] = $playlist;
-                    $this->action = "editListEditor";
-                    $this->emitEditor();
-                    $displayForm = false;
+                        // display the editor
+?>
+    <SCRIPT TYPE="text/javascript"><!--
+        window.open("?action=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
+    // -->
+    </SCRIPT>
+<?php
+                        $displayForm = false;
+                    }
                 } else
                     echo "<B><FONT CLASS='error'>Show details are invalid.</FONT></B><BR>\n";
             }

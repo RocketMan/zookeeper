@@ -1208,7 +1208,6 @@ div.toggle-time-entry div {
 }
 .import-csv .group div {
     display: inline-block;
-    float: right;
 }
 .import-csv span {
     display: inline-block;
