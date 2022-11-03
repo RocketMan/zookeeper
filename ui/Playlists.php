@@ -943,7 +943,7 @@ class Playlists extends MenuItem {
         </div>
         <div>
           <label>DJ:</label>
-          <input type='text' id='airname' name='airname' value='<?php echo $airname; ?>' required>
+          <input type='text' id='airname' name='airname' value='<?php echo $airname; ?>' maxlength='<?php echo IDJ::MAX_AIRNAME_LENGTH; ?>' required>
         </div>
         <div>
           <label>Date / Time:</label>

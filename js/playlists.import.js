@@ -65,6 +65,13 @@ $().ready(function() {
         }
     });
 
+    // limit length on mobile
+    $("input").on('keyup', function() {
+        var max = this.getAttribute('maxlength');
+        if(max && this.value.length > max)
+            this.value = this.value.substring(0, max);
+    });
+
     $(".import-csv").on('submit', function(e) {
         var airname = $("#airname").val().trim();
         if(airname.length == 0 ||
