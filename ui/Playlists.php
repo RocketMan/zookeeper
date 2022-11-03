@@ -951,7 +951,7 @@ class Playlists extends MenuItem {
             <input type='text' class='date' required>
             <div class='pull-right'>
               <input type='text' id='fromtime-entry' class='time' required>
-              <span class="time-spacer">-</span>
+              <div class='time-spacer'>-</div>
               <input type='text' id='totime-entry' class='time' required>
             </div>
           </div>
