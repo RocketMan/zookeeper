@@ -878,147 +878,123 @@ class Playlists extends MenuItem {
         $totime = $_REQUEST["totime"];
         $delimiter = $_REQUEST["delimiter"] ?? "";
         $enclosure = $_REQUEST["enclosure"] ?? "\"";
+
+        $empty = $_POST["empty"] ?? 0;
+        if($empty)
+            $errorMessage = "<b><font class='error'>Import file contains no data.  Check the format and try again.</font></b>";
     
-        if($button == " Setup New Airname... ") {
-            $displayForm = 1;
-            $djname = trim($djname);
-            if($newairname == " Add Airname " && $djname) {
-                // Insert new airname
-                $api = Engine::api(IDJ::class);
-                $success = $api->insertAirname($djname, $this->session->getUser());
-                if($success > 0) {
-                    $airname = $api->lastInsertId();
-                    $button = "";
-                    $displayForm = 0;
-                } else
-                    $errorMessage = "<B><FONT CLASS=\"error\">Airname '$djname' is invalid or already exists.</FONT></B>";
-            }
-            if ($displayForm) {
-    ?>
-    <P CLASS="header"><b>Add Air Name</b></P>
-    <?php echo $errorMessage; ?>
-    <FORM ACTION="?" METHOD=POST>
-    <TABLE CELLPADDING=2 CELLSPACING=0>
-      <TR>
-        <TD ALIGN=RIGHT>Airname:</TD>
-        <TD><INPUT TYPE=TEXT NAME=djname SIZE=30 maxlength=<?php echo IDJ::MAX_AIRNAME_LENGTH;?> data-focus></TD>
-      </TR>
-      <TR>
-        <TD>&nbsp;</TD>
-        <TD><INPUT TYPE=SUBMIT NAME="newairname" VALUE=" Add Airname "></TD>
-      </TR>
-    </TABLE>
-    <INPUT TYPE=HIDDEN NAME=button VALUE=" Setup New Airname... ">
-    <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
-    <INPUT TYPE=HIDDEN NAME=subaction VALUE="importCSV">
-    <INPUT TYPE=HIDDEN NAME=playlist VALUE="<?php echo $playlist;?>">
-    <INPUT TYPE=HIDDEN NAME=description VALUE="<?php echo htmlentities(stripslashes($description));?>">
-    <INPUT TYPE=HIDDEN NAME=date VALUE="<?php echo htmlentities(stripslashes($date));?>">
-    <INPUT TYPE=HIDDEN NAME=time VALUE="<?php echo htmlentities(stripslashes($time));?>">
-    <INPUT TYPE=HIDDEN NAME=fromtime VALUE="<?php echo htmlentities(stripslashes($fromtime));?>">
-    <INPUT TYPE=HIDDEN NAME=totime VALUE="<?php echo htmlentities(stripslashes($totime));?>">
-    <INPUT TYPE=HIDDEN NAME=delimiter VALUE="<?php echo htmlentities(stripslashes($delimiter), ENT_QUOTES);?>">
-    <INPUT TYPE=HIDDEN NAME=enclosure VALUE="<?php echo htmlentities(stripslashes($enclosure), ENT_QUOTES);?>">
-    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
-    </FORM>
-    <?php 
-                return;
-            }
-        }
         if(!$date)
             $date = date("Y-m-d");
         list($year, $month, $day) = explode("-", $date);
+
         $time = $this->composeTime($fromtime, $totime);
+
+        if($validate == "edit" && !$time) {
+           $errorMessage = "<b><font class='error'>Invalid time range (min " . IPlaylist::MIN_SHOW_LEN . " minutes, max " . (IPlaylist::MAX_SHOW_LEN / 60) . " hours)</font></b>";
+           $totime = "";
+        }
+
+        // lookup the airname
+        $aid = null;
+        if($validate == "edit" && $airname && strcasecmp($airname, "none")) {
+            $djapi = Engine::api(IDJ::class);
+            $aid = $djapi->getAirname($airname, $this->session->getUser());
+            if(!$aid) {
+                // airname does not exist; try to create it
+                $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $this->session->getUser());
+                if($success > 0) {
+                    // success!
+                    $aid = $djapi->lastInsertId();
+                } else {
+                   $errorMessage = "<b><font class='error'>Airname '$airname' is invalid or already exists.</font></b>";
+                   $airname = "";
+                   $aid = false;
+                }
+            }
+        }
+
         if(!$userfile || $userfile == "none" ||
                 $description == "" ||
                 $time == '' ||
+                $aid === false ||
+                $empty ||
                 !checkdate($month, $day, $year)) {
+            UI::emitJS('js/jquery.fxtime.js');
+            UI::emitJS('js/playlists.import.js');
+
             if($validate == "edit")
-                echo "<B><FONT CLASS='error'>Ensure fields are not blank and date is valid.</FONT></B><BR>\n";
+                echo $errorMessage ?? "<b><font class='error'>Ensure fields are not blank and date is valid.</font></b><br>\n";
     ?>
-      <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
-        <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
-        <INPUT TYPE=HIDDEN NAME=subaction VALUE="importCSV">
-        <INPUT TYPE=HIDDEN NAME=validate VALUE="edit">
-        <INPUT TYPE=HIDDEN NAME=MAX_FILE_SIZE VALUE=100000>
-        <TABLE CELLPADDING=2 CELLSPACING=0>
-          <TR>
-            <TD ALIGN=RIGHT>Show Name:</TD>
-            <TD><INPUT TYPE=TEXT NAME=description VALUE="<?php echo stripslashes($description);?>" SIZE=30 maxlength=<?php echo IPlaylist::MAX_DESCRIPTION_LENGTH;?> data-focus></TD>
-          </TR><TR>
-            <TD ALIGN=RIGHT>Date:</TD>
-            <TD><INPUT TYPE=TEXT NAME=date VALUE="<?php echo stripslashes($date);?>" SIZE=15></TD>
-          </TR><TR>
-            <TD ALIGN=RIGHT>Time Slot:</TD>
-    <?php 
-        if(strlen($fromtime) && strlen($totime)
-                       || $this->extractTime($time, $fromtime, $totime)) {
-            // Emit the time in canonical format
-            echo "        <TD><SELECT NAME=fromtime>\n";
-            for($i=0; $i<24; $i++) {
-                for($j=0; $j<60; $j+=30) {
-                    $ovalue = sprintf("%02d%02d", $i, $j);
-                    $selected = ($ovalue == $fromtime)?" SELECTED":"";
-                    echo "              <OPTION VALUE=\"$ovalue\"$selected>$ovalue\n";
-                }
-            }
-            echo "            </SELECT> - <SELECT NAME=totime>\n";
-            for($i=0; $i<24; $i++) {
-                for($j=0; $j<60; $j+=30) {
-                    $ovalue = sprintf("%02d%02d", $i, $j);
-                    $selected = ($ovalue == $totime)?" SELECTED":"";
-                    echo "              <OPTION VALUE=\"$ovalue\"$selected>$ovalue\n";
-                }
-            }
-            echo "            </SELECT></TD>\n";
-        } else
-            // Emit the time in legacy format
-            echo "        <TD><INPUT TYPE=TEXT NAME=time VALUE=\"". htmlentities(stripslashes($time)) . "\" CLASS=input SIZE=15></TD>\n";
-    ?>
-          </TR><TR>
-            <TD ALIGN=RIGHT>Airname:</TD>
-            <TD><SELECT NAME=airname>
-    <?php 
-            $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, $djname);
-            while ($records && ($row = $records->fetch())) {
-                $selected = ($row[0] == $airname)?" SELECTED":"";
-                echo "              <OPTION VALUE=\"" . $row[0] ."\"" . $selected .
-                     ">$row[1]\n";
-            }
-            $selected = $airname?"":" SELECTED";
-            echo "              <OPTION VALUE=\"\"$selected>(unpublished playlist)\n";
-    ?>
-                </SELECT><INPUT TYPE=SUBMIT NAME=button VALUE=" Setup New Airname... "></TD>
-          </TR><TR>
-          </TR><TR>
-            <TD ALIGN=RIGHT>Delimiter:</TD>
-            <TD><INPUT TYPE=text NAME=delimiter SIZE=2 MAXLENGTH=1 VALUE="<?php echo htmlentities($delimiter, ENT_QUOTES); ?>"> (empty for tab)
-            <span style="display: inline-block;min-width: 35px"></span>
-            Field enclosure: <INPUT TYPE=text NAME=enclosure SIZE=2 MAXLENGTH=1 VALUE="<?php echo htmlentities($enclosure, ENT_QUOTES); ?>">
-          </TR><TR>
-            <TD ALIGN=RIGHT>Import from file:</TD><TD><INPUT NAME=userfile TYPE=file></TD>
-          </TR><TR>
-            <TD>&nbsp;</TD>
-            <TD><INPUT TYPE=submit VALUE=" Import Playlist "></TD>
-          </TR><TR>
-            <TD>&nbsp;</TD>
-            <TD CLASS="sub"><div class='user-tip' style='display: block; max-width: 550px;'>
-                <h4>CSV Format</h4>
-                <p>File must be UTF-8 encoded, with one
-                track per line.  Each line may contain 4, 5, or 6 columns:</p>
-                <p>&nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; label</B> &nbsp;or<BR><BR>
-                &nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label</B> &nbsp;or<BR><BR>
-                &nbsp;&nbsp;&nbsp;&nbsp;<B>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp; label&nbsp; timestamp</B>,</p>
-                <p>where each column is optionally enclosed by the specified field enclosure character, and separated by a delimiter character.  If no Delimiter is specified, tab is used.</p>
-                <p>Any file data not in this format will be ignored.</p></div></TD>
-          </TR>
-        </TABLE>
-      </FORM>
+      <form class='import-csv' enctype='multipart/form-data' action='?' method='post'>
+        <input type='hidden' name='action' value='importExport'>
+        <input type='hidden' name='subaction' value='importCSV'>
+        <input type='hidden' name='validate' value='edit'>
+        <input type='hidden' name='MAX_FILE_SIZE' value='100000'>
+        <input type='hidden' name='date' id='date' value='<?php echo $date; ?>'>
+        <input type='hidden' name='fromtime' id='fromtime' value='<?php echo $fromtime; ?>'>
+        <input type='hidden' name='totime' id='totime' value='<?php echo $totime; ?>'>
+        <input type='hidden' id='date-format' value='<?php echo self::isUsLocale() ? "mm/dd/yy" : "dd-mm-yy"; ?>'>
+        <datalist id='airnames'>
+        <?php echo $this->getDJAirNames(); ?>
+        </datalist>
+        <div>
+          <label>Show Name:</label>
+          <input type='text' name='description' value='<?php echo stripslashes($description);?>' maxlength='<?php echo IPlaylist::MAX_DESCRIPTION_LENGTH;?>' required>
+        </div>
+        <div>
+          <label>DJ:</label>
+          <input type='text' id='airname' name='airname' value='<?php echo $airname; ?>' maxlength='<?php echo IDJ::MAX_AIRNAME_LENGTH; ?>' required>
+        </div>
+        <div>
+          <label>Date / Time:</label>
+          <div class='group'>
+            <input type='text' class='date' required>
+            <div class='pull-right'>
+              <input type='text' id='fromtime-entry' class='time' required>
+              <div class='time-spacer'>-</div>
+              <input type='text' id='totime-entry' class='time' required>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label>Import from:</label>
+          <input type='file' name='userfile' required>
+        </div>
+        <div>
+          <label>Delimiter:</label>
+          <div class='group'>
+            <input type='text' class='delimiter' name='delimiter' maxlength='1' value='<?php echo htmlentities($delimiter, ENT_QUOTES); ?>'> (empty for tab)
+            <div class='pull-right'>
+              Field enclosure:
+              <input type='text' class='delimiter' name='enclosure' maxlength='1' value='<?php echo htmlentities($enclosure, ENT_QUOTES); ?>'>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label></label>
+          <input type='submit' value=' Import Playlist '>
+        </div>
+        <div>
+          <label></label>
+          <div class='user-tip sub' style='display: inline-block; max-width: 550px;'>
+            <h4>CSV Format</h4>
+            <p>File must be UTF-8 encoded, with one
+            track per line.  Each line may contain 4, 5, or 6 columns:</p>
+            <pre style='padding-left: 20px; white-space: normal;'><b>artist&nbsp; track&nbsp; album&nbsp; label</b> &nbsp;<i>or</i><br>
+            <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label</b> &nbsp;<i>or</i><br>
+            <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label&nbsp; timestamp</b></pre>
+            <p>where each column is optionally enclosed by the specified field enclosure character, and separated by a delimiter character.  If no delimiter is specified, tab is used.</p>
+            <p>If you do not have a tag or label but want to supply a timestamp,
+            leave the tag and/or label column empty.</p>
+            <p>Any file data not in this format will be ignored.</p>
+          </div>
+        </div>
+      </form>
     <?php 
         } else {
             // Create the playlist
             $api = Engine::api(IPlaylist::class);
-            $success = $api->insertPlaylist($this->session->getUser(), $date, $time, $description, $airname);
+            $success = $api->insertPlaylist($this->session->getUser(), $date, $time, $description, $aid);
             $playlist = $api->lastInsertId();
 
             // empty delimiter is tab
@@ -1086,13 +1062,21 @@ class Playlists extends MenuItem {
             }
             // echo "<B>Imported $count tracks.</B>\n";
             $fd = null; // close
-            unset($_POST["validate"]);
+
+            if($count == 0) {
+                $api->deletePlaylist($playlist);
+                $_POST["empty"] = 1;
+                $this->emitImportList();
+                return;
+            }
 
             $this->lazyLoadImages($playlist);
-
-            $_REQUEST["playlist"] = $playlist;
-            $this->action = "editListEditor";
-            $this->emitEditor();
+?>
+    <SCRIPT TYPE="text/javascript"><!--
+        window.open("?action=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
+    // -->
+    </SCRIPT>
+<?php
         }
     }
     
@@ -1150,6 +1134,7 @@ class Playlists extends MenuItem {
                     $playlist = $papi->lastInsertId();
 
                     // insert the tracks
+                    $count = 0;
                     $status = '';
                     $window = $papi->getTimestampWindow($playlist);
                     $data = isset($json->attributes)?$attrs->events:$json->data;
@@ -1167,15 +1152,25 @@ class Playlists extends MenuItem {
                             }
                         }
                         $success = $papi->insertTrackEntry($playlist, $entry, $status);
+                        $count++;
                     }
 
-                    $this->lazyLoadImages($playlist);
+                    if($count == 0) {
+                        $papi->deletePlaylist($playlist);
+                        echo "<b><font class='error'>Import file contains no entries.</font></b><br>\n";
+                    } else {
+                        // success
+                        $this->lazyLoadImages($playlist);
 
-                    // display the editor
-                    $_REQUEST["playlist"] = $playlist;
-                    $this->action = "editListEditor";
-                    $this->emitEditor();
-                    $displayForm = false;
+                        // display the editor
+?>
+    <SCRIPT TYPE="text/javascript"><!--
+        window.open("?action=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
+    // -->
+    </SCRIPT>
+<?php
+                        $displayForm = false;
+                    }
                 } else
                     echo "<B><FONT CLASS='error'>Show details are invalid.</FONT></B><BR>\n";
             }
@@ -1189,7 +1184,7 @@ class Playlists extends MenuItem {
         <INPUT TYPE=HIDDEN NAME=MAX_FILE_SIZE VALUE=100000>
         <TABLE CELLPADDING=2 CELLSPACING=0>
           <TR>
-            <TD ALIGN=RIGHT>Import from file:</TD><TD><INPUT NAME=userfile TYPE=file data-focus></TD>
+            <TD><label style='font-weight: bold'>Import from:</label></TD><TD><INPUT NAME=userfile TYPE=file required></TD>
           </TR><TR>
             <TD>&nbsp;</TD>
             <TD><INPUT TYPE=submit VALUE=" Import Playlist "></TD>
