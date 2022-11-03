@@ -132,10 +132,14 @@ $().ready(function(){
         tr.find('.pedit').on('click', pedit);
         tr.find('.pdup').on('click', pdup);
         tr.find('.pdel').on('click', pdel);
-        tr.find('.action').on('click', function() {
+        tr.find('.action').on('click', function(e) {
             if (isEditing()) return;
             $(".mobileMenuContent").not($(this).next()).hide();
             $(this).next().slideToggle();
+            e.stopPropagation();
+        });
+        tr.find('.mobileMenuContent').on('click dblclick', function(e) {
+            e.stopPropagation();
         });
         tr.find('.open').on('click', function() {
             if (isEditing()) return;
@@ -743,7 +747,9 @@ $().ready(function(){
     //
     // 'padding-top' is a hack to prevent accordion shifting layout when
     // opening and closing the content.
-    $(".active-playlist-container").css('overflow', 'visible').css('padding-top', '2px');
+    $(".active-playlist-container").css('overflow', 'visible').css('padding-top', '2px').on('click', function() {
+        $(".mobileMenuContent").slideUp();
+    });
     $(".newPlaylist button").on('click', function() {
         if (isEditing(true)) return;
 
