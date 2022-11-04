@@ -938,6 +938,26 @@ class Playlists extends MenuItem {
         <?php echo $this->getDJAirNames(); ?>
         </datalist>
         <div>
+          <label>Import from:</label>
+          <div class='group file-area'>
+            <input type='file' name='userfile' required>
+            <div class='file-overlay'>
+              <div class='default'>Drag&amp;Drop file here or <span class='pseudo-button'>Browse Files</span></div>
+              <div class='success'>Your file is selected.</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label>Delimiter:</label>
+          <div class='group'>
+            <input type='text' class='delimiter' name='delimiter' maxlength='1' value='<?php echo htmlentities($delimiter, ENT_QUOTES); ?>'> (empty for tab)
+            <div class='pull-right'>
+              Field enclosure:
+              <input type='text' class='delimiter' name='enclosure' maxlength='1' value='<?php echo htmlentities($enclosure, ENT_QUOTES); ?>'>
+            </div>
+          </div>
+        </div>
+        <div>
           <label>Show Name:</label>
           <input type='text' name='description' value='<?php echo stripslashes($description);?>' maxlength='<?php echo IPlaylist::MAX_DESCRIPTION_LENGTH;?>' required>
         </div>
@@ -953,26 +973,6 @@ class Playlists extends MenuItem {
               <input type='text' id='fromtime-entry' class='time' required>
               <div class='time-spacer'>-</div>
               <input type='text' id='totime-entry' class='time' required>
-            </div>
-          </div>
-        </div>
-        <div>
-          <label>Import from:</label>
-          <div class='group file-area'>
-            <input type='file' name='userfile' required>
-            <div class='file-overlay'>
-              <div class='default'>Click to select a file or drag it here.</div>
-              <div class='success'>Your file is selected.</div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <label>Delimiter:</label>
-          <div class='group'>
-            <input type='text' class='delimiter' name='delimiter' maxlength='1' value='<?php echo htmlentities($delimiter, ENT_QUOTES); ?>'> (empty for tab)
-            <div class='pull-right'>
-              Field enclosure:
-              <input type='text' class='delimiter' name='enclosure' maxlength='1' value='<?php echo htmlentities($enclosure, ENT_QUOTES); ?>'>
             </div>
           </div>
         </div>
@@ -1193,7 +1193,7 @@ class Playlists extends MenuItem {
           <div class='group file-area'>
             <input type='file' name='userfile' required>
             <div class='file-overlay'>
-              <div class='default'>Click to select a file or drag it here.</div>
+              <div class='default'>Drag&amp;Drop file here or <span class='pseudo-button'>Browse Files</span></div>
               <div class='success'>Your file is selected.</div>
             </div>
           </div>

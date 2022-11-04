@@ -1231,7 +1231,7 @@ div.toggle-time-entry div {
 .file-area {
     position: relative;
     width: 100%;
-    min-height: 44px;
+    min-height: 52px;
 }
 .file-area input[type=file] {
     position: absolute;
@@ -1246,7 +1246,7 @@ div.toggle-time-entry div {
 .file-area .file-overlay {
     box-sizing: border-box;
     width: 100%;
-    padding: 10px 0;
+    padding: 14px 0;
     background-color: #fff;
     border: 2px dashed #ccc;
     vertical-align: middle;
@@ -1254,8 +1254,19 @@ div.toggle-time-entry div {
     white-space: nowrap;
     transition: background 0.3s ease-in-out;
 }
+.file-area .file-overlay .pseudo-button {
+    color: #333;
+    background-color: #f4f4f4;
+    border-radius: 4px;
+    border: 1px solid #cdcdcd;
+    padding: 2px 6px;
+    margin-left: 2px;
+}
+.file-area:active .file-overlay .pseudo-button {
+    background-color: #d6d6d6;
+}
 .file-area .file-overlay.drop-active {
-    border-color: #637789;
+    border-color: #32cd32;
 }
 .drop-block:after {
     content: '';
@@ -1275,10 +1286,7 @@ div.toggle-time-entry div {
     text-overflow: ellipsis;
 }
 .file-area .file-overlay .default {
-    color: #333;
-}
-.file-area:hover input[type=file]:not(:valid) + .file-overlay {
-    border: 2px dashed #637789;
+    color: #666;
 }
 .file-area input[type=file]:focus + .file-overlay {
     border-color: #637789;
