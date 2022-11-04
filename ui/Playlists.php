@@ -925,7 +925,7 @@ class Playlists extends MenuItem {
             if($validate == "edit")
                 echo $errorMessage ?? "<b><font class='error'>Ensure fields are not blank and date is valid.</font></b><br>\n";
     ?>
-      <form class='import-csv' enctype='multipart/form-data' action='?' method='post'>
+      <form class='import-form import-csv' enctype='multipart/form-data' action='?' method='post'>
         <input type='hidden' name='action' value='importExport'>
         <input type='hidden' name='subaction' value='importCSV'>
         <input type='hidden' name='validate' value='edit'>
@@ -958,7 +958,13 @@ class Playlists extends MenuItem {
         </div>
         <div>
           <label>Import from:</label>
-          <input type='file' name='userfile' required>
+          <div class='group file-area'>
+            <input type='file' name='userfile' required>
+            <div class='file-overlay'>
+              <div class='default'>Click to select a file or drag it here.</div>
+              <div class='success'>Your file is selected.</div>
+            </div>
+          </div>
         </div>
         <div>
           <label>Delimiter:</label>
@@ -984,8 +990,6 @@ class Playlists extends MenuItem {
             <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label</b> &nbsp;<i>or</i><br>
             <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label&nbsp; timestamp</b></pre>
             <p>where each column is optionally enclosed by the specified field enclosure character, and separated by a delimiter character.  If no delimiter is specified, tab is used.</p>
-            <p>If you do not have a tag or label but want to supply a timestamp,
-            leave the tag and/or label column empty.</p>
             <p>Any file data not in this format will be ignored.</p>
           </div>
         </div>
@@ -1177,25 +1181,35 @@ class Playlists extends MenuItem {
         }
 
         if($displayForm) {
+            UI::emitJS('js/jquery.fxtime.js');
+            UI::emitJS('js/playlists.import.js');
     ?>
-      <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
-        <INPUT TYPE=HIDDEN NAME=action VALUE="importExport">
-        <INPUT TYPE=HIDDEN NAME=subaction VALUE="importJSON">
-        <INPUT TYPE=HIDDEN NAME=MAX_FILE_SIZE VALUE=100000>
-        <TABLE CELLPADDING=2 CELLSPACING=0>
-          <TR>
-            <TD><label style='font-weight: bold'>Import from:</label></TD><TD><INPUT NAME=userfile TYPE=file required></TD>
-          </TR><TR>
-            <TD>&nbsp;</TD>
-            <TD><INPUT TYPE=submit VALUE=" Import Playlist "></TD>
-          </TR><TR>
-            <TD>&nbsp;</TD>
-            <TD CLASS="sub"><div class='user-tip' style='display: block'>
-                <p>File must be a UTF-8 encoded JSON playlist,
-                such as previously exported via Export Playlist.</p></div></TD>
-          </TR>
-        </TABLE>
-      </FORM>
+      <form class='import-form import-json' enctype="multipart/form-data" action='?' method='post'>
+        <input type='hidden' name='action' value='importExport'>
+        <input type='hidden' name='subaction' value='importJSON'>
+        <input type='hidden' name='MAX_FILE_SIZE' value='100000'>
+        <div>
+          <label>Import from:</label>
+          <div class='group file-area'>
+            <input type='file' name='userfile' required>
+            <div class='file-overlay'>
+              <div class='default'>Click to select a file or drag it here.</div>
+              <div class='success'>Your file is selected.</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label></label>
+          <input type='submit' value=' Import Playlist '>
+        </div>
+        <div>
+          <label></label>
+          <div class='user-tip sub' style='display: inline-block'>
+            <p>File must be a UTF-8 encoded JSON playlist,
+            such as previously exported via Export Playlist.</p>
+          </div>
+        </div>
+      </form>
     <?php
         }
     }

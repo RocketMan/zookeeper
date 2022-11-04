@@ -90,5 +90,31 @@ $().ready(function() {
         $("#totime").val($("#totime-entry").fxtime('val').replace(':',''));
     });
 
+    $("body").on('dragenter dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(".file-overlay").addClass('drop-active');
+        $(this).addClass('drop-block');
+    }).on('dragleave', function() {
+        $(".file-overlay").removeClass('drop-active');
+        $(this).removeClass('drop-block');
+    }).on('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(".file-overlay").removeClass('drop-active');
+        $("body").removeClass('drop-block');
+        if(e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.files.length) {
+            if(e.originalEvent.dataTransfer.files.length > 1) {
+                alert('Please select only one file for import');
+                return;
+            }
+            $("input[type=file]")[0].files = e.originalEvent.dataTransfer.files;
+            $(".file-area .success").text(e.originalEvent.dataTransfer.files[0].name);
+        }
+    });
+    $("input[type=file]").on('change', function(e) {
+        $(".file-area .success").text(this.files[0].name);
+    });
+
     $("input:invalid").first().focus();
 });
