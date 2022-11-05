@@ -99,14 +99,16 @@ $().ready(function() {
     }).on('drop', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        $("body").removeClass('drop-active');
-        if(e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.files.length) {
-            if(e.originalEvent.dataTransfer.files.length > 1) {
+        $(this).removeClass('drop-active');
+        if(e.originalEvent.dataTransfer &&
+                e.originalEvent.dataTransfer.files.length) {
+            var files = e.originalEvent.dataTransfer.files;
+            if(files.length > 1) {
                 alert('Please select only one file for import');
                 return;
             }
-            $("input[type=file]")[0].files = e.originalEvent.dataTransfer.files;
-            $(".file-area .success").text(e.originalEvent.dataTransfer.files[0].name);
+            $("input[type=file]")[0].files = files;
+            $(".file-area .success").text(files[0].name);
         }
     });
     $("input[type=file]").on('change', function(e) {

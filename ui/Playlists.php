@@ -942,7 +942,7 @@ class Playlists extends MenuItem {
           <div class='group file-area'>
             <input type='file' name='userfile' required>
             <div class='file-overlay'>
-              <div class='default'>Drag&amp;Drop file here or <span class='pseudo-button'>Browse Files</span></div>
+              <div class='default'>Drag&hairsp;&amp;&hairsp;Drop file here or <span class='pseudo-button'>Browse Files</span></div>
               <div class='success'>Your file is selected.</div>
             </div>
           </div>
@@ -1193,7 +1193,7 @@ class Playlists extends MenuItem {
           <div class='group file-area'>
             <input type='file' name='userfile' required>
             <div class='file-overlay'>
-              <div class='default'>Drag&amp;Drop file here or <span class='pseudo-button'>Browse Files</span></div>
+              <div class='default'>Drag&hairsp;&amp;&hairsp;Drop file here or <span class='pseudo-button'>Browse Files</span></div>
               <div class='success'>Your file is selected.</div>
             </div>
           </div>
