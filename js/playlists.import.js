@@ -93,16 +93,13 @@ $().ready(function() {
     $("body").on('dragenter dragover', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        $(".file-overlay").addClass('drop-active');
-        $(this).addClass('drop-block');
+        $(this).addClass('drop-active');
     }).on('dragleave', function() {
-        $(".file-overlay").removeClass('drop-active');
-        $(this).removeClass('drop-block');
+        $(this).removeClass('drop-active');
     }).on('drop', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        $(".file-overlay").removeClass('drop-active');
-        $("body").removeClass('drop-block');
+        $("body").removeClass('drop-active');
         if(e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.files.length) {
             if(e.originalEvent.dataTransfer.files.length > 1) {
                 alert('Please select only one file for import');

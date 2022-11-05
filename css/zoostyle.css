@@ -1260,15 +1260,21 @@ div.toggle-time-entry div {
     border-radius: 4px;
     border: 1px solid #cdcdcd;
     padding: 2px 6px;
-    margin-left: 2px;
+}
+.file-area:hover .file-overlay .pseudo-button {
+    background-color: #f8f8f8;
 }
 .file-area:active .file-overlay .pseudo-button {
     background-color: #d6d6d6;
 }
-.file-area .file-overlay.drop-active {
+.drop-active .file-overlay {
     border-color: #32cd32;
+    background-color: #98fb98;
 }
-.drop-block:after {
+.drop-active .file-overlay .pseudo-button {
+    background-color: transparent;
+}
+.drop-active:after {
     content: '';
     display: block;
     position: absolute;
