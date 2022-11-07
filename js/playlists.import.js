@@ -90,5 +90,30 @@ $().ready(function() {
         $("#totime").val($("#totime-entry").fxtime('val').replace(':',''));
     });
 
+    $("body").on('dragenter dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('drop-active');
+    }).on('dragleave', function() {
+        $(this).removeClass('drop-active');
+    }).on('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('drop-active');
+        if(e.originalEvent.dataTransfer &&
+                e.originalEvent.dataTransfer.files.length) {
+            var files = e.originalEvent.dataTransfer.files;
+            if(files.length > 1) {
+                alert('Please select only one file for import');
+                return;
+            }
+            $("input[type=file]")[0].files = files;
+            $(".file-area .success").text(files[0].name);
+        }
+    });
+    $("input[type=file]").on('change', function(e) {
+        $(".file-area .success").text(this.files[0].name);
+    });
+
     $("input:invalid").first().focus();
 });
