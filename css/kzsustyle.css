@@ -15,12 +15,6 @@ a:hover {
 p {
 	margin: 10px 0;
 }
-p.indented {
-	margin-left: 40px;
-}
-p.center {
-	text-align: center;
-}
 li {
 	margin-left: 10px;
 	margin-bottom: 5px;

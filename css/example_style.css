@@ -48,6 +48,9 @@ a {
 a:hover {
     text-decoration: underline;
 }
+p {
+    margin: 10px 0;
+}
 div.playlistBanner a {
     color: #fff !important;
     text-decoration: underline;
