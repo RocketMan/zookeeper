@@ -70,12 +70,16 @@ body {
 }
 h1 {
     font-size: 16pt;
+    margin-top: 0;
+    margin-bottom: 10px;
     padding-top: 0;
 }
 h2, .subhead  {
     color: #d83d04;
     font-size: 14pt;
     font-weight: bold;
+    margin-top: 0;
+    margin-bottom: 8px;
     padding-top: 0;
     text-align: left;
 }
@@ -83,12 +87,7 @@ h3 {
     font-size: 12pt;
     font-weight: bold;
     line-height: 1.0;
-}
-h1.subhead,
-h2.subhead,
-h3.subhead {
-    margin-top: 0;
-    margin-left: 2px;
+    margin-bottom: 2px;
 }
 th.subhead {
     padding-top: 0;
@@ -850,9 +849,19 @@ input[type="checkbox"]:checked:active {
  */
 .searchTable {
     text-align:left;
+    margin: -2px;
+    border: 0;
+    border-spacing: 0;
 }
 .searchTable > thead > tr {
     border-bottom: 1px solid gray;
+}
+.searchTable th {
+    padding-left: 2px;
+    padding-right: 2px;
+}
+.searchTable td {
+    padding: 2px;
 }
 .albumReview {
     background-image: URL('../img/rinfo.gif');

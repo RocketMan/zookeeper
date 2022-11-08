@@ -415,9 +415,9 @@ class Search extends MenuItem {
             echo "<input id='maxresults' type='hidden' value='" . $this->maxresults . "'>\n";
             echo "<input id='chunksize' type='hidden' value='" . $this->chunksize . "'\n>";
             echo "</form>\n";
-            echo "<h2 class='subhead'>$name's Album Reviews</h2>\n";
-            echo "<table class='searchTable' cellpadding='2' cellspacing='0' border='0' id='results'></table>\n";
+            echo "<h2>$name's Album Reviews</h2>\n";
+            echo "<table class='searchTable' id='results'></table>\n";
         } else
-            echo "<h2 class='subhead'>Unknown DJ</h2>\n";
+            echo "<h2>Unknown DJ</h2>\n";
     }
 }
