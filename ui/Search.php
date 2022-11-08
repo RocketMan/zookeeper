@@ -408,16 +408,16 @@ class Search extends MenuItem {
         if($name) {
             UI::emitJS('js/jquery.bahashchange.min.js');
             UI::emitJS('js/search.library.js');
-            echo "<FORM>\n<INPUT id='showTag' type='hidden' value='" . ($this->session->isAuth('u')?'true':'false') . "'>\n";
-            echo "<INPUT id='type' type='hidden' value='reviews'>\n";
-            echo "<INPUT id='sortBy' type='hidden' value='".$sortBy."'>\n";
-            echo "<INPUT id='key' type='hidden' value='" . $this->searchText . "'>\n";
-            echo "<INPUT id='maxresults' type='hidden' value='" . $this->maxresults . "'>\n";
-            echo "<INPUT id='chunksize' type='hidden' value='" . $this->chunksize . "'\n>";
-            echo "</FORM>\n";
-            echo "<TABLE WIDTH=\"100%\"><TR><TH ALIGN=LEFT CLASS=\"subhead\">$name's Album Reviews</TH></TR></TABLE><hr/>\n";
-            echo "<TABLE CLASS=\"searchTable\" CELLPADDING=2 CELLSPACING=0 BORDER=0 id=\"results\"></TABLE>\n";
+            echo "<form>\n<input id='showTag' type='hidden' value='" . ($this->session->isAuth('u')?'true':'false') . "'>\n";
+            echo "<input id='type' type='hidden' value='reviews'>\n";
+            echo "<input id='sortBy' type='hidden' value='".$sortBy."'>\n";
+            echo "<input id='key' type='hidden' value='" . $this->searchText . "'>\n";
+            echo "<input id='maxresults' type='hidden' value='" . $this->maxresults . "'>\n";
+            echo "<input id='chunksize' type='hidden' value='" . $this->chunksize . "'\n>";
+            echo "</form>\n";
+            echo "<h2 class='subhead'>$name's Album Reviews</h2>\n";
+            echo "<table class='searchTable' cellpadding='2' cellspacing='0' border='0' id='results'></table>\n";
         } else
-            echo "<H2>Unknown DJ</H2>\n";
+            echo "<h2 class='subhead'>Unknown DJ</h2>\n";
     }
 }

@@ -70,26 +70,28 @@ body {
 }
 h1 {
     font-size: 16pt;
-    margin-top: 0px;
-    padding-top: 0px;
-    margin-bottom: 10px;
+    padding-top: 0;
 }
 h2, .subhead  {
     color: #d83d04;
     font-size: 14pt;
     font-weight: bold;
-    padding-top: 8px;
-    margin-bottom: 5px;
+    padding-top: 0;
     text-align: left;
 }
-h3  {
+h3 {
     font-size: 12pt;
     font-weight: bold;
     line-height: 1.0;
-    margin-bottom: 2px;
+}
+h1.subhead,
+h2.subhead,
+h3.subhead {
+    margin-top: 0;
+    margin-left: 2px;
 }
 th.subhead {
-    padding-top: 0px;
+    padding-top: 0;
 }
     
 div.subhead {
@@ -116,7 +118,7 @@ ol, ul {
     display: block;
     margin: 1em 0;
     margin-left: 30px;
-    padding-left: 0px;
+    padding-left: 0;
 }
 ol ul, ul ol, ul ul, ol ol {
     margin-top: 0;
@@ -129,7 +131,7 @@ table.afileactivity {
 }
 .hborder, .hborder td {
     border-style: solid;
-    border-width: 1px 0px 0px 0px;
+    border-width: 1px 0 0 0;
     border-color: #cccccc;
     vertical-align: baseline;
 }
@@ -141,13 +143,13 @@ table.afileactivity {
     background-color: #000000;
     color: #ffffff;
     border-style: solid;
-    border-width: 1px 0px 0px 0px;
+    border-width: 1px 0 0 0;
     border-color: #cccccc;
 }
 .noQuota, .noQuota td {
     background-color: #ffff00;
     border-style: solid;
-    border-width: 1px 0px 0px 0px;
+    border-width: 1px 0 0 0;
     border-color: #cccccc;
 }
 
@@ -254,7 +256,7 @@ span.review-categories > span.zk-hidden {
 /* album details */
 .currentsTop {
     border-style: solid;
-    border-width: 1px 1px 0px 1px;
+    border-width: 1px 1px 0 1px;
     border-color: #cccccc;
     font-size: 80%;
     background-color: #eeeeee;
@@ -262,7 +264,7 @@ span.review-categories > span.zk-hidden {
 }
 .currentsBottom {
     border-style: solid;
-    border-width: 0px 1px 1px 1px;
+    border-width: 0 1px 1px 1px;
     border-color: #cccccc;
     font-size: 80%;
     color: #000000;
@@ -311,10 +313,10 @@ td.label-form {
     box-shadow:5px 5px 8px #888888;
 }
 .editorUp {
-    top: 0px;
+    top: 0;
     width: 220px;
     height: 18px;
-    border: 0px;
+    border: 0;
     border-radius: 3px 3px 0 0;
     color: #ffffff;
     font-family: courier;
@@ -322,10 +324,10 @@ td.label-form {
     background-color: #2530a7;
 }
 .editorDown {
-    top: 0px;
+    top: 0;
     width: 220px;
     height: 18px;
-    border: 0px;
+    border: 0;
     border-radius: 0 0 3px 3px;
     font-family: courier;
     font-weight: 900;
@@ -391,7 +393,7 @@ div.box {
 }
 div.leftNav {
     float: left;
-    margin-top: 0px;
+    margin-top: 0;
     margin-left: 2px;
     text-align: left;
     width: 165px;
@@ -443,7 +445,7 @@ p.zktitle a {
     color: #000000;
     font-size: 18px;
     font-weight: bold;
-    margin: 0px;
+    margin: 0;
     margin-bottom: 10px;
     text-decoration: none;
 }
@@ -522,8 +524,8 @@ p.zktitle a {
 }
 .secCell {
     vertical-align: bottom;
-    padding: 0px;
-    border-spacing: 0px;
+    padding: 0;
+    border-spacing: 0;
 }
 
 /* general */
@@ -881,7 +883,7 @@ input[type="checkbox"]:checked:active {
 
 .tablesorter-default  .header, .tablesorter-default .tablesorter-header {
     font-weight: bold;
-    padding: 0px 16px 0px 0px;
+    padding: 0 16px 0 0;
 }
 
 /* up/down & edit links for playlist edits */
@@ -914,7 +916,7 @@ input[type="checkbox"]:checked:active {
 .songDivider hr {
     position: relative;
     top: 3px;
-    height: 0px;
+    height: 0;
     background-color: gray;
 }
 
@@ -946,7 +948,7 @@ input[type="checkbox"]:checked:active {
 }
 
 .markdown-help {
-    padding: 10px 0px;
+    padding: 10px 0;
     display: none;
 }
 
@@ -993,7 +995,7 @@ input[type="checkbox"]:checked:active {
 .invalid-input, .fxtime:invalid {
     border: 2px solid #f88;
     border-radius: 2px;
-    box-shadow: 0px 0px 2px #f88, inset 0px 0px 2px #f88;
+    box-shadow: 0 0 2px #f88, inset 0 0 2px #f88;
 }
 
 /* hack for fx not to display red border on empty field */
@@ -1006,7 +1008,7 @@ input[type="checkbox"]:checked:active {
     padding: 2px 3px 2px 3px ;
     border: 2px solid #0c0;
     border-radius: 2px;
-    box-shadow: 0px 0px 2px #f88, inset 0px 0px 2px #f88;
+    box-shadow: 0 0 2px #f88, inset 0 0 2px #f88;
 }
 
 .highlight {
@@ -1041,7 +1043,7 @@ a:hover.copy {
     overflow: hidden;
     border-radius: 3px;
     background-color: #fff;
-    box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 1px;
+    box-shadow: rgba(0, 0, 0, 0.1) 0 1px 1px;
     position: relative;
     text-align: left;
 }
