@@ -22,6 +22,10 @@
 
 /*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
+function htmlify(s) {
+    return s != null?s.replace(/&/g, '&amp;').replace(/</g, '&lt;'):'';
+}
+
 function indent() {
     return $("<TD>", {
         class: 'ind'
@@ -94,7 +98,7 @@ function getArtist(node) {
     var name = node.artist;
     if(name.substr(0, 8) == '[coll]: ')
         name = 'Various Artists';
-    return name;
+    return htmlify(name);
 }
 
 function emitAlbumsEx(table, response, odata, header, tag) {
@@ -120,8 +124,8 @@ function emitAlbumsEx(table, response, odata, header, tag) {
                             getArtist(album.attributes) + '</A>' +
                             "&nbsp;&#8226;&nbsp;");
         var albumx = $("<I>").html('<A HREF="?action=findAlbum&n=' + album.id +
-                                  '" CLASS="nav">' + album.attributes.album + '</A>');
-        td.append(albumx).append('&nbsp; (' + (album.relationships && album.relationships.label ? album.relationships.label.meta.name : "Unknown") + ')');
+                                   '" CLASS="nav">' + htmlify(album.attributes.album) + '</A>');
+        td.append(albumx).append('&nbsp; (' + htmlify(album.relationships && album.relationships.label ? album.relationships.label.meta.name : "Unknown") + ')');
         tr.append(td);
         table.append(tr);
     });
@@ -200,9 +204,9 @@ var lists = {
                                     '&q=10&action=search" CLASS="nav">' + getArtist(track) + '</A>' +
                                     "&nbsp;&#8226;&nbsp;");
                 var albumx = $("<I>").html('<A HREF="?action=findAlbum&n=' + entry.id +
-                                      '" CLASS="nav">' + album.attributes.album + '</A>');
+                                      '" CLASS="nav">' + htmlify(album.attributes.album) + '</A>');
                 td.append(albumx);
-                td.append('&nbsp;&#8226;&nbsp;"' + track.track + '"');
+                td.append('&nbsp;&#8226;&nbsp;"' + htmlify(track.track) + '"');
                 tr.append(td);
                 table.append(tr);
             });
@@ -227,10 +231,10 @@ var lists = {
             tr = $("<TR>").append(indent());
             var td = $("<TD>").html('<A HREF="?s=byLabelKey&n=' +
                                     entry.id + '&q=10&action=search" CLASS="nav">' +
-                                    label.attributes.name + '</A>');
+                                    htmlify(label.attributes.name) + '</A>');
             if(label.attributes.city)
-                td.append("&nbsp;&#8226; " + label.attributes.city + "&nbsp;" +
-                          label.attributes.state);
+                td.append("&nbsp;&#8226; " + htmlify(label.attributes.city) + "&nbsp;" +
+                          htmlify(label.attributes.state));
             tr.append(td);
             table.append(tr);
         });
@@ -261,10 +265,10 @@ var lists = {
                 align: 'left'
             }).html('<A HREF="?action=viewDJ&seq=selList&playlist=' +
                     list.id + '" CLASS="nav">' +
-                    list.attributes.name + '</A>' +
+                    htmlify(list.attributes.name) + '</A>' +
                     '&nbsp;&#8226;&nbsp;' +
                     day + " " + months[month-1] + year + '&nbsp;&nbsp;(' +
-                    list.attributes.airname + ')');
+                    htmlify(list.attributes.airname) + ')');
             tr.append(td);
             table.append(tr);
 
@@ -273,12 +277,12 @@ var lists = {
                     td.append('<BR>&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="sub">' +
                           getArtist(event) +
                           '&nbsp;&#8226;&nbsp;<I>' +
-                          event.album + '</I>' +
+                          htmlify(event.album) + '</I>' +
                           '&nbsp;&#8226;&nbsp;"' +
-                          event.track + '"</SPAN>');
+                          htmlify(event.track) + '"</SPAN>');
                 } else if (comment = event.comment) {
                     td.append('<BR>&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="sub"><I>' +
-                          comment + '...</I></SPAN>');
+                          htmlify(comment) + '...</I></SPAN>');
                 }
             });
         });
@@ -308,9 +312,9 @@ var lists = {
                                     '&nbsp;&#8226;&nbsp;' +
                                     '<I><A HREF="?action=findAlbum&n=' +
                                     album.data.id + '" CLASS="nav">' +
-                                    album.meta.album + '</A></I>' +
+                                    htmlify(album.meta.album) + '</A></I>' +
                                     '&nbsp;&nbsp;(' +
-                                    review.attributes.airname + ')');
+                                    htmlify(review.attributes.airname) + ')');
             tr.append(td);
             table.append(tr);
         });
@@ -342,8 +346,8 @@ var lists = {
                         "<I>" +
                         '<A HREF="?action=findAlbum&n=' +
                         entry.id + '" CLASS="nav">' +
-                        album.attributes.album + '</A></I>' +
-                        '&nbsp;&#8226;&nbsp;"' + track.track + '"');
+                        htmlify(album.attributes.album) + '</A></I>' +
+                        '&nbsp;&#8226;&nbsp;"' + htmlify(track.track) + '"');
                 tr.append(td);
                 table.append(tr);
             });
