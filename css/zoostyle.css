@@ -857,8 +857,7 @@ input[type="checkbox"]:checked:active {
     border-bottom: 1px solid gray;
 }
 .searchTable th {
-    padding-left: 2px;
-    padding-right: 2px;
+    padding: 2px 2px 0;
 }
 .searchTable td {
     padding: 2px;
