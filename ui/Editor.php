@@ -162,13 +162,76 @@ class Editor extends MenuItem {
     }
     
     public function processLocal($action, $subaction) {
+        $this->printConfig = Engine::param('label_printer');
+        if($subaction == "status" && $this->session->isAuth("m")) {
+            echo $this->getPrintStatus();
+            return;
+        }
+
         UI::emitJS('js/editor.common.js');
         $subactions = self::$subactions;
         if(Engine::api(IEditor::class)->getNumQueuedTags($this->session->getUser()))
             $subactions = array_merge($subactions, self::$subactions_tagq);
         $this->subaction = $subaction;
-        $this->printConfig = Engine::param('label_printer');
         return $this->dispatchSubaction($action, $subaction, $subactions);
+    }
+
+    private function getPrinterQueue($probe = false) {
+        $printers = $this->printConfig['print_queue'] ?? null;
+        if(is_array($printers)) {
+            $queue = $_REQUEST['printqueue'] ?? "";
+            if(!$probe && (!$queue || sizeof($printers) == 1)) {
+                if(sizeof($printers) > 1)
+                    error_log("multiple printers defined but none selected");
+                $queue = $printers[0]['queue'];
+            }
+        } else
+            $queue = $printers;
+
+        return $queue;
+    }
+
+    private function getPrinterDescription($pattern = "%%") {
+        $queue = $_REQUEST['printqueue'] ?? "";
+        $printers = $this->printConfig['print_queue'] ?? null;
+        if(is_array($printers)) {
+            foreach($printers as $printer) {
+                if($printer['queue'] == $queue)
+                    return str_replace("%%", $printer['description'], $pattern);
+            }
+        }
+        return "";
+    }
+
+    private function emitPrinterSelection() {
+        $printers = $this->printConfig['print_queue'] ?? null;
+        if(!is_array($printers) || sizeof($printers) < 2)
+            return;
+
+        $options = "";
+        foreach($printers as $printer)
+            $options .= "<option value='".htmlentities($printer['queue'], ENT_QUOTES)."'>".htmlentities($printer['description'], ENT_QUOTES, 'UTF-8');
+
+        // unique but irreversible identifier for the user
+        $uuid = md5($this->session->getUser());
+?>
+        <div id="select-printer-dialog" class="zk-popup">
+            <div class="zk-popup-content">
+                <h4>Which printer would you like to use today?</h4>
+                <p>Print tag to:
+                <select id="select-printer">
+                <?php echo $options; ?>
+                </select></p>
+                <p class="sub">(Your selection will be remembered for the rest of this session.)</p>
+                <div class="zk-popup-actionarea">
+                    <button type="button">Cancel</button>
+                    <button type="button" class="default">Print</button>
+                </div>
+            </div>
+        </div> <!-- select-printer-dialog -->
+        <input type='hidden' id='print-queue' name='printqueue'>
+        <input type='hidden' id='user-uuid' value='<?php echo $uuid; ?>'>
+<?php
     }
 
     public function musicEditor() {
@@ -189,9 +252,7 @@ class Editor extends MenuItem {
                 echo "  <FORM ACTION=\"?\" METHOD=POST>\n";
                 echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n      <TR><TH ALIGN=LEFT>$title</TH><TH ALIGN=RIGHT CLASS=\"error\">";
                 if(!$this->subaction) {
-                    $printStatus = $this->getPrintStatus();
-                    if($printStatus)
-                        echo "Label printer alert:&nbsp;&nbsp;$printStatus";
+                    echo "<span id='print-status'></span>\n";
                 }
                 echo "</TH></TR>\n      <TR><TD COLSPAN=2 HEIGHT=130 VALIGN=MIDDLE>\n";
     
@@ -213,6 +274,8 @@ class Editor extends MenuItem {
 <?php 
         $this->emitHidden("seq", $_REQUEST["seq"]);
         $this->emitVars();
+        if($this->canPrintLocal())
+            $this->emitPrinterSelection();
         echo "  </FORM>\n";
     }
 
@@ -255,6 +318,8 @@ class Editor extends MenuItem {
 <?php
         $this->emitHidden("seq", $_REQUEST["seq"]);
         $this->emitVars();
+        if($this->canPrintLocal())
+            $this->emitPrinterSelection();
         echo "  </FORM>\n";
     }
     
@@ -716,7 +781,7 @@ class Editor extends MenuItem {
             else if($this->albumUpdated)
                 $title = "Album Updated!";
             if($this->tagPrinted) {
-                $printed = $this->canPrintLocal()?"Printed":"Queued";
+                $printed = $this->tagPrinted == -1 ? "Queued" : "Printed" . $this->tagPrinted;
                 $title .= "&nbsp;&nbsp;<FONT CLASS=\"success\">Tag $printed</FONT>";
             }
             break;
@@ -742,7 +807,7 @@ class Editor extends MenuItem {
         case "select":
             $title = "Select tags to print";
             if($this->tagPrinted)
-                $title .= "&nbsp;&nbsp;<FONT CLASS=\"success\">Tag(s) Printed</FONT>";
+                $title .= "&nbsp;&nbsp;<FONT CLASS=\"success\">Tag(s) Printed" . $this->tagPrinted . "</FONT>";
             break;
         case "form":
             $title = "Select the label format";
@@ -945,12 +1010,12 @@ class Editor extends MenuItem {
     </TD></TR>
     <TR><TD ALIGN=CENTER>
     <!--P ALIGN=CENTER-->
-      <INPUT TYPE=SUBMIT NAME=lnew CLASS=submit VALUE="  New  ">&nbsp;
-      <INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Edit  ">&nbsp;
+      <INPUT TYPE=SUBMIT NAME=lnew CLASS=submit VALUE="  New  ">
+      <INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Edit  ">
     <?php  if($_REQUEST["seltag"]) { ?>
-      <INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE="   OK   ">&nbsp;
+      <INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE="   OK   ">
     <?php  } else if($this->subaction != "labels") { ?>
-      <INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE=" Tracks &gt;&gt; ">&nbsp;
+      <INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE="Tracks &gt;&gt;">
     <?php  } ?>
     <!--/P-->
     </TD><TD></TD></TR>
@@ -1148,7 +1213,7 @@ class Editor extends MenuItem {
         if(!empty($this->printConfig['print_methods'])) {
             // Enqueue tag for later printing
             Engine::api(IEditor::class)->enqueueTag($tag, $this->session->getUser());
-            $this->tagPrinted = 1;
+            $this->tagPrinted = -1;
         }
     }
 
@@ -1178,17 +1243,17 @@ class Editor extends MenuItem {
                                   $this->printConfig['box_mode'],
                                   $this->printConfig['text_mode']);
     
-        $printer = popen("lpr -P".$this->printConfig['print_queue'], "w");
+        $printer = popen("lpr -P".$this->getPrinterQueue(), "w");
         fwrite($printer, $output);
         pclose($printer);
-    
-        $this->tagPrinted = 1;
+
+        $this->tagPrinted = $this->getPrinterDescription(" to %%");
     }
 
     private function getPrintStatus() {
         $status = "";
-        if($this->canPrintLocal()) {
-            $printer = popen("lpoptions -d ".$this->printConfig['print_queue'], "r");
+        if($this->canPrintLocal() && ($queue = $this->getPrinterQueue(true))) {
+            $printer = popen("lpoptions -d $queue", "r");
             $output = stream_get_contents($printer);
             pclose($printer);
             $options = explode(' ', $output);
@@ -1223,6 +1288,10 @@ class Editor extends MenuItem {
                 }
             }
         }
-        return $status;
+
+        if($status)
+            $status = $this->getPrinterDescription("%% ") . "label printer alert: $status";
+
+        return json_encode(["text" => $status]);
     }
 }
