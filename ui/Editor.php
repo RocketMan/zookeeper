@@ -208,9 +208,13 @@ class Editor extends MenuItem {
         if(!is_array($printers) || sizeof($printers) < 2)
             return;
 
+        $clientIP = $_SERVER['REMOTE_ADDR'];
+
         $options = "";
-        foreach($printers as $printer)
-            $options .= "<option value='".htmlentities($printer['queue'], ENT_QUOTES)."'>".htmlentities($printer['description'], ENT_QUOTES, 'UTF-8');
+        foreach($printers as $printer) {
+            $selected = ($printer['preferred'] ?? "none") == $clientIP ? " selected" : "";
+            $options .= "<option value='".htmlentities($printer['queue'], ENT_QUOTES)."'$selected>".htmlentities($printer['description'], ENT_QUOTES, 'UTF-8');
+        }
 
         // unique but irreversible identifier for the user
         $uuid = md5($this->session->getUser());
