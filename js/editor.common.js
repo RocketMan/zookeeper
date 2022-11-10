@@ -274,9 +274,13 @@ $().ready(function() {
 
     $("#print").click(function() {
         var local = $("#local").val() == 1;
-        if(!local)
+        if(local) {
+            var selected = $("INPUT:checkbox:checked").length > 0;
+            if(!selected)
+                alert("Select at least one tag to proceed");
+        } else
             alert('tags can be printed to the label printer only at the station');
-        return local;
+        return local && selected;
     });
 
     $("#printToPDF").click(function() {
