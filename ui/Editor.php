@@ -180,9 +180,12 @@ class Editor extends MenuItem {
         $printers = $this->printConfig['print_queue'] ?? null;
         if(is_array($printers)) {
             $queue = $_REQUEST['printqueue'] ?? "";
-            if(!$probe && (!$queue || sizeof($printers) == 1)) {
-                if(sizeof($printers) > 1)
+            if(!$queue || sizeof($printers) == 1) {
+                if(sizeof($printers) > 1) {
+                    if($probe)
+                        return "";
                     error_log("multiple printers defined but none selected");
+                }
                 $queue = $printers[0]['queue'];
             }
         } else
