@@ -184,7 +184,7 @@ class Editor extends MenuItem {
                 if(sizeof($printers) > 1) {
                     if($probe)
                         return "";
-                    error_log("multiple printers defined but none selected");
+                    error_log("getPrinterQueue: multiple printers defined but none selected");
                 }
                 $queue = $printers[0]['queue'];
             }
@@ -204,6 +204,30 @@ class Editor extends MenuItem {
             }
         }
         return "";
+    }
+
+    private function getPrinterInfo() {
+        $info = $this->printConfig;
+        $printers = $info['print_queue'] ?? null;
+        if(is_array($printers)) {
+            $queue = $_REQUEST['printqueue'] ?? "";
+            if(!$queue || sizeof($printers) == 1) {
+                if(sizeof($printers) > 1)
+                    error_log("getPrinterInfo: multiple printers defined but none selected");
+                $info = $printers[0];
+            } else {
+                foreach($printers as $printer) {
+                    if($printer['queue'] == $queue) {
+                        $info = $printer;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return function($param) use($info) {
+            return $info[$param] ?? $this->printConfig[$param];
+        };
     }
 
     private function emitPrinterSelection() {
@@ -1236,9 +1260,10 @@ class Editor extends MenuItem {
             return;
         }
 
-        $charset = self::$charset[$this->printConfig['charset']];
+        $info = $this->getPrinterInfo();
+        $charset = self::$charset[$info('charset')];
 
-        $template = $this->printConfig['use_template'];
+        $template = $info('use_template');
         if($template) {
             $pdf = popen(__DIR__."/../".
                                   "zk print form=$template tags=$tag", "r");
@@ -1246,9 +1271,9 @@ class Editor extends MenuItem {
             pclose($pdf);
         } else
             $output = self::makeLabel($tag, $charset,
-                                  $this->printConfig['darkness'],
-                                  $this->printConfig['box_mode'],
-                                  $this->printConfig['text_mode']);
+                                  $info('darkness'),
+                                  $info('box_mode'),
+                                  $info('text_mode'));
     
         $printer = popen("lpr -P".$this->getPrinterQueue(), "w");
         fwrite($printer, $output);

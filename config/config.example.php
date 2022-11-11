@@ -208,8 +208,31 @@ $config = [
         ],
         /**
          * lpr print queue name
+         *
+         * this can be a string (the queue name) or an array if you
+         * have multiple printers
          */
-        'print_queue' => 'label',
+        'print_queue' => [
+            [
+                'queue' => 'label',
+                'description' => 'Annex',
+                /*
+                 * preferred is the IP address of a computer for which
+                 * this printer should be offered as the default
+                 */
+                'preferred' => '192.168.0.103'
+                /*
+                 * you may optionally specify any of the printer
+                 * characteristics (use_template, charset, darkness,
+                 * text_mode, box_mode); if supplied, they override
+                 * the defaults
+                 */
+            ],
+            [
+                'queue' => 'label-2',
+                'description' => 'MD Office',
+            ]
+        ],
         /**
          * lpr charset is one of UTF-8, LATIN-1, or ASCII
          */
