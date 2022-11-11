@@ -214,8 +214,8 @@ $config = [
          */
         'print_queue' => [
             [
-                'queue' => 'label',
-                'description' => 'Annex',
+                'queue' => 'example-lpr-queue',
+                'description' => 'Example Description',
                 /*
                  * preferred is the IP address of a computer for which
                  * this printer should be offered as the default
@@ -229,8 +229,8 @@ $config = [
                  */
             ],
             [
-                'queue' => 'label-2',
-                'description' => 'MD Office',
+                'queue' => 'example-lpr-queue-2',
+                'description' => 'Example Description 2',
             ]
         ],
         /**
