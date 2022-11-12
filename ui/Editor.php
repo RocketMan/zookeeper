@@ -30,6 +30,7 @@ use ZK\Engine\Engine;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\PlaylistEntry;
+use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
@@ -230,6 +231,14 @@ class Editor extends MenuItem {
         };
     }
 
+    private static function addrInSubnets($addr, $subnets) {
+        foreach(is_array($subnets) ? $subnets : [ $subnets ] as $subnet) {
+            if(Session::addrInSubnet($addr, $subnet))
+                return true;
+        }
+        return false;
+    }
+
     private function emitPrinterSelection() {
         $printers = $this->printConfig['print_queue'] ?? null;
         if(!is_array($printers) || sizeof($printers) < 2)
@@ -238,8 +247,9 @@ class Editor extends MenuItem {
         $clientIP = $_SERVER['REMOTE_ADDR'];
 
         $options = "";
+        $haveSelected = "";
         foreach($printers as $printer) {
-            $selected = ($printer['preferred'] ?? "none") == $clientIP ? " selected" : "";
+            $haveSelected |= $selected = !$haveSelected && self::addrInSubnets($clientIP, $printer['preferred'] ?? "0") ? " selected" : "";
             $options .= "<option value='".htmlentities($printer['queue'], ENT_QUOTES)."'$selected>".htmlentities($printer['description'], ENT_QUOTES, 'UTF-8');
         }
 

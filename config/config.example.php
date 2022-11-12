@@ -54,6 +54,9 @@ $config = [
      * This value enables guest account authentication and tag printing
      * only on the specified subnet.
      *
+     * Value may be specified in CIDR subnet notation (e.g., 2.2.2.0/24)
+     * or as an address fragment (e.g., 2.2.2).
+     *
      * Set this value to 0 to enable guest accounts and tag printing for
      * all addresses.
      */
@@ -217,12 +220,15 @@ $config = [
                 'queue' => 'example-lpr-queue',
                 'description' => 'Example Description',
                 /*
-                 * preferred is the IP address of a computer for which
-                 * this printer should be offered as the default
+                 * 'preferred' is the IP address of a computer for which
+                 * this printer should be offered as the default.
+                 *
+                 * It may be a dotted-quad IP address, a CIDR netmask,
+                 * or array of IP addresses and/or netmasks.
                  */
                 'preferred' => '192.168.0.103'
                 /*
-                 * you may optionally specify any of the printer
+                 * You may optionally specify any of the printer
                  * characteristics (use_template, charset, darkness,
                  * text_mode, box_mode); if supplied, they override
                  * the defaults

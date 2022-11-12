@@ -52,7 +52,7 @@ $config = [
      * Set this value to 0 to enable guest accounts and tag printing for
      * all addresses.
      */
-    'local_subnet' => '171.66.118.',  // IP in subnet 171.66.118.
+    'local_subnet' => '171.66.118.0/25',
 
     /**
      * URLs
