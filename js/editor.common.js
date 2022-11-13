@@ -419,7 +419,7 @@ $().ready(function() {
     });
 
     var printStatus = $("#print-status");
-    if(printStatus) {
+    if(printStatus.length > 0) {
         var queue = sessionStorage.getItem($("#user-uuid").val());
         $.ajax({
             dataType: 'json',
