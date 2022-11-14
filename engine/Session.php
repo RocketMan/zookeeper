@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -263,10 +263,30 @@ class Session extends DBO {
         return $allow;
     }
 
+    /*
+     * test if an IP address is in a subnet
+     *
+     * subnet may be specified in CIDR notation (e.g., 192.168.0.0/24)
+     * or as a fragment (e.g., 192.168.0), in which case the
+     * number of network bits is inferred from the fragment length.
+     *
+     * @param $addr dotted quad address string (e.g., 192.168.0.1)
+     * @param $subnet CIDR subnet or address fragment string
+     * @return true if and only if the address is in the subnet
+     */
+    public static function addrInSubnet($addr, $subnet) {
+        $subnet = rtrim($subnet, '.');
+        $segCount = substr_count($subnet, '.');
+        if(strpos($subnet, '/') === false)
+            $subnet .= str_repeat('.0', 3 - $segCount) . '/' . ++$segCount * 8;
+        $parts = explode('/', $subnet);
+        $netmask = ~(pow(2, 32 - $parts[1]) - 1);
+        return (ip2long($addr) & $netmask) == (ip2long($parts[0]) & $netmask);
+    }
+
     public static function checkLocal() {
         $local_subnet = Engine::param('local_subnet');
         return !$local_subnet ||
-                    substr($_SERVER['REMOTE_ADDR'], 0, strlen($local_subnet))
-                        == $local_subnet;
+                    self::addrInSubnet($_SERVER['REMOTE_ADDR'], $local_subnet);
     }
 }

@@ -274,9 +274,13 @@ $().ready(function() {
 
     $("#print").click(function() {
         var local = $("#local").val() == 1;
-        if(!local)
+        if(local) {
+            var selected = $("INPUT:checkbox:checked").length > 0;
+            if(!selected)
+                alert("Select at least one tag to proceed");
+        } else
             alert('tags can be printed to the label printer only at the station');
-        return local;
+        return local && selected;
     });
 
     $("#printToPDF").click(function() {
@@ -376,6 +380,57 @@ $().ready(function() {
         list.focus();
         return scrollDown();
     });
+
+    var actionButton;
+    $("input[name='print'], input[name='next'][value='  Done!  ']").on('click', function(e) {
+        // if no printer selection, or printer has already been selected,
+        // there is nothing to do
+        var queue = $("#print-queue");
+        if(queue.length == 0 || queue.val().length > 0)
+            return;
+
+        // we only print from track screen if album is new
+        if($(this).attr('name') == 'next' &&
+                $("input[name=new]").val().length == 0)
+            return;
+
+        var printerId = sessionStorage.getItem($("#user-uuid").val());
+        if(!printerId) {
+            actionButton = this;
+            $("#select-printer-dialog").show();
+            $("#select-printer").focus();
+            e.preventDefault();
+            return;
+        }
+
+        queue.val(printerId);
+    });
+
+    $(".zk-popup button").click(function() {
+        if($(this).hasClass("default")) {
+            var printerId =  $("#select-printer").val();
+            sessionStorage.setItem($("#user-uuid").val(), printerId);
+            $("#print-queue").val(printerId);
+            actionButton.click();
+        }
+
+        $(".zk-popup").hide();
+        $("*[data-focus]").focus();
+    });
+
+    var printStatus = $("#print-status");
+    if(printStatus.length > 0) {
+        var queue = sessionStorage.getItem($("#user-uuid").val());
+        $.ajax({
+            dataType: 'json',
+            type: 'GET',
+            accept: "application/json; charset=utf-8",
+            url: '?action=editor&subaction=status&printqueue=' +
+                        (queue ? encodeURIComponent(queue) : "")
+        }).done(function (response) {
+            printStatus.text(response.text);
+        });
+    }
 
     $("*[data-focus]").focus();
 });
