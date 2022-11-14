@@ -292,7 +292,7 @@ class Editor extends MenuItem {
                 $title = $this->getPanelTitle($_REQUEST["seq"]);
                 echo "  <FORM ACTION=\"?\" METHOD=POST>\n";
                 echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n      <TR><TH ALIGN=LEFT>$title</TH><TH ALIGN=RIGHT CLASS=\"error\">";
-                if(!$this->subaction) {
+                if(!$this->subaction && $this->canPrintLocal()) {
                     echo "<span id='print-status'></span>\n";
                 }
                 echo "</TH></TR>\n      <TR><TD COLSPAN=2 HEIGHT=130 VALIGN=MIDDLE>\n";
