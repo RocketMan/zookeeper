@@ -821,7 +821,7 @@ class Editor extends MenuItem {
                 $title = "Album Added!";
             else if($this->albumUpdated)
                 $title = "Album Updated!";
-            if($this->tagPrinted) {
+            if(!is_null($this->tagPrinted)) {
                 $printed = $this->tagPrinted == -1 ? "Queued" : "Printed" . $this->tagPrinted;
                 $title .= "&nbsp;&nbsp;<FONT CLASS=\"success\">Tag $printed</FONT>";
             }
@@ -847,7 +847,7 @@ class Editor extends MenuItem {
             break;
         case "select":
             $title = "Select tags to print";
-            if($this->tagPrinted)
+            if(!is_null($this->tagPrinted))
                 $title .= "&nbsp;&nbsp;<FONT CLASS=\"success\">Tag(s) Printed" . $this->tagPrinted . "</FONT>";
             break;
         case "form":
