@@ -14,6 +14,9 @@
 <link rel="icon" href="{rss/@zk:favicon}"/>
 <style type="text/css">
 <xsl:text><![CDATA[
+h2 {
+  margin-top: revert;
+}
 .rss-channel > .rss-item {
   padding: 2px 0px;
 }
