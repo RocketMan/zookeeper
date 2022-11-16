@@ -359,7 +359,7 @@ class Playlists extends MenuItem {
     
         switch($h) {
         case 0:
-            return $m?($h . $min . "am"):"midnight";
+            return $m?("12" . $min . "am"):"midnight";
         case 12:
             return $m?($h . $min . "pm"):"noon";
         default:
