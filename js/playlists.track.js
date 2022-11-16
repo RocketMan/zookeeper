@@ -136,6 +136,7 @@ $().ready(function(){
                 var artist = track.artist ? track.artist + ' - ' : '';
                 options += "<option data-track='" + htmlify(track.track) +
                     "' data-artist='" + htmlify(track.artist) +
+                    "' data-index='" + htmlify(i+1) +
                     "' value='" + htmlify((i+1) + ". " + artist + track.track) + "'>";
             }
             $("#track-titles").html(options);
@@ -708,8 +709,12 @@ $().ready(function(){
     $("#track-title").on('click', function() {
         $(this).autocomplete('search', '');
     }).on('blur autocomplete', function() {
-        var title = this.value;
+        var index, title = this.value;
         var opt = $("#track-titles option[value='" + escQuote(title) + "']");
+
+        if(opt.length == 0 && (index = title.trim().match(/^\d+$/)))
+            opt = $("#track-titles option[data-index='" + escQuote(index[0]) + "']");
+
         if(opt.length > 0) {
             var artist = opt.data("artist");
             if(artist)
