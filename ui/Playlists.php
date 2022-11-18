@@ -53,12 +53,12 @@ class Playlists extends MenuItem {
         [ "editList", "emitListManager" ],
         [ "editListGetHint", "listManagerGetHint" ],
         [ "editListEditor", "emitEditor" ],
+        [ "editListAddTrack", "handleAddTrack" ],
+        [ "editListMoveTrack", "handleMoveTrack" ],
         [ "importExport", "emitImportExportList" ],
         [ "viewDJ", "emitViewDJ" ],
         [ "viewDJReviews", "viewDJReviews" ],
         [ "updateDJInfo", "updateDJInfo" ],
-        [ "addTrack", "handleAddTrack" ],
-        [ "moveTrack", "handleMoveTrack" ],
     ];
 
     private $action;

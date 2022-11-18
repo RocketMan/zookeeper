@@ -390,7 +390,7 @@ $().ready(function(){
 
         $.ajax({
             type: "POST",
-            url: "?action=moveTrack",
+            url: "?action=editListMoveTrack",
             dataType : "json",
             accept: "application/json; charset=utf-8",
             data: postData,
@@ -493,7 +493,7 @@ $().ready(function(){
 
         $.ajax({
             type: "POST",
-            url: "?action=addTrack&oaction=" + $("#track-action").val(),
+            url: "?action=editListAddTrack&oaction=" + $("#track-action").val(),
             dataType : 'json',
             accept: "application/json; charset=utf-8",
             data: postData,
@@ -860,7 +860,7 @@ $().ready(function(){
             dataType : 'json',
             type: 'POST',
             accept: "application/json; charset=utf-8",
-            url: "?action=addTrack",
+            url: "?action=editListAddTrack",
             data: postData,
             success: function(respObj) {
                 // *1 to coerce to int as switch uses strict comparison
