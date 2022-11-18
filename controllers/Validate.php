@@ -263,7 +263,7 @@ class Validate implements IController {
         if($this->doTest("move track", $success2 && $success3)) {
             $response = $this->client->post('', [
                 RequestOptions::FORM_PARAMS => [
-                    "action" => "moveTrack",
+                    "action" => "editListMoveTrack",
                     "playlist" => $pid,
                     "fromId" => $sid,
                     "toId" => $cid
