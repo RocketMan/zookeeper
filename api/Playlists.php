@@ -605,6 +605,10 @@ class Playlists implements RequestHandlerInterface {
             $meta = $res->metaInformation();
             $meta->set("html", ob_get_contents());
             $meta->set("seq", $papi->getSeq(0, $entry->getId()));
+
+            // track is in the grace period?
+            $window = $papi->getTimestampWindow($pid, false);
+            $meta->set("runsover", new \DateTime($entry->getCreated()) >= $window['end']);
             ob_end_clean();
         }
     }

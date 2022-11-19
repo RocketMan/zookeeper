@@ -549,7 +549,7 @@ $().ready(function(){
 
                 $("#track-type-pick").val('manual-entry').trigger('change');
 
-                if(respObj.runsover) {
+                if(respObj.data.meta.runsover) {
                     $("#extend-show").show();
                     $("#extend-time").focus();
                 }
@@ -911,7 +911,7 @@ $().ready(function(){
 
                     updatePlayable();
 
-                    if(respObj.runsover) {
+                    if(meta.runsover) {
                         $("#extend-show").show();
                         $("#extend-time").focus();
                     }
