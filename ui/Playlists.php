@@ -277,10 +277,9 @@ class Playlists extends MenuItem {
                 $retMsg = $status == '' ? "DB update error" : $status;
             } else {
                 // JM 2019-08-15 action and id need to be set
-                // for hyperlinks genereated by makePlaylistObserver (#54)
-                $this->action = $_REQUEST["oaction"];
+                // for hyperlinks genereated by PlaylistBuilder (#54)
                 ob_start();
-                $this->makePlaylistObserver($playlistId, true)->observe($entry);
+                PlaylistBuilder::newInstance($playlistId, $_REQUEST["oaction"], true, $this->session->isAuth("u"))->observe($entry);
                 $newRow = ob_get_contents();
                 ob_end_clean();
 
@@ -385,12 +384,6 @@ class Playlists extends MenuItem {
             $dateSpec = self::isUsLocale() ? 'D M d, Y ' : 'D d M Y ';
             return date($dateSpec, strtotime($time));
         }
-    }
-
-    private static function timestampToLocale($timestamp) {
-        // colon is included in 24hr format for symmetry with fxtime
-        $timeSpec = self::isUsLocale() ? 'h:i a' : 'H:i';
-        return $timestamp ? date($timeSpec, $timestamp) : '';
     }
 
     public function viewDJReviews() {
@@ -503,17 +496,6 @@ class Playlists extends MenuItem {
 
         $airNames .=  "<OPTION VALUE='None'>";
         return $airNames."\n";
-    }
-
-    private function makeEditDiv($entry, $playlist) {
-        $href = "?playlist=" . $playlist . "&amp;id=" .
-                $entry->getId() . "&amp;action=" . $this->action . "&amp;";
-        $editLink = "<A CLASS='songEdit nav' HREF='" . $href ."seq=editTrack'>&#x270f;</a>";
-        //NOTE: in edit mode the list is ordered new to old, so up makes it 
-        //newer in time order & vice-versa.
-        $dnd = "<DIV class='grab' data-id='".$entry->getId()."'>&#x2630;</DIV>";
-        $retVal = "<div class='songManager'>" . $dnd . $editLink . "</div>";
-        return $retVal;
     }
 
     // make header for edit & view playlist
@@ -1353,88 +1335,6 @@ class Playlists extends MenuItem {
             break;
         }
     }
-    
-    private function makeAlbumLink($entry, $includeLabel) {
-        $albumName = $entry->getAlbum();
-        $labelName = $entry->getLabel();
-        if (empty($albumName) && empty($labelName))
-            return "";
-
-        $labelSpan = "<span class='songLabel'> / " . $this->smartURL($labelName) . "</span>";
-        if($entry->getTag()) {
-            $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($entry->getTag()) .
-                          "&amp;q=&amp;action=search' CLASS='nav'>".$albumName ."</A>";
-
-            if ($includeLabel) {
-                $albumTitle = $albumTitle . $labelSpan;
-            }
-        } else {
-            $albumTitle = $this->smartURL($albumName);
-            if ($includeLabel) 
-                $albumTitle = $albumTitle . $labelSpan;
-       }
-       return $albumTitle;
-    }
-
-    private function makePlaylistObserver($playlist, $editMode) {
-        $break = false;
-        return (new PlaylistObserver())->onComment(function($entry) use($playlist, $editMode, &$break) {
-                $editCell = $editMode ? "<TD>" .
-                    $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
-                $created = $entry->getCreatedTimestamp();
-                $timeplayed = self::timestampToLocale($created);
-                echo "<TR class='commentRow".($editMode?"Edit":"")."'>" . $editCell .
-                     "<TD class='time' data-utc='$created'>$timeplayed</TD>" .
-                     "<TD COLSPAN=4>".UI::markdown($entry->getComment()).
-                     "</TD></TR>\n";
-                $break = false;
-            })->onLogEvent(function($entry) use($playlist, $editMode, &$break) {
-                $created = $entry->getCreatedTimestamp();
-                $timeplayed = self::timestampToLocale($created);
-                if($this->session->isAuth("u")) {
-                    // display log entries only for authenticated users
-                    $editCell = $editMode ? "<TD>" .
-                        $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
-                    echo "<TR class='logEntry".($editMode?"Edit":"")."'>" . $editCell .
-                         "<TD class='time' data-utc='$created'>$timeplayed</TD>" .
-                         "<TD>".$entry->getLogEventType()."</TD>" .
-                         "<TD COLSPAN=3>".$entry->getLogEventCode()."</TD>" .
-                         "</TR>\n";
-                    $break = false;
-                } else if(!$break) {
-                    echo "<TR class='songDivider'>" . $editCell .
-                         "<TD class='time' data-utc='$created'>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
-                    $break = true;
-                }
-            })->onSetSeparator(function($entry) use($playlist, $editMode, &$break) {
-                if($editMode || !$break) {
-                    $editCell = $editMode ? "<TD>" .
-                        $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
-                    $created = $entry->getCreatedTimestamp();
-                    $timeplayed = self::timestampToLocale($created);
-                    echo "<TR class='songDivider'>" . $editCell .
-                         "<TD class='time' data-utc='$created'>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
-                    $break = true;
-                }
-            })->onSpin(function($entry) use($playlist, $editMode, &$break) {
-                $editCell = $editMode ? "<TD>" .
-                    $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
-                $created = $entry->getCreatedTimestamp();
-                $timeplayed = self::timestampToLocale($created);
-                $reviewCell = $entry->getReviewed() ? "<div class='albumReview'></div>" : "";
-                $artistName = PlaylistEntry::swapNames($entry->getArtist());
-
-                $albumLink = $this->makeAlbumLink($entry, true);
-                echo "<TR class='songRow'>" . $editCell .
-                     "<TD class='time' data-utc='$created'>$timeplayed</TD>" .
-                     "<TD>" . $this->smartURL($artistName) . "</TD>" .
-                     "<TD>" . $this->smartURL($entry->getTrack()) . "</TD>" .
-                     "<TD>$reviewCell</TD>" .
-                     "<TD>$albumLink</TD>" .
-                     "</TR>\n";
-                $break = false;
-            });
-    }
 
     private function emitPlaylistBody($playlist, $editMode) {
         $header = $this->makePlaylistHeader($editMode);
@@ -1446,11 +1346,12 @@ class Playlists extends MenuItem {
         $entries = $api->getTracks($playlist, $editMode)->asArray();
         Engine::api(ILibrary::class)->markAlbumsReviewed($entries);
 
-        $observer = $this->makePlaylistObserver($playlist, $editMode);
+        $observer = PlaylistBuilder::newInstance($playlist, $this->action, $editMode, $this->session->isAuth("u"));
         echo "<TBODY>\n";
-        if($entries != null && sizeof($entries) > 0)
+        if($entries != null && sizeof($entries) > 0) {
             foreach($entries as $entry)
                 $observer->observe(new PlaylistEntry($entry));
+        }
         echo "</TBODY></TABLE>\n";
 
         if($editMode) {

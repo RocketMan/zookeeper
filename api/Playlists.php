@@ -32,6 +32,8 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
 
+use ZK\UI\PlaylistBuilder;
+
 use Enm\JsonApi\Exception\BadRequestException;
 use Enm\JsonApi\Exception\NotAllowedException;
 use Enm\JsonApi\Exception\ResourceNotFoundException;
@@ -596,6 +598,17 @@ class Playlists implements RequestHandlerInterface {
         return new EmptyResponse();
     }
 
+    private function injectMetadata($papi, $res, $pid, $entry) {
+        if($_GET['oaction'] ?? null) {
+            ob_start();
+            PlaylistBuilder::newInstance($pid, $_GET['oaction'], true, true)->observe($entry);
+            $meta = $res->metaInformation();
+            $meta->set("html", ob_get_contents());
+            $meta->set("seq", $papi->getSeq(0, $entry->getId()));
+            ob_end_clean();
+        }
+    }
+
     public function addRelatedResources(RequestInterface $request): ResponseInterface {
         if($request->relationship() != "events") {
             throw new NotAllowedException('You are not allowed to modify the relationship ' . $request->relationship());
@@ -642,7 +655,8 @@ class Playlists implements RequestHandlerInterface {
                 error_log("failed to parse timestamp: $created");
                 $entry->setCreated(null);
             }
-        } else if($autoTimestamp = $api->isNowWithinShow($list))
+        } else if($autoTimestamp = $api->isNowWithinShow($list) &&
+                !($_GET["cue"] ?? null))
             $entry->setCreated((new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL));
 
         $status = '';
@@ -665,9 +679,13 @@ class Playlists implements RequestHandlerInterface {
                 PushServer::lazyLoadImages($key, $entry->getId());
         }
 
-        return $success ?
-            new DocumentResponse(new Document(new JsonResource("event", $entry->getId()))) :
-            new BadRequestException($status ?? "DB update error");
+        if($success) {
+            $res = new JsonResource("event", $entry->getId());
+            $this->injectMetadata($api, $res, $key, $entry);
+            return new DocumentResponse(new Document($res));
+        }
+
+        return new BadRequestException($status ?? "DB update error");
     }
 
     public function replaceRelatedResources(RequestInterface $request): ResponseInterface {
@@ -698,7 +716,16 @@ class Playlists implements RequestHandlerInterface {
             throw new NotAllowedException("event not in list");
 
         // TBD allow changes instead of complete relacement
-        $entry = PlaylistEntry::fromArray($event->attributes()->all());
+        if($event->attributes()->getOptional("type"))
+            $entry = PlaylistEntry::fromArray($event->attributes()->all());
+        else {
+            $entry = new PlaylistEntry($track);
+            if(!$event->attributes()->getOptional("created") &&
+                        $api->isNowWithinShow($list)) {
+                $created = (new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL);
+                $entry->setCreated($created);
+            }
+        }
         $entry->setId($id);
 
         try {
@@ -725,6 +752,12 @@ class Playlists implements RequestHandlerInterface {
 
         if($success && isset($stamp))
             PushServer::lazyLoadImages($key, $id);
+
+        if($success && ($_GET['oaction'] ?? null)) {
+            $res = new JsonResource("event", $entry->getId());
+            $this->injectMetadata($api, $res, $key, $entry);
+            return new DocumentResponse(new Document($res));
+        }
 
         return $success ?
             new EmptyResponse() :

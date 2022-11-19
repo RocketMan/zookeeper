@@ -454,20 +454,20 @@ $().ready(function(){
 
     function submitTrack(id) {
         console.log("enter submitTrack");
-        var spinTime, artist, label, album, track, type, eventType, eventCode, comment;
+        var itemType, spinTime, artist, label, album, track, eventType, eventCode, comment;
         var trackType =  $("#track-type-pick").val();
 
         if (trackType == 'set-separator') {
-            type = $("#const-set-separator").val();
+            itemType = 'break';
         } else if (isNmeType(trackType)) {
-            type = $("#const-log-event").val();
+            itemType = 'logEvent';
             eventType = getEventType(trackType);
             eventCode = $("#nme-id").val();
         } else if (trackType == 'comment-entry') {
-            type = $("#const-comment").val();
+            itemType = 'comment';
             comment = $("#comment-data").val();
         } else {
-            type = $("#const-spin").val();
+            itemType = 'spin';
             artist = $("#track-artist").val();
             label =  $("#track-label").val();
             album =  $("#track-album").val();
@@ -476,30 +476,44 @@ $().ready(function(){
         spinTime =  $("#track-time").fxtime('val');
 
         var postData = {
-            playlist: $("#track-playlist").val(),
-            type: type,
-            tag: tagId,
-            artist: artist,
-            label: label,
-            time: spinTime,
-            album: album,
-            track: track,
-            eventType: eventType,
-            eventCode: eventCode,
-            comment: comment,
-            cue: id == 'track-add' ? 1 : 0,
-            size: $(".playlistTable > tbody > tr").length,
+            data: {
+                type: 'event',
+                attributes: {
+                    type: itemType,
+                    artist: artist,
+                    album: album,
+                    track: track,
+                    label: label,
+                    comment: comment,
+                    event: eventType,
+                    code: eventCode,
+                    created: spinTime
+                }
+            }
         };
 
+        if(trackType == 'manual-entry' && tagId) {
+            postData.data.relationships = {
+                album: {
+                    data: {
+                        type: 'album',
+                        id: tagId
+                    }
+                }
+            };
+        }
+
+        var playlistId = $("#track-playlist").val();
         $.ajax({
             type: "POST",
-            url: "?action=addTrack&oaction=" + $("#track-action").val(),
+            url: "api/v1/playlist/" + playlistId + "/events?oaction=" +
+                $("#track-action").val() + "&cue=" + (id == 'track-add' ? 1 : 0),
             dataType : 'json',
             accept: "application/json; charset=utf-8",
-            data: postData,
+            data: JSON.stringify(postData),
             success: function(respObj) {
                 // *1 to coerce to int as switch uses strict comparison
-                switch(respObj.seq*1) {
+                switch(respObj.data.meta.seq*1) {
                 case -1:
                     // playlist is out of sync with table; reload
                     location.href = "?action=" + $("#track-action").val() +
@@ -507,7 +521,7 @@ $().ready(function(){
                     break;
                 case 0:
                     // playlist is in natural order; prepend
-                    $(".playlistTable > tbody").prepend(respObj.row);
+                    $(".playlistTable > tbody").prepend(respObj.data.meta.html);
                     $(".playlistTable > tbody > tr").eq(0).find(".grab").mousedown(grabStart);
                     break;
                 default:
@@ -518,11 +532,11 @@ $().ready(function(){
                     // Table is ordered latest to oldest, which means
                     // we must reverse the sense of seq.
                     var rows = $(".playlistTable > tbody > tr");
-                    var index = rows.length - respObj.seq + 1;
+                    var index = rows.length - respObj.data.meta.seq + 1;
                     if(index < rows.length)
-                        rows.eq(index).before(respObj.row);
+                        rows.eq(index).before(respObj.data.meta.html);
                     else
-                        rows.eq(rows.length - 1).after(respObj.row);
+                        rows.eq(rows.length - 1).after(respObj.data.meta.html);
                     $(".playlistTable > tbody > tr").eq(index).find(".grab").mousedown(grabStart);
                     break;
                 }
@@ -850,21 +864,24 @@ $().ready(function(){
 
     function timestampTrack(row) {
         var postData = {
-            playlist: $("#track-playlist").val(),
-            tid: $(row).find(".grab").data("id"),
-            oaction: $("#track-action").val(),
-            size: $(".playlistTable > tbody > tr").length,
+            data: {
+                type: 'event',
+                id: $(row).find(".grab").data("id")
+            }
         };
 
+        var playlistId = $("#track-playlist").val();
         $.ajax({
             dataType : 'json',
-            type: 'POST',
+            type: 'PATCH',
             accept: "application/json; charset=utf-8",
-            url: "?action=addTrack",
-            data: postData,
+            url: "api/v1/playlist/" + playlistId + "/events?oaction=" +
+                $("#track-action").val(),
+            data: JSON.stringify(postData),
             success: function(respObj) {
+                var meta = respObj.data.meta;
                 // *1 to coerce to int as switch uses strict comparison
-                switch(respObj.seq*1) {
+                switch(meta.seq*1) {
                 case -1:
                     // playlist is out of sync with table; reload
                     location.href = "?action=" + $("#track-action").val() +
@@ -882,13 +899,13 @@ $().ready(function(){
                     $(row).remove();
 
                     var rows = $(".playlistTable > tbody > tr");
-                    var index = rows.length - respObj.seq + 1;
+                    var index = rows.length - meta.seq + 1;
                     if(index == 0)
-                        $(".playlistTable > tbody").prepend(respObj.row);
+                        $(".playlistTable > tbody").prepend(meta.html);
                     else if(index < rows.length)
-                        rows.eq(index).before(respObj.row);
+                        rows.eq(index).before(meta.html);
                     else
-                        rows.eq(rows.length - 1).after(respObj.row);
+                        rows.eq(rows.length - 1).after(meta.html);
 
                     $(".playlistTable > tbody > tr").eq(index).find(".grab").mousedown(grabStart);
 

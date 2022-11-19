@@ -61,47 +61,30 @@ namespace ZK\Engine;
  * 
  */
 class PlaylistObserver {
-    private $comment;
-    private $logEvent;
-    private $setSeparator;
-    private $spin;
-
+    private $closures = [];
 
     public function __call($method, $args) {
-        if(isset($this->$method) && $this->$method instanceof \Closure)
-            return call_user_func_array($this->$method, $args);
+        // onXXX(function() {})
+        if(strlen($method) > 2 && substr($method, 0, 2) == 'on' &&
+                sizeof($args) && $args[0] instanceof \Closure) {
+            $name = strtolower(substr($method, 2, 1)) . substr($method, 3);
+            $this->closures[$name] = $args[0];
+            return $this;
+        // observeXXX(PlaylistEntry)
+        } else if(strlen($method) > 7 && substr($method, 0, 7) == 'observe' &&
+                sizeof($args) && $args[0] instanceof PlaylistEntry) {
+            $name = strtolower(substr($method, 7, 1)) . substr($method, 8);
+            return key_exists($name, $this->closures) ?
+                                $this->closures[$name]($args[0]) : null;
+        }
+
+        throw new \Error("Call to undefined method ".__CLASS__."::$method");
     }
 
-    /**
-     * install lambda function to handle comment entries
-     */
-    public function onComment(\Closure $comment) {
-        $this->comment = $comment;
-        return $this;
-    }
-
-    /**
-     * install lambda function to handle log event entries
-     */
-    public function onLogEvent(\Closure $logEvent) {
-        $this->logEvent = $logEvent;
-        return $this;
-    }
-
-    /**
-     * install lambda function to handle set separator entries
-     */
-    public function onSetSeparator(\Closure $setSeparator) {
-        $this->setSeparator = $setSeparator;
-        return $this;
-    }
-
-    /**
-     * install lambda function to handle spin entries
-     */
-    public function onSpin(\Closure $spin) {
-        $this->spin = $spin;
-        return $this;
+    public function __clone() {
+        $this->closures = array_map(function($closure) {
+            return $closure->bindTo($this);
+        }, $this->closures);
     }
 
     /**
@@ -109,25 +92,9 @@ class PlaylistObserver {
      */
     public function on(string $types, \Closure $fn) {
         foreach(explode(' ', $types) as $type)
-            $this->$type = $fn;
+            $this->closures[$type] = $fn;
 
         return $this;
-    }
-    
-    private function observeComment($entry) {
-        return $this->comment ? $this->comment($entry) : null;
-    }
-
-    private function observeLogEvent($entry) {
-        return $this->logEvent ? $this->logEvent($entry) : null;
-    }
-
-    private function observeSetSeparator($entry) {
-        return $this->setSeparator ? $this->setSeparator($entry) : null;
-    }
-
-    private function observeSpin($entry) {
-        return $this->spin ? $this->spin($entry) : null;
     }
 
     /**
