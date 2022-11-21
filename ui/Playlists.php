@@ -57,7 +57,6 @@ class Playlists extends MenuItem {
         [ "viewDJ", "emitViewDJ" ],
         [ "viewDJReviews", "viewDJReviews" ],
         [ "updateDJInfo", "updateDJInfo" ],
-        [ "moveTrack", "handleMoveTrack" ],
     ];
 
     private $action;
@@ -179,32 +178,6 @@ class Playlists extends MenuItem {
         }
     }
     
-    public function handleMoveTrack() {
-        $retVal = [];
-        $list = $_POST["playlist"];
-        $from = $_REQUEST["fromId"];
-        $to = $_REQUEST["toId"];
-
-        if(!isset($list) || !$this->isOwner($list)) {
-            $retVal['status'] = 'access error';
-            http_response_code(400);
-            echo json_encode($retVal);
-            return;
-        }
-
-        if($list && $from && $to && $from != $to) {
-            $success = Engine::api(IPlaylist::class)->moveTrack($list, $from, $to);
-            $retMsg = $success?"success":"DB update error";
-        } else {
-            $success = false;
-            $retMsg = "invalid request";
-        }
-
-        $retVal['status'] = $retMsg;
-        http_response_code($success?200:400);
-        echo json_encode($retVal);
-    }
-
     private static function isUsLocale() : bool {
         if(!isset(self::$usLocale))
             self::$usLocale = UI::getClientLocale() == 'en_US';
