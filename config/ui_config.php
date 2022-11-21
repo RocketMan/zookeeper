@@ -43,7 +43,6 @@ $menu = [
     [ 'u', 'updateDJInfo', 'Edit Profile',          ZK\UI\Playlists::class ],
     [ 'a', 'viewDJ%',      'DJ Zone!',              ZK\UI\Playlists::class ],
     [ 'a', 'viewList%',    'Playlists by Date',     ZK\UI\Playlists::class ],
-    [ 'u', 'addTrack',     0,                       ZK\UI\Playlists::class ],
     [ 'u', 'moveTrack',    0,                       ZK\UI\Playlists::class ],
     [ 'U', 'changePass',   'Change Password',       ZK\UI\ChangePass::class ],
     [ 'p', 'deepStorage',  'Deep Storage',          ZK\UI\DeepStorage::class ],
