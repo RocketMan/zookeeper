@@ -48,8 +48,9 @@ request to `api/v1/playlist/:id/events`.  See the
 
 ### Filters
 
-You may specify at most one filter as a query string parameter of the
-form `filter[_field_]=_value_`.  Possible fields are listed below.
+In general, you may specify at most one filter as a query string
+parameter of the form `filter[_field_]=_value_`.  Possible fields are
+listed below.
 
   * date
   * id
@@ -61,9 +62,10 @@ playlist, if any.  `user` may have the value 'self' for the
 currently authenticated user.  The 'match' keyword indicates a
 full-text search against artist, album, or label of any spin.
 
-The query string parameter `deleted=1` may be supplied to return only
-deleted but not yet purged playlists.  In this case, the `expires`
-property will be set for each playlist in the response.
+In the case of `filter[user]`, you may supply an optional filter
+`filter[deleted]=1` to return only only deleted but not yet purged
+playlists.  In this case, the `expires` property will be set for each
+playlist in the response.
 
 Pagination is supported only for match.  Sorting is not supported.
 

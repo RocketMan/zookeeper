@@ -103,7 +103,8 @@ class Playlists implements RequestHandlerInterface {
             if(!$key)
                 throw new \InvalidArgumentException("Must supply value for user filter");
             $api = Engine::api(IPlaylist::class);
-            if($_GET["deleted"] ?? 0) {
+            if($request->hasFilter("deleted") &&
+                    $request->filterValue("deleted")) {
                 $rows = $api->getListsSelDeleted($key, $offset, $limit);
                 $count = $api->getDeletedPlaylistCount($key);
             } else {

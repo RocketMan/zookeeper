@@ -170,6 +170,12 @@ trait OffsetPaginationTrait {
         if(!$ops)
             throw new NotAllowedException("Must specify filter.  May be one of: ".implode(", ", array_keys($paginateOps)));
 
+        // copy remaining filters, if any
+        foreach($request->filter as $name => $value) {
+            if($name != $type)
+                $filter .= "&filter%5B" . urlencode($name) . "%5D=" . urlencode($value);
+        }
+
         $reqOffset = $offset = $request->hasPagination("offset")?
                 (int)$request->paginationValue("offset"):0;
 
