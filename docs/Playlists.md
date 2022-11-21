@@ -62,8 +62,8 @@ playlist, if any.  `user` may have the value 'self' for the
 currently authenticated user.  The 'match' keyword indicates a
 full-text search against artist, album, or label of any spin.
 
-In the case of `filter[user]`, you may supply an optional filter
-`filter[deleted]=1` to return only only deleted but not yet purged
+In the case of `filter[user]`, you may specify in addition
+`filter[deleted]=1` to return only deleted but not yet purged
 playlists.  In this case, the `expires` property will be set for each
 playlist in the response.
 
