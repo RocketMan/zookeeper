@@ -186,7 +186,9 @@ this same endpoint:
 
 * To add a new event, issue a POST to the endpoint;
 * To modify an event, issue a PATCH to the endpoint;
-* To delete an event, issue a DELETE to the endpoint.
+* To delete an event, issue a DELETE to the endpoint;
+* To resequence an event, issue a PATCH request with a `moveTo` meta key
+whose value is the id of the event currently in the target position.
 
 In all cases, the request body contains a single event in the format
 returned by a GET request to the endpoint.
