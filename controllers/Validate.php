@@ -261,12 +261,15 @@ class Validate implements IController {
             $success3 = false;
 
         if($this->doTest("move track", $success2 && $success3)) {
-            $response = $this->client->post('', [
-                RequestOptions::FORM_PARAMS => [
-                    "action" => "moveTrack",
-                    "playlist" => $pid,
-                    "fromId" => $sid,
-                    "toId" => $cid
+            $response = $this->client->patch($list . '/events', [
+                RequestOptions::JSON => [
+                    'data' => [
+                        'type' => 'event',
+                        'id' => $sid,
+                        'meta' => [
+                            'moveTo' => $cid
+                        ]
+                    ]
                 ]
             ]);
 
