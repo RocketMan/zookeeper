@@ -599,19 +599,23 @@ class Playlists implements RequestHandlerInterface {
         return new EmptyResponse();
     }
 
-    private function injectMetadata($papi, $res, $pid, $entry) {
-        if($_GET['oaction'] ?? null) {
-            ob_start();
-            PlaylistBuilder::newInstance($pid, $_GET['oaction'], true, true)->observe($entry);
-            $meta = $res->metaInformation();
-            $meta->set("html", ob_get_contents());
-            $meta->set("seq", $papi->getSeq(0, $entry->getId()));
+    private function injectMetadata($api, $rqMeta, $rsMeta, $listId, $size, $entry) {
+        ob_start();
+        $action = $rqMeta->getOptional("action", "");
+        PlaylistBuilder::newInstance($listId, $action, true, true)->observe($entry);
+        $rsMeta->set("html", ob_get_contents());
+        ob_end_clean();
 
-            // track is in the grace period?
-            $window = $papi->getTimestampWindow($pid, false);
-            $meta->set("runsover", new \DateTime($entry->getCreated()) >= $window['end']);
-            ob_end_clean();
-        }
+        // seq is one of:
+        //   -1     client playlist is out of sync with the service
+        //   0      playlist is in natural order
+        //   > 0    ordinal of inserted entry
+        $rsMeta->set("seq", $size ? $size : $api->getSeq(0, $entry->getId()));
+
+        // track is in the grace period?
+        $window = $api->getTimestampWindow($listId, false);
+        $rsMeta->set("runsover", $entry->getCreated() &&
+                new \DateTime($entry->getCreated()) >= $window['end']);
     }
 
     public function addRelatedResources(RequestInterface $request): ResponseInterface {
@@ -637,6 +641,11 @@ class Playlists implements RequestHandlerInterface {
         $event = $request->requestBody()->data()->first("event");
         $entry = PlaylistEntry::fromArray($event->attributes()->all());
 
+        // if size matches count, set to 0 (in sync) else -1 (out of sync)
+        $size = $event->metaInformation()->getOptional("size");
+        if(!is_null($size))
+            $size = $size == $api->getTrackCount($key) ? 0 : -1;
+
         try {
             $album = $event->relationships()->get("album")->related()->first("album");
             $albumrec = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $album->id());
@@ -651,7 +660,13 @@ class Playlists implements RequestHandlerInterface {
         } catch(\Exception $e) {}
 
         $autoTimestamp = false;
-        if($created = $entry->getCreated()) {
+        $created = $entry->getCreated();
+        if($created == "auto" || !$created && Engine::getApiVer() < 1.1) {
+            $autoTimestamp = $api->isNowWithinShow($list);
+            $created = $autoTimestamp ? (new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL) : null;
+        }
+
+        if($created) {
             $window = $api->getTimestampWindow($key);
             try {
                 $stamp = PlaylistEntry::scrubTimestamp(new \DateTime($created), $window);
@@ -660,9 +675,8 @@ class Playlists implements RequestHandlerInterface {
                 error_log("failed to parse timestamp: $created");
                 $entry->setCreated(null);
             }
-        } else if($autoTimestamp = $api->isNowWithinShow($list) &&
-                !($_GET["cue"] ?? null))
-            $entry->setCreated((new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL));
+        } else
+            $entry->setCreated(null);
 
         $status = '';
         $success = $api->insertTrackEntry($key, $entry, $status);
@@ -686,7 +700,8 @@ class Playlists implements RequestHandlerInterface {
 
         if($success) {
             $res = new JsonResource("event", $entry->getId());
-            $this->injectMetadata($api, $res, $key, $entry);
+            if($event->metaInformation()->getOptional("wantMeta"))
+                $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $size, $entry);
             return new DocumentResponse(new Document($res));
         }
 
@@ -720,17 +735,21 @@ class Playlists implements RequestHandlerInterface {
         if(!$track || $track['list'] != $key)
             throw new NotAllowedException("event not in list");
 
+        // if size matches count, set to 0 (in sync) else -1 (out of sync)
+        $size = $event->metaInformation()->getOptional("size");
+        if(!is_null($size))
+            $size = $size == $api->getTrackCount($key) ? 0 : -1;
+
         // TBD allow changes instead of complete relacement
-        if($event->attributes()->getOptional("type"))
-            $entry = PlaylistEntry::fromArray($event->attributes()->all());
-        else {
-            $entry = new PlaylistEntry($track);
-            if(!$event->attributes()->getOptional("created") &&
-                        $api->isNowWithinShow($list)) {
-                $created = (new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL);
-                $entry->setCreated($created);
-            }
+        $entry = $event->attributes()->getOptional("type") ?
+            PlaylistEntry::fromArray($event->attributes()->all()) :
+            new PlaylistEntry($track);
+
+        if($event->attributes()->getOptional("created") == "auto") {
+            $created = $api->isNowWithinShow($list) ? (new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL) : null;
+            $entry->setCreated($created);
         }
+
         $entry->setId($id);
 
         try {
@@ -758,9 +777,9 @@ class Playlists implements RequestHandlerInterface {
         if($success && isset($stamp))
             PushServer::lazyLoadImages($key, $id);
 
-        if($success && ($_GET['oaction'] ?? null)) {
+        if($success && $event->metaInformation()->getOptional("wantMeta")) {
             $res = new JsonResource("event", $entry->getId());
-            $this->injectMetadata($api, $res, $key, $entry);
+            $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $size, $entry);
             return new DocumentResponse(new Document($res));
         }
 

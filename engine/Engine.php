@@ -102,6 +102,13 @@ class Engine {
     }
 
     /**
+     * return the API version
+     */
+    public static function getApiVer() : float {
+        return floatval($_SERVER['REDIRECT_APIVER'] ?? 1);
+    }
+
+    /**
      * return the URL of the current request, less leaf filename, if any
      */
     public static function getBaseUrl() {

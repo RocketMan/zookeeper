@@ -475,6 +475,9 @@ $().ready(function(){
         }
         spinTime =  $("#track-time").fxtime('val');
 
+        if(!spinTime && id == 'track-play')
+            spinTime = 'auto';
+
         var postData = {
             data: {
                 type: 'event',
@@ -488,6 +491,11 @@ $().ready(function(){
                     event: eventType,
                     code: eventCode,
                     created: spinTime
+                },
+                meta: {
+                    wantMeta: true,
+                    action: $("#track-action").val(),
+                    size: $(".playlistTable > tbody > tr").length
                 }
             }
         };
@@ -506,14 +514,15 @@ $().ready(function(){
         var playlistId = $("#track-playlist").val();
         $.ajax({
             type: "POST",
-            url: "api/v1/playlist/" + playlistId + "/events?oaction=" +
-                $("#track-action").val() + "&cue=" + (id == 'track-add' ? 1 : 0),
+            // use API v1.1 or later for correct auto timestamp semantics
+            url: "api/v1.1/playlist/" + playlistId + "/events",
             dataType : 'json',
             accept: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
             success: function(respObj) {
+                var meta = respObj.data.meta;
                 // *1 to coerce to int as switch uses strict comparison
-                switch(respObj.data.meta.seq*1) {
+                switch(meta.seq*1) {
                 case -1:
                     // playlist is out of sync with table; reload
                     location.href = "?action=" + $("#track-action").val() +
@@ -521,7 +530,7 @@ $().ready(function(){
                     break;
                 case 0:
                     // playlist is in natural order; prepend
-                    $(".playlistTable > tbody").prepend(respObj.data.meta.html);
+                    $(".playlistTable > tbody").prepend(meta.html);
                     $(".playlistTable > tbody > tr").eq(0).find(".grab").mousedown(grabStart);
                     break;
                 default:
@@ -532,11 +541,11 @@ $().ready(function(){
                     // Table is ordered latest to oldest, which means
                     // we must reverse the sense of seq.
                     var rows = $(".playlistTable > tbody > tr");
-                    var index = rows.length - respObj.data.meta.seq + 1;
+                    var index = rows.length - meta.seq + 1;
                     if(index < rows.length)
-                        rows.eq(index).before(respObj.data.meta.html);
+                        rows.eq(index).before(meta.html);
                     else
-                        rows.eq(rows.length - 1).after(respObj.data.meta.html);
+                        rows.eq(rows.length - 1).after(meta.html);
                     $(".playlistTable > tbody > tr").eq(index).find(".grab").mousedown(grabStart);
                     break;
                 }
@@ -549,7 +558,7 @@ $().ready(function(){
 
                 $("#track-type-pick").val('manual-entry').trigger('change');
 
-                if(respObj.data.meta.runsover) {
+                if(meta.runsover) {
                     $("#extend-show").show();
                     $("#extend-time").focus();
                 }
@@ -866,7 +875,15 @@ $().ready(function(){
         var postData = {
             data: {
                 type: 'event',
-                id: $(row).find(".grab").data("id")
+                id: $(row).find(".grab").data("id"),
+                attributes: {
+                    created: 'auto'
+                },
+                meta: {
+                    wantMeta: true,
+                    action: $("#track-action").val(),
+                    size: $(".playlistTable > tbody > tr").length
+                }
             }
         };
 
@@ -875,8 +892,7 @@ $().ready(function(){
             dataType : 'json',
             type: 'PATCH',
             accept: "application/json; charset=utf-8",
-            url: "api/v1/playlist/" + playlistId + "/events?oaction=" +
-                $("#track-action").val(),
+            url: "api/v1/playlist/" + playlistId + "/events",
             data: JSON.stringify(postData),
             success: function(respObj) {
                 var meta = respObj.data.meta;

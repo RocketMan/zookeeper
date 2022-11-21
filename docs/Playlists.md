@@ -205,9 +205,13 @@ X-APIKEY authentication is required; the operation will fail if you do
 not own the playlist.
 
 **Notes:**
-* If you add an event to a live playlist (one that is on-air 'now')
-and do not supply a `created` property, created will be set automatically;
+* For `api/v1`, if you add an event to a live playlist (one that is
+on-air 'now') and do not supply a `created` attribute, created will be
+set automatically; for `api/v1.1` and later, supply `created` with
+value `auto` if you want an automatic timestamp for a live playlist,
+otherwise none will be set;
 * Added or modified events are automatically positioned to the correct
 position in the playlist relative to their created time;
 * Added events with no created time are placed at the end of the playlist;
-* To modify an event, you must specify _all_ attributes.
+* To modify an event, you must specify _all_ attributes.  Exception: You
+may change an event's timestamp by supplying only the `created` attribute.
