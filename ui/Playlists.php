@@ -424,10 +424,6 @@ class Playlists extends MenuItem {
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <input id='track-action' type='hidden' value='<?php echo $this->action; ?>'>
             <input id='const-prefix' type='hidden' value='<?php echo self::NME_PREFIX; ?>'>
-            <input id='const-set-separator' type='hidden' value='<?php echo PlaylistEntry::TYPE_SET_SEPARATOR; ?>'>
-            <input id='const-log-event' type='hidden' value='<?php echo PlaylistEntry::TYPE_LOG_EVENT; ?>'>
-            <input id='const-comment' type='hidden' value='<?php echo PlaylistEntry::TYPE_COMMENT; ?>'>
-            <input id='const-spin' type='hidden' value='<?php echo PlaylistEntry::TYPE_SPIN; ?>'>
             <label></label><span id='error-msg' class='error'></span>
             <div>
             <?php if(!$editTrack) { ?>
