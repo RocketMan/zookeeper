@@ -564,8 +564,10 @@ $().ready(function(){
                 }
             },
             error: function (jqXHR, textStatus, errorThrown) {
-                const msg = jqXHR.responseJSON ? jqXHR.responseJSON.status : errorThrown;
-                showUserError("Your track was not saved: " + msg);
+                var json = JSON.parse(jqXHR.responseText);
+                var status = (json && json.errors)?
+                        json.errors[0].title:('Your track was not saved: ' + textStatus);
+                showUserError(status);
             }
         });
     }

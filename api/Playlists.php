@@ -670,10 +670,12 @@ class Playlists implements RequestHandlerInterface {
             $window = $api->getTimestampWindow($key);
             try {
                 $stamp = PlaylistEntry::scrubTimestamp(new \DateTime($created), $window);
-                $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
+                if($stamp)
+                    $entry->setCreated($stamp->format(IPlaylist::TIME_FORMAT_SQL));
+                else
+                    throw new \Exception("Time is outside show start/end times");
             } catch(\Exception $e) {
-                error_log("failed to parse timestamp: $created");
-                $entry->setCreated(null);
+                throw new \InvalidArgumentException($e->getMessage());
             }
         } else
             $entry->setCreated(null);
@@ -762,10 +764,12 @@ class Playlists implements RequestHandlerInterface {
             $window = $api->getTimestampWindow($key);
             try {
                 $stamp = PlaylistEntry::scrubTimestamp(new \DateTime($created), $window);
-                $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
+                if($stamp)
+                    $entry->setCreated($stamp->format(IPlaylist::TIME_FORMAT_SQL));
+                else
+                    throw new \Exception("Time is outside show start/end times");
             } catch(\Exception $e) {
-                error_log("failed to parse timestamp: $created");
-                $entry->setCreated(null);
+                throw new \InvalidArgumentException($e->getMessage());
             }
         }
 
