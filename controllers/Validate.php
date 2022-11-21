@@ -273,7 +273,7 @@ class Validate implements IController {
                 ]
             ]);
 
-            $success4 = $response->getStatusCode() == 200;
+            $success4 = $response->getStatusCode() == 204;
             $this->showSuccess($success4, $response);
         } else
             $success4 = false;
