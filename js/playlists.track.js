@@ -383,17 +383,21 @@ $().ready(function(){
 
     function moveTrack(list, fromId, toId, tr, si, rows) {
         var postData = {
-            playlist: list,
-            fromId: fromId,
-            toId: toId
+            data: {
+                type: 'event',
+                id: fromId,
+                meta: {
+                    moveTo: toId
+                }
+            }
         };
 
         $.ajax({
-            type: "POST",
-            url: "?action=moveTrack",
+            type: "PATCH",
+            url: "api/v1/playlist/" + list + "/events",
             dataType : "json",
             accept: "application/json; charset=utf-8",
-            data: postData,
+            data: JSON.stringify(postData),
             success: function(respObj) {
                 // move succeeded, clear timestamp
                 tr.find("td").eq(1).data('utc','').html('');
@@ -407,7 +411,10 @@ $().ready(function(){
                 else
                     rows.eq(si).after(tr);
 
-                $('#error-msg').text("Error moving track: " + jqXHR.responseJSON.status);
+                var json = JSON.parse(jqXHR.responseText);
+                var status = (json && json.errors)?
+                        json.errors[0].title:textStatus;
+                $('#error-msg').text("Error moving track: " + status);
             }
         });
     }

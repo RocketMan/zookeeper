@@ -773,7 +773,10 @@ class Playlists implements RequestHandlerInterface {
             }
         }
 
-        $success = $api->updateTrackEntry($key, $entry);
+        $moveTo = $event->metaInformation()->getOptional("moveTo");
+        $success = $moveTo ?
+            $api->moveTrack($key, $id, $moveTo) :
+            $api->updateTrackEntry($key, $entry);
 
         if($success && $list['airname'] && $api->isNowWithinShow($list))
             PushServer::sendAsyncNotification();
