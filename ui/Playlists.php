@@ -84,19 +84,6 @@ class Playlists extends MenuItem {
         return $name;
     }
     
-    private function extractTime($time, &$fromTime, &$toTime) {
-        if(strlen($time) == 9 && $time[4] == '-') {
-            $fromTime = substr($time, 0, 4);
-            $toTime = substr($time, 5, 4);
-            return true;
-        } else if(!strlen($time)) {
-            $fromTime = "0000";
-            $toTime = "0000";
-            return true;
-        } else
-            return false;
-    }
-    
     // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
     // returns empty string if invalid
     private function normalizeTime($t) {
@@ -223,6 +210,11 @@ class Playlists extends MenuItem {
         }
     }
 
+    public static function makeShowDateAndTime($row) {
+        return self::timestampToDate($row['showdate']) . " " .
+               self::timeToLocale($row['showtime']);
+    }
+
     public function viewDJReviews() {
         $this->newEntity(Search::class)->doSearch();
     }
@@ -341,6 +333,68 @@ class Playlists extends MenuItem {
         $header = "<TR class='playlistHdr' ALIGN=LEFT>" . $editCol . "<TH WIDTH='64px'>Time</TH><TH WIDTH='25%'>" .
                   "Artist</TH><TH WIDTH='25%'>Track</TH><TH></TH><TH>Album/Label</TH></TR>";
         return $header;
+    }
+
+    private function emitPlaylistBody($playlist, $editMode) {
+        $header = $this->makePlaylistHeader($editMode);
+        $editCell = "";
+        echo "<TABLE class='playlistTable' CELLPADDING=1>\n";
+        echo "<THEAD>" . $header . "</THEAD>";
+
+        $api = Engine::api(IPlaylist::class);
+        $entries = $api->getTracks($playlist, $editMode)->asArray();
+        Engine::api(ILibrary::class)->markAlbumsReviewed($entries);
+
+        $observer = PlaylistBuilder::newInstance($playlist, $this->action, $editMode, $this->session->isAuth("u"));
+        echo "<TBODY>\n";
+        if($entries != null && sizeof($entries) > 0) {
+            foreach($entries as $entry)
+                $observer->observe(new PlaylistEntry($entry));
+        }
+        echo "</TBODY></TABLE>\n";
+
+        if($editMode) {
+            UI::emitJS('js/jquery.fxtime.js');
+            UI::emitJS('js/playlists.track.js');
+        } else {
+            $show = $api->getPlaylist($playlist);
+            if($api->isNowWithinShow($show))
+                UI::emitJS('js/playlists.live.js');
+        }
+    }
+
+    private function emitPlaylistBanner($playlistId, $playlist, $editMode) {
+        $showName = $playlist['description'];
+        $djId = $playlist['id'];
+        $djName = $playlist['airname'] ?? "None";
+        $showDateTime = self::makeShowDateAndTime($playlist);
+
+        $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
+
+        if(!$editMode && $this->session->isAuth("v"))
+            $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='action' VALUE='editList'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
+
+        $djName = htmlentities($djName, ENT_QUOTES, 'UTF-8');
+        $djLink = $djId ? "<a href='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' class='nav2'>$djName</a>" : $djName;
+
+        echo "<div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>".htmlentities($showName, ENT_QUOTES, 'UTF-8')."</span> <span id='banner-dj'>with $djLink</span></span><div>{$showDateTime}&nbsp;</div></div>\n";
+?>
+    <SCRIPT TYPE="text/javascript"><!--
+    <?php ob_start([JSMin::class, 'minify']); ?>
+    // Truncate the show name (banner-description) so that the combined
+    // show name, DJ name, and date/time fit on one line.
+    $().ready(function() {
+        var maxWidth = $(".playlistBanner").outerWidth();
+        var dateWidth = $(".playlistBanner div").outerWidth();
+        if($("#banner-caption").outerWidth() + dateWidth > maxWidth) {
+            var width = maxWidth - $("#banner-dj").outerWidth() - dateWidth - 12;
+            $("#banner-description").outerWidth(width);
+        }
+    });
+    <?php ob_end_flush(); ?>
+    // -->
+    </SCRIPT>
+    <?php
     }
 
     private function editPlaylist($playlistId) {
@@ -549,14 +603,6 @@ class Playlists extends MenuItem {
         $this->emitTrackAdder($playlistId, $playlist, $id);
     }
 
-    private function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTime) {
-        $id = 0;
-        $status = '';
-        // Run the query
-        $success = Engine::api(IPlaylist::class)->insertTrack($playlistId,
-                     $tag, $artist, $track, $album, $label, $spinTime, $id, $status);    
-    }
-    
     public function emitEditor() {
         $artist = $_REQUEST["artist"];
         $track = $_REQUEST["track"];
@@ -611,6 +657,14 @@ class Playlists extends MenuItem {
        $this->dispatchSubaction($this->action, $this->subaction, $subactions);
     }
     
+    private function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTime) {
+        $id = 0;
+        $status = '';
+        // Run the query
+        $success = Engine::api(IPlaylist::class)->insertTrack($playlistId,
+                     $tag, $artist, $track, $album, $label, $spinTime, $id, $status);
+    }
+
     public function emitExportList() {
     ?>
     <FORM ACTION="?" METHOD=POST>
@@ -1173,74 +1227,7 @@ class Playlists extends MenuItem {
         }
     }
 
-    private function emitPlaylistBody($playlist, $editMode) {
-        $header = $this->makePlaylistHeader($editMode);
-        $editCell = "";
-        echo "<TABLE class='playlistTable' CELLPADDING=1>\n";
-        echo "<THEAD>" . $header . "</THEAD>";
-
-        $api = Engine::api(IPlaylist::class);
-        $entries = $api->getTracks($playlist, $editMode)->asArray();
-        Engine::api(ILibrary::class)->markAlbumsReviewed($entries);
-
-        $observer = PlaylistBuilder::newInstance($playlist, $this->action, $editMode, $this->session->isAuth("u"));
-        echo "<TBODY>\n";
-        if($entries != null && sizeof($entries) > 0) {
-            foreach($entries as $entry)
-                $observer->observe(new PlaylistEntry($entry));
-        }
-        echo "</TBODY></TABLE>\n";
-
-        if($editMode) {
-            UI::emitJS('js/jquery.fxtime.js');
-            UI::emitJS('js/playlists.track.js');
-        } else {
-            $show = $api->getPlaylist($playlist);
-            if($api->isNowWithinShow($show))
-                UI::emitJS('js/playlists.live.js');
-        }
-    }
-
-    public static function makeShowDateAndTime($row) {
-        return self::timestampToDate($row['showdate']) . " " .
-               self::timeToLocale($row['showtime']);
-    }
-
-    private function emitPlaylistBanner($playlistId, $playlist, $editMode) {
-        $showName = $playlist['description'];
-        $djId = $playlist['id'];
-        $djName = $playlist['airname'] ?? "None";
-        $showDateTime = self::makeShowDateAndTime($playlist);
-
-        $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
-
-        if(!$editMode && $this->session->isAuth("v"))
-            $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='action' VALUE='editList'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
-
-        $djName = htmlentities($djName, ENT_QUOTES, 'UTF-8');
-        $djLink = $djId ? "<a href='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' class='nav2'>$djName</a>" : $djName;
-
-        echo "<div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>".htmlentities($showName, ENT_QUOTES, 'UTF-8')."</span> <span id='banner-dj'>with $djLink</span></span><div>{$showDateTime}&nbsp;</div></div>\n";
-?>
-    <SCRIPT TYPE="text/javascript"><!--
-    <?php ob_start([JSMin::class, 'minify']); ?>
-    // Truncate the show name (banner-description) so that the combined
-    // show name, DJ name, and date/time fit on one line.
-    $().ready(function() {
-        var maxWidth = $(".playlistBanner").outerWidth();
-        var dateWidth = $(".playlistBanner div").outerWidth();
-        if($("#banner-caption").outerWidth() + dateWidth > maxWidth) {
-            var width = maxWidth - $("#banner-dj").outerWidth() - dateWidth - 12;
-            $("#banner-description").outerWidth(width);
-        }
-    });
-    <?php ob_end_flush(); ?>
-    // -->
-    </SCRIPT>
-    <?php
-    }
-
-    public  function emitViewPlayList() {
+    public function emitViewPlayList() {
         $playlistId = $_REQUEST["playlist"];
         $this->viewList($playlistId);
     }
