@@ -186,7 +186,7 @@ this same endpoint:
 
 * To add a new event, issue a POST to the endpoint;
 * To modify an event, issue a PATCH to the endpoint;
-* To delete an event, issue a DELETE to the endpoint;
+* To delete an event, issue a DELETE to the endpoint.
 
 In all cases, the request body contains a single event in the format
 returned by a GET request to the endpoint.
@@ -206,28 +206,56 @@ not own the playlist.
 
 ### Automatic timestamping
 
-Events added to or updated in a 'live' (currently on-air) playlist
+Events added to, or updated in a 'live' (currently on-air) playlist,
 can be automatically timestamped with the current time.
 
-* For API v1 (`POST api/v1/playlist/:id/events`) creating a new event
-with a missing or empty `created` attribute, or whose `created` has value
-`auto`, will automatically apply a timestamp to a live list;
-* For API v1.1 or later (`POST api/v1.1/playlist/:id/events`), you
-must supply a `created` attribute with value `auto` to request a
-timestamp on a new event; an empty or missing `created` attribute
-results in no timestamp;
-* For all API versions, PATCH to the events endpoint will apply an
-automatic timestamp to an existing event if the list is live and the
-`created` attribute has value `auto`.
+* POST (API version 1): If you omit, or supply an empty `created`
+attribute, or a `created` attribute whose value is 'auto' in a POST
+request to the `api/v1/playlist/:id/events` endpoint, zookeeper will
+automatically apply a timestamp to the new event, if the playlist is
+currently on-air;
+* POST (API version 1.1 and later): If you supply a `created` attribute
+with value 'auto' in a POST request to the `api/v1.1/playlist/:id/events`
+endpoint, zookeeper will automatically apply a timestamp to the new event,
+if the playlist is currently on-air.  Unlike API version 1, an empty
+or absent `created` attribute will **not** timestamp the event;
+* PATCH (all API versions): If you supply a `created` attribute with
+value 'auto' in a PATCH request to the events endpoint, zookeeper will
+timestamp the existing event, if the playlist is currently on-air.
+An empty or absent `created` attribute will not timestamp the event.
 
 ### Event resequencing
 
-To resequence an event, issue a PATCH request with a `moveTo` meta key
-whose value is the id of the event currently in the target position.
+To reorder an event within a playlist, issue a PATCH request with a
+`moveTo` meta key, the value of which is the id of the event currently
+in the target position.
 
 It is NOT necessary to specify attributes in the request body.
-However, as with any PATCH request, you may provide one or more
-attributes to modify the event at the same time as the restore.
+However, as with any PATCH request, you may provide attributes to
+modify the event at the same time as the resequencing.
+
+Example:
+
+To move event with ID 12345 to the position currently occupied by
+the event with ID 67890 in playlist 98765:
+
+````
+PATCH /api/v1/playlist/98765/events HTTP/1.1
+X-APIKEY: eb5e0e0b42a84531af5f257ed61505050494788d
+Content-Type: application/vnd.api+json
+
+{
+  "data": {
+    "type": "event",
+    "id": "12345",
+    "meta": {
+      "moveTo": "67890"
+    }
+  }
+}
+````
+
+Upon success, the timestamp of the resequenced event is cleared.
 
 ### Notes
 * Added or modified events are automatically positioned to the correct
