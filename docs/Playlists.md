@@ -187,8 +187,6 @@ this same endpoint:
 * To add a new event, issue a POST to the endpoint;
 * To modify an event, issue a PATCH to the endpoint;
 * To delete an event, issue a DELETE to the endpoint;
-* To resequence an event, issue a PATCH request with a `moveTo` meta key
-whose value is the id of the event currently in the target position.
 
 In all cases, the request body contains a single event in the format
 returned by a GET request to the endpoint.
@@ -206,14 +204,34 @@ well as the server action are the same.
 X-APIKEY authentication is required; the operation will fail if you do
 not own the playlist.
 
-**Notes:**
-* For `api/v1`, if you add an event to a live playlist (one that is
-on-air 'now') and do not supply a `created` attribute, created will be
-set automatically; for `api/v1.1` and later, supply `created` with
-value `auto` if you want an automatic timestamp for a live playlist,
-otherwise none will be set;
+### Automatic timestamping
+
+Events added to or updated in a 'live' (currently on-air) playlist
+can be automatically timestamped with the current time.
+
+* For API v1 (`POST api/v1/playlist/:id/events`) creating a new event
+with a missing or empty `created` attribute, or whose `created` has value
+`auto`, will automatically apply a timestamp to a live list;
+* For API v1.1 or later (`POST api/v1.1/playlist/:id/events`), you
+must supply a `created` attribute with value `auto` to request a
+timestamp on a new event; an empty or missing `created` attribute
+results in no timestamp;
+* For all API versions, PATCH to the events endpoint will apply an
+automatic timestamp to an existing event if the list is live and the
+`created` attribute has value `auto`.
+
+### Event resequencing
+
+To resequence an event, issue a PATCH request with a `moveTo` meta key
+whose value is the id of the event currently in the target position.
+
+It is NOT necessary to specify attributes in the request body.
+However, as with any PATCH request, you may provide one or more
+attributes to modify the event at the same time as the restore.
+
+### Notes
 * Added or modified events are automatically positioned to the correct
-position in the playlist relative to their created time;
+position in the playlist, relative to their created time;
 * Added events with no created time are placed at the end of the playlist;
 * To modify an event, you must specify _all_ attributes.  Exception: You
 may change an event's timestamp by supplying only the `created` attribute.
