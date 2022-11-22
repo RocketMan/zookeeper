@@ -568,12 +568,12 @@ class Playlists implements RequestHandlerInterface {
         $success = $attrs->isEmpty() ? true :
                         $api->updatePlaylist($key, $date, $time, $name, $aid);
 
-        if($success)
+        if($success) {
             PushServer::sendAsyncNotification();
+            return new EmptyResponse();
+        }
 
-        return $success ?
-            new EmptyResponse() :
-            new BadRequestException("DB update error");
+        throw new BadRequestException("DB update error");
     }
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
@@ -707,7 +707,7 @@ class Playlists implements RequestHandlerInterface {
             return new DocumentResponse(new Document($res));
         }
 
-        return new BadRequestException($status ?? "DB update error");
+        throw new BadRequestException($status ?? "DB update error");
     }
 
     public function replaceRelatedResources(RequestInterface $request): ResponseInterface {
@@ -773,10 +773,12 @@ class Playlists implements RequestHandlerInterface {
             }
         }
 
-        $moveTo = $event->metaInformation()->getOptional("moveTo");
-        $success = $moveTo ?
-            $api->moveTrack($key, $id, $moveTo) :
-            $api->updateTrackEntry($key, $entry);
+        $success = $event->attributes()->isEmpty() ?
+                        true : $api->updateTrackEntry($key, $entry);
+
+        if($success &&
+                ($moveTo = $event->metaInformation()->getOptional("moveTo")))
+            $success = $api->moveTrack($key, $id, $moveTo);
 
         if($success && $list['airname'] && $api->isNowWithinShow($list))
             PushServer::sendAsyncNotification();
@@ -790,9 +792,10 @@ class Playlists implements RequestHandlerInterface {
             return new DocumentResponse(new Document($res));
         }
 
-        return $success ?
-            new EmptyResponse() :
-            new BadRequestException("DB update error");
+        if($success)
+            return new EmptyResponse();
+
+        throw new BadRequestException("DB update error");
     }
 
     public function removeRelatedResources(RequestInterface $request): ResponseInterface {
@@ -824,8 +827,9 @@ class Playlists implements RequestHandlerInterface {
 
         $success = $api->deleteTrack($id);
 
-        return $success ?
-            new EmptyResponse() :
-            new BadRequestException("DB update error");
+        if($success)
+            return new EmptyResponse();
+
+        throw new BadRequestException("DB update error");
     }
 }
