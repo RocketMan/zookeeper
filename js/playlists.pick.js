@@ -747,9 +747,7 @@ $().ready(function(){
     //
     // 'padding-top' is a hack to prevent accordion shifting layout when
     // opening and closing the content.
-    $(".active-playlist-container").css('overflow', 'visible').css('padding-top', '2px').on('click', function() {
-        $(".mobileMenuContent").slideUp();
-    });
+    $(".active-playlist-container").css('overflow', 'visible').css('padding-top', '2px');
     $(".newPlaylist button").on('click', function() {
         if (isEditing(true)) return;
 
@@ -788,6 +786,8 @@ $().ready(function(){
             at: 'right bottom'
         },
         show: true
+    }).on('click', function() {
+        $(".mobileMenuContent").slideUp();
     });
 
     window.addEventListener('pageshow', function() {
