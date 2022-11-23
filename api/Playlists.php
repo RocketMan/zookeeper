@@ -756,7 +756,15 @@ class Playlists implements RequestHandlerInterface {
 
         try {
             $album = $event->relationships()->get("album")->related()->first("album");
-            $entry->setTag($album->id());
+            $albumrec = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $album->id());
+            if(sizeof($albumrec)) {
+                // don't allow modification of album info if tag is set
+                $entry->setTag($album->id());
+                if(!$albumrec[0]["iscoll"])
+                    $entry->setArtist(PlaylistEntry::swapNames($albumrec[0]["artist"]));
+                $entry->setAlbum($albumrec[0]["album"]);
+                $entry->setLabel($albumrec[0]["name"]);
+            }
         } catch(\Exception $e) {}
 
         $created = $entry->getCreated();
