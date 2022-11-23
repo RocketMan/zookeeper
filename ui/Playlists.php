@@ -57,8 +57,6 @@ class Playlists extends MenuItem {
         [ "viewDJ", "emitViewDJ" ],
         [ "viewDJReviews", "viewDJReviews" ],
         [ "updateDJInfo", "updateDJInfo" ],
-        [ "addTrack", "handleAddTrack" ],
-        [ "moveTrack", "handleMoveTrack" ],
     ];
 
     private $action;
@@ -84,19 +82,6 @@ class Playlists extends MenuItem {
         }
 
         return $name;
-    }
-    
-    private function extractTime($time, &$fromTime, &$toTime) {
-        if(strlen($time) == 9 && $time[4] == '-') {
-            $fromTime = substr($time, 0, 4);
-            $toTime = substr($time, 5, 4);
-            return true;
-        } else if(!strlen($time)) {
-            $fromTime = "0000";
-            $toTime = "0000";
-            return true;
-        } else
-            return false;
     }
     
     // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
@@ -180,168 +165,6 @@ class Playlists extends MenuItem {
         }
     }
     
-    // add track from an ajax post from client. return new track row
-    // upon success else 400 response.
-    public function handleAddTrack() {
-        $retVal = [];
-        $playlistId = trim($_POST["playlist"]);
-        $playlistApi = Engine::api(IPlaylist::class);
-        $playlist = $playlistApi->getPlaylist($playlistId, 1);
-
-        if(!$playlist || $playlist['dj'] != $this->session->getUser()) {
-            $retVal['status'] = 'access error';
-            http_response_code(400);
-            echo json_encode($retVal);
-            return;
-        }
-
-        $isLiveShow = $playlistApi->isNowWithinShow($playlist);
-
-        $type = $_REQUEST["type"] ?? null;
-        if(isset($_REQUEST["size"]) && $playlistId) {
-            $count = $playlistApi->getTrackCount($playlistId);
-            // if size matches count, set to 0 (in sync) else -1 (out of sync)
-            $size = $count == $_REQUEST["size"]?0:-1;
-        }
-
-        $spinDateTime = null;
-        $spinTime = $_REQUEST["time"] ?? ''; // optional paramter, may be empty
-        if ($spinTime != '') {
-            $window = $playlistApi->getTimestampWindow($playlistId);
-            $spinDateTime = PlaylistEntry::scrubTimestamp(
-                                         new \DateTime($spinTime), $window);
-            if($spinDateTime == null) {
-                $retVal['status'] = "Time is outside show start/end times";
-                http_response_code(400);
-                echo json_encode($retVal);
-                return;
-            }
-        }
-
-        $isCue = $_REQUEST["cue"] ?? 0;
-
-        $entry = null;
-        $tid = $_REQUEST["tid"] ?? null;
-        if($tid) {
-            $track = $playlistApi->getTrack($tid);
-            if(!$track || $track['list'] != $playlistId) {
-                $retMsg = 'access error';
-            } else {
-                $entry = new PlaylistEntry($track);
-                // TBD support field update
-            }
-        } else
-        switch($type) {
-        case PlaylistEntry::TYPE_SET_SEPARATOR:
-            $entry = (new PlaylistEntry())->setSetSeparator();
-            break;
-        case PlaylistEntry::TYPE_COMMENT:
-            $entry = (new PlaylistEntry())->setComment(mb_substr(trim(str_replace("\r\n", "\n", $_REQUEST["comment"])), 0, PlaylistEntry::MAX_COMMENT_LENGTH));
-            break;
-        case PlaylistEntry::TYPE_LOG_EVENT:
-            $entry = (new PlaylistEntry())->setLogEvent(
-                $_REQUEST["eventType"], trim($_REQUEST["eventCode"]));
-            break;
-        default:
-            // spin
-            $artist = trim($_REQUEST["artist"]);
-            $track = trim($_REQUEST["track"]);
-            if (empty($playlistId) || empty($artist) || empty($track)) {
-                $retMsg = "required field missing: -" . $playlistId . "-, -" . $artist . "-, -" . $track . "-";
-            } else {
-                // set the review flag for PlaylistObserver
-                if($_REQUEST["tag"])
-                    Engine::api(ILibrary::class)->markAlbumsReviewed($_=[&$_REQUEST]);
-                $entry = new PlaylistEntry($_REQUEST);
-            }
-            break;
-        }
-
-        if($entry) {
-            $retMsg = 'success';
-            $id = '';
-            $status = '';
-            $autostamp = false;
-
-            if ($isLiveShow && !$spinDateTime && !$isCue) {
-                $spinDateTime = new \DateTime("now");
-                $autostamp = true;
-            }
-
-            if ($spinDateTime != null)
-                $entry->setCreated($spinDateTime->format(IPlaylist::TIME_FORMAT_SQL));
-
-            $updateStatus = $tid ? $playlistApi->updateTrackEntry($playlistId, $entry) : $playlistApi->insertTrackEntry($playlistId, $entry, $status);
-
-            if (!$updateStatus) {
-                $retMsg = $status == '' ? "DB update error" : $status;
-            } else {
-                // JM 2019-08-15 action and id need to be set
-                // for hyperlinks genereated by makePlaylistObserver (#54)
-                $this->action = $_REQUEST["oaction"];
-                ob_start();
-                $this->makePlaylistObserver($playlistId, true)->observe($entry);
-                $newRow = ob_get_contents();
-                ob_end_clean();
-
-                $retVal['row'] = $newRow;
-                // seq is one of:
-                //   -1     client playlist is out of sync with the service
-                //   0      playlist is in natural order
-                //   > 0    ordinal of inserted entry
-                $retVal['seq'] = $size ? $size : $playlistApi->getSeq(0, $entry->getId());
-
-                $window = $playlistApi->getTimestampWindow($playlistId, false);
-                if($isLiveShow && $playlist['airname']) {
-                    $playlist['id'] = $playlistId;
-                    if($entry->isType(PlaylistEntry::TYPE_SPIN)) {
-                        $spin = $entry->asArray();
-                        $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
-                    } else
-                        $spin = null;
-
-                    if($autostamp && $spinDateTime >= $window['start'])
-                        PushServer::sendAsyncNotification($playlist, $spin);
-                } else if(!$isLiveShow)
-                    $this->lazyLoadImages($playlistId, $entry->getId());
-
-                // track is in the grace period?
-                $retVal['runsover'] = $spinDateTime >= $window['end'];
-            }
-        } else
-            $updateStatus = 0; //failure
-
-        $retVal['status'] = $retMsg;
-        http_response_code($updateStatus == 0 ? 400 : 200);
-        echo json_encode($retVal);
-    }
-
-    public function handleMoveTrack() {
-        $retVal = [];
-        $list = $_POST["playlist"];
-        $from = $_REQUEST["fromId"];
-        $to = $_REQUEST["toId"];
-
-        if(!isset($list) || !$this->isOwner($list)) {
-            $retVal['status'] = 'access error';
-            http_response_code(400);
-            echo json_encode($retVal);
-            return;
-        }
-
-        if($list && $from && $to && $from != $to) {
-            $success = Engine::api(IPlaylist::class)->moveTrack($list, $from, $to);
-            $retMsg = $success?"success":"DB update error";
-        } else {
-            $success = false;
-            $retMsg = "invalid request";
-        }
-
-        $retVal['status'] = $retMsg;
-        http_response_code($success?200:400);
-        echo json_encode($retVal);
-    }
-
     private static function isUsLocale() : bool {
         if(!isset(self::$usLocale))
             self::$usLocale = UI::getClientLocale() == 'en_US';
@@ -387,10 +210,9 @@ class Playlists extends MenuItem {
         }
     }
 
-    private static function timestampToLocale($timestamp) {
-        // colon is included in 24hr format for symmetry with fxtime
-        $timeSpec = self::isUsLocale() ? 'h:i a' : 'H:i';
-        return $timestamp ? date($timeSpec, $timestamp) : '';
+    public static function makeShowDateAndTime($row) {
+        return self::timestampToDate($row['showdate']) . " " .
+               self::timeToLocale($row['showtime']);
     }
 
     public function viewDJReviews() {
@@ -505,23 +327,79 @@ class Playlists extends MenuItem {
         return $airNames."\n";
     }
 
-    private function makeEditDiv($entry, $playlist) {
-        $href = "?playlist=" . $playlist . "&amp;id=" .
-                $entry->getId() . "&amp;action=" . $this->action . "&amp;";
-        $editLink = "<A CLASS='songEdit nav' HREF='" . $href ."seq=editTrack'>&#x270f;</a>";
-        //NOTE: in edit mode the list is ordered new to old, so up makes it 
-        //newer in time order & vice-versa.
-        $dnd = "<DIV class='grab' data-id='".$entry->getId()."'>&#x2630;</DIV>";
-        $retVal = "<div class='songManager'>" . $dnd . $editLink . "</div>";
-        return $retVal;
-    }
-
     // make header for edit & view playlist
     private function makePlaylistHeader($isEditMode) {
         $editCol = $isEditMode ? "<TD WIDTH='30PX' />" : "";
         $header = "<TR class='playlistHdr' ALIGN=LEFT>" . $editCol . "<TH WIDTH='64px'>Time</TH><TH WIDTH='25%'>" .
                   "Artist</TH><TH WIDTH='25%'>Track</TH><TH></TH><TH>Album/Label</TH></TR>";
         return $header;
+    }
+
+    private function emitPlaylistBody($playlist, $editMode) {
+        $header = $this->makePlaylistHeader($editMode);
+        $editCell = "";
+        echo "<TABLE class='playlistTable' CELLPADDING=1>\n";
+        echo "<THEAD>" . $header . "</THEAD>";
+
+        $api = Engine::api(IPlaylist::class);
+        $entries = $api->getTracks($playlist, $editMode)->asArray();
+        Engine::api(ILibrary::class)->markAlbumsReviewed($entries);
+
+        $observer = PlaylistBuilder::newInstance([
+            "id" => $playlist,
+            "action" => $this->action,
+            "editMode" => $editMode,
+            "authUser" => $this->session->isAuth("u")
+        ]);
+        echo "<TBODY>\n";
+        if($entries != null && sizeof($entries) > 0) {
+            foreach($entries as $entry)
+                $observer->observe(new PlaylistEntry($entry));
+        }
+        echo "</TBODY></TABLE>\n";
+
+        if($editMode) {
+            UI::emitJS('js/jquery.fxtime.js');
+            UI::emitJS('js/playlists.track.js');
+        } else {
+            $show = $api->getPlaylist($playlist);
+            if($api->isNowWithinShow($show))
+                UI::emitJS('js/playlists.live.js');
+        }
+    }
+
+    private function emitPlaylistBanner($playlistId, $playlist, $editMode) {
+        $showName = $playlist['description'];
+        $djId = $playlist['id'];
+        $djName = $playlist['airname'] ?? "None";
+        $showDateTime = self::makeShowDateAndTime($playlist);
+
+        $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
+
+        if(!$editMode && $this->session->isAuth("v"))
+            $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='action' VALUE='editList'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
+
+        $djName = htmlentities($djName, ENT_QUOTES, 'UTF-8');
+        $djLink = $djId ? "<a href='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' class='nav2'>$djName</a>" : $djName;
+
+        echo "<div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>".htmlentities($showName, ENT_QUOTES, 'UTF-8')."</span> <span id='banner-dj'>with $djLink</span></span><div>{$showDateTime}&nbsp;</div></div>\n";
+?>
+    <SCRIPT TYPE="text/javascript"><!--
+    <?php ob_start([JSMin::class, 'minify']); ?>
+    // Truncate the show name (banner-description) so that the combined
+    // show name, DJ name, and date/time fit on one line.
+    $().ready(function() {
+        var maxWidth = $(".playlistBanner").outerWidth();
+        var dateWidth = $(".playlistBanner div").outerWidth();
+        if($("#banner-caption").outerWidth() + dateWidth > maxWidth) {
+            var width = maxWidth - $("#banner-dj").outerWidth() - dateWidth - 12;
+            $("#banner-description").outerWidth(width);
+        }
+    });
+    <?php ob_end_flush(); ?>
+    // -->
+    </SCRIPT>
+    <?php
     }
 
     private function editPlaylist($playlistId) {
@@ -551,10 +429,6 @@ class Playlists extends MenuItem {
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
             <input id='track-action' type='hidden' value='<?php echo $this->action; ?>'>
             <input id='const-prefix' type='hidden' value='<?php echo self::NME_PREFIX; ?>'>
-            <input id='const-set-separator' type='hidden' value='<?php echo PlaylistEntry::TYPE_SET_SEPARATOR; ?>'>
-            <input id='const-log-event' type='hidden' value='<?php echo PlaylistEntry::TYPE_LOG_EVENT; ?>'>
-            <input id='const-comment' type='hidden' value='<?php echo PlaylistEntry::TYPE_COMMENT; ?>'>
-            <input id='const-spin' type='hidden' value='<?php echo PlaylistEntry::TYPE_SPIN; ?>'>
             <label></label><span id='error-msg' class='error'></span>
             <div>
             <?php if(!$editTrack) { ?>
@@ -730,14 +604,6 @@ class Playlists extends MenuItem {
         $this->emitTrackAdder($playlistId, $playlist, $id);
     }
 
-    private function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTime) {
-        $id = 0;
-        $status = '';
-        // Run the query
-        $success = Engine::api(IPlaylist::class)->insertTrack($playlistId,
-                     $tag, $artist, $track, $album, $label, $spinTime, $id, $status);    
-    }
-    
     public function emitEditor() {
         $artist = $_REQUEST["artist"];
         $track = $_REQUEST["track"];
@@ -792,6 +658,14 @@ class Playlists extends MenuItem {
        $this->dispatchSubaction($this->action, $this->subaction, $subactions);
     }
     
+    private function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTime) {
+        $id = 0;
+        $status = '';
+        // Run the query
+        $success = Engine::api(IPlaylist::class)->insertTrack($playlistId,
+                     $tag, $artist, $track, $album, $label, $spinTime, $id, $status);
+    }
+
     public function emitExportList() {
     ?>
     <FORM ACTION="?" METHOD=POST>
@@ -1353,156 +1227,8 @@ class Playlists extends MenuItem {
             break;
         }
     }
-    
-    private function makeAlbumLink($entry, $includeLabel) {
-        $albumName = $entry->getAlbum();
-        $labelName = $entry->getLabel();
-        if (empty($albumName) && empty($labelName))
-            return "";
 
-        $labelSpan = "<span class='songLabel'> / " . $this->smartURL($labelName) . "</span>";
-        if($entry->getTag()) {
-            $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($entry->getTag()) .
-                          "&amp;q=&amp;action=search' CLASS='nav'>".$albumName ."</A>";
-
-            if ($includeLabel) {
-                $albumTitle = $albumTitle . $labelSpan;
-            }
-        } else {
-            $albumTitle = $this->smartURL($albumName);
-            if ($includeLabel) 
-                $albumTitle = $albumTitle . $labelSpan;
-       }
-       return $albumTitle;
-    }
-
-    private function makePlaylistObserver($playlist, $editMode) {
-        $break = false;
-        return (new PlaylistObserver())->onComment(function($entry) use($playlist, $editMode, &$break) {
-                $editCell = $editMode ? "<TD>" .
-                    $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
-                $created = $entry->getCreatedTimestamp();
-                $timeplayed = self::timestampToLocale($created);
-                echo "<TR class='commentRow".($editMode?"Edit":"")."'>" . $editCell .
-                     "<TD class='time' data-utc='$created'>$timeplayed</TD>" .
-                     "<TD COLSPAN=4>".UI::markdown($entry->getComment()).
-                     "</TD></TR>\n";
-                $break = false;
-            })->onLogEvent(function($entry) use($playlist, $editMode, &$break) {
-                $created = $entry->getCreatedTimestamp();
-                $timeplayed = self::timestampToLocale($created);
-                if($this->session->isAuth("u")) {
-                    // display log entries only for authenticated users
-                    $editCell = $editMode ? "<TD>" .
-                        $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
-                    echo "<TR class='logEntry".($editMode?"Edit":"")."'>" . $editCell .
-                         "<TD class='time' data-utc='$created'>$timeplayed</TD>" .
-                         "<TD>".$entry->getLogEventType()."</TD>" .
-                         "<TD COLSPAN=3>".$entry->getLogEventCode()."</TD>" .
-                         "</TR>\n";
-                    $break = false;
-                } else if(!$break) {
-                    echo "<TR class='songDivider'>" . $editCell .
-                         "<TD class='time' data-utc='$created'>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
-                    $break = true;
-                }
-            })->onSetSeparator(function($entry) use($playlist, $editMode, &$break) {
-                if($editMode || !$break) {
-                    $editCell = $editMode ? "<TD>" .
-                        $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
-                    $created = $entry->getCreatedTimestamp();
-                    $timeplayed = self::timestampToLocale($created);
-                    echo "<TR class='songDivider'>" . $editCell .
-                         "<TD class='time' data-utc='$created'>$timeplayed</TD><TD COLSPAN=4><HR></TD></TR>\n";
-                    $break = true;
-                }
-            })->onSpin(function($entry) use($playlist, $editMode, &$break) {
-                $editCell = $editMode ? "<TD>" .
-                    $this->makeEditDiv($entry, $playlist) . "</TD>" : "";
-                $created = $entry->getCreatedTimestamp();
-                $timeplayed = self::timestampToLocale($created);
-                $reviewCell = $entry->getReviewed() ? "<div class='albumReview'></div>" : "";
-                $artistName = PlaylistEntry::swapNames($entry->getArtist());
-
-                $albumLink = $this->makeAlbumLink($entry, true);
-                echo "<TR class='songRow'>" . $editCell .
-                     "<TD class='time' data-utc='$created'>$timeplayed</TD>" .
-                     "<TD>" . $this->smartURL($artistName) . "</TD>" .
-                     "<TD>" . $this->smartURL($entry->getTrack()) . "</TD>" .
-                     "<TD>$reviewCell</TD>" .
-                     "<TD>$albumLink</TD>" .
-                     "</TR>\n";
-                $break = false;
-            });
-    }
-
-    private function emitPlaylistBody($playlist, $editMode) {
-        $header = $this->makePlaylistHeader($editMode);
-        $editCell = "";
-        echo "<TABLE class='playlistTable' CELLPADDING=1>\n";
-        echo "<THEAD>" . $header . "</THEAD>";
-
-        $api = Engine::api(IPlaylist::class);
-        $entries = $api->getTracks($playlist, $editMode)->asArray();
-        Engine::api(ILibrary::class)->markAlbumsReviewed($entries);
-
-        $observer = $this->makePlaylistObserver($playlist, $editMode);
-        echo "<TBODY>\n";
-        if($entries != null && sizeof($entries) > 0)
-            foreach($entries as $entry)
-                $observer->observe(new PlaylistEntry($entry));
-        echo "</TBODY></TABLE>\n";
-
-        if($editMode) {
-            UI::emitJS('js/jquery.fxtime.js');
-            UI::emitJS('js/playlists.track.js');
-        } else {
-            $show = $api->getPlaylist($playlist);
-            if($api->isNowWithinShow($show))
-                UI::emitJS('js/playlists.live.js');
-        }
-    }
-
-    public static function makeShowDateAndTime($row) {
-        return self::timestampToDate($row['showdate']) . " " .
-               self::timeToLocale($row['showtime']);
-    }
-
-    private function emitPlaylistBanner($playlistId, $playlist, $editMode) {
-        $showName = $playlist['description'];
-        $djId = $playlist['id'];
-        $djName = $playlist['airname'] ?? "None";
-        $showDateTime = self::makeShowDateAndTime($playlist);
-
-        $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
-
-        if(!$editMode && $this->session->isAuth("v"))
-            $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='action' VALUE='editList'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
-
-        $djName = htmlentities($djName, ENT_QUOTES, 'UTF-8');
-        $djLink = $djId ? "<a href='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' class='nav2'>$djName</a>" : $djName;
-
-        echo "<div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>".htmlentities($showName, ENT_QUOTES, 'UTF-8')."</span> <span id='banner-dj'>with $djLink</span></span><div>{$showDateTime}&nbsp;</div></div>\n";
-?>
-    <SCRIPT TYPE="text/javascript"><!--
-    <?php ob_start([JSMin::class, 'minify']); ?>
-    // Truncate the show name (banner-description) so that the combined
-    // show name, DJ name, and date/time fit on one line.
-    $().ready(function() {
-        var maxWidth = $(".playlistBanner").outerWidth();
-        var dateWidth = $(".playlistBanner div").outerWidth();
-        if($("#banner-caption").outerWidth() + dateWidth > maxWidth) {
-            var width = maxWidth - $("#banner-dj").outerWidth() - dateWidth - 12;
-            $("#banner-description").outerWidth(width);
-        }
-    });
-    <?php ob_end_flush(); ?>
-    // -->
-    </SCRIPT>
-    <?php
-    }
-
-    public  function emitViewPlayList() {
+    public function emitViewPlayList() {
         $playlistId = $_REQUEST["playlist"];
         $this->viewList($playlistId);
     }

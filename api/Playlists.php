@@ -32,6 +32,8 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
 
+use ZK\UI\PlaylistBuilder;
+
 use Enm\JsonApi\Exception\BadRequestException;
 use Enm\JsonApi\Exception\NotAllowedException;
 use Enm\JsonApi\Exception\ResourceNotFoundException;
@@ -101,7 +103,8 @@ class Playlists implements RequestHandlerInterface {
             if(!$key)
                 throw new \InvalidArgumentException("Must supply value for user filter");
             $api = Engine::api(IPlaylist::class);
-            if($_GET["deleted"] ?? 0) {
+            if($request->hasFilter("deleted") &&
+                    $request->filterValue("deleted")) {
                 $rows = $api->getListsSelDeleted($key, $offset, $limit);
                 $count = $api->getDeletedPlaylistCount($key);
             } else {
@@ -565,12 +568,12 @@ class Playlists implements RequestHandlerInterface {
         $success = $attrs->isEmpty() ? true :
                         $api->updatePlaylist($key, $date, $time, $name, $aid);
 
-        if($success)
+        if($success) {
             PushServer::sendAsyncNotification();
+            return new EmptyResponse();
+        }
 
-        return $success ?
-            new EmptyResponse() :
-            new BadRequestException("DB update error");
+        throw new BadRequestException("DB update error");
     }
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
@@ -596,6 +599,30 @@ class Playlists implements RequestHandlerInterface {
         return new EmptyResponse();
     }
 
+    private function injectMetadata($api, $rqMeta, $rsMeta, $listId, $size, $entry) {
+        ob_start();
+        $action = $rqMeta->getOptional("action", "");
+        PlaylistBuilder::newInstance([
+            "id" => $listId,
+            "action" => $action,
+            "editMode" => true,
+            "authUser" => true
+        ])->observe($entry);
+        $rsMeta->set("html", ob_get_contents());
+        ob_end_clean();
+
+        // seq is one of:
+        //   -1     client playlist is out of sync with the service
+        //   0      playlist is in natural order
+        //   > 0    ordinal of inserted entry
+        $rsMeta->set("seq", $size ? $size : $api->getSeq(0, $entry->getId()));
+
+        // track is in the grace period?
+        $window = $api->getTimestampWindow($listId, false);
+        $rsMeta->set("runsover", $entry->getCreated() &&
+                new \DateTime($entry->getCreated()) >= $window['end']);
+    }
+
     public function addRelatedResources(RequestInterface $request): ResponseInterface {
         if($request->relationship() != "events") {
             throw new NotAllowedException('You are not allowed to modify the relationship ' . $request->relationship());
@@ -619,6 +646,11 @@ class Playlists implements RequestHandlerInterface {
         $event = $request->requestBody()->data()->first("event");
         $entry = PlaylistEntry::fromArray($event->attributes()->all());
 
+        // if size matches count, set to 0 (in sync) else -1 (out of sync)
+        $size = $event->metaInformation()->getOptional("size");
+        if(!is_null($size))
+            $size = $size == $api->getTrackCount($key) ? 0 : -1;
+
         try {
             $album = $event->relationships()->get("album")->related()->first("album");
             $albumrec = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $album->id());
@@ -633,17 +665,25 @@ class Playlists implements RequestHandlerInterface {
         } catch(\Exception $e) {}
 
         $autoTimestamp = false;
-        if($created = $entry->getCreated()) {
+        $created = $entry->getCreated();
+        if($created == "auto" || !$created && Engine::getApiVer() < 1.1) {
+            $autoTimestamp = $api->isNowWithinShow($list);
+            $created = $autoTimestamp ? (new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL) : null;
+        }
+
+        if($created) {
             $window = $api->getTimestampWindow($key);
             try {
                 $stamp = PlaylistEntry::scrubTimestamp(new \DateTime($created), $window);
-                $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
+                if($stamp)
+                    $entry->setCreated($stamp->format(IPlaylist::TIME_FORMAT_SQL));
+                else
+                    throw new \Exception("Time is outside show start/end times");
             } catch(\Exception $e) {
-                error_log("failed to parse timestamp: $created");
-                $entry->setCreated(null);
+                throw new \InvalidArgumentException($e->getMessage());
             }
-        } else if($autoTimestamp = $api->isNowWithinShow($list))
-            $entry->setCreated((new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL));
+        } else
+            $entry->setCreated(null);
 
         $status = '';
         $success = $api->insertTrackEntry($key, $entry, $status);
@@ -665,9 +705,14 @@ class Playlists implements RequestHandlerInterface {
                 PushServer::lazyLoadImages($key, $entry->getId());
         }
 
-        return $success ?
-            new DocumentResponse(new Document(new JsonResource("event", $entry->getId()))) :
-            new BadRequestException($status ?? "DB update error");
+        if($success) {
+            $res = new JsonResource("event", $entry->getId());
+            if($event->metaInformation()->getOptional("wantMeta"))
+                $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $size, $entry);
+            return new DocumentResponse(new Document($res));
+        }
+
+        throw new BadRequestException($status ?? "DB update error");
     }
 
     public function replaceRelatedResources(RequestInterface $request): ResponseInterface {
@@ -697,13 +742,34 @@ class Playlists implements RequestHandlerInterface {
         if(!$track || $track['list'] != $key)
             throw new NotAllowedException("event not in list");
 
+        // if size matches count, set to 0 (in sync) else -1 (out of sync)
+        $size = $event->metaInformation()->getOptional("size");
+        if(!is_null($size))
+            $size = $size == $api->getTrackCount($key) ? 0 : -1;
+
         // TBD allow changes instead of complete relacement
-        $entry = PlaylistEntry::fromArray($event->attributes()->all());
+        $entry = $event->attributes()->getOptional("type") ?
+            PlaylistEntry::fromArray($event->attributes()->all()) :
+            new PlaylistEntry($track);
+
+        if($event->attributes()->getOptional("created") == "auto") {
+            $created = $api->isNowWithinShow($list) ? (new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL) : null;
+            $entry->setCreated($created);
+        }
+
         $entry->setId($id);
 
         try {
             $album = $event->relationships()->get("album")->related()->first("album");
-            $entry->setTag($album->id());
+            $albumrec = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $album->id());
+            if(sizeof($albumrec)) {
+                // don't allow modification of album info if tag is set
+                $entry->setTag($album->id());
+                if(!$albumrec[0]["iscoll"])
+                    $entry->setArtist(PlaylistEntry::swapNames($albumrec[0]["artist"]));
+                $entry->setAlbum($albumrec[0]["album"]);
+                $entry->setLabel($albumrec[0]["name"]);
+            }
         } catch(\Exception $e) {}
 
         $created = $entry->getCreated();
@@ -711,14 +777,21 @@ class Playlists implements RequestHandlerInterface {
             $window = $api->getTimestampWindow($key);
             try {
                 $stamp = PlaylistEntry::scrubTimestamp(new \DateTime($created), $window);
-                $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
+                if($stamp)
+                    $entry->setCreated($stamp->format(IPlaylist::TIME_FORMAT_SQL));
+                else
+                    throw new \Exception("Time is outside show start/end times");
             } catch(\Exception $e) {
-                error_log("failed to parse timestamp: $created");
-                $entry->setCreated(null);
+                throw new \InvalidArgumentException($e->getMessage());
             }
         }
 
-        $success = $api->updateTrackEntry($key, $entry);
+        $success = $event->attributes()->isEmpty() ?
+                        true : $api->updateTrackEntry($key, $entry);
+
+        if($success &&
+                ($moveTo = $event->metaInformation()->getOptional("moveTo")))
+            $success = $api->moveTrack($key, $id, $moveTo);
 
         if($success && $list['airname'] && $api->isNowWithinShow($list))
             PushServer::sendAsyncNotification();
@@ -726,9 +799,16 @@ class Playlists implements RequestHandlerInterface {
         if($success && isset($stamp))
             PushServer::lazyLoadImages($key, $id);
 
-        return $success ?
-            new EmptyResponse() :
-            new BadRequestException("DB update error");
+        if($success && $event->metaInformation()->getOptional("wantMeta")) {
+            $res = new JsonResource("event", $entry->getId());
+            $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $size, $entry);
+            return new DocumentResponse(new Document($res));
+        }
+
+        if($success)
+            return new EmptyResponse();
+
+        throw new BadRequestException("DB update error");
     }
 
     public function removeRelatedResources(RequestInterface $request): ResponseInterface {
@@ -760,8 +840,9 @@ class Playlists implements RequestHandlerInterface {
 
         $success = $api->deleteTrack($id);
 
-        return $success ?
-            new EmptyResponse() :
-            new BadRequestException("DB update error");
+        if($success)
+            return new EmptyResponse();
+
+        throw new BadRequestException("DB update error");
     }
 }

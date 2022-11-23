@@ -273,7 +273,7 @@ $().ready(function(){
             url += "&page[offset]=" + offset;
 
         if(deleted)
-            url += "&deleted=1";
+            url += "&filter[deleted]=1";
 
         $.ajax({
             dataType: 'json',

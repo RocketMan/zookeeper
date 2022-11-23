@@ -161,7 +161,6 @@ trait OffsetPaginationTrait {
         foreach($paginateOps as $type => $value) {
             if($request->hasFilter($type)) {
                 $key = $request->filterValue($type);
-                $filter = "filter%5B" . urlencode($type) . "%5D=" . urlencode($key);
                 $ops = $value;
                 break;
             }
@@ -209,6 +208,8 @@ trait OffsetPaginationTrait {
             break;
         }
         $document = new Document($result);
+
+        $filter = http_build_query(['filter' => $request->filter]);
 
         $base = Engine::getBaseUrl().$request->type()."?{$filter}";
         $size = "&page%5Bsize%5D=$limit";
