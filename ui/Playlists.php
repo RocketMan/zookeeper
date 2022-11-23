@@ -345,7 +345,12 @@ class Playlists extends MenuItem {
         $entries = $api->getTracks($playlist, $editMode)->asArray();
         Engine::api(ILibrary::class)->markAlbumsReviewed($entries);
 
-        $observer = PlaylistBuilder::newInstance($playlist, $this->action, $editMode, $this->session->isAuth("u"));
+        $observer = PlaylistBuilder::newInstance([
+            "id" => $playlist,
+            "action" => $this->action,
+            "editMode" => $editMode,
+            "authUser" => $this->session->isAuth("u")
+        ]);
         echo "<TBODY>\n";
         if($entries != null && sizeof($entries) > 0) {
             foreach($entries as $entry)

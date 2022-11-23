@@ -31,11 +31,10 @@ use ZK\UI\UICommon as UI;
 use VStelmakh\UrlHighlight\UrlHighlight;
 
 class PlaylistBuilder extends PlaylistObserver {
-    protected $action;
-    protected $authUser;
+    private const PARAMS = [ "id", "action", "editMode", "authUser" ];
+
+    protected $params;
     protected $break;
-    protected $editMode;
-    protected $playlistId;
 
     private static bool $usLocale;
     private static UrlHighlight $urlHighlighter;
@@ -59,15 +58,18 @@ class PlaylistBuilder extends PlaylistObserver {
         return self::$urlHighlighter->highlightUrls(htmlentities($name));
     }
 
-    public static function newInstance(int $playlistId, string $action, bool $editMode, bool $authUser) : PlaylistBuilder {
-        $inst = new PlaylistBuilder();
+    public static function newInstance(array $params) {
+        // validate all parameters are present
+        // TBD: when we require PHP 8, replace with named params
+        $missing = [];
+        foreach(self::PARAMS as $param)
+            if(!key_exists($param, $params))
+                $missing[] = $param;
 
-        $inst->playlistId = $playlistId;
-        $inst->action = $action;
-        $inst->editMode = $editMode;
-        $inst->authUser = $authUser;
+        if(sizeof($missing))
+            throw new \InvalidArgumentException("missing required parameter(s): " . implode(", ", $missing));
 
-        return $inst;
+        return new PlaylistBuilder($params);
     }
 
     protected function makeAlbumLink($entry, $includeLabel) {
@@ -93,8 +95,8 @@ class PlaylistBuilder extends PlaylistObserver {
     }
 
     protected function makeEditDiv($entry) {
-        $href = "?playlist=" . $this->playlistId . "&amp;id=" .
-                $entry->getId() . "&amp;action=" . $this->action . "&amp;";
+        $href = "?playlist=" . $this->params["id"] . "&amp;id=" .
+                $entry->getId() . "&amp;action=" . $this->params["action"] . "&amp;";
         $editLink = "<A CLASS='songEdit nav' HREF='" . $href ."seq=editTrack'>&#x270f;</a>";
         //NOTE: in edit mode the list is ordered new to old, so up makes it 
         //newer in time order & vice-versa.
@@ -103,13 +105,14 @@ class PlaylistBuilder extends PlaylistObserver {
         return $retVal;
     }
 
-    protected function __construct() {
+    protected function __construct(array $params) {
+        $this->params = $params;
         $this->on('comment', function($entry) {
-            $editCell = $this->editMode ? "<TD>" .
+            $editCell = $this->params["editMode"] ? "<TD>" .
                 $this->makeEditDiv($entry) . "</TD>" : "";
             $created = $entry->getCreatedTimestamp();
             $timeplayed = self::timestampToLocale($created);
-            echo "<TR class='commentRow".($this->editMode?"Edit":"")."'>" . $editCell .
+            echo "<TR class='commentRow".($this->params["editMode"]?"Edit":"")."'>" . $editCell .
                  "<TD class='time' data-utc='$created'>$timeplayed</TD>" .
                  "<TD COLSPAN=4>".UI::markdown($entry->getComment()).
                  "</TD></TR>\n";
@@ -117,11 +120,11 @@ class PlaylistBuilder extends PlaylistObserver {
         })->on('logEvent', function($entry) {
             $created = $entry->getCreatedTimestamp();
             $timeplayed = self::timestampToLocale($created);
-            if($this->authUser) {
+            if($this->params["authUser"]) {
                 // display log entries only for authenticated users
-                $editCell = $this->editMode ? "<TD>" .
+                $editCell = $this->params["editMode"] ? "<TD>" .
                     $this->makeEditDiv($entry) . "</TD>" : "";
-                echo "<TR class='logEntry".($this->editMode?"Edit":"")."'>" . $editCell .
+                echo "<TR class='logEntry".($this->params["editMode"]?"Edit":"")."'>" . $editCell .
                      "<TD class='time' data-utc='$created'>$timeplayed</TD>" .
                      "<TD>".$entry->getLogEventType()."</TD>" .
                      "<TD COLSPAN=3>".$entry->getLogEventCode()."</TD>" .
@@ -133,8 +136,8 @@ class PlaylistBuilder extends PlaylistObserver {
                 $this->break = true;
             }
         })->on('setSeparator', function($entry) {
-            if($this->editMode || !$this->break) {
-                $editCell = $this->editMode ? "<TD>" .
+            if($this->params["editMode"] || !$this->break) {
+                $editCell = $this->params["editMode"] ? "<TD>" .
                     $this->makeEditDiv($entry) . "</TD>" : "";
                 $created = $entry->getCreatedTimestamp();
                 $timeplayed = self::timestampToLocale($created);
@@ -143,7 +146,7 @@ class PlaylistBuilder extends PlaylistObserver {
                 $this->break = true;
             }
         })->on('spin', function($entry) {
-            $editCell = $this->editMode ? "<TD>" .
+            $editCell = $this->params["editMode"] ? "<TD>" .
                 $this->makeEditDiv($entry) . "</TD>" : "";
             $created = $entry->getCreatedTimestamp();
             $timeplayed = self::timestampToLocale($created);

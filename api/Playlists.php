@@ -602,7 +602,12 @@ class Playlists implements RequestHandlerInterface {
     private function injectMetadata($api, $rqMeta, $rsMeta, $listId, $size, $entry) {
         ob_start();
         $action = $rqMeta->getOptional("action", "");
-        PlaylistBuilder::newInstance($listId, $action, true, true)->observe($entry);
+        PlaylistBuilder::newInstance([
+            "id" => $listId,
+            "action" => $action,
+            "editMode" => true,
+            "authUser" => true
+        ])->observe($entry);
         $rsMeta->set("html", ob_get_contents());
         ob_end_clean();
 
