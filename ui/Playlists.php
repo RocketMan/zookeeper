@@ -565,7 +565,7 @@ class Playlists extends MenuItem {
     <?php
     }
 
-    private function emitEditForm($playlistId, $id, $album, $track) {
+    private function emitEditForm($playlistId, $id, $album) {
     ?>
       <DIV class='playlistBanner'>&nbsp;Editing highlighted item</DIV>
       <input type='hidden' id='track-id' value='<?php echo $id; ?>'>
@@ -607,7 +607,6 @@ class Playlists extends MenuItem {
         $playlist = $_REQUEST["playlist"] ?? null;
         $seq = $_REQUEST["seq"] ?? null;
         $id = $_REQUEST["id"] ?? null;
-        $track = null;
     ?>
     <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
     <TR><TD>
@@ -615,8 +614,9 @@ class Playlists extends MenuItem {
         if($seq == "editTrack") {
             $albuminfo = Engine::api(IPlaylist::class)->getTrack($id);
             if($albuminfo) {
+                // if editing a track, always get the playlist from
+                // the track, even if one is supplied in the request
                 $playlist = $albuminfo['list'];
-                $track = $albuminfo['track'];
             }
         }
 
@@ -628,7 +628,7 @@ class Playlists extends MenuItem {
 
         switch ($seq) {
         case "editTrack":
-            $this->emitEditForm($playlist, $id, $albuminfo, $track);
+            $this->emitEditForm($playlist, $id, $albuminfo);
             break;
         default:
             $this->emitTagForm($playlist, $message);
