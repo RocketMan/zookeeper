@@ -78,7 +78,7 @@ class PlaylistBuilder extends PlaylistObserver {
         if (empty($albumName) && empty($labelName))
             return "";
 
-        $labelSpan = "<span class='songLabel'> / " . $this->smartURL($labelName) . "</span>";
+        $labelSpan = "<span class='songLabel'> / " . self::smartURL($labelName) . "</span>";
         if($entry->getTag()) {
             $albumTitle = "<A HREF='?s=byAlbumKey&amp;n=" . UI::URLify($entry->getTag()) .
                           "&amp;q=&amp;action=search' CLASS='nav'>".$albumName ."</A>";
@@ -87,7 +87,7 @@ class PlaylistBuilder extends PlaylistObserver {
                 $albumTitle = $albumTitle . $labelSpan;
             }
         } else {
-            $albumTitle = $this->smartURL($albumName);
+            $albumTitle = self::smartURL($albumName);
             if ($includeLabel) 
                 $albumTitle = $albumTitle . $labelSpan;
         }
@@ -152,8 +152,8 @@ class PlaylistBuilder extends PlaylistObserver {
             $albumLink = $this->makeAlbumLink($entry, true);
             echo "<TR class='songRow'>" . $editCell .
                  "<TD class='time' data-utc='$created'>$timeplayed</TD>" .
-                 "<TD>" . $this->smartURL($artistName) . "</TD>" .
-                 "<TD>" . $this->smartURL($entry->getTrack()) . "</TD>" .
+                 "<TD>" . self::smartURL($artistName) . "</TD>" .
+                 "<TD>" . self::smartURL($entry->getTrack()) . "</TD>" .
                  "<TD>$reviewCell</TD>" .
                  "<TD>$albumLink</TD>" .
                  "</TR>\n";

@@ -615,7 +615,7 @@ class Playlists extends MenuItem {
         if($seq == "editTrack") {
             $albuminfo = Engine::api(IPlaylist::class)->getTrack($id);
             if($albuminfo) {
-                $playlist = $albuminfo["list"];
+                $playlist = $albuminfo['list'];
                 $track = $albuminfo['track'];
             }
         }
