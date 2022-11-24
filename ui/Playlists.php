@@ -346,7 +346,6 @@ class Playlists extends MenuItem {
         Engine::api(ILibrary::class)->markAlbumsReviewed($entries);
 
         $observer = PlaylistBuilder::newInstance([
-            "id" => $playlist,
             "action" => $this->action,
             "editMode" => $editMode,
             "authUser" => $this->session->isAuth("u")
@@ -605,35 +604,30 @@ class Playlists extends MenuItem {
     }
 
     public function emitEditor() {
-        $artist = $_REQUEST["artist"];
-        $track = $_REQUEST["track"];
-        $ctrack = $_REQUEST["ctrack"];
-        $album = $_REQUEST["album"];
-        $tag = $_REQUEST["tag"];
-        $playlist = $_REQUEST["playlist"];
-        $id = $_REQUEST["id"];
-        $seq = $_REQUEST["seq"];
-        $button = $_REQUEST["button"];
-        $otrack = $_REQUEST["otrack"];
-        $label = $_REQUEST["label"];
-        $separator = $_REQUEST["separator"];
-        $logevent = $_REQUEST["logevent"];
-        $comment = $_REQUEST["comment"];
+        $playlist = $_REQUEST["playlist"] ?? null;
+        $seq = $_REQUEST["seq"] ?? null;
+        $id = $_REQUEST["id"] ?? null;
+        $track = null;
     ?>
     <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
     <TR><TD>
     <?php
+        if($seq == "editTrack") {
+            $albuminfo = Engine::api(IPlaylist::class)->getTrack($id);
+            if($albuminfo) {
+                $playlist = $albuminfo["list"];
+                $track = $albuminfo['track'];
+            }
+        }
+
         $message = "";
-        if(!isset($playlist) || !$this->isOwner($playlist)) {
+        if(is_null($playlist) || !$this->isOwner($playlist)) {
             $seq = "error";
             $message = "access error";
         }
+
         switch ($seq) {
         case "editTrack":
-            // Run the query
-            $albuminfo = Engine::api(IPlaylist::class)->getTrack($id);
-            if($albuminfo)
-                $track = $albuminfo['track'];
             $this->emitEditForm($playlist, $id, $albuminfo, $track);
             break;
         default:

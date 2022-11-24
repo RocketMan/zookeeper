@@ -31,7 +31,7 @@ use ZK\UI\UICommon as UI;
 use VStelmakh\UrlHighlight\UrlHighlight;
 
 class PlaylistBuilder extends PlaylistObserver {
-    private const PARAMS = [ "id", "action", "editMode", "authUser" ];
+    private const PARAMS = [ "action", "editMode", "authUser" ];
 
     protected $params;
     protected $break;
@@ -95,14 +95,10 @@ class PlaylistBuilder extends PlaylistObserver {
     }
 
     protected function makeEditDiv($entry) {
-        $href = "?playlist=" . $this->params["id"] . "&amp;id=" .
-                $entry->getId() . "&amp;action=" . $this->params["action"] . "&amp;";
-        $editLink = "<A CLASS='songEdit nav' HREF='" . $href ."seq=editTrack'>&#x270f;</a>";
-        //NOTE: in edit mode the list is ordered new to old, so up makes it 
-        //newer in time order & vice-versa.
-        $dnd = "<DIV class='grab' data-id='".$entry->getId()."'>&#x2630;</DIV>";
-        $retVal = "<div class='songManager'>" . $dnd . $editLink . "</div>";
-        return $retVal;
+        $href = "?id=" . $entry->getId() . "&amp;action=" . $this->params["action"] . "&amp;seq=editTrack";
+        $editLink = "<a class='songEdit nav' href='$href'>&#x270f;</a>";
+        $dnd = "<div class='grab' data-id='" . $entry->getId() . "'>&#x2630;</div>";
+        return "<div class='songManager'>" . $dnd . $editLink . "</div>";
     }
 
     protected function __construct(array $params) {

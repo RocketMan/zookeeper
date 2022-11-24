@@ -603,7 +603,6 @@ class Playlists implements RequestHandlerInterface {
         ob_start();
         $action = $rqMeta->getOptional("action", "");
         PlaylistBuilder::newInstance([
-            "id" => $listId,
             "action" => $action,
             "editMode" => true,
             "authUser" => true
