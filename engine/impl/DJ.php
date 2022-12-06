@@ -94,6 +94,14 @@ class DJImpl extends DBO implements IDJ {
         return $result?$result['id']:0;
     }
     
+    public function getAirnameOwner($djname) {
+        $query = "SELECT dj FROM airnames WHERE airname=?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $djname);
+        $result = $stmt->executeAndFetch();
+        return $result?$result['dj']:null;
+    }
+
     public function updateAirname($djname, $user, $url, $email, $id=0) {
         $query = "UPDATE airnames " .
                  "SET url=?, email=?";

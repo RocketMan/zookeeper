@@ -392,6 +392,7 @@ class Playlists implements RequestHandlerInterface {
         // validate the show's properties
         $papi = Engine::api(IPlaylist::class);
         $dup = $attrs->getOptional("rebroadcast", false);
+        $airname = $dup ? $attrs->getOptional("airname") : $attrs->getRequired("airname");
         if($dup) {
             $origin = $show->relationships()->get("origin")->related()->first("show")->id();
             $list = $papi->getPlaylist($origin);
@@ -402,9 +403,13 @@ class Playlists implements RequestHandlerInterface {
             $topOrigin = $list;
             while($topOrigin && $topOrigin['origin'])
                 $topOrigin = $papi->getPlaylist($topOrigin['origin']);
+
+            // if root origin does not exist, infer owner from airname
+            if(!$topOrigin && $airname &&
+                    ($owner = Engine::api(IDJ::class)->getAirnameOwner($airname)))
+                $topOrigin = [ 'dj' => $owner ];
         }
         $foreign = $dup && $topOrigin && $topOrigin['dj'] != $user;
-        $airname = $dup ? $attrs->getOptional("airname") : $attrs->getRequired("airname");
         $time = $attrs->getRequired("time");
         $this->validateTime($time); // raises exception on invalid
 

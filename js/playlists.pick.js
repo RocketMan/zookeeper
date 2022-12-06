@@ -672,7 +672,7 @@ $().ready(function(){
     function fdup(id) {
         $.ajax({
             type: 'GET',
-            url: 'api/v1/playlist/' + id,
+            url: 'api/v1/playlist/' + id + '?fields[show]=-events',
             accept: "application/json; charset=utf-8"
         }).done(function(response) {
             var date = new Date(response.data.attributes.date + 'T00:00:00Z');
