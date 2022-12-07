@@ -57,7 +57,7 @@ class DJImpl extends DBO implements IDJ {
         if($user && !$id && !$noPrune)
             $this->purgeUnusedAirnames($user);
 
-        $query = "SELECT a.id, airname, url, email, name, realname FROM airnames a LEFT JOIN users u ON a.dj = u.name ";
+        $query = "SELECT a.id, airname, url, email, name, realname, a.dj FROM airnames a LEFT JOIN users u ON a.dj = u.name ";
         if($id)
             $query .= "WHERE a.id = ?";
         else if($user)
@@ -94,14 +94,6 @@ class DJImpl extends DBO implements IDJ {
         return $result?$result['id']:0;
     }
     
-    public function getAirnameOwner($djname) {
-        $query = "SELECT dj FROM airnames WHERE airname=?";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $djname);
-        $result = $stmt->executeAndFetch();
-        return $result?$result['dj']:null;
-    }
-
     public function updateAirname($djname, $user, $url, $email, $id=0) {
         $query = "UPDATE airnames " .
                  "SET url=?, email=?";

@@ -405,9 +405,8 @@ class Playlists implements RequestHandlerInterface {
                 $topOrigin = $papi->getPlaylist($topOrigin['origin']);
 
             // if root origin does not exist, infer owner from airname
-            if(!$topOrigin && $airname &&
-                    ($owner = Engine::api(IDJ::class)->getAirnameOwner($airname)))
-                $topOrigin = [ 'dj' => $owner ];
+            if(!$topOrigin && $list['airname'])
+                $topOrigin = Engine::api(IDJ::class)->getAirnames(0, $list['airname'])->fetch();
         }
         $foreign = $dup && $topOrigin && $topOrigin['dj'] != $user;
         $time = $attrs->getRequired("time");

@@ -33,7 +33,6 @@ interface IDJ {
     function getAirnames($user=0, $id=0, $noPrune=0);
     function getActiveAirnames($viewAll=0);
     function getAirname($djname, $user="");
-    function getAirnameOwner($djname);
     function updateAirname($djname, $user, $url, $email, $id=0);
     function insertAirname($djname, $user);
     function reassignAirname($id, $user);
