@@ -147,13 +147,9 @@ class Playlists extends MenuItem {
         }
     }
     
-    private static function isUsLocale() : bool {
-        return UI::getClientLocale() == 'en_US';
-    }
-
     private static function hourToLocale($hour, $full=0) {
         // account for legacy, free-format time encoding
-        if(!is_numeric($hour) || !self::isUsLocale())
+        if(!is_numeric($hour) || !UI::isUsLocale())
             return $hour;
 
         $h = (int)floor($hour/100);
@@ -185,7 +181,7 @@ class Playlists extends MenuItem {
         if ($time == null || $time == '') {
             return "";
         } else {
-            $dateSpec = self::isUsLocale() ? 'D M d, Y ' : 'D d M Y ';
+            $dateSpec = UI::isUsLocale() ? 'D M d, Y ' : 'D d M Y ';
             return date($dateSpec, strtotime($time));
         }
     }
@@ -500,7 +496,7 @@ class Playlists extends MenuItem {
 
                 // colon is included in 24hr format for symmetry with fxtime,
                 // which it is referencing
-                $timeSpec = self::isUsLocale() ? 'g:i a' : 'H:i';
+                $timeSpec = UI::isUsLocale() ? 'g:i a' : 'H:i';
                 $startAMPM = $window['start']->format($timeSpec);
                 $endAMPM = $window['end']->format($timeSpec);
                 $timeMsg = "($startAMPM - $endAMPM)";
@@ -781,7 +777,7 @@ class Playlists extends MenuItem {
         <input type='hidden' name='date' id='date' value='<?php echo $date; ?>'>
         <input type='hidden' name='fromtime' id='fromtime' value='<?php echo $fromtime; ?>'>
         <input type='hidden' name='totime' id='totime' value='<?php echo $totime; ?>'>
-        <input type='hidden' id='date-format' value='<?php echo self::isUsLocale() ? "mm/dd/yy" : "dd-mm-yy"; ?>'>
+        <input type='hidden' id='date-format' value='<?php echo UI::isUsLocale() ? "mm/dd/yy" : "dd-mm-yy"; ?>'>
         <datalist id='airnames'>
         <?php echo $this->getDJAirNames(); ?>
         </datalist>
@@ -1467,7 +1463,7 @@ class Playlists extends MenuItem {
             echo "<TABLE class='recentAirplay' CELLPADDING=2 CELLSPACING=0 BORDER=0>\n";
     
             // Setup date format based on locale
-            $dateSpec = self::isUsLocale() ? 'M d, Y' : 'd M Y';
+            $dateSpec = UI::isUsLocale() ? 'M d, Y' : 'd M Y';
     
             // Ensure we have an even number of plays
             if(sizeof($plays)%2)

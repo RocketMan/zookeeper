@@ -248,6 +248,10 @@ class UICommon {
         });
     }
 
+    public static function isUsLocale() : bool {
+        return self::getClientLocale() == 'en_US';
+    }
+
     /**
      * decorate the specified asset for cache control
      *

@@ -34,13 +34,9 @@ class PlaylistBuilder extends PlaylistObserver {
     protected $params;
     protected $break;
 
-    protected static function isUsLocale() : bool {
-        return UI::getClientLocale() == 'en_US';
-    }
-
     protected static function timestampToLocale($timestamp) {
         // colon is included in 24hr format for symmetry with fxtime
-        $timeSpec = self::isUsLocale() ? 'h:i a' : 'H:i';
+        $timeSpec = UI::isUsLocale() ? 'h:i a' : 'H:i';
         return $timestamp ? date($timeSpec, $timestamp) : '';
     }
 
