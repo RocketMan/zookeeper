@@ -38,8 +38,6 @@ use ZK\UI\UICommon as UI;
 
 use JSMin\JSMin;
 
-use VStelmakh\UrlHighlight\UrlHighlight;
-
 
 class Playlists extends MenuItem {
     private const NME_PREFIX = "nme-";
@@ -61,7 +59,6 @@ class Playlists extends MenuItem {
 
     private $action;
     private $subaction;
-    private $urlHighlighter;
 
     private static bool $usLocale;
 
@@ -69,19 +66,6 @@ class Playlists extends MenuItem {
         $this->action = $action;
         $this->subaction = $subaction;
         return $this->dispatchAction($action, self::$actions);
-    }
-    
-    private function smartURL($name, $detect=true) {
-        $name = htmlentities($name);
-
-        if($detect) {
-            if(!isset($this->urlHighlighter))
-                $this->urlHighlighter = new UrlHighlight();
-
-            $name = $this->urlHighlighter->highlightUrls($name);
-        }
-
-        return $name;
     }
     
     // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
@@ -1253,7 +1237,7 @@ class Playlists extends MenuItem {
             $label = str_replace(" Records", "", $result[$i][$labelField]);
             $label = str_replace(" Recordings", "", $label);
     
-            echo $this->smartURL($artist) . "&nbsp;&#8226; <I>";
+            echo UI::smartURL($artist) . "&nbsp;&#8226; <I>";
     
             // Album
             if($result[$i]["tag"])
@@ -1262,12 +1246,12 @@ class Playlists extends MenuItem {
                       "&amp;q=". $maxresults.
                       "&amp;action=search\">";
     
-            echo $this->smartURL($result[$i]["album"], !$result[$i]["tag"]);
+            echo UI::smartURL($result[$i]["album"], !$result[$i]["tag"]);
             if($result[$i]["tag"])
                 echo "</A>";
             echo "</I>";
             if($label)
-                echo "&nbsp;&#8226; (".$this->smartURL($label) . ")";
+                echo "&nbsp;&#8226; (".UI::smartURL($label) . ")";
             echo "</TD></TR>\n";
         }
     }

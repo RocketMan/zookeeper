@@ -26,6 +26,8 @@ namespace ZK\UI;
 
 use ZK\Engine\Engine;
 
+use VStelmakh\UrlHighlight\UrlHighlight;
+
 class UICommon {
     const CHARSET_ASCII = 0;
     const CHARSET_LATIN1 = 1;
@@ -101,14 +103,27 @@ class UICommon {
         /*"\u{201c}"*/ "\xe2\x80\x9c"=>'"', /*"\u{201d}"*/ "\xe2\x80\x9d"=>'"',
     ];
 
-    /**
-     * return the URL of the current request, less leaf filename, if any
-     * @deprecated use Engine::getBaseUrl()
-     */
-    public static function getBaseUrl() {
-        return Engine::getBaseUrl();
+    private static $singletons = [];
+
+    protected static function getSingleton(string $name, \Closure $factory) {
+        if(!key_exists($name, self::$singletons))
+            self::$singletons[$name] = $factory();
+
+        return self::$singletons[$name];
     }
-    
+
+    public static function smartURL($name, $detect=true) {
+        $name = htmlentities($name);
+
+        if($detect) {
+            $name = self::getSingleton('urlHighlighter', function() {
+                return new UrlHighlight();
+            })->highlightUrls($name);
+        }
+
+        return $name;
+    }
+
     /**
      * return the specified markdown as html
      *
@@ -116,10 +131,11 @@ class UICommon {
      * newlines are automatically converted to line breaks.
      */
     public static function markdown($text) {
-        return \Parsedown::instance()->
-               setBreaksEnabled(true)->
-               setSafeMode(true)->
-               text($text);
+        return self::getSingleton('markdown', function() {
+            return \Parsedown::instance()->
+                       setBreaksEnabled(true)->
+                       setSafeMode(true);
+        })->text($text);
     }
 
     public static function markdownHelp() { ?>
@@ -137,6 +153,14 @@ class UICommon {
         </div>
 
 <?php
+    }
+
+    /**
+     * return the URL of the current request, less leaf filename, if any
+     * @deprecated use Engine::getBaseUrl()
+     */
+    public static function getBaseUrl() {
+        return Engine::getBaseUrl();
     }
 
     /**
@@ -219,7 +243,9 @@ class UICommon {
      * convenience method to get best locale from the current request
      */
     public static function getClientLocale() {
-        return self::acceptFromHttp($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en-US');
+        return self::getSingleton('clientLocale', function() {
+            return self::acceptFromHttp($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en-US');
+        });
     }
 
     /**
