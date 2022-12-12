@@ -34,12 +34,8 @@ class PlaylistBuilder extends PlaylistObserver {
     protected $params;
     protected $break;
 
-    private static bool $usLocale;
-
     protected static function isUsLocale() : bool {
-        if(!isset(self::$usLocale))
-            self::$usLocale = UI::getClientLocale() == 'en_US';
-        return self::$usLocale;
+        return UI::getClientLocale() == 'en_US';
     }
 
     protected static function timestampToLocale($timestamp) {

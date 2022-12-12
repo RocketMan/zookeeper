@@ -60,8 +60,6 @@ class Playlists extends MenuItem {
     private $action;
     private $subaction;
 
-    private static bool $usLocale;
-
     public function processLocal($action, $subaction) {
         $this->action = $action;
         $this->subaction = $subaction;
@@ -150,9 +148,7 @@ class Playlists extends MenuItem {
     }
     
     private static function isUsLocale() : bool {
-        if(!isset(self::$usLocale))
-            self::$usLocale = UI::getClientLocale() == 'en_US';
-        return self::$usLocale;
+        return UI::getClientLocale() == 'en_US';
     }
 
     private static function hourToLocale($hour, $full=0) {
