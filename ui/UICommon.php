@@ -106,10 +106,7 @@ class UICommon {
     private static $singletons = [];
 
     protected static function getSingleton(string $name, \Closure $factory) {
-        if(!key_exists($name, self::$singletons))
-            self::$singletons[$name] = $factory();
-
-        return self::$singletons[$name];
+        return self::$singletons[$name] ??= $factory();
     }
 
     public static function smartURL($name, $detect=true) {
