@@ -28,34 +28,16 @@ use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
 use ZK\UI\UICommon as UI;
 
-use VStelmakh\UrlHighlight\UrlHighlight;
-
 class PlaylistBuilder extends PlaylistObserver {
     private const PARAMS = [ "action", "editMode", "authUser" ];
 
     protected $params;
     protected $break;
 
-    private static bool $usLocale;
-    private static UrlHighlight $urlHighlighter;
-
-    protected static function isUsLocale() : bool {
-        if(!isset(self::$usLocale))
-            self::$usLocale = UI::getClientLocale() == 'en_US';
-        return self::$usLocale;
-    }
-
     protected static function timestampToLocale($timestamp) {
         // colon is included in 24hr format for symmetry with fxtime
-        $timeSpec = self::isUsLocale() ? 'h:i a' : 'H:i';
+        $timeSpec = UI::isUsLocale() ? 'h:i a' : 'H:i';
         return $timestamp ? date($timeSpec, $timestamp) : '';
-    }
-
-    protected static function smartURL($name) {
-        if(!isset(self::$urlHighlighter))
-            self::$urlHighlighter = new UrlHighlight();
-
-        return self::$urlHighlighter->highlightUrls(htmlentities($name));
     }
 
     public static function newInstance(array $params) {
@@ -82,10 +64,10 @@ class PlaylistBuilder extends PlaylistObserver {
         $albumTitle = $entry->getTag() ?
             "<a href='?s=byAlbumKey&amp;n=" . htmlentities($entry->getTag()) .
             "&amp;action=search' class='nav'>$albumName</a>" :
-            self::smartURL($albumName);
+            UI::smartURL($albumName);
 
         if($includeLabel)
-            $albumTitle .= "<span class='songLabel'> / " . self::smartURL($labelName) . "</span>";
+            $albumTitle .= "<span class='songLabel'> / " . UI::smartURL($labelName) . "</span>";
 
         return $albumTitle;
     }
@@ -148,8 +130,8 @@ class PlaylistBuilder extends PlaylistObserver {
             $albumLink = $this->makeAlbumLink($entry, true);
             echo "<tr class='songRow'>" . $editCell .
                  "<td class='time' data-utc='$created'>$timeplayed</td>" .
-                 "<td>" . self::smartURL($artistName) . "</td>" .
-                 "<td>" . self::smartURL($entry->getTrack()) . "</td>" .
+                 "<td>" . UI::smartURL($artistName) . "</td>" .
+                 "<td>" . UI::smartURL($entry->getTrack()) . "</td>" .
                  "<td>$reviewCell</td>" .
                  "<td>$albumLink</td>" .
                  "</tr>\n";

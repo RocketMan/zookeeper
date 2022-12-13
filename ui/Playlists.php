@@ -38,8 +38,6 @@ use ZK\UI\UICommon as UI;
 
 use JSMin\JSMin;
 
-use VStelmakh\UrlHighlight\UrlHighlight;
-
 
 class Playlists extends MenuItem {
     private const NME_PREFIX = "nme-";
@@ -61,27 +59,11 @@ class Playlists extends MenuItem {
 
     private $action;
     private $subaction;
-    private $urlHighlighter;
-
-    private static bool $usLocale;
 
     public function processLocal($action, $subaction) {
         $this->action = $action;
         $this->subaction = $subaction;
         return $this->dispatchAction($action, self::$actions);
-    }
-    
-    private function smartURL($name, $detect=true) {
-        $name = htmlentities($name);
-
-        if($detect) {
-            if(!isset($this->urlHighlighter))
-                $this->urlHighlighter = new UrlHighlight();
-
-            $name = $this->urlHighlighter->highlightUrls($name);
-        }
-
-        return $name;
     }
     
     // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
@@ -165,15 +147,9 @@ class Playlists extends MenuItem {
         }
     }
     
-    private static function isUsLocale() : bool {
-        if(!isset(self::$usLocale))
-            self::$usLocale = UI::getClientLocale() == 'en_US';
-        return self::$usLocale;
-    }
-
     private static function hourToLocale($hour, $full=0) {
         // account for legacy, free-format time encoding
-        if(!is_numeric($hour) || !self::isUsLocale())
+        if(!is_numeric($hour) || !UI::isUsLocale())
             return $hour;
 
         $h = (int)floor($hour/100);
@@ -205,7 +181,7 @@ class Playlists extends MenuItem {
         if ($time == null || $time == '') {
             return "";
         } else {
-            $dateSpec = self::isUsLocale() ? 'D M d, Y ' : 'D d M Y ';
+            $dateSpec = UI::isUsLocale() ? 'D M d, Y ' : 'D d M Y ';
             return date($dateSpec, strtotime($time));
         }
     }
@@ -520,7 +496,7 @@ class Playlists extends MenuItem {
 
                 // colon is included in 24hr format for symmetry with fxtime,
                 // which it is referencing
-                $timeSpec = self::isUsLocale() ? 'g:i a' : 'H:i';
+                $timeSpec = UI::isUsLocale() ? 'g:i a' : 'H:i';
                 $startAMPM = $window['start']->format($timeSpec);
                 $endAMPM = $window['end']->format($timeSpec);
                 $timeMsg = "($startAMPM - $endAMPM)";
@@ -801,7 +777,7 @@ class Playlists extends MenuItem {
         <input type='hidden' name='date' id='date' value='<?php echo $date; ?>'>
         <input type='hidden' name='fromtime' id='fromtime' value='<?php echo $fromtime; ?>'>
         <input type='hidden' name='totime' id='totime' value='<?php echo $totime; ?>'>
-        <input type='hidden' id='date-format' value='<?php echo self::isUsLocale() ? "mm/dd/yy" : "dd-mm-yy"; ?>'>
+        <input type='hidden' id='date-format' value='<?php echo UI::isUsLocale() ? "mm/dd/yy" : "dd-mm-yy"; ?>'>
         <datalist id='airnames'>
         <?php echo $this->getDJAirNames(); ?>
         </datalist>
@@ -1253,7 +1229,7 @@ class Playlists extends MenuItem {
             $label = str_replace(" Records", "", $result[$i][$labelField]);
             $label = str_replace(" Recordings", "", $label);
     
-            echo $this->smartURL($artist) . "&nbsp;&#8226; <I>";
+            echo UI::smartURL($artist) . "&nbsp;&#8226; <I>";
     
             // Album
             if($result[$i]["tag"])
@@ -1262,12 +1238,12 @@ class Playlists extends MenuItem {
                       "&amp;q=". $maxresults.
                       "&amp;action=search\">";
     
-            echo $this->smartURL($result[$i]["album"], !$result[$i]["tag"]);
+            echo UI::smartURL($result[$i]["album"], !$result[$i]["tag"]);
             if($result[$i]["tag"])
                 echo "</A>";
             echo "</I>";
             if($label)
-                echo "&nbsp;&#8226; (".$this->smartURL($label) . ")";
+                echo "&nbsp;&#8226; (".UI::smartURL($label) . ")";
             echo "</TD></TR>\n";
         }
     }
@@ -1487,7 +1463,7 @@ class Playlists extends MenuItem {
             echo "<TABLE class='recentAirplay' CELLPADDING=2 CELLSPACING=0 BORDER=0>\n";
     
             // Setup date format based on locale
-            $dateSpec = self::isUsLocale() ? 'M d, Y' : 'd M Y';
+            $dateSpec = UI::isUsLocale() ? 'M d, Y' : 'd M Y';
     
             // Ensure we have an even number of plays
             if(sizeof($plays)%2)
