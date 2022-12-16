@@ -102,7 +102,7 @@ $().ready(function(){
         showButtonPanel: true,
         setDate: new Date(),
         dateFormat: 'yy-mm-dd',
-        yearRange: startYear + ':' + nowDate.getFullYear(),
+        yearRange: startYear + ':' + (nowDate.getMonth() == 11 /*Dec*/ ? '+1' : nowDate.getFullYear()),
         onChangeMonthYear: function(year, month) {
             setAvailableDays(`${year}-${month}-1`);
         },
