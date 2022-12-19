@@ -174,10 +174,12 @@ $().ready(function(){
         tr.append($("<td>"));
         tr.append($("<td>").append($("<input>", {
             class: 'description',
+            pattern: '.*\\S.*',
             maxlength: $("#max-description-length").val()
         })));
         tr.append($("<td>").append($("<input>", {
             class: 'airname',
+            pattern: '.*\\S.*',
             maxlength: $("#max-airname-length").val()
         })));
         tr.append($("<td>").append($("<input>", {
@@ -245,8 +247,8 @@ $().ready(function(){
         return {
             id: row.data('id'),
             attributes: {
-                name: row.find('input.description').val(),
-                airname: airname.val(),
+                name: row.find('input.description').val().trim(),
+                airname: airname.val().trim(),
                 date: date.toISOString().split('T')[0],
                 time: start + '-' + end
             }
@@ -434,7 +436,7 @@ $().ready(function(){
         if(input.prop('disabled'))
             return true;
 
-        var airname = input.val();
+        var airname = input.val().trim();
         return $(".airnames option[value='" + escQuote(airname) + "' i]").length > 0 || confirm('Create new air name "' + airname + '"?');
     }
 
