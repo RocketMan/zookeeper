@@ -139,7 +139,7 @@ class PlaylistEntry {
     *  914824, 880994, 1134313.
     */
     public static function swapNames($fullName) {
-        $suffixMap = [ "band" => "", "with" => "", "and" => "", "feat." => "" ];
+        $suffixMap = [ "band" => "", "with" => "", "and" => "", "&" => "", "feat." => "" ];
 
         $namesAr = explode(", ", $fullName);
         if (count($namesAr) == 2) {
@@ -150,7 +150,7 @@ class PlaylistEntry {
             } else if ($spacesCnt > 1) {
                 $key = strtolower($spacesAr[1]);
                 if (array_key_exists($key, $suffixMap)) {
-                    $fullName = $spacesAr[0] . ' ' . $namesAr[0] . ' ' . substr($namesAr[1], strlen($spacesAr[0]));
+                    $fullName = $spacesAr[0] . ' ' . $namesAr[0] . substr($namesAr[1], strlen($spacesAr[0]));
                 }
             }
         }
