@@ -153,15 +153,16 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
-    private function purgeEmptyPlaylist($user, $date) {
+    private function purgeEmptyPlaylist($user, $date, $time) {
         // search for last entered playlist by this DJ on this date
         $query = "SELECT l.id AS lid, t.id AS tid FROM lists l ".
                  "LEFT JOIN tracks t ON l.id = t.list ".
-                 "WHERE dj = ? AND showdate = ? ".
+                 "WHERE dj = ? AND showdate = ? AND showtime = ? ".
                  "ORDER BY l.id DESC LIMIT 1";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
         $stmt->bindValue(2, $date);
+        $stmt->bindValue(3, $time);
         $result = $stmt->executeAndFetch();
         if($result && !$result['tid']) {
             // DJ's last entered playlist on this date has no tracks; delete it
@@ -177,11 +178,12 @@ class PlaylistImpl extends DBO implements IPlaylist {
         }
     }
 
-    public function insertPlaylist($user, $date, $time, $description, $airname) {
+    public function insertPlaylist($user, $date, $time, $description, $airname, $autoPurge = true) {
         list($year, $month, $day) = explode("-", $date);
         $canonicalDate = "$year-$month-$day";
 
-        $this->purgeEmptyPlaylist($user, $canonicalDate);
+        if($autoPurge)
+            $this->purgeEmptyPlaylist($user, $canonicalDate, $time);
 
         $query = "INSERT INTO lists " .
                  "(dj, showdate, showtime, description, airname) VALUES " .
@@ -319,7 +321,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $success = $from?$this->insertPlaylist($from['dj'],
                                      $from['showdate'], $from['showtime'],
                                      $from['description'],
-                                     $from['airname']):false;
+                                     $from['airname'], false):false;
         if($success) {
             $newListId = $this->lastInsertId();
 
