@@ -242,14 +242,14 @@ var lists = {
             attrs.tracks.forEach(function(track) {
                 tr = $("<TR>");
                 var td = $("<TD>");
-                var artist = track.artist != null?track.artist:getArtist(attrs);
+                var artist = track.artist != null?track.artist:attrs.artist;
                 td.append(
                     $("<A href='#" + encobj({
                         type: 'artists',
                         key: artist,
                         sortBy: 'Artist',
                         form: true
-                    }, true) + "'>").append(artist));
+                    }, true) + "'>").append(htmlify(artist)));
                 tr.append(td);
                 tr.append($("<TD>").html($("<A>", {
                     href: "?s=byAlbumKey&n=" +
