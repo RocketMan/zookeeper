@@ -289,7 +289,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $key = $matches[1];
 
             // Before MySQL 8, RLIKE is not unicode-aware, so do bytewise test
-            $rlike = preg_replace("/['\u{2019}]/u", "('|\u{2019})", $search);
+            $rlike = preg_replace("/['\u{2019}]/u", "('|\u{2019})", preg_quote($search));
             if(substr($rlike, -1) == "%")
                 $rlike = substr($rlike, 0, -1);
 
@@ -333,6 +333,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $pos = (!$count && $stmt->fetch())?$pos + $askCount - 1:0;
         } else {
             // caller has requested total row count instead of data
+
             // strip ORDER BY and/or LIMIT clauses
             $ob = strpos($query, " ORDER BY");
             if($ob)
