@@ -277,7 +277,30 @@ class LibraryImpl extends DBO implements ILibrary {
             return;
         }
       
+        // Collation for utf8mb4 does not coalese apostrophe U+0027 (')
+        // and right single quotation mark U+2019 (’).  If the search
+        // string includes an apostrophe or quotation mark, we will
+        // massage the query to match either.
+        //
+        // RLIKE (REGEXP) is expensive, so we let LIKE do the heavy
+        // lifting in a derived table and then run RLIKE over the result.
+        if(preg_match("/['\u{2019}]/u", $search) &&
+                preg_match('/(\w+) LIKE /', $query, $matches)) {
+            $key = $matches[1];
+
+            // Before MySQL 8, RLIKE is not unicode-aware, so do bytewise test
+            $rlike = preg_replace("/['\u{2019}]/u", "('|\u{2019})", $search);
+            if(substr($rlike, -1) == "%")
+                $rlike = substr($rlike, 0, -1);
+
+            $search = preg_replace("/['\u{2019}]/u", "_", $search);
+        } else
+            $rlike = null;
+
         if($count > 0) {
+            if($rlike)
+                $query = "SELECT * FROM ( $query ) x WHERE $key RLIKE ?";
+
             $stmt = $this->prepare($query);
             switch($bindType) {
             case 1:
@@ -295,6 +318,10 @@ class LibraryImpl extends DBO implements ILibrary {
                 $stmt->bindValue(4, (int)$count, \PDO::PARAM_INT);
                 break;
             }
+
+            if($rlike)
+                $stmt->bindValue($bindType + 1, $rlike);
+
             $stmt->execute();
 
             // copy the requested rows
@@ -306,7 +333,6 @@ class LibraryImpl extends DBO implements ILibrary {
             $pos = (!$count && $stmt->fetch())?$pos + $askCount - 1:0;
         } else {
             // caller has requested total row count instead of data
-
             // strip ORDER BY and/or LIMIT clauses
             $ob = strpos($query, " ORDER BY");
             if($ob)
@@ -322,8 +348,13 @@ class LibraryImpl extends DBO implements ILibrary {
                 $query = "SELECT COUNT(*) FROM (" . $query . ") x";
             } else {
                 $from = strpos($query, "FROM");
-                $query = "SELECT COUNT(*) " . substr($query, $from);
+                $query = $rlike ? "SELECT COUNT(*) FROM ( SELECT $key " .
+                        substr($query, $from) . " ) x" :
+                        "SELECT COUNT(*) " . substr($query, $from);
             }
+
+            if($rlike)
+                $query .= " WHERE $key RLIKE ?";
 
             $stmt = $this->prepare($query);
             switch($bindType) {
@@ -336,6 +367,9 @@ class LibraryImpl extends DBO implements ILibrary {
                 $stmt->bindValue(2, $search);
                 break;
             }
+
+            if($rlike)
+                $stmt->bindValue($bindType < 4 ? 2 : 3, $rlike);
 
             $retVal = $stmt->execute() && ($row = $stmt->fetch())?$row[0]:-1;
         }
