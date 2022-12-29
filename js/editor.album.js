@@ -134,9 +134,8 @@ $().ready(function() {
     var seltag = $("#seltag").val();
     if(seltag > 0) {
         getAlbums('filter[id]=' + encodeURIComponent(seltag));
-        $("#list").focus();
     } else {
         getAlbums('page[before]=');
-        $("#search").focus();
     }
+    $("#search").focus();
 });
