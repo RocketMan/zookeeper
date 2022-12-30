@@ -104,6 +104,14 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY artist, album, t.tag" ]
     ];
 
+    /**
+     * characters in each element are coalesced for searching
+     */
+    private static $coalesce = [
+        "'\u{0060}\u{00b4}\u{2018}\u{2019}", // single quotation mark
+        "\"\u{201c}\u{201d}",                // double quotation mark
+    ];
+
     private static function orderBy($sortBy) {
         if(substr($sortBy, -1) == "-") {
             $sortBy = substr($sortBy, 0, -1);
@@ -277,23 +285,34 @@ class LibraryImpl extends DBO implements ILibrary {
             return;
         }
       
-        // Collation for utf8mb4 does not coalese apostrophe U+0027 (')
-        // and right single quotation mark U+2019 (’).  If the search
-        // string includes an apostrophe or quotation mark, we will
-        // massage the query to match either.
+        // Collation for utf8mb4 coalesces related characters, such as
+        // 'a', 'a-umlaut', 'a-acute', and so on, for searching.  However,
+        // it does not coalese various punctuation, such as apostrophe
+        // and right single quotation mark U+2019 (’).
         //
-        // RLIKE (REGEXP) is expensive, so we let LIKE do the heavy
-        // lifting in a derived table and then run RLIKE over the result.
-        if(preg_match("/['\u{2019}]/u", $search) &&
+        // If the search string includes any such punctuation, we will
+        // massage the query to match related characters as well.
+        //
+        // We employ MySQL RLIKE (REGEXP) for this purpose; however,
+        // it is expensive; thus, we let LIKE do the heavy lifting in
+        // a derived table and then run RLIKE over the result.
+        $cchars = implode(self::$coalesce);
+        if(preg_match("/[$cchars]/u", $search) &&
                 preg_match('/(\w+) LIKE /', $query, $matches)) {
             $key = $matches[1];
 
-            // Before MySQL 8, RLIKE is not unicode-aware, so do bytewise test
-            $rlike = preg_replace("/['\u{2019}]/u", "('|\u{2019})", preg_quote($search));
+            $rlike = preg_quote($search);
+            foreach(self::$coalesce as $c) {
+                // pre-MySQL 8, RLIKE is not unicode-aware, so do bytewise test
+                $rlike = preg_replace("/[$c]/u", "(" .
+                    implode("|", preg_split("//u", $c, 0, PREG_SPLIT_NO_EMPTY)) .
+                    ")", $rlike);
+            }
+
             if(substr($rlike, -1) == "%")
                 $rlike = substr($rlike, 0, -1);
 
-            $search = preg_replace("/['\u{2019}]/u", "_", $search);
+            $search = preg_replace("/[$cchars]/u", "_", $search);
         } else
             $rlike = null;
 
