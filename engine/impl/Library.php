@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -110,6 +110,13 @@ class LibraryImpl extends DBO implements ILibrary {
     private static $coalesce = [
         "'\u{0060}\u{00b4}\u{2018}\u{2019}", // single quotation mark
         "\"\u{201c}\u{201d}",                // double quotation mark
+    ];
+
+    /*
+     * words to exclude from a full-text search
+     */
+    private static $ftExclude = [
+        "a", "an", "and", "or", "the"
     ];
 
     private static function orderBy($sortBy) {
@@ -839,11 +846,6 @@ class LibraryImpl extends DBO implements ILibrary {
         return $result;
     }
 
-    public static function ftfilter($elt) {
-       return strlen($elt) > 1 &&
-          $elt != "an" && $elt != "and" && $elt != "or" && $elt != "the";
-    }
-
     public function searchFullText($type, $key, $size, $offset) {
         $retVal = array();
         $loggedIn = Engine::session()->isAuth("u");
@@ -856,8 +858,10 @@ class LibraryImpl extends DBO implements ILibrary {
         if(substr($key, 0, 2) == "\\\"") {
              $search = $key;
         } else {
-             $words = array_filter(explode(" ", $key), array(__CLASS__, "ftfilter"));
-             $search = "+".implode(" +",$words);
+             $words = array_filter(preg_split('/\W+/u', $key, 0, PREG_SPLIT_NO_EMPTY), function($word) {
+                 return !in_array($word, self::$ftExclude);
+             });
+             $search = "+" . implode(" +", $words);
         }
     
         // JM 2010-09-26 remove semicolons to thwart injection attacks

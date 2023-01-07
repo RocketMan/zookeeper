@@ -91,7 +91,7 @@ particulars, then read on.
    may locate and/or name the file differently.  In the `[mysqld]`
    section, add the lines:
 
-        ft_min_word_len = 3
+        ft_min_word_len = 1
         ft_stopword_file = ''
 
    If `ft_min_word_len` or `ft_stopword_file` is already in the file,
