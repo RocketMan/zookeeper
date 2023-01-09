@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -300,6 +300,7 @@ class Validate implements IController {
             $this->showSuccess($success5, $response);
         }
 
+        $successd = false;
         if($this->doTest("duplicate playlist", $success4)) {
             $response = $this->client->post('api/v1/playlist', [
                 RequestOptions::JSON => [
