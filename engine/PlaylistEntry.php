@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -295,11 +295,13 @@ class PlaylistEntry {
         $this->entry['artist'] = IPlaylist::SPECIAL_TRACK . IPlaylist::COMMENT_FLAG;
         if(mb_strlen($comment) < 80) {
             $this->entry['track'] = $comment;
+            $this->entry['album'] = $this->entry['label'] = '';
         } else {
             $this->entry['track'] = mb_substr($comment, 0, 80);
             $rest = mb_substr($comment, 80);
             if(mb_strlen($rest) < 80) {
                 $this->entry['album'] = $rest;
+                $this->entry['label'] = '';
             } else {
                 $this->entry['album'] = mb_substr($rest, 0, 80);
                 $this->entry['label'] = mb_substr($rest, 80);
