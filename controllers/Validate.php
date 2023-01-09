@@ -220,12 +220,13 @@ class Validate implements IController {
             ]);
 
             $success2 = $response->getStatusCode() == 200;
-            if($success2) {
-                $json = json_decode($response->getBody()->getContents());
+            if($success2) { $b1 = $response->getBody()->getContents();
+                $json = json_decode($b1);
                 if($json !== null && $json->data)
                     $cid = $json->data->id;
                 else
                     $success2 = false;
+                    echo "body: $b1 ";
             }
 
             $this->showSuccess($success2, $response);
@@ -300,6 +301,7 @@ class Validate implements IController {
             $this->showSuccess($success5, $response);
         }
 
+        $successd = false;
         if($this->doTest("duplicate playlist", $success4)) {
             $response = $this->client->post('api/v1/playlist', [
                 RequestOptions::JSON => [
