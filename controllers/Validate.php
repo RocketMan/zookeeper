@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -220,13 +220,12 @@ class Validate implements IController {
             ]);
 
             $success2 = $response->getStatusCode() == 200;
-            if($success2) { $b1 = $response->getBody()->getContents();
-                $json = json_decode($b1);
+            if($success2) {
+                $json = json_decode($response->getBody()->getContents());
                 if($json !== null && $json->data)
                     $cid = $json->data->id;
                 else
                     $success2 = false;
-                    echo "body: $b1 ";
             }
 
             $this->showSuccess($success2, $response);
