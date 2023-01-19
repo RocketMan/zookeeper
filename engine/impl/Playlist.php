@@ -317,6 +317,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $pdo = $this->newPDO();
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+        $pdo->exec("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
         $pdo->beginTransaction();
 
         try {
@@ -342,6 +343,21 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 $toStamp->modify("+1 day");
 
             $query = "SELECT id FROM tracks WHERE list = ? " .
+                     "AND created >= ? ORDER BY seq, id LIMIT 1";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $playlist);
+            $stmt->bindValue(2, $toStamp->format(self::TIME_FORMAT_SQL));
+            $highRow = $stmt->executeAndFetch();
+            if($highRow && ($seq = $this->getSeq($playlist, $highRow['id']))) {
+                // getSeq() populated seq for the delete
+                $query = "DELETE FROM tracks WHERE list = ? AND seq >= ?";
+                $stmt = $pdo->prepare($query);
+                $stmt->bindValue(1, $playlist);
+                $stmt->bindValue(2, $seq);
+                $stmt->execute();
+            }
+
+            $query = "SELECT id FROM tracks WHERE list = ? " .
                      "AND created < ? ORDER BY seq DESC, id DESC LIMIT 1";
             $stmt = $pdo->prepare($query);
             $stmt->bindValue(1, $playlist);
@@ -359,20 +375,6 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 $stmt = $pdo->prepare($query);
                 $stmt->bindValue(1, $seq);
                 $stmt->bindValue(2, $playlist);
-                $stmt->execute();
-            }
-
-            $query = "SELECT id FROM tracks WHERE list = ? " .
-                     "AND created >= ? ORDER BY seq, id LIMIT 1";
-            $stmt = $pdo->prepare($query);
-            $stmt->bindValue(1, $playlist);
-            $stmt->bindValue(2, $toStamp->format(self::TIME_FORMAT_SQL));
-            $highRow = $stmt->executeAndFetch();
-            if($highRow && ($seq = $this->getSeq($playlist, $highRow['id']))) {
-                $query = "DELETE FROM tracks WHERE list = ? AND seq >= ?";
-                $stmt = $pdo->prepare($query);
-                $stmt->bindValue(1, $playlist);
-                $stmt->bindValue(2, $seq);
                 $stmt->execute();
             }
 
