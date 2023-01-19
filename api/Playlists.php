@@ -434,7 +434,11 @@ class Playlists implements RequestHandlerInterface {
 
         if($dup) {
             // duplicate an existing playlist
-            $playlist = $papi->duplicatePlaylist($origin);
+            $fromTime = $show->metaInformation()->getOptional("fromtime");
+            if($fromTime && !preg_match('/^\d{4}(\-\d{4})?$/', $fromTime))
+                throw new \Exception("fromtime invalid");
+
+            $playlist = $papi->duplicatePlaylist($origin, $fromTime);
             if(!$playlist)
                 throw new \Exception("duplication failed");
 
