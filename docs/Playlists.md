@@ -95,6 +95,13 @@ The name of the duplicated playlist follows the same convention as
 playlists duplicated in the user interface.  If desired, an alternate
 name can be specified via the `name` attribute.
 
+In addition, you may specify an optional meta attribute `fromtime` to
+indicate the portion of the playlist you wish to duplicate.  The value
+may be a range (hhmm-hhmm) or a time (hhmm).  If you specify a time,
+the API copies from the specified time to the end of the playlist.
+**Important:** `fromtime` specifies the time relative to the original
+playlist that is being copied.
+
 Example:
 
 To duplicate playlist 12345 for rebroadcast on 2022-01-01 from 1800-2000:
@@ -111,6 +118,40 @@ Content-Type: application/vnd.api+json
       "rebroadcast": true,
       "date": "2022-01-01",
       "time": "1800-2000"
+    },
+    "relationships": {
+      "origin": {
+        "data": {
+          "type": "show",
+          "id": "12345"
+        }
+      }
+    }
+  }
+}
+````
+
+Example with `fromtime`:
+
+Playlist 12345 runs from 0000-0300.  To duplicate only one hour of
+this playlist, from 0100-0200, for rebroadcast on 2022-01-01 from
+1800-1900:
+
+````
+POST /api/v1/playlist HTTP/1.1
+X-APIKEY: eb5e0e0b42a84531af5f257ed61505050494788d
+Content-Type: application/vnd.api+json
+
+{
+  "data": {
+    "type": "show",
+    "attributes": {
+      "rebroadcast": true,
+      "date": "2022-01-01",
+      "time": "1800-1900"
+    },
+    "meta": {
+      "fromtime": "0100-0200"
     },
     "relationships": {
       "origin": {

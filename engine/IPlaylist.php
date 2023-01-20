@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -84,7 +84,7 @@ interface IPlaylist {
     function insertPlaylist($user, $date, $time, $description, $airname);
     function updatePlaylist($playlist, $date, $time, $description, $airname,
                                $deleteTracksPastEnd=0);
-    function duplicatePlaylist($playlist);
+    function duplicatePlaylist($playlist, $time = null);
     function reparentPlaylist($playlist, $user);
     function getSeq($list, $id);
     function moveTrack($list, $id, $toId, $clearTimestamp=true);

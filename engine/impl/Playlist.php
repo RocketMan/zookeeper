@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -311,7 +311,89 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $stmt->execute();
     }
 
-    public function duplicatePlaylist($playlist) {
+    protected function slicePlaylist($playlist, $time) {
+        // use a fresh connection so we don't adversely affect
+        // anything else by changing the attributes, etc.
+        $pdo = $this->newPDO();
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+        $pdo->exec("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
+        $pdo->beginTransaction();
+
+        try {
+            $query = "SELECT showdate, showtime FROM lists WHERE id = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $playlist);
+            $from = $stmt->executeAndFetch();
+            $date = $from['showdate'];
+            $oldTime = explode('-', $from['showtime']);
+            $newTime = explode('-', $time);
+            if(count($newTime) == 1)
+                $newTime[] = $oldTime[1];
+            $fromStamp = \DateTime::createFromFormat(self::TIME_FORMAT,
+                        $date . " " . $newTime[0]);
+            $toStamp = \DateTime::createFromFormat(self::TIME_FORMAT,
+                        $date . " " . $newTime[1]);
+            // event timestamps include seconds; we adjust toStamp
+            // to capture all events within the last minute
+            $toStamp->modify("+1 minute");
+
+            // if playlist spans midnight, end time is next day
+            if($toStamp < $fromStamp)
+                $toStamp->modify("+1 day");
+
+            $query = "SELECT id FROM tracks WHERE list = ? " .
+                     "AND created >= ? ORDER BY seq, id LIMIT 1";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $playlist);
+            $stmt->bindValue(2, $toStamp->format(self::TIME_FORMAT_SQL));
+            $highRow = $stmt->executeAndFetch();
+            if($highRow && ($seq = $this->getSeq($playlist, $highRow['id']))) {
+                // getSeq() populated seq for the delete
+                $query = "DELETE FROM tracks WHERE list = ? AND seq >= ?";
+                $stmt = $pdo->prepare($query);
+                $stmt->bindValue(1, $playlist);
+                $stmt->bindValue(2, $seq);
+                $stmt->execute();
+            }
+
+            $query = "SELECT id FROM tracks WHERE list = ? " .
+                     "AND created < ? ORDER BY seq DESC, id DESC LIMIT 1";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $playlist);
+            $stmt->bindValue(2, $fromStamp->format(self::TIME_FORMAT_SQL));
+            $lowRow = $stmt->executeAndFetch();
+            if($lowRow && ($seq = $this->getSeq($playlist, $lowRow['id']))) {
+                // getSeq() populated seq for the delete and update
+                $query = "DELETE FROM tracks WHERE list = ? AND seq <= ?";
+                $stmt = $pdo->prepare($query);
+                $stmt->bindValue(1, $playlist);
+                $stmt->bindValue(2, $seq);
+                $stmt->execute();
+
+                $query = "UPDATE tracks SET seq = seq - ? WHERE list = ?";
+                $stmt = $pdo->prepare($query);
+                $stmt->bindValue(1, $seq);
+                $stmt->bindValue(2, $playlist);
+                $stmt->execute();
+            }
+
+            $query = "UPDATE lists SET showtime = ? WHERE id = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, implode('-', $newTime));
+            $stmt->bindValue(2, $playlist);
+            $stmt->execute();
+
+            // if we made it this far, success!
+            $pdo->commit();
+        } catch(\Exception $e) {
+            error_log("slicePlaylist: " . $e->getMessage());
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    public function duplicatePlaylist($playlist, $time = null) {
         $query = "SELECT dj, showdate, showtime, description, airname " .
                  "FROM lists WHERE id = ?";
         $stmt = $this->prepare($query);
@@ -341,6 +423,14 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue(2, $playlist);
             $success = $stmt->execute();
 
+            if($success && $time) {
+                try {
+                    $this->slicePlaylist($newListId, $time);
+                } catch(\Exception $e) {
+                    $success = false;
+                }
+            }
+
             if($success) {
                 // insert comment at beginning of playlist
                 $comment = preg_replace_callback("/%([^%]*)%/",
@@ -362,6 +452,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
                         $this->moveTrack($newListId, $entry->getId(), $first['id']);
                 }
             }
+
+            if(!$success)
+                $this->deletePlaylist($newListId, true);
         }
 
         return $success?$newListId:false;
@@ -907,7 +1000,16 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $res;
     }
 
-    public function deletePlaylist($playlist) {
+    public function deletePlaylist($playlist, $permanent = false) {
+        if($permanent) {
+            $query = "DELETE FROM tracks, lists USING lists " .
+                     "LEFT OUTER JOIN tracks ON lists.id = tracks.list " .
+                     "WHERE lists.id = ?";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $playlist);
+            return $stmt->execute();
+        }
+
         // fetch the airname from the playlists table
         $row = $this->getPlaylist($playlist);
         $airname = $row?$row['airname']:null;
