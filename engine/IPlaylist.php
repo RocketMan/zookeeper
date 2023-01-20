@@ -99,7 +99,7 @@ interface IPlaylist {
     function updateTrackEntry($playlist, PlaylistEntry $entry);
     function deleteTrack($id);
     function getTopPlays($airname=0, $days=41, $count=10);
-    function getLastPlays($tag, $count=0, $excludeAutomation=true);
+    function getLastPlays($tag, $count=0, $excludeAutomation=true, $excludeRebroadcasts=true);
     function getRecentPlays($airname, $count);
     function getPlaysBefore($timestamp, $limit);
     function deletePlaylist($playlist);

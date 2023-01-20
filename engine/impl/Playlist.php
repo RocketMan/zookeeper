@@ -867,7 +867,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         }
     }
 
-    public function getLastPlays($tag, $count=0, $excludeAutomation=true) {
+    public function getLastPlays($tag, $count=0, $excludeAutomation=true, $excludeRebroadcasts=true) {
         settype($tag, "integer");
         $zootopia = $excludeAutomation ? $this->getZootopiaAirname() : null;
         $query = "SELECT l.id, l.showdate, l.description, a.airname," .
@@ -877,6 +877,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
                  " JOIN lists l ON t.list = l.id " .
                  " LEFT JOIN airnames a ON l.airname = a.id" .
                  " WHERE t.tag = ? AND l.airname IS NOT NULL" .
+                 ($excludeRebroadcasts ? " AND origin IS NULL" : "") .
                  ($zootopia ? " AND a.airname <> ?" : "") .
                  " GROUP BY t.tag, l.id ORDER BY l.showdate DESC, l.showtime DESC";
         if($count)
