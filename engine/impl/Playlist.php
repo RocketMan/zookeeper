@@ -423,16 +423,15 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue(2, $playlist);
             $success = $stmt->execute();
 
-            if($success) {
-                if($time) {
-                    try {
-                        $this->slicePlaylist($newListId, $time);
-                    } catch(\Exception $e) {
-                        $this->deletePlaylist($newListId, true);
-                        return false;
-                    }
+            if($success && $time) {
+                try {
+                    $this->slicePlaylist($newListId, $time);
+                } catch(\Exception $e) {
+                    $success = false;
                 }
+            }
 
+            if($success) {
                 // insert comment at beginning of playlist
                 $comment = preg_replace_callback("/%([^%]*)%/",
                     function($matches) use ($from) {
@@ -453,6 +452,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
                         $this->moveTrack($newListId, $entry->getId(), $first['id']);
                 }
             }
+
+            if(!$success)
+                $this->deletePlaylist($newListId, true);
         }
 
         return $success?$newListId:false;
