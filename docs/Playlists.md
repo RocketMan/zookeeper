@@ -135,7 +135,7 @@ Example with `fromtime`:
 
 Playlist 12345 runs from 0000-0300.  To duplicate only one hour of
 this playlist, from 0100-0200, for rebroadcast on 2022-01-01 from
-1800-2000:
+1800-1900:
 
 ````
 POST /api/v1/playlist HTTP/1.1
