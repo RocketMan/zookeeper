@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     const intl = new Date().toLocaleTimeString().match(/am|pm/i) == null;
@@ -28,6 +28,7 @@ $().ready(function(){
     var mobile = window.innerWidth < 1024; // match @media min-width in css
     var maxresults = mobile ? 7 : 10, chunksize = mobile ? 7 : 10;
     var editing = null;
+    var shownames = null;
 
     /**
      * @param date string formatted 'yyyy-mm-dd'
@@ -217,6 +218,47 @@ $().ready(function(){
                 }).filter(function() {
                     return this.toLowerCase().includes(term);
                 }));
+            }
+        }).on('click', function() {
+            $(this).autocomplete('search', '');
+        });
+        tr.find(".description").autocomplete({
+            minLength: 0,
+            source: function(rq, rs) {
+                var term = rq.term.toLowerCase();
+                if(shownames) {
+                    rs(shownames.filter(function(show) {
+                        return show.name.toLowerCase().startsWith(term);
+                    }).map(show => show.name));
+                    return;
+                }
+
+                $.ajax({
+                    type: 'GET',
+                    accept: 'application/json; charset=utf-8',
+                    url: 'api/v1/playlist?filter[user]=self&fields[show]=name,airname,rebroadcast',
+                }).done(function(response) {
+                    shownames = response.data.map(show => show.attributes)
+                        .sort((a, b) => Intl.Collator().compare(a.name, b.name))
+                        .filter(function(show, pos, shows) {
+                            return !pos ||
+                                show.name.localeCompare(shows[pos - 1].name,
+                                                   undefined,
+                                                   { sensitivity: 'base' });
+                        })
+                        .filter(function(show) {
+                            return !show.rebroadcast;
+                        });
+
+                    rs(shownames.filter(function(show) {
+                        return show.name.toLowerCase().startsWith(term);
+                    }).map(show => show.name));
+                });
+            },
+            select: function(event, ui) {
+                var name = ui.item.value;
+                var show = shownames.find(show => show.name == name);
+                $("input.airname").val(show.airname);
             }
         }).on('click', function() {
             $(this).autocomplete('search', '');
@@ -556,7 +598,7 @@ $().ready(function(){
 
             var nrow = makeRow(list);
             row.replaceWith(nrow);
-            editing = null;
+            editing = shownames = null;
         }).fail(function (jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
             if (json && json.errors) {
