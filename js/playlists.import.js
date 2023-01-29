@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,9 +20,11 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function() {
+    var shownames = null;
+
     /**
      * @param time string formatted 'hhmm'
      */
@@ -48,6 +50,48 @@ $().ready(function() {
 
         var hour = start.split(':')[0];
         $(this).fxtime('seg', 3, hour < 11 || hour > 22 ? 'AM' : 'PM').select();
+    });
+
+    $("#description").on('click', function() {
+        $(this).autocomplete('search', '');
+    }).autocomplete({
+        minLength: 0,
+        source: function(rq, rs) {
+            var term = rq.term.toLowerCase();
+            if(shownames) {
+                rs(shownames.filter(function(show) {
+                    return show.name.toLowerCase().startsWith(term);
+                }).map(show => show.name));
+                return;
+            }
+
+            $.ajax({
+                type: 'GET',
+                accept: 'application/json; charset=utf-8',
+                url: 'api/v1/playlist?filter[user]=self&fields[show]=name,airname,rebroadcast',
+            }).done(function(response) {
+                shownames = response.data.map(show => show.attributes)
+                    .sort((a, b) => Intl.Collator().compare(a.name, b.name))
+                    .filter(function(show, pos, shows) {
+                        return !pos ||
+                            show.name.localeCompare(shows[pos - 1].name,
+                                               undefined,
+                                               { sensitivity: 'base' });
+                    })
+                    .filter(function(show) {
+                        return !show.rebroadcast;
+                    });
+
+                rs(shownames.filter(function(show) {
+                    return show.name.toLowerCase().startsWith(term);
+                }).map(show => show.name));
+            });
+        },
+        select: function(event, ui) {
+            var name = ui.item.value;
+            var show = shownames.find(show => show.name == name);
+            $("#airname").val(show.airname);
+        }
     });
 
     $("#airname").on('click', function() {
