@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -80,8 +80,8 @@ class Albums implements RequestHandlerInterface {
      * This is the PHP equivalent of the editor.common.js zkAlpha function
      */
     public static function zkAlpha($val, $isTrack=false) {
-        $words = preg_split(self::NONALNUM, $val);
-        $newVal = join(" ", array_map(function(int $index, string $word) use($words) {
+        $words = preg_split(self::NONALNUM, $val, 0, PREG_SPLIT_DELIM_CAPTURE);
+        $newVal = join('', array_map(function(int $index, string $word) use($words) {
             // words starting with caps are kept as-is
             if(preg_match('/^\p{Lu}/u', $word))
                 return $word;
