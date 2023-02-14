@@ -941,6 +941,8 @@ class Editor extends MenuItem {
             break;
         case "tracks":
             $title = "Tracks for $albumLabel";
+            if(!$_REQUEST["new"] && !isset($_REQUEST["nextTrack"]))
+                $title .= " <button class='discogs-prefill' title='load URLs from Discogs'><img src='img/discogs.svg'></button>";
             break;
         case "select":
             $title = "Select tags to print";

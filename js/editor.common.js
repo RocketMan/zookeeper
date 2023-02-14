@@ -512,5 +512,43 @@ $().ready(function() {
         }
     });
 
+    $(".discogs-prefill").on('click', function(e) {
+        e.preventDefault();
+        var url = "?action=editor&subaction=prefill&album=" +
+            encodeURIComponent($("input[name=album]").val());
+        if($("input[name=coll]").length == 0)
+            url += "&artist=" + encodeURIComponent($("input[name=artist]").val());
+
+        $.ajax({
+            dataType: 'json',
+            type: 'GET',
+            accept: 'application/json; charset=utf-8',
+            url: url
+        }).done(function(response) {
+            var state = 0; // bit 0 = match, bit 1 = set, bit 2 = mismatch
+            if(response.tracks) {
+                state = 0x1;
+                response.tracks.forEach(function(track) {
+                    if(track.url) {
+                        var trackurl = $("input[name=trackUrl" + track.seq + "]");
+                        if(!trackurl.val()) {
+                            if($("input[name=track" + track.seq + "]").val().substring(0, 3) == track.title.substring(0, 3)) {
+                                trackurl.val(track.url);
+                                state |= 0x2;
+                            } else
+                                state |= 0x4;
+                        }
+                    }
+                });
+            }
+
+            alert(state ?
+                  (/*state & 0x4 ? "Check Track Names and try again" :*/
+                   (state & 0x2 ? "Updated URLs.  Press [Done!] to save" :
+                    "No new URLs found")) :
+                  "Album not found in Discogs");
+        });
+    });
+
     $("*[data-focus]").focus();
 });
