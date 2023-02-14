@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -333,6 +333,8 @@ class EditorImpl extends DBO implements IEditor {
             $stmt = $pdo->prepare($query);
             $stmt->bindValue(1, $tag);
             $stmt->execute();
+
+            Engine::api(IArtwork::class)->deleteAlbumArt($tag);
 
             // any spins which reference this album will already have
             // a private copy of the artist/album/label name; all that
