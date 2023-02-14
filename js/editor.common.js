@@ -542,11 +542,14 @@ $().ready(function() {
                 });
             }
 
-            alert(state ?
+            // display alert after fields have populated
+            setTimeout(function() {
+                alert(state ?
                   (/*state & 0x4 ? "Check Track Names and try again" :*/
                    (state & 0x2 ? "Updated URLs.  Press [Done!] to save" :
                     "No new URLs found")) :
-                  "Album not found in Discogs");
+                      "Album not found in Discogs");
+            }, 100);
         });
     });
 
