@@ -1223,7 +1223,7 @@ class Editor extends MenuItem {
     ?>
         <div class='user-tip'>
         <p>Tracks have been prefilled based on album and artist.
-        Please confirm the tracks are correct.</p>
+        Please confirm the tracks are correct and press 'Done!'</p>
         <p>You may make changes as needed or
         <button class='clear-prefill'>Clear Prefill</button></p></div>
         <table class='trackEditor'>
