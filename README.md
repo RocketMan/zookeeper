@@ -6,7 +6,7 @@
 [![latest version](https://badgen.net/github/release/RocketMan/zookeeper?label=latest)](https://github.com/RocketMan/zookeeper/releases)
 
 Zookeeper Online is a music database and charting application for
-college and independent radio.
+student and independent radio.
 
 A snapshot of the master branch is maintained at
 https://zookeeper.ibinx.com/master/
