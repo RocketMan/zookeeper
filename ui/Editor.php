@@ -944,7 +944,7 @@ class Editor extends MenuItem {
             if(!$_REQUEST["new"] && !isset($_REQUEST["nextTrack"]) &&
                     ($config = Engine::param('discogs')) &&
                     ($config['apikey'] || $config['client_id'] && $config['client_secret']))
-                $title .= " <button class='discogs-prefill' title='load URLs from Discogs'><img src='img/discogs.svg'></button>";
+                $title .= " <button class='discogs-prefill' title='Load URLs from Discogs'><img src='img/discogs.svg'><span> Load URLs</span></button>";
             break;
         case "select":
             $title = "Select tags to print";
