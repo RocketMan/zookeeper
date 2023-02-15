@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -27,6 +27,7 @@ namespace ZK\UI;
 use ZK\Controllers\API;
 
 use ZK\Engine\Engine;
+use ZK\Engine\IArtwork;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\PlaylistEntry;
@@ -34,7 +35,14 @@ use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
+
 class Editor extends MenuItem {
+    const DISCOGS_BASE = "https://www.discogs.com";
+    const DISCOGS_SEARCH = "https://api.discogs.com/database/search";
+    const UA = "Zookeeper/2.0; (+https://zookeeper.ibinx.com/)";
+
     private static $subactions = [
         [ "m", "", "Albums", "musicEditor" ],
         [ "m", "labels", "Labels", "musicEditor" ],
@@ -164,9 +172,15 @@ class Editor extends MenuItem {
     
     public function processLocal($action, $subaction) {
         $this->printConfig = Engine::param('label_printer');
-        if($subaction == "status" && $this->session->isAuth("m")) {
-            echo $this->getPrintStatus();
-            return;
+        if($this->session->isAuth("m")) {
+            switch($subaction) {
+            case "prefill":
+                echo $this->prefillTracks();
+                return;
+            case "status":
+                echo $this->getPrintStatus();
+                return;
+            }
         }
 
         UI::emitJS('js/editor.common.js');
@@ -175,6 +189,82 @@ class Editor extends MenuItem {
             $subactions = array_merge($subactions, self::$subactions_tagq);
         $this->subaction = $subaction;
         return $this->dispatchSubaction($action, $subaction, $subactions);
+    }
+
+    private function prefillTracks() {
+        $config = Engine::param('discogs');
+        if($config) {
+            $apiKey = $config['apikey'];
+            $clientId = $config['client_id'];
+            $clientSecret = $config['client_secret'];
+
+            if($apiKey || $clientId && $clientSecret) {
+                $discogs = new Client([
+                    RequestOptions::HEADERS => [
+                        'User-Agent' => self::UA,
+                        'Authorization' => $apiKey ?
+                            "Discogs token=$apiKey" :
+                            "Discogs key=$clientId, secret=$clientSecret"
+                    ]
+                ]);
+
+                $response = $discogs->get(self::DISCOGS_SEARCH, [
+                    RequestOptions::QUERY => [
+                        "artist" => $_GET["artist"] ?? "Various",
+                        "release_title" => $_GET["album"],
+                        "per_page" => 1
+                    ]
+                ]);
+
+                $page = $response->getBody()->getContents();
+                $json = json_decode($page);
+
+                if($json->results && ($result = $json->results[0])) {
+                    $imageUrl = $result->cover_image &&
+                        !preg_match('|/spacer.gif$|', $result->cover_image) ?
+                        $result->cover_image : null;
+                    $infoUrl = self::DISCOGS_BASE . $result->uri;
+
+                    $response = $discogs->get($result->resource_url);
+                    $page = $response->getBody()->getContents();
+                    $json = json_decode($page);
+                    $seq = 0;
+                    $tracks = [];
+                    foreach($json->tracklist as $track) {
+                        if($track->type_ != "track")
+                            continue;
+
+                        $entry = [];
+                        $entry["seq"] = ++$seq;
+                        $entry["oseq"] = trim($track->position);
+                        $entry["title"] = mb_substr(trim($track->title), 0, PlaylistEntry::MAX_FIELD_LENGTH);
+                        if($track->artists)
+                            $entry["artist"] = mb_substr(trim($track->artists[0]->name), 0, PlaylistEntry::MAX_FIELD_LENGTH);
+                        if($json->videos) {
+                            foreach($json->videos as $key => $video) {
+                                if(mb_stripos($video->title, $track->title) !== false) {
+                                    unset($json->videos[$key]);
+                                    $entry["url"] = mb_substr($video->uri, 0, IEditor::MAX_PLAYABLE_URL_LENGTH);
+
+                                    // audio track is definitive
+                                    if(preg_match('/\Waudio\W/iu', $video->title))
+                                        break;
+                                }
+                            }
+                        }
+                        $tracks[] = $entry;
+                    }
+
+                    $res = json_encode([
+                        "imageUrl" => $imageUrl,
+                        "infoUrl" => $infoUrl,
+                        "tracks" => $tracks
+                    ]);
+                }
+            }
+        }
+
+        return $res ?? "{}";
     }
 
     private function getPrinterQueue($probe = false) {
@@ -752,6 +842,13 @@ class Editor extends MenuItem {
         if($result) {
             if($_REQUEST["new"]) {
                 $_REQUEST["seltag"] = $album["tag"];
+                $infoUrl = $_REQUEST["infoUrl"] ?? null;
+                if($infoUrl) {
+                    Engine::api(IArtwork::class)->insertAlbumArt(
+                        $_REQUEST["seltag"],
+                        $_REQUEST["imageUrl"] ?? null,
+                        $infoUrl);
+                }
                 $this->printTag($_REQUEST["seltag"]);
             }
 
@@ -844,6 +941,10 @@ class Editor extends MenuItem {
             break;
         case "tracks":
             $title = "Tracks for $albumLabel";
+            if(!$_REQUEST["new"] && !isset($_REQUEST["nextTrack"]) &&
+                    ($config = Engine::param('discogs')) &&
+                    ($config['apikey'] || $config['client_id'] && $config['client_secret']))
+                $title .= " <button class='discogs-prefill' title='Load URLs from Discogs'><img src='img/discogs.svg'><span> Load URLs</span></button>";
             break;
         case "select":
             $title = "Select tags to print";
@@ -1119,11 +1220,18 @@ class Editor extends MenuItem {
     }
     
     private function emitTrackList($focusTrack, $isCollection) {
+    ?>
+        <div class='user-tip'>
+        <p>Tracks have been prefilled based on album and artist.
+        Please confirm the tracks are correct and press 'Done!'</p>
+        <p>You may make changes as needed or
+        <button class='clear-prefill'>Clear Prefill</button></p></div>
+        <table class='trackEditor'>
+    <?php
         $artistHdr = $isCollection ? "<TH>Artist</TH>" : "";
         $cellWidth = "width:" . ($isCollection ? "220px" : "330px");
         $idp = "padding-right:" . ($isCollection ? "3px" : "7px");
 
-        echo "<TABLE class='trackEditor'>\n";
         echo "<TR><TH></TH><TH>Track Name</TH>${artistHdr}<TH>URL</TH><TD align=right style='$idp'>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='&minus;'></TD></TR>\n";
 
         for($i=0; $i<$this->tracksPerPage; $i++) {
@@ -1135,7 +1243,7 @@ class Editor extends MenuItem {
 
             echo "<TR>";
             echo "<TD ALIGN='RIGHT' style='width:20px' ><b>$trackNum:</b></TD>";
-            echo "<TD><INPUT NAME='track$trackNum' style='$cellWidth' VALUE=\"$title\" CLASS=text maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
+            echo "<TD><INPUT NAME='track$trackNum' style='$cellWidth' VALUE=\"$title\" TYPE=text CLASS=text maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
 
             if($isCollection) {
                 $artist = htmlentities(stripslashes($_POST["artist".$trackNum]));
@@ -1148,7 +1256,7 @@ class Editor extends MenuItem {
 
             echo "</TR>\n";
         }
-        echo "</TABLE>";
+        echo "</table>";
     }
 
     private function trackForm() {

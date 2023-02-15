@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 /*
  * For the Albums and Labels tabs, implementations for the following
@@ -431,6 +431,127 @@ $().ready(function() {
             printStatus.text(response.text);
         });
     }
+
+    if($("input[name=seq]").val() == "tracks" &&
+            $("input[name=tdb]").length == 0) {
+        var url = "?action=editor&subaction=prefill&album=" +
+            encodeURIComponent($("input[name=album]").val());
+        if($("input[name=coll]").length == 0)
+            url += "&artist=" + encodeURIComponent($("input[name=artist]").val());
+
+        $.ajax({
+            dataType: 'json',
+            type: 'GET',
+            accept: 'application/json; charset=utf-8',
+            url: url
+        }).done(function(response) {
+            if(response.tracks) {
+                var form=$("form");
+                response.tracks.forEach(function(track) {
+                    var input = $("input[name=track" + track.seq + "]");
+                    if(input.length) {
+                        input.val(track.title);
+                        $("input[name=trackUrl" + track.seq + "]").val(track.url ?? '');
+                        if(track.artist)
+                            $("input[name=artist" + track.seq + "]").val(track.artist);
+                    } else {
+                        form.append($("<input>", {
+                            type: 'hidden',
+                            name: 'track' + track.seq,
+                            class: 'prefill',
+                            value: track.title
+                        })).append($("<input>", {
+                            type: 'hidden',
+                            name: 'trackUrl' + track.seq,
+                            class: 'prefill',
+                            value: track.url ?? ''
+                        }));
+                        if(track.artist) {
+                            form.append($("<input>", {
+                                type: 'hidden',
+                                name: 'artist' + track.seq,
+                                class: 'prefill',
+                                value: track.artist
+                            }));
+                        }
+                    }
+                });
+
+                form.append($("<input>", {
+                    type: 'hidden',
+                    name: 'tdb',
+                    class: 'prefill',
+                    value: 'true'
+                })).append($("<input>", {
+                    type: 'hidden',
+                    name: 'infoUrl',
+                    class: 'prefill',
+                    value: response.infoUrl
+                }));
+                if(response.imageUrl) {
+                    form.append($("<input>", {
+                        type: 'hidden',
+                        name: 'imageUrl',
+                        class: 'prefill',
+                        value: response.imageUrl
+                    }));
+                }
+
+                $(".user-tip").slideDown();
+            }
+        });
+    }
+
+    $(".clear-prefill").on('click', function(e) {
+        e.preventDefault();
+        if(confirm("Clear all tracks?")) {
+            $("input[type=text], input[type=url]").val('');
+            $("input.prefill").remove();
+
+            $(".user-tip").slideUp();
+        }
+    });
+
+    $(".discogs-prefill").on('click', function(e) {
+        e.preventDefault();
+        var url = "?action=editor&subaction=prefill&album=" +
+            encodeURIComponent($("input[name=album]").val());
+        if($("input[name=coll]").length == 0)
+            url += "&artist=" + encodeURIComponent($("input[name=artist]").val());
+
+        $.ajax({
+            dataType: 'json',
+            type: 'GET',
+            accept: 'application/json; charset=utf-8',
+            url: url
+        }).done(function(response) {
+            var state = 0; // bit 0 = match, bit 1 = set, bit 2 = mismatch
+            if(response.tracks) {
+                state = 0x1;
+                response.tracks.forEach(function(track) {
+                    if(track.url) {
+                        var trackurl = $("input[name=trackUrl" + track.seq + "]");
+                        if(!trackurl.val()) {
+                            if($("input[name=track" + track.seq + "]").val().substring(0, 3) == track.title.substring(0, 3)) {
+                                trackurl.val(track.url);
+                                state |= 0x2;
+                            } else
+                                state |= 0x4;
+                        }
+                    }
+                });
+            }
+
+            // display alert after fields have populated
+            setTimeout(function() {
+                alert(state ?
+                  (/*state & 0x4 ? "Check Track Names and try again" :*/
+                   (state & 0x2 ? "Updated URLs.  Press 'Done!' to save." :
+                    "No new URLs found")) :
+                      "Album not found in Discogs");
+            }, 100);
+        });
+    });
 
     $("*[data-focus]").focus();
 });
