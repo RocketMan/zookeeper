@@ -160,6 +160,7 @@ class Editor extends MenuItem {
     private $albumUpdated;
     private $tagPrinted;
     private $printConfig;
+    private $discogsConfig;
 
     public static function emitQueueHook($session) {
         if(Engine::api(IEditor::class)->getNumQueuedTags($session->getUser()))
@@ -191,76 +192,99 @@ class Editor extends MenuItem {
         return $this->dispatchSubaction($action, $subaction, $subactions);
     }
 
+    /**
+     * @return string for apikey auth, array for client auth, false if none
+     */
+    private function getDiscogsConfig() {
+        return $this->discogsConfig ??=
+            (($config = Engine::param('discogs'))
+                && !empty($config['apikey']) ? $config['apikey'] :
+            ($config
+                && !empty($config['client_id'])
+                && !empty($config['client_secret']) ? $config : false));
+    }
+
     private function prefillTracks() {
-        $config = Engine::param('discogs');
+        $config = $this->getDiscogsConfig();
         if($config) {
-            $apiKey = $config['apikey'];
-            $clientId = $config['client_id'];
-            $clientSecret = $config['client_secret'];
+            $discogs = new Client([
+                RequestOptions::HEADERS => [
+                    'User-Agent' => self::UA,
+                    'Authorization' => is_string($config) ?
+                        "Discogs token=$config" :
+                        "Discogs key=${config['client_id']}, secret=${config['client_secret']}"
+                ]
+            ]);
 
-            if($apiKey || $clientId && $clientSecret) {
-                $discogs = new Client([
-                    RequestOptions::HEADERS => [
-                        'User-Agent' => self::UA,
-                        'Authorization' => $apiKey ?
-                            "Discogs token=$apiKey" :
-                            "Discogs key=$clientId, secret=$clientSecret"
-                    ]
-                ]);
+            switch($_GET["medium"] ?? null) {
+            case 'S':
+                $format = "Vinyl, 7\"";
+                break;
+            case 'T':
+            case 'V':
+                $format = "Vinyl";
+                break;
+            case 'M':
+                $format = "Cassette";
+                break;
+            default:
+                $format = "CD";
+                break;
+            }
 
-                $response = $discogs->get(self::DISCOGS_SEARCH, [
-                    RequestOptions::QUERY => [
-                        "artist" => $_GET["artist"] ?? "Various",
-                        "release_title" => $_GET["album"],
-                        "per_page" => 1
-                    ]
-                ]);
+            $response = $discogs->get(self::DISCOGS_SEARCH, [
+                RequestOptions::QUERY => [
+                    "artist" => $_GET["artist"] ?? "Various",
+                    "release_title" => $_GET["album"],
+                    "format" => $format,
+                    "per_page" => 1
+                ]
+            ]);
 
+            $page = $response->getBody()->getContents();
+            $json = json_decode($page);
+
+            if($json->results && ($result = $json->results[0])) {
+                $imageUrl = $result->cover_image &&
+                    !preg_match('|/spacer.gif$|', $result->cover_image) ?
+                    $result->cover_image : null;
+                $infoUrl = self::DISCOGS_BASE . $result->uri;
+
+                $response = $discogs->get($result->resource_url);
                 $page = $response->getBody()->getContents();
                 $json = json_decode($page);
+                $seq = 0;
+                $tracks = [];
+                foreach($json->tracklist as $track) {
+                    if($track->type_ != "track")
+                        continue;
 
-                if($json->results && ($result = $json->results[0])) {
-                    $imageUrl = $result->cover_image &&
-                        !preg_match('|/spacer.gif$|', $result->cover_image) ?
-                        $result->cover_image : null;
-                    $infoUrl = self::DISCOGS_BASE . $result->uri;
+                    $entry = [];
+                    $entry["seq"] = ++$seq;
+                    $entry["oseq"] = trim($track->position);
+                    $entry["title"] = mb_substr(trim($track->title), 0, PlaylistEntry::MAX_FIELD_LENGTH);
+                    if($track->artists)
+                        $entry["artist"] = mb_substr(trim($track->artists[0]->name), 0, PlaylistEntry::MAX_FIELD_LENGTH);
+                    if($json->videos) {
+                        foreach($json->videos as $key => $video) {
+                            if(mb_stripos($video->title, $entry['title']) !== false) {
+                                unset($json->videos[$key]);
+                                $entry["url"] = mb_substr($video->uri, 0, IEditor::MAX_PLAYABLE_URL_LENGTH);
 
-                    $response = $discogs->get($result->resource_url);
-                    $page = $response->getBody()->getContents();
-                    $json = json_decode($page);
-                    $seq = 0;
-                    $tracks = [];
-                    foreach($json->tracklist as $track) {
-                        if($track->type_ != "track")
-                            continue;
-
-                        $entry = [];
-                        $entry["seq"] = ++$seq;
-                        $entry["oseq"] = trim($track->position);
-                        $entry["title"] = mb_substr(trim($track->title), 0, PlaylistEntry::MAX_FIELD_LENGTH);
-                        if($track->artists)
-                            $entry["artist"] = mb_substr(trim($track->artists[0]->name), 0, PlaylistEntry::MAX_FIELD_LENGTH);
-                        if($json->videos) {
-                            foreach($json->videos as $key => $video) {
-                                if(mb_stripos($video->title, $track->title) !== false) {
-                                    unset($json->videos[$key]);
-                                    $entry["url"] = mb_substr($video->uri, 0, IEditor::MAX_PLAYABLE_URL_LENGTH);
-
-                                    // audio track is definitive
-                                    if(preg_match('/\Waudio\W/iu', $video->title))
-                                        break;
-                                }
+                                // audio track is definitive
+                                if(preg_match('/\Waudio\W/iu', $video->title))
+                                    break;
                             }
                         }
-                        $tracks[] = $entry;
                     }
-
-                    $res = json_encode([
-                        "imageUrl" => $imageUrl,
-                        "infoUrl" => $infoUrl,
-                        "tracks" => $tracks
-                    ]);
+                    $tracks[] = $entry;
                 }
+
+                $res = json_encode([
+                    "imageUrl" => $imageUrl,
+                    "infoUrl" => $infoUrl,
+                    "tracks" => $tracks
+                ]);
             }
         }
 
@@ -942,8 +966,7 @@ class Editor extends MenuItem {
         case "tracks":
             $title = "Tracks for $albumLabel";
             if(!$_REQUEST["new"] && !isset($_REQUEST["nextTrack"]) &&
-                    ($config = Engine::param('discogs')) &&
-                    ($config['apikey'] || $config['client_id'] && $config['client_secret']))
+                    $this->getDiscogsConfig())
                 $title .= " <button class='discogs-prefill' title='Load URLs from Discogs'><img src='img/discogs.svg'><span> Load URLs</span></button>";
             break;
         case "select":
@@ -1220,12 +1243,21 @@ class Editor extends MenuItem {
     }
     
     private function emitTrackList($focusTrack, $isCollection) {
+        UI::emitJSVar("mediaTypes",
+            $this->getDiscogsConfig() ? ILibrary::MEDIA : false);
     ?>
-        <div class='user-tip'>
-        <p>Tracks have been prefilled based on album and artist.
-        Please confirm the tracks are correct and press 'Done!'</p>
-        <p>You may make changes as needed or
-        <button class='clear-prefill'>Clear Prefill</button></p></div>
+        <div class='user-tip discogs-prefill-confirm'>
+        <p class='title'>Confirm Track Prefill</p>
+        <p>Tracks have been prefilled from Discogs.
+        Please confirm the names are correct.</p>
+        <p><button class='clear-prefill'>No, clear prefill</button>
+        <button class='submit-prefill'>Yes, save tracks</button></p></div>
+        <div class='user-tip discogs-no-match'>
+        <p>No Discogs tracks for <span id='discogs-no-match-album'></span>
+        with media type <span id='discogs-no-match-media'></span>
+        found.</p>
+        <p>If you believe the album is in Discogs, please check that you
+        have specified the correct media type.</p></div>
         <table class='trackEditor'>
     <?php
         $artistHdr = $isCollection ? "<TH>Artist</TH>" : "";

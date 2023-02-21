@@ -433,9 +433,10 @@ $().ready(function() {
     }
 
     if($("input[name=seq]").val() == "tracks" &&
-            $("input[name=tdb]").length == 0) {
+            $("input[name=tdb]").length == 0 && mediaTypes) {
         var url = "?action=editor&subaction=prefill&album=" +
-            encodeURIComponent($("input[name=album]").val());
+            encodeURIComponent($("input[name=album]").val()) +
+            "&medium=" + encodeURIComponent($("input[name=medium]").val());
         if($("input[name=coll]").length == 0)
             url += "&artist=" + encodeURIComponent($("input[name=artist]").val());
 
@@ -497,25 +498,38 @@ $().ready(function() {
                     }));
                 }
 
-                $(".user-tip").slideDown();
+                $(".discogs-prefill-confirm").slideDown();
+            } else {
+                $("#discogs-no-match-album").text($("input[name=album]").val());
+                $("#discogs-no-match-media").text(mediaTypes[$("input[name=medium]").val()]);
+                $(".discogs-no-match").slideDown();
             }
         });
     }
 
+    $(".submit-prefill").on('click', function(e) {
+        e.preventDefault();
+        $("input[name=next]").click();
+    });
+
     $(".clear-prefill").on('click', function(e) {
         e.preventDefault();
-        if(confirm("Clear all tracks?")) {
-            $("input[type=text], input[type=url]").val('');
-            $("input.prefill").remove();
+        $("input[type=text], input[type=url]").val('');
+        $("input.prefill").remove();
 
-            $(".user-tip").slideUp();
-        }
+        $(".discogs-prefill-confirm").slideUp();
+
+        // display alert after fields have cleared
+        setTimeout(function() {
+            $("*[data-focus]").focus();
+        }, 500);
     });
 
     $(".discogs-prefill").on('click', function(e) {
         e.preventDefault();
         var url = "?action=editor&subaction=prefill&album=" +
-            encodeURIComponent($("input[name=album]").val());
+            encodeURIComponent($("input[name=album]").val()) +
+            "&medium=" + encodeURIComponent($("input[name=medium]").val());
         if($("input[name=coll]").length == 0)
             url += "&artist=" + encodeURIComponent($("input[name=artist]").val());
 

@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -282,7 +282,19 @@ class UICommon {
         echo "<SCRIPT TYPE=\"text/javascript\" SRC=\"" .
              self::decorate($asset) . "\"></SCRIPT>\n";
     }
-    
+
+    /**
+     * emit in-line code to set a JavaScript variable
+     *
+     * @param $name variable name
+     * @param $value variable value (can be scalar, object, or array)
+     */
+    public static function emitJSVar($name, $value) {
+        echo "<script type='text/javascript'><!--\n";
+        echo "var $name = " . json_encode($value) . ";\n";
+        echo "// -->\n</script>\n";
+    }
+
     /**
      * emit in-line JavaScript setFocus function
      *

@@ -631,6 +631,18 @@ table.recentAirplay td, .sub {
 .discogs-prefill span {
     vertical-align: middle;
 }
+.user-tip.discogs-prefill-confirm {
+    border-color: #ccc;
+    margin-bottom: 5px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.8),0 6px 20px 0 rgba(0,0,0,0.2);
+}
+.discogs-prefill-confirm .title,
+.discogs-no-match span {
+    font-weight: bold;
+}
+.discogs-prefill-confirm button {
+    min-width: 160px;
+}
 .success {
     color: #006600;
 }
