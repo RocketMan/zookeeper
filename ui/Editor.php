@@ -204,6 +204,11 @@ class Editor extends MenuItem {
                 && !empty($config['client_secret']) ? $config : false));
     }
 
+    private function getUrlAutofill() {
+        return ($config = Engine::param('discogs'))
+            && ($config['track_url_enabled'] ?? false);
+    }
+
     private function prefillTracks() {
         $config = $this->getDiscogsConfig();
         if($config) {
@@ -255,6 +260,7 @@ class Editor extends MenuItem {
                 $json = json_decode($page);
                 $seq = 0;
                 $tracks = [];
+                $addUrls = $this->getUrlAutofill();
                 foreach($json->tracklist as $track) {
                     if($track->type_ != "track")
                         continue;
@@ -262,10 +268,11 @@ class Editor extends MenuItem {
                     $entry = [];
                     $entry["seq"] = ++$seq;
                     $entry["oseq"] = trim($track->position);
+                    $entry["time"] = trim($track->duration);
                     $entry["title"] = mb_substr(trim($track->title), 0, PlaylistEntry::MAX_FIELD_LENGTH);
                     if($track->artists)
                         $entry["artist"] = mb_substr(trim($track->artists[0]->name), 0, PlaylistEntry::MAX_FIELD_LENGTH);
-                    if($json->videos) {
+                    if($addUrls && $json->videos) {
                         foreach($json->videos as $key => $video) {
                             if(mb_stripos($video->title, $entry['title']) !== false) {
                                 unset($json->videos[$key]);
@@ -966,7 +973,7 @@ class Editor extends MenuItem {
         case "tracks":
             $title = "Tracks for $albumLabel";
             if(!$_REQUEST["new"] && !isset($_REQUEST["nextTrack"]) &&
-                    $this->getDiscogsConfig())
+                    $this->getUrlAutofill())
                 $title .= " <button class='discogs-prefill' title='Load URLs from Discogs'><img src='img/discogs.svg'><span> Load URLs</span></button>";
             break;
         case "select":
@@ -1250,8 +1257,8 @@ class Editor extends MenuItem {
         <p class='title'>Confirm Track Prefill</p>
         <p>Tracks have been prefilled from Discogs.
         Please confirm the names are correct.</p>
-        <p><button class='clear-prefill'>No, clear prefill</button>
-        <button class='submit-prefill'>Yes, save tracks</button></p></div>
+        <p>You may make changes as needed or 'Clear Prefill'
+        if the tracks do not match the album.</p></div>
         <div class='user-tip discogs-no-match'>
         <p>No Discogs tracks for <span id='discogs-no-match-album'></span>
         with media type <span id='discogs-no-match-media'></span>
@@ -1329,8 +1336,9 @@ class Editor extends MenuItem {
     ?>
 
     <div style="padding-top:8px; padding-left:25px;">
-        <INPUT TYPE=SUBMIT NAME=more CLASS=submit VALUE='  More Tracks...  '>
-        <INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE='  Done!  '>
+        <INPUT TYPE=SUBMIT CLASS='submit' NAME=more VALUE='  More Tracks...  '>
+        <INPUT TYPE=SUBMIT CLASS='submit clear-prefill zk-hidden' VALUE='  Clear Prefill  '>
+        <INPUT TYPE=SUBMIT CLASS='submit' NAME=next VALUE='  Done!  '>
         <INPUT TYPE=HIDDEN NAME=nextTrack VALUE=<?php echo (int)($_REQUEST["nextTrack"]+$this->tracksPerPage);?>>
     </div>
 

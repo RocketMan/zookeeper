@@ -499,6 +499,7 @@ $().ready(function() {
                 }
 
                 $(".discogs-prefill-confirm").slideDown();
+                $(".clear-prefill").removeClass('zk-hidden');
             } else {
                 $("#discogs-no-match-album").text($("input[name=album]").val());
                 $("#discogs-no-match-media").text(mediaTypes[$("input[name=medium]").val()]);
@@ -507,22 +508,17 @@ $().ready(function() {
         });
     }
 
-    $(".submit-prefill").on('click', function(e) {
-        e.preventDefault();
-        $("input[name=next]").click();
-    });
-
     $(".clear-prefill").on('click', function(e) {
         e.preventDefault();
-        $("input[type=text], input[type=url]").val('');
-        $("input.prefill").remove();
+        if(confirm("Clear all tracks?")) {
+            $("input[type=text], input[type=url]").val('');
+            $("input.prefill").remove();
 
-        $(".discogs-prefill-confirm").slideUp();
+            $(".discogs-prefill-confirm").slideUp();
+            $(".clear-prefill").addClass('zk-hidden');
 
-        // display alert after fields have cleared
-        setTimeout(function() {
             $("*[data-focus]").focus();
-        }, 500);
+        }
     });
 
     $(".discogs-prefill").on('click', function(e) {
