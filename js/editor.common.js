@@ -155,8 +155,7 @@ function onKeyDown(list, e) {
 
 $().ready(function() {
     var focus, sel, count = 0, max = -1;
-
-    const NONALNUM=/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/;
+    const NONALNUM=/([^\p{L}\d'])/u;
     const STOPWORDS=/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i;
     function zkAlpha(control) {
         var val=control.val();
@@ -169,7 +168,8 @@ $().ready(function() {
             // stopwords are not capitalized, unless first or last
             if(word.search(STOPWORDS) > -1 &&
                     index !== 0 &&
-                    index !== array.length - 1)
+                    index !== array.length - 1 &&
+                    array[index - 1].match(/\s/))
                 return word.toLowerCase();
 
             // otherwise, capitalize the word

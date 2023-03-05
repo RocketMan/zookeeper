@@ -73,7 +73,7 @@ class Albums implements RequestHandlerInterface {
         "match(track)" =>         [ ILibrary::TRACK_NAME, "tracks" ],
     ];
 
-    private const NONALNUM="/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/";
+    private const NONALNUM='/([^\p{L}\d\'])/u';
     private const STOPWORDS="/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i";
 
     /**
@@ -89,7 +89,8 @@ class Albums implements RequestHandlerInterface {
             // stopwords are not capitalized, unless first or last
             if(preg_match(self::STOPWORDS, $word) &&
                         $index != 0 &&
-                        $index != sizeof($words) - 1) {
+                        $index != sizeof($words) - 1 &&
+                        preg_match('/\s/', $words[$index - 1])) {
                 return mb_strtolower($word);
             }
 
