@@ -116,7 +116,7 @@ class Validate implements IController {
         $api = Engine::api(IUser::class);
 
         $this->doTest("create user");
-        $this->testUser = "__".substr(md5(uniqid(rand())), 0, 6);
+        $this->testUser = "_0".substr(md5(uniqid(rand())), 0, 6);
         $this->testPass = md5(uniqid(rand()));
         $success = $api->insertUser($this->testUser, $this->testPass,
                 self::TEST_NAME, self::TEST_ACCESS, "");
