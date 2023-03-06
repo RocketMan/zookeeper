@@ -73,7 +73,7 @@ class Albums implements RequestHandlerInterface {
         "match(track)" =>         [ ILibrary::TRACK_NAME, "tracks" ],
     ];
 
-    private const NONALNUM='/([^\p{L}\d\'])/u';
+    private const NONALNUM='/([^\p{L}\d\'\x{2019}])/u';
     private const STOPWORDS="/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i";
 
     /**

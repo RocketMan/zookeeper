@@ -155,7 +155,7 @@ function onKeyDown(list, e) {
 
 $().ready(function() {
     var focus, sel, count = 0, max = -1;
-    const NONALNUM=/([^\p{L}\d'])/u;
+    const NONALNUM=/([^\p{L}\d'\u{2019}])/u;
     const STOPWORDS=/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i;
     function zkAlpha(control) {
         var val=control.val();
