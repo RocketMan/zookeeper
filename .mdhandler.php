@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -23,6 +23,8 @@
  */
 
 require_once __DIR__."/vendor/autoload.php";
+
+use Erusev\Parsedown\Parsedown;
 
 use ZK\UI\UICommon as UI;
 
@@ -62,11 +64,9 @@ echo "<LINK REL=\"stylesheet\" HREF=\"$stylesheet\">\n";
 echo "<TITLE>".basename($_SERVER['REQUEST_URI'])."</TITLE>\n";
 echo "</HEAD>\n<BODY>\n<DIV class='box'>\n";
 
-ob_start("markdown");
-
-function markdown($buffer) {
-    return Parsedown::instance()->text($buffer);
-}
+ob_start(function($buffer) {
+    return (new Parsedown())->toHtml($buffer);
+});
 
 require_once($target);
 
