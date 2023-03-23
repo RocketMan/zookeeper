@@ -242,7 +242,7 @@ class Editor extends MenuItem {
                     "artist" => $_GET["artist"] ?? "Various",
                     "release_title" => $_GET["album"],
                     "format" => $format,
-                    "per_page" => 1
+                    "per_page" => 20
                 ]
             ]);
 
@@ -250,6 +250,28 @@ class Editor extends MenuItem {
             $json = json_decode($page);
 
             if($json->results && ($result = $json->results[0])) {
+                foreach($json->results as $r) {
+                    if($r->master_id != $result->master_id)
+                        continue;
+
+                    // master releases are definitive
+                    if($r->type == "master") {
+                        $result = $r;
+                        break;
+                    }
+
+                    // ignore promos and limited/special editions
+                    if(array_reduce($r->format,
+                            function($carry, $item) {
+                                return $carry ||
+                                    $item == "Promo" ||
+                                    strpos($item, "Edition") !== false;
+                            }))
+                        continue;
+
+                    $result = $r;
+                }
+
                 $imageUrl = $result->cover_image &&
                     !preg_match('|/spacer.gif$|', $result->cover_image) ?
                     $result->cover_image : null;
