@@ -62,11 +62,11 @@ $().ready(function(){
         var mode = $("#track-type-pick").val();
         switch(mode) {
         case 'manual-entry':
-            $('#track-artist').focus();
+            $('#track-artist').trigger('focus');
             break;
         case 'comment-entry':
             $("#remaining").html("(0/" + $("#comment-max").val() + " characters)");
-            $('#comment-data').focus();
+            $('#comment-data').trigger('focus');
             break;
         case 'set-separator':
             setAddButtonState(true);
@@ -189,7 +189,7 @@ $().ready(function(){
         clearUserInput(true);
         $("#track-entry > div").addClass("zk-hidden");
         $("#" + newType).removeClass("zk-hidden");
-        $("#" + newType + " *[data-focus]").focus();
+        $("#" + newType + " *[data-focus]").trigger('focus');
         if (newType == NME_ENTRY) {
             var option = $("option:selected", this);
             var argCnt = $(option).data("args");
@@ -226,7 +226,7 @@ $().ready(function(){
         setAddButtonState(len > 0);
     });
 
-    $("#markdown-help-link").click(function() {
+    $("#markdown-help-link").on('click', function() {
         if($("#markdown-help").is(":visible")) {
             $("#markdown-help").slideUp();
             $("#markdown-help-link").text("formatting help");
@@ -242,7 +242,7 @@ $().ready(function(){
         setAddButtonState(haveAll);
     });
 
-    $("#edit-save").click(function(){
+    $("#edit-save").on('click', function(){
         // double check that we have everything.
         if (haveAllUserInput() == false) {
             showUserError('A required field is missing');
@@ -252,14 +252,14 @@ $().ready(function(){
         // don't allow submission of album tag in the artist field
         if($("#track-artist").val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
             showUserError('Album tag is invalid');
-            $("#track-artist").focus();
+            $("#track-artist").trigger('focus');
             return;
         }
 
         // check that the timestamp, if any, is valid
         if($(".fxtime").is(":invalid")) {
             showUserError('Time is outside show start/end times');
-            $(".fxtime").focus();
+            $(".fxtime").trigger('focus');
             return;
         }
 
@@ -338,7 +338,7 @@ $().ready(function(){
         });
     });
 
-    $("#edit-delete").click(function(){
+    $("#edit-delete").on('click', function(){
         if(!confirm("Delete this item?"))
             return;
 
@@ -370,7 +370,7 @@ $().ready(function(){
         });
     });
 
-    $("#edit-cancel").click(function(){
+    $("#edit-cancel").on('click', function(){
         location.href = "?action=" + $("#track-action").val() +
             "&playlist=" + $("#track-playlist").val();
     });
@@ -567,7 +567,7 @@ $().ready(function(){
 
                 if(meta.runsover) {
                     $("#extend-show").show();
-                    $("#extend-time").focus();
+                    $("#extend-time").trigger('focus');
                 }
             },
             error: function (jqXHR, textStatus, errorThrown) {
@@ -579,7 +579,7 @@ $().ready(function(){
         });
     }
 
-    $(".track-submit").click(function(e) {
+    $(".track-submit").on('click', function(e) {
         // double check that we have everything.
         if (haveAllUserInput() == false) {
             showUserError('A required field is missing');
@@ -589,14 +589,14 @@ $().ready(function(){
         // don't allow submission of album tag in the artist field
         if($("#track-artist").val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
             showUserError('Album tag is invalid');
-            $("#track-artist").focus();
+            $("#track-artist").trigger('focus');
             return;
         }
 
         // check that the timestamp, if any, is valid
         if($(".fxtime").is(":invalid")) {
             showUserError('Time is outside show start/end times');
-            $(".fxtime").focus();
+            $(".fxtime").trigger('focus');
             return;
         }
 
@@ -800,7 +800,7 @@ $().ready(function(){
         return hour + min + ampm;
     }
 
-    $(".zk-popup button#extend").click(function() {
+    $(".zk-popup button#extend").on('click', function() {
         var showTime = $("#show-time").val().split('-');
 
         var edate = new Date("2022-01-01T" +
@@ -849,12 +849,12 @@ $().ready(function(){
         });
     });
 
-    $(".zk-popup button").click(function() {
+    $(".zk-popup button").on('click', function() {
         $(".zk-popup").hide();
-        $("*[data-focus]").focus();
+        $("*[data-focus]").trigger('focus');
     });
 
-    $("div.toggle-time-entry").click(function() {
+    $("div.toggle-time-entry").on('click', function() {
         var timeEntry = $("#time-entry");
         if(timeEntry.hasClass('zk-hidden'))
             timeEntry.slideDown().removeClass('zk-hidden');
@@ -938,7 +938,7 @@ $().ready(function(){
 
                     if(meta.runsover) {
                         $("#extend-show").show();
-                        $("#extend-time").focus();
+                        $("#extend-time").trigger('focus');
                     }
                     break;
                 }
@@ -966,7 +966,7 @@ $().ready(function(){
 
             // drag loses the event handler in some cases
             // this ensures we always have exactly one handler bound
-            playable.off().click(function() {
+            playable.off().on('click', function() {
                 timestampTrack(highlight);
             });
         } else if(playable != null) {
@@ -990,10 +990,10 @@ $().ready(function(){
                     $(this).fxtime('val') &&
                     $('button.default:visible').is(':enabled')) {
                 // focus before click to trigger time validation
-                $('button.default:visible').focus().click();
+                $('button.default:visible').trigger('focus').trigger('click');
 
                 if(this.matches(":invalid"))
-                    this.focus();
+                    this.trigger('focus');
             }
         }).on('segblur', function(e) {
             if(e.detail.seg == 1) {
@@ -1038,5 +1038,5 @@ $().ready(function(){
         alert('Playlist URL copied to the clipboard!');
     });
 
-    $("*[data-focus]").focus();
+    $("*[data-focus]").trigger('focus');
 });

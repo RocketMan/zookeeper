@@ -120,7 +120,7 @@ $().ready(function() {
         var airname = $("#airname").val().trim();
         if(airname.length == 0 ||
                $("#airnames option[value='" + escQuote(airname) + "' i]").length == 0 && !confirm('Create new airname "' + airname + '"?')) {
-            $("#airname").val('').focus();
+            $("#airname").val('').trigger('focus');
             e.preventDefault();
             return;
         }
@@ -159,5 +159,5 @@ $().ready(function() {
         $(".file-area .success").text(this.files[0].name);
     });
 
-    $("input:invalid").first().focus();
+    $("input:invalid").first().trigger('focus');
 });
