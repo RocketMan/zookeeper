@@ -454,7 +454,7 @@ $().ready(function(){
                         var a = $("<a>", {
                             class: 'nav',
                             href: '#'
-                        }).text(cur).click((function(low) {
+                        }).text(cur).on('click', (function(low) {
                             return function() {
                                 loadLists(chunksize, low, deleted);
                                 return false;
@@ -502,7 +502,7 @@ $().ready(function(){
         var required = row.find("input:invalid");
         if(required.length > 0) {
             required.addClass("invalid-input");
-            required.first().focus();
+            required.first().trigger('focus');
             return;
         }
 
@@ -565,7 +565,7 @@ $().ready(function(){
         var required = row.find("input:invalid");
         if(required.length > 0) {
             required.addClass("invalid-input");
-            required.first().focus();
+            required.first().trigger('focus');
             return;
         }
 
@@ -628,7 +628,7 @@ $().ready(function(){
         var edit = makeEditRow();
         setEditRow(edit, data);
         row.replaceWith(edit);
-        edit.find("td input").first().focus();
+        edit.find("td input").first().trigger('focus');
         edit.find("button#save").on('click', function() {
             updatePlaylist($(this).closest('tr'));
         });
@@ -669,7 +669,7 @@ $().ready(function(){
         var edit = makeEditRow(true);
         setEditRow(edit, data);
         row.after(edit);
-        edit.find("td input.time#start").focus().select();
+        edit.find("td input.time#start").trigger('focus').select();
         edit.find("button#save").on('click', function() {
             newPlaylist($(this).closest('tr'));
         });
@@ -735,7 +735,7 @@ $().ready(function(){
             var edit = makeEditRow(true);
             setEditRow(edit, response.data);
             $(".active-grid tbody").prepend(edit);
-            edit.find("td input.time#start").focus().select();
+            edit.find("td input.time#start").trigger('focus').select();
             edit.find("button#save").on('click', function() {
                 newPlaylist($(this).closest('tr'));
             });
@@ -803,7 +803,7 @@ $().ready(function(){
         // prefill based on historical hint
         getHint(row);
         $(".active-grid tbody").prepend(row);
-        row.find("td input").first().focus();
+        row.find("td input").first().trigger('focus');
         row.find("button#save").on('click', function() {
             newPlaylist($(this).closest('tr'));
         });
@@ -841,11 +841,11 @@ $().ready(function(){
 
     // the following are for Edit Profile
 
-    $("#name").blur(function() {
-        $(this).val($(this).val().trim());
+    $("#name").on('blur', function() {
+        this.value = this.value.trim();
     });
 
-    $("#multi").click(function() {
+    $("#multi").on('click', function() {
         if($(this).is(':checked')) {
             $("#name").attr("disabled","disabled");
             $("#name").val($("#oldname").val());
@@ -862,5 +862,5 @@ $().ready(function(){
         }
     });
 
-    $("*[data-focus]").focus();
+    $("*[data-focus]").trigger('focus');
 });

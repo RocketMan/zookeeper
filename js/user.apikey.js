@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2021 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 function copyToClipboard(text) {
     var temp = $("<INPUT>");
@@ -31,16 +31,16 @@ function copyToClipboard(text) {
 }
 
 $().ready(function() {
-    $("INPUT:checkbox#all").click(function() {
+    $("INPUT:checkbox#all").on('click', function() {
         var all = $(this).is(":checked");
         $("INPUT:checkbox").prop('checked', all);
     });
-    $("A.copy").click(function() {
+    $("A.copy").on('click', function() {
         var key = $(this).closest("TR").children("TD.apikey").html();
         copyToClipboard(key);
         alert('Key copied to clipboard!');
     });
-    $("INPUT[name=deleteKey]").click(function(e) {
+    $("INPUT[name=deleteKey]").on('click', function(e) {
         if($("INPUT:checkbox:checked").length == 0 ||
            !confirm('Delete the selected keys?\n\nCAUTION: THIS CANNOT BE UNDONE.')) {
             return false;

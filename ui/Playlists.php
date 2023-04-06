@@ -688,7 +688,7 @@ class Playlists extends MenuItem {
     </div>
       <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     <?php ob_start([JSMin::class, 'minify']); ?>
-            $('input:radio[name="format"]').change(function() {
+            $('input:radio[name="format"]').on('change', function() {
                 if($(this).is(':checked') && $(this).val() == "json") {
                     $("#json-help").show();
                     $("#csv-help").hide();
@@ -698,8 +698,8 @@ class Playlists extends MenuItem {
                 }
             });
             $().ready(function() {
-                $("input[name='format']:eq(0)").click();
-                $("select[name='playlist']").focus();
+                $("input[name='format']:eq(0)").trigger('click');
+                $("select[name='playlist']").trigger('focus');
             });
     <?php ob_end_flush(); ?>
       // -->
