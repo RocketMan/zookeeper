@@ -205,11 +205,12 @@ class UIController implements IController {
   <?php UI::emitCSS('css/zoostyle.css'); ?>
   <?php UI::emitCSS(Engine::param('stylesheet')); ?>
   <?php UI::emitCSS('css/about.css'); ?>
-  <?php UI::emitJS('js/jquery.min.js'); ?>
-  <?php UI::emitJS('js/jquery.tablesorter.min.js'); ?>
 
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.css" />
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+
+  <?php UI::emitJS('js/jquery.tablesorter.min.js'); ?>
 
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $stationTitle; ?> Music Reviews" HREF="zkrss.php?feed=reviews">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $stationTitle; ?> Airplay Charts" HREF="zkrss.php?feed=charts">
