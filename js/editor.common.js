@@ -200,15 +200,13 @@ $().ready(function() {
 
     $("#comp").on('click', function(e) {
         var disabled = $(this).is(":checked");
-        $("INPUT[name=artist]").css("visibility", disabled?'hidden':'visible');
-        $("#lartist").css("visibility", disabled?'hidden':'visible');
-        disabled?$("INPUT[name=album]").trigger('focus'):$("INPUT[name=artist]").trigger('focus');
+        $("INPUT[name=artist], #lartist").css("visibility", disabled ? 'hidden' : 'visible');
+        $("INPUT[name=" + (disabled ? "album" : "artist") + "]").trigger('focus');
     });
 
     $("#location").on('change', function(e) {
         var storage = $("SELECT[name=location]").val() == 'G';
-        $("INPUT[name=bin]").css("visibility", storage?'visible':'hidden');
-        $("#lbin").css("visibility", storage?'visible':'hidden');
+        $("INPUT[name=bin], #lbin").css("visibility", storage ? 'visible' : 'hidden');
         if(storage)
             $("INPUT[name=bin]").trigger('focus');
     });
