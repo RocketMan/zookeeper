@@ -40,7 +40,7 @@ $().ready(function(){
                 let excludeDay = !goodDays.includes(day);
                 return excludeDay;
             });
-            excludeDays.unbind('click').addClass(['ui-datepicker-unselectable', 'ui-state-disabled']);
+            excludeDays.off('click').addClass(['ui-datepicker-unselectable', 'ui-state-disabled']);
         });
     }
 

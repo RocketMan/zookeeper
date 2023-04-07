@@ -49,7 +49,7 @@ $().ready(function() {
             return;
 
         var hour = start.split(':')[0];
-        $(this).fxtime('seg', 3, hour < 11 || hour > 22 ? 'AM' : 'PM').select();
+        $(this).fxtime('seg', 3, hour < 11 || hour > 22 ? 'AM' : 'PM').trigger('select');
     });
 
     $("#description").on('click', function() {

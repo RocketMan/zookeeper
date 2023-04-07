@@ -452,11 +452,11 @@ $().ready(function(){
                 var targetId = target.data("id");
                 moveTrack(listId, sourceId, targetId, tr, si, rows);
             }
-            $(document).unbind("mousemove", move).unbind("mouseup", up);
+            $(document).off("mousemove", move).off("mouseup", up);
             b.removeClass("grabCursor").css("userSelect", "none");
             tr.removeClass("grabbed");
         }
-        $(document).mousemove(move).mouseup(up);
+        $(document).on('mousemove', move).on('mouseup', up);
     }
 
     function submitTrack(id) {
@@ -538,7 +538,7 @@ $().ready(function(){
                 case 0:
                     // playlist is in natural order; prepend
                     $(".playlistTable > tbody").prepend(meta.html);
-                    $(".playlistTable > tbody > tr").eq(0).find(".grab").mousedown(grabStart);
+                    $(".playlistTable > tbody > tr").eq(0).find(".grab").on('mousedown', grabStart);
                     break;
                 default:
                     // seq specifies the ordinal of the entry,
@@ -553,7 +553,7 @@ $().ready(function(){
                         rows.eq(index).before(meta.html);
                     else
                         rows.eq(rows.length - 1).after(meta.html);
-                    $(".playlistTable > tbody > tr").eq(index).find(".grab").mousedown(grabStart);
+                    $(".playlistTable > tbody > tr").eq(index).find(".grab").on('mousedown', grabStart);
                     break;
                 }
 
@@ -686,7 +686,7 @@ $().ready(function(){
         });
     }
 
-    $("#track-artist").focusout(function() {
+    $("#track-artist").on('focusout', function() {
         $("#error-msg").text('');
         $(this).removeClass('invalid-input');
         var artist = $(this).val();
@@ -776,13 +776,13 @@ $().ready(function(){
         tagId = 0;
     });
 
-    $(".playlistTable .grab").mousedown(grabStart);
+    $(".playlistTable .grab").on('mousedown', grabStart);
 
     // from user.apikey.js
     function copyToClipboard(text) {
         var temp = $("<input>");
         $("body").append(temp);
-        temp.val(text).select();
+        temp.val(text).trigger('select');
         document.execCommand("copy");
         temp.remove();
     }
@@ -932,7 +932,7 @@ $().ready(function(){
                     else
                         rows.eq(rows.length - 1).after(meta.html);
 
-                    $(".playlistTable > tbody > tr").eq(index).find(".grab").mousedown(grabStart);
+                    $(".playlistTable > tbody > tr").eq(index).find(".grab").on('mousedown', grabStart);
 
                     updatePlayable();
 
@@ -985,7 +985,7 @@ $().ready(function(){
     })).val('manual-entry');
 
     $(".fxtime").fxtime()
-        .keydown(function(e) {
+        .on('keydown', function(e) {
             if(e.which == 0x0d && // Enter key
                     $(this).fxtime('val') &&
                     $('button.default:visible').is(':enabled')) {

@@ -165,7 +165,7 @@ $().ready(function(){
             return;
 
         var hour = start.split(':')[0];
-        $(this).fxtime('seg', 3, hour < 11 || hour > 22 ? 'AM' : 'PM').select();
+        $(this).fxtime('seg', 3, hour < 11 || hour > 22 ? 'AM' : 'PM').trigger('select');
     }
 
     function makeEditRow(isNew = 0) {
@@ -669,7 +669,7 @@ $().ready(function(){
         var edit = makeEditRow(true);
         setEditRow(edit, data);
         row.after(edit);
-        edit.find("td input.time#start").trigger('focus').select();
+        edit.find("td input.time#start").trigger('focus').trigger('select');
         edit.find("button#save").on('click', function() {
             newPlaylist($(this).closest('tr'));
         });
@@ -735,7 +735,7 @@ $().ready(function(){
             var edit = makeEditRow(true);
             setEditRow(edit, response.data);
             $(".active-grid tbody").prepend(edit);
-            edit.find("td input.time#start").trigger('focus').select();
+            edit.find("td input.time#start").trigger('focus').trigger('select');
             edit.find("button#save").on('click', function() {
                 newPlaylist($(this).closest('tr'));
             });
@@ -847,10 +847,10 @@ $().ready(function(){
 
     $("#multi").on('click', function() {
         if($(this).is(':checked')) {
-            $("#name").attr("disabled","disabled");
+            $("#name").prop("disabled", true);
             $("#name").val($("#oldname").val());
         } else {
-            $("#name").removeAttr("disabled");
+            $("#name").prop("disabled", false);
         }
     });
 

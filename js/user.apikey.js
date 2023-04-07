@@ -25,7 +25,7 @@
 function copyToClipboard(text) {
     var temp = $("<INPUT>");
     $("BODY").append(temp);
-    temp.val(text).select();
+    temp.val(text).trigger('select');
     document.execCommand("copy");
     temp.remove();
 }
