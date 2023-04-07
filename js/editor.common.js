@@ -157,9 +157,9 @@ $().ready(function() {
     var focus, sel, count = 0, max = -1;
     const NONALNUM=/([^\p{L}\d'\u{2019}])/u;
     const STOPWORDS=/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i;
-    function zkAlpha(control) {
-        var val=control.val();
-        var track=control.data("zkalpha") === true;
+    $.fn.zkAlpha = function() {
+        var val=this.val();
+        var track=this.data("zkalpha") === true;
         var newVal=val.split(NONALNUM).map(function(word, index, array) {
             // words starting with caps are kept as-is
             if(word.search(/^\p{Lu}/u) > -1)
@@ -178,11 +178,12 @@ $().ready(function() {
         }).join('');
         if(track != true && newVal.substr(0, 4) == 'The ')
             newVal=newVal.substr(4)+', The';
-        control.val(newVal);
+        this.val(newVal);
+        return this;
     }
 
     $("INPUT[data-zkalpha]").on('change', function(e) {
-        zkAlpha($(this));
+        $(this).zkAlpha();
     });
     $("INPUT[data-track]").on('focus', function(e) {
         focus = $(this).data("track");
@@ -451,7 +452,7 @@ $().ready(function() {
                 response.tracks.forEach(function(track) {
                     var input = $("input[name=track" + track.seq + "]");
                     if(input.length) {
-                        input.val(track.title);
+                        input.val(track.title.toLowerCase()).zkAlpha();
                         $("input[name=trackUrl" + track.seq + "]").val(track.url ?? '');
                         if(track.artist)
                             $("input[name=artist" + track.seq + "]").val(track.artist);
@@ -460,8 +461,9 @@ $().ready(function() {
                             type: 'hidden',
                             name: 'track' + track.seq,
                             class: 'prefill',
-                            value: track.title
-                        })).append($("<input>", {
+                            value: track.title.toLowerCase(),
+                            'data-zkalpha': 'true'
+                        }).zkAlpha()).append($("<input>", {
                             type: 'hidden',
                             name: 'trackUrl' + track.seq,
                             class: 'prefill',
