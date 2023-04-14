@@ -60,7 +60,7 @@ $config = [
      * Set this value to 0 to enable guest accounts and tag printing for
      * all addresses.
      */
-    'local_subnet' => '2.2.2.',  // IP in subnet 2.2.2.x
+    'local_subnet' => '2.2.2.0/24',  // IP in subnet 2.2.2.x
 
     /**
      * URLs
@@ -158,8 +158,8 @@ $config = [
      * playlist is viewed.
      */
     'nme' => [
-//        ['name' => 'LID', 'args'  => 0],
-//        ['name' => 'PROMO','args' => 1],
+        ['name' => 'LID', 'args'  => 0],
+        ['name' => 'Promo','args' => 1],
 //        ['name' => 'PSA',  'args'  => 1]
      ],
 
