@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     // fetch the days with playlists for the selected month and enable the on the calendar.
@@ -40,7 +40,7 @@ $().ready(function(){
                 let excludeDay = !goodDays.includes(day);
                 return excludeDay;
             });
-            excludeDays.unbind('click').addClass(['ui-datepicker-unselectable', 'ui-state-disabled']);
+            excludeDays.off('click').addClass(['ui-datepicker-unselectable', 'ui-state-disabled']);
         });
     }
 
@@ -102,7 +102,7 @@ $().ready(function(){
         showButtonPanel: true,
         setDate: new Date(),
         dateFormat: 'yy-mm-dd',
-        yearRange: startYear + ':' + nowDate.getFullYear(),
+        yearRange: startYear + ':' + (nowDate.getMonth() == 11 /*Dec*/ ? '+1' : nowDate.getFullYear()),
         onChangeMonthYear: function(year, month) {
             setAvailableDays(`${year}-${month}-1`);
         },
@@ -174,7 +174,7 @@ $().ready(function(){
 
     // make 'Today' button load today's playlists
     $(document).on('click', "button.ui-datepicker-current", function(event) {
-        $(".ui-datepicker-today").click();
+        $(".ui-datepicker-today").trigger('click');
     });
 
     nowIso = `${nowDate.getFullYear()}-${("0" + (nowDate.getMonth()+1)).slice(-2)}-${("0" + nowDate.getDate()).slice(-2)}`;

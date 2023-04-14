@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -202,11 +202,11 @@ class NowAiringServer implements MessageComponentInterface {
             $query = $album ? [
                 "artist" => $artist,
                 "release_title" => $album,
-                "per_page" => 5
+                "per_page" => 40
             ] : [
                 "query" => $artist,
                 "type" => "artist",
-                "per_page" => 5
+                "per_page" => 1
             ];
 
             $response = $this->discogs->get('', [
@@ -217,6 +217,34 @@ class NowAiringServer implements MessageComponentInterface {
             $json = json_decode($page);
 
             if($json->results && ($result = $json->results[0])) {
+                if($album) foreach($json->results as $r) {
+                    if($r->master_id != $result->master_id)
+                        continue;
+
+                    // master releases are definitive
+                    if($r->type == "master") {
+                        $result = $r;
+                        break;
+                    }
+
+                    // ignore promos and limited/special editions
+                    if(array_reduce($r->format,
+                            function($carry, $item) {
+                                return $carry ||
+                                    $item == "Promo" ||
+                                    strpos($item, "Edition") !== false;
+                            }))
+                        continue;
+
+                    // prefer CD or vinyl
+                    switch($r->format[0]) {
+                    case "CD":
+                    case "Vinyl":
+                        $result = $r;
+                        break;
+                    }
+                }
+
                 if($result->cover_image &&
                         !preg_match('|/spacer.gif$|', $result->cover_image))
                     $imageUrl = $result->cover_image;

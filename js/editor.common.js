@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 /*
  * For the Albums and Labels tabs, implementations for the following
@@ -155,12 +155,11 @@ function onKeyDown(list, e) {
 
 $().ready(function() {
     var focus, sel, count = 0, max = -1;
-
-    const NONALNUM=/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/;
+    const NONALNUM=/([^\p{L}\d'\u{2019}])/u;
     const STOPWORDS=/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i;
-    function zkAlpha(control) {
-        var val=control.val();
-        var track=control.data("zkalpha") === true;
+    $.fn.zkAlpha = function() {
+        var val=this.val();
+        var track=this.data("zkalpha") === true;
         var newVal=val.split(NONALNUM).map(function(word, index, array) {
             // words starting with caps are kept as-is
             if(word.search(/^\p{Lu}/u) > -1)
@@ -169,7 +168,8 @@ $().ready(function() {
             // stopwords are not capitalized, unless first or last
             if(word.search(STOPWORDS) > -1 &&
                     index !== 0 &&
-                    index !== array.length - 1)
+                    index !== array.length - 1 &&
+                    array[index - 1].match(/\s/))
                 return word.toLowerCase();
 
             // otherwise, capitalize the word
@@ -178,16 +178,17 @@ $().ready(function() {
         }).join('');
         if(track != true && newVal.substr(0, 4) == 'The ')
             newVal=newVal.substr(4)+', The';
-        control.val(newVal);
+        this.val(newVal);
+        return this;
     }
 
-    $("INPUT[data-zkalpha]").change(function(e) {
-        zkAlpha($(this));
+    $("INPUT[data-zkalpha]").on('change', function(e) {
+        $(this).zkAlpha();
     });
-    $("INPUT[data-track]").focus(function(e) {
+    $("INPUT[data-track]").on('focus', function(e) {
         focus = $(this).data("track");
     });
-    $("INPUT[data-upper]").change(function(e) {
+    $("INPUT[data-upper]").on('change', function(e) {
         $(this).val($(this).val().toUpperCase());
     });
 
@@ -197,28 +198,26 @@ $().ready(function() {
         return i;
     }
 
-    $("#comp").click(function(e) {
+    $("#comp").on('click', function(e) {
         var disabled = $(this).is(":checked");
-        $("INPUT[name=artist]").css("visibility", disabled?'hidden':'visible');
-        $("#lartist").css("visibility", disabled?'hidden':'visible');
-        disabled?$("INPUT[name=album]").focus():$("INPUT[name=artist]").focus();
+        $("INPUT[name=artist], #lartist").css("visibility", disabled ? 'hidden' : 'visible');
+        $("INPUT[name=" + (disabled ? "album" : "artist") + "]").trigger('focus');
     });
 
-    $("#location").change(function(e) {
+    $("#location").on('change', function(e) {
         var storage = $("SELECT[name=location]").val() == 'G';
-        $("INPUT[name=bin]").css("visibility", storage?'visible':'hidden');
-        $("#lbin").css("visibility", storage?'visible':'hidden');
+        $("INPUT[name=bin], #lbin").css("visibility", storage ? 'visible' : 'hidden');
         if(storage)
-            $("INPUT[name=bin]").focus();
+            $("INPUT[name=bin]").trigger('focus');
     });
 
-    $("#foreign").click(function(e) {
+    $("#foreign").on('click', function(e) {
         var foreign = $("INPUT[name=foreign]").is(":checked");
         $("#lstate").css("visibility", foreign?'hidden':'visible');
         $("#lzip").html(foreign?'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country:':'Postal Code:');
     });
 
-    $("#insert").click(function(e) {
+    $("#insert").on('click', function(e) {
         var form = $('FORM');
         var coll = $('INPUT[name=coll]').val() == "on";
         var next = nextTrack();
@@ -244,10 +243,10 @@ $().ready(function() {
         if(coll) {
             $("INPUT[name='artist" + focus + "' i]").val("");
         }
-        $("INPUT[name='track" + focus + "' i]").focus();
+        $("INPUT[name='track" + focus + "' i]").trigger('focus');
     });
 
-    $("#delete").click(function(e) {
+    $("#delete").on('click', function(e) {
         if(confirm('Delete track ' + focus + '?')) {
             var coll = $('INPUT[name=coll]').val() == "on";
             var last = nextTrack()-1;
@@ -263,16 +262,16 @@ $().ready(function() {
             if(coll) {
                 $("INPUT[name='artist" + last + "' i]").val("");
             }
-            $("INPUT[name='track" + focus + "' i]").focus();
+            $("INPUT[name='track" + focus + "' i]").trigger('focus');
         }
     });
 
-    $("INPUT:checkbox#all").click(function() {
+    $("INPUT:checkbox#all").on('click', function() {
         var all = $(this).is(":checked");
         $("INPUT:checkbox").prop('checked', all);
     });
 
-    $("#print").click(function() {
+    $("#print").on('click', function() {
         var local = $("#local").val() == 1;
         if(local) {
             var selected = $("INPUT:checkbox:checked").length > 0;
@@ -283,21 +282,21 @@ $().ready(function() {
         return local && selected;
     });
 
-    $("#printToPDF").click(function() {
+    $("#printToPDF").on('click', function() {
         var selected = $("INPUT:checkbox:checked").length > 0;
         if(!selected)
             alert("Select at least one tag to proceed");
         return selected;
     });
 
-    $("#queueform-next").click(function() {
+    $("#queueform-next").on('click', function() {
         var selected = $("INPUT:radio:checked").length > 0;
         if(!selected)
             alert("Select a label format");
         return selected;
     });
 
-    $("#queueplace-next").click(function() {
+    $("#queueplace-next").on('click', function() {
         if(count == 0) {
             alert("Select at least one label to print");
             return false;
@@ -307,7 +306,7 @@ $().ready(function() {
         return true;
     });
 
-    $("A[data-label]").click(function() {
+    $("A[data-label]").on('click', function() {
         var elt = $(this);
         var idx = elt.data("label");
         if(max == -1) {
@@ -368,16 +367,16 @@ $().ready(function() {
         }
     });
 
-    $("#coll").click(function() {
+    $("#coll").on('click', function() {
         onSearchNow();
     });
 
     $("#bup").on('click', function() {
-        list.focus();
+        list.trigger('focus');
         return scrollUp();
     });
     $("#bdown").on('click', function() {
-        list.focus();
+        list.trigger('focus');
         return scrollDown();
     });
 
@@ -398,7 +397,7 @@ $().ready(function() {
         if(!printerId) {
             actionButton = this;
             $("#select-printer-dialog").show();
-            $("#select-printer").focus();
+            $("#select-printer").trigger('focus');
             e.preventDefault();
             return;
         }
@@ -406,16 +405,16 @@ $().ready(function() {
         queue.val(printerId);
     });
 
-    $(".zk-popup button").click(function() {
+    $(".zk-popup button").on('click', function() {
         if($(this).hasClass("default")) {
             var printerId =  $("#select-printer").val();
             sessionStorage.setItem($("#user-uuid").val(), printerId);
             $("#print-queue").val(printerId);
-            actionButton.click();
+            actionButton.trigger('click');
         }
 
         $(".zk-popup").hide();
-        $("*[data-focus]").focus();
+        $("*[data-focus]").trigger('focus');
     });
 
     var printStatus = $("#print-status");
@@ -432,5 +431,137 @@ $().ready(function() {
         });
     }
 
-    $("*[data-focus]").focus();
+    if($("input[name=seq]").val() == "tracks" &&
+            $("input[name=tdb]").length == 0 && mediaTypes) {
+        var url = "?action=editor&subaction=prefill&album=" +
+            encodeURIComponent($("input[name=album]").val()) +
+            "&medium=" + encodeURIComponent($("input[name=medium]").val());
+        if($("input[name=coll]").length == 0)
+            url += "&artist=" + encodeURIComponent($("input[name=artist]").val());
+
+        $.ajax({
+            dataType: 'json',
+            type: 'GET',
+            accept: 'application/json; charset=utf-8',
+            url: url
+        }).done(function(response) {
+            if(response.tracks) {
+                var form=$("form");
+                response.tracks.forEach(function(track) {
+                    var input = $("input[name=track" + track.seq + "]");
+                    if(input.length) {
+                        input.val(track.title.toLowerCase()).zkAlpha();
+                        $("input[name=trackUrl" + track.seq + "]").val(track.url ?? '');
+                        if(track.artist)
+                            $("input[name=artist" + track.seq + "]").val(track.artist);
+                    } else {
+                        form.append($("<input>", {
+                            type: 'hidden',
+                            name: 'track' + track.seq,
+                            class: 'prefill',
+                            value: track.title.toLowerCase(),
+                            'data-zkalpha': 'true'
+                        }).zkAlpha()).append($("<input>", {
+                            type: 'hidden',
+                            name: 'trackUrl' + track.seq,
+                            class: 'prefill',
+                            value: track.url ?? ''
+                        }));
+                        if(track.artist) {
+                            form.append($("<input>", {
+                                type: 'hidden',
+                                name: 'artist' + track.seq,
+                                class: 'prefill',
+                                value: track.artist
+                            }));
+                        }
+                    }
+                });
+
+                form.append($("<input>", {
+                    type: 'hidden',
+                    name: 'tdb',
+                    class: 'prefill',
+                    value: 'true'
+                })).append($("<input>", {
+                    type: 'hidden',
+                    name: 'infoUrl',
+                    class: 'prefill',
+                    value: response.infoUrl
+                }));
+                if(response.imageUrl) {
+                    form.append($("<input>", {
+                        type: 'hidden',
+                        name: 'imageUrl',
+                        class: 'prefill',
+                        value: response.imageUrl
+                    }));
+                }
+
+                $(".discogs-prefill-confirm").slideDown();
+                $(".clear-prefill").removeClass('zk-hidden');
+            } else {
+                $("#discogs-no-match-album").text($("input[name=album]").val());
+                $("#discogs-no-match-media").text(mediaTypes[$("input[name=medium]").val()]);
+                $(".discogs-no-match").slideDown();
+            }
+        });
+    }
+
+    $(".clear-prefill").on('click', function(e) {
+        e.preventDefault();
+        if(confirm("Clear all tracks?")) {
+            $("input[type=text], input[type=url]").val('');
+            $("input.prefill").remove();
+
+            $(".discogs-prefill-confirm").slideUp();
+            $(".clear-prefill").addClass('zk-hidden');
+
+            $("*[data-focus]").trigger('focus');
+        }
+    });
+
+    $(".discogs-prefill").on('click', function(e) {
+        e.preventDefault();
+        var url = "?action=editor&subaction=prefill&album=" +
+            encodeURIComponent($("input[name=album]").val()) +
+            "&medium=" + encodeURIComponent($("input[name=medium]").val());
+        if($("input[name=coll]").length == 0)
+            url += "&artist=" + encodeURIComponent($("input[name=artist]").val());
+
+        $.ajax({
+            dataType: 'json',
+            type: 'GET',
+            accept: 'application/json; charset=utf-8',
+            url: url
+        }).done(function(response) {
+            var state = 0; // bit 0 = match, bit 1 = set, bit 2 = mismatch
+            if(response.tracks) {
+                state = 0x1;
+                response.tracks.forEach(function(track) {
+                    if(track.url) {
+                        var trackurl = $("input[name=trackUrl" + track.seq + "]");
+                        if(!trackurl.val()) {
+                            if($("input[name=track" + track.seq + "]").val().substring(0, 3) == track.title.substring(0, 3)) {
+                                trackurl.val(track.url);
+                                state |= 0x2;
+                            } else
+                                state |= 0x4;
+                        }
+                    }
+                });
+            }
+
+            // display alert after fields have populated
+            setTimeout(function() {
+                alert(state ?
+                  (/*state & 0x4 ? "Check Track Names and try again" :*/
+                   (state & 0x2 ? "Updated URLs.  Press 'Done!' to save." :
+                    "No new URLs found")) :
+                      "Album not found in Discogs");
+            }, 100);
+        });
+    });
+
+    $("*[data-focus]").trigger('focus');
 });

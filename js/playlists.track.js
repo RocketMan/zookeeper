@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     const NME_ENTRY='nme-entry';
@@ -62,11 +62,11 @@ $().ready(function(){
         var mode = $("#track-type-pick").val();
         switch(mode) {
         case 'manual-entry':
-            $('#track-artist').focus();
+            $('#track-artist').trigger('focus');
             break;
         case 'comment-entry':
             $("#remaining").html("(0/" + $("#comment-max").val() + " characters)");
-            $('#comment-data').focus();
+            $('#comment-data').trigger('focus');
             break;
         case 'set-separator':
             setAddButtonState(true);
@@ -189,7 +189,7 @@ $().ready(function(){
         clearUserInput(true);
         $("#track-entry > div").addClass("zk-hidden");
         $("#" + newType).removeClass("zk-hidden");
-        $("#" + newType + " *[data-focus]").focus();
+        $("#" + newType + " *[data-focus]").trigger('focus');
         if (newType == NME_ENTRY) {
             var option = $("option:selected", this);
             var argCnt = $(option).data("args");
@@ -226,7 +226,7 @@ $().ready(function(){
         setAddButtonState(len > 0);
     });
 
-    $("#markdown-help-link").click(function() {
+    $("#markdown-help-link").on('click', function() {
         if($("#markdown-help").is(":visible")) {
             $("#markdown-help").slideUp();
             $("#markdown-help-link").text("formatting help");
@@ -242,7 +242,7 @@ $().ready(function(){
         setAddButtonState(haveAll);
     });
 
-    $("#edit-save").click(function(){
+    $("#edit-save").on('click', function(){
         // double check that we have everything.
         if (haveAllUserInput() == false) {
             showUserError('A required field is missing');
@@ -252,14 +252,14 @@ $().ready(function(){
         // don't allow submission of album tag in the artist field
         if($("#track-artist").val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
             showUserError('Album tag is invalid');
-            $("#track-artist").focus();
+            $("#track-artist").trigger('focus');
             return;
         }
 
         // check that the timestamp, if any, is valid
         if($(".fxtime").is(":invalid")) {
             showUserError('Time is outside show start/end times');
-            $(".fxtime").focus();
+            $(".fxtime").trigger('focus');
             return;
         }
 
@@ -338,7 +338,7 @@ $().ready(function(){
         });
     });
 
-    $("#edit-delete").click(function(){
+    $("#edit-delete").on('click', function(){
         if(!confirm("Delete this item?"))
             return;
 
@@ -370,7 +370,7 @@ $().ready(function(){
         });
     });
 
-    $("#edit-cancel").click(function(){
+    $("#edit-cancel").on('click', function(){
         location.href = "?action=" + $("#track-action").val() +
             "&playlist=" + $("#track-playlist").val();
     });
@@ -452,11 +452,11 @@ $().ready(function(){
                 var targetId = target.data("id");
                 moveTrack(listId, sourceId, targetId, tr, si, rows);
             }
-            $(document).unbind("mousemove", move).unbind("mouseup", up);
+            $(document).off("mousemove", move).off("mouseup", up);
             b.removeClass("grabCursor").css("userSelect", "none");
             tr.removeClass("grabbed");
         }
-        $(document).mousemove(move).mouseup(up);
+        $(document).on('mousemove', move).on('mouseup', up);
     }
 
     function submitTrack(id) {
@@ -538,7 +538,7 @@ $().ready(function(){
                 case 0:
                     // playlist is in natural order; prepend
                     $(".playlistTable > tbody").prepend(meta.html);
-                    $(".playlistTable > tbody > tr").eq(0).find(".grab").mousedown(grabStart);
+                    $(".playlistTable > tbody > tr").eq(0).find(".grab").on('mousedown', grabStart);
                     break;
                 default:
                     // seq specifies the ordinal of the entry,
@@ -553,7 +553,7 @@ $().ready(function(){
                         rows.eq(index).before(meta.html);
                     else
                         rows.eq(rows.length - 1).after(meta.html);
-                    $(".playlistTable > tbody > tr").eq(index).find(".grab").mousedown(grabStart);
+                    $(".playlistTable > tbody > tr").eq(index).find(".grab").on('mousedown', grabStart);
                     break;
                 }
 
@@ -567,7 +567,7 @@ $().ready(function(){
 
                 if(meta.runsover) {
                     $("#extend-show").show();
-                    $("#extend-time").focus();
+                    $("#extend-time").trigger('focus');
                 }
             },
             error: function (jqXHR, textStatus, errorThrown) {
@@ -579,7 +579,7 @@ $().ready(function(){
         });
     }
 
-    $(".track-submit").click(function(e) {
+    $(".track-submit").on('click', function(e) {
         // double check that we have everything.
         if (haveAllUserInput() == false) {
             showUserError('A required field is missing');
@@ -589,14 +589,14 @@ $().ready(function(){
         // don't allow submission of album tag in the artist field
         if($("#track-artist").val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
             showUserError('Album tag is invalid');
-            $("#track-artist").focus();
+            $("#track-artist").trigger('focus');
             return;
         }
 
         // check that the timestamp, if any, is valid
         if($(".fxtime").is(":invalid")) {
             showUserError('Time is outside show start/end times');
-            $(".fxtime").focus();
+            $(".fxtime").trigger('focus');
             return;
         }
 
@@ -686,7 +686,7 @@ $().ready(function(){
         });
     }
 
-    $("#track-artist").focusout(function() {
+    $("#track-artist").on('focusout', function() {
         $("#error-msg").text('');
         $(this).removeClass('invalid-input');
         var artist = $(this).val();
@@ -718,7 +718,7 @@ $().ready(function(){
     }).on('click', function() {
         $(this).autocomplete('search', this.value);
     }).autocomplete({
-        minLength: 3,
+        minLength: 1,
         source: function(rq, rs) {
             var artist = rq.term;
 
@@ -776,13 +776,13 @@ $().ready(function(){
         tagId = 0;
     });
 
-    $(".playlistTable .grab").mousedown(grabStart);
+    $(".playlistTable .grab").on('mousedown', grabStart);
 
     // from user.apikey.js
     function copyToClipboard(text) {
         var temp = $("<input>");
         $("body").append(temp);
-        temp.val(text).select();
+        temp.val(text).trigger('select');
         document.execCommand("copy");
         temp.remove();
     }
@@ -800,7 +800,7 @@ $().ready(function(){
         return hour + min + ampm;
     }
 
-    $(".zk-popup button#extend").click(function() {
+    $(".zk-popup button#extend").on('click', function() {
         var showTime = $("#show-time").val().split('-');
 
         var edate = new Date("2022-01-01T" +
@@ -849,12 +849,12 @@ $().ready(function(){
         });
     });
 
-    $(".zk-popup button").click(function() {
+    $(".zk-popup button").on('click', function() {
         $(".zk-popup").hide();
-        $("*[data-focus]").focus();
+        $("*[data-focus]").trigger('focus');
     });
 
-    $("div.toggle-time-entry").click(function() {
+    $("div.toggle-time-entry").on('click', function() {
         var timeEntry = $("#time-entry");
         if(timeEntry.hasClass('zk-hidden'))
             timeEntry.slideDown().removeClass('zk-hidden');
@@ -932,13 +932,13 @@ $().ready(function(){
                     else
                         rows.eq(rows.length - 1).after(meta.html);
 
-                    $(".playlistTable > tbody > tr").eq(index).find(".grab").mousedown(grabStart);
+                    $(".playlistTable > tbody > tr").eq(index).find(".grab").on('mousedown', grabStart);
 
                     updatePlayable();
 
                     if(meta.runsover) {
                         $("#extend-show").show();
-                        $("#extend-time").focus();
+                        $("#extend-time").trigger('focus');
                     }
                     break;
                 }
@@ -966,7 +966,7 @@ $().ready(function(){
 
             // drag loses the event handler in some cases
             // this ensures we always have exactly one handler bound
-            playable.off().click(function() {
+            playable.off().on('click', function() {
                 timestampTrack(highlight);
             });
         } else if(playable != null) {
@@ -985,15 +985,15 @@ $().ready(function(){
     })).val('manual-entry');
 
     $(".fxtime").fxtime()
-        .keydown(function(e) {
+        .on('keydown', function(e) {
             if(e.which == 0x0d && // Enter key
                     $(this).fxtime('val') &&
                     $('button.default:visible').is(':enabled')) {
                 // focus before click to trigger time validation
-                $('button.default:visible').focus().click();
+                $('button.default:visible').trigger('focus').trigger('click');
 
                 if(this.matches(":invalid"))
-                    this.focus();
+                    this.trigger('focus');
             }
         }).on('segblur', function(e) {
             if(e.detail.seg == 1) {
@@ -1038,5 +1038,5 @@ $().ready(function(){
         alert('Playlist URL copied to the clipboard!');
     });
 
-    $("*[data-focus]").focus();
+    $("*[data-focus]").trigger('focus');
 });

@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -187,6 +187,22 @@ class ArtworkImpl extends DBO implements IArtwork {
             substr($key, 0, 2) . '/' .
             substr($key, 2, 2) . '/' .
             substr($key, 4);
+    }
+
+    public function deleteAlbumArt($tag) {
+        $image = $this->getAlbumArt($tag);
+        if($image) {
+            $query = "DELETE FROM albummap, artwork USING albummap " .
+                     "LEFT JOIN artwork ON albummap.image_id = artwork.id " .
+                     "WHERE image_id = ?";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $image['image_id']);
+            if($stmt->execute()) {
+                $cacheDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
+                $path = $cacheDir . $this->getCachePath($image['image_uuid']);
+                unlink(realpath($path));
+            }
+        }
     }
 
     public function expireCache($days=10, $expireAlbums=false) {

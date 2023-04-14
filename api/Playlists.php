@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -434,7 +434,11 @@ class Playlists implements RequestHandlerInterface {
 
         if($dup) {
             // duplicate an existing playlist
-            $playlist = $papi->duplicatePlaylist($origin);
+            $fromTime = $show->metaInformation()->getOptional("fromtime");
+            if($fromTime && !preg_match('/^\d{4}(\-\d{4})?$/', $fromTime))
+                throw new \Exception("fromtime invalid");
+
+            $playlist = $papi->duplicatePlaylist($origin, $fromTime);
             if(!$playlist)
                 throw new \Exception("duplication failed");
 
@@ -666,6 +670,23 @@ class Playlists implements RequestHandlerInterface {
                 $entry->setLabel($albumrec[0]["name"]);
             }
         } catch(\Exception $e) {}
+
+        // validate required fields
+        $invalid = false;
+        switch($entry->getType()) {
+        case PlaylistEntry::TYPE_COMMENT:
+            $invalid = empty($entry->getComment());
+            break;
+        case PlaylistEntry::TYPE_LOG_EVENT:
+            $invalid = empty($entry->getLogEventType()) || empty($entry->getLogEventCode());
+            break;
+        case PlaylistEntry::TYPE_SPIN:
+            $invalid = empty($entry->getArtist()) || empty($entry->getTrack());
+            break;
+        }
+
+        if($invalid)
+            throw new \InvalidArgumentException("missing required field");
 
         $autoTimestamp = false;
         $created = $entry->getCreated();

@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 // can be overridden by request params 'q' and 'chunksize', respectively
 var maxresults = 50, chunksize = 15;
@@ -58,7 +58,7 @@ function header(title, sortable) {
         var a = $("<A>", {
             class: 'nav',
             href: '#',
-        }).append(title).click(function() {
+        }).append(title).on('click', function() {
             $("#sortBy").val(action);
             search(maxresults, 0);
             return false;
@@ -105,7 +105,7 @@ function emitMore(table, data) {
                     var a = $("<a>", {
                         class: 'nav',
                         href: '#'
-                    }).text(cur).click((function(low) {
+                    }).text(cur).on('click', (function(low) {
                         return function() {
                             search(chunksize, low);
                             return false;
@@ -242,14 +242,14 @@ var lists = {
             attrs.tracks.forEach(function(track) {
                 tr = $("<TR>");
                 var td = $("<TD>");
-                var artist = track.artist != null?track.artist:getArtist(attrs);
+                var artist = track.artist != null?track.artist:attrs.artist;
                 td.append(
                     $("<A href='#" + encobj({
                         type: 'artists',
                         key: artist,
                         sortBy: 'Artist',
                         form: true
-                    }, true) + "'>").append(artist));
+                    }, true) + "'>").append(htmlify(artist)));
                 tr.append(td);
                 tr.append($("<TD>").html($("<A>", {
                     href: "?s=byAlbumKey&n=" +
@@ -414,7 +414,7 @@ function search(size, offset) {
                 if($("#m").is(":checked"))
                     results.append('Hint: Uncheck "Exact match" box to broaden search.');
             }
-            $("#n").focus();
+            $("#n").trigger('focus');
         },
         error: function(jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
@@ -495,5 +495,5 @@ $().ready(function() {
     } else if($("#n").val().length > 0)
         $("FORM#search").submit();
 
-    $("#n").focus();
+    $("#n").trigger('focus');
 });

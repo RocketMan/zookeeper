@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -73,15 +73,15 @@ class Albums implements RequestHandlerInterface {
         "match(track)" =>         [ ILibrary::TRACK_NAME, "tracks" ],
     ];
 
-    private const NONALNUM="/([\.,!\?&~ \-\+=\{\[\(\|\}\]\)])/";
+    private const NONALNUM='/([^\p{L}\d\'\x{2019}])/u';
     private const STOPWORDS="/^(a|an|and|at|but|by|for|in|nor|of|on|or|out|so|the|to|up|yet)$/i";
 
     /**
      * This is the PHP equivalent of the editor.common.js zkAlpha function
      */
     public static function zkAlpha($val, $isTrack=false) {
-        $words = preg_split(self::NONALNUM, $val);
-        $newVal = join(" ", array_map(function(int $index, string $word) use($words) {
+        $words = preg_split(self::NONALNUM, $val, 0, PREG_SPLIT_DELIM_CAPTURE);
+        $newVal = join('', array_map(function(int $index, string $word) use($words) {
             // words starting with caps are kept as-is
             if(preg_match('/^\p{Lu}/u', $word))
                 return $word;
@@ -89,7 +89,8 @@ class Albums implements RequestHandlerInterface {
             // stopwords are not capitalized, unless first or last
             if(preg_match(self::STOPWORDS, $word) &&
                         $index != 0 &&
-                        $index != sizeof($words) - 1) {
+                        $index != sizeof($words) - 1 &&
+                        preg_match('/\s/', $words[$index - 1])) {
                 return mb_strtolower($word);
             }
 

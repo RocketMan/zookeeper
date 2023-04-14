@@ -81,6 +81,25 @@ class ZootopiaListener {
 
     private const TIDY_START = 3; // number of minutes past top of hour to round start time
 
+    /**
+     * test zootopia artist name against zookeeper artist
+     *
+     * this does PlaylistEntry::swapNames on the zookeeper artist name to
+     * restore it to original form for the comparison, but in addition,
+     * it also matches zookeeper albums keyed with 'and', as is often
+     * the case, against zootopia artist entries that use '&'.
+     *
+     * @param $albumArtist zookeeper artist name
+     * @param $trackArtist zootopia artist name
+     * @return true if match, false otherwise
+     */
+    protected static function testArtist($albumArtist, $trackArtist) {
+        return !strcasecmp($swap = PlaylistEntry::swapNames($albumArtist), $trackArtist) ||
+            strpos($trackArtist, '&') !== false &&
+            ($i = stripos($swap, ' and ')) !== false &&
+            !strcasecmp(substr_replace($swap, '&', $i + 1, 3), $trackArtist);
+    }
+
     public function __construct(\React\EventLoop\LoopInterface $loop) {
         $this->loop = $loop;
         $this->subscriber = new \Ratchet\Client\Connector($loop);
@@ -307,13 +326,13 @@ class ZootopiaListener {
                 foreach($json->data as $data) {
                     if($data->attributes->coll) {
                         foreach($data->attributes->tracks as $track) {
-                            if(!strcasecmp(PlaylistEntry::swapNames($track->artist), $event["track_artist"])) {
+                            if(self::testArtist($track->artist, $event["track_artist"])) {
                                 $album = $data;
                                 $album->attributes->artist = $track->artist;
                                 break 2;
                             }
                         }
-                    } else if(!strcasecmp(PlaylistEntry::swapNames($data->attributes->artist), $event["track_artist"])) {
+                    } else if(self::testArtist($data->attributes->artist, $event["track_artist"])) {
                         $album = $data;
                         break;
                     }

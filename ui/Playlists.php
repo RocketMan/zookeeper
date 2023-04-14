@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -688,7 +688,7 @@ class Playlists extends MenuItem {
     </div>
       <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     <?php ob_start([JSMin::class, 'minify']); ?>
-            $('input:radio[name="format"]').change(function() {
+            $('input:radio[name="format"]').on('change', function() {
                 if($(this).is(':checked') && $(this).val() == "json") {
                     $("#json-help").show();
                     $("#csv-help").hide();
@@ -698,8 +698,8 @@ class Playlists extends MenuItem {
                 }
             });
             $().ready(function() {
-                $("input[name='format']:eq(0)").click();
-                $("select[name='playlist']").focus();
+                $("input[name='format']:eq(0)").trigger('click');
+                $("select[name='playlist']").trigger('focus');
             });
     <?php ob_end_flush(); ?>
       // -->
@@ -803,7 +803,7 @@ class Playlists extends MenuItem {
         </div>
         <div>
           <label>Show Name:</label>
-          <input type='text' name='description' value='<?php echo stripslashes($description);?>' maxlength='<?php echo IPlaylist::MAX_DESCRIPTION_LENGTH;?>' required>
+          <input type='text' id='description' name='description' value='<?php echo stripslashes($description);?>' maxlength='<?php echo IPlaylist::MAX_DESCRIPTION_LENGTH;?>' required>
         </div>
         <div>
           <label>DJ:</label>

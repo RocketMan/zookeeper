@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -102,6 +102,21 @@ class LibraryImpl extends DBO implements ILibrary {
                   "WHERE MATCH (track) AGAINST(? IN BOOLEAN MODE) ".
                   "AND location != 'U' " .
                   "ORDER BY artist, album, t.tag" ]
+    ];
+
+    /**
+     * characters in each element are coalesced for searching
+     */
+    private static $coalesce = [
+        "'\u{0060}\u{00b4}\u{2018}\u{2019}", // single quotation mark
+        "\"\u{201c}\u{201d}",                // double quotation mark
+    ];
+
+    /*
+     * words to exclude from a full-text search
+     */
+    private static $ftExclude = [
+        "a", "an", "and", "or", "the"
     ];
 
     private static function orderBy($sortBy) {
@@ -277,7 +292,41 @@ class LibraryImpl extends DBO implements ILibrary {
             return;
         }
       
+        // Collation for utf8mb4 coalesces related characters, such as
+        // 'a', 'a-umlaut', 'a-acute', and so on, for searching.  However,
+        // it does not coalese various punctuation, such as apostrophe
+        // and right single quotation mark U+2019 (’).
+        //
+        // If the search string includes any such punctuation, we will
+        // massage the query to match related characters as well.
+        //
+        // We employ MySQL RLIKE (REGEXP) for this purpose; however,
+        // it is expensive; thus, we let LIKE do the heavy lifting in
+        // a derived table and then run RLIKE over the result.
+        $cchars = implode(self::$coalesce);
+        if(preg_match("/[$cchars]/u", $search) &&
+                preg_match('/(\w+) LIKE /', $query, $matches)) {
+            $key = $matches[1];
+
+            $rlike = preg_quote($search);
+            foreach(self::$coalesce as $c) {
+                // pre-MySQL 8, RLIKE is not unicode-aware, so do bytewise test
+                $rlike = preg_replace("/[$c]/u", "(" .
+                    implode("|", preg_split("//u", $c, 0, PREG_SPLIT_NO_EMPTY)) .
+                    ")", $rlike);
+            }
+
+            if(substr($rlike, -1) == "%")
+                $rlike = substr($rlike, 0, -1);
+
+            $search = preg_replace("/[$cchars]/u", "_", $search);
+        } else
+            $rlike = null;
+
         if($count > 0) {
+            if($rlike)
+                $query = "SELECT * FROM ( $query ) x WHERE $key RLIKE ?";
+
             $stmt = $this->prepare($query);
             switch($bindType) {
             case 1:
@@ -295,6 +344,10 @@ class LibraryImpl extends DBO implements ILibrary {
                 $stmt->bindValue(4, (int)$count, \PDO::PARAM_INT);
                 break;
             }
+
+            if($rlike)
+                $stmt->bindValue($bindType + 1, $rlike);
+
             $stmt->execute();
 
             // copy the requested rows
@@ -322,8 +375,13 @@ class LibraryImpl extends DBO implements ILibrary {
                 $query = "SELECT COUNT(*) FROM (" . $query . ") x";
             } else {
                 $from = strpos($query, "FROM");
-                $query = "SELECT COUNT(*) " . substr($query, $from);
+                $query = $rlike ? "SELECT COUNT(*) FROM ( SELECT $key " .
+                        substr($query, $from) . " ) x" :
+                        "SELECT COUNT(*) " . substr($query, $from);
             }
+
+            if($rlike)
+                $query .= " WHERE $key RLIKE ?";
 
             $stmt = $this->prepare($query);
             switch($bindType) {
@@ -336,6 +394,9 @@ class LibraryImpl extends DBO implements ILibrary {
                 $stmt->bindValue(2, $search);
                 break;
             }
+
+            if($rlike)
+                $stmt->bindValue($bindType < 4 ? 2 : 3, $rlike);
 
             $retVal = $stmt->execute() && ($row = $stmt->fetch())?$row[0]:-1;
         }
@@ -785,11 +846,6 @@ class LibraryImpl extends DBO implements ILibrary {
         return $result;
     }
 
-    public static function ftfilter($elt) {
-       return strlen($elt) > 1 &&
-          $elt != "an" && $elt != "and" && $elt != "or" && $elt != "the";
-    }
-
     public function searchFullText($type, $key, $size, $offset) {
         $retVal = array();
         $loggedIn = Engine::session()->isAuth("u");
@@ -802,8 +858,10 @@ class LibraryImpl extends DBO implements ILibrary {
         if(substr($key, 0, 2) == "\\\"") {
              $search = $key;
         } else {
-             $words = array_filter(explode(" ", $key), array(__CLASS__, "ftfilter"));
-             $search = "+".implode(" +",$words);
+             $words = array_filter(preg_split('/\W+/u', $key, 0, PREG_SPLIT_NO_EMPTY), function($word) {
+                 return !in_array($word, self::$ftExclude);
+             });
+             $search = "+" . implode(" +", $words);
         }
     
         // JM 2010-09-26 remove semicolons to thwart injection attacks

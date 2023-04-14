@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     const intl = new Date().toLocaleTimeString().match(/am|pm/i) == null;
@@ -28,6 +28,7 @@ $().ready(function(){
     var mobile = window.innerWidth < 1024; // match @media min-width in css
     var maxresults = mobile ? 7 : 10, chunksize = mobile ? 7 : 10;
     var editing = null;
+    var shownames = null;
 
     /**
      * @param date string formatted 'yyyy-mm-dd'
@@ -164,7 +165,7 @@ $().ready(function(){
             return;
 
         var hour = start.split(':')[0];
-        $(this).fxtime('seg', 3, hour < 11 || hour > 22 ? 'AM' : 'PM').select();
+        $(this).fxtime('seg', 3, hour < 11 || hour > 22 ? 'AM' : 'PM').trigger('select');
     }
 
     function makeEditRow(isNew = 0) {
@@ -174,10 +175,12 @@ $().ready(function(){
         tr.append($("<td>"));
         tr.append($("<td>").append($("<input>", {
             class: 'description',
+            pattern: '.*\\S.*',
             maxlength: $("#max-description-length").val()
         })));
         tr.append($("<td>").append($("<input>", {
             class: 'airname',
+            pattern: '.*\\S.*',
             maxlength: $("#max-airname-length").val()
         })));
         tr.append($("<td>").append($("<input>", {
@@ -219,6 +222,47 @@ $().ready(function(){
         }).on('click', function() {
             $(this).autocomplete('search', '');
         });
+        tr.find(".description").autocomplete({
+            minLength: 0,
+            source: function(rq, rs) {
+                var term = rq.term.toLowerCase();
+                if(shownames) {
+                    rs(shownames.filter(function(show) {
+                        return show.name.toLowerCase().startsWith(term);
+                    }).map(show => show.name));
+                    return;
+                }
+
+                $.ajax({
+                    type: 'GET',
+                    accept: 'application/json; charset=utf-8',
+                    url: 'api/v1/playlist?filter[user]=self&fields[show]=name,airname,rebroadcast',
+                }).done(function(response) {
+                    shownames = response.data.map(show => show.attributes)
+                        .sort((a, b) => Intl.Collator().compare(a.name, b.name))
+                        .filter(function(show, pos, shows) {
+                            return !pos ||
+                                show.name.localeCompare(shows[pos - 1].name,
+                                                   undefined,
+                                                   { sensitivity: 'base' });
+                        })
+                        .filter(function(show) {
+                            return !show.rebroadcast;
+                        });
+
+                    rs(shownames.filter(function(show) {
+                        return show.name.toLowerCase().startsWith(term);
+                    }).map(show => show.name));
+                });
+            },
+            select: function(event, ui) {
+                var name = ui.item.value;
+                var show = shownames.find(show => show.name == name);
+                $("input.airname").val(show.airname);
+            }
+        }).on('click', function() {
+            $(this).autocomplete('search', '');
+        });
         return tr;
     }
 
@@ -245,8 +289,8 @@ $().ready(function(){
         return {
             id: row.data('id'),
             attributes: {
-                name: row.find('input.description').val(),
-                airname: airname.val(),
+                name: row.find('input.description').val().trim(),
+                airname: airname.val().trim(),
                 date: date.toISOString().split('T')[0],
                 time: start + '-' + end
             }
@@ -410,7 +454,7 @@ $().ready(function(){
                         var a = $("<a>", {
                             class: 'nav',
                             href: '#'
-                        }).text(cur).click((function(low) {
+                        }).text(cur).on('click', (function(low) {
                             return function() {
                                 loadLists(chunksize, low, deleted);
                                 return false;
@@ -434,7 +478,7 @@ $().ready(function(){
         if(input.prop('disabled'))
             return true;
 
-        var airname = input.val();
+        var airname = input.val().trim();
         return $(".airnames option[value='" + escQuote(airname) + "' i]").length > 0 || confirm('Create new air name "' + airname + '"?');
     }
 
@@ -458,7 +502,7 @@ $().ready(function(){
         var required = row.find("input:invalid");
         if(required.length > 0) {
             required.addClass("invalid-input");
-            required.first().focus();
+            required.first().trigger('focus');
             return;
         }
 
@@ -521,7 +565,7 @@ $().ready(function(){
         var required = row.find("input:invalid");
         if(required.length > 0) {
             required.addClass("invalid-input");
-            required.first().focus();
+            required.first().trigger('focus');
             return;
         }
 
@@ -554,7 +598,7 @@ $().ready(function(){
 
             var nrow = makeRow(list);
             row.replaceWith(nrow);
-            editing = null;
+            editing = shownames = null;
         }).fail(function (jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
             if (json && json.errors) {
@@ -584,7 +628,7 @@ $().ready(function(){
         var edit = makeEditRow();
         setEditRow(edit, data);
         row.replaceWith(edit);
-        edit.find("td input").first().focus();
+        edit.find("td input").first().trigger('focus');
         edit.find("button#save").on('click', function() {
             updatePlaylist($(this).closest('tr'));
         });
@@ -625,7 +669,7 @@ $().ready(function(){
         var edit = makeEditRow(true);
         setEditRow(edit, data);
         row.after(edit);
-        edit.find("td input.time#start").focus().select();
+        edit.find("td input.time#start").trigger('focus').trigger('select');
         edit.find("button#save").on('click', function() {
             newPlaylist($(this).closest('tr'));
         });
@@ -691,7 +735,7 @@ $().ready(function(){
             var edit = makeEditRow(true);
             setEditRow(edit, response.data);
             $(".active-grid tbody").prepend(edit);
-            edit.find("td input.time#start").focus().select();
+            edit.find("td input.time#start").trigger('focus').trigger('select');
             edit.find("button#save").on('click', function() {
                 newPlaylist($(this).closest('tr'));
             });
@@ -759,7 +803,7 @@ $().ready(function(){
         // prefill based on historical hint
         getHint(row);
         $(".active-grid tbody").prepend(row);
-        row.find("td input").first().focus();
+        row.find("td input").first().trigger('focus');
         row.find("button#save").on('click', function() {
             newPlaylist($(this).closest('tr'));
         });
@@ -797,16 +841,16 @@ $().ready(function(){
 
     // the following are for Edit Profile
 
-    $("#name").blur(function() {
-        $(this).val($(this).val().trim());
+    $("#name").on('blur', function() {
+        this.value = this.value.trim();
     });
 
-    $("#multi").click(function() {
+    $("#multi").on('click', function() {
         if($(this).is(':checked')) {
-            $("#name").attr("disabled","disabled");
+            $("#name").prop("disabled", true);
             $("#name").val($("#oldname").val());
         } else {
-            $("#name").removeAttr("disabled");
+            $("#name").prop("disabled", false);
         }
     });
 
@@ -818,5 +862,5 @@ $().ready(function(){
         }
     });
 
-    $("*[data-focus]").focus();
+    $("*[data-focus]").trigger('focus');
 });
