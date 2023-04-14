@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 function changeSel(index) {
     $("#selpubkey").val(items[index].id);
@@ -111,12 +111,12 @@ $().ready(function() {
     var name = $("#req-name").val();
     if(seltag > 0) {
         getLabels('filter[album.id]=' + encodeURIComponent(seltag));
-        $("#list").focus();
+        $("#list").trigger('focus');
     } else if(name.length > 0) {
         getLabels('filter[name]=' + encodeURIComponent(name));
-        $("#list").focus();
+        $("#list").trigger('focus');
     } else {
         getLabels('page[before]=');
-        $("#search").focus();
+        $("#search").trigger('focus');
     }
 });

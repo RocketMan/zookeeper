@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     function localTime(date) {
@@ -213,7 +213,7 @@ $().ready(function(){
         };
     };
 
-    $("#date").change(function() {
+    $("#date").on('change', function() {
         var date = $(this).val();
         var url = '?subaction=times&date=' + encodeURIComponent(date);
 
@@ -229,12 +229,12 @@ $().ready(function(){
         });
     });
 
-    $("#time").change(function() {
+    $("#time").on('change', function() {
         var time = $(this).val();
         populateCards(true, time == 'now' ? null : ($("#date").val() + " " + time));
     });
 
-    $("#more").click(function() {
+    $("#more").on('click', function() {
         var last = $(".card").last().data("time");
         if(last)
             populateCards(false, last);

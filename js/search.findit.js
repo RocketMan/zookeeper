@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2022 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 function htmlify(s) {
     return s != null?s.replace(/&/g, '&amp;').replace(/</g, '&lt;'):'';
@@ -60,7 +60,7 @@ function emitMore(table, response, data, type) {
                     var a = $("<a>", {
                         class: 'nav',
                         href: '#'
-                    }).text(cur).click((function(low) {
+                    }).text(cur).on('click', (function(low) {
                         return function() {
                             search(type, links.href, chunksize, low);
                             return false;
@@ -80,7 +80,7 @@ function emitMore(table, response, data, type) {
             var a = $("<a>", {
                 class: 'nav',
                 href: '#',
-            }).text(more + ' more...').click((function(size, offset) {
+            }).text(more + ' more...').on('click', (function(size, offset) {
                 return function() {
                     search(type, links.href, size, offset);
                     return false;
@@ -449,7 +449,7 @@ $().ready(function() {
         setTimeout(onSearchNow, 0);
     });
 
-    field.focus();
+    field.trigger('focus');
     var val = field.val();
     if(val.length > 0)
         onSearchNow();

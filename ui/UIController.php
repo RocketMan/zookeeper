@@ -201,26 +201,17 @@ class UIController implements IController {
       if($favicon)
           echo "<LINK REL=\"icon\" HREF=\"$favicon\">\n";
   ?>
-  <?php UI::emitCSS('css/tablesorter/theme.default.css'); ?>
+  <link rel="stylesheet" type="text/css" href="vendor/mottie/tablesorter/dist/css/theme.default.min.css" />
   <?php UI::emitCSS('css/zoostyle.css'); ?>
   <?php UI::emitCSS(Engine::param('stylesheet')); ?>
   <?php UI::emitCSS('css/about.css'); ?>
-  <?php UI::emitJS('js/jquery.min.js'); ?>
-  <?php UI::emitJS('js/jquery.tablesorter.min.js'); ?>
 
-  <SCRIPT TYPE="text/javascript"><!--
-    <?php ob_start([JSMin::class, 'minify']); ?>
-    // polyfill String.padStart as needed
-    if(!String.prototype.padStart) {
-        document.write('<script src="https://polyfill.io/v3/polyfill.min.js?features=String.prototype.padStart"><\/script>');
-    }
-
-    document.write('<link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/base/jquery-ui.css" rel="stylesheet" type="text/css" />');
-    document.write('<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js"><\/script>') 
-
-    <?php ob_end_flush(); ?>
-  // -->
-  </SCRIPT>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="vendor/components/jquery/jquery.min.js"><\/script>')</script>
+  <link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.css" onerror="this.onerror=null;this.href='vendor/components/jqueryui/themes/base/jquery-ui.css';" />
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+  <script>window.jQuery.ui || document.write('<script src="vendor/components/jqueryui/jquery-ui.min.js"><\/script>')</script>
+  <script type="text/javascript" src="vendor/mottie/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
 
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $stationTitle; ?> Music Reviews" HREF="zkrss.php?feed=reviews">
   <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $stationTitle; ?> Airplay Charts" HREF="zkrss.php?feed=charts">

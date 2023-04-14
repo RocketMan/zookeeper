@@ -252,7 +252,7 @@ class AddManager extends MenuItem {
         $sortTable.tablesorter({});
         $sortTable.find('th.initial-sort-col').trigger('sort');
 
-        $("*[data-focus]").focus();
+        $("*[data-focus]").trigger('focus');
     });
     // -->
     </SCRIPT>

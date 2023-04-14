@@ -182,13 +182,13 @@ $().ready(function() {
         return this;
     }
 
-    $("INPUT[data-zkalpha]").change(function(e) {
+    $("INPUT[data-zkalpha]").on('change', function(e) {
         $(this).zkAlpha();
     });
-    $("INPUT[data-track]").focus(function(e) {
+    $("INPUT[data-track]").on('focus', function(e) {
         focus = $(this).data("track");
     });
-    $("INPUT[data-upper]").change(function(e) {
+    $("INPUT[data-upper]").on('change', function(e) {
         $(this).val($(this).val().toUpperCase());
     });
 
@@ -198,28 +198,26 @@ $().ready(function() {
         return i;
     }
 
-    $("#comp").click(function(e) {
+    $("#comp").on('click', function(e) {
         var disabled = $(this).is(":checked");
-        $("INPUT[name=artist]").css("visibility", disabled?'hidden':'visible');
-        $("#lartist").css("visibility", disabled?'hidden':'visible');
-        disabled?$("INPUT[name=album]").focus():$("INPUT[name=artist]").focus();
+        $("INPUT[name=artist], #lartist").css("visibility", disabled ? 'hidden' : 'visible');
+        $("INPUT[name=" + (disabled ? "album" : "artist") + "]").trigger('focus');
     });
 
-    $("#location").change(function(e) {
+    $("#location").on('change', function(e) {
         var storage = $("SELECT[name=location]").val() == 'G';
-        $("INPUT[name=bin]").css("visibility", storage?'visible':'hidden');
-        $("#lbin").css("visibility", storage?'visible':'hidden');
+        $("INPUT[name=bin], #lbin").css("visibility", storage ? 'visible' : 'hidden');
         if(storage)
-            $("INPUT[name=bin]").focus();
+            $("INPUT[name=bin]").trigger('focus');
     });
 
-    $("#foreign").click(function(e) {
+    $("#foreign").on('click', function(e) {
         var foreign = $("INPUT[name=foreign]").is(":checked");
         $("#lstate").css("visibility", foreign?'hidden':'visible');
         $("#lzip").html(foreign?'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country:':'Postal Code:');
     });
 
-    $("#insert").click(function(e) {
+    $("#insert").on('click', function(e) {
         var form = $('FORM');
         var coll = $('INPUT[name=coll]').val() == "on";
         var next = nextTrack();
@@ -245,10 +243,10 @@ $().ready(function() {
         if(coll) {
             $("INPUT[name='artist" + focus + "' i]").val("");
         }
-        $("INPUT[name='track" + focus + "' i]").focus();
+        $("INPUT[name='track" + focus + "' i]").trigger('focus');
     });
 
-    $("#delete").click(function(e) {
+    $("#delete").on('click', function(e) {
         if(confirm('Delete track ' + focus + '?')) {
             var coll = $('INPUT[name=coll]').val() == "on";
             var last = nextTrack()-1;
@@ -264,16 +262,16 @@ $().ready(function() {
             if(coll) {
                 $("INPUT[name='artist" + last + "' i]").val("");
             }
-            $("INPUT[name='track" + focus + "' i]").focus();
+            $("INPUT[name='track" + focus + "' i]").trigger('focus');
         }
     });
 
-    $("INPUT:checkbox#all").click(function() {
+    $("INPUT:checkbox#all").on('click', function() {
         var all = $(this).is(":checked");
         $("INPUT:checkbox").prop('checked', all);
     });
 
-    $("#print").click(function() {
+    $("#print").on('click', function() {
         var local = $("#local").val() == 1;
         if(local) {
             var selected = $("INPUT:checkbox:checked").length > 0;
@@ -284,21 +282,21 @@ $().ready(function() {
         return local && selected;
     });
 
-    $("#printToPDF").click(function() {
+    $("#printToPDF").on('click', function() {
         var selected = $("INPUT:checkbox:checked").length > 0;
         if(!selected)
             alert("Select at least one tag to proceed");
         return selected;
     });
 
-    $("#queueform-next").click(function() {
+    $("#queueform-next").on('click', function() {
         var selected = $("INPUT:radio:checked").length > 0;
         if(!selected)
             alert("Select a label format");
         return selected;
     });
 
-    $("#queueplace-next").click(function() {
+    $("#queueplace-next").on('click', function() {
         if(count == 0) {
             alert("Select at least one label to print");
             return false;
@@ -308,7 +306,7 @@ $().ready(function() {
         return true;
     });
 
-    $("A[data-label]").click(function() {
+    $("A[data-label]").on('click', function() {
         var elt = $(this);
         var idx = elt.data("label");
         if(max == -1) {
@@ -369,16 +367,16 @@ $().ready(function() {
         }
     });
 
-    $("#coll").click(function() {
+    $("#coll").on('click', function() {
         onSearchNow();
     });
 
     $("#bup").on('click', function() {
-        list.focus();
+        list.trigger('focus');
         return scrollUp();
     });
     $("#bdown").on('click', function() {
-        list.focus();
+        list.trigger('focus');
         return scrollDown();
     });
 
@@ -399,7 +397,7 @@ $().ready(function() {
         if(!printerId) {
             actionButton = this;
             $("#select-printer-dialog").show();
-            $("#select-printer").focus();
+            $("#select-printer").trigger('focus');
             e.preventDefault();
             return;
         }
@@ -407,16 +405,16 @@ $().ready(function() {
         queue.val(printerId);
     });
 
-    $(".zk-popup button").click(function() {
+    $(".zk-popup button").on('click', function() {
         if($(this).hasClass("default")) {
             var printerId =  $("#select-printer").val();
             sessionStorage.setItem($("#user-uuid").val(), printerId);
             $("#print-queue").val(printerId);
-            actionButton.click();
+            actionButton.trigger('click');
         }
 
         $(".zk-popup").hide();
-        $("*[data-focus]").focus();
+        $("*[data-focus]").trigger('focus');
     });
 
     var printStatus = $("#print-status");
@@ -519,7 +517,7 @@ $().ready(function() {
             $(".discogs-prefill-confirm").slideUp();
             $(".clear-prefill").addClass('zk-hidden');
 
-            $("*[data-focus]").focus();
+            $("*[data-focus]").trigger('focus');
         }
     });
 
@@ -565,5 +563,5 @@ $().ready(function() {
         });
     });
 
-    $("*[data-focus]").focus();
+    $("*[data-focus]").trigger('focus');
 });
