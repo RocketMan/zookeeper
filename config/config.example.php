@@ -141,6 +141,11 @@ $config = [
     ],
 
     /**
+     * enable external playable track links
+     */
+    'external_links_enabled' => false,
+
+    /**
      * playable track URLs which should be suppressed for
      * non-authenticated users
      */
