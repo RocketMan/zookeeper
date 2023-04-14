@@ -205,8 +205,8 @@ class Editor extends MenuItem {
     }
 
     private function getUrlAutofill() {
-        return ($config = Engine::param('discogs'))
-            && ($config['track_url_enabled'] ?? false);
+        return Engine::param('external_links_enabled')
+                && $this->session->isAuth("p");
     }
 
     private function prefillTracks() {
