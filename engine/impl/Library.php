@@ -488,6 +488,12 @@ class LibraryImpl extends DBO implements ILibrary {
     // for each album which has at least one playable track.
     //
     public function markAlbumsPlayable(&$albums) {
+        $enableExternalLinks = Engine::param('external_links_enabled');
+        $internalLinks = Engine::param('internal_links');
+
+        if(!$enableExternalLinks && !$internalLinks)
+            return;
+
         $chain = [];
         $tags = [];
         $queryset = "";
@@ -507,14 +513,24 @@ class LibraryImpl extends DBO implements ILibrary {
                 $tags[$tag] = $i;
             }
         }
+
+        $urlFilter = $enableExternalLinks ? "url <> ''" : "url RLIKE ?";
+
         $query = "SELECT tag FROM tracknames ".
-                 "WHERE url <> '' AND tag IN (0${queryset}) ".
+                 "WHERE $urlFilter AND tag IN (0${queryset}) ".
                  "GROUP BY tag ";
         if($querysetcoll)
             $query .= "UNION SELECT tag FROM colltracknames ".
-                      "WHERE url <> '' AND tag IN (0${querysetcoll}) ".
+                      "WHERE $urlFilter AND tag IN (0${querysetcoll}) ".
                       "GROUP BY tag";
         $stmt = $this->prepare($query);
+        if(!$enableExternalLinks) {
+            // RLIKE doesn't like (|s) so replace with equivalent s?
+            $rlike = preg_replace(['/\(\|s\)/', '/\/(.*)\//'], ['s?', '\1'], $internalLinks);
+            $stmt->bindValue(1, $rlike);
+            if($querysetcoll)
+                $stmt->bindValue(2, $rlike);
+        }
         $stmt->execute();
         while($row = $stmt->fetch()) {
             for($next = $tags[$row[0]]; $next >= 0; $next = array_key_exists($next, $chain)?$chain[$next]:-1) {
