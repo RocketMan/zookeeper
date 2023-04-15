@@ -2,7 +2,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -50,7 +50,7 @@ SET time_zone = "+00:00";
 
 CREATE TABLE IF NOT EXISTS `airnames` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `dj` varchar(8) DEFAULT NULL,
+  `dj` varchar(8) NOT NULL,
   `airname` varchar(30) NOT NULL DEFAULT '',
   `url` varchar(80) DEFAULT NULL,
   `email` varchar(80) DEFAULT NULL,
@@ -231,7 +231,7 @@ CREATE TABLE IF NOT EXISTS `currents` (
 
 CREATE TABLE IF NOT EXISTS `lists` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `dj` varchar(8) DEFAULT NULL,
+  `dj` varchar(8) NOT NULL,
   `showdate` date NOT NULL DEFAULT '0000-00-00',
   `showtime` varchar(20) DEFAULT NULL,
   `description` varchar(80) DEFAULT NULL,
@@ -317,7 +317,7 @@ CREATE TABLE IF NOT EXISTS `publist` (
 CREATE TABLE IF NOT EXISTS `reviews` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `tag` int(11) NOT NULL DEFAULT '0',
-  `user` varchar(8) DEFAULT NULL,
+  `user` varchar(8) NOT NULL,
   `created` datetime DEFAULT NULL,
   `private` int(11) DEFAULT NULL,
   `airname` int(11) DEFAULT NULL,
@@ -339,7 +339,7 @@ CREATE TABLE IF NOT EXISTS `reviews` (
 CREATE TABLE IF NOT EXISTS `sessions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `sessionkey` varchar(32) NOT NULL DEFAULT '',
-  `user` varchar(8) DEFAULT NULL,
+  `user` varchar(8) NOT NULL,
   `access` varchar(12) DEFAULT NULL,
   `logon` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   `realname` varchar(128) DEFAULT NULL,
@@ -389,9 +389,9 @@ CREATE TABLE IF NOT EXISTS `ssosetup` (
 
 CREATE TABLE IF NOT EXISTS `tagqueue` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user` varchar(8) NOT NULL DEFAULT '',
-  `tag` int(11) NOT NULL DEFAULT '0',
-  `keyed` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `user` varchar(8) NOT NULL,
+  `tag` int(11) NOT NULL,
+  `keyed` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ut` (`user`,`tag`),
   KEY `user` (`user`),
@@ -451,7 +451,7 @@ CREATE TABLE IF NOT EXISTS `tracks` (
 
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(8) DEFAULT NULL,
+  `name` varchar(8) NOT NULL,
   `password` varchar(34) DEFAULT NULL,
   `groups` varchar(12) DEFAULT NULL,
   `realname` varchar(128) DEFAULT NULL,
