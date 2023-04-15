@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -324,6 +324,11 @@ class Reviews extends MenuItem {
     }
     
     public function editReview() {
+        if(!$this->session->isAuth("u")) {
+            $this->newEntity(Home::class)->emitHome();
+            return;
+        }
+
         $airname = mb_substr(trim($_REQUEST["airname"]), 0, IDJ::MAX_AIRNAME_LENGTH);
     
         if($_POST["validate"]) {
