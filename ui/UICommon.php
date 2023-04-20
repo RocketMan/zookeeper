@@ -26,6 +26,10 @@ namespace ZK\UI;
 
 use ZK\Engine\Engine;
 
+use Erusev\Parsedown\Configurables;
+use Erusev\Parsedown\Parsedown;
+use Erusev\Parsedown\State;
+
 use VStelmakh\UrlHighlight\UrlHighlight;
 
 class UICommon {
@@ -129,10 +133,11 @@ class UICommon {
      */
     public static function markdown($text) {
         return self::getSingleton('markdown', function() {
-            return \Parsedown::instance()->
-                       setBreaksEnabled(true)->
-                       setSafeMode(true);
-        })->text($text);
+            return new Parsedown(new State([
+                new Configurables\Breaks(true),
+                new Configurables\SafeMode(true)
+            ]));
+        })->toHtml($text);
     }
 
     public static function markdownHelp() { ?>
