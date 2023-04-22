@@ -29,6 +29,7 @@ $config = [
     'favicon' => 'img/kzsu/favicon.ico',
 
     'stylesheet' => 'css/kzsustyle.css',
+    'custom_template_dir' => 'kzsu_classic',
 
     /**
      * e-mail settings
@@ -131,7 +132,6 @@ $config = [
      * controllers here override/replace the defaults
      */
     'custom_controllers' => [
-        'main' => ZK\UI\KzsuUIController::class,
     ],
 
     /**

@@ -170,6 +170,13 @@ class Editor extends MenuItem {
     private static function isEmpty($var) {
         return !isset($var) || empty($var) && $var !== 0 && $var !== "0";
     }
+
+    public function getSubactions($action) {
+        $subactions = self::$subactions;
+        if(Engine::api(IEditor::class)->getNumQueuedTags($this->session->getUser()))
+            $subactions = array_merge($subactions, self::$subactions_tagq);
+        return $subactions;
+    }
     
     public function processLocal($action, $subaction) {
         $this->printConfig = Engine::param('label_printer');

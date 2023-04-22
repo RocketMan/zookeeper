@@ -39,9 +39,11 @@ class Charts extends MenuItem {
         [ "n", "chartemail", "E-Mail", "chartEMail" ],
     ];
 
+    public function getSubactions($action) { return self::$subactions; }
+
     public function processLocal($action, $subaction) {
         $extra = "<SPAN CLASS='sub'><B>Chart Feed:</B></SPAN> <A TYPE='application/rss+xml' HREF='zkrss.php?feed=charts'><IMG SRC='img/rss.png' ALT='rss'></A><BR><IMG SRC='img/blank.gif' WIDTH=1 HEIGHT=2 BORDER=0 ALT=''>";
-        return $this->dispatchSubAction($action, $subaction,
+        return $this->dispatchSubaction($action, $subaction,
                                             self::$subactions, $extra);
     }
 

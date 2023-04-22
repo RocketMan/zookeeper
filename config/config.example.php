@@ -34,6 +34,7 @@ $config = [
     'favicon' => 'img/favicon.ico',
 
     'stylesheet' => 'css/example_style.css',
+    'custom_template_dir' => 'example_classic',
 
     /**
      * e-mail settings

@@ -1,0 +1,32 @@
+<body>
+<div class="box">
+  {% block header %}      {# <div class="header"> #}
+  {% endblock %}
+  {% block navigation %}  {# <div class="leftNav"> #}
+  {% include('navigation.html') %}
+  {% endblock %}
+  {% block content %}     {# <div class="content"> #}
+  {% include('content.html') %}
+  {% endblock %}
+  <div class="footer">
+    {% if app.copyright is not empty %}
+      {{ app.copyright | raw }}<br />
+    {% endif %}
+    <a href="#about">Zookeeper Online &copy; 1997-2023 J Mason. All rights reserved.</a>
+    <a href="PRIVACY.md" target="_blank">Privacy policy</a>
+  </div>
+</div>
+<div class="lightbox" id="about">
+  <div class="lightbox-modal">
+    <div class="close"><a href="#">[x]</a></div>
+    <div class="body">
+      <p class="title">Zookeeper Online version {{ app.version }}</p>
+      <p>Zookeeper Online &copy; 1997-2023 J Mason &lt;jmason@ibinx.com&gt;</p>
+      <p>This program is free software; you are welcome to redistribute it
+      under certain conditions.  See the <a href="LICENSE" target="_blank">LICENSE</a>
+      for details.</p>
+      <p><a href="https://zookeeper.ibinx.com/" target="_blank">Zookeeper Online project homepage</a></p>
+    </div>
+  </div>
+</div>
+</body>

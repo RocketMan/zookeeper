@@ -37,6 +37,10 @@ class UserAdmin extends MenuItem {
         [ "x", "airnames", "Airnames", "adminAirnames" ],
     ];
 
+    public function getSubactions() {
+        return self::$subactions;
+    }
+
     public function processLocal($action, $subaction) {
         UI::emitJS("js/useradmin.js");
         return $this->dispatchSubAction($action, $subaction, self::$subactions);

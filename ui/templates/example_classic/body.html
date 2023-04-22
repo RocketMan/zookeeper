@@ -1,0 +1,13 @@
+{% extends "default/body.html" %}
+{% block header %}
+<div class="header">
+  <div class="headerLogo">
+    <a href="{{ app.urls.home }}">
+      <img src="{{ app.logo }}" alt="{{ app.station_full }}" title="{{ app.station_full }}">
+    </a>
+  </div>
+  <div class="headerNavbar">
+    <span>{{ app.station_slogan }}</span>
+  </div>
+</div>
+{% endblock %}

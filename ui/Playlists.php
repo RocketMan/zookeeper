@@ -60,6 +60,34 @@ class Playlists extends MenuItem {
     private $action;
     private $subaction;
 
+    public function getSubactions($action) {
+        switch($action) {
+        case 'updateDJInfo':
+            $subactions = [
+                [ "u", "", "Update Airname", "updateAirname" ],
+                [ "u", "manageKeys", "Manage API Keys", "manageKeys" ],
+            ];
+            break;
+        case 'viewDJ':
+            $subactions = [
+                [ "a", "", "DJs active past 12 weeks", "emitViewDJMain" ],
+                [ "a", "viewAll", "All DJs", "emitViewDJMain" ]
+            ];
+            break;
+        case 'importExport':
+            $subactions = [
+                [ "u", "", "Export Playlist", "emitExportList" ],
+                [ "u", "importJSON", "Import Playlist (JSON)", "emitImportJSON" ],
+                [ "u", "importCSV", "Import Playlist (CSV)", "emitImportList" ]
+            ];
+            break;
+        default:
+            $subactions = [];
+            break;
+        }
+        return $subactions;
+    }
+
     public function processLocal($action, $subaction) {
         $this->action = $action;
         $this->subaction = $subaction;

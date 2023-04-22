@@ -80,6 +80,10 @@ class AddManager extends MenuItem {
         }
     }
 
+    public function getSubactions($action) {
+        return self::$subactions;
+    }
+
     public function processLocal($action, $subaction) {
         $extra = "";
         if(!$subaction &&

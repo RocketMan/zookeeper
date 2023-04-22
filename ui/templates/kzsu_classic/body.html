@@ -1,0 +1,26 @@
+{% extends "default/body.html" %}
+{% block header %}
+<div class="header">
+  <div class="headerLogo">
+    <a href="{{ app.urls.home }}">
+      <img src="{{ app.logo }}" alt="{{ app.station_full }}" title="{{ app.station_full }}">
+    </a>
+  </div>
+  <div class="headerListen">
+    <a href="{{ app.urls.listen }}"><span class="clickTo">click to</span><br>listen<br><span class="listenLive">LIVE</span></a>
+  </div>
+  <div class="headerNavbar">
+    <a href="{{ app.urls.home }}schedule/">schedule</a> +
+    <a href="?">music</a> +
+    <a href="{{ app.urls.home }}sports/">sports</a> +
+    <a href="{{ app.urls.home }}concerts/">concerts</a> +
+    <a href="{{ app.urls.home }}join/">join</a>
+    <br>
+    <A HREF="{{ app.urls.home }}contact/">contact</A> +
+    <A HREF="{{ app.urls.home }}about/">about</A> +
+    <A HREF="{{ app.urls.home }}zine/">zine</A> +
+    <A HREF="{{ app.urls.home }}donate/">donate</A> +
+    <A HREF="{{ app.urls.home }}merch/">merch</A>
+  </div>
+</div>
+{% endblock %}

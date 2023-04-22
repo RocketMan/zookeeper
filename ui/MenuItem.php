@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -28,8 +28,12 @@ use ZK\Controllers\CommandTarget;
 
 abstract class MenuItem extends CommandTarget {
     protected $title;
+    protected $template;
+    protected $extra;
 
     public function getTitle() { return $this->title; }
+    public function getTemplate() { return $this->template; }
+    public function getExtra() { return $this->extra; }
 
     public function newEntity($entityClass) {
         $obj = parent::newEntity($entityClass);
@@ -38,26 +42,29 @@ abstract class MenuItem extends CommandTarget {
         return $obj;
     }
 
-    public function dispatchSubaction($action, $subaction, &$subactions, $extra=0) {
-        // Emit the secondary navbar
-        if($extra)
-            echo "  <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n    <TR><TD VALIGN=BOTTOM CLASS=\"secCell\">\n";
+    public function getSubactions($action) { return []; }
 
-        echo  "  <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>\n    <TR>\n";
+    public function composeSubmenu($action, $subaction) {
+        $result = [];
+        $subactions = $this->getSubactions($action);
         foreach($subactions as $item) {
             $entry = new MenuEntry($item);
-            if($entry->label && $this->session->isAuth($entry->access))
-                $this->emitSecondaryNavSel($action, $subaction, $entry->action, $entry->label);
+            if($entry->label && $this->session->isAuth($entry->access)) {
+                $subactionLen = strlen($entry->action);
+                $selected = $subactionLen ?
+                    substr($subaction, 0, $subactionLen) == $entry->action :
+                    $subaction == $entry->action;
+                $result[] = [ 'subaction' => $entry->action,
+                              'label' => $entry->label,
+                              'selected' => $selected ];
+            }
         }
-        echo "    </TR>\n  </TABLE>\n";
+        return $result;
+    }
 
-        if($extra)
-            echo "</TD><TH ALIGN=RIGHT CLASS=\"secCell\">$extra</TH></TR></TABLE>\n";
+    public function dispatchSubaction($action, $subaction, &$subactions, $extra=0) {
+        $this->extra = $extra;
 
-        echo "  <TABLE style='margin-bottom:4px' CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n";
-        echo "    <TR><TD CLASS=\"linkrow\" HEIGHT=5><IMG SRC=\"img/blank.gif\" HEIGHT=5 WIDTH=1 ALT=\"\"></TD></TR>\n";
-        echo "  </TABLE>\n";
-    
         // Dispatch the selected subaction
         $processed = 0;
         foreach($subactions as $item) {
@@ -74,16 +81,5 @@ abstract class MenuItem extends CommandTarget {
             $entry = new MenuEntry($subactions[0]);
             $this->{$entry->implementation}();
         }
-    }
-
-    private function emitSecondaryNavSel($action,
-                            $subAction, $menuSubAction, $description) {
-        $description = preg_replace("/ /", "&nbsp;", $description);
-        $subActionLen = strlen($menuSubAction);
-        $selected = (($subActionLen?(substr($subAction, 0, $subActionLen) == $menuSubAction):($subAction == $menuSubAction))?" CLASS=\"secSel\"":" CLASS=\"secNorm\"");
-        echo "      <TD ALIGN=CENTER$selected>&nbsp;&nbsp;&nbsp;" .
-             "<A CLASS=\"linkhead\" HREF=\"" .
-             "?action=$action&amp;subaction=$menuSubAction\">$description</A>&nbsp;&nbsp;&nbsp;</TD>\n";
-        echo "      <TD WIDTH=1 BGCOLOR=\"#c0c0c0\"><IMG SRC=\"img/blank.gif\" WIDTH=1 HEIGHT=1 ALT=\"\"></TD>\n";
     }
 }
