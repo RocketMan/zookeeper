@@ -260,67 +260,12 @@ class Playlists extends MenuItem {
     }
 
     public function emitListManager() {
-        UI::emitJS("js/jquery.fxtime.js");
-        UI::emitJS("js/playlists.pick.js");
-        ?>
-  <div class='playlist-accordion no-text-select' style='display: none'>
-    <h3>My Playlists</h3>
-    <div class='active-playlist-container'>
-      <div class='float-error'></div>
-      <div class='newPlaylist'><button><span>+ Add New Playlist</span></button></div>
-      <div>
-        <datalist class='airnames'>
-        <?php echo $this->getDJAirNames(); ?>
-        </datalist>
-        <input type='hidden' id='duplicate-suffix' value='<?php
-        echo IPlaylist::DUPLICATE_SUFFIX; ?>' />
-        <input type='hidden' id='max-description-length' value='<?php
-        echo IPlaylist::MAX_DESCRIPTION_LENGTH; ?>' />
-        <input type='hidden' id='max-airname-length' value='<?php
-        echo IDJ::MAX_AIRNAME_LENGTH; ?>' />
-        <table class='playlist-grid active-grid'>
-          <colgroup>
-            <col style='width: 55px'>
-            <col style='width: 170px'>
-            <col style='width: 100px'>
-            <col style='width: 90px'>
-            <col style='width: 70px'>
-            <col style='width: 12px'>
-            <col style='width: 70px'>
-            <col>
-          </colgroup>
-          <thead><tr>
-            <th></th><th>Show</th><th>DJ</th><th>Date</th><th>Start</th><th></th><th>End</th><th></th>
-            </tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-    <h3>Deleted Playlists</h3>
-    <div class='deleted-playlist-container'>
-      <table class='playlist-grid deleted-grid'>
-        <colgroup>
-          <col style='width: 65px'>
-          <col style='width: 170px'>
-          <col style='width: 100px'>
-          <col style='width: 90px'>
-          <col style='width: 70px'>
-          <col style='width: 12px'>
-          <col style='width: 70px'>
-          <col style='width: 90px'>
-        </colgroup>
-        <thead><tr>
-          <th></th><th>Show</th><th>DJ</th><th>Date</th><th>Start</th><th></th><th>End</th><th>Expires</th>
-          </tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-  <?php
-        if(isset($_POST["duplicate"]) && $_POST["duplicate"]) {
-            echo "<input type='hidden' id='duplicate' value='" .
-                    $_POST["playlist"] . "' />\n";
-        }
+        $this->setTemplate("list/pick.html");
+        $this->addVar('airnames', $this->getDJAirNames());
+        $this->addVar('duplicate', isset($_POST["duplicate"]) && $_POST["duplicate"] ? $_POST["playlist"] : false);
+        $this->addVar('DUPLICATE_SUFFIX', IPlaylist::DUPLICATE_SUFFIX);
+        $this->addVar('MAX_DESCRIPTION_LENGTH', IPlaylist::MAX_DESCRIPTION_LENGTH);
+        $this->addVar('MAX_AIRNAME_LENGTH', IDJ::MAX_AIRNAME_LENGTH);
     }
 
     private function getDJAirNames() {
@@ -786,82 +731,21 @@ class Playlists extends MenuItem {
                 $aid === false ||
                 $empty ||
                 !checkdate($month, $day, $year)) {
-            UI::emitJS('js/jquery.fxtime.js');
-            UI::emitJS('js/playlists.import.js');
-
-            if($validate == "edit")
-                echo $errorMessage ?? "<b><font class='error'>Ensure fields are not blank and date is valid.</font></b><br>\n";
-    ?>
-      <form class='import-form import-csv' enctype='multipart/form-data' action='?' method='post'>
-        <input type='hidden' name='action' value='importExport'>
-        <input type='hidden' name='subaction' value='importCSV'>
-        <input type='hidden' name='validate' value='edit'>
-        <input type='hidden' name='MAX_FILE_SIZE' value='100000'>
-        <input type='hidden' name='date' id='date' value='<?php echo $date; ?>'>
-        <input type='hidden' name='fromtime' id='fromtime' value='<?php echo $fromtime; ?>'>
-        <input type='hidden' name='totime' id='totime' value='<?php echo $totime; ?>'>
-        <input type='hidden' id='date-format' value='<?php echo UI::isUsLocale() ? "mm/dd/yy" : "dd-mm-yy"; ?>'>
-        <datalist id='airnames'>
-        <?php echo $this->getDJAirNames(); ?>
-        </datalist>
-        <div>
-          <label>Import from:</label>
-          <div class='group file-area'>
-            <input type='file' name='userfile' required>
-            <div class='file-overlay'>
-              <div class='default'>Drag&hairsp;&amp;&hairsp;Drop file here or <span class='pseudo-button'>Browse Files</span></div>
-              <div class='success'>Your file is selected.</div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <label>Delimiter:</label>
-          <div class='group'>
-            <input type='text' class='delimiter' name='delimiter' maxlength='1' value='<?php echo htmlentities($delimiter, ENT_QUOTES); ?>'> (empty for tab)
-            <div class='pull-right'>
-              Field enclosure:
-              <input type='text' class='delimiter' name='enclosure' maxlength='1' value='<?php echo htmlentities($enclosure, ENT_QUOTES); ?>'>
-            </div>
-          </div>
-        </div>
-        <div>
-          <label>Show Name:</label>
-          <input type='text' id='description' name='description' value='<?php echo stripslashes($description);?>' maxlength='<?php echo IPlaylist::MAX_DESCRIPTION_LENGTH;?>' required>
-        </div>
-        <div>
-          <label>DJ:</label>
-          <input type='text' id='airname' name='airname' value='<?php echo $airname; ?>' maxlength='<?php echo IDJ::MAX_AIRNAME_LENGTH; ?>' required>
-        </div>
-        <div>
-          <label>Date / Time:</label>
-          <div class='group'>
-            <input type='text' class='date' required>
-            <div class='pull-right'>
-              <input type='text' id='fromtime-entry' class='time' required>
-              <div class='time-spacer'>-</div>
-              <input type='text' id='totime-entry' class='time' required>
-            </div>
-          </div>
-        </div>
-        <div>
-          <label></label>
-          <input type='submit' value=' Import Playlist '>
-        </div>
-        <div>
-          <label></label>
-          <div class='user-tip sub' style='display: inline-block; max-width: 550px;'>
-            <h4>CSV Format</h4>
-            <p>File must be UTF-8 encoded, with one
-            track per line.  Each line may contain 4, 5, or 6 columns:</p>
-            <pre style='padding-left: 20px; white-space: normal;'><b>artist&nbsp; track&nbsp; album&nbsp; label</b> &nbsp;<i>or</i><br>
-            <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label</b> &nbsp;<i>or</i><br>
-            <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label&nbsp; timestamp</b></pre>
-            <p>where each column is optionally enclosed by the specified field enclosure character, and separated by a delimiter character.  If no delimiter is specified, tab is used.</p>
-            <p>Any file data not in this format will be ignored.</p>
-          </div>
-        </div>
-      </form>
-    <?php 
+            $this->setTemplate("list/importCSV.html");
+            $this->addVar('errorMessage',
+                    $validate == "edit" ?
+                    ($errorMessage ?? "<b><font class='error'>Ensure fields are not blank and date is valid.</font></b><br>\n") : false);
+            $this->addVar('date', $date);
+            $this->addVar('fromtime', $fromtime);
+            $this->addVar('totime', $totime);
+            $this->addVar('dateformat', UI::isUsLocale() ? "mm/dd/yy" : "dd-mm-yy");
+            $this->addVar('airnames', $this->getDJAirNames());
+            $this->addVar('delimiter', $delimiter);
+            $this->addVar('enclosure', $enclosure);
+            $this->addVar('description', stripslashes($description));
+            $this->addVar('MAX_DESCRIPTION_LENGTH', IPlaylist::MAX_DESCRIPTION_LENGTH);
+            $this->addVar('airname', $airname);
+            $this->addVar('MAX_AIRNAME_LENGTH', IDJ::MAX_AIRNAME_LENGTH);
         } else {
             // Create the playlist
             $api = Engine::api(IPlaylist::class);
@@ -1048,36 +932,7 @@ class Playlists extends MenuItem {
         }
 
         if($displayForm) {
-            UI::emitJS('js/jquery.fxtime.js');
-            UI::emitJS('js/playlists.import.js');
-    ?>
-      <form class='import-form import-json' enctype="multipart/form-data" action='?' method='post'>
-        <input type='hidden' name='action' value='importExport'>
-        <input type='hidden' name='subaction' value='importJSON'>
-        <input type='hidden' name='MAX_FILE_SIZE' value='100000'>
-        <div>
-          <label>Import from:</label>
-          <div class='group file-area'>
-            <input type='file' name='userfile' required>
-            <div class='file-overlay'>
-              <div class='default'>Drag&hairsp;&amp;&hairsp;Drop file here or <span class='pseudo-button'>Browse Files</span></div>
-              <div class='success'>Your file is selected.</div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <label></label>
-          <input type='submit' value=' Import Playlist '>
-        </div>
-        <div>
-          <label></label>
-          <div class='user-tip sub' style='display: inline-block'>
-            <p>File must be a UTF-8 encoded JSON playlist,
-            such as previously exported via Export Playlist.</p>
-          </div>
-        </div>
-      </form>
-    <?php
+            $this->setTemplate("list/importJSON.html");
         }
     }
 

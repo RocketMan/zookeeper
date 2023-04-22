@@ -29,11 +29,21 @@ use ZK\Controllers\CommandTarget;
 abstract class MenuItem extends CommandTarget {
     protected $title;
     protected $template;
+    protected $templateVars = [];
     protected $extra;
 
     public function getTitle() { return $this->title; }
     public function getTemplate() { return $this->template; }
+    public function getTemplateVars() { return $this->templateVars; }
     public function getExtra() { return $this->extra; }
+
+    protected function setTemplate($template) {
+        $this->template = $template;
+    }
+
+    protected function addVar($key, $value) {
+        $this->templateVars[$key] = $value;
+    }
 
     public function newEntity($entityClass) {
         $obj = parent::newEntity($entityClass);

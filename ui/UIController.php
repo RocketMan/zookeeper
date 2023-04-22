@@ -197,9 +197,17 @@ class UIController implements IController {
                 if($rpath)
                     $path[] = $rpath;
             }
+/*
+            $cacheDir = self::TEMPLATE_BASE . '/.cache';
+            if(!is_dir($cacheDir) && !mkdir($cacheDir)) {
+                error_log("UIController: cannot create $cacheDir");
+                $cacheDir = false; // disable cache
+            }
+*/
+            $cacheDir = false;
 
             $loader = new \Twig\Loader\FilesystemLoader($path);
-            $twig = new \Twig\Environment($loader);
+            $twig = new \Twig\Environment($loader, [ 'cache' => $cacheDir ]);
             $twig->addGlobal('app', $app);
 
             $filter = new \Twig\TwigFilter('decorate', function($asset) {
@@ -208,7 +216,7 @@ class UIController implements IController {
             $twig->addFilter($filter);
 
             $template = $twig->load('index.html');
-            echo $template->render();
+            echo $template->render($this->menuItem ? $this->menuItem->getTemplateVars() : []);
         }
     }
 
