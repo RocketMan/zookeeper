@@ -192,11 +192,8 @@ class Editor extends MenuItem {
         }
 
         UI::emitJS('js/editor.common.js');
-        $subactions = self::$subactions;
-        if(Engine::api(IEditor::class)->getNumQueuedTags($this->session->getUser()))
-            $subactions = array_merge($subactions, self::$subactions_tagq);
         $this->subaction = $subaction;
-        return $this->dispatchSubaction($action, $subaction, $subactions);
+        return $this->dispatchSubaction($action, $subaction);
     }
 
     /**

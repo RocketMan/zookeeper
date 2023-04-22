@@ -62,10 +62,11 @@ abstract class MenuItem extends CommandTarget {
         return $result;
     }
 
-    public function dispatchSubaction($action, $subaction, &$subactions, $extra=0) {
+    public function dispatchSubaction($action, $subaction, $extra=0) {
         $this->extra = $extra;
 
         // Dispatch the selected subaction
+        $subactions = $this->getSubactions($action);
         $processed = 0;
         foreach($subactions as $item) {
             $entry = new MenuEntry($item);

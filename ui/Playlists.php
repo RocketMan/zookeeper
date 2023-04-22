@@ -51,10 +51,10 @@ class Playlists extends MenuItem {
         [ "editList", "emitListManager" ],
         [ "editListGetHint", "listManagerGetHint" ],
         [ "editListEditor", "emitEditor" ],
-        [ "importExport", "emitImportExportList" ],
+        [ "importExport", "processLocalSubaction" ],
         [ "viewDJ", "emitViewDJ" ],
         [ "viewDJReviews", "viewDJReviews" ],
-        [ "updateDJInfo", "updateDJInfo" ],
+        [ "updateDJInfo", "processLocalSubaction" ],
     ];
 
     private $action;
@@ -92,6 +92,10 @@ class Playlists extends MenuItem {
         $this->action = $action;
         $this->subaction = $subaction;
         return $this->dispatchAction($action, self::$actions);
+    }
+
+    public function processLocalSubaction() {
+        $this->dispatchSubaction($this->action, $this->subaction);
     }
     
     // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
@@ -647,15 +651,6 @@ class Playlists extends MenuItem {
     <?php 
     }
 
-    public function emitImportExportList() {
-       $subactions = [
-           [ "u", "", "Export Playlist", "emitExportList" ],
-           [ "u", "importJSON", "Import Playlist (JSON)", "emitImportJSON" ],
-           [ "u", "importCSV", "Import Playlist (CSV)", "emitImportList" ]
-       ];
-       $this->dispatchSubaction($this->action, $this->subaction, $subactions);
-    }
-    
     private function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTime) {
         $id = 0;
         $status = '';
@@ -1086,14 +1081,6 @@ class Playlists extends MenuItem {
         }
     }
 
-    public function updateDJInfo() {
-        $subactions = [
-            [ "u", "", "Update Airname", "updateAirname" ],
-            [ "u", "manageKeys", "Manage API Keys", "manageKeys" ],
-        ];
-        $this->dispatchSubaction($this->action, $this->subaction, $subactions);
-    }
-
     public function manageKeys() {
         $api = Engine::api(IUser::class);
         if($_POST["newKey"]) {
@@ -1377,11 +1364,7 @@ class Playlists extends MenuItem {
             return;
         }
     
-        $subactions = [
-            [ "a", "", "DJs active past 12 weeks", "emitViewDJMain" ],
-            [ "a", "viewAll", "All DJs", "emitViewDJMain" ]
-        ];
-        $this->dispatchSubaction($this->action, $this->subaction, $subactions);
+        $this->dispatchSubaction($this->action, $this->subaction);
     }
     
     public function emitViewDJMain() {

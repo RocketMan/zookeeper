@@ -91,7 +91,7 @@ class AddManager extends MenuItem {
             $extra .= "<A CLASS='nav' HREF='#top' onClick=window.open('?target=afile')>Print View</A>&nbsp;&nbsp;";
         $extra .= "<SPAN CLASS='sub'><B>Adds Feed:</B></SPAN> <A TYPE='application/rss+xml' HREF='zkrss.php?feed=adds'><IMG SRC='img/rss.png' ALT='rss'></A><BR><IMG SRC='img/blank.gif' WIDTH=1 HEIGHT=2 BORDER=0 ALT=''>";
 
-        return $this->dispatchSubAction($action, $subaction, self::$subactions, $extra);
+        return $this->dispatchSubAction($action, $subaction, $extra);
     }
 
     private static function afileDefaultSort($a, $b) {
