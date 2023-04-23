@@ -165,16 +165,16 @@ div.messageBanner {
 }
 
 
-/* Footer Styles */
+/* Legal Styles */
 
-div.footer {
+div.legal {
 	color: #ccc;
 }
-div.footer a {
+div.legal a {
 	color: #fff;
 	text-decoration: none;
 }
-div.footer a:hover {
+div.legal a:hover {
 	color: #91a3ce;
 	text-decoration: none;
 }

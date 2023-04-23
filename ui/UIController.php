@@ -85,7 +85,6 @@ class UIController implements IController {
     protected $menu;
 
     protected $menuItem;
-    protected $data;
 
     /**
      * return menu item that matches the specified action
@@ -168,12 +167,12 @@ class UIController implements IController {
         } else {
             ob_start();
             $this->emitMain($_REQUEST["action"], $_REQUEST["subaction"]);
-            $this->data = ob_get_contents();
+            $data = ob_get_contents();
             ob_end_clean();
 
             $app = new \stdClass();
             $app->content = new \stdClass();
-            $app->content->data = $this->data;
+            $app->content->data = $data;
             $app->content->template = $this->menuItem ? $this->menuItem->getTemplate() : null;
             $app->extra = $this->menuItem ? $this->menuItem->getExtra() : null;
             $app->menu = $this->composeMenu($_REQUEST['action']);

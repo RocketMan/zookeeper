@@ -430,16 +430,6 @@ div.content {
     margin-right: auto;
     overflow: auto;
 }
-div.footer {
-    width: auto;
-    clear: both;
-    text-align: right;
-    padding-top: 15px;
-    padding-bottom: 10px;
-}
-div.footer a:hover {
-    text-decoration: underline;
-}
 p.zktitle a {
     color: #000000;
     font-size: 18px;

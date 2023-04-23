@@ -8,24 +8,30 @@
   {% block content %}     {# <div class="content"> #}
   {% include('content.html') %}
   {% endblock %}
-  <div class="footer">
+  {% block footer %}
+  {% endblock %}
+  <div class="legal">
     {% if app.copyright is not empty %}
       {{ app.copyright | raw }}<br />
     {% endif %}
-    <a href="#about">Zookeeper Online &copy; 1997-2023 J Mason. All rights reserved.</a>
-    <a href="PRIVACY.md" target="_blank">Privacy policy</a>
+    Powered by <a href="#about">Zookeeper Online</a>&trade; &copy; 1997-2023 J Mason.&nbsp;
+    <a href="PRIVACY.md" target="_blank">Privacy Policy</a>
   </div>
 </div>
-<div class="lightbox" id="about">
-  <div class="lightbox-modal">
-    <div class="close"><a href="#">[x]</a></div>
+<div class="legal-lightbox" id="about">
+  <div class="legal-lightbox-modal">
+    <div class="close"><a href="#">&#x2715;</a></div>
     <div class="body">
-      <p class="title">Zookeeper Online version {{ app.version }}</p>
-      <p>Zookeeper Online &copy; 1997-2023 J Mason &lt;jmason@ibinx.com&gt;</p>
-      <p>This program is free software; you are welcome to redistribute it
-      under certain conditions.  See the <a href="LICENSE" target="_blank">LICENSE</a>
-      for details.</p>
-      <p><a href="https://zookeeper.ibinx.com/" target="_blank">Zookeeper Online project homepage</a></p>
+      <p class="title">Zookeeper Online&trade;&nbsp; version {{ app.version }}</p>
+      <p>Copyright &copy; 1997-2023 J Mason &lt;jmason@ibinx.com&gt;.  All rights reserved.</p>
+      <p>Zookeeper Online is free and open source software (FOSS) that assists
+      in the management of various radio station functions such as music
+      library, playlists, and charting.</p>
+      <p>You may redistribute and/or modify this software under the terms
+      of the <a href="LICENSE" target="_blank">GNU General Public License
+      (GPL) version 3</a> or later.</p>
+      <p>Visit the <a href="https://zookeeper.ibinx.com/" target="_blank">Zookeeper
+      Online project homepage</a> for more information.</p>
     </div>
   </div>
 </div>
