@@ -73,6 +73,11 @@ abstract class MenuItem extends CommandTarget {
     }
 
     public function dispatchSubaction($action, $subaction, $extra=0) {
+        if(substr($subaction, -1) == "_") {
+            echo json_encode($this->composeSubmenu($action, substr($subaction, 0, -1)));
+            return;
+        }
+
         $this->extra = $extra;
 
         // Dispatch the selected subaction
