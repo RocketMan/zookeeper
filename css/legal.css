@@ -2,7 +2,7 @@ div.legal {
     width: auto;
     clear: both;
     text-align: right;
-    padding-top: 15px;
+    padding-top: 5px;
     padding-bottom: 10px;
 }
 div.legal a:hover {
@@ -11,7 +11,6 @@ div.legal a:hover {
 div.legal a[href='#about'] {
     font-weight: bold
 }
-
 .legal-lightbox {
     display: none;
     position: fixed;
@@ -21,14 +20,12 @@ div.legal a[href='#about'] {
     color: #323232;
     top: 0;
     left: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.4);
 }
-
 .legal-lightbox-modal {
-    background-color: #fefefe;
+    background-color: #fff;
     font-weight: bold;
     width: 50%;
-    height: 30%;
     margin: auto;
     padding: 25px;
     position: relative;
@@ -37,45 +34,36 @@ div.legal a[href='#about'] {
     border-radius: 4px 4px 0 0;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.8),0 6px 20px 0 rgba(0,0,0,0.2);
 }
-
 .legal-lightbox-modal P {
     padding-bottom: 10px;
     text-align: left;
 }
-
 .legal-lightbox-modal A {
     color: #cc0000;
 }
-
 .legal-lightbox-modal .close {
     float: right;
     width: 20px;
     display: inline-block;
 }
-
 .legal-lightbox-modal .close A {
     text-decoration: none;
     font-size: 20px;
     color: #666;
 }
-
 .legal-lightbox-modal .close A:hover {
     color: #333;
 }
-
 .legal-lightbox-modal .body {
 }
-
 .legal-lightbox-modal .title {
     font-size: large;
     margin: auto;
     padding-bottom: 20px;
 }
-
 .legal-lightbox-modal .title .version {
     font-size: smaller;
 }
-
 .legal-lightbox:target {
     outline: none;
     display: block;
