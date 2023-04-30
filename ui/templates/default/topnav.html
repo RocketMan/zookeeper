@@ -33,7 +33,7 @@
       {% if app.session.isAuth("u") %}
       {{ app.session.getDN() }} - <a href="?action=logout" class="login">Logout</a>
       {% elseif app.sso %}
-      <a style="font-size: 90%" href="?action=loginHelp">(help)&nbsp;&nbsp;<a href="?action=ssoLogin">Login</a></a>
+      <a style="font-size: 90%" href="?action=loginHelp">(help)</a>&nbsp;&nbsp;<a href="ssoLogin.php">Login</a></a>
       {% else %}
       <a href="?action=login">Login</a>
       {% endif %}
