@@ -326,7 +326,7 @@ $().ready(function(){
             accept: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
             success: function(response) {
-                location.href = "?action=" + $("#track-action").val() +
+                location.href = "?subaction=" + $("#track-action").val() +
                     "&playlist=" + playlistId;
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -358,7 +358,7 @@ $().ready(function(){
             accept: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
             success: function(response) {
-                location.href = "?action=" + $("#track-action").val() +
+                location.href = "?subaction=" + $("#track-action").val() +
                     "&playlist=" + playlistId;
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -371,7 +371,7 @@ $().ready(function(){
     });
 
     $("#edit-cancel").on('click', function(){
-        location.href = "?action=" + $("#track-action").val() +
+        location.href = "?subaction=" + $("#track-action").val() +
             "&playlist=" + $("#track-playlist").val();
     });
 
@@ -532,7 +532,7 @@ $().ready(function(){
                 switch(meta.seq*1) {
                 case -1:
                     // playlist is out of sync with table; reload
-                    location.href = "?action=" + $("#track-action").val() +
+                    location.href = "?subaction=" + $("#track-action").val() +
                         "&playlist=" + $("#track-playlist").val();
                     break;
                 case 0:
@@ -909,7 +909,7 @@ $().ready(function(){
                 switch(meta.seq*1) {
                 case -1:
                     // playlist is out of sync with table; reload
-                    location.href = "?action=" + $("#track-action").val() +
+                    location.href = "?subaction=" + $("#track-action").val() +
                         "&playlist=" + $("#track-playlist").val();
                     break;
                 default:

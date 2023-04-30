@@ -1,0 +1,69 @@
+<meta name="viewport" content="width=device-width, initial-scale=0.86, user-scalable=yes">
+<link rel="stylesheet" type="text/css" href="{{ "css/topnav.css" | decorate }}" />
+<script type="text/javascript" src="{{ "js/topnav.js" | decorate }}"></script>
+<script type="text/javascript" src="{{ "js/search.findit.js" | decorate }}"></script>
+<nav>
+  <div class="menu-icon">
+    <span class="fas fa-bars"></span>
+  </div>
+  <div class="logo">
+    {{ app.station_title }}
+  </div>
+  <div class="nav-items">
+  {% for item in app.menu %}
+  <li {{ item.selected ? "class='selected'" : "" }} data-action='{{ item.action }}'><a href='?action={{ item.action }}'><span class="chevron-right"></span>{{ item.label }}</a>
+    {% if item.selected %}
+    <ul>
+    {% for subitem in app.submenu %}
+      <li {{ subitem.selected ? "class='selected'" : "" }}><a href='?action={{ item.action }}&subaction={{ subitem.subaction }}'>{{ subitem.label }}</a></li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+  {% endfor %}
+  </li>
+  </div>
+  <div class="search-icon">
+    <span class="fas fa-search"></span>
+  </div>
+  <div class="cancel-icon">
+    <span class="fas fa-times"></span>
+  </div>
+  <div class="login-search">
+    <div class="login">
+      {% if app.session.isAuth("u") %}
+      {{ app.session.getDN() }} - <a href="?action=logout" class="login">Logout</a>
+      {% elseif app.sso %}
+      <a style="font-size: 90%" href="?action=loginHelp">(help)&nbsp;&nbsp;<a href="?action=ssoLogin">Login</a></a>
+      {% else %}
+      <a href="?action=login">Login</a>
+      {% endif %}
+    </div>
+    <form action="#">
+      <input type="search" class="search-data" placeholder="Search" required>
+      <input type="hidden" id="fkey">
+    </form>
+  </div>
+</nav>
+{% for item in app.menu %}
+{% if item.selected %}
+<div class="breadcrumbs">
+  <ul>
+    <li><span class="fas fa-home"></span></li>
+    <li>{{ item.label }}</li>
+  {% for subitem in app.submenu %}
+  {% if subitem.selected %}
+    <li>{{ subitem.label }}</li>
+    {% if app.tertiary %}
+    <li>{{ app.tertiary }}</li>
+    {% endif %}
+  {% endif %}
+  {% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% endfor %}
+{% if app.extra %}
+<div class="topnav-extra">
+  {{ app.extra | raw }}
+</div>
+{% endif %}

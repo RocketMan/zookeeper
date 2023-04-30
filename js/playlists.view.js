@@ -25,7 +25,7 @@
 $().ready(function(){
     // fetch the days with playlists for the selected month and enable the on the calendar.
     function setAvailableDays(showDate) {
-        let url = 'index.php?action=viewListDaysByDate&viewdate=' + showDate;
+        let url = 'index.php?subaction=viewListDaysByDate&viewdate=' + showDate;
         $.ajax({
             dataType : 'json',
             type: 'GET',
@@ -55,7 +55,7 @@ $().ready(function(){
         }
         
         setDateDisplay(isoDate);
-        let url = 'index.php?action=viewListsByDate&viewdate=' + isoDate;
+        let url = 'index.php?subaction=viewListsByDate&viewdate=' + isoDate;
         $('#playlist-list tbody').html('');
         $.ajax({
             dataType : 'json',

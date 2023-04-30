@@ -287,7 +287,7 @@ class AddManager extends MenuItem {
       <TABLE CELLPADDING=2 CELLSPACING=0 WIDTH="100%" BORDER=0>
         <TR>
           <TH ALIGN=LEFT>
-            <FORM ACTION="" METHOD=POST>
+            <FORM id='add-manager' ACTION="" METHOD=POST>
               Adds for:
               <SELECT NAME=date data-focus onChange='this.form.submit()'>
     <?php 
@@ -307,7 +307,7 @@ class AddManager extends MenuItem {
           </TH>
     <?php if($this->session->isAuth("n")) { ?>
           <TD ALIGN=RIGHT>
-            <FORM ACTION="?" METHOD=POST>
+            <FORM id='export-target' ACTION="?" METHOD=POST>
               <SELECT NAME=os>
                   <OPTION VALUE="win">Windows
                   <OPTION VALUE="mac">Mac OS 9
@@ -335,12 +335,12 @@ class AddManager extends MenuItem {
     <?php ob_start([JSMin::class, 'minify']); ?>
 
     function onExport() {
-      if(document.forms[1].os.value == "email") {
-        document.forms[0].subaction.value = "addsemail";
-        document.forms[0].submit();
+      if(document.getElementById('export-target').os.value == "email") {
+        document.getElementById('add-manager').subaction.value = "addsemail";
+        document.getElementById('add-manager').submit();
       } else {
-        document.forms[1].date.value = document.forms[0].date.value;
-        document.forms[1].submit();
+        document.getElementById('export-target').date.value = document.getElementById('add-manager').date.value;
+        document.getElementById('export-target').submit();
       }
     }
     <?php ob_end_flush(); ?>
@@ -375,8 +375,8 @@ class AddManager extends MenuItem {
     function Confirm<?php echo $name; ?>(<?php if($id) echo "id"; ?>)
     {
     <?php if($rtaction) { ?>
-      if(document.forms[0].<?php echo $rtaction; ?>.selectedIndex >= 0) {
-        action = document.forms[0].<?php echo $rtaction; ?>.options[document.forms[0].<?php echo $rtaction; ?>.selectedIndex].value;
+      if(document.getElementById('add-manager').<?php echo $rtaction; ?>.selectedIndex >= 0) {
+        action = document.getElementById('add-manager').<?php echo $rtaction; ?>.options[document.getElementById('add-manager').<?php echo $rtaction; ?>.selectedIndex].value;
       } else {
         return;
       }
@@ -682,7 +682,7 @@ class AddManager extends MenuItem {
             if($i == 1) {
                 // Emit header
                 $title = $this->addManagerGetTitle($seq);
-                echo "  <FORM ACTION=\"\" METHOD=POST>\n";
+                echo "  <FORM id='add-manager' ACTION=\"\" METHOD=POST>\n";
                 echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>\n      <TR><TH ALIGN=LEFT>$title</TH></TR>\n      <TR><TD HEIGHT=130 VALIGN=MIDDLE>\n";
     
             }
@@ -779,7 +779,7 @@ class AddManager extends MenuItem {
             if($i == 1 && $seq != "fin") {
                 // Emit header
                 $title = $this->addManagerGetTitle($seq);
-                echo "  <FORM ACTION=\"\" METHOD=POST>\n";
+                echo "  <FORM id='add-manager' ACTION=\"\" METHOD=POST>\n";
                 echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>\n      <TR><TH ALIGN=LEFT>$title</TH></TR>\n      <TR><TD HEIGHT=130 VALIGN=MIDDLE>\n";
     
             }
@@ -856,7 +856,7 @@ class AddManager extends MenuItem {
             }
         }
     ?>
-      <FORM ACTION="" METHOD=POST>
+      <FORM id='add-manager' ACTION="" METHOD=POST>
         <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
           <TR><TH>&nbsp;</TH><TH>Category</TH><TH>Code&nbsp;</TH><TH>Director</TH><TH>E-Mail Address</TH></TR>
     <?php 
@@ -1004,7 +1004,7 @@ class AddManager extends MenuItem {
             echo "  <HR>\n";
         }
     ?>
-      <FORM ACTION="" METHOD=POST>
+      <FORM id='add-manager' ACTION="" METHOD=POST>
         <TABLE CELLPADDING=2 BORDER=0>
           <TR><TD ALIGN=RIGHT>Add For:</TD><TD ALIGN=LEFT><?php echo date("j F Y", mktime(0,0,0,$m,$d,$y));?></TD></TR>
           <TR><TD ALIGN=RIGHT>E-Mail To:</TD><TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=address VALUE="<?php echo htmlentities($address);?>" CLASS=INPUT SIZE=30></TD></TR>

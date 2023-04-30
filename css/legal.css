@@ -34,6 +34,12 @@ div.legal a[href='#about'] {
     border-radius: 4px 4px 0 0;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.8),0 6px 20px 0 rgba(0,0,0,0.2);
 }
+@media (max-width: 800px) {
+    .legal-lightbox-modal {
+        width: 80%;
+    }
+}
+    
 .legal-lightbox-modal P {
     padding-bottom: 10px;
     text-align: left;

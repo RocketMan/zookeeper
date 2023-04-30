@@ -15,7 +15,7 @@ $config = [
      */
     'station' => 'KZSU',
 
-    'station_title' => 'KZSU Radio',
+    'station_title' => 'KZSU Music',
 
     'station_medium' => 'KZSU 90.1FM',
 
@@ -23,13 +23,13 @@ $config = [
 
     'station_freq' => '90.1FM',
 
-    'copyright' => '&copy; 2002-2023 Stanford University.  All rights reserved.  Please read the Stanford University <A HREF="https://www.stanford.edu/site/terms/">acceptable use policy</A>',
+    'copyright' => '&copy; 2002-2023 Stanford University. Stanford, California 94305. <A HREF="https://www.stanford.edu/site/terms/">Terms of Use</A>',
 
     'logo' => 'img/kzsu/kzsu_aharoni.png',
     'favicon' => 'img/kzsu/favicon.ico',
 
     'stylesheet' => 'css/kzsustyle.css',
-    'custom_template_dir' => 'kzsu_classic',
+    'custom_template_dir' => 'kzsu',
 
     /**
      * e-mail settings
@@ -63,6 +63,7 @@ $config = [
         'listen' => 'http://kzsu.stanford.edu/live',
         'report_missing' => 'https://spreadsheets.google.com/a/kzsu.stanford.edu/viewform?hl=en&formkey=dGRuMW1GNFVQcXoxbmU3YWZHWlVna0E6MQ&$missingSelect&entry_2=%USERNAME%&entry_1=%ALBUMTAG%',
         //'old_charts' => 'http://kzsu.stanford.edu/charts/',
+        'contact' => '?action=contact'
     ],
 
     'contact' => [
@@ -123,7 +124,6 @@ $config = [
      * menu items here are appended to the defaults
      */
     'custom_menu' => [
-        [ 'a', 'contact%', 'Submit Music', ZK\UI\KzsuContacts::class ],
     ],
 
     /**

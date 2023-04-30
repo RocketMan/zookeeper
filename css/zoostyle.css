@@ -3,6 +3,22 @@
  * element names should be lower case only!
  */
 
+:root {
+    --theme-nav-background-colour: #171c24;
+    --theme-nav-highlight-colour: #333;
+    --theme-nav-foreground-colour: #fff;
+    --theme-nav-separator: 1px solid #333;
+    --theme-subnav-active: 3px solid #c00;
+    --theme-menu-background-colour: #14181f;
+    --theme-search-background-colour: #1e232b;
+
+    --theme-button-foreground-colour: #fff;
+    --theme-button-background-colour: #333;
+
+    --theme-secdiv-background-colour: #333;
+    --theme-secdiv-lite-background-colour: #333;
+}
+
 /* Use a CSS reset to smooth out browser incongruities. */
 /* CSS Reset from meyerweb.com v1.0 | 20080212 */
 
@@ -67,6 +83,7 @@ body {
     font-size: 10pt;
     font-family: Helvetica, Verdana, Arial, sans-serif;
     line-height: 1.2;
+    background-color: #fff;
 }
 h1 {
     font-size: 16pt;
@@ -317,10 +334,10 @@ td.label-form {
     height: 18px;
     border: 0;
     border-radius: 3px 3px 0 0;
-    color: #ffffff;
+    color: var(--theme-button-foreground-colour);
     font-family: courier;
     font-weight: 900;
-    background-color: #2530a7;
+    background-color: var(--theme-button-background-colour);
 }
 .editorDown {
     top: 0;
@@ -330,8 +347,8 @@ td.label-form {
     border-radius: 0 0 3px 3px;
     font-family: courier;
     font-weight: 900;
-    color: #ffffff;
-    background-color: #2530a7;
+    color: var(--theme-button-foreground-colour);
+    background-color: var(--theme-button-background-colour);
 }
 .editorChooser {
     width: 218px;
@@ -343,10 +360,6 @@ td.label-form {
     border-radius: 2px;
     box-shadow: -1px -19px 0 1px #637789, 1px 19px 0 1px #637789, -1px 19px 0 1px #637789, 1px -19px 0 1px #637789;
     outline: 0;
-}
-
-.trackEditor {
-    width: 100%;
 }
 
 .trackEditor th {
@@ -456,11 +469,11 @@ p.zktitle a {
 }
 
 /* primary navigation */
-.nav:link { color: #990010; }
-.nav:visited { color: #990010; }
-.nav:active { color: #990010; }
-.nav2:link { color: #000000; }
-.nav2:visited { color: #000000; }
+.nav:link { color: #2530a7; }
+.nav:visited { color: #2530a7; }
+.nav:active { color: #2530a7; }
+.nav2:link { color: #fff; }
+.nav2:visited { color: #fff; }
 .nav2:active { color: #ff0000; }
 .nav2sel:link { color: #91a3ce; }
 .nav2sel:visited { color: #91a3ce; }
@@ -494,19 +507,19 @@ p.zktitle a {
 }
 .linkrow {
     line-height: 5px;
-    background-color: #2530a7;
+    background-color: var(--theme-secdiv-background-colour);
 }
 .secNorm {
     padding-top: 2px;
-    background-color: #5863da;
+    background-color: var(--theme-secdiv-lite-background-colour);
 }
 .secSel {
     padding-top: 2px;
-    background-color: #2530a7;
+    background-color: var(--theme-secdiv-background-colour);
     color: #ffffff;
 }
 .secSelSub {
-    background-color: #2530a7;
+    background-color: var(--theme-secdiv-lite-background-colour);
     color: #ffffff;
     font-family: verdana, arial, helvetica, sans-serif;
     font-size: 80%;
@@ -522,11 +535,11 @@ p.zktitle a {
     font-size: 11pt;
     font-weight: bold;
     color: white;
-    background-color: #2530A7;
+    background-color: var(--theme-secdiv-background-colour);
     line-height: 24px;
     margin-bottom: 4px;
     display: inline-block;
-    width: 710px;
+    width: 100%;
 }
 .playlistBanner span {
     display: inline-block;
@@ -556,13 +569,13 @@ p.zktitle a {
 }
 th.sec {
     color: white;
-    background-color: #2530a7;
+    background-color: #333;
     text-align: left;
 }
 .secdiv, .secdiv th, th.sec {
     padding-left: 4px;
     color: white;
-    background-color: #2530a7;
+    background-color: var(--theme-secdiv-background-colour);
 }
 .error {
     font-weight: bold;
@@ -593,10 +606,10 @@ table.recentAirplay td, .sub {
     margin-bottom: 5px;
 }
 .submit {
-    color: #ffffff;
-    background-color: #5863da;
+    color: var(--theme-button-foreground-colour);
+    background-color: var(--theme-button-background-colour);
     border-width: 1px;
-    border-color: #5863da;
+    border-color: var(--theme-button-background-colour);
     border-radius: 3px;
     padding: 3px 8px;
     border-style: solid;
@@ -793,6 +806,10 @@ table.recentAirplay td, .sub {
     height: 100%;
     overflow: auto;
     background-color: rgba(0,0,0,0.4);
+}
+.zk-popup:target {
+    outline: none;
+    display: block;
 }
 .zk-popup .zk-popup-content {
     position: relative;
@@ -1051,11 +1068,12 @@ a:hover.copy {
     margin-top: 0;
     padding-top: 0;
     transition: all 1000ms ease-in-out;
+    max-width: 1210px;
 }
 
 .recently-played .card {
     display: inline-block;
-    width: calc(20% - 16px);
+    width: 170px;/*calc(20% - 16px);*/
     vertical-align: top;
     margin: 7px;
 
@@ -1123,6 +1141,7 @@ a:hover.copy {
 
 .recently-played-date-picker {
     position: relative;
+    max-width: 1120px;
 }
 
 .recently-played-date-picker h3 {
@@ -1138,6 +1157,47 @@ a:hover.copy {
 
 .recently-played-date-picker select {
     margin-left: 10px;
+}
+
+@media (max-width: 1150px) {
+    .recently-played .card {
+	width: calc(20% - 16px);
+    }
+}
+@media (max-width: 800px) {
+    .recently-played .card {
+	width: calc(25% - 15px);
+    }
+}
+@media (max-width: 600px) {
+    .recently-played .card {
+	width: calc(33.333% - 15px);
+    }
+}
+@media (max-width: 425px) {
+    .recently-played-date-picker div {
+	display: inline;
+	position: relative;
+    }
+    .recently-played-date-picker select:first-of-type {
+	margin-left: 0;
+    }
+    .recently-played .card {
+	display: flex;
+	width: auto;
+	margin-right: 20px;
+    }
+    .recently-played .card .artwork {
+	width: 126px;
+    }
+    .recently-played .card .info {
+	width: calc(100% - 126px);
+    }
+    .recently-played .card .time {
+	position: absolute;
+	bottom: 0;
+	left: 126px;
+    }
 }
 
 .show-more {
@@ -1229,6 +1289,11 @@ div.toggle-time-entry div {
 }
 .import-form .group div {
     display: inline-block;
+}
+.import-form input[type=radio] {
+    width: 15px;
+    height: 15px;
+    margin-right: 0;
 }
 .import-csv div.time-spacer {
     min-width: 5px;
@@ -1334,8 +1399,14 @@ div.toggle-time-entry div {
     user-select: none;
 }
 
+.playlist-by-date {
+    /*max-width: 1400px;/*TEST*/
+    /*margin: 0 auto;/*TEST*/
+}
 .playlist-accordion.ui-accordion {
     height: 520px;
+    /*max-width: 1400px;/*TEST*/
+    /*margin: 0 auto;/*TEST*/
 }
 .playlist-accordion.ui-accordion .ui-accordion-header {
     color: #d83d04;

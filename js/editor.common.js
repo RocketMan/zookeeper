@@ -193,7 +193,7 @@ $().ready(function() {
     });
 
     function nextTrack() {
-        var form = document.forms[0];
+        var form = document.getElementById('editor');
         for(var i=1; typeof(eval('form.track'+i)) != 'undefined'; i++);
         return i;
     }

@@ -72,6 +72,7 @@ class UIController implements IController {
         'copyright',
         'favicon',
         'logo',
+        'station',
         'station_full',
         'station_slogan',
         'station_title',
@@ -129,7 +130,8 @@ class UIController implements IController {
      */
     public function composeMenu($action) {
         $result = [];
-        $this->menu->iterate(function($entry) use(&$result, $action) {
+        $active = false;
+        $this->menu->iterate(function($entry) use(&$result, &$active, $action) {
             $item = new MenuEntry($entry);
             $itemAction = $item->action;
             if($item->label && $this->session->isAuth($item->access)) {
@@ -139,11 +141,18 @@ class UIController implements IController {
                         substr($itemAction, -1) == '%' &&
                         substr($itemAction, 0, -1) ==
                                 substr($action, 0, strlen($itemAction) - 1);
+                $active |= $selected;
                 $result[] = [ 'action' => $baseAction,
                               'label' => $item->label,
                               'selected' => $selected ];
             }
         });
+
+        if(!$active && count($result) &&
+                $this->session->isAuth("u") &&
+                $action == "loginValidate")
+            $result[0]['selected'] = true;
+
         return $result;
     }
 
@@ -177,6 +186,7 @@ class UIController implements IController {
             $app->extra = $this->menuItem ? $this->menuItem->getExtra() : null;
             $app->menu = $this->composeMenu($_REQUEST['action']);
             $app->submenu = $this->menuItem ? $this->menuItem->composeSubmenu($_REQUEST['action'], $_REQUEST['subaction']) : [];
+            $app->tertiary = $this->menuItem ? $this->menuItem->getTertiary() : null;
             foreach(self::TEMPLATE_SAFE_PARAMS as $param)
                 $app->$param = Engine::param($param);
             $app->page_title = $this->menuItem ? $this->menuItem->getTitle() : null;

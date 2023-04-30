@@ -145,12 +145,12 @@ $().ready(function(){
         tr.find('.open').on('click', function() {
             if (isEditing()) return;
             var id = $(this).closest('tr').data('id');
-            window.open("?action=editListEditor&playlist=" + id, "_top");
+            window.open("?subaction=editListEditor&playlist=" + id, "_top");
         });
         tr.on('dblclick', function() {
             if (isEditing()) return;
             var id = $(this).data('id');
-            window.open("?action=editListEditor&playlist=" + id, "_top");
+            window.open("?subaction=editListEditor&playlist=" + id, "_top");
         });
 
         return tr;
@@ -546,7 +546,7 @@ $().ready(function(){
         }).done(function (data, textStatus, request) {
             var location = request.getResponseHeader('Location');
             var id = location.split('/').pop();
-            window.open("?action=editListEditor&playlist=" + id, "_top");
+            window.open("?subaction=editListEditor&playlist=" + id, "_top");
         }).fail(function (jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
             if (json && json.errors) {
@@ -765,7 +765,7 @@ $().ready(function(){
             dataType: 'json',
             type: 'GET',
             accept: "application/json; charset=utf-8",
-            url: '?action=editListGetHint'
+            url: '?subaction=editListGetHint'
         }).done(function (response) {
             if(response.attributes)
                 setEditRow(row, response);

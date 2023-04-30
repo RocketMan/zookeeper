@@ -69,7 +69,8 @@ class ChangePass extends MenuItem {
         <TD><INPUT TYPE=SUBMIT VALUE=" Change Password "></TD>
       </TR>
     </TABLE>
-    <INPUT TYPE=HIDDEN NAME=action VALUE="changePass">
+    <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
+    <INPUT TYPE=HIDDEN NAME=subaction VALUE="changePass">
     <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
     </FORM>
     <?php 

@@ -37,14 +37,30 @@ class Reviews extends MenuItem {
     const PLAIN_TEXT_WRAP_LEN = 75;
 
     private static $actions = [
-        [ "viewRecent", "viewRecentReviews" ],
+        [ "viewRecent", "viewRecentDispatch" ],
         [ "viewRecentReview", "viewReview" ],
         [ "searchReviewView", "viewReview" ],
         [ "searchReviewEdit", "editReview" ],
     ];
 
+    private static $subactions = [
+        [ "a", "", "Recent Reviews", "viewRecentReviews" ],
+        [ "a", "viewDJ", "By DJ", "reviewsByDJ" ],
+    ];
+
+    private $subaction;
+
     public function processLocal($action, $subaction) {
-        return $this->dispatchAction($action, self::$actions);
+        $this->subaction = $subaction;
+        $this->dispatchAction($action, self::$actions);
+    }
+
+    public function getSubactions($action) {
+        return self::$subactions;
+    }
+
+    public function viewRecentDispatch() {
+        $this->dispatchSubaction('', $this->subaction);
     }
 
     public function emitReviewHook($tag=0) {
@@ -52,6 +68,81 @@ class Reviews extends MenuItem {
             $tag = $_REQUEST["n"];
         if($this->session->isAuth("u"))
             echo "<A HREF=\"?action=searchReviewEdit&amp;tag=$tag\" CLASS=\"nav\"><B>Write a review of this album</B></A>";
+    }
+
+    public function emitViewDJMain() {
+        $viewAll = $this->subaction == "viewDJAll";
+    ?>
+    </p>
+    <TABLE CELLPADDING=2 CELLSPACING=2 BORDER=0 CLASS="djzone">
+      <!--TR><TH COLSPAN=2 ALIGN=LEFT>Select a DJ:</TH></TR-->
+      <TR><TH COLSPAN=2 ALIGN=LEFT><?php
+        $last = "";
+        $dot = 0;
+        for($i=0; $i<26; $i++)
+            echo "<A HREF=\"#" . chr($i+65) . "\">" . chr($i+65) . "</A>&nbsp;&nbsp;";
+        echo "</TH></TR>\n  <TR><TD COLSPAN=2>";
+
+        // Run the query
+        $records = Engine::api(IDJ::class)->getActiveAirnames($viewAll, 1);
+        $i = 0;
+        while($records && ($row = $records->fetch())) {
+            $row["sort"] = preg_match("/^the /i", $row[1])?substr($row[1], 4):$row[1];
+            // sort symbols beyond Z with the numerics and other special chars
+            if(UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1))) > "Z")
+                $row["sort"] = "@".$row["sort"];
+
+            $dj[$i++] = $row;
+        }
+
+        if(isset($dj))
+            usort($dj, function($a, $b) {
+                return strcasecmp($a["sort"], $b["sort"]);
+            });
+
+        for($j = 0; $j < $i; $j++) {
+            $row = $dj[$j];
+            $cur = UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1)));
+            if($cur < "A") $cur = "#";
+            if($cur != $last) {
+                $last = $cur;
+                echo "</TD></TR>\n  <TR><TD COLSPAN=2>&nbsp;</TD></TR>\n  <TR><TH VALIGN=TOP><A NAME=\"$last\">$last</A>&nbsp;&nbsp;</TH>\n      <TD VALIGN=TOP>";
+                $dot = 0;
+            }
+
+            if($dot)
+                echo "&nbsp;&nbsp;&#8226;&nbsp; ";
+            else
+                $dot = 1;
+
+            echo "<A CLASS=\"nav\" HREF=\"".
+                 "?action=viewRecent&subaction=viewDJ&amp;seq=selUser&amp;viewuser=$row[0]\">";
+
+            $displayName = str_replace(" ", "&nbsp;", htmlentities($row[1]));
+            echo "$displayName</A>";
+        }
+        echo "</TD></TR>\n</TABLE>\n";
+        if($this->subaction == "viewDJ")
+            echo "<h4>Didn't find the DJ you were looking for?  Show <a href='?action=viewRecent&subaction=viewDJAll'>All DJs</a>.</h4>\n";
+        echo "</div>\n";
+    }
+
+    public function reviewsByDJ() {
+        $seq = $_REQUEST["seq"];
+        $viewuser = $_REQUEST["viewuser"] ?? null;
+        if($seq == "selUser" && $viewuser) {
+            $results = Engine::api(IDJ::class)->getAirnames(0, $viewuser);
+            if($results) {
+                $row = $results->fetch();
+                $this->addVar("key", $viewuser);
+                $this->addVar("airname", $row['airname']);
+                $this->tertiary = $row['airname'];
+                $this->template = "reviews.html";
+                return;
+            }
+        }
+
+        $this->emitViewDJMain();
     }
     
     private function emitReviewRow($row, $album) {
@@ -103,7 +194,7 @@ class Reviews extends MenuItem {
         $author = $isAuthorized && trim($_GET["dj"]) == 'Me' ? $this->session->getUser() : '';        
 
         echo "<DIV class='categoryPicker form-entry'>";
-        echo "<A style='float:right' TYPE='application/rss+xml' HREF='zkrss.php?feed=reviews'>" .
+        $this->extra = "<span class='sub'><b>Recent Reviews Feed:</b></span> <A TYPE='application/rss+xml' HREF='zkrss.php?feed=reviews'>" .
              "<IMG SRC='img/rss.png' ALT='rss'></A>";
 
         echo "<label class='reviewLabel'>Categories:&nbsp;</label>";

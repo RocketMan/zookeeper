@@ -43,61 +43,34 @@ class Playlists extends MenuItem {
     private const NME_PREFIX = "nme-";
 
     //NOTE: update ui_config.php when changing the actions.
-    private static $actions = [
-        [ "viewList", "emitPlaylistPicker" ],
-        [ "viewListById", "emitViewPlaylist" ],
-        [ "viewListDaysByDate", "handlePlaylistDaysByDate" ],
-        [ "viewListsByDate", "handlePlaylistsByDate" ],
-        [ "editList", "emitListManager" ],
-        [ "editListGetHint", "listManagerGetHint" ],
-        [ "editListEditor", "emitEditor" ],
-        [ "importExport", "processLocalSubaction" ],
-        [ "viewDJ", "emitViewDJ" ],
-        [ "viewDJReviews", "viewDJReviews" ],
-        [ "updateDJInfo", "processLocalSubaction" ],
+    private static $subactions = [
+        [ "a", "", "On Now", "emitHome" ],
+        [ "a", "recent", 0, "recentSpins" ],
+        [ "a", "times", 0, "getTimes" ],
+        [ "u", "editList", "My Playlists", "emitListManager" ],
+        [ "a", "viewList", "By Date", "emitPlaylistPicker" ],
+        [ "a", "viewListById", 0, "emitViewPlaylist" ],
+        [ "a", "viewListDaysByDate", 0, "handlePlaylistDaysByDate" ],
+        [ "a", "viewListsByDate", 0, "handlePlaylistsByDate" ],
+        [ "u", "editListGetHint", 0, "listManagerGetHint" ],
+        [ "u", "editListEditor", 0, "emitEditor" ],
+        [ "a", "viewDJ", "By DJ", "emitViewDJ" ],
+        [ "u", "import", "Import", "emitImportList" ],
     ];
 
     private $action;
     private $subaction;
 
     public function getSubactions($action) {
-        switch($action) {
-        case 'updateDJInfo':
-            $subactions = [
-                [ "u", "", "Update Airname", "updateAirname" ],
-                [ "u", "manageKeys", "Manage API Keys", "manageKeys" ],
-            ];
-            break;
-        case 'viewDJ':
-            $subactions = [
-                [ "a", "", "DJs active past 12 weeks", "emitViewDJMain" ],
-                [ "a", "viewAll", "All DJs", "emitViewDJMain" ]
-            ];
-            break;
-        case 'importExport':
-            $subactions = [
-                [ "u", "", "Export Playlist", "emitExportList" ],
-                [ "u", "importJSON", "Import Playlist (JSON)", "emitImportJSON" ],
-                [ "u", "importCSV", "Import Playlist (CSV)", "emitImportList" ]
-            ];
-            break;
-        default:
-            $subactions = [];
-            break;
-        }
-        return $subactions;
+        return self::$subactions;
     }
 
     public function processLocal($action, $subaction) {
         $this->action = $action;
         $this->subaction = $subaction;
-        return $this->dispatchAction($action, self::$actions);
+        return $this->dispatchSubaction($action, $subaction);
     }
 
-    public function processLocalSubaction() {
-        $this->dispatchSubaction($this->action, $this->subaction);
-    }
-    
     // given a time string H:MM, HH:MM, or HHMM, return normalized to HHMM
     // returns empty string if invalid
     private function normalizeTime($t) {
@@ -223,10 +196,6 @@ class Playlists extends MenuItem {
                self::timeToLocale($row['showtime']);
     }
 
-    public function viewDJReviews() {
-        $this->newEntity(Search::class)->doSearch();
-    }
-
     public function listManagerGetHint() {
         $hint = null;
         $now = new \DateTime("now");
@@ -257,6 +226,18 @@ class Playlists extends MenuItem {
             }
         }
         echo $hint ? json_encode($hint) : "{}";
+    }
+
+    public function emitHome() {
+        $this->newEntity(Home::class)->emitHome();
+    }
+
+    public function recentSpins() {
+        $this->newEntity(Home::class)->recentSpins();
+    }
+
+    public function getTimes() {
+        $this->newEntity(Home::class)->getTimes();
     }
 
     public function emitListManager() {
@@ -299,7 +280,7 @@ class Playlists extends MenuItem {
         Engine::api(ILibrary::class)->markAlbumsReviewed($entries);
 
         $observer = PlaylistBuilder::newInstance([
-            "action" => $this->action,
+            "action" => $this->subaction,
             "editMode" => $editMode,
             "authUser" => $this->session->isAuth("u")
         ]);
@@ -332,7 +313,7 @@ class Playlists extends MenuItem {
             $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='action' VALUE='editList'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
 
         $djName = htmlentities($djName, ENT_QUOTES, 'UTF-8');
-        $djLink = $djId ? "<a href='?action=viewDJ&amp;seq=selUser&amp;viewuser=$djId' class='nav2'>$djName</a>" : $djName;
+        $djLink = $djId ? "<a href='?subaction=viewDJ&amp;seq=selUser&amp;viewuser=$djId' class='nav2'>$djName</a>" : $djName;
 
         echo "<div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>".htmlentities($showName, ENT_QUOTES, 'UTF-8')."</span> <span id='banner-dj'>with $djLink</span></span><div>{$showDateTime}&nbsp;</div></div>\n";
 ?>
@@ -379,7 +360,7 @@ class Playlists extends MenuItem {
             <input id='show-time' type='hidden' value="<?php echo $playlist['showtime']; ?>" >
             <input id='timezone-offset' type='hidden' value="<?php echo round(date('Z')/-60, 2); /* server TZ equivalent of javascript Date.getTimezoneOffset() */ ?>" >
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
-            <input id='track-action' type='hidden' value='<?php echo $this->action; ?>'>
+            <input id='track-action' type='hidden' value='<?php echo $this->subaction; ?>'>
             <input id='const-prefix' type='hidden' value='<?php echo self::NME_PREFIX; ?>'>
             <label></label><span id='error-msg' class='error'></span>
             <div>
@@ -388,7 +369,7 @@ class Playlists extends MenuItem {
                   <div class='dot-menu-dots no-text-select'>&#x22ee;</div>
                   <div class='dot-menu-content'>
                     <ul>
-                      <li><a href='#' class='nav' data-link='<?php echo Engine::getBaseURL()."?action=viewListById&amp;playlist=$playlistId"; ?>' id='copy-link' title='copy playlist URL to the clipboard'>Link to Playlist</a>
+                      <li><a href='#' class='nav' data-link='<?php echo Engine::getBaseURL()."?subaction=viewListById&amp;playlist=$playlistId"; ?>' id='copy-link' title='copy playlist URL to the clipboard'>Link to Playlist</a>
                       <li><a href='?target=export&amp;playlist=<?php echo $playlistId; ?>&amp;format=csv' class='nav' download='playlist.csv' title='export playlist as CSV'>Export CSV</a>
                       <li><a href='api/v1/playlist/<?php echo $playlistId; ?>' class='nav' download='playlist.json' title='export playlist as JSON'>Export JSON</a>
                       <li><a href='?target=export&amp;playlist=<?php echo $playlistId; ?>&amp;format=html' class='nav' target='_blank' title='printable playlist (opens in new window)'>Print View</a>
@@ -604,137 +585,164 @@ class Playlists extends MenuItem {
                      $tag, $artist, $track, $album, $label, $spinTime, $id, $status);
     }
 
-    public function emitExportList() {
-    ?>
-    <FORM ACTION="?" METHOD=POST>
-    <B>Select Playlist:</B><BR>
-    <TABLE CELLPADDING=0 BORDER=0><TR><TD>
-    <SELECT NAME=playlist SIZE=10>
-    <?php 
-        // Run the query
-        $records = Engine::api(IPlaylist::class)->getListsSelNormal($this->session->getUser());
-        while($records && ($row = $records->fetch()))
-            echo "  <OPTION VALUE=\"$row[0]\">$row[1] -- $row[3]\n";
-    ?>
-    </SELECT></TD></TR>
-    <TR><TD>
-       <B>Export As:</B>
-       <INPUT TYPE=RADIO NAME=format VALUE=json>JSON
-       <INPUT TYPE=RADIO NAME=format VALUE=csv>CSV
-       <!--
-       <INPUT TYPE=RADIO NAME=format VALUE=xml>XML
-       <INPUT TYPE=RADIO NAME=format VALUE=html>HTML
-       -->
-    </TD></TR>
-    <TR><TD>
-    <INPUT TYPE=SUBMIT VALUE=" Export Playlist ">
-    <INPUT TYPE=HIDDEN NAME=target VALUE="export">
-    </TD></TR></TABLE>
-    </FORM>
-    <div id='json-help' class='user-tip'>
-
-    <h4>About JSON</h4>
-
-    <p>The JSON format preserves all playlist details, including log
-    entries, comments, and time marks.  It is the more modern,
-    comprehensive export alternative.</p>
-
-    <p>You should choose JSON if you wish to preserve all aspects of
-    your playlist for subsequent import.</p>
-
-    </div>
-    <div id='csv-help' class='user-tip'>
-
-    <h4>About CSV</h4>
-
-    <p>CSV is a simple, tab-delimited format that preserves track
-    details only.</p>
-
-    <p>This format is suitable for use with spreadsheets and legacy
-    applications.</p>
-
-    </div>
-      <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([JSMin::class, 'minify']); ?>
-            $('input:radio[name="format"]').on('change', function() {
-                if($(this).is(':checked') && $(this).val() == "json") {
-                    $("#json-help").show();
-                    $("#csv-help").hide();
-                } else {
-                    $("#json-help").hide();
-                    $("#csv-help").show();
-                }
-            });
-            $().ready(function() {
-                $("input[name='format']:eq(0)").trigger('click');
-                $("select[name='playlist']").trigger('focus');
-            });
-    <?php ob_end_flush(); ?>
-      // -->
-      </SCRIPT>
-    <?php 
-    }
-
     public function emitImportList() {
-        $validate = $_POST["validate"];
-        $description = mb_substr(trim($_REQUEST["description"]), 0, IPlaylist::MAX_DESCRIPTION_LENGTH);
-        $date = $_REQUEST["date"];
-        $time = $_REQUEST["time"];
-        $airname = $_REQUEST["airname"];
-        $playlist = $_REQUEST["playlist"];
-        $button = $_REQUEST["button"];
-        $djname = mb_substr(trim($_REQUEST["djname"]), 0, IDJ::MAX_AIRNAME_LENGTH);
-        $newairname = $_REQUEST["newairname"];
-        $userfile = $_FILES['userfile']['tmp_name'];
-        $fromtime = $_REQUEST["fromtime"];
-        $totime = $_REQUEST["totime"];
+        $validate = $_POST["validate"];error_log("v=$validate");
+        $format = $_REQUEST["format"] ?? "json";
+        if($format == "csv") {
+            $description = mb_substr(trim($_REQUEST["description"]), 0, IPlaylist::MAX_DESCRIPTION_LENGTH);
+            $date = $_REQUEST["date"];
+            $time = $_REQUEST["time"];
+            $airname = $_REQUEST["airname"];
+            $djname = mb_substr(trim($_REQUEST["djname"]), 0, IDJ::MAX_AIRNAME_LENGTH);
+            $fromtime = $_REQUEST["fromtime"];
+            $totime = $_REQUEST["totime"];
+        }
         $delimiter = $_REQUEST["delimiter"] ?? "";
         $enclosure = $_REQUEST["enclosure"] ?? "\"";
+        $userfile = $_FILES['userfile']['tmp_name'];
+        $playlist = $_REQUEST["playlist"];
+        $button = $_REQUEST["button"];
 
         $empty = $_POST["empty"] ?? 0;
         if($empty)
             $errorMessage = "<b><font class='error'>Import file contains no data.  Check the format and try again.</font></b>";
-    
-        if(!$date)
-            $date = date("Y-m-d");
-        list($year, $month, $day) = explode("-", $date);
 
-        $time = $this->composeTime($fromtime, $totime);
+        if($format == "csv") {
+            if(!$date)
+                $date = date("Y-m-d");
+            list($year, $month, $day) = explode("-", $date);
 
-        if($validate == "edit" && !$time) {
-           $errorMessage = "<b><font class='error'>Invalid time range (min " . IPlaylist::MIN_SHOW_LEN . " minutes, max " . (IPlaylist::MAX_SHOW_LEN / 60) . " hours)</font></b>";
-           $totime = "";
-        }
+            $time = $this->composeTime($fromtime, $totime);
 
-        // lookup the airname
-        $aid = null;
-        if($validate == "edit" && $airname && strcasecmp($airname, "none")) {
-            $djapi = Engine::api(IDJ::class);
-            $aid = $djapi->getAirname($airname, $this->session->getUser());
-            if(!$aid) {
-                // airname does not exist; try to create it
-                $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $this->session->getUser());
-                if($success > 0) {
-                    // success!
-                    $aid = $djapi->lastInsertId();
-                } else {
-                   $errorMessage = "<b><font class='error'>Airname '$airname' is invalid or already exists.</font></b>";
-                   $airname = "";
-                   $aid = false;
+            if($validate == "edit" && !$time) {
+                $errorMessage = "<b><font class='error'>Invalid time range (min " . IPlaylist::MIN_SHOW_LEN . " minutes, max " . (IPlaylist::MAX_SHOW_LEN / 60) . " hours)</font></b>";
+                $totime = "";
+            }
+
+            // lookup the airname
+            $aid = null;
+            if($validate == "edit" && $airname && strcasecmp($airname, "none")) {
+                $djapi = Engine::api(IDJ::class);
+                $aid = $djapi->getAirname($airname, $this->session->getUser());
+                if(!$aid) {
+                    // airname does not exist; try to create it
+                    $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $this->session->getUser());
+                    if($success > 0) {
+                        // success!
+                        $aid = $djapi->lastInsertId();
+                    } else {
+                        $errorMessage = "<b><font class='error'>Airname '$airname' is invalid or already exists.</font></b>";
+                        $airname = "";
+                        $aid = false;
+                    }
                 }
             }
         }
 
-        if(!$userfile || $userfile == "none" ||
-                $description == "" ||
-                $time == '' ||
-                $aid === false ||
-                $empty ||
-                !checkdate($month, $day, $year)) {
-            $this->setTemplate("list/importCSV.html");
+        if($userfile && $format == "json") {
+            // read the JSON file
+            $file = file_get_contents($userfile);
+
+            // parse the file
+            $json = json_decode($file);
+
+            // allow type 'show' in root node (legacy)
+            if(!$json || $json->type != "show") {
+                // 'show' encapsulated within data
+                if($json && is_array($json->data) && $json->data[0]->type == "show")
+                    $json = $json->data[0];
+                else if($json && $json->data && $json->data->type == "show")
+                    $json = $json->data;
+                else
+                    $errorMessage = "<B><FONT CLASS='error'>File is not in the expected format.  Ensure file is a valid JSON playlist.</FONT></B><BR>\n";
+            }
+
+            if($json && $json->type == "show") {
+                // allow for legacy attributes at the data level
+                $attrs = isset($json->attributes)?$json->attributes:$json;
+
+                // validate the show's properties
+                $valid = false;
+                list($year, $month, $day) = explode("-", $attrs->date);
+                if($attrs->airname && $attrs->name && $attrs->time &&
+                        checkdate($month, $day, $year))
+                    $valid = true;
+
+                // lookup the airname
+                if($valid) {
+                    $djapi = Engine::api(IDJ::class);
+                    $airname = $djapi->getAirname($attrs->airname, $this->session->getUser());
+                    if(!$airname) {
+                        // airname does not exist; try to create it
+                        $success = $djapi->insertAirname(mb_substr($attrs->airname, 0, IDJ::MAX_AIRNAME_LENGTH), $this->session->getUser());
+                        if($success > 0) {
+                            // success!
+                            $airname = $djapi->lastInsertId();
+                        } else
+                            $valid = false;
+                    }
+                }
+
+                // create the playlist
+                if($valid) {
+                    $papi = Engine::api(IPlaylist::class);
+                    $papi->insertPlaylist($this->session->getUser(), $attrs->date, $attrs->time, mb_substr($attrs->name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $airname);
+                    $playlist = $papi->lastInsertId();
+
+                    // insert the tracks
+                    $count = 0;
+                    $status = '';
+                    $window = $papi->getTimestampWindow($playlist);
+                    $data = isset($json->attributes)?$attrs->events:$json->data;
+                    foreach($data as $pentry) {
+                        $entry = PlaylistEntry::fromJSON($pentry);
+                        $created = $entry->getCreated();
+                        if($created) {
+                            try {
+                                $stamp = PlaylistEntry::scrubTimestamp(
+                                            new \DateTime($created), $window);
+                                $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
+                            } catch(\Exception $e) {
+                                error_log("failed to parse timestamp: $created");
+                                $entry->setCreated(null);
+                            }
+                        }
+                        $success = $papi->insertTrackEntry($playlist, $entry, $status);
+                        $count++;
+                    }
+
+                    if($count == 0) {
+                        $papi->deletePlaylist($playlist);
+                        $errorMessage = "<b><font class='error'>Import file contains no entries.</font></b><br>\n";
+                    } else {
+                        // success
+                        $this->lazyLoadImages($playlist);
+
+                        // display the editor
+?>
+    <SCRIPT TYPE="text/javascript"><!--
+        window.open("?subaction=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
+    // -->
+    </SCRIPT>
+<?php
+                        $displayForm = false;
+                    }
+                } else
+                    $errorMessage = "<B><FONT CLASS='error'>Show details are invalid.</FONT></B><BR>\n";
+            }
+        }
+
+        if(!$userfile || $userfile == "none" || $errorMessage || $empty ||
+                $format == "csv" && (
+                    $description == "" ||
+                    $time == '' ||
+                    $aid === false ||
+                    !checkdate($month, $day, $year))) {
+            $this->setTemplate("list/importCommon.html");
             $this->addVar('errorMessage',
                     $validate == "edit" ?
                     ($errorMessage ?? "<b><font class='error'>Ensure fields are not blank and date is valid.</font></b><br>\n") : false);
+            $this->addVar('format', $format);
             $this->addVar('date', $date);
             $this->addVar('fromtime', $fromtime);
             $this->addVar('totime', $totime);
@@ -746,7 +754,7 @@ class Playlists extends MenuItem {
             $this->addVar('MAX_DESCRIPTION_LENGTH', IPlaylist::MAX_DESCRIPTION_LENGTH);
             $this->addVar('airname', $airname);
             $this->addVar('MAX_AIRNAME_LENGTH', IDJ::MAX_AIRNAME_LENGTH);
-        } else {
+        } else if($format == "csv"){
             // Create the playlist
             $api = Engine::api(IPlaylist::class);
             $success = $api->insertPlaylist($this->session->getUser(), $date, $time, $description, $aid);
@@ -828,246 +836,13 @@ class Playlists extends MenuItem {
             $this->lazyLoadImages($playlist);
 ?>
     <SCRIPT TYPE="text/javascript"><!--
-        window.open("?action=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
+        window.open("?subaction=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
     // -->
     </SCRIPT>
 <?php
         }
     }
     
-    public function emitImportJSON() {
-        $displayForm = true;
-        $userfile = $_FILES['userfile']['tmp_name'];
-        if($userfile) {
-            // read the JSON file
-            $file = file_get_contents($userfile);
-
-            // parse the file
-            $json = json_decode($file);
-
-            // allow type 'show' in root node (legacy)
-            if(!$json || $json->type != "show") {
-                // 'show' encapsulated within data
-                if($json && is_array($json->data) && $json->data[0]->type == "show")
-                    $json = $json->data[0];
-                else if($json && $json->data && $json->data->type == "show")
-                    $json = $json->data;
-                else
-                    echo "<B><FONT CLASS='error'>File is not in the expected format.  Ensure file is a valid JSON playlist.</FONT></B><BR>\n";
-            }
-
-            if($json && $json->type == "show") {
-                // allow for legacy attributes at the data level
-                $attrs = isset($json->attributes)?$json->attributes:$json;
-
-                // validate the show's properties
-                $valid = false;
-                list($year, $month, $day) = explode("-", $attrs->date);
-                if($attrs->airname && $attrs->name && $attrs->time &&
-                        checkdate($month, $day, $year))
-                    $valid = true;
-
-                // lookup the airname
-                if($valid) {
-                    $djapi = Engine::api(IDJ::class);
-                    $airname = $djapi->getAirname($attrs->airname, $this->session->getUser());
-                    if(!$airname) {
-                        // airname does not exist; try to create it
-                        $success = $djapi->insertAirname(mb_substr($attrs->airname, 0, IDJ::MAX_AIRNAME_LENGTH), $this->session->getUser());
-                        if($success > 0) {
-                            // success!
-                            $airname = $djapi->lastInsertId();
-                        } else
-                            $valid = false;
-                    }
-                }
-
-                // create the playlist
-                if($valid) {
-                    $papi = Engine::api(IPlaylist::class);
-                    $papi->insertPlaylist($this->session->getUser(), $attrs->date, $attrs->time, mb_substr($attrs->name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $airname);
-                    $playlist = $papi->lastInsertId();
-
-                    // insert the tracks
-                    $count = 0;
-                    $status = '';
-                    $window = $papi->getTimestampWindow($playlist);
-                    $data = isset($json->attributes)?$attrs->events:$json->data;
-                    foreach($data as $pentry) {
-                        $entry = PlaylistEntry::fromJSON($pentry);
-                        $created = $entry->getCreated();
-                        if($created) {
-                            try {
-                                $stamp = PlaylistEntry::scrubTimestamp(
-                                            new \DateTime($created), $window);
-                                $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
-                            } catch(\Exception $e) {
-                                error_log("failed to parse timestamp: $created");
-                                $entry->setCreated(null);
-                            }
-                        }
-                        $success = $papi->insertTrackEntry($playlist, $entry, $status);
-                        $count++;
-                    }
-
-                    if($count == 0) {
-                        $papi->deletePlaylist($playlist);
-                        echo "<b><font class='error'>Import file contains no entries.</font></b><br>\n";
-                    } else {
-                        // success
-                        $this->lazyLoadImages($playlist);
-
-                        // display the editor
-?>
-    <SCRIPT TYPE="text/javascript"><!--
-        window.open("?action=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
-    // -->
-    </SCRIPT>
-<?php
-                        $displayForm = false;
-                    }
-                } else
-                    echo "<B><FONT CLASS='error'>Show details are invalid.</FONT></B><BR>\n";
-            }
-        }
-
-        if($displayForm) {
-            $this->setTemplate("list/importJSON.html");
-        }
-    }
-
-    public function manageKeys() {
-        $api = Engine::api(IUser::class);
-        if($_POST["newKey"]) {
-            $newKey = sha1(uniqid(rand()));
-            $api->addAPIKey($this->session->getUser(), $newKey);
-        } else if($_POST["deleteKey"]) {
-            $selKeys = [];
-            foreach($_POST as $key => $value) {
-                if(substr($key, 0, 2) == "id" && $value == "on")
-                    $selKeys[] = substr($key, 2);
-            }
-            if(sizeof($selKeys))
-                $api->deleteAPIKeys($this->session->getUser(), $selKeys);
-        }
-    ?>
-       <div class='user-tip' style='display: block; max-width: 550px;'>
-       <p>API Keys allow external applications access to your playlists
-       and other personal details.</p><p>Generate and share an API Key only
-       if you trust the external application.</p>
-       </div>
-    <?php
-        $keys = $api->getAPIKeys($this->session->getUser())->asArray();
-        echo "<form action='?' method=post>\n";
-        if(sizeof($keys)) {
-    ?>
-       <p><b>Your API Keys:</b></p>
-       <table border=0>
-       <tr><th><input name=all id='all' type=checkbox></th><th align=right>API Key</th><th></th></tr>
-   <?php
-            foreach($keys as $key) {
-                echo "<tr><td><input name=id{$key['id']} type=checkbox></td>".
-                     "<td class='apikey'>{$key['apikey']}</td>".
-                     "<td><a href='#' title='Copy Key to Clipboard' class='copy'>&#x1f4cb;</a></td></tr>\n";
-            }
-            echo "</table>\n";
-            echo "<p><input type=submit class=submit name=deleteKey value=' Remove Key '>&nbsp;&nbsp;&nbsp;\n";
-        } else
-            echo "<p><b>You have no API Keys.</b></p><p>\n";
-
-        echo "<input type=submit class=submit name=newKey value=' Generate New Key '></p>\n";
-        echo "<input type=hidden name=action value='{$this->action}'>\n";
-        echo "<input type=hidden name=subaction value='{$this->subaction}'>\n";
-        echo "</form>\n";
-        UI::emitJS('js/user.apikey.js');
-    }
-
-    public function updateAirname() {
-        UI::emitJS("js/playlists.pick.js");
-
-        $validate = $_POST["validate"];
-        $multi = $_REQUEST["multi"];
-        $url = $_REQUEST["url"];
-        $email = $_REQUEST["email"];
-        $airname = $_REQUEST["airname"];
-        $name = trim($_REQUEST["name"]);
-    
-        if($validate && $airname) {
-            // Update DJ info
-            $success = Engine::api(IDJ::class)->updateAirname($name,
-                     $this->session->getUser(), $url, $email,
-                     $multi?0:$airname);
-            if($success) {
-                echo "<B>Your airname has been updated.</B>\n";
-                return;
-            } else
-                echo "<B><FONT CLASS=\"error\">'$name' is invalid or already exists.</FONT></B>";
-            // fall through...
-        }
-        $airnames = Engine::api(IDJ::class)->getAirnames(
-                     $this->session->getUser(), $airname)->asArray();
-
-        switch(sizeof($airnames)) {
-        case 0:
-            // No airnames
-    ?>
-    <P><B><FONT CLASS="error">You have no airnames</FONT></B></P>
-    <P>Publish at least one playlist or music review to create
-       an airname.</P>
-    <?php 
-            break;
-        case 1:
-            // Only one airname; emit form
-    ?>
-    <FORM id="update-airname" ACTION="?" METHOD=POST>
-    <P><B>Update airname '<?php echo $airnames[0]['airname'];?>'</B></P>
-    <TABLE CELLPADDING=2 BORDER=0>
-      <TR><TD ALIGN=RIGHT>Airname:</TD>
-        <TD><INPUT id='name' TYPE=TEXT NAME=name required VALUE="<?php echo $name?$name:$airnames[0]['airname'];?>" CLASS=input MAXLENGTH=<?php echo IDJ::MAX_AIRNAME_LENGTH . ($name?" data-focus":"");?> SIZE=40></TD></TR>
-      <TR><TD ALIGN=RIGHT>URL:</TD>
-        <TD><INPUT TYPE=TEXT NAME=url VALUE="<?php echo $url?$url:$airnames[0]['url'];?>" CLASS=input SIZE=40 MAXLENGTH=80<?php echo $name?"":" data-focus"; ?>></TD></TR>
-      <TR><TD ALIGN=RIGHT>e-mail:</TD>
-        <TD><INPUT TYPE=TEXT NAME=email VALUE="<?php echo $email?$email:$airnames[0]['email'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
-    <?php 
-            // Suppress the account update option for local-only accounts,
-            // as they tend to be shared.
-            if($multi && !$this->session->isAuth("g"))
-                echo "  <TR><TD>&nbsp</TD><TD><INPUT id='multi' TYPE=CHECKBOX NAME=multi>&nbsp;Check here to apply the URL and e-mail to all of your DJ airnames</TD></TR>";
-    ?>
-      <TR><TD COLSPAN=2>&nbsp;</TD></TR>
-      <TR><TD>&nbsp;</TD><TD><INPUT TYPE=SUBMIT VALUE="  Update  ">
-              <INPUT TYPE=HIDDEN NAME=airname VALUE="<?php echo $airnames[0]['id'];?>">
-              <INPUT TYPE=HIDDEN id='oldname' VALUE="<?php echo $airnames[0]['airname'];?>">
-              <INPUT TYPE=HIDDEN NAME=action VALUE="updateDJInfo">
-              <INPUT TYPE=HIDDEN NAME=validate VALUE="y"></TD></TR>
-    </TABLE>
-    </FORM>
-    <?php 
-            break;
-        default:
-            // Multiple airnames; emit airname selection form
-    ?>
-    <FORM ACTION="?" METHOD=POST>
-    <B>Select Airname:</B><BR>
-    <TABLE CELLPADDING=0 BORDER=0><TR><TD>
-    <SELECT NAME=airname SIZE=10 data-focus>
-    <?php 
-            foreach($airnames as $row) {
-                 echo "  <OPTION VALUE=\"$row[0]\">$row[1]\n";
-            }
-    ?>
-    </SELECT></TD></TR>
-    <TR><TD>
-    <INPUT TYPE=SUBMIT VALUE=" Next &gt;&gt; ">
-    <INPUT TYPE=HIDDEN NAME=action VALUE="updateDJInfo">
-    <INPUT TYPE=HIDDEN NAME=multi VALUE="y">
-    </TD></TR></TABLE>
-    </FORM>
-    <?php 
-            break;
-        }
-    }
-
     public function emitViewPlayList() {
         $playlistId = $_REQUEST["playlist"];
         $this->viewList($playlistId);
@@ -1129,8 +904,10 @@ class Playlists extends MenuItem {
         if(((($seq == "selUser") && $viewuser)) ||
                 (($seq == "selList") && !$playlist)) {
             $results = Engine::api(IDJ::class)->getAirnames(0, $viewuser);
-            if($results)
+            if($results) {
                 $row = $results->fetch();
+                $this->tertiary = $row['airname'];
+            }
     ?>
     <FORM ACTION="?" METHOD=POST>
     <TABLE WIDTH="100%"><TR><TD ALIGN=RIGHT VALIGN=TOP>
@@ -1186,7 +963,7 @@ class Playlists extends MenuItem {
             echo "      <TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;${blname}Recent reviews</TH></TR>\n";
             $this->emitViewDJAlbum($recentReviews, $block?" CLASS=\"sub\"":"", 0, "name");
             if(sizeof($recentReviews) == $count - 1)
-                echo "  <TR><TD></TD><TD ALIGN=LEFT CLASS=\"sub\"><A HREF=\"?s=byReviewer&amp;n=$viewuser&amp;p=0&amp;q=50&amp;action=viewDJReviews\" CLASS=\"nav\">More reviews...</A></TD></TR>\n";
+                echo "  <TR><TD></TD><TD ALIGN=LEFT CLASS=\"sub\"><A HREF=\"?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&viewuser=$viewuser\" CLASS=\"nav\">More reviews...</A></TD></TR>\n";
             echo "    </TABLE></TD>\n";
         }
     
@@ -1207,7 +984,7 @@ class Playlists extends MenuItem {
       <TR><TD>
         <INPUT TYPE=SUBMIT VALUE=" View Playlist ">
         <INPUT TYPE=HIDDEN NAME=viewuser VALUE="<?php echo $viewuser;?>">
-        <INPUT TYPE=HIDDEN NAME=action VALUE="viewDJ">
+        <INPUT TYPE=HIDDEN NAME=subaction VALUE="viewDJ">
         <INPUT TYPE=HIDDEN NAME=seq VALUE="selList">
       </TD></TR>
     </TABLE>
@@ -1218,12 +995,15 @@ class Playlists extends MenuItem {
             $this->viewList($playlist);
             return;
         }
-    
-        $this->dispatchSubaction($this->action, $this->subaction);
+
+        $this->emitViewDJMain();
     }
     
     public function emitViewDJMain() {
+        $viewAll = $this->subaction == "viewDJAll";
+        //echo "<h2>" . ($this->subaction == "viewDJ" ? "Active" : "All") . " DJs</h2>\n";
     ?>
+    </p>
     <TABLE CELLPADDING=2 CELLSPACING=2 BORDER=0 CLASS="djzone">
       <!--TR><TH COLSPAN=2 ALIGN=LEFT>Select a DJ:</TH></TR-->
       <TR><TH COLSPAN=2 ALIGN=LEFT><?php 
@@ -1234,7 +1014,7 @@ class Playlists extends MenuItem {
         echo "</TH></TR>\n  <TR><TD COLSPAN=2>";
     
         // Run the query
-        $records = Engine::api(IDJ::class)->getActiveAirnames($this->subaction == "viewAll");
+        $records = Engine::api(IDJ::class)->getActiveAirnames($viewAll);
         $i = 0;
         while($records && ($row = $records->fetch())) {
             $row["sort"] = preg_match("/^the /i", $row[1])?substr($row[1], 4):$row[1];
@@ -1266,12 +1046,15 @@ class Playlists extends MenuItem {
                 $dot = 1;
             
             echo "<A CLASS=\"nav\" HREF=\"".
-                 "?action=viewDJ&amp;seq=selUser&amp;viewuser=$row[0]\">";
+                 "?subaction=viewDJ&amp;seq=selUser&amp;viewuser=$row[0]\">";
     
             $displayName = str_replace(" ", "&nbsp;", htmlentities($row[1]));
             echo "$displayName</A>";
         }
         echo "</TD></TR>\n</TABLE>\n";
+        if($this->subaction == "viewDJ")
+            echo "<h4>Didn't find the DJ you were looking for?  Show <a href='?subaction=viewDJAll'>All DJs</a>.</h4>\n";
+        echo "</div>\n";
     }
     
     // return list of days in month that have at least 1 playlist.
@@ -1291,6 +1074,7 @@ class Playlists extends MenuItem {
     // emit page for picking playlists for a given month.
     public function emitPlaylistPicker() {
         $startDate = Engine::param('playlist_start_date');
+        echo "<div class='playlist-by-date'>";
         echo "<b>Playlist Date:&nbsp;</b>";
         echo "<input id='playlist-start-date' type='hidden' value='${startDate}' />";
         echo "<input id='playlist-date'/>";
@@ -1299,6 +1083,7 @@ class Playlists extends MenuItem {
         echo "<table id='playlist-list'>";
         echo "<thead><tr><th textalign='left' colspan='2' class='subhead'></th></tr></thead>";
         echo "<tbody></tbody></table>";
+        echo "</div>";
         UI::emitJS('js/playlists.view.js');
     }
 
@@ -1307,7 +1092,7 @@ class Playlists extends MenuItem {
         $records = Engine::api(IPlaylist::class)->getPlaylists(1, 1, $viewdate, 0, 0, 0, 20);
         $tbody = '';
         $count = 0;
-        $href = '?action=viewListById&playlist';
+        $href = '?subaction=viewListById&playlist';
         while($records && ($row = $records->fetch())) {
             $timeRange = self::timeToLocale($row[2]);
             $title = htmlentities($row[3]);
@@ -1348,7 +1133,7 @@ class Playlists extends MenuItem {
                 if($play["description"]) {
                     $showDate = date($dateSpec, strtotime($play["showdate"]));
                     $showLink = "<A HREF='".
-                         "?action=viewDJ&amp;playlist=".$play["id"].
+                         "?subaction=viewDJ&amp;playlist=".$play["id"].
                          "&amp;seq=selList'>".$play["description"]."</A>";
 
                     $trackList = implode(", ", $play["tracks"]);    

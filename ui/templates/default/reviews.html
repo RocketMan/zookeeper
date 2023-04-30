@@ -1,0 +1,12 @@
+<script type="text/javascript" SRC="js/jquery.bahashchange.min.js"></script>
+<script type="text/javascript" src="{{ 'js/search.library.js' | decorate }}"></script>
+<form>
+  <input id='showTag' type='hidden' value='true'>
+  <input id='type' type='hidden' value='reviews'>
+  <input id='sortBy' type='hidden' value='Artist'>
+  <input id='key' type='hidden' value='{{ key }}'>
+  <input id='maxresults' type='hidden' value='50'>
+  <input id='chunksize' type='hidden' value='15'>
+</form>
+<h2>{{ airname }}'s Album Reviews</h2>
+<table class='searchTable' id='results'></table>

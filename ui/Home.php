@@ -43,8 +43,8 @@ class Home extends MenuItem {
         return $this->dispatchAction($subaction, self::$subactions);
     }
 
-    protected function recentSpins() {
-        $plays = Engine::api(IPlaylist::class)->getPlaysBefore($_REQUEST["before"] ?? null, 10);
+    public function recentSpins() {
+        $plays = Engine::api(IPlaylist::class)->getPlaysBefore($_REQUEST["before"] ?? null, $_REQUEST["count"] ?? 10);
         echo json_encode($plays);
     }
 
@@ -85,31 +85,24 @@ class Home extends MenuItem {
         return $result;
     }
 
-    protected function getTimes() {
+    public function getTimes() {
         $retVal = [];
         $retVal['times'] = $this->makeTimePicker($_REQUEST["date"] ?? null);
         echo json_encode($retVal);
     }
 
     public function emitHome() {
-        echo "<H1>". Engine::param('station'). " Music :: " . Engine::param('application') . "</H1>\n";
-        $requestLine = Engine::param('contact')['request'];
-        if ($requestLine)
-            echo "<div class='home-hdr'><label>Request Line:</label> $requestLine</div>";
-
-        $musicDirEmail = Engine::param('email')['md'];
-        $musicDirName = Engine::param('md_name');
-        echo "<div class='home-hdr'><label>Music Director:</label> <A HREF='mailto:$musicDirEmail'>$musicDirName</A></div>";
-
         $this->emitWhatsOnNow();
         if(($config = Engine::param('discogs')) &&
                 ($config['apikey'] || $config['client_id']) &&
                 Engine::param('push_enabled', true))
             $this->emitRecentlyPlayed();
-        else
+        else {
             $this->emitTopPlays();
-        echo "<div style='border:0; position:absolute; bottom:0px' CLASS='subhead'>For complete album charting, see our ";
-        echo "<A CLASS='subhead' HREF='?action=viewChart'><B>Airplay Charts</B></A></div>";
+
+            echo "<div style='border:0; position:absolute; bottom:0px' CLASS='subhead'>For complete album charting, see our ";
+            echo "<a class='subhead' href='?action=viewChart'><b>Airplay Charts</b></a></div>\n";
+        }
     }
 
     private function emitRecentlyPlayed() {
@@ -199,8 +192,8 @@ class Home extends MenuItem {
             $airName = htmlentities($row["airname"]);
             $description = htmlentities($row["description"]);
             $showDateTime = Playlists::makeShowDateAndTime($row);
-            $hrefAirName =  "?action=viewDJ&amp;seq=selUser&amp;viewuser=$airId";
-            $hrefPL = "?action=viewDate&amp;seq=selList&amp;playlist=$row[0]";
+            $hrefAirName =  "?subaction=viewDJ&amp;seq=selUser&amp;viewuser=$airId";
+            $hrefPL = "?subaction=viewDate&amp;seq=selList&amp;playlist=$row[0]";
             echo "<A HREF='$hrefPL' CLASS='nav'>$description</A>&nbsp;with&nbsp;";
             echo "<A HREF='$hrefAirName' CLASS='calNav'>$airName</A></div>";
             echo "<div class='home-showbox'>";

@@ -14,7 +14,9 @@
     {% endif %}
     <link rel="stylesheet" type="text/css" href="vendor/mottie/tablesorter/dist/css/theme.default.min.css" />
     <link rel="stylesheet" type="text/css" href="{{ "css/zoostyle.css" | decorate }}" />
+    {% if app.stylesheet is not empty %}
     <link rel="stylesheet" type="text/css" href="{{ app.stylesheet | decorate }}" />
+    {% endif %}
     <link rel="stylesheet" type="text/css" href="{{ "css/legal.css" | decorate }}" />
 
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>

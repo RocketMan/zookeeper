@@ -46,7 +46,6 @@ class Search extends MenuItem {
         [ "byTrack", "searchForm" ],
         [ "byLabel", "searchForm" ],
         [ "byLabelKey", "searchForm" ],
-        [ "byReviewer", "searchByReviewer" ],
     ];
 
     // can be overridden by request params 'q' and 'chunksize', respectively
@@ -398,31 +397,5 @@ class Search extends MenuItem {
                try <A HREF="?action=find" CLASS="nav">Find It!</A></B></TD></TR>
     </TABLE>
     <?php 
-    }
-    
-    public function searchByReviewer() {
-        $sortBy = array_key_exists("sortBy", $_REQUEST)?$_REQUEST["sortBy"]:"";
-        if(!$sortBy)$sortBy="Artist";
-    
-        if($this->searchText) {
-            $airnames = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), $this->searchText);
-            if ($arow = $airnames->fetch())
-                $name = $arow["airname"];
-        }
-    
-        if($name) {
-            UI::emitJS('js/jquery.bahashchange.min.js');
-            UI::emitJS('js/search.library.js');
-            echo "<form>\n<input id='showTag' type='hidden' value='" . ($this->session->isAuth('u')?'true':'false') . "'>\n";
-            echo "<input id='type' type='hidden' value='reviews'>\n";
-            echo "<input id='sortBy' type='hidden' value='".$sortBy."'>\n";
-            echo "<input id='key' type='hidden' value='" . $this->searchText . "'>\n";
-            echo "<input id='maxresults' type='hidden' value='" . $this->maxresults . "'>\n";
-            echo "<input id='chunksize' type='hidden' value='" . $this->chunksize . "'\n>";
-            echo "</form>\n";
-            echo "<h2>$name's Album Reviews</h2>\n";
-            echo "<table class='searchTable' id='results'></table>\n";
-        } else
-            echo "<h2>Unknown DJ</h2>\n";
     }
 }

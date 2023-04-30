@@ -1,234 +1,35 @@
-/* KZSU Master Stylesheet */
+:root {
+    --theme-nav-background-colour: #820000;
+    --theme-nav-highlight-colour: #b1040e;
+    --theme-nav-foreground-colour: #fff;
+    --theme-nav-separator: 1px solid #720000;
+    --theme-subnav-active: 3px solid #b1040e;
+    --theme-menu-background-colour: #820000;
+    --theme-search-background-colour: #820000;
 
-/* General styles */
-body {
-	color: black;
-	background-color: #980000;
+    --theme-button-foreground-colour: #fff;
+    --theme-button-background-colour: #980000;
+
+    --theme-secdiv-background-colour: #980000;
+    --theme-secdiv-lite-background-colour: #c80000;
 }
+
 a {
-	color: #990010;
-	text-decoration: none;
+    color: #990010;
+    text-decoration: none;
 }
 a:hover {
-	text-decoration: underline;
-}
-p {
-	margin: 10px 0;
-}
-li {
-	margin-left: 10px;
-	margin-bottom: 5px;
-}
-img.left {
-	float: left;
-	border: 2px solid #990010;
-	margin: 5px 10px 5px 0;
-}
-img.right {
-	float: right;
-	border: 2px solid #990010;
-	margin: 5px 0 5px 10px;
+    text-decoration: underline;
 }
 
-
-/* Header styles */
-.playlistBanner {
-    background-color: #980000;
+div.playTrack a {
+    filter: invert(0.3) sepia(1) saturate(5) hue-rotate(310deg);
 }
 
-div.header {
-	font-family: "century gothic", "urw gothic l",
-		"futura std", "helvetica", "sans serif";
-	width: 900px;
-	margin-left: auto;
-	margin-right: auto;
-}
-span.headerInternal{
-		color: #fff;
-	text-align: center;
-}
-div.headerNavbar {
-	text-align: center;
-	font-size: 17pt;
-	color: #aaa;
-	padding: 20px;
-	padding-top: 35px
-}
-div.headerNavbar a {
-	color: #fff;
-	text-decoration: none;
-	margin: 0 5px;
-}
-div.headerNavbar a:hover {
-	color: #91a3ce;
-	text-decoration: none;
-}
-  
-div.headerListen {
-	float: right;
-	text-align: right;
-	font-size: 32px;
-	line-height: 34px;
-	position: relative;
-	top: -8px;
-}
-div.headerListen a {
-	color: #fff;
-	text-decoration: none;
-}
-div.headerListen a:hover {
-	color: #91a3ce;
-	text-decoration: none;
-}
-span.clickTo {
-	position: relative;
-	font-size: 22px;
-	top: 8px;
-}
-span.listenLive {
-	font-weight: bold;
-	font-size: 38px;
-}
-div.rightStripe {
-	float: right;
-	clear: none;
-	background-color: #980000;
-	display: inline;
-	width: 20px;
-	margin-right: -20px; /* Hide this on non-moz/webkit browsers */
-	height: 250px;
-	-webkit-transform: translate(-60px,-50px) rotate(-45deg);
-	-moz-transform: translate(-60px,-50px) rotate(-45deg);
-}
-
-/* Subnavigation Styles */
-div.subnavigation {
-		/* Remember to keep this in sync with contentWithoutStripe below. */
-	background-color: #eee;
-	width: 890px;
-	margin-left: auto;
-	margin-right: auto;
-	padding: 5px;
-}
-#navbar {
-	float: center;
-	background: #fff;
-	width: 850px;
-	padding: 5px;
-}
-
-#leftnav {
-	float: left;
-	text-align: left;
-}
-
-#rightnav {
-	text-align: right;
-}
-
-#credentials {
-	color: #d83d04;
-	font-weight: bold;
-}
-
-/* Content Styles */
-DIV.leftNav {
-	background-color: #980000;
-}
-DIV.leftNav A {
-	color: #ffffff;
-}
-div.content {
-	/* Remember to keep this in sync with contentWithoutStripe below. */
-	background-color: #fff;
-}
-
-div.contentWithoutStripe {
-	background-color: #fff;
-	width: 840px;
-	margin-left: auto;
-	margin-right: auto;
-	padding: 30px;
-	padding-top: 20px;
-	overflow: auto;
-}
-
-div.messageBanner {
-	border: 3px solid #980000;
-	background-color: #fff;
-	margin-left: auto;
-	margin-right: auto;
-	width: 675px;
-	padding: 10px;
-	font-size: 18px;
-	text-align: center;
-}
-
-
-/* Legal Styles */
-
-div.legal {
-	color: #ccc;
-}
-div.legal a {
-	color: #fff;
-	text-decoration: none;
-}
-div.legal a:hover {
-	color: #91a3ce;
-	text-decoration: none;
-}
-
-P.zktitle A {
-	color: #ffffff;
-}
-
-/* primary navigation */
 .nav:link { color: #990010; }
 .nav:visited { color: #990010; }
 .nav:active { color: #990010; }
-.nav2:link { color: #ffffff; }
-.nav2:visited { color: #ffffff; }
-.nav2:active { color: #ff0000; }
-.nav2sel:link { color: #91a3ce; }
-.nav2sel:visited { color: #91a3ce; }
-.nav2sel:active { color: #ff0000; }
-.nav3:link { color: #a3a3a3; }
-.nav3:visited { color: #a3a3a3; }
-.nav3:active { color: #a3a3a3; }
-.nav3s { color: #a3a3a3; font-size: 80%; }
 
-.linkrow {
-	background-color: #980000;
-}
-
-.secdiv, .secdiv TH, TH.sec {
-	color: white;
-	background-color: #980000;
-}
-.secNorm {
-	background-color: #c80000;
-}
-.secSel {
-	background-color: #980000;
-}
-.secSelSub {
-	background-color: #c80000;
-}
-.submit {
-	background-color: #980000;
-	border-color: #980000;
-}
 .albumReview {
-	background-image: URL('../img/kzsu/kzsu_rinfo.gif');
-}
-.editorUp {
-	background-color: #980000;
-}
-.editorDown {
-	background-color: #980000;
-}
-
-DIV.playTrack A {
-    filter: invert(0.3) sepia(1) saturate(5) hue-rotate(310deg);
+    background-image: URL('../img/kzsu/kzsu_rinfo.gif');
 }

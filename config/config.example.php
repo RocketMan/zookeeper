@@ -34,7 +34,7 @@ $config = [
     'favicon' => 'img/favicon.ico',
 
     'stylesheet' => 'css/example_style.css',
-    'custom_template_dir' => 'example_classic',
+    'custom_template_dir' => 'example',
 
     /**
      * e-mail settings
@@ -69,6 +69,7 @@ $config = [
     'urls' => [
         'home' => 'https://www.example.com/',
         'listen' => 'https://www.example.com/listen',
+        'contact' => '?action=contact'
     ],
 
     'contact' => [

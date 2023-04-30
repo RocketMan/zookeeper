@@ -101,6 +101,20 @@ $().ready(function(){
         if(before != null)
             url += "&before=" + encodeURIComponent(before);
 
+        var width = $(document).width();
+        var count;
+        // widths correspond to the recently-played
+        // @media settings in zoostyle.css
+        if(width > 1150)
+            count = 12;
+        else if(width > 800)
+            count = 10;
+        else if(width > 600)
+            count = 8;
+        else
+            count = 6;
+        url += "&count=" + encodeURIComponent(count);
+
         $("div.content").css("background-color", "#eee");
 
         // hack to keep white body in sync
@@ -156,7 +170,7 @@ $().ready(function(){
             } else {
                 var start = serverDate(onnow.show_start);
                 var end = serverDate(onnow.show_end);
-                $(".home-show").html("<A HREF='?action=viewDate&amp;seq=selList&amp;playlist=" + onnow.show_id + "' CLASS='nav'>" + onnow.name + "</A>&nbsp;with&nbsp;" + onnow.airname);
+                $(".home-show").html("<A HREF='?subaction=viewDate&amp;seq=selList&amp;playlist=" + onnow.show_id + "' CLASS='nav'>" + onnow.name + "</A>&nbsp;with&nbsp;" + onnow.airname);
                 $(".home-datetime").html(start.toLocaleString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) + " " + localTime(start) + " - " + localTime(end) + " " + $("#tz").val());
                 if(onnow.id == 0) {
                     $(".home-currenttrack").fadeout();

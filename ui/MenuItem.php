@@ -31,11 +31,13 @@ abstract class MenuItem extends CommandTarget {
     protected $template;
     protected $templateVars = [];
     protected $extra;
+    protected $tertiary;
 
     public function getTitle() { return $this->title; }
     public function getTemplate() { return $this->template; }
     public function getTemplateVars() { return $this->templateVars; }
     public function getExtra() { return $this->extra; }
+    public function getTertiary() { return $this->tertiary; }
 
     protected function setTemplate($template) {
         $this->template = $template;
@@ -56,6 +58,7 @@ abstract class MenuItem extends CommandTarget {
 
     public function composeSubmenu($action, $subaction) {
         $result = [];
+        $active = false;
         $subactions = $this->getSubactions($action);
         foreach($subactions as $item) {
             $entry = new MenuEntry($item);
@@ -64,11 +67,16 @@ abstract class MenuItem extends CommandTarget {
                 $selected = $subactionLen ?
                     substr($subaction, 0, $subactionLen) == $entry->action :
                     $subaction == $entry->action;
+                $active |= $selected;
                 $result[] = [ 'subaction' => $entry->action,
                               'label' => $entry->label,
                               'selected' => $selected ];
             }
         }
+
+        if(!$active && count($result))
+            $result[0]['selected'] = true;
+
         return $result;
     }
 
@@ -83,18 +91,29 @@ abstract class MenuItem extends CommandTarget {
         // Dispatch the selected subaction
         $subactions = $this->getSubactions($action);
         $processed = 0;
+        $deferred = null;
         foreach($subactions as $item) {
             $entry = new MenuEntry($item);
-            if(($subaction == $entry->action) && $this->session->isAuth($entry->access)) {
-                $this->{$entry->implementation}();
-                $processed = 1;
-                break;
+            $subactionLen = strlen($entry->action);
+            $selected = $subactionLen ?
+                substr($subaction, 0, $subactionLen) == $entry->action :
+                $subaction == $entry->action;
+            if($selected && $this->session->isAuth($entry->access)) {
+                if($subaction == $entry->action) {
+                    $this->{$entry->implementation}();
+                    $processed = 1;
+                    break;
+                }
+
+                // stem matched; this will become the default, provided
+                // no other entry matches exactly
+                $deferred = $entry;
             }
         }
     
         // If no subaction was dispatched, default to the first one
         if(!$processed) {
-            $entry = new MenuEntry($subactions[0]);
+            $entry = $deferred ?? new MenuEntry($subactions[0]);
             $this->{$entry->implementation}();
         }
     }

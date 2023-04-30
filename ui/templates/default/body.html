@@ -1,14 +1,17 @@
 <body>
+{% block topnav %}
+{% include('topnav.html') %}
+{% endblock %}
 <div class="box">
   {% block header %}      {# <div class="header"> #}
   {% endblock %}
   {% block navigation %}  {# <div class="leftNav"> #}
-  {% include('navigation.html') %}
   {% endblock %}
   {% block content %}     {# <div class="content"> #}
   {% include('content.html') %}
   {% endblock %}
   {% block footer %}
+  {% include('footer.html') %}
   {% endblock %}
   <div class="legal">
     {% if app.copyright is not empty %}

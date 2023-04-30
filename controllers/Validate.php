@@ -281,8 +281,8 @@ class Validate implements IController {
         if($this->doTest("view playlist", $success4)) {
             $response = $this->client->get('', [
                 RequestOptions::QUERY => [
-                    "action" => "viewListById",
-                    "subaction" => "",
+                    "action" => "",
+                    "subaction" => "viewListById",
                     "playlist" => $pid
                 ],
                 RequestOptions::HEADERS => [
