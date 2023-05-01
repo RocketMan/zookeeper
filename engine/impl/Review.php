@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -92,6 +92,22 @@ class ReviewImpl extends DBO implements IReview {
         }
         if($limit)
             $stmt->bindValue($p++, (int)$limit, \PDO::PARAM_INT);
+        return $stmt->iterate(\PDO::FETCH_BOTH);
+    }
+
+    public function getActiveReviewers($viewAll = 0) {
+        $query = "SELECT a.id, a.airname FROM reviews r, airnames a ";
+        $query .= "WHERE a.id = r.airname AND r.airname IS NOT NULL ";
+        if(!$viewAll)
+            $query .= "AND ADDDATE(r.created, 12*7) > NOW() ";
+        $query .= "GROUP BY a.airname UNION ";
+        $query .= "SELECT u.name, u.realname FROM reviews r, users u ";
+        $query .= "WHERE u.name = r.user AND r.airname IS NULL ";
+        if(!$viewAll)
+            $query .= "AND ADDDATE(r.created, 12*7) > NOW() ";
+        $query .= "GROUP BY u.name";
+
+        $stmt = $this->prepare($query);
         return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     

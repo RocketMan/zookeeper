@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -72,18 +72,12 @@ class DJImpl extends DBO implements IDJ {
         return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
-    public function getActiveAirnames($viewAll=0, $hasReviews=0) {
-        if($hasReviews) {
-            $query = "SELECT a.id, a.airname FROM reviews r, airnames a ";
-            $query .= "WHERE a.id = r.airname AND r.airname IS NOT NULL ";
-        } else {
-            $query = "SELECT a.id, a.airname FROM lists l, airnames a ";
-            $query .= "WHERE a.id = l.airname AND l.airname IS NOT NULL ";
-        }
+    public function getActiveAirnames($viewAll=0) {
+        $query = "SELECT a.id, a.airname FROM lists l, airnames a " .
+                 "WHERE a.id = l.airname AND l.airname IS NOT NULL ";
         if(!$viewAll)
-            $query .= "AND ADDDATE(" . ($hasReviews ? "r.created" : "l.showdate") . ", 12*7) > NOW() ";
+            $query .= "AND ADDDATE(l.showdate, 12*7) > NOW() ";
         $query .=  "GROUP BY a.airname ORDER BY a.airname";
-
         $stmt = $this->prepare($query);
         return $stmt->iterate(\PDO::FETCH_BOTH);
     }

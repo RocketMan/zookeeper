@@ -26,8 +26,9 @@ namespace ZK\UI;
 
 use ZK\Engine\Engine;
 use ZK\Engine\IDJ;
-use ZK\Engine\IReview;
 use ZK\Engine\ILibrary;
+use ZK\Engine\IReview;
+use ZK\Engine\IUser;
 
 use ZK\UI\UICommon as UI;
 
@@ -84,7 +85,7 @@ class Reviews extends MenuItem {
         echo "</TH></TR>\n  <TR><TD COLSPAN=2>";
 
         // Run the query
-        $records = Engine::api(IDJ::class)->getActiveAirnames($viewAll, 1);
+        $records = Engine::api(IReview::class)->getActiveReviewers($viewAll);
         $i = 0;
         while($records && ($row = $records->fetch())) {
             $row["sort"] = preg_match("/^the /i", $row[1])?substr($row[1], 4):$row[1];
@@ -131,12 +132,23 @@ class Reviews extends MenuItem {
         $seq = $_REQUEST["seq"];
         $viewuser = $_REQUEST["viewuser"] ?? null;
         if($seq == "selUser" && $viewuser) {
-            $results = Engine::api(IDJ::class)->getAirnames(0, $viewuser);
-            if($results) {
-                $row = $results->fetch();
+            $airname = null;
+            if(is_numeric($viewuser)) {
+                $results = Engine::api(IDJ::class)->getAirnames(0, $viewuser);
+                if($results) {
+                    $row = $results->fetch();
+                    $airname = $row['airname'];
+                }
+            } else {
+                $row = Engine::api(IUser::class)->getUser($viewuser);
+                if($row)
+                    $airname = $row['realname'];
+            }
+
+            if($airname) {
+                $this->addVar("airname", $airname);
                 $this->addVar("key", $viewuser);
-                $this->addVar("airname", $row['airname']);
-                $this->tertiary = $row['airname'];
+                $this->tertiary = $airname;
                 $this->template = "reviews.html";
                 return;
             }

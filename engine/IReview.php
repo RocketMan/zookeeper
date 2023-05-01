@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -45,6 +45,7 @@ interface IReview {
     const MAX_REVIEW_LENGTH = 64000;
 
     function getRecentReviews($user = "", $weeks = 0, $limit = 0, $loggedIn = 0);
+    function getActiveReviewers($viewAll=0);
     function getReviews($tag, $byName=1, $user = "", $loggedIn = 0, $byId = 0);
     function insertReview($tag, $private, $airname, $review, $user);
     function updateReview($tag, $private, $airname, $review, $user);
