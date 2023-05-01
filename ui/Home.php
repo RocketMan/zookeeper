@@ -193,7 +193,7 @@ class Home extends MenuItem {
             $description = htmlentities($row["description"]);
             $showDateTime = Playlists::makeShowDateAndTime($row);
             $hrefAirName =  "?subaction=viewDJ&amp;seq=selUser&amp;viewuser=$airId";
-            $hrefPL = "?subaction=viewDate&amp;seq=selList&amp;playlist=$row[0]";
+            $hrefPL = "?subaction=viewListById&amp;playlist=$row[0]";
             echo "<A HREF='$hrefPL' CLASS='nav'>$description</A>&nbsp;with&nbsp;";
             echo "<A HREF='$hrefAirName' CLASS='calNav'>$airName</A></div>";
             echo "<div class='home-showbox'>";
