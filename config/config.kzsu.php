@@ -59,8 +59,8 @@ $config = [
      * URLs
      */
     'urls' => [
-        'home' => 'http://kzsu.stanford.edu/',
-        'listen' => 'http://kzsu.stanford.edu/live',
+        'home' => 'https://kzsu.stanford.edu/',
+        'listen' => 'https://kzsu.stanford.edu/live',
         'report_missing' => 'https://spreadsheets.google.com/a/kzsu.stanford.edu/viewform?hl=en&formkey=dGRuMW1GNFVQcXoxbmU3YWZHWlVna0E6MQ&$missingSelect&entry_2=%USERNAME%&entry_1=%ALBUMTAG%',
         //'old_charts' => 'http://kzsu.stanford.edu/charts/',
         'contact' => '?action=contact'
