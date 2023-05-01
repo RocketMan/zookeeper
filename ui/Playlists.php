@@ -738,7 +738,7 @@ class Playlists extends MenuItem {
                     $time == '' ||
                     $aid === false ||
                     !checkdate($month, $day, $year))) {
-            $this->setTemplate("list/importCommon.html");
+            $this->setTemplate("list/import.html");
             $this->addVar('errorMessage',
                     $validate == "edit" ?
                     ($errorMessage ?? "<b><font class='error'>Ensure fields are not blank and date is valid.</font></b><br>\n") : false);
