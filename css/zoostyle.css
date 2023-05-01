@@ -92,7 +92,7 @@ h1 {
     padding-top: 0;
 }
 h2, .subhead  {
-    color: #d83d04;
+    color: var(--theme-nav-highlight-colour);
     font-size: 14pt;
     font-weight: bold;
     margin-top: 0;
@@ -478,10 +478,10 @@ p.zktitle a {
 .nav2sel:link { color: #91a3ce; }
 .nav2sel:visited { color: #91a3ce; }
 .nav2sel:active { color: #ff0000; }
-.nav3:link { color: #d83d04; }
-.nav3:visited { color: #d83d04; }
-.nav3:active { color: #d83d04; }
-.nav3s { color: #d83d04; font-size: 80%; }
+.nav3:link { color: var(--theme-nav-highlight-colour); }
+.nav3:visited { color: var(--theme-nav-highlight-colour); }
+.nav3:active { color: var(--theme-nav-highlight-colour); }
+.nav3s { color: var(--theme-nav-highlight-colour); font-size: 80%; }
 
 /* secondary navigation */
 .linkhead {
@@ -599,7 +599,7 @@ table.recentAirplay td, .sub {
     color: #000000;
 }
 .subhead2 {
-    color: #d83d04;
+    color: var(--theme-nav-highlight-colour);
     font-size: 10pt;
     font-weight: bold;
     padding-top: 10px;
@@ -1409,7 +1409,7 @@ div.toggle-time-entry div {
     /*margin: 0 auto;/*TEST*/
 }
 .playlist-accordion.ui-accordion .ui-accordion-header {
-    color: #d83d04;
+    color: var(--theme-nav-highlight-colour);
     font-size: 14pt;
     font-weight: bold;
     margin-top: 0;
@@ -1420,7 +1420,7 @@ div.toggle-time-entry div {
     padding: 0;
 }
 .playlist-accordion.ui-accordion .ui-accordion-header-icon {
-    filter: brightness(0) saturate(100%) invert(24%) sepia(57%) saturate(3719%) hue-rotate(16deg) brightness(97%) contrast(105%); /* #d83d04 see https://codepen.io/sosuke/pen/Pjoqqp */
+    filter: brightness(0) saturate(100%) invert(17%) sepia(32%) saturate(14%) hue-rotate(330deg) brightness(90%) contrast(89%); /* #333333 see https://codepen.io/sosuke/pen/Pjoqqp */
 }
 .playlist-accordion.ui-accordion .ui-accordion-content {
     padding: 0;
