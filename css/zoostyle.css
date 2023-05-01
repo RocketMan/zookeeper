@@ -92,7 +92,7 @@ h1 {
     padding-top: 0;
 }
 h2, .subhead  {
-    color: var(--theme-nav-highlight-colour);
+    color: #000;
     font-size: 14pt;
     font-weight: bold;
     margin-top: 0;
@@ -599,7 +599,7 @@ table.recentAirplay td, .sub {
     color: #000000;
 }
 .subhead2 {
-    color: var(--theme-nav-highlight-colour);
+    color: #000;
     font-size: 10pt;
     font-weight: bold;
     padding-top: 10px;
