@@ -132,6 +132,18 @@ The following is an overview of the source code directory structure:
             Server-generated UI.  Menu items are specified in metadata,
             via config/ui_config.php.
 
+        ui/templates/default/
+            Twig UI templates directory.  These can be replaced or
+            extended via custom templates.
+
+        ui/templates/_custom dir_/
+            Custom Twig templates.  _custom dir_ is specified in
+            config/config.php; by default, 'custom' is used.
+
+            To extend or reference a default template, you may use
+            path expressions of the form 'default/_template_',
+            where _template_ is the default template file name.
+
         vendor/
             PHP Composer dependencies (not delivered from the repo)
             See INSTALLATION.md for more information.
