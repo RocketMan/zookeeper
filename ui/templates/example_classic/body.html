@@ -1,4 +1,6 @@
 {% extends "default/body.html" %}
+{% block topnav %}
+{% endblock %}
 {% block header %}
 <div class="header">
   <div class="headerLogo">
@@ -10,4 +12,9 @@
     <span>{{ app.station_slogan }}</span>
   </div>
 </div>
+{% endblock %}
+{% block navigation %}
+{% include('navigation.html') %}
+{% endblock %}
+{% block footer %}
 {% endblock %}
