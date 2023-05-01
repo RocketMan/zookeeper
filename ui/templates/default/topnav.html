@@ -64,11 +64,11 @@ Credits:
 {% if item.selected %}
 <div class="breadcrumbs">
   <ul>
-    <li><span class="fas fa-home"></span></li>
-    <li>{{ item.label }}</li>
+    <li><span class="fas fa-home"></span><span class="fas fa-chevron-right"></span></li>
+    <li>{{ item.label }}<span class="fas fa-chevron-right"></span></li>
   {% for subitem in app.submenu %}
   {% if subitem.selected %}
-    <li>{{ subitem.label }}</li>
+    <li>{{ subitem.label }}<span class="fas fa-chevron-right"></span></li>
     {% if app.tertiary %}
     <li>{{ app.tertiary }}</li>
     {% endif %}
