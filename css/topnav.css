@@ -75,7 +75,6 @@ nav .nav-items > li a {
 }
 
 nav .login-search {
-  margin-right: 10px;
 }
 
 nav .login-search .login,
@@ -452,7 +451,6 @@ nav .search-icon {
   font-size: 18px;
   font-weight: 500;
   letter-spacing: -1px;
-  margin-right: 20px;
   overflow-y: scroll;
   text-decoration: none;
 }
