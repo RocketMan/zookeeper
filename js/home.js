@@ -107,9 +107,9 @@ $().ready(function(){
         // @media settings in zoostyle.css
         if(width > 1150)
             count = 12;
-        else if(width > 800)
+        else if(width > 900)
             count = 10;
-        else if(width > 600)
+        else if(width > 700)
             count = 8;
         else
             count = 6;

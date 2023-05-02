@@ -1159,22 +1159,26 @@ a:hover.copy {
     margin-left: 10px;
 }
 
+/*
+ * if you change @media settings for the recently played cards,
+ * update the corresponding widths in home.js
+ */
 @media (max-width: 1150px) {
     .recently-played .card {
 	width: calc(20% - 16px);
     }
 }
-@media (max-width: 800px) {
+@media (max-width: 900px) {
     .recently-played .card {
 	width: calc(25% - 15px);
     }
 }
-@media (max-width: 600px) {
+@media (max-width: 700px) {
     .recently-played .card {
 	width: calc(33.333% - 15px);
     }
 }
-@media (max-width: 425px) {
+@media (max-width: 525px) {
     .recently-played-date-picker div {
 	display: inline;
 	position: relative;
