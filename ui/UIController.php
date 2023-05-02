@@ -255,10 +255,24 @@ class UIController implements IController {
         case "logout":
             $this->doLogout();
             break;
+        case "viewDJReviews";
+            // redirect DJ review URLs from v2.x
+            $qs = "?action=viewRecent&subaction=viewDJ&seq=selUser&viewuser=".urlencode($_REQUEST["n"]??'');
+            header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            exit;
+        case "viewList":
+        case "viewListById":
+        case "viewDJ":
+            // redirect playlist URLs from v2.x
+            $_REQUEST["subaction"] = $_REQUEST["action"];
+            $_REQUEST["action"] = "";
+            $qs = "?" . http_build_query($_REQUEST);
+            header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            exit;
         case "viewDate":
             // redirect playlist URLs from the legacy date picker
-            $qs = isset($_REQUEST["playlist"])?"?action=viewListById&playlist=".urlencode($_REQUEST["playlist"]):"?action=viewList";
-            header("Location: ".UI::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            $qs = isset($_REQUEST["playlist"])?"?subaction=viewListById&playlist=".urlencode($_REQUEST["playlist"]):"?subaction=viewList";
+            header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
         }
     }
@@ -363,14 +377,14 @@ class UIController implements IController {
     protected function emitLoginHelp() {
         $station = htmlentities(Engine::param('station'));
     ?>
-    <DIV CLASS="subhead">login help</DIV>
+    <h2>login help</h2>
     <P>Google single sign-on provides integrated access to your existing
     <?php echo htmlentities(Engine::param('application')); ?> account.  Select the 'login' link in the
     left-hand navigation and enter your <?php echo $station; ?> Google account credentials
     if challenged.</P>
     <P>If you do not yet have a <?php echo $station; ?> Google account, contact the
     <A HREF="mailto:<?php echo Engine::param('email')['pd']; ?>">Program Director</A>.</P>
-    <DIV CLASS="subhead">classic login</DIV>
+    <h2>classic login</h2>
     <P>If you need immediate access but do not yet have a <?php echo $station; ?> Google account,
     go to the <A HREF="?action=login">classic login</A> page and enter your
     existing <?php echo htmlentities(Engine::param('application')); ?> user name and password.
@@ -392,7 +406,7 @@ class UIController implements IController {
     
     protected function emitLogout() {
         $logoutURI = Engine::param('sso')['logout_uri'];
-        $logoutURI = str_replace("{base_url}", urlencode(UI::getBaseUrl()."?action=logout"), $logoutURI);
+        $logoutURI = str_replace("{base_url}", urlencode(Engine::getBaseUrl()."?action=logout"), $logoutURI);
 
         $dn = $this->session->getDN()?$this->session->getDN():$this->dn;
     
@@ -425,7 +439,7 @@ class UIController implements IController {
         }
 
         // do the redirection
-        SSOCommon::zkHttpRedirect(UI::getBaseURL(), $rq);
+        SSOCommon::zkHttpRedirect(Engine::getBaseURL(), $rq);
         return true;
     }
 
