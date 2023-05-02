@@ -183,7 +183,7 @@ class Home extends MenuItem {
     }
     
     private function emitWhatsOnNow() {
-        echo "<div class='subhead'>On Now:<div class='home-onnow'>\n";
+        echo "<div class='subhead'>On Now<div class='home-onnow'>\n";
         echo "<div class='home-show'>";
         $tz = date("T");
         $record = Engine::api(IPlaylist::class)->getWhatsOnNow();

@@ -110,12 +110,6 @@ th.subhead {
     padding-top: 0;
 }
     
-div.subhead {
-    padding-top: 4px;
-    border-top: 1px solid gray;
-    border-bottom: 1px solid gray;
-}
-   
 .subhead2.coming-up {
     color: gray;
     font-size: 12pt;
