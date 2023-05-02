@@ -1409,7 +1409,7 @@ div.toggle-time-entry div {
     /*margin: 0 auto;/*TEST*/
 }
 .playlist-accordion.ui-accordion .ui-accordion-header {
-    color: var(--theme-nav-highlight-colour);
+    color: #5863da;
     font-size: 14pt;
     font-weight: bold;
     margin-top: 0;
@@ -1420,7 +1420,7 @@ div.toggle-time-entry div {
     padding: 0;
 }
 .playlist-accordion.ui-accordion .ui-accordion-header-icon {
-    filter: brightness(0) saturate(100%) invert(17%) sepia(32%) saturate(14%) hue-rotate(330deg) brightness(90%) contrast(89%); /* #333333 see https://codepen.io/sosuke/pen/Pjoqqp */
+    filter: brightness(0) saturate(100%) invert(32%) sepia(90%) saturate(767%) hue-rotate(207deg) brightness(99%) contrast(94%); /* #5863da see https://codepen.io/sosuke/pen/Pjoqqp */
 }
 .playlist-accordion.ui-accordion .ui-accordion-content {
     padding: 0;

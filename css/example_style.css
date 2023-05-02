@@ -77,8 +77,3 @@ div.playlistBanner a {
 .nav2:link { color: #000; }
 .nav2:visited { color: #000; }
 .nav2:active { color: #000; }
-
-
-.playlist-accordion.ui-accordion .ui-accordion-header-icon {
-    filter: brightness(0) saturate(100%) invert(14%) sepia(74%) saturate(2385%) hue-rotate(225deg) brightness(120%) contrast(101%); /* #2530a7 see https://codepen.io/sosuke/pen/Pjoqqp */
-}
