@@ -1,22 +1,22 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
-  {% block head %}
-  {% if app.page_title is not empty %}
-    {% set title = app.page_title ~ " - " ~ app.station_title %}
-  {% else %}
-    {% set title = app.station_title %}
-  {% endif %}
+{% block head %}
+{% if app.page_title is not empty %}
+  {%- set title = app.page_title ~ " - " ~ app.station_title -%}
+{% else %}
+  {%- set title = app.station_title -%}
+{% endif %}
   <head>
     <title>{{ title }} - Zookeeper Online</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    {% if app.favicon is not empty %}
+{% if app.favicon is not empty %}
     <link rel="icon" href="{{ app.favicon }}" />
-    {% endif %}
+{% endif %}
     <link rel="stylesheet" type="text/css" href="vendor/mottie/tablesorter/dist/css/theme.default.min.css" />
     <link rel="stylesheet" type="text/css" href="{{ "css/zoostyle.css" | decorate }}" />
-    {% if app.stylesheet is not empty %}
+{% if app.stylesheet is not empty %}
     <link rel="stylesheet" type="text/css" href="{{ app.stylesheet | decorate }}" />
-    {% endif %}
+{% endif %}
     <link rel="stylesheet" type="text/css" href="{{ "css/legal.css" | decorate }}" />
 
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
@@ -31,8 +31,8 @@
     <link rel="alternate" type="application/rss+xml" title="{{ app.station_title }} A-File Adds" href="zkrss.php?feed=adds" />
     <link rel="search" type="application/opensearchdescription+xml" href="?target=opensearch" title="{{ app.station_title }}" />
   </head>
-  {% endblock %}
-  {% block body %}
-  {% include('body.html') %}
-  {% endblock %}
+{% endblock %}
+{% block body %}
+{% include('body.html') %}
+{% endblock %}
 </html>

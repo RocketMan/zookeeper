@@ -3,20 +3,20 @@
 {% include('topnav.html') %}
 {% endblock %}
 <div class="box">
-  {% block header %}      {# <div class="header"> #}
-  {% endblock %}
-  {% block navigation %}  {# <div class="leftNav"> #}
-  {% endblock %}
-  {% block content %}     {# <div class="content"> #}
-  {% include('content.html') %}
-  {% endblock %}
-  {% block footer %}
-  {% include('footer.html') %}
-  {% endblock %}
+{% block header %}      {# <div class="header"> #}
+{% endblock %}
+{% block navigation %}  {# <div class="leftNav"> #}
+{% endblock %}
+{% block content %}     {# <div class="content"> #}
+{% include('content.html') %}
+{% endblock %}
+{% block footer %}
+{% include('footer.html') %}
+{% endblock %}
   <div class="legal">
-    {% if app.copyright is not empty %}
-      {{ app.copyright | raw }}<br />
-    {% endif %}
+{% if app.copyright is not empty %}
+    {{ app.copyright | raw }}<br />
+{% endif %}
     Powered by <a href="#about">Zookeeper Online</a>&trade; &copy; 1997-2023 J Mason.&nbsp;
     <a href="PRIVACY.md" target="_blank">Privacy Policy</a>
   </div>
