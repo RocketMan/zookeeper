@@ -149,7 +149,7 @@ class Reviews extends MenuItem {
                 $this->addVar("airname", $airname);
                 $this->addVar("key", $viewuser);
                 $this->tertiary = $airname;
-                $this->template = "reviews.html";
+                $this->template = "search.reviews.html";
                 return;
             }
         }
@@ -433,73 +433,57 @@ class Reviews extends MenuItem {
         }
 
         $airname = mb_substr(trim($_REQUEST["airname"]), 0, IDJ::MAX_AIRNAME_LENGTH);
-    
+
+        $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
+        $self = "(" . $user[0]["realname"] . ")";
+        $errorMessage = "";
         if($_POST["validate"]) {
-            switch($_REQUEST["button"]) {
-            case " Setup New Airname... ":
-                $displayForm = 1;
-                $djname = trim($_REQUEST["djname"]);
-                if($_REQUEST["newairname"] == " Add Airname " && $djname) {
-                    // Insert new airname
-                    $api = Engine::api(IDJ::class);
-                    $success = $api->insertAirname($djname, $this->session->getUser());
+            $review = mb_substr(trim($_REQUEST["review"]), 0, IReview::MAX_REVIEW_LENGTH);
+
+            // lookup the airname
+            $aid = null;
+            if($airname && strcasecmp($airname, $self)) {
+                $djapi = Engine::api(IDJ::class);
+                $aid = $djapi->getAirname($airname, $this->session->getUser());
+                if(!$aid) {
+                    // airname does not exist; try to create it
+                    $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $this->session->getUser());
                     if($success > 0) {
-                        $airname = $api->lastInsertId();
+                        // success!
+                        $aid = $djapi->lastInsertId();
+                    } else {
+                        $errorMessage = "<p><b><font class='error'>Airname '$airname' is invalid or already exists.</font></b></p>";
+                        $airname = "";
+                        $aid = false;
                         $_REQUEST["button"] = "";
-                        $displayForm = 0;
-                    } else
-                        $errorMessage = "<B><FONT COLOR=\"#cc0000\">Airname '$djname' is invalid or already exists.</FONT></B>";
+                    }
                 }
-                if ($displayForm) {
-    ?>
-    <P CLASS="header">Add New Airname</P>
-    <?php echo $errorMessage; ?>
-    <FORM ACTION="?" METHOD=POST>
-    <TABLE CELLPADDING=0 CELLSPACING=0>
-      <TR>
-        <TD ALIGN=RIGHT>Airname:</TD>
-        <TD><INPUT TYPE=TEXT NAME=djname CLASS=input maxlength=<?php echo IDJ::MAX_AIRNAME_LENGTH;?> SIZE=30></TD>
-      </TR>
-      <TR>
-        <TD>&nbsp;</TD>
-        <TD><INPUT TYPE=SUBMIT NAME="newairname" VALUE=" Add Airname "></TD>
-      </TR>
-    </TABLE>
-    <INPUT TYPE=HIDDEN NAME=button VALUE=" Setup New Airname... ">
-    <INPUT TYPE=HIDDEN NAME=created VALUE="<?php echo $_REQUEST["created"];?>">
-    <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $_REQUEST["tag"];?>">
-    <INPUT TYPE=HIDDEN NAME=action VALUE="searchReviewEdit">
-    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
-    </FORM>
-    <?php 
-                    UI::setFocus("djname");
-                    return;
-                }
-                break;
+            }
+
+            switch($_REQUEST["button"]) {
             case " Post Review! ":
                 Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
-                $review = mb_substr(trim($_REQUEST["review"]), 0, IReview::MAX_REVIEW_LENGTH);
-                $success = Engine::api(IReview::class)->insertReview($_REQUEST["tag"], $_REQUEST["private"], $airname, $review, $this->session->getUser());
+                $success = Engine::api(IReview::class)->insertReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
                 if($success >= 1) {
                     if($_REQUEST["noise"])
-                        $this->eMailReview($_REQUEST["tag"], $airname, $review);
+                        $this->eMailReview($_REQUEST["tag"], $aid, $review);
                     echo "<B><FONT COLOR=\"#ffcc33\">Your review has been posted!</FONT></B>\n";
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
-                echo "<B><FONT COLOR=\"#cc0000\">Review not posted.  Try again later.</FONT></B>\n";
+                $errorMessage = "<B><FONT COLOR=\"#cc0000\">Review not posted.  Try again later.</FONT></B>\n";
                 break;
             case " Update Review ":
                 $review = mb_substr(trim($_REQUEST["review"]), 0, IReview::MAX_REVIEW_LENGTH);
-                $success = Engine::api(IReview::class)->updateReview($_REQUEST["tag"], $_REQUEST["private"], $airname, $review, $this->session->getUser());
+                $success = Engine::api(IReview::class)->updateReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
                 if($success >= 0) {
                     if($_REQUEST["noise"])
-                        $this->eMailReview($_REQUEST["tag"], $airname, $review);
+                        $this->eMailReview($_REQUEST["tag"], $aid, $review);
                     echo "<B><FONT COLOR=\"#ffcc33\">Your review has been updated.</FONT></B>\n";
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
-                echo "<B><FONT COLOR=\"#cc0000\">Review not updated.  Try again later.</FONT></B>\n";
+                $errorMessage = "<B><FONT COLOR=\"#cc0000\">Review not updated.  Try again later.</FONT></B>\n";
                 break;
             case " Delete Review ":
                 $success = Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
@@ -508,12 +492,12 @@ class Reviews extends MenuItem {
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
-                echo "<B><FONT COLOR=\"#cc0000\">Delete failed.  Try again later.</FONT></B>\n";
+                $errorMessage = "<B><FONT COLOR=\"#cc0000\">Delete failed.  Try again later.</FONT></B>\n";
                 break;
             }
         }
         $_REQUEST["private"] = 0;
-        $results = Engine::api(IReview::class)->getReviews($_REQUEST["tag"], 0, $this->session->getUser(), 1);
+        $results = Engine::api(IReview::class)->getReviews($_REQUEST["tag"], 1, $this->session->getUser(), 1);
         if(sizeof($results)) {
             $saveAirname = $airname;
             extract($results[0]);
@@ -523,54 +507,24 @@ class Reviews extends MenuItem {
         }
         
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["tag"]);
-    ?>
-    <P CLASS="header">Review Album:&nbsp;&nbsp;<?php echo $albums[0]["artist"] ." / ". $albums[0]["album"];?></P>
-    <FORM ACTION="?" METHOD=POST>
-    <TABLE>
-      <TR><TD ALIGN=RIGHT>Reviewer:</TD>
-          <TD><SELECT NAME=airname>
-    <?php 
+
+        $airnames = "";
         $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, $djname);
         while ($row = $records->fetch()) {
-           $selected = ($row[0] == $airname)?" SELECTED":"";
-           echo "            <OPTION VALUE=\"" . $row[0] ."\"" . $selected .
-                ">$row[1]\n";
+           $airnames .= "<OPTION VALUE=\"" . $row['airname'] ."\">\n";
         }
-        $selected = $airname?"":" SELECTED";
-        $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
-        echo "            <OPTION VALUE=\"\"$selected>(" . $user[0]["realname"] . ")\n";
-    ?>
-              </SELECT><INPUT TYPE=SUBMIT NAME=button VALUE=" Setup New Airname... "></TD></TR>
-    </TABLE>
-    <TABLE>
-      <TR><TD>Review:</TD>
-          <TD ALIGN=RIGHT><INPUT TYPE=RADIO NAME=private VALUE=0<?php if(!$_REQUEST["private"])echo " CHECKED";?>>Public&nbsp;&nbsp;
-                          <INPUT TYPE=RADIO NAME=private VALUE=1<?php if($_REQUEST["private"])echo " CHECKED";?>>Private</TD></TR>
-      <TR><TD COLSPAN=2>
-        <SPAN CLASS=input><TEXTAREA WRAP=VIRTUAL NAME=review maxlength=<?php echo IReview::MAX_REVIEW_LENGTH;?> COLS=50 ROWS=20>
-<?php echo htmlentities($review);?></TEXTAREA></SPAN><BR>
-      </TD></TR>
-      <TR><TD ALIGN=LEFT COLSPAN=2>
-    <?php 
-        if($id) {
-    ?>
-          <INPUT TYPE=SUBMIT NAME=button VALUE=" Update Review ">&nbsp;&nbsp;&nbsp;
-              <INPUT TYPE=SUBMIT NAME=button VALUE= " Delete Review ">
-    <?php  } else { ?>
-          <INPUT TYPE=SUBMIT NAME=button VALUE=" Post Review! ">
-    <?php    $email = " CHECKED";
-           } ?>
-      </TD></TR>
-      <TR><TD ALIGN=LEFT COLSPAN=2>
-        <INPUT TYPE=CHECKBOX NAME=noise<?php echo $email;?>>E-mail review to Noise
-      </TD></TR>
-    </TABLE>
-    <INPUT TYPE=HIDDEN NAME=created VALUE="<?php echo $_REQUEST["created"];?>">
-    <INPUT TYPE=HIDDEN NAME=tag VALUE="<?php echo $_REQUEST["tag"];?>">
-    <INPUT TYPE=HIDDEN NAME=action VALUE="searchReviewEdit">
-    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
-    </FORM>
-    <?php 
-        UI::setFocus("review");
+        $airnames .= "<OPTION VALUE=\"$self\">\n";
+
+        $this->template = "review.html";
+        $this->addVar("id", $id ?? 0);
+        $this->addVar("album", $albums[0]);
+        $this->addVar("errorMessage", $errorMessage);
+        $this->addVar("airnames", $airnames);
+        $this->addVar("airname", $airname);
+        $this->addVar("self", $self);
+        $this->addVar("review", $review);
+        $this->addVar("private", $_REQUEST["private"] ?? 0);
+        $this->addVar("MAX_AIRNAME_LENGTH", IDJ::MAX_AIRNAME_LENGTH);
+        $this->addVar("MAX_REVIEW_LENGTH", IReview::MAX_REVIEW_LENGTH);
     }
 }
