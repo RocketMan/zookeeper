@@ -49,8 +49,13 @@ abstract class MenuItem extends CommandTarget {
 
     public function newEntity($entityClass) {
         $obj = parent::newEntity($entityClass);
-        if($obj)
+        if($obj) {
             $obj->title = &$this->title;
+            $obj->template = &$this->template;
+            $obj->templateVars = &$this->templateVars;
+            $obj->extra = &$this->extra;
+            $obj->tertiary = &$this->tertiary;
+        }
         return $obj;
     }
 
