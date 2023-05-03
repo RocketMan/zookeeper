@@ -2,7 +2,9 @@
 {{ errorMessage | raw }}
 <form class="review" action="?" method=post>
 <datalist id='airnames'>
-{{ airnames | raw }}
+{% for airname in airnames %}
+  <option value='{{ airname }}'>
+{% endfor %}
 </datalist>
 <table>
   <tr>

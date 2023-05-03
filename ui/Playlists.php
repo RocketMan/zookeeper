@@ -250,15 +250,13 @@ class Playlists extends MenuItem {
     }
 
     private function getDJAirNames() {
-        $airNames = '';
+        $airNames = [];
         $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, 1);
-        while ($records && ($row = $records->fetch())) {
-           $newItem = "<OPTION VALUE='".htmlentities($row['airname'], ENT_QUOTES, 'UTF-8')."'>";
-           $airNames .= $newItem;
-        }
+        while ($records && ($row = $records->fetch()))
+           $airNames[] = $row['airname'];
 
-        $airNames .=  "<OPTION VALUE='None'>";
-        return $airNames."\n";
+        $airNames[] = 'None';
+        return $airNames;
     }
 
     // make header for edit & view playlist

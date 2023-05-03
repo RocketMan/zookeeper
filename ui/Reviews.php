@@ -508,12 +508,11 @@ class Reviews extends MenuItem {
         
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["tag"]);
 
-        $airnames = "";
+        $airnames = [];
         $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, $djname);
-        while ($row = $records->fetch()) {
-           $airnames .= "<OPTION VALUE=\"" . $row['airname'] ."\">\n";
-        }
-        $airnames .= "<OPTION VALUE=\"$self\">\n";
+        while ($row = $records->fetch())
+           $airnames[] = $row['airname'];
+        $airnames[] = $self;
 
         $this->template = "review.html";
         $this->addVar("id", $id ?? 0);

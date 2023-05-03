@@ -13,7 +13,9 @@
   <input type='hidden' name='totime' id='totime' value='{{ totime }}'>
   <input type='hidden' id='date-format' value='{{ dateformat }}'>
   <datalist id='airnames'>
-    {{ airnames | raw }}
+{% for airname in airnames %}
+    <option value='{{ airname }}'>
+{% endfor %}
   </datalist>
   <div>
     <label>Import from:</label>
