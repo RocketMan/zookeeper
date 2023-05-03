@@ -255,6 +255,7 @@ class UIController implements IController {
         case "logout":
             $this->doLogout();
             break;
+/*
         case "viewDJReviews";
             // redirect DJ review URLs from v2.x
             $qs = "?action=viewRecent&subaction=viewDJ&seq=selUser&viewuser=".urlencode($_REQUEST["n"]??'');
@@ -269,6 +270,7 @@ class UIController implements IController {
             $qs = "?" . http_build_query($_REQUEST);
             header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
+*/
         case "viewDate":
             // redirect playlist URLs from the legacy date picker
             $qs = isset($_REQUEST["playlist"])?"?subaction=viewListById&playlist=".urlencode($_REQUEST["playlist"]):"?subaction=viewList";
