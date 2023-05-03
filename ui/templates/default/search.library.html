@@ -1,0 +1,37 @@
+<script type="text/javascript" SRC="js/jquery.bahashchange.min.js"></script>
+<script type="text/javascript" src="{{ 'js/search.library.js' | decorate }}"></script>
+<form action="?" method=post id='search'>
+<table width="100%">
+  <tr><td>
+    <table cellpadding=2>
+      <tr>
+        <td align=right><b>Search by:</b></td>
+        <td><input type=radio name=s value="artists" data-sort="Artist" {{ search.searchType == 'byArtist' ? 'checked' : '' }}>Artist</td>
+        <td><input type=radio name=s value="albums" data-sort="Album" {{ search.searchType == 'byAlbum' ? 'checked' : '' }}>Album</td>
+        <td><input type=radio name=s value="tracks" data-sort="Track" {{ search.searchType == 'byTrack' ? 'checked' : '' }}>Track</td>
+        <td><input type=radio name=s value="labels" data-sort="" {{ search.searchType == 'byLabel' ? 'checked' : '' }}>Label</td>
+      </tr>
+      <tr>
+        <td align=right><b>For:</b></td>
+        <td colspan=4><input type=text id='n' value='{{ search.searchType == 'byLabelKey' ? '' : search.searchText }}' size=35 class=input autocomplete=off></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td><input type=submit value="Search"></td>
+        <td colspan=2><input type=checkbox id='m' value=1 {{ search.exactMatch and search.searchType != 'byLabelKey' ? 'checked' : '' }}>Exact match</td>
+        <td><input type='hidden' id='maxresults' value='{{ search.maxresults }}'></td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+<input type=hidden id='sortBy' value=''>
+<input type=hidden id='type' value='{{ search.searchType == 'byLabelKey' ? 'albumsByPubkey' : '' }}'>
+<input type=hidden id='key' value='{{ search.searchType == 'byLabelKey' ? search.searchText : '' }}'>
+<input type=hidden id='chunksize' value='{{ search.chunksize }}'>
+</form>
+<br>
+<table class='searchTable' cellpadding=2 cellspacing=0 border=0>
+  <tr>
+    <td><b>Tip:  For a more extensive search, use the Search field in the top navigation area.</b></td>
+  </tr>
+</table>
