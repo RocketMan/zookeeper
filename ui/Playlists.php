@@ -241,7 +241,7 @@ class Playlists extends MenuItem {
     }
 
     public function emitListManager() {
-        $this->setTemplate("list/pick.html");
+        $this->setTemplate("list/mylists.html");
         $this->addVar('airnames', $this->getDJAirNames());
         $this->addVar('duplicate', isset($_POST["duplicate"]) && $_POST["duplicate"] ? $_POST["playlist"] : false);
         $this->addVar('DUPLICATE_SUFFIX', IPlaylist::DUPLICATE_SUFFIX);
@@ -1074,17 +1074,8 @@ class Playlists extends MenuItem {
     // emit page for picking playlists for a given month.
     public function emitPlaylistPicker() {
         $startDate = Engine::param('playlist_start_date');
-        echo "<div class='playlist-by-date'>";
-        echo "<b>Playlist Date:&nbsp;</b>";
-        echo "<input id='playlist-start-date' type='hidden' value='${startDate}' />";
-        echo "<input id='playlist-date'/>";
-        echo "<input id='playlist-datepicker' readonly='true' type='hidden' autocomplete='off' />";
-        echo "<img id='playlist-calendar' src='img/calendar-icon.svg'></img>";
-        echo "<table id='playlist-list'>";
-        echo "<thead><tr><th textalign='left' colspan='2' class='subhead'></th></tr></thead>";
-        echo "<tbody></tbody></table>";
-        echo "</div>";
-        UI::emitJS('js/playlists.view.js');
+        $this->setTemplate("list/bydate.html");
+        $this->addVar("startDate", $startDate);
     }
 
     public function handlePlaylistsByDate() {
