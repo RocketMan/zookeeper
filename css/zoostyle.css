@@ -1013,6 +1013,7 @@ input[type="checkbox"]:checked:active {
 }
 
 .grab {
+    color: #333;
     position: absolute;
     line-height: 1.4;
     cursor: grab;

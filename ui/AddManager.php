@@ -128,10 +128,10 @@ class AddManager extends MenuItem {
        $hrefDate= "?action=addmgr&amp;subaction=adds&amp;date=$date ";
        $class = ($requestId && $requestId == $albumId) ? "sel" : "nav";
        $cellDate = "<A CLASS='nav' HREF='" . $hrefDate .
-          "' onClick='ConfirmDelete(" . $albumId . "); return false;'>[x]</A>&nbsp;";
+          "' onClick='ConfirmDelete(" . $albumId . "); return false;'><span class='fas fa-trash'></span></A>&nbsp;";
 
        $hrefId = "?action=addmgr&amp;subaction=addsedit&amp;id=" . $albumId;
-       $cellId = "<A CLASS='songEdit' HREF='" . $hrefId . "'>&#x270f;</A>";
+       $cellId = "<A CLASS='songEdit' HREF='" . $hrefId . "'><span class='fas fa-edit'></span></A>";
 
        return "<TD>" . $cellDate . $cellId . "</TD>";
     }
