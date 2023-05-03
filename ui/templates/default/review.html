@@ -27,7 +27,7 @@
     <td align=left colspan=2>
 {% if id %}
       <input type=submit name=button value=" Update Review ">&nbsp;&nbsp;&nbsp;
-      <input type=submit name=button value= " Delete Review ">
+      <input type=submit name=button id='delrev' value= " Delete Review ">
 {% else %}
       <input type=submit name=button value=" Post Review! ">
 {% endif %}
@@ -72,6 +72,11 @@ $().ready(function() {
             e.preventDefault();
             return;
         }
+    });
+
+    $("#delrev").on('click', function(e) {
+        if(!confirm("Delete the review?"))
+            e.preventDefault();
     });
 
     $("*[name=review]").focus();
