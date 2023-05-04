@@ -584,7 +584,7 @@ class Playlists extends MenuItem {
     }
 
     public function emitImportList() {
-        $validate = $_POST["validate"];error_log("v=$validate");
+        $validate = $_POST["validate"];
         $format = $_REQUEST["format"] ?? "json";
         if($format == "csv") {
             $description = mb_substr(trim($_REQUEST["description"]), 0, IPlaylist::MAX_DESCRIPTION_LENGTH);
