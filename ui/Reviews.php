@@ -125,7 +125,6 @@ class Reviews extends MenuItem {
         echo "</TD></TR>\n</TABLE>\n";
         if($this->subaction == "viewDJ")
             echo "<h4>Didn't find the DJ you were looking for?  Show <a href='?action=viewRecent&subaction=viewDJAll'>All DJs</a>.</h4>\n";
-        echo "</div>\n";
     }
 
     public function reviewsByDJ() {

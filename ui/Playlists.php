@@ -1052,7 +1052,6 @@ class Playlists extends MenuItem {
         echo "</TD></TR>\n</TABLE>\n";
         if($this->subaction == "viewDJ")
             echo "<h4>Didn't find the DJ you were looking for?  Show <a href='?subaction=viewDJAll'>All DJs</a>.</h4>\n";
-        echo "</div>\n";
     }
     
     // return list of days in month that have at least 1 playlist.
