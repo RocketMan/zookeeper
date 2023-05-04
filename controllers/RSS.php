@@ -179,7 +179,7 @@ class RSS extends CommandTarget implements IController {
        $station = self::xmlentities(Engine::param('station_title', Engine::param('station')));
        $limit = isset($_REQUEST["limit"])?$_REQUEST["limit"]:50;
 
-       $title = "$station Music Reviews";
+       $title = "$station Album Reviews";
     
        $dateSpec = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
 
