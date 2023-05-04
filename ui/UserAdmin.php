@@ -62,7 +62,7 @@ class UserAdmin extends MenuItem {
     public function settings() {
         if(substr($this->subaction, -1) != "_")
             UI::emitJS("js/useradmin.js");
-        return $this->dispatchSubAction($this->action, $this->subaction);
+        return $this->dispatchSubaction($this->action, $this->subaction);
     }
 
     public function contact() {

@@ -52,7 +52,7 @@ class ChangePass extends MenuItem {
                 echo "<B><FONT CLASS=\"error\">Old Password is not valid.</FONT></B>\n";
         }
     ?>
-    <P CLASS="header">Change Password</P>
+    <h2>Change Password</h2>
     <FORM ACTION="?" METHOD=POST>
     <TABLE CELLPADDING=0 CELLSPACING=0>
       <TR>
