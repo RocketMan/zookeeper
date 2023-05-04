@@ -344,7 +344,7 @@ class UIController implements IController {
             echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">There was a problem accessing Google authentication.  Please try again later.</FONT></B></TD></TR>\n";
             break;
         case "cookiesDisabled":
-            echo "  <TR><TD>&nbsp;</TD><TD><P><B><FONT CLASS=\"error\">You must enable cookies to login to ".htmlentities(Engine::param('application')).".</FONT></B></P>".
+            echo "  <TR><TD>&nbsp;</TD><TD><P><B><FONT CLASS=\"error\">You must enable cookies to login to Zookeeper Online.</FONT></B></P>".
             "<P>Enable cookies in your browser for the website '".
             $_SERVER['REQUEST_SCHEME']."://".$_SERVER['SERVER_NAME'].
             "/' and try again.</P>".
@@ -382,15 +382,15 @@ class UIController implements IController {
     ?>
     <h2>login help</h2>
     <P>Google single sign-on provides integrated access to your existing
-    <?php echo htmlentities(Engine::param('application')); ?> account.  Select the 'login' link in the
-    left-hand navigation and enter your <?php echo $station; ?> Google account credentials
+    Zookeeper Online account.  Select the 'Login' link
+    and enter your <?php echo $station; ?> Google account credentials
     if challenged.</P>
     <P>If you do not yet have a <?php echo $station; ?> Google account, contact the
     <A HREF="mailto:<?php echo Engine::param('email')['pd']; ?>">Program Director</A>.</P>
     <h2>classic login</h2>
     <P>If you need immediate access but do not yet have a <?php echo $station; ?> Google account,
     go to the <A HREF="?action=login">classic login</A> page and enter your
-    existing <?php echo htmlentities(Engine::param('application')); ?> user name and password.
+    existing Zookeeper Online user name and password.
     <B>Classic login may be deprecated or restricted in future.</B></P>
 <?php 
     }
