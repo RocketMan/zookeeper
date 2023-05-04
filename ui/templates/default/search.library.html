@@ -6,27 +6,27 @@
     <table cellpadding=2>
       <tr>
         <td align=right><b>Search by:</b></td>
-        <td><input type=radio name=s value="artists" data-sort="Artist" {{ search.searchType == 'byArtist' ? 'checked' : '' }}>Artist</td>
-        <td><input type=radio name=s value="albums" data-sort="Album" {{ search.searchType == 'byAlbum' ? 'checked' : '' }}>Album</td>
-        <td><input type=radio name=s value="tracks" data-sort="Track" {{ search.searchType == 'byTrack' ? 'checked' : '' }}>Track</td>
-        <td><input type=radio name=s value="labels" data-sort="" {{ search.searchType == 'byLabel' ? 'checked' : '' }}>Label</td>
+        <td><input type=radio name=s value="artists" data-sort="Artist" {{ search.searchType == 'byArtist' ? 'checked' }}>Artist</td>
+        <td><input type=radio name=s value="albums" data-sort="Album" {{ search.searchType == 'byAlbum' ? 'checked' }}>Album</td>
+        <td><input type=radio name=s value="tracks" data-sort="Track" {{ search.searchType == 'byTrack' ? 'checked' }}>Track</td>
+        <td><input type=radio name=s value="labels" data-sort="" {{ search.searchType == 'byLabel' ? 'checked' }}>Label</td>
       </tr>
       <tr>
         <td align=right><b>For:</b></td>
-        <td colspan=4><input type=text id='n' value='{{ search.searchType == 'byLabelKey' ? '' : search.searchText }}' size=35 class=input autocomplete=off></td>
+        <td colspan=4><input type=text id='n' value='{{ search.searchType != 'byLabelKey' ? search.searchText }}' size=35 class=input autocomplete=off></td>
       </tr>
       <tr>
         <td></td>
         <td><input type=submit value="Search"></td>
-        <td colspan=2><input type=checkbox id='m' value=1 {{ search.exactMatch and search.searchType != 'byLabelKey' ? 'checked' : '' }}>Exact match</td>
+        <td colspan=2><input type=checkbox id='m' value=1 {{ search.exactMatch and search.searchType != 'byLabelKey' ? 'checked' }}>Exact match</td>
         <td><input type='hidden' id='maxresults' value='{{ search.maxresults }}'></td>
       </tr>
     </table>
   </td></tr>
 </table>
 <input type=hidden id='sortBy' value=''>
-<input type=hidden id='type' value='{{ search.searchType == 'byLabelKey' ? 'albumsByPubkey' : '' }}'>
-<input type=hidden id='key' value='{{ search.searchType == 'byLabelKey' ? search.searchText : '' }}'>
+<input type=hidden id='type' value='{{ search.searchType == 'byLabelKey' ? 'albumsByPubkey' }}'>
+<input type=hidden id='key' value='{{ search.searchType == 'byLabelKey' ? search.searchText }}'>
 <input type=hidden id='chunksize' value='{{ search.chunksize }}'>
 </form>
 <br>
