@@ -206,14 +206,15 @@ class UIController implements IController {
                 if($rpath)
                     $path[] = $rpath;
             }
-/*
-            $cacheDir = self::TEMPLATE_BASE . '/.cache';
-            if(!is_dir($cacheDir) && !mkdir($cacheDir)) {
-                error_log("UIController: cannot create $cacheDir");
-                $cacheDir = false; // disable cache
+
+            $cacheDir = Engine::param('template_cache_enabled') ?
+                            self::TEMPLATE_BASE . '/.cache' : false;
+            if($cacheDir) {
+                if(!is_dir($cacheDir) && !mkdir($cacheDir)) {
+                    error_log("UIController: cannot create $cacheDir");
+                    $cacheDir = false; // disable cache
+                }
             }
-*/
-            $cacheDir = false;
 
             $loader = new \Twig\Loader\FilesystemLoader($path);
             $twig = new \Twig\Environment($loader, [ 'cache' => $cacheDir ]);

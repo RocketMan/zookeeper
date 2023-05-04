@@ -34,7 +34,27 @@ $config = [
     'favicon' => 'img/favicon.ico',
 
     'stylesheet' => 'css/example_style.css',
+
+    /**
+     * subdirectory for custom Twig templates
+     *
+     * this directory is relativve to ui/templates
+     *
+     * templates in this directory override/extend templates
+     * in the ui/templates/default directory
+     */
     'custom_template_dir' => 'example',
+
+    /**
+     * enable twig template caching
+     *
+     * if enabled, your webserver user needs write permission
+     * to ui/templates/.cache.
+     *
+     * IMPORTANT: purge ui/templates/.cache any time changes are made
+     * to the templates!
+     */
+    'template_cache_enabled' => false,
 
     /**
      * e-mail settings
