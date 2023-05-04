@@ -340,6 +340,7 @@ class UserAdmin extends MenuItem {
     <FORM ACTION="?" METHOD=POST>
     <INPUT TYPE=SUBMIT CLASS=submit VALUE="  New User  ">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
+    <INPUT TYPE=HIDDEN NAME=subaction VALUE="users">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="newUser">
     <INPUT TYPE=HIDDEN id='nameCol' VALUE='1'>
     </FORM>
