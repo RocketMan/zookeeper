@@ -159,43 +159,24 @@ $().ready(function(){
         var socket = new WebSocket($("#push-subscribe").val());
         socket.last = last;
         socket.onmessage = function(message) {
-            if(this.last.fader != null) {
-                clearInterval(this.last.fader);
-                this.last.fader = null;
-            }
-
             var onnow = JSON.parse(message.data);
             if(onnow.show_id == 0) {
                 $(".home-show").html("");
-                $(".home-currenttrack").fadeout();
-                $(".home-datetime").html("[No playlist available]").fadein();
+                $(".home-currenttrack").slideUp();
+                $(".home-datetime").html("[No playlist available]");
             } else {
                 var start = serverDate(onnow.show_start);
                 var end = serverDate(onnow.show_end);
                 $(".home-show").html("<A HREF='?subaction=viewListById&amp;playlist=" + onnow.show_id + "' CLASS='nav'>" + onnow.name + "</A>&nbsp;with&nbsp;" + onnow.airname);
                 $(".home-datetime").html(start.toLocaleString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) + " " + localTime(start) + " - " + localTime(end) + " " + $("#tz").val());
                 if(onnow.id == 0) {
-                    $(".home-currenttrack").fadeout();
-                    $(".home-datetime").fadein();
+                    $("#home-current-track-" + this.last.current).hide('slide', { direction: 'up' });
+                    this.last.current = (this.last.current + 1) % 2
+                    $("#home-current-track-" + this.last.current).html("&nbsp;").show('slide', { direction: 'down' });
                 } else {
-                    $(".home-datetime").fadeout();
-                    $(".home-currenttrack").html(onnow.track_artist + " &#8211; <I>" + onnow.track_title + "</I> (" + onnow.track_album + ")").fadein();
-                    this.last.current = 0;
-                    this.last.fader = setInterval(function() {
-                        switch(socket.last.current++) {
-                        case 0:
-                            break;
-                        case 1:
-                            $(".home-currenttrack").fadeout();
-                            $(".home-datetime").fadein();
-                            break;
-                        case 2:
-                            $(".home-datetime").fadeout();
-                            $(".home-currenttrack").fadein();
-                            socket.last.current = 0;
-                            break;
-                        }
-                    }, 5000);
+                    $("#home-current-track-" + this.last.current).hide('slide', { direction: 'up' });
+                    this.last.current = (this.last.current + 1) % 2
+                    $("#home-current-track-" + this.last.current).html(onnow.track_artist + " &#8211; <I>" + onnow.track_title + "</I> (" + onnow.track_album + ")").show('slide', { direction: 'down' });
 
                     var time = $("#time").val();
                     var nowPlaying = $(".recently-played");
@@ -257,5 +238,5 @@ $().ready(function(){
     });
 
     populateCards(false, null);
-    connect({ fader: null, open: false });
+    connect({ current: 0, open: false });
 });
