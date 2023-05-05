@@ -1212,6 +1212,7 @@ a:hover.copy {
 .show-more {
     text-align: center;
     padding-bottom: 20px;
+    max-width: 1210px;
 }
 
 /* artwork on album details page */
