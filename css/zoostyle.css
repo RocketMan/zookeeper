@@ -228,15 +228,26 @@ span.review-categories > span.zk-hidden {
     -o-transition: visibility 0s 2s, opacity 2s linear;
     transition: visibility 0s 2s, opacity 2s linear;
 }
-.home-showbox {
-    position: relative;
-    max-height: 40px;
-    overflow: hidden;
+.home-nowplaying {
+    font-size: 12pt;
+    line-height: 1.5;
+    font-weight: 600;
+    border-bottom: 1px solid gray;
+    padding-bottom: 8px;
+    max-height: 80px;
 }
-.home-datetime {
-    font-size: 10pt;
-    padding-top: 4px;
-    padding-bottom: 4px;
+.home-title .show-time {
+    padding-left: 10px;
+    font-weight: normal;
+}
+.home-show {
+    font-weight: 600;
+    font-size: 12pt;
+}
+.home-trackbox {
+    position: relative;
+    max-height: 25px;
+    overflow: hidden;
 }
 .home-currenttrack {
     font-weight: normal;

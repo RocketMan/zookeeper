@@ -183,25 +183,25 @@ class Home extends MenuItem {
     }
     
     private function emitWhatsOnNow() {
-        echo "<div class='subhead'>On Now<div class='home-onnow'>\n";
-        echo "<div class='home-show'>";
+        echo "<div class='home-nowplaying'><span class='home-title'>On Now";
         $tz = date("T");
         $record = Engine::api(IPlaylist::class)->getWhatsOnNow();
         if($record && ($row = $record->fetch())) {
             $airId = $row["airid"];
             $airName = htmlentities($row["airname"]);
             $description = htmlentities($row["description"]);
-            $showDateTime = Playlists::makeShowDateAndTime($row);
+            $showTime = Playlists::makeShowTime($row);
             $hrefAirName =  "?subaction=viewDJ&amp;seq=selUser&amp;viewuser=$airId";
             $hrefPL = "?subaction=viewListById&amp;playlist=$row[0]";
+            echo ": <span class='show-time'>$showTime</span></span>\n";
+            echo "<div><div class='home-show'>";
             echo "<A HREF='$hrefPL' CLASS='nav'>$description</A>&nbsp;with&nbsp;";
             echo "<A HREF='$hrefAirName' CLASS='calNav'>$airName</A></div>";
-            echo "<div class='home-showbox'>";
-            echo "<div class='home-datetime'>$showDateTime $tz</div>";
         } else {
-            echo "</div><div class='home-showbox'>";
-            echo "<div class='home-datetime'>[No playlist available]</div>";
+            echo "</span>\n";
+            echo "<div><div class='home-show'>[No playlist available]</div>\n";
         }
+        echo "<div class='home-trackbox'>";
         echo "<div id='home-current-track-0' class='home-currenttrack' style='display: none'></div>\n";
         echo "<div id='home-current-track-1' class='home-currenttrack' style='display: none'></div></div>\n";
         echo "</div></div>\n";

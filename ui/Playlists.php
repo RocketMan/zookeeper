@@ -196,6 +196,10 @@ class Playlists extends MenuItem {
                self::timeToLocale($row['showtime']);
     }
 
+    public static function makeShowTime($row) {
+        return self::timeToLocale($row['showtime']);
+    }
+
     public function listManagerGetHint() {
         $hint = null;
         $now = new \DateTime("now");

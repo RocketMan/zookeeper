@@ -161,14 +161,14 @@ $().ready(function(){
         socket.onmessage = function(message) {
             var onnow = JSON.parse(message.data);
             if(onnow.show_id == 0) {
-                $(".home-show").html("");
+                $(".home-title").html("On Now");
+                $(".home-show").html("[No Playlist available]");
                 $(".home-currenttrack").slideUp();
-                $(".home-datetime").html("[No playlist available]");
             } else {
                 var start = serverDate(onnow.show_start);
                 var end = serverDate(onnow.show_end);
                 $(".home-show").html("<A HREF='?subaction=viewListById&amp;playlist=" + onnow.show_id + "' CLASS='nav'>" + onnow.name + "</A>&nbsp;with&nbsp;" + onnow.airname);
-                $(".home-datetime").html(start.toLocaleString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) + " " + localTime(start) + " - " + localTime(end) + " " + $("#tz").val());
+                $(".home-title").html("On Now: <span class='show-time'>" + localTime(start) + " - " + localTime(end) + " " + $("#tz").val() + "</span>");
                 if(onnow.id == 0) {
                     $("#home-current-track-" + this.last.current).hide('slide', { direction: 'up' });
                     this.last.current = (this.last.current + 1) % 2
