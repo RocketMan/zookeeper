@@ -70,6 +70,7 @@ class UIController implements IController {
      */
     private const TEMPLATE_SAFE_PARAMS = [
         'copyright',
+        'email',
         'favicon',
         'logo',
         'station',

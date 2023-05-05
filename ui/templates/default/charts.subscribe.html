@@ -1,0 +1,35 @@
+<p>
+The {{ app.station }} Music Department maintains two e-mail lists:</p>
+<ul>
+
+<li><b>Weekly Charts e-mail list</b> - Each week, the number of plays of
+the releases in rotation are tallied up, and a chart is made showing a
+ranked list of the most played stuff on our airwaves for that week.
+This is what's reported to the trades.
+{% if weeklyPage %}  
+If you'd like to receive this chart each week by e-mail, please visit
+the <a href="{{ weeklyPage }}">Weekly Charts</a> page.
+{% endif %}
+
+<li><b>Monthly Charts e-mail list</b> - Each month, the number of plays
+of the releases in rotation for the previous month are tallied up, and
+a chart is made showing a ranked list of the most played stuff on our
+airwaves for that month.
+{% if monthlyPage %}
+If you'd like to receive this chart each week by e-mail, please visit
+the <a href="{{ monthlyPage }}">Monthly Charts</a> page.
+{% endif %}
+</ul>
+
+<p>These mailing lists are one-way lists, which means you'll receive
+e-mail only from {{ app.station }}.  Any reply by a subscriber will
+return to {{ app.station }} but will not be sent to everyone else on
+the list.  Also, each subscriber's e-mail address is suppressed from
+the header so other subscribers can't collect the addresses to create
+a spamming list.</p>
+
+<p>Any attempts to use these lists or their contents for unsolicited
+e-mail will earn our everlasting contempt.  Subscriptions from
+fraudulent addresses and spam companies will be summarily deleted.</p>
+
+<p>Any questions can be sent to <a href="{{ app.email.md }}">{{ app.email.md }}</a>.</p>
