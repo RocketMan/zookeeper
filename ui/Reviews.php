@@ -205,7 +205,7 @@ class Reviews extends MenuItem {
         $author = $isAuthorized && trim($_GET["dj"]) == 'Me' ? $this->session->getUser() : '';        
 
         echo "<DIV class='categoryPicker form-entry'>";
-        $this->extra = "<span class='sub'><b>Recent Reviews Feed:</b></span> <A TYPE='application/rss+xml' HREF='zkrss.php?feed=reviews'>" .
+        $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <A TYPE='application/rss+xml' HREF='zkrss.php?feed=reviews'>" .
              "<IMG SRC='img/rss.png' ALT='rss'></A>";
 
         echo "<label class='reviewLabel'>Categories:&nbsp;</label>";
