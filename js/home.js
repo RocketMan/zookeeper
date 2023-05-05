@@ -146,15 +146,6 @@ $().ready(function(){
         });
     }
 
-    $.fn.extend({
-        fadeout: function() {
-            return this.removeClass("zk-fade-visible").addClass("zk-fade-hidden");
-        },
-        fadein: function() {
-            return this.removeClass("zk-fade-hidden").addClass("zk-fade-visible");
-        }
-    });
-
     function connect(last) {
         var socket = new WebSocket($("#push-subscribe").val());
         socket.last = last;
@@ -169,13 +160,11 @@ $().ready(function(){
                 var end = serverDate(onnow.show_end);
                 $(".home-show").html("<A HREF='?subaction=viewListById&amp;playlist=" + onnow.show_id + "' CLASS='nav'>" + onnow.name + "</A>&nbsp;with&nbsp;" + onnow.airname);
                 $(".home-title").html("On Now: <span class='show-time'>" + localTime(start) + " - " + localTime(end) + " " + $("#tz").val() + "</span>");
+                $("#home-current-track-" + this.last.current).hide('slide', { direction: 'up' });
+                this.last.current = (this.last.current + 1) % 2
                 if(onnow.id == 0) {
-                    $("#home-current-track-" + this.last.current).hide('slide', { direction: 'up' });
-                    this.last.current = (this.last.current + 1) % 2
                     $("#home-current-track-" + this.last.current).html("&nbsp;").show('slide', { direction: 'down' });
                 } else {
-                    $("#home-current-track-" + this.last.current).hide('slide', { direction: 'up' });
-                    this.last.current = (this.last.current + 1) % 2
                     $("#home-current-track-" + this.last.current).html(onnow.track_artist + " &#8211; <I>" + onnow.track_title + "</I> (" + onnow.track_album + ")").show('slide', { direction: 'down' });
 
                     var time = $("#time").val();
