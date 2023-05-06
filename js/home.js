@@ -153,7 +153,7 @@ $().ready(function(){
             var onnow = JSON.parse(message.data);
             if(onnow.show_id == 0) {
                 $(".home-title").html("On Now");
-                $(".home-show").html("[No Playlist available]");
+                $(".home-show").html("[No playlist available]");
                 $(".home-currenttrack").slideUp();
             } else {
                 var start = serverDate(onnow.show_start);
