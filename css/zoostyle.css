@@ -1201,7 +1201,8 @@ a:hover.copy {
 	margin-right: 20px;
     }
     .recently-played .card .artwork {
-	width: 126px;
+	min-width: 126px;
+	max-width: 126px; /* fixes issue in webkit with svg */
     }
     .recently-played .card .info {
 	width: calc(100% - 126px);
