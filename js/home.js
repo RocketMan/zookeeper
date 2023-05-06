@@ -160,12 +160,10 @@ $().ready(function(){
                 var end = serverDate(onnow.show_end);
                 $(".home-show").html("<A HREF='?subaction=viewListById&amp;playlist=" + onnow.show_id + "' CLASS='nav'>" + onnow.name + "</A>&nbsp;with&nbsp;" + onnow.airname);
                 $(".home-title").html("On Now: <span class='show-time'>" + localTime(start) + " - " + localTime(end) + " " + $("#tz").val() + "</span>");
-                $("#home-current-track-" + this.last.current).hide('slide', { direction: 'up' });
-                this.last.current = (this.last.current + 1) % 2
                 if(onnow.id == 0) {
-                    $("#home-current-track-" + this.last.current).html("&nbsp;").show('slide', { direction: 'down' });
+                    $(".home-currenttrack").html("&nbsp;").slideDown();
                 } else {
-                    $("#home-current-track-" + this.last.current).html(onnow.track_artist + " &#8211; <I>" + onnow.track_title + "</I> (" + onnow.track_album + ")").show('slide', { direction: 'down' });
+                    $(".home-currenttrack").html(onnow.track_artist + " &#8211; <I>" + onnow.track_title + "</I> (" + onnow.track_album + ")").slideDown();
 
                     var time = $("#time").val();
                     var nowPlaying = $(".recently-played");
@@ -227,5 +225,5 @@ $().ready(function(){
     });
 
     populateCards(false, null);
-    connect({ current: 0, open: false });
+    connect({ open: false });
 });

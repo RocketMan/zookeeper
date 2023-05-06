@@ -202,8 +202,7 @@ class Home extends MenuItem {
             echo "<div><div class='home-show'>[No playlist available]</div>\n";
         }
         echo "<div class='home-trackbox'>";
-        echo "<div id='home-current-track-0' class='home-currenttrack' style='display: none'></div>\n";
-        echo "<div id='home-current-track-1' class='home-currenttrack' style='display: none'></div></div>\n";
+        echo "<div class='home-currenttrack' style='display: none'></div></div>\n";
         echo "</div></div>\n";
 
         if(Engine::param('push_enabled', true)) {
