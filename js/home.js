@@ -154,16 +154,16 @@ $().ready(function(){
             if(onnow.show_id == 0) {
                 $(".home-title").html("On Now");
                 $(".home-show").html("[No playlist available]");
-                $(".home-currenttrack").slideUp();
+                $(".home-currenttrack").html("&nbsp;");
             } else {
                 var start = serverDate(onnow.show_start);
                 var end = serverDate(onnow.show_end);
                 $(".home-show").html("<A HREF='?subaction=viewListById&amp;playlist=" + onnow.show_id + "' CLASS='nav'>" + onnow.name + "</A>&nbsp;with&nbsp;" + onnow.airname);
                 $(".home-title").html("On Now: <span class='show-time'>" + localTime(start) + " - " + localTime(end) + " " + $("#tz").val() + "</span>");
                 if(onnow.id == 0) {
-                    $(".home-currenttrack").html("&nbsp;").slideDown();
+                    $(".home-currenttrack").html("&nbsp;");
                 } else {
-                    $(".home-currenttrack").html(onnow.track_artist + " &#8211; <I>" + onnow.track_title + "</I> (" + onnow.track_album + ")").slideDown();
+                    $(".home-currenttrack").html(onnow.track_artist + " &#8211; <I>" + onnow.track_title + "</I> (" + onnow.track_album + ")");
 
                     var time = $("#time").val();
                     var nowPlaying = $(".recently-played");
