@@ -24,15 +24,22 @@
 
 $().ready(function(){
     function localTime(date) {
-        var hour = date.getHours();
-        var ampm = hour >= 12?"pm":"am";
         var m = date.getMinutes();
         var min = m == 0?'':':' + String(m).padStart(2, '0');
-        if(hour > 12)
-            hour -= 12;
-        else if(hour == 0)
-            hour = 12;
-        return hour + min + ampm;
+        var hour = date.getHours();
+        switch(hour) {
+        case 0:
+            return m ? "12" + min + "am" : "midnight";
+        case 12:
+            return m ? hour + min + "pm" : "noon";
+        default:
+            var ampm = hour >= 12?"pm":"am";
+            if(hour > 12)
+                hour -= 12;
+            else if(hour == 0)
+                hour = 12;
+            return hour + min + ampm;
+        }
     }
 
     function serverDate(s) {
