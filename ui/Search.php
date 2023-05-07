@@ -178,7 +178,11 @@ class Search extends MenuItem {
             $showMissing = 0;
             break;
         default:
-            echo ILibrary::GENRES[$albums[0]["category"]] . $medium;
+            if($medium == " Digital") {
+                echo "<I>Digital</I>";
+                $showMissing = 0;
+            } else
+                echo ILibrary::GENRES[$albums[0]["category"]] . $medium;
             break;
         }
         echo "</B>";
