@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -66,6 +66,7 @@ interface ILibrary {
         "C"=>"A-File",
         "G"=>"Storage",
         "L"=>"Library",
+        "I"=>"Digital",
         "M"=>"Missing",
         "R"=>"Needs Repair",
         "U"=>"Deaccessioned",
