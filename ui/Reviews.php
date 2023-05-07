@@ -73,58 +73,27 @@ class Reviews extends MenuItem {
 
     public function emitViewDJMain() {
         $viewAll = $this->subaction == "viewDJAll";
-    ?>
-    </p>
-    <TABLE CELLPADDING=2 CELLSPACING=2 BORDER=0 CLASS="djzone">
-      <!--TR><TH COLSPAN=2 ALIGN=LEFT>Select a DJ:</TH></TR-->
-      <TR><TH COLSPAN=2 ALIGN=LEFT><?php
-        $last = "";
-        $dot = 0;
-        for($i=0; $i<26; $i++)
-            echo "<A HREF=\"#" . chr($i+65) . "\">" . chr($i+65) . "</A>&nbsp;&nbsp;";
-        echo "</TH></TR>\n  <TR><TD COLSPAN=2>";
 
         // Run the query
         $records = Engine::api(IReview::class)->getActiveReviewers($viewAll);
-        $i = 0;
+        $dj = [];
         while($records && ($row = $records->fetch())) {
             $row["sort"] = preg_match("/^the /i", $row[1])?substr($row[1], 4):$row[1];
             // sort symbols beyond Z with the numerics and other special chars
             if(UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1))) > "Z")
                 $row["sort"] = "@".$row["sort"];
 
-            $dj[$i++] = $row;
+            $row["cur"] = UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1)));
+            $dj[] = $row;
         }
 
-        if(isset($dj))
+        if(count($dj))
             usort($dj, function($a, $b) {
                 return strcasecmp($a["sort"], $b["sort"]);
             });
 
-        for($j = 0; $j < $i; $j++) {
-            $row = $dj[$j];
-            $cur = UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1)));
-            if($cur < "A") $cur = "#";
-            if($cur != $last) {
-                $last = $cur;
-                echo "</TD></TR>\n  <TR><TD COLSPAN=2>&nbsp;</TD></TR>\n  <TR><TH VALIGN=TOP><A NAME=\"$last\">$last</A>&nbsp;&nbsp;</TH>\n      <TD VALIGN=TOP>";
-                $dot = 0;
-            }
-
-            if($dot)
-                echo "&nbsp;&nbsp;&#8226;&nbsp; ";
-            else
-                $dot = 1;
-
-            echo "<A CLASS=\"nav\" HREF=\"".
-                 "?action=viewRecent&subaction=viewDJ&amp;seq=selUser&amp;viewuser=$row[0]\">";
-
-            $displayName = str_replace(" ", "&nbsp;", htmlentities($row[1]));
-            echo "$displayName</A>";
-        }
-        echo "</TD></TR>\n</TABLE>\n";
-        if($this->subaction == "viewDJ")
-            echo "<h4>Didn't find the DJ you were looking for?  Show <a href='?action=viewRecent&subaction=viewDJAll'>All DJs</a>.</h4>\n";
+        $this->setTemplate("selectdj.html");
+        $this->addVar("djs", $dj);
     }
 
     public function reviewsByDJ() {

@@ -302,6 +302,9 @@ span.review-categories > span.zk-hidden {
 table.djzone td:last-child {
     width: 100%;
 }
+table.djzone a {
+    white-space: nowrap;
+}
 
 /* library editor */
 td.label-form a {
