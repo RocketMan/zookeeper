@@ -153,7 +153,7 @@ class Search extends MenuItem {
         echo htmlentities($albums[0]["album"]) . "</A></B></TD>";
     
         $medium = " " . ILibrary::MEDIA[$albums[0]["medium"]];
-        if($medium == " CD") $medium = "";
+        if($albums[0]["medium"] == "C") $medium = ""; // CD
     
         $showMissing = "missing";
         echo "<TD WIDTH=80>&nbsp;</TD>" .
@@ -178,7 +178,7 @@ class Search extends MenuItem {
             $showMissing = 0;
             break;
         default:
-            if($medium == " Digital") {
+            if($albums[0]["medium"] == "D") { // Digital
                 echo "<I>Digital</I>";
                 $showMissing = 0;
             } else
