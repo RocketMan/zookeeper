@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -66,7 +66,7 @@ class UserAdmin extends MenuItem {
     }
 
     public function contact() {
-        $this->template = "contact.html";
+        $this->setTemplate("contact.html");
     }
 
     public function updateAirnames() {
@@ -170,36 +170,10 @@ class UserAdmin extends MenuItem {
             if(sizeof($selKeys))
                 $api->deleteAPIKeys($this->session->getUser(), $selKeys);
         }
-    ?>
-       <div class='user-tip' style='display: block; max-width: 550px;'>
-       <p>API Keys allow external applications access to your playlists
-       and other personal details.</p><p>Generate and share an API Key only
-       if you trust the external application.</p>
-       </div>
-    <?php
-        $keys = $api->getAPIKeys($this->session->getUser())->asArray();
-        echo "<form action='?' method=post>\n";
-        if(sizeof($keys)) {
-    ?>
-       <p><b>Your API Keys:</b></p>
-       <table border=0>
-       <tr><th><input name=all id='all' type=checkbox></th><th align=right>API Key</th><th></th></tr>
-   <?php
-            foreach($keys as $key) {
-                echo "<tr><td><input name=id{$key['id']} type=checkbox></td>".
-                     "<td class='apikey'>{$key['apikey']}</td>".
-                     "<td><a href='#' title='Copy Key to Clipboard' class='copy'>&#x1f4cb;</a></td></tr>\n";
-            }
-            echo "</table>\n";
-            echo "<p><input type=submit class=submit name=deleteKey value=' Remove Key '>&nbsp;&nbsp;&nbsp;\n";
-        } else
-            echo "<p><b>You have no API Keys.</b></p><p>\n";
 
-        echo "<input type=submit class=submit name=newKey value=' Generate New Key '></p>\n";
-        echo "<input type=hidden name=action value='{$_REQUEST['action']}'>\n";
-        echo "<input type=hidden name=subaction value='{$_REQUEST['subaction']}'>\n";
-        echo "</form>\n";
-        UI::emitJS('js/user.apikey.js');
+        $keys = $api->getAPIKeys($this->session->getUser())->asArray();
+        $this->setTemplate("apikeys.html");
+        $this->addVar("keys", $keys);
     }
 
     public function changePass() {
