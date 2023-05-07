@@ -163,10 +163,6 @@ class Search extends MenuItem {
             echo "<I>Deep&nbsp;Storage&nbsp;".$albums[0]["bin"]."</I>";
             $showMissing = 0;
             break;
-        case 'I':
-            echo "<I>Digital</I>";
-            $showMissing = 0;
-            break;
         case 'M':
             echo "<I>Missing</I>";
             $showMissing = "found";

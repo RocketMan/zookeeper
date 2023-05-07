@@ -47,6 +47,7 @@ interface ILibrary {
     const MEDIA = [
         "C"=>"CD",
         "M"=>"Cassette",
+        "D"=>"Digital",
         "S"=>"7\"",
         "T"=>"10\"",
         "V"=>"12\"",
@@ -66,7 +67,6 @@ interface ILibrary {
         "C"=>"A-File",
         "G"=>"Storage",
         "L"=>"Library",
-        "I"=>"Digital",
         "M"=>"Missing",
         "R"=>"Needs Repair",
         "U"=>"Deaccessioned",
