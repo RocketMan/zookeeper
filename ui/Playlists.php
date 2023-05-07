@@ -1010,10 +1010,10 @@ class Playlists extends MenuItem {
         while($records && ($row = $records->fetch())) {
             $row["sort"] = preg_match("/^the /i", $row[1])?substr($row[1], 4):$row[1];
             // sort symbols beyond Z with the numerics and other special chars
-            if(UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1))) > "Z")
+            $row["cur"] = UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1)));
+            if($row["cur"] > "Z")
                 $row["sort"] = "@".$row["sort"];
 
-            $row["cur"] = UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1)));
             $dj[] = $row;
         }
     
