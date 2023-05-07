@@ -230,7 +230,7 @@ nav .search-icon {
     left: -100%;
     height: 100%;
     padding: 10px 50px 0 50px;
-    background: var(--theme-menu-background-colour);/*#14181f;*/
+    background: var(--theme-menu-background-colour);
     display: inline-block;
     transition: left 0.3s ease;
   }
@@ -317,11 +317,22 @@ nav .search-icon {
   nav .cancel-icon.show{
     display: block;
   }
+  nav .login-search .login a {
+    padding-right: 20px;
+  }
+  nav .login-search .login .whois {
+    position: absolute;
+    top: 4px;
+    right: 24px;
+  }
+  nav .login-search .login .whois-sep {
+    display: none;
+  }
   .nav-items:not(.active) li.selected ul {
     display: none;
   }
 }
-@media (max-width: 980px){
+@media (max-width: 1000px){ /*was 980px*/
   nav .menu-icon,
   nav .cancel-icon,
   nav .search-icon{

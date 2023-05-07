@@ -47,7 +47,9 @@ Credits:
   <div class="login-search">
     <div class="login">
 {% if app.session.isAuth("u") %}
-      {{ app.session.getDN() }} - <a href="?action=logout">Logout</a>
+      <span class="whois">{{ app.session.getDN() }}</span>
+      <span class="whois-sep">-</span>
+      <a href="?action=logout">Logout</a>
 {% elseif app.sso %}
       {# <a style="font-size: 90%" href="?action=loginHelp">(help)</a>&nbsp;&nbsp; #}<a href="ssoLogin.php">Login</a>
 {% else %}
