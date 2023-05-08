@@ -443,7 +443,8 @@ function search(type, url, size, offset) {
 
     var field = $(".search-data");
     field.keyup(function(e) {
-        if(e.originalEvent.keyCode == 13)
+        // nothing to do if search field has not changed
+        if(this.value == $("#fkey").val())
             return;
 
         var sync = field.closest("form").get(0); // access underlying DOM element
