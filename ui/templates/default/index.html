@@ -1,8 +1,8 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 {% block head %}
-{% if app.page_title is not empty %}
-  {%- set title = app.page_title ~ " - " ~ app.station_title -%}
+{% if app.content.title is not empty %}
+  {%- set title = app.content.title ~ " - " ~ app.station_title -%}
 {% else %}
   {%- set title = app.station_title -%}
 {% endif %}

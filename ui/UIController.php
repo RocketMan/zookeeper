@@ -184,13 +184,13 @@ class UIController implements IController {
             $app->content = new \stdClass();
             $app->content->data = $data;
             $app->content->template = $this->menuItem ? $this->menuItem->getTemplate() : null;
+            $app->content->title = $this->menuItem ? $this->menuItem->getTitle() : null;
             $app->extra = $this->menuItem ? $this->menuItem->getExtra() : null;
             $app->menu = $this->composeMenu($_REQUEST['action']);
             $app->submenu = $this->menuItem ? $this->menuItem->composeSubmenu($_REQUEST['action'], $_REQUEST['subaction']) : [];
             $app->tertiary = $this->menuItem ? $this->menuItem->getTertiary() : null;
             foreach(self::TEMPLATE_SAFE_PARAMS as $param)
                 $app->$param = Engine::param($param);
-            $app->page_title = $this->menuItem ? $this->menuItem->getTitle() : null;
             $app->request = $_REQUEST;
             $app->session = new SafeSession();
             $app->sso = !empty(Engine::param('sso')['client_id']);
