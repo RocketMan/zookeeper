@@ -102,6 +102,7 @@ nav form {
 
 nav form .search-data {
   height: 100%;
+  width: 248px;
   padding: 0 10px;
   color: #000;
   font-size: 17px;
@@ -332,7 +333,7 @@ nav .search-icon {
     display: none;
   }
 }
-@media (max-width: 1000px){ /*was 980px*/
+@media (max-width: 1000px){
   nav .menu-icon,
   nav .cancel-icon,
   nav .search-icon{
