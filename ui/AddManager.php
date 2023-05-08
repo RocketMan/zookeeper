@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -243,12 +243,8 @@ class AddManager extends MenuItem {
                  "minimum of 7 days.  Sizzle = (raw spin count while in the ".
                  "A-File / days in A-File) * 100, where days in A-File &gt; 7.</P>\n";
     
-        if($showEdit) {
-            $this->emitConfirmID("Delete",
-                        "Delete this album from the add?",
-                        "action=addmgr&subaction=addsdel",
-                        "id");
-        }
+        if($showEdit)
+            $this->emitConfirmDelete();
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     $().ready(function(){
@@ -367,33 +363,19 @@ class AddManager extends MenuItem {
         }
         return $medium;
     }
-    
-    private function emitConfirmID($name, $message, $action, $id="", $rtaction="") {
+
+    private function emitConfirmDelete() {
     ?>
+    <FORM id='add-delete' ACTION="?action=addmgr&subaction=addsdel" METHOD=POST>
+        <INPUT TYPE='hidden' NAME='id' VALUE='' />
+    </FORM>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([JSMin::class, 'minify']); ?>
-    function Confirm<?php echo $name; ?>(<?php if($id) echo "id"; ?>)
-    {
-    <?php if($rtaction) { ?>
-      if(document.getElementById('add-manager').<?php echo $rtaction; ?>.selectedIndex >= 0) {
-        action = document.getElementById('add-manager').<?php echo $rtaction; ?>.options[document.getElementById('add-manager').<?php echo $rtaction; ?>.selectedIndex].value;
-      } else {
-        return;
-      }
-    <?php } ?>
-      answer = confirm("<?php echo $message; ?>");
-      if(answer != 0) {
-        location = "<?php 
-           echo "?$action";
-           if($rtaction)
-              echo "&$rtaction=\" + action";
-           else if($id)
-              echo "&$id=\" + id";
-           else
-              echo "\""; ?>;
+    function ConfirmDelete(id) {
+      if(confirm("Delete this album from the add?")) {
+        $('#add-delete input[name=id]').val(id);
+        $('#add-delete').submit();
       }
     }
-    <?php ob_end_flush(); ?>
     // -->
     </SCRIPT>
     <?php 
@@ -837,7 +819,7 @@ class AddManager extends MenuItem {
             $_REQUEST["date"] = $row["adddate"];
         }
     
-        if($_SERVER['REQUEST_METHOD'] == 'POST')
+        if($id && $_SERVER['REQUEST_METHOD'] == 'POST')
             Engine::api(IChart::class)->deleteAlbum($id);
         $this->addManagerShowAdd();
     }
