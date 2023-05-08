@@ -216,9 +216,6 @@ nav .search-icon {
 }
 
 @media (max-width: 1000px) {
-  div.box {
-    padding-right: 0;
-  }
   nav{
     padding: 0;
   }
