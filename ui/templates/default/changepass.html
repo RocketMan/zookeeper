@@ -3,7 +3,7 @@
 {% endif %}
 {% if form %}
 <form action="?" method=post>
-<table cellpadding=0 cellspacing=0>
+<table>
   <tr>
     <td align=right>Old Password:</td>
     <td><input type=password name=oldPass value="{{ app.request.oldPass }}" class=input size=15></td>
@@ -15,7 +15,7 @@
     <td><input type=password name=newPass2 class=input size=15></td>
   </tr><tr>
     <td>&nbsp;</td>
-    <td><input type=submit value=" Change Password "></td>
+    <td><input type=submit class="submit" value=" Change Password "></td>
   </tr>
 </table>
 <input type=hidden name=action value="{{ app.request.action }}">
