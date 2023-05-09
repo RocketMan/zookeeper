@@ -497,7 +497,7 @@ p.zktitle a {
 
 /* secondary navigation */
 .linkhead {
-    font-family: verdana, arial, helvetica, sans-serif;
+    font-family: Helvetica, Verdana, Arial, sans-serif;
 }
 .linkhead:active {
     font-size: 100%;
@@ -533,7 +533,7 @@ p.zktitle a {
 .secSelSub {
     background-color: var(--theme-secdiv-lite-background-colour);
     color: #ffffff;
-    font-family: verdana, arial, helvetica, sans-serif;
+    font-family: Helvetica, Verdana, Arial, sans-serif;
     font-size: 80%;
 }
 .secCell {
@@ -598,12 +598,12 @@ th.sec {
 .sel:visited { color: #ff0000; }
 .sel:active { color: #ff0000; }
 table.recentAirplay td, .sub {
-    font-family: verdana, arial, helvetica, sans-serif;
+    font-family: Helvetica, Verdana, Arial, sans-serif;
     font-size: 8pt;
     color: #000000;
 }
 .sub2 {
-    font-family: verdana, arial, helvetica, sans-serif;
+    font-family: Helvetica, Verdana, Arial, sans-serif;
     font-size: 8pt;
     color: #ffffff;
 }
