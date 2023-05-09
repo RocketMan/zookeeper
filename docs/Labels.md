@@ -1,4 +1,4 @@
-## Zookeeper JSON:API :: Label
+## Zookeeper Online JSON:API :: Label
 
 This is specific API information for the 'label' type.  For generic API
 information, see the [JSON:API main page](./API.md).

@@ -1,4 +1,4 @@
-## Zookeeper JSON:API :: Review
+## Zookeeper Online JSON:API :: Review
 
 This is specific API information for the 'review' type.  For generic API
 information, see the [JSON:API main page](./API.md).
@@ -35,7 +35,7 @@ Review search by DJ airname is supported through the api/v1/album
 endpoint by using the filter `reviews.airname.id`.
 
 **TIP:** It is often useful to access the name and artist of the album
-associated with a review.  Zookeeper denormalizes this information and
+associated with a review.  Zookeeper Online denormalizes this information and
 makes it availble as metadata in the review's album relationship.  In
 this way, it is not necessary to request separately the album just to
 obtain the artist and album name.
