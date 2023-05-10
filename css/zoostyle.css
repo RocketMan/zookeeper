@@ -172,12 +172,16 @@ table.afileactivity {
 }
 
 /* charts */
-.top30 {
+.top30 .sub {
     font-size: 10pt;
     vertical-align: top;
 }
+table.top30,
+table.top30 table {
+    width: 100%;
+}
 @media (max-width: 700px) {
-    td.top30:last-child table {
+    td.top30:last-child:not(:only-child) table {
 	display: none;
     }
 }
