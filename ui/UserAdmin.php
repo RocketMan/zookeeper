@@ -126,7 +126,6 @@ class UserAdmin extends MenuItem {
               <INPUT TYPE=HIDDEN NAME=airname VALUE="<?php echo $airnames[0]['id'];?>">
               <INPUT TYPE=HIDDEN id='oldname' VALUE="<?php echo $airnames[0]['airname'];?>">
               <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
-              <INPUT TYPE=HIDDEN NAME=subaction VALUE="users">
               <INPUT TYPE=HIDDEN NAME=validate VALUE="y"></TD></TR>
     </TABLE>
     </FORM>
@@ -138,15 +137,47 @@ class UserAdmin extends MenuItem {
     <FORM ACTION="?" METHOD=POST>
     <B>Select Airname:</B><BR>
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
-    <SELECT NAME=airname SIZE=10 data-focus>
+    <ul tabindex='0' class='playlist-selector listbox no-text-select'>
     <?php
             foreach($airnames as $row) {
-                 echo "  <OPTION VALUE=\"$row[0]\">$row[1]\n";
+                 echo "  <li data-value=\"$row[0]\">$row[1]</li>\n";
             }
     ?>
-    </SELECT></TD></TR>
+    </ul></TD></TR>
     <TR><TD>
+        <SCRIPT TYPE="text/javascript"><!--
+           $().ready(function() {
+               $("ul.playlist-selector").on('keydown', function(e) {
+                   var cur = $(this).find('.state-active').index();
+                   switch(e.originalEvent.keyCode) {
+                   case 13: // enter
+                       $(this).closest("form").submit();
+                       e.preventDefault();
+                       return;
+                   case 38: // up
+                       if(cur)
+                           cur--;
+                       e.preventDefault();
+                       break;
+                   case 40: // down
+                       if(cur < $(this).find('li').length - 1)
+                           cur++;
+                       e.preventDefault();
+                       break;
+                   }
+                   $(this).find('li').eq(cur).trigger('mousedown');
+               });
+               $("ul.playlist-selector li").on('mousedown', function() {
+                   $("ul.playlist-selector li").removeClass('state-active');
+                   $("INPUT[NAME=airname]").val($(this).addClass('state-active').data('value'));
+               }).on('dblclick', function() {
+                   $(this).closest("form").submit();
+               }).first().trigger('mousedown');
+           });
+        // -->
+        </SCRIPT>
     <INPUT TYPE=SUBMIT VALUE=" Next &gt;&gt; ">
+    <INPUT TYPE=HIDDEN NAME=airname VALUE="">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=multi VALUE="y">
     </TD></TR></TABLE>
