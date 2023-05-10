@@ -925,7 +925,7 @@ class Playlists extends MenuItem {
             }
     ?>
     </TD></TR></TABLE>
-    <TABLE WIDTH="100%" CELLSPACING=0>
+    <TABLE CELLSPACING=0>
       <?php 
             $weeks = 10;
             $limit = 10;
@@ -948,7 +948,7 @@ class Playlists extends MenuItem {
 
             $block = sizeof($recentReviews);
             $blname = sizeof($topPlays)?"":$row['airname'] . "'s ";
-            echo "    <TABLE WIDTH=\"100%\" CELLSPACING=0 BORDER=0>\n";
+            echo "    <TABLE CELLSPACING=0 BORDER=0>\n";
             if(sizeof($recentPlays)) {
                 echo "<TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;${blname}Recent airplay</TH></TR>";
                 $this->emitViewDJAlbum($recentPlays, $block?" CLASS=\"sub\"":"");
@@ -957,10 +957,10 @@ class Playlists extends MenuItem {
         </TABLE>
       </TD><?php 
         if(sizeof($recentReviews)) {
-            echo "<TD>&nbsp;&nbsp;&nbsp;</TD><TD CLASS=\"recentReviews\"VALIGN=TOP>\n";
             $block = sizeof($recentPlays);
+            echo "<TD>".($block?"&nbsp;&nbsp;&nbsp;":"")."</TD><TD CLASS=\"recentReviews\"VALIGN=TOP>\n";
             $blname = (sizeof($topPlays) || sizeof($recentPlays))?"":$row['airname'] . "'s ";
-            echo "    <TABLE WIDTH=\"100%\" BORDER=0 CELLSPACING=0>\n";
+            echo "    <TABLE BORDER=0 CELLSPACING=0>\n";
     
             echo "      <TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;${blname}Recent reviews</TH></TR>\n";
             $this->emitViewDJAlbum($recentReviews, $block?" CLASS=\"sub\"":"", 0, "name");
