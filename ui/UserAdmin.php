@@ -134,7 +134,7 @@ class UserAdmin extends MenuItem {
         default:
             // Multiple airnames; emit airname selection form
     ?>
-    <FORM ACTION="?" METHOD=POST>
+    <FORM class="playlist-selector" ACTION="?" METHOD=POST>
     <B>Select Airname:</B><BR>
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
     <ul tabindex='0' class='playlist-selector listbox no-text-select'>
