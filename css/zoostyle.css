@@ -483,8 +483,10 @@ p.zktitle a {
 }
 
 ul.listbox.playlist-selector {
-    min-width: 300px;
     height: 150px;
+    min-width: 300px;
+    max-width: 600px;
+    text-overflow: ellipsis;
     overflow: hidden;
     overflow-y: scroll;
     margin-bottom: 5px;
