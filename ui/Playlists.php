@@ -1103,7 +1103,7 @@ class Playlists extends MenuItem {
     public function viewLastPlays($tag, $count=0) {
         $plays = Engine::api(IPlaylist::class)->getLastPlays($tag, $count);
         if($plays) {
-            echo "<DIV class='playlistBanner'>&nbsp;Recent Airplay</DIV>";
+            echo "<DIV class='secdiv'>Recent Airplay</DIV>";
     
             echo "<TABLE class='recentAirplay' CELLPADDING=2 CELLSPACING=0 BORDER=0>\n";
     

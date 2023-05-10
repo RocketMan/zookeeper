@@ -176,6 +176,9 @@ table.afileactivity {
     font-size: 10pt;
     vertical-align: top;
 }
+.top30 th.sub {
+    line-height: 24px;
+}
 table.top30,
 table.top30 table {
     width: 100%;
@@ -623,8 +626,11 @@ th.sec {
     text-align: left;
 }
 .secdiv, .secdiv th, th.sec {
-    padding-left: 4px;
+    padding: 0 4px;
+    line-height: 22px;
+    font-size: 11pt;
     color: white;
+    font-weight: bold;
     background-color: var(--theme-secdiv-background-colour);
 }
 .error {
