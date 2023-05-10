@@ -300,6 +300,9 @@ span.review-categories > span.zk-hidden {
     font-size: 80%;
     color: #000000;
 }
+td.review {
+    font-size: 11pt;
+}
 
 /* DJ Zone! */
 .recentPlays, .recentReviews {
@@ -632,7 +635,7 @@ th.sec {
 .sel:link { color: #ff0000; }
 .sel:visited { color: #ff0000; }
 .sel:active { color: #ff0000; }
-table.recentAirplay td, .sub {
+.sub {
     font-family: 'Roboto', Helvetica, sans-serif;
     font-size: 8pt;
     color: #000000;
