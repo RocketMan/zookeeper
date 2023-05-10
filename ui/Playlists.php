@@ -991,6 +991,8 @@ class Playlists extends MenuItem {
                    switch(e.originalEvent.keyCode) {
                    case 13: // enter
                        $(this).closest("form").submit();
+                       e.preventDefault();
+                       return;
                    case 38: // up
                        if(cur)
                            cur--;
@@ -1002,13 +1004,13 @@ class Playlists extends MenuItem {
                        e.preventDefault();
                        break;
                    }
-                   $(this).find('li')
-                       .removeClass('state-active')
-                       .eq(cur).addClass('state-active');
+                   $(this).find('li').eq(cur).trigger('mousedown');
                });
                $("ul.playlist-selector li").on('mousedown', function() {
                    $("ul.playlist-selector li").removeClass('state-active');
                    $("INPUT[NAME=playlist]").val($(this).addClass('state-active').data('value'));
+               }).on('dblclick', function() {
+                   $(this).closest("form").submit();
                }).first().trigger('mousedown');
            });
         // -->
