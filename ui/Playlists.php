@@ -911,7 +911,7 @@ class Playlists extends MenuItem {
                 $this->tertiary = $row['airname'];
             }
     ?>
-    <FORM ACTION="?" METHOD=POST>
+    <FORM ACTION="?" class="playlist-selector" METHOD=POST>
     <TABLE WIDTH="100%"><TR><TD ALIGN=RIGHT VALIGN=TOP>
     <?php 
             // Emit optional URL and/or e-mail for DJ

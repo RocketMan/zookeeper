@@ -487,9 +487,26 @@ ul.listbox.playlist-selector {
     height: 150px;
     overflow: hidden;
     overflow-y: scroll;
+    margin-bottom: 5px;
 }
-.playlist-selector:focus {
+ul.listbox.playlist-selector:focus {
     border-color: #637789;
+}
+/* mobile */
+@media (max-width: 1024px) {
+    ul.listbox.playlist-selector {
+        border-radius: 8px;
+        font-size: 18px;
+        padding: 0;
+	height: 200px;
+    }
+    ul.listbox.playlist-selector li {
+        padding: 10px;
+        border-top: 1px solid #c5c5c5;
+    }
+    form.playlist-selector input[type=submit] {
+	height: 30px;
+    }
 }
 
 /* primary navigation */
