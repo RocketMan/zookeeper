@@ -972,19 +972,49 @@ class Playlists extends MenuItem {
     ?>
       </TR></TABLE>
     <?php if (sizeof($topPlays) || sizeof($recentPlays) || sizeof($recentReviews)) echo "<BR>\n"; ?>
-    <TABLE WIDTH="100%">
+    <TABLE>
       <TR><TH ALIGN=LEFT><?php echo $row['airname'];?>'s playlists:</TH></TR>
       <TR><TD>
-         <SELECT NAME=playlist SIZE=6 data-focus>
+         <ul tabindex='0' class='playlist-selector listbox no-text-select'>
     <?php 
             // Run the query
             $records = Engine::api(IPlaylist::class)->getPlaylists(0, 0, 0, $viewuser);
             while($row = $records->fetch())
-                echo "        <OPTION VALUE=\"$row[0]\">$row[1] -- ".htmlentities($row[3], ENT_QUOTES, 'UTF-8')."\n";
+                echo "        <li data-value=\"$row[0]\">$row[1] -- ".htmlentities($row[3], ENT_QUOTES, 'UTF-8')."</li>\n";
     ?>
-        </SELECT></TD></TR>
+        </ul></TD></TR>
       <TR><TD>
+        <SCRIPT TYPE="text/javascript"><!--
+           $().ready(function() {
+               $("ul.playlist-selector").on('keydown', function(e) {
+                   var cur = $(this).find('.state-active').index();
+                   switch(e.originalEvent.keyCode) {
+                   case 13: // enter
+                       $(this).closest("form").submit();
+                   case 38: // up
+                       if(cur)
+                           cur--;
+                       e.preventDefault();
+                       break;
+                   case 40: // down
+                       if(cur < $(this).find('li').length - 1)
+                           cur++;
+                       e.preventDefault();
+                       break;
+                   }
+                   $(this).find('li')
+                       .removeClass('state-active')
+                       .eq(cur).addClass('state-active');
+               });
+               $("ul.playlist-selector li").on('mousedown', function() {
+                   $("ul.playlist-selector li").removeClass('state-active');
+                   $("INPUT[NAME=playlist]").val($(this).addClass('state-active').data('value'));
+               }).first().trigger('mousedown');
+           });
+        // -->
+        </SCRIPT>
         <INPUT TYPE=SUBMIT VALUE=" View Playlist ">
+        <INPUT TYPE=HIDDEN NAME=playlist VALUE="">
         <INPUT TYPE=HIDDEN NAME=viewuser VALUE="<?php echo $viewuser;?>">
         <INPUT TYPE=HIDDEN NAME=subaction VALUE="viewDJ">
         <INPUT TYPE=HIDDEN NAME=seq VALUE="selList">

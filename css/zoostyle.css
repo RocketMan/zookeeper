@@ -482,6 +482,16 @@ p.zktitle a {
     margin-top: 10px;
 }
 
+ul.listbox.playlist-selector {
+    min-width: 300px;
+    height: 150px;
+    overflow: hidden;
+    overflow-y: scroll;
+}
+.playlist-selector:focus {
+    border-color: #637789;
+}
+
 /* primary navigation */
 .nav:link { color: #2530a7; }
 .nav:visited { color: #2530a7; }
