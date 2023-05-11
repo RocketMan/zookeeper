@@ -134,10 +134,10 @@ class UserAdmin extends MenuItem {
         default:
             // Multiple airnames; emit airname selection form
     ?>
-    <FORM class="playlist-selector" ACTION="?" METHOD=POST>
+    <FORM class="selector" ACTION="?" METHOD=POST>
     <B>Select Airname:</B><BR>
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
-    <ul tabindex='0' class='playlist-selector listbox no-text-select'>
+    <ul tabindex='0' class='selector listbox no-text-select'>
     <?php
             foreach($airnames as $row) {
                  echo "  <li data-value=\"$row[0]\">$row[1]</li>\n";
@@ -147,7 +147,7 @@ class UserAdmin extends MenuItem {
     <TR><TD>
         <SCRIPT TYPE="text/javascript"><!--
            $().ready(function() {
-               $("ul.playlist-selector").on('keydown', function(e) {
+               $("ul.selector").on('keydown', function(e) {
                    var cur = $(this).find('.state-active').index();
                    switch(e.originalEvent.keyCode) {
                    case 13: // enter
@@ -167,8 +167,8 @@ class UserAdmin extends MenuItem {
                    }
                    $(this).find('li').eq(cur).trigger('mousedown');
                });
-               $("ul.playlist-selector li").on('mousedown', function() {
-                   $("ul.playlist-selector li").removeClass('state-active');
+               $("ul.selector li").on('mousedown', function() {
+                   $("ul.selector li").removeClass('state-active');
                    $("INPUT[NAME=airname]").val($(this).addClass('state-active').data('value'));
                }).on('dblclick', function() {
                    $(this).closest("form").submit();

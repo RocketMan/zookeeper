@@ -911,7 +911,7 @@ class Playlists extends MenuItem {
                 $this->tertiary = $row['airname'];
             }
     ?>
-    <FORM ACTION="?" class="playlist-selector" METHOD=POST>
+    <FORM ACTION="?" class="selector" METHOD=POST>
     <TABLE WIDTH="100%"><TR><TD ALIGN=RIGHT VALIGN=TOP>
     <?php 
             // Emit optional URL and/or e-mail for DJ
@@ -975,7 +975,7 @@ class Playlists extends MenuItem {
     <TABLE>
       <TR><TH ALIGN=LEFT><?php echo $row['airname'];?>'s playlists:</TH></TR>
       <TR><TD>
-         <ul tabindex='0' class='playlist-selector listbox no-text-select'>
+         <ul tabindex='0' class='selector listbox no-text-select'>
     <?php 
             // Run the query
             $records = Engine::api(IPlaylist::class)->getPlaylists(0, 0, 0, $viewuser);
@@ -986,7 +986,7 @@ class Playlists extends MenuItem {
       <TR><TD>
         <SCRIPT TYPE="text/javascript"><!--
            $().ready(function() {
-               $("ul.playlist-selector").on('keydown', function(e) {
+               $("ul.selector").on('keydown', function(e) {
                    var cur = $(this).find('.state-active').index();
                    switch(e.originalEvent.keyCode) {
                    case 13: // enter
@@ -1006,8 +1006,8 @@ class Playlists extends MenuItem {
                    }
                    $(this).find('li').eq(cur).trigger('mousedown');
                });
-               $("ul.playlist-selector li").on('mousedown', function() {
-                   $("ul.playlist-selector li").removeClass('state-active');
+               $("ul.selector li").on('mousedown', function() {
+                   $("ul.selector li").removeClass('state-active');
                    $("INPUT[NAME=playlist]").val($(this).addClass('state-active').data('value'));
                }).on('dblclick', function() {
                    $(this).closest("form").submit();

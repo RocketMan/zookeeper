@@ -492,7 +492,7 @@ p.zktitle a {
     margin-top: 10px;
 }
 
-ul.listbox.playlist-selector {
+ul.listbox.selector {
     height: 150px;
     min-width: 300px;
     max-width: 600px;
@@ -501,22 +501,22 @@ ul.listbox.playlist-selector {
     overflow-y: scroll;
     margin-bottom: 5px;
 }
-ul.listbox.playlist-selector:focus {
+ul.listbox.selector:focus {
     border-color: #637789;
 }
 /* mobile */
 @media (max-width: 700px) {
-    ul.listbox.playlist-selector {
+    ul.listbox.selector {
         border-radius: 8px;
         font-size: 18px;
         padding: 0;
 	height: 200px;
     }
-    ul.listbox.playlist-selector li {
+    ul.listbox.selector li {
         padding: 10px;
         border-top: 1px solid #c5c5c5;
     }
-    form.playlist-selector input[type=submit] {
+    form.selector input[type=submit] {
 	height: 30px;
     }
 }
