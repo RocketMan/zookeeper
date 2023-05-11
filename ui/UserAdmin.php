@@ -166,7 +166,7 @@ class UserAdmin extends MenuItem {
                        break;
                    }
                    $(this).find('li').eq(cur).trigger('mousedown');
-               });
+               }).trigger('focus');
                $("ul.selector li").on('mousedown', function() {
                    $("ul.selector li").removeClass('state-active');
                    $("INPUT[NAME=airname]").val($(this).addClass('state-active').data('value'));
