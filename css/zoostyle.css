@@ -508,12 +508,12 @@ ul.listbox.selector:focus {
 @media (max-width: 700px) {
     ul.listbox.selector {
         border-radius: 8px;
-        font-size: 18px;
+        font-size: 16px;
         padding: 0;
 	height: 200px;
     }
     ul.listbox.selector li {
-        padding: 10px;
+        padding: 8px;
         border-top: 1px solid #c5c5c5;
     }
     form.selector input[type=submit] {
