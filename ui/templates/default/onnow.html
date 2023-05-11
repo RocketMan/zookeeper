@@ -1,0 +1,76 @@
+<div class='home-nowplaying'>
+  <span class='home-title'>On Now
+{%- if onnow %}: <span class='show-time'>{{ onnow.showtime }} {{ tz }}</span>
+  </span>
+  <div>
+    <div class='home-show'>
+      <a href='{{ onnow.href }}'>{{ onnow.description }}</a>&nbsp;with&nbsp;<a href='{{ onnow.djref }}' class='calNav'>{{ onnow.airname }}</a>
+    </div>
+{% else %}
+  </span>
+  <div>
+    <div class='home-show'>[No playlist available]</div>
+{% endif %}
+    <div class='home-trackbox'>
+      <div class='home-currenttrack'>&nbsp;</div>
+    </div>
+  </div>
+</div>
+{% if push %}
+<form>
+  <input type=hidden id='tz' value='{{ tz }}'>
+  <input type=hidden id='push-subscribe' value='{{ push }}'>
+</form>
+<script type="text/javascript" src="{{ "js/home.js" | decorate }}"></script>
+{% endif %}
+{% if discogs %}
+<div class='recently-played-date-picker'>
+  <h3>Recently Played on {{ app.station }}</h3>
+  <div>
+    <form>
+      <select id='date'>{{ datepicker | raw }}</select>
+      <select id='time'>{{ timepicker | raw }}</select>
+    </form>
+  </div>
+</div>
+<div class='recently-played'></div>
+<div class='show-more'>
+  <form>
+    <input type='button' id='more' value='show more'>
+  </form>
+</div>
+{% elseif topplays | length %}
+<table width="100%">
+  <tr>
+    <th align=left class="subhead">Our Top {{ limit }} Albums
+      <br><font class="subhead2">for the
+      {{ numweeks == 1 ? "week" : numweeks ~ " week period" }}
+      ending {{ enddate }}</font>
+    </th>
+    <td align=right style="vertical-align: bottom;">
+  </tr>
+</table>
+<table class='top-albums'>
+  <tr style='border-bottom:1px solid gray'>
+    <th></th>
+    <th align=left colspan=2>Artist</th>
+    <th align=left>Album/Label</th>
+  </tr>
+{% for topplay in topplays %}
+  <tr>
+    <td style='font-weight:bold; padding-right:0;' align=left>{{ topplay.index }}.</td>
+    <td>{{ topplay.artist }}</td>
+    <td style='padding-right:4px'>
+      <div class='{{ topplay.reviewed ? "albumReview" : "albumNoReview" }}'</div>
+    </td>
+    <td>
+      <a class='nav' href='?s=byAlbumKey&amp;n={{ topplay.tag }}&amp;action=search'>{{ topplay.album }}</a> / {{ topplay.label }}
+    </td>
+  </tr>
+{% endfor %}
+</table>
+<div style='border:0; position:absolute; bottom:0;' CLASS='subhead'>
+  For complete album charting, see our
+  <a href='?action=viewChart'><b>Airplay Charts</b></a>
+</div>
+{% endif %}

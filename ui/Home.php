@@ -92,28 +92,20 @@ class Home extends MenuItem {
     }
 
     public function emitHome() {
+        $this->setTemplate("onnow.html");
         $this->emitWhatsOnNow();
         if(($config = Engine::param('discogs')) &&
                 ($config['apikey'] || $config['client_id']) &&
                 Engine::param('push_enabled', true))
             $this->emitRecentlyPlayed();
-        else {
+        else
             $this->emitTopPlays();
-
-            echo "<div style='border:0; position:absolute; bottom:0px' CLASS='subhead'>For complete album charting, see our ";
-            echo "<a class='subhead' href='?action=viewChart'><b>Airplay Charts</b></a></div>\n";
-        }
     }
 
     private function emitRecentlyPlayed() {
-        echo "<div class='recently-played-date-picker'><h3>Recently Played on ".Engine::param('station')."</h3>\n";
-        echo "<div><form><select id='date'>";
-        echo $this->makeDatePicker();
-        echo "</select><select id='time'>";
-        echo $this->makeTimePicker();
-        echo "</select></form></div></div>\n";
-        echo "<div class='recently-played'></div>\n";
-        echo "<div class='show-more'><form><input type=button id=more value='show more'></form></div>\n";
+        $this->addVar('discogs', true);
+        $this->addVar('datepicker', $this->makeDatePicker());
+        $this->addVar('timepicker', $this->makeTimePicker());
     }
 
     private function emitTopPlays($numweeks=1, $limit=10) {
@@ -140,76 +132,41 @@ class Home extends MenuItem {
     
        Engine::api(ILibrary::class)->markAlbumsReviewed($topPlays);
        if(sizeof($topPlays)) {
-         echo "<TABLE WIDTH=\"100%\">\n";
-
-          echo "<TR><TH ALIGN=LEFT CLASS=\"subhead\">";
           $formatEndDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
-          echo "Our Top $limit Albums\n" .
-          "    <BR><FONT CLASS=\"subhead2\">for the ";
-          echo ($numweeks == 1)?"week":"$numweeks week period";
-          echo " ending $formatEndDate</FONT></TH><TD ALIGN=RIGHT STYLE=\"vertical-align: bottom;\"></TR></TABLE>";
-
-          echo "<TABLE width='100%' class='top-albums'><TR style='border-bottom:1px solid gray'><TH></TH><TH ALIGN=LEFT COLSPAN=2>Artist</TH><TH ALIGN=LEFT>Album/Label</TH></TR>\n";
           for($i=0; $i < sizeof($topPlays); $i++) {
-             $tagId = $topPlays[$i]["tag"];
-             $artist = $topPlays[$i]["artist"];
-             $haveReview = $topPlays[$i]["reviewed"];
-             $album = UI::HTMLify($topPlays[$i]["album"], 20);
-             $label = UI::HTMLify($topPlays[$i]["label"], 20);
+             $topPlays[$i]['index'] = $i + 1;
 
              // Setup artist correctly for collections & swap names if from library
+             $artist = $topPlays[$i]['artist'];
              if (preg_match("/^COLL$/i", $artist))
                  $artist = "Various Artists";
-             else if ($tagId)
+             else if ($topPlays[$i]['tag'])
                  $artist = PlaylistEntry::swapNames($artist);
-
-             $artist = UI::HTMLify($artist, 20);
-             echo "<TR>";
-             echo "<TD style='font-weight:bold; padding-right:0px' ALIGN=LEFT>".(string)($i + 1).".</TD>";
-             echo "<TD>$artist</TD>";
-
-             $reviewClass = $haveReview ? "albumReview" : "albumNoReview";
-
-             echo "<td style='padding-right:4px'><div class='$reviewClass'></div></td>";
-             // Album
-             echo "<TD>" .
-                  "<A CLASS='nav' HREF='?s=byAlbumKey&amp;n=" . UI::URLify($tagId).
-                  "&amp;action=search'>".
-                  "$album</A> / $label </TD>";
-             echo "</TR>\n";
+             $topPlays[$i]['artist'] = $artist;
           }
-          echo "</TABLE>\n";
+
+          $this->addVar('topplays', $topPlays);
+          $this->addVar('numweeks', $numweeks);
+          $this->addVar('limit', $limit);
+          $this->addVar('enddate', $formatEndDate);
        }
     }
     
     private function emitWhatsOnNow() {
-        echo "<div class='home-nowplaying'><span class='home-title'>On Now";
         $tz = date("T");
+        $this->addVar('tz', $tz);
         $record = Engine::api(IPlaylist::class)->getWhatsOnNow();
         if($record && ($row = $record->fetch())) {
+            $row['showtime'] = Playlists::makeShowTime($row);
             $airId = $row["airid"];
-            $airName = htmlentities($row["airname"]);
-            $description = htmlentities($row["description"]);
-            $showTime = Playlists::makeShowTime($row);
-            $hrefAirName =  "?subaction=viewDJ&amp;seq=selUser&amp;viewuser=$airId";
-            $hrefPL = "?subaction=viewListById&amp;playlist=$row[0]";
-            echo ": <span class='show-time'>$showTime $tz</span></span>\n";
-            echo "<div><div class='home-show'>";
-            echo "<A HREF='$hrefPL' CLASS='nav'>$description</A>&nbsp;with&nbsp;";
-            echo "<A HREF='$hrefAirName' CLASS='calNav'>$airName</A></div>";
-        } else {
-            echo "</span>\n";
-            echo "<div><div class='home-show'>[No playlist available]</div>\n";
+            $row['djref'] =  "?subaction=viewDJ&seq=selUser&viewuser=$airId";
+            $row['href'] = "?subaction=viewListById&playlist=$row[0]";
+            $this->addVar('onnow', $row);
         }
-        echo "<div class='home-trackbox'>";
-        echo "<div class='home-currenttrack'>&nbsp;</div></div>\n";
-        echo "</div></div>\n";
 
         if(Engine::param('push_enabled', true)) {
-            echo "<form><input type=hidden id='tz' value='$tz'>";
-            echo "<input type=hidden id='push-subscribe' value='" .
-                preg_replace("/^(http)/", "ws", UI::getBaseUrl()) . "push/onair'></form>\n";
-            UI::emitJS('js/home.js');
+            $push = preg_replace("/^(http)/", "ws", UI::getBaseUrl()) . "push/onair";
+            $this->addVar('push', $push);
         }
     }
 }
