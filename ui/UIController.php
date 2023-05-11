@@ -364,7 +364,7 @@ class UIController implements IController {
       <TR><TD ALIGN=RIGHT>Password:</TD>
           <TD><INPUT TYPE=PASSWORD NAME=password CLASS=input></TD></TR>
       <TR><TD>&nbsp;</TD>
-          <TD><INPUT TYPE=SUBMIT VALUE="  OK  "></TD></TR>
+          <TD><INPUT TYPE=SUBMIT class="submit" VALUE="  OK  "></TD></TR>
 <?php if(!empty(Engine::param('sso')['client_id'])) { ?>
       <TR><TD>&nbsp;</TD>
           <TD><DIV STYLE="margin-left:50px;margin-top:10px;">&mdash; or &mdash;</DIV></TD></TR>
@@ -552,12 +552,12 @@ class UIController implements IController {
               <TR><TD ALIGN=RIGHT>Password:</TD>
                   <TD><INPUT TYPE=PASSWORD NAME=password CLASS=input></TD></TR>
               <TR><TD>&nbsp;</TD>
-                  <TD><INPUT TYPE=SUBMIT VALUE="  Continue  "></TD></TR>
+                  <TD><INPUT TYPE=SUBMIT class="submit" VALUE="  Continue  "></TD></TR>
           </TABLE>
       </DIV>
       <P><INPUT TYPE="radio" NAME="account" VALUE="new" onClick="showNew();">I would like to create a new Zookeeper account</P>
       <DIV ID="newSect" style="display:none;margin-left:50px;">
-         <INPUT TYPE=SUBMIT VALUE="  Continue  ">
+         <INPUT TYPE=SUBMIT class="submit" VALUE="  Continue  ">
       </DIV>
       <INPUT TYPE="hidden" NAME="action" VALUE="ssoOptions">
       <INPUT TYPE="hidden" NAME="ssoOptions" VALUE="<?php echo $_REQUEST["ssoOptions"]; ?>">
