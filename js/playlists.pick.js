@@ -25,7 +25,7 @@
 $().ready(function(){
     const intl = new Date().toLocaleTimeString().match(/am|pm/i) == null;
 
-    var mobile = window.innerWidth < 1024; // match @media min-width in css
+    var mobile = window.innerWidth < 700; // match @media min-width in css
     var maxresults = mobile ? 7 : 10, chunksize = mobile ? 7 : 10;
     var editing = null;
     var shownames = null;

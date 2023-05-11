@@ -505,7 +505,7 @@ ul.listbox.playlist-selector:focus {
     border-color: #637789;
 }
 /* mobile */
-@media (max-width: 1000px) {
+@media (max-width: 700px) {
     ul.listbox.playlist-selector {
         border-radius: 8px;
         font-size: 18px;
@@ -1678,14 +1678,14 @@ a.listEdit {
 
 /*@media (min-width: 9999px) {*/
 /* desktop */
-@media (min-width: 1024px) {
+@media (min-width: 700px) {
     .playlist-grid tbody tr {
         line-height: 30px;
     }
 }
 /*@media (max-width: 9999px) {*/
 /* mobile */
-@media (max-width: 1024px) {
+@media (max-width: 700px) {
     .playlist-grid tbody tr {
         line-height: 40px;
     }
@@ -1778,7 +1778,7 @@ ul.listbox .state-active,
     border-color: transparent;
 }
 /* make autocomplete mobile ui more consistent with mobile datalist */
-@media (max-width: 1024px) {
+@media (max-width: 700px) {
     .ui-autocomplete {
         max-height: 500px;
         max-width: 100%;
