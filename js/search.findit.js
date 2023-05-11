@@ -87,7 +87,9 @@ function emitMore(table, response, data, type) {
                     return false;
                 }
             })(size, offset));
-            ul.append($("<li>").css('width', 'auto').append(a));
+            ul.append($("<li>", {
+                class: 'more',
+            }).css('width', 'auto').append(a));
         }
         table.append($("<tr>").append(indent()).append($("<td>", {
             colSpan: 3

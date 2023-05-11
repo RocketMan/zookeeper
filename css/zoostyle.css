@@ -1711,12 +1711,18 @@ ul.pagination {
     text-align: center;
     font-weight: bold;
 }
-ul.pagination li {
-    width: 22px;
+ul.pagination li:not(.more) {
+    width: 30px;
+    line-height: 30px;
     margin: 0;
 }
 ul.pagination li a {
     display: block;
+    border-radius: 50%;
+}
+ul.pagination li:not(.more) a:hover {
+    background-color: rgba(0,0,0,0.2);
+    text-decoration: none;
 }
 
 ul.listbox {
