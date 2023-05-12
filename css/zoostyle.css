@@ -1107,7 +1107,7 @@ input[type="checkbox"]:checked:active {
     background-color: #ff9;
 }
 
-.date, .time {
+.date, .time, .nowrap {
     white-space: nowrap;
 }
 

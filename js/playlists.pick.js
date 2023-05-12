@@ -195,7 +195,9 @@ $().ready(function(){
             class: 'time',
             id: 'end'
         })));
-        var td = $("<td>");
+        var td = $("<td>", {
+            class: 'nowrap'
+        });
         td.append($("<button>", {
             class: 'default',
             id: 'save'
