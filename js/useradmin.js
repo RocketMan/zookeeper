@@ -44,7 +44,7 @@ $().ready(function(){
             0: { sorter: 'text' },
             [$("#nameCol").val()]: { sorter: 'fullName' }
         }
-    });
+    }).css('display','table');
 
     sortTable.find('TH.initial-sort-col').trigger('sort');
 

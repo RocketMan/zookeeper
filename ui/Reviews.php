@@ -204,7 +204,7 @@ class Reviews extends MenuItem {
         echo "<span id='review-count'></span>";
 
         $reviewsHeader = $this->makeRecentReviewsHeader();
-        echo "<TABLE class='sortable-table' WIDTH='100%'>";
+        echo "<TABLE class='sortable-table' style='display: none' WIDTH='100%'>";
         echo $reviewsHeader;
         echo "<TBODY>";
 
@@ -226,7 +226,7 @@ class Reviews extends MenuItem {
             var INITIAL_SORT_COL = 0; //date
             $('.sortable-table').tablesorter({
                 sortList: [[INITIAL_SORT_COL, 0]],
-            });
+            }).css('display','table');
 
             function setGenreVisibility(genre, showIt) {
                 let genreClass = 'tr.' + genre;

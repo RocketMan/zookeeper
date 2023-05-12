@@ -148,7 +148,7 @@ class AddManager extends MenuItem {
                                "<TH class='sorter-false'></TH>" : */ "";
         $playableCell = $showReview && $isAuthenticated ? "<TH class='sorter-false'></TH>" : "";
 
-        echo "<TABLE class='sortable-table' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
+        echo "<TABLE class='sortable-table' style='display: none' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
              "<TH class='initial-sort-col'>Cat</TH>" .  $reviewCell .
              "<TH>ID</TH>" .
              "<TH>Artist</TH>" . $legacyReviewCell . $playableCell .
@@ -249,7 +249,7 @@ class AddManager extends MenuItem {
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     $().ready(function(){
         var $sortTable = $('.sortable-table');
-        $sortTable.tablesorter({});
+        $sortTable.tablesorter({}).css('display','table');
         $sortTable.find('th.initial-sort-col').trigger('sort');
 
         $("*[data-focus]").trigger('focus');
@@ -1103,7 +1103,7 @@ class AddManager extends MenuItem {
         $lastShowEnd = null;
         $lastDate = null;
     
-        echo "<TABLE class='sortable-table' CLASS='afileactivity'>";
+        echo "<TABLE class='sortable-table afileactivity' style='display: none'>";
         echo "<THEAD><TR>";
         echo "<TH style='width:90px'>Date</TH>";
         echo "<TH>DJ</TH>";
@@ -1225,7 +1225,7 @@ class AddManager extends MenuItem {
         var INITIAL_SORT_COL = 0; //date
         $('.sortable-table').tablesorter({
             sortList: [[INITIAL_SORT_COL, 0]],
-        });
+        }).css('display','table');
     });
     <?php ob_end_flush(); ?>
     // -->

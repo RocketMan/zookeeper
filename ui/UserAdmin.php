@@ -352,7 +352,7 @@ class UserAdmin extends MenuItem {
     </P>
     <?php 
         // Emit the column headers
-        echo "<P><TABLE class='sortable-table'>\n  <THEAD><TR>\n";
+        echo "<P><TABLE class='sortable-table' style='display: none'>\n  <THEAD><TR>\n";
         $this->emitColumnHeader("User", true);
         $this->emitColumnHeader("Name");
         $this->emitColumnHeader("Groups");
@@ -448,7 +448,7 @@ class UserAdmin extends MenuItem {
         }
     
         // Emit the column headers
-        echo "<P><TABLE class='sortable-table'>\n  <THEAD><TR>\n";
+        echo "<P><TABLE class='sortable-table' style='display: none'>\n  <THEAD><TR>\n";
         $this->emitColumnHeader("Airname", true);
         $this->emitColumnHeader("User");
         $this->emitColumnHeader("Name");
