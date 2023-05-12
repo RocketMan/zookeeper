@@ -4,7 +4,7 @@
   </span>
   <div>
     <div class='home-show'>
-      <a href='{{ onnow.href }}'>{{ onnow.description }}</a>&nbsp;with&nbsp;<a href='{{ onnow.djref }}' class='calNav'>{{ onnow.airname }}</a>
+      <a href='?subaction=viewListById&amp;playlist={{ onnow.id }}'>{{ onnow.description }}</a>&nbsp;with&nbsp;<a href='?subaction=viewDJ&amp;seq=selUser&amp;viewuser={{ onnow.airid }}' class='calNav'>{{ onnow.airname }}</a>
     </div>
 {% else %}
   </span>

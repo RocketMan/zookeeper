@@ -158,9 +158,6 @@ class Home extends MenuItem {
         $record = Engine::api(IPlaylist::class)->getWhatsOnNow();
         if($record && ($row = $record->fetch())) {
             $row['showtime'] = Playlists::makeShowTime($row);
-            $airId = $row["airid"];
-            $row['djref'] =  "?subaction=viewDJ&seq=selUser&viewuser=$airId";
-            $row['href'] = "?subaction=viewListById&playlist=$row[0]";
             $this->addVar('onnow', $row);
         }
 
