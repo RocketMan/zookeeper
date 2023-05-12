@@ -248,9 +248,10 @@ class AddManager extends MenuItem {
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     $().ready(function(){
-        var $sortTable = $('.sortable-table');
-        $sortTable.tablesorter({}).css('display','table');
-        $sortTable.find('th.initial-sort-col').trigger('sort');
+        var INITIAL_SORT_COL = 1; // cat
+        $('.sortable-table').tablesorter({
+            sortList: [[INITIAL_SORT_COL, 0]],
+        }).css('display','table');
 
         $("*[data-focus]").trigger('focus');
     });
