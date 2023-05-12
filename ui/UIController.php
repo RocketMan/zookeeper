@@ -59,12 +59,7 @@ class SafeSession {
     }
 }
 
-class UIController implements IController {
-    /**
-     * parent directory for Twig templates
-     */
-    private const TEMPLATE_BASE = __DIR__ . '/templates';
-
+class LazyLoadParams {
     /**
      * list of Engine::params safe for templates
      */
@@ -80,6 +75,23 @@ class UIController implements IController {
         'stylesheet',
         'urls',
     ];
+
+    public function __isset($name) {
+        return in_array($name, self::TEMPLATE_SAFE_PARAMS);
+    }
+
+    public function __get($name) {
+        $this->$name = in_array($name, self::TEMPLATE_SAFE_PARAMS) ?
+                    Engine::param($name) : null;
+        return $this->$name;
+    }
+}
+
+class UIController implements IController {
+    /**
+     * parent directory for Twig templates
+     */
+    private const TEMPLATE_BASE = __DIR__ . '/templates';
 
     protected $ssoUser;
     protected $dn;
@@ -180,7 +192,7 @@ class UIController implements IController {
             $data = ob_get_contents();
             ob_end_clean();
 
-            $app = new \stdClass();
+            $app = new LazyLoadParams();
             $app->content = new \stdClass();
             $app->content->data = $data;
             $app->content->template = $this->menuItem ? $this->menuItem->getTemplate() : null;
@@ -189,8 +201,6 @@ class UIController implements IController {
             $app->menu = $this->composeMenu($_REQUEST['action']);
             $app->submenu = $this->menuItem ? $this->menuItem->composeSubmenu($_REQUEST['action'], $_REQUEST['subaction']) : [];
             $app->tertiary = $this->menuItem ? $this->menuItem->getTertiary() : null;
-            foreach(self::TEMPLATE_SAFE_PARAMS as $param)
-                $app->$param = Engine::param($param);
             $app->request = $_REQUEST;
             $app->session = new SafeSession();
             $app->sso = !empty(Engine::param('sso')['client_id']);
