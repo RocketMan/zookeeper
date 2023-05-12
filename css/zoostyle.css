@@ -993,11 +993,14 @@ input[type="checkbox"]:checked:active {
     width: 10px;
     height: 4px;
 }
-
 .songEdit {
     top: -2px;
-    left: 14px;
-    font-size:14px;
+    left: 16px;
+    font-size: 14px;
+}
+
+.currentsEdit {
+    padding-left: 5px;
 }
 
 .songLabel {

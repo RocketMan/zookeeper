@@ -131,7 +131,7 @@ class AddManager extends MenuItem {
           "' onClick='ConfirmDelete(" . $albumId . "); return false;'><span class='fas fa-trash'></span></A>&nbsp;";
 
        $hrefId = "?action=addmgr&amp;subaction=addsedit&amp;id=" . $albumId;
-       $cellId = "<A CLASS='songEdit' HREF='" . $hrefId . "'><span class='fas fa-edit'></span></A>";
+       $cellId = "<A CLASS='currentsEdit' HREF='" . $hrefId . "'><span class='fas fa-edit'></span></A>";
 
        return "<TD>" . $cellDate . $cellId . "</TD>";
     }
