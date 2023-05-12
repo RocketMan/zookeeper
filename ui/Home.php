@@ -30,8 +30,6 @@ use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 
-use ZK\UI\UICommon as UI;
-
 class Home extends MenuItem {
     private static $subactions = [
         [ "", "emitHome" ],
@@ -162,7 +160,7 @@ class Home extends MenuItem {
         }
 
         if(Engine::param('push_enabled', true)) {
-            $push = preg_replace("/^(http)/", "ws", UI::getBaseUrl()) . "push/onair";
+            $push = preg_replace("/^(http)/", "ws", Engine::getBaseUrl()) . "push/onair";
             $this->addVar('push', $push);
         }
     }

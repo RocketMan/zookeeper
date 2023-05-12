@@ -13,6 +13,17 @@ __template__ is the filename of the default template; e.g.,
 
     {% extends 'default/content.html' %}
 
+### Filters
+
+The 'decorate' filter decorates an asset URI in such a way that it
+will change when the referenced asset changes.  In this way, assets
+such as js and css files are guaranteed to load anew in the client
+browser whenever they change in the service.
+
+Example:
+
+    <link rel="stylesheet" type="text/css" href="{{ 'css/mystyle.css' | decorate }}" />
+
 ### Template environment
 
 In addition to controller-specific variables, the following global
