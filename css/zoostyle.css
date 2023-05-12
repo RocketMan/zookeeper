@@ -1697,9 +1697,6 @@ a.listEdit {
     .newPlaylist button {
         height: 30px;
     }
-    .playlist-grid button:last-child {
-        margin-right: 0;
-    }
 }
 
 ul.pagination {
