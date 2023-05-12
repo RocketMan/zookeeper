@@ -30,7 +30,7 @@ $config = [
 
     'stylesheet' => 'css/kzsustyle.css',
     'custom_template_dir' => 'kzsu',
-    'template_cache_enabled' => false,
+    'template_cache_enabled' => true,
 
     /**
      * e-mail settings
