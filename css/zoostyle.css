@@ -102,6 +102,10 @@ h2, .subhead  {
     padding-top: 0;
     text-align: left;
 }
+.no-margin {
+    margin-top: 0;
+    margin-bottom: 0;
+}
 h3 {
     font-size: 12pt;
     font-weight: bold;
@@ -141,6 +145,52 @@ ol, ul {
 ol ul, ul ol, ul ul, ol ol {
     margin-top: 0;
     margin-bottom: 0;
+}
+
+/* default button styling */
+div.content input[type=button]:not(.submit),
+div.content input[type=submit]:not(.submit,.editorUp,.editorDown) {
+    color: #000;
+    background-color: #f4f4f4;
+    border-radius: 4px;
+    border: 1px solid #cdcdcd;
+    padding: 4px 6px;
+}
+div.content input[type=button]:not(.submit):hover,
+div.content input[type=submit]:not(.submit,.editorUp,.editorDown):hover {
+    background-color: #f8f8f8;
+}
+div.content input[type=button]:not(.submit):active,
+div.content input[type=submit]:not(.submit,.editorUp,.editorDown):active {
+    background-color: #d6d6d6;
+}
+
+/* input fields */
+div.content .textsp {
+    border: 1px solid #ccc;
+}
+div.content input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
+div.content select[size='1'] {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+@media (max-width: 700px) {
+    div.content #playlist-date,
+    div.content table input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
+    div.content table select[size='1'] {
+        font-size: 14px;
+        height: 24px;
+    }
+    div.content div.pl-form-entry input,
+    div.content div.pl-form-entry button {
+	height: 30px;
+    }
+    div.content select[size='1'] {
+        height: 26px;
+    }
+    div.content .listbox {
+        font-size: 16px;
+    }
 }
 
 /* afile activity page */
@@ -500,9 +550,14 @@ ul.listbox.selector {
     overflow: hidden;
     overflow-y: scroll;
     margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
 }
 ul.listbox.selector:focus {
-    border-color: #637789;
+    outline-color: auto;/*#637789;*/
+    outline-style: auto;
+    outline-width: 3px;
+    outline-offset: -2px;
 }
 /* mobile */
 @media (max-width: 700px) {
@@ -712,6 +767,38 @@ th.sec {
     border-radius: 3px;
     width: 120px;
 }
+
+/* try to make selectmenu ui more consistent with browser defaults */
+.ui-selectmenu-button.ui-button {
+    font-family: 'Roboto', Helvetica, sans-serif;
+    padding: 3px 4px 3px 2px;
+}
+.ui-selectmenu-button.ui-button:focus {
+    outline-color: auto;
+    outline-style: auto;
+    outline-width: 3px;
+    outline-offset: -2px;
+}
+li.ui-menu-item {
+    font-family: 'Roboto', Helvetica, sans-serif;
+}
+li.ui-menu-item .ui-state-active,
+.ui-selectmenu-button.ui-button:active {
+    color: #000;
+    background: #ccc;
+    border-color: transparent;
+}
+@media (max-width: 700px) {
+    .ui-selectmenu-button.ui-button {
+        font-size: 14px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+    }
+    li.ui-menu-item {
+        font-size: 14px;
+    }
+}
+
 @-moz-document url-prefix() {
     /* combo is a tad gaunt on fx */
     .textsp {
@@ -1464,6 +1551,7 @@ div.toggle-time-entry div {
 }
 
 .playlist-by-date {
+    margin-top: 2px;
     /*max-width: 1400px;/*TEST*/
     /*margin: 0 auto;/*TEST*/
 }
@@ -1768,7 +1856,7 @@ ul.listbox li {
 
 /* try to make autocomplete ui more consistent with browser defaults */
 .ui-autocomplete.ui-widget {
-    font-family: sans-serif;
+    font-family: 'Roboto', Helvetica, sans-serif;
     padding: 1px;
 }
 .ui-autocomplete.ui-widget .ui-menu-item {

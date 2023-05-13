@@ -853,7 +853,7 @@ class AddManager extends MenuItem {
         }
     ?>
           <TR><TD>&nbsp;</TD>
-              <TD COLSPAN=4 ALIGN=LEFT><INPUT TYPE=SUBMIT VALUE=" Update Categories "></TD></TR>
+              <TD COLSPAN=4 ALIGN=LEFT><INPUT TYPE=SUBMIT class="submit" VALUE=" Update Categories "></TD></TR>
     <?php 
         if($seq == "update") {
             if($success)

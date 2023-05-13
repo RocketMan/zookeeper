@@ -107,7 +107,7 @@ class UserAdmin extends MenuItem {
             // Only one airname; emit form
     ?>
     <FORM id="update-airname" ACTION="?" METHOD=POST>
-    <P><B>Update airname '<?php echo $airnames[0]['airname'];?>'</B></P>
+    <h3 class='no-margin'>Update airname '<?php echo $airnames[0]['airname'];?>'</h3>
     <TABLE CELLPADDING=2 BORDER=0>
       <TR><TD ALIGN=RIGHT>Airname:</TD>
         <TD><INPUT id='name' TYPE=TEXT NAME=name required VALUE="<?php echo $name?$name:$airnames[0]['airname'];?>" CLASS=input MAXLENGTH=<?php echo IDJ::MAX_AIRNAME_LENGTH . ($name?" data-focus":"");?> SIZE=40></TD></TR>
@@ -135,7 +135,7 @@ class UserAdmin extends MenuItem {
             // Multiple airnames; emit airname selection form
     ?>
     <FORM class="selector" ACTION="?" METHOD=POST>
-    <B>Select Airname:</B><BR>
+    <h3 class='no-margin'>Select Airname:</h3>
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
     <ul tabindex='0' class='selector listbox no-text-select'>
     <?php
@@ -298,7 +298,7 @@ class UserAdmin extends MenuItem {
     <TABLE CELLPADDING=2 CELLSPACING=2>
       <TR>
         <TD>&nbsp;</TD>
-        <TD WIDTH="100%"><B><FONT SIZE="+1"><?php echo $uid;?></FONT></B></TD>
+        <TD WIDTH="100%"><h3 class='no-margin'><?php echo $uid;?></h3></TD>
       </TR><TR>
         <TD>&nbsp;</TD>
         <TD>&nbsp;</TD>
@@ -413,7 +413,7 @@ class UserAdmin extends MenuItem {
     <TABLE CELLPADDING=2 CELLSPACING=2 WIDTH="100%">
       <TR>
         <TD>&nbsp;</TD>
-        <TD WIDTH="100%"><B><FONT SIZE="+1"><?php echo $row["airname"];?></FONT></B></TD>
+        <TD WIDTH="100%"><h3 class='no-margin'><?php echo $row["airname"];?></h3></TD>
       </TR><TR>
         <TD>&nbsp;</TD>
         <TD>&nbsp;</TD>

@@ -39,7 +39,7 @@ class DeepStorage extends MenuItem {
         <INPUT TYPE=hidden name=action value="editor">
         <INPUT TYPE=hidden name=subaction value="deepStorage">
         <INPUT TYPE=hidden name=MAX_FILE_SIZE value=100000>
-        <TABLE BORDER=0>
+        <TABLE BORDER=0 CELLPADDING=2 style='margin-top: 2px'>
           <TR><TD ALIGN=RIGHT>Send this tab-delimited file:</TD><TD><INPUT NAME=userfile TYPE=file></TD></TR>
           <TR><TD ALIGN=RIGHT>Tag column number:</TD><TD><INPUT TYPE=text name=column value="1" LENGTH=10></TD></TR>
           <TR><TD ALIGN=RIGHT>Box number:</TD><TD><INPUT TYPE=text name=bin LENGTH=10></TD></TR>

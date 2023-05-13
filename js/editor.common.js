@@ -563,5 +563,7 @@ $().ready(function() {
         });
     });
 
+    $("select.textsp").selectmenu();
+
     $("*[data-focus]").trigger('focus');
 });

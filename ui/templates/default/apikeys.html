@@ -6,7 +6,7 @@ if you trust the external application.
 </div>
 <form action='?' method=post>
 {% if keys | length %}
-  <p><b>Your API Keys:</b></p>
+  <h3>Your API Keys:</h3>
   <table border=0>
     <tr><th><input name=all id='all' type=checkbox></th><th align=right>API Key</th><th></th></tr>
   {%~ for key in keys %}
