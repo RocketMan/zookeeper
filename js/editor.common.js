@@ -204,7 +204,7 @@ $().ready(function() {
         $("INPUT[name=" + (disabled ? "album" : "artist") + "]").trigger('focus');
     });
 
-    $("#location").on('change', function(e) {
+    $("#location").on('change selectmenuchange', function(e) {
         var storage = $("SELECT[name=location]").val() == 'G';
         $("INPUT[name=bin], #lbin").css("visibility", storage ? 'visible' : 'hidden');
         if(storage)
