@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS `albumvol` (
   KEY `album` (`album`),
   KEY `pubkey` (`pubkey`),
   KEY `aat` (`artist`,`album`,`tag`),
+  KEY `location` (`location`),
   FULLTEXT KEY `artist_2` (`artist`,`album`),
   FULLTEXT KEY `artist_3` (`artist`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
