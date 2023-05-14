@@ -167,6 +167,9 @@ class Search extends MenuItem {
             echo "<I>Missing</I>";
             $showMissing = "found";
             break;
+        case 'C':
+            echo "<I>A-File</I>";
+            break;
         case 'E':
             echo "<I>Review Shelf</I>";
             break;
