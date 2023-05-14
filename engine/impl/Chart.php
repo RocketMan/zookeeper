@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -180,7 +180,15 @@ class ChartImpl extends DBO implements IChart {
     
         return $result;
     }
-    
+
+    private function updateLocation($tag, $location) {
+        $query = "UPDATE albumvol SET location = ? WHERE tag = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $location);
+        $stmt->bindValue(2, $tag);
+        return $stmt->execute();
+    }
+
     public function addAlbum($aid, $tag, $adddate, $pulldate, $cats) {
         $query = "INSERT INTO currents " .
                  "(afile_number, tag, adddate, pulldate, category) " .
@@ -191,7 +199,10 @@ class ChartImpl extends DBO implements IChart {
         $stmt->bindValue(3, $adddate);
         $stmt->bindValue(4, $pulldate);
         $stmt->bindValue(5, $cats);
-        return $stmt->execute() && $stmt->rowCount() >= 0;
+        $success = $stmt->execute() && $stmt->rowCount() >= 0;
+        if($success)
+            $success &= $this->updateLocation($tag, 'C'); // A-File
+        return $success;
     }
     
     public function updateAlbum($id, $aid, $tag, $adddate, $pulldate, $cats) {
@@ -211,16 +222,35 @@ class ChartImpl extends DBO implements IChart {
         // query are exactly the same as the existing columns; hence,
         // we cannot distinguish between a degenerate update and a
         // failed update resulting from a bad WHERE clause.  bummer.
-        return $stmt->execute() && $stmt->rowCount() >= 0;
+        $success = $stmt->execute() && $stmt->rowCount() >= 0;
+        if($success) {
+            $today = date("Y-m-d");
+            $location = $adddate <= $today && $pulldate > $today ? 'C' : 'L';
+            $success &= $this->updateLocation($tag, $location);
+        }
+        return $success;
     }
     
     public function deleteAlbum($id) {
         $query = "DELETE FROM currents WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $id);
-        return $stmt->execute() && $stmt->rowCount() >= 0;
+        $success = $stmt->execute() && $stmt->rowCount() >= 0;
+        if($success)
+            $success &= $this->updateLocation($tag, 'L'); // Library
+        return $success;
     }
-    
+
+    public function retireAlbums($date) {
+        $query = "UPDATE albumvol a LEFT JOIN currents c " .
+                 "ON a.tag = c.tag AND adddate <= ? AND pulldate > ? " .
+                 "SET location='L' WHERE location='C' AND c.tag IS NULL";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $date);
+        $stmt->bindValue(2, $date);
+        return $stmt->execute() ? $stmt->rowCount() : false;
+    }
+
     public function getAlbum($id) {
         settype($id, "integer");
         $query = "SELECT * FROM currents WHERE id = ?";

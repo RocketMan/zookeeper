@@ -41,6 +41,7 @@ interface IChart {
     function addAlbum($aid, $tag, $adddate, $pulldate, $cats);
     function updateAlbum($id, $aid, $tag, $adddate, $pulldate, $cats);
     function deleteAlbum($id);
+    function retireAlbums($date);
     function getAlbum($id);
     function getAlbumByTag($tag);
     function getAlbumPlays($tag, $startDate="", $endDate="", $limit="");

@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -46,6 +46,7 @@ class RunDaily implements IController {
         echo "Starting ".date("Y-m-d H:i:s")."\n";
         
         $this->runCharts();
+        $this->retireCurrents();
         $this->purgeDeletedPlaylists();
         $this->purgeOldSessions();
         $this->purgeArtworkCache();
@@ -100,6 +101,12 @@ class RunDaily implements IController {
             if($addresses['crossroads'])
                 $this->chartMonthly($date, $addresses['crossroads'], 1);
         }
+    }
+
+    private function retireCurrents() {
+        $today = date("Y-m-d");
+        $success = Engine::api(IChart::class)->retireAlbums($today);
+        echo "Retiring currents: ".($success === false ? "FAILED!" : "OK ($success albums)")."\n";
     }
 
     private function purgeDeletedPlaylists() {
