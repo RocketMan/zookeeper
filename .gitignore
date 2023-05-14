@@ -2,6 +2,7 @@
 .DS_Store
 config/config.php
 img/.cache
+ui/templates/.cache
 vendor
 *.swo
 *.swn
