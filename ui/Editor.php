@@ -912,7 +912,10 @@ class Editor extends MenuItem {
                         $_REQUEST["imageUrl"] ?? null,
                         $infoUrl);
                 }
-                $this->printTag($_REQUEST["seltag"]);
+
+                // don't automatically print/queue tag for digital media
+                if($album["medium"] != "D")
+                    $this->printTag($_REQUEST["seltag"]);
             }
 
             $this->albumAdded = $_REQUEST["new"];
