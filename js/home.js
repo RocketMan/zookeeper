@@ -204,7 +204,7 @@ $().ready(function(){
         };
     };
 
-    $("#date").on('change', function() {
+    $("#date").on('change selectmenuchange', function() {
         var date = $(this).val();
         var url = '?subaction=times&date=' + encodeURIComponent(date);
 
@@ -214,16 +214,16 @@ $().ready(function(){
             accept: 'application/json; charset=utf-8',
             url: url
         }).done(function (response) {
-            $("#time").empty().append(response.times);
+            $("#time").empty().append(response.times).selectmenu('refresh');
             var time = $("#time").val();
             populateCards(true, time == 'now' ? null : (date + " " + time));
         });
-    });
+    }).selectmenu({width: 145});
 
-    $("#time").on('change', function() {
+    $("#time").on('change selectmenuchange', function() {
         var time = $(this).val();
         populateCards(true, time == 'now' ? null : ($("#date").val() + " " + time));
-    });
+    }).selectmenu({width: 145});
 
     $("#more").on('click', function() {
         var last = $(".card").last().data("time");

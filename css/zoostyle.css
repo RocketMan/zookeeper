@@ -571,6 +571,7 @@ ul.listbox.selector:focus {
         padding: 8px;
         border-top: 1px solid #c5c5c5;
     }
+    form.selector input[type=button],
     form.selector input[type=submit] {
 	height: 30px;
     }
@@ -771,7 +772,7 @@ th.sec {
 /* try to make selectmenu ui more consistent with browser defaults */
 .ui-selectmenu-button.ui-button {
     font-family: 'Roboto', Helvetica, sans-serif;
-    padding: 3px 4px 3px 2px;
+    padding: 3px 5px;
 }
 .ui-selectmenu-button.ui-button:focus {
     outline-color: auto;
@@ -791,8 +792,7 @@ li.ui-menu-item .ui-state-active,
 @media (max-width: 700px) {
     .ui-selectmenu-button.ui-button {
         font-size: 14px;
-        padding-top: 6px;
-        padding-bottom: 6px;
+        padding: 6px;
     }
     li.ui-menu-item {
         font-size: 14px;
