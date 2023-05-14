@@ -263,7 +263,7 @@ class Reviews extends MenuItem {
                 $(this).prop('checked', isChecked);
             });
 
-            $("#djPicker").on('change', function(e) {
+            $("#djPicker").on('change selectmenuchange', function(e) {
                 let selectedDj = $(this).children("option:selected").val();
                 window.location.assign('?action=viewRecent&dj=' + selectedDj);
             }).selectmenu();
