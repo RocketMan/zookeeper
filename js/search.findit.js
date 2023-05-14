@@ -22,6 +22,7 @@
 
 /*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
+$().ready(function() {
 function htmlify(s) {
     return s != null?s.replace(/&/g, '&amp;').replace(/</g, '&lt;'):'';
 }
@@ -86,7 +87,9 @@ function emitMore(table, response, data, type) {
                     return false;
                 }
             })(size, offset));
-            ul.append($("<li>").css('width', 'auto').append(a));
+            ul.append($("<li>", {
+                class: 'more',
+            }).css('width', 'auto').append(a));
         }
         table.append($("<tr>").append(indent()).append($("<td>", {
             colSpan: 3
@@ -123,7 +126,7 @@ function emitAlbumsEx(table, response, odata, header, tag) {
                             '&q=10&action=search" CLASS="nav">' +
                             getArtist(album.attributes) + '</A>' +
                             "&nbsp;&#8226;&nbsp;");
-        var albumx = $("<I>").html('<A HREF="?action=findAlbum&n=' + album.id +
+        var albumx = $("<I>").html('<A HREF="?action=search&s=byAlbumKey&n=' + album.id +
                                    '" CLASS="nav">' + htmlify(album.attributes.album) + '</A>');
         td.append(albumx).append('&nbsp; (' + htmlify(album.relationships && album.relationships.label ? album.relationships.label.meta.name : "Unknown") + ')');
         tr.append(td);
@@ -203,7 +206,7 @@ var lists = {
                                     encodeURIComponent(track.artist) +
                                     '&q=10&action=search" CLASS="nav">' + getArtist(track) + '</A>' +
                                     "&nbsp;&#8226;&nbsp;");
-                var albumx = $("<I>").html('<A HREF="?action=findAlbum&n=' + entry.id +
+                var albumx = $("<I>").html('<A HREF="?action=search&s=byAlbumKey&n=' + entry.id +
                                       '" CLASS="nav">' + htmlify(album.attributes.album) + '</A>');
                 td.append(albumx);
                 td.append('&nbsp;&#8226;&nbsp;"' + htmlify(track.track) + '"');
@@ -263,7 +266,7 @@ var lists = {
             var year = " " + sd.substr(0, 4);
             var td = $("<TD>", {
                 align: 'left'
-            }).html('<A HREF="?action=viewDJ&seq=selList&playlist=' +
+            }).html('<A HREF="?subaction=viewDJ&seq=selList&playlist=' +
                     list.id + '" CLASS="nav">' +
                     htmlify(list.attributes.name) + '</A>' +
                     '&nbsp;&#8226;&nbsp;' +
@@ -310,7 +313,7 @@ var lists = {
                                     '&q=10&action=search" CLASS="nav">' +
                                     getArtist(album.meta) + '</A>' +
                                     '&nbsp;&#8226;&nbsp;' +
-                                    '<I><A HREF="?action=findAlbum&n=' +
+                                    '<I><A HREF="?action=search&s=byAlbumKey&n=' +
                                     album.data.id + '" CLASS="nav">' +
                                     htmlify(album.meta.album) + '</A></I>' +
                                     '&nbsp;&nbsp;(' +
@@ -344,7 +347,7 @@ var lists = {
                         getArtist(album.attributes) + '</A>' +
                         "&nbsp;&#8226;&nbsp;" +
                         "<I>" +
-                        '<A HREF="?action=findAlbum&n=' +
+                        '<A HREF="?action=search&s=byAlbumKey&n=' +
                         entry.id + '" CLASS="nav">' +
                         htmlify(album.attributes.album) + '</A></I>' +
                         '&nbsp;&#8226;&nbsp;"' + htmlify(track.track) + '"');
@@ -359,7 +362,7 @@ var lists = {
 
 function searchAll() {
     var url = "api/v1/search?filter[*]=" +
-                encodeURIComponent($("#key").val());
+                encodeURIComponent($("#fkey").val());
     search(null, url, 5, -1);
 }
 
@@ -390,8 +393,19 @@ function search(type, url, size, offset) {
 
             clearSavedTable();
             var total = response.links.first.meta.total;
-            $("#total").html("(" + total + " total)");
-            var results = $("#results");
+            var rcount = $("#total");
+            if(!rcount.length) {
+                rcount = $("<div>", {
+                    class: 'result-count',
+                    id: 'total'
+                });
+                $("body").append(rcount);
+            }
+            var search = $("#fkey").val().trim();
+            rcount.html((total ? total : "No") + " items found");
+            $(".nav-items li").removeClass("selected");
+            $(".breadcrumbs").hide();
+            var results = $(".content");
             results.empty();
             response.all = true;
             response.data.forEach(function(list) {
@@ -400,11 +414,7 @@ function search(type, url, size, offset) {
             });
 
             if(total == '0') {
-                var search = $("#key").val();
-                if(search.length < 4 ||
-                   search.match(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^_`{|}~]/g) != null) {
-                    results.html('TIP: For short names or names with punctuation, try the <A HREF="?action=search&s=byArtist&n=' + encodeURIComponent(search) + '">Classic Search</A>.');
-                }
+                results.html('Didn\'t find what you were looking for?  Try the <a href="?action=search&s=byArtist&n=' + encodeURIComponent(search) + '">Classic Search</a>.');
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -416,11 +426,10 @@ function search(type, url, size, offset) {
     });
 }
 
-$().ready(function() {
     function onSearchNow() {
         // for the benefit of the pagination links, copy the search
         // string to a hidden field so it is preserved on Back
-        $("#key").val($("#search").val());
+        $("#fkey").val($(".search-data").val());
         searchAll();
     }
 
@@ -429,14 +438,18 @@ $().ready(function() {
             // restore search string on Back
             // schedule for later to avoid webkit's autocomplete=off blanking
             setTimeout(function() {
-                $("#search").val($("#key").val());
+                $(".search-data").val($("#fkey").val());
             }, 100);
         }
     });
 
-    var field = $("#search");
-    field.keyup(function() {
-        var sync = $("FORM").get(0); // access underlying DOM element
+    var field = $(".search-data");
+    field.keyup(function(e) {
+        // nothing to do if search field has not changed
+        if(this.value == $("#fkey").val())
+            return;
+
+        var sync = field.closest("form").get(0); // access underlying DOM element
         if(sync.Timer) {
             clearTimeout(sync.Timer);
             sync.Timer = null;

@@ -117,6 +117,8 @@ $().ready(function() {
     });
 
     $(".import-csv").on('submit', function(e) {
+        if($("input[name=format]:checked").val() == "json")
+            return;
         var airname = $("#airname").val().trim();
         if(airname.length == 0 ||
                $("#airnames option[value='" + escQuote(airname) + "' i]").length == 0 && !confirm('Create new airname "' + airname + '"?')) {
@@ -138,8 +140,9 @@ $().ready(function() {
         e.preventDefault();
         e.stopPropagation();
         $(this).addClass('drop-active');
-    }).on('dragleave', function() {
-        $(this).removeClass('drop-active');
+    }).on('dragleave', function(e) {
+        if(e.target.matches('body'))
+            $(this).removeClass('drop-active');
     }).on('drop', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -157,6 +160,23 @@ $().ready(function() {
     });
     $("input[type=file]").on('change', function(e) {
         $(".file-area .success").text(this.files[0].name);
+    });
+
+    $("input[name=format]").on('change', function(e) {
+        switch(this.value) {
+        case 'csv':
+            $(".csv-fields").slideDown();
+            $(".info-csv").css('display', 'inline-block');
+            $(".info-json").hide();
+            $(".csv-required").attr('required', true);
+            break;
+        case 'json':
+            $(".csv-fields").slideUp();
+            $(".info-csv").hide();
+            $(".info-json").css('display', 'inline-block');
+            $(".csv-required").attr('required', false);
+            break;
+        }
     });
 
     $("input:invalid").first().trigger('focus');

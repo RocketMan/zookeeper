@@ -46,6 +46,7 @@ class Editor extends MenuItem {
     private static $subactions = [
         [ "m", "", "Albums", "musicEditor" ],
         [ "m", "labels", "Labels", "musicEditor" ],
+        [ "e", "deepStorage", "Deep Storage", "deepStorage" ],
     ];
 
     private static $subactions_tagq = [
@@ -170,6 +171,13 @@ class Editor extends MenuItem {
     private static function isEmpty($var) {
         return !isset($var) || empty($var) && $var !== 0 && $var !== "0";
     }
+
+    public function getSubactions($action) {
+        $subactions = self::$subactions;
+        if(Engine::api(IEditor::class)->getNumQueuedTags($this->session->getUser()))
+            $subactions = array_merge($subactions, self::$subactions_tagq);
+        return $subactions;
+    }
     
     public function processLocal($action, $subaction) {
         $this->printConfig = Engine::param('label_printer');
@@ -184,12 +192,14 @@ class Editor extends MenuItem {
             }
         }
 
-        UI::emitJS('js/editor.common.js');
-        $subactions = self::$subactions;
-        if(Engine::api(IEditor::class)->getNumQueuedTags($this->session->getUser()))
-            $subactions = array_merge($subactions, self::$subactions_tagq);
+        if(substr($subaction, -1) != "_")
+            UI::emitJS('js/editor.common.js');
         $this->subaction = $subaction;
-        return $this->dispatchSubaction($action, $subaction, $subactions);
+        return $this->dispatchSubaction($action, $subaction);
+    }
+
+    public function deepStorage() {
+        $this->newEntity(DeepStorage::class)->processLocal("editor", "deepStorage");
     }
 
     /**
@@ -433,7 +443,7 @@ class Editor extends MenuItem {
             if($i == 1) {
                 // Emit header
                 $title = $this->getPanelTitle($_REQUEST["seq"]);
-                echo "  <FORM ACTION=\"?\" METHOD=POST>\n";
+                echo "  <FORM id='editor' ACTION=\"?\" METHOD=POST>\n";
                 echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n      <TR><TH ALIGN=LEFT>$title</TH><TH ALIGN=RIGHT CLASS=\"error\">";
                 if(!$this->subaction && $this->canPrintLocal()) {
                     echo "<span id='print-status'></span>\n";
@@ -481,7 +491,7 @@ class Editor extends MenuItem {
             if($i == 1) {
                 // Emit header
                 $title = $this->getPanelTitle($_REQUEST["seq"]);
-                echo "  <FORM ACTION=\"?\" METHOD=POST>\n";
+                echo "  <FORM id='editor' ACTION=\"?\" METHOD=POST>\n";
                 echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n      <TR><TH ALIGN=LEFT>$title</TH></TR>\n      <TR><TD HEIGHT=130 VALIGN=MIDDLE>\n";
     
             }
@@ -548,7 +558,7 @@ class Editor extends MenuItem {
          }
          echo "<P><B>Tags queued for printing:</B>\n";
          echo "</P>\n";
-         echo "    <TABLE BORDER=0>\n      <TR><TH><INPUT NAME=all id='all' TYPE=checkbox></TH><TH ALIGN=RIGHT>Tag&nbsp;&nbsp;</TH><TH>Artist</TH><TH>&nbsp;</TH><TH>Album</TH></TR>\n";
+         echo "    <TABLE BORDER=0>\n      <TR><TH><INPUT NAME=all id='all' TYPE=checkbox></TH><TH ALIGN=RIGHT>Tag&nbsp;&nbsp;</TH><TH ALIGN=left>Artist</TH><TH>&nbsp;</TH><TH ALIGN=left>Album</TH></TR>\n";
          if($result = Engine::api(IEditor::class)->getQueuedTags($this->session->getUser())) {
               while($row = $result->fetch()) {
                    echo "      <TR><TD><INPUT NAME=tag".$row["tag"]." TYPE=checkbox".($_POST["tag".$row["tag"]] == "on"?" checked":"")."></TD>";
@@ -902,7 +912,10 @@ class Editor extends MenuItem {
                         $_REQUEST["imageUrl"] ?? null,
                         $infoUrl);
                 }
-                $this->printTag($_REQUEST["seltag"]);
+
+                // don't automatically print/queue tag for digital media
+                if($album["medium"] != "D")
+                    $this->printTag($_REQUEST["seltag"]);
             }
 
             $this->albumAdded = $_REQUEST["new"];
@@ -1291,9 +1304,8 @@ class Editor extends MenuItem {
     <?php
         $artistHdr = $isCollection ? "<TH>Artist</TH>" : "";
         $cellWidth = "width:" . ($isCollection ? "220px" : "330px");
-        $idp = "padding-right:" . ($isCollection ? "3px" : "7px");
 
-        echo "<TR><TH></TH><TH>Track Name</TH>${artistHdr}<TH>URL</TH><TD align=right style='$idp'>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='&minus;'></TD></TR>\n";
+        echo "<TR><TH></TH><TH>Track Name</TH>${artistHdr}<TH>URL</TH><TD align=right>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='&minus;'></TD></TR>\n";
 
         for($i=0; $i<$this->tracksPerPage; $i++) {
             $trackNum = $_REQUEST["nextTrack"] + $i;

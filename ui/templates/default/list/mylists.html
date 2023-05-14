@@ -1,0 +1,57 @@
+<script type="text/javascript" src="{{ 'js/jquery.fxtime.js' | decorate }}"></script>
+<script type="text/javascript" src="{{ 'js/playlists.pick.js' | decorate }}"></script>
+<div class='playlist-accordion no-text-select' style='display: none'>
+  <h3>My Playlists</h3>
+  <div class='active-playlist-container'>
+    <div class='float-error'></div>
+    <div class='newPlaylist'><button><span>+ Add New Playlist</span></button></div>
+    <div>
+      <datalist class='airnames'>
+{% for airname in airnames %}
+        <option value='{{ airname }}'>
+{% endfor %}
+      </datalist>
+      <input type='hidden' id='duplicate-suffix' value='{{ DUPLICATE_SUFFIX }}' />
+      <input type='hidden' id='max-description-length' value='{{ MAX_DESCRIPTION_LENGTH }}' />
+      <input type='hidden' id='max-airname-length' value='{{ MAX_AIRNAME_LENGTH }}' />
+      <table class='playlist-grid active-grid'>
+        <colgroup>
+          <col style='width: 55px'>
+          <col style='width: 170px'>
+          <col style='width: 100px'>
+          <col style='width: 90px'>
+          <col style='width: 70px'>
+          <col style='width: 12px'>
+          <col style='width: 70px'>
+          <col>
+        </colgroup>
+        <thead><tr>
+          <th></th><th>Show</th><th>DJ</th><th>Date</th><th>Start</th><th></th><th>End</th><th></th>
+          </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <h3>Deleted Playlists</h3>
+  <div class='deleted-playlist-container'>
+    <table class='playlist-grid deleted-grid'>
+      <colgroup>
+        <col style='width: 65px'>
+        <col style='width: 170px'>
+        <col style='width: 100px'>
+        <col style='width: 90px'>
+        <col style='width: 70px'>
+        <col style='width: 12px'>
+        <col style='width: 70px'>
+        <col>
+      </colgroup>
+      <thead><tr>
+        <th></th><th>Show</th><th>DJ</th><th>Date</th><th>Start</th><th></th><th>End</th><th>Expires</th>
+        </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+{% if duplicate %}
+<input type='hidden' id='duplicate' value='{{ duplicate }}' />
+{% endif %}

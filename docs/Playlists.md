@@ -1,4 +1,4 @@
-## Zookeeper JSON:API :: Playlist
+## Zookeeper Online JSON:API :: Playlist
 
 This is specific API information for the 'playlist' type.  For generic API
 information, see the [JSON:API main page](./API.md).
@@ -252,16 +252,16 @@ can be automatically timestamped with the current time.
 
 * POST (API version 1): If you omit, or supply an empty `created`
 attribute, or a `created` attribute whose value is 'auto' in a POST
-request to the `api/v1/playlist/:id/events` endpoint, zookeeper will
+request to the `api/v1/playlist/:id/events` endpoint, Zookeeper Online will
 automatically apply a timestamp to the new event, if the playlist is
 currently on-air;
 * POST (API version 1.1 and later): If you supply a `created` attribute
 with value 'auto' in a POST request to the `api/v1.1/playlist/:id/events`
-endpoint, zookeeper will automatically apply a timestamp to the new event,
+endpoint, Zookeeper Online will automatically apply a timestamp to the new event,
 if the playlist is currently on-air.  Unlike API version 1, an empty
 or absent `created` attribute will **not** timestamp the event;
 * PATCH (all API versions): If you supply a `created` attribute with
-value 'auto' in a PATCH request to the events endpoint, zookeeper will
+value 'auto' in a PATCH request to the events endpoint, Zookeeper Online will
 timestamp the existing event, if the playlist is currently on-air.
 An empty or absent `created` attribute will not timestamp the event.
 

@@ -1,0 +1,41 @@
+<body>
+{% block topnav %}
+{% include('topnav.html') %}
+{% endblock %}
+<div class="box">
+{% block header %}      {# <div class="header"> #}
+{% endblock %}
+{% block navigation %}  {# <div class="leftNav"> #}
+{% endblock %}
+{% block content %}     {# <div class="content"> #}
+{% include('content.html') %}
+{% endblock %}
+{% block footer %}
+{% include('footer.html') %}
+{% endblock %}
+  <div class="legal">
+{% if app.copyright is not empty %}
+    {{ app.copyright | raw }}<br />
+{% endif %}
+    Powered by <a href="#about">Zookeeper Online</a>&trade; &copy; 1997-2023 J Mason.&nbsp;
+    <a href="PRIVACY.md" target="_blank">Privacy Policy</a>
+  </div>
+</div>
+<div class="legal-lightbox" id="about">
+  <div class="legal-lightbox-modal">
+    <div class="close"><a href="#">&#x2715;</a></div>
+    <div class="body">
+      <p class="title">Zookeeper Online&trade;&nbsp; {{ app.version }}</p>
+      <p>Copyright &copy; 1997-2023 J Mason &lt;jmason@ibinx.com&gt;.</p>
+      <p>Zookeeper Online is free and open source software (FOSS) that assists
+      in the management of various radio station functions such as music
+      library, playlists, and charting.</p>
+      <p>You may redistribute and/or modify this software under the terms
+      of the <a href="LICENSE" target="_blank">GNU General Public License
+      (GPL) version 3</a> or later.</p>
+      <p>Visit the <a href="https://zookeeper.ibinx.com/" target="_blank">Zookeeper
+      Online project homepage</a> for more information.</p>
+    </div>
+  </div>
+</div>
+</body>

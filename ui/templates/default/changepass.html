@@ -1,0 +1,31 @@
+{% if message %}
+<h3 class='no-margin'>{{ message | raw }}</h3>
+{% endif %}
+{% if form %}
+<form action="?" method=post>
+<table>
+  <tr>
+    <td align=right>Old Password:</td>
+    <td><input type=password name=oldPass value="{{ app.request.oldPass }}" class=input size=15></td>
+  </tr><tr>
+    <td align=right>New Password:</td>
+    <td><input type=password name=newPass class=input size=15></td>
+  </tr><tr>
+    <td align=right>New Password (again):</td>
+    <td><input type=password name=newPass2 class=input size=15></td>
+  </tr><tr>
+    <td>&nbsp;</td>
+    <td><input type=submit class="submit" value=" Change Password "></td>
+  </tr>
+</table>
+<input type=hidden name=action value="{{ app.request.action }}">
+<input type=hidden name=subaction value="{{ app.request.subaction }}">
+<input type=hidden name=validate value="y">
+</form>
+<script type="text/javascript"><!--
+$().ready(function() {
+    $("input[name={{ app.request.oldPass ? 'newPass' : 'oldPass' }}]").trigger('focus');
+});
+// -->
+</script>
+{% endif %}

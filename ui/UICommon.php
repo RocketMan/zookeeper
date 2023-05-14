@@ -309,7 +309,7 @@ class UICommon {
         if($control) {
             echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
                  "$().ready(function(){".
-                 "document.forms[0].$control.focus();".
+                 "$('*[name=$control]').focus();".
                  "}); // -->\n</SCRIPT>\n";
         }
     }

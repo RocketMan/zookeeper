@@ -1,6 +1,6 @@
-## Zookeeper JSON:API
+## Zookeeper Online JSON:API
 
-Zookeeper exposes a JSON:API v1.0 REST API to facilitate programmatic
+Zookeeper Online exposes a JSON:API v1.0 REST API to facilitate programmatic
 integration with external applications.
 
 The endpoints exposed by the API are:
@@ -10,7 +10,7 @@ The endpoints exposed by the API are:
 * [api/v1/playlist](Playlists.md)
 * [api/v1/review](Reviews.md)
 
-The endpoints are relative to the installation directory of zookeeper.
+The endpoints are relative to the installation directory of Zookeeper Online.
 
 You will find detailed information about each endpoint through the
 links above.  The following is a discussion of the general conventions

@@ -1,0 +1,30 @@
+<div class='leftNav'>
+  <p class='zktitle'><a href='?'>Zookeeper Online</a></p>
+  <table cellpadding=0>
+    {% for item in app.menu %}
+    <tr>
+      <td></td>
+      <td><a class='{{ item.selected ? 'nav2sel' : 'nav2' }}' href='?action={{ item.action }}'><b>{{ item.label }}</b></a></td>
+    </tr>
+    {% endfor %}
+    {% if app.session.isAuth("u") %}
+    <tr>
+      <td></td>
+      <td>
+        <div style='margin-top:8px'><a class='nav3' href='?action=logout'><b>logout</b></a></div>
+        <div class='nav3s'>({{ app.session.getDN() }})</div>
+      </td>
+    </tr>
+    {% elseif app.sso %}
+    <tr>
+      <td></td>
+      <td><div style='margin-top:8px'><a class="nav3" href="ssoLogin.php"><b>Login</b></a>&nbsp;&nbsp;<a style="font-size: 90%;" href="?action=loginHelp">(help)</a></div></td>
+    </tr>
+    {% else %}
+    <tr>
+      <td></td>
+      <td><div style='margin-top:8px'><a class="nav3" href="?action=login"><b>Login</b></a></div></td>
+    </tr>
+    {% endif %}
+  </table>
+</div>

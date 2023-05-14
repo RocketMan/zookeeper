@@ -50,7 +50,49 @@ class MenuEntry {
     }
 }
 
+class SafeSession {
+    public function getDN() { return Engine::session()->getDN(); }
+    public function getUser() { return Engine::session()->getUser(); }
+
+    public function isAuth($mode) {
+        return Engine::session()->isAuth($mode);
+    }
+}
+
+class LazyLoadParams {
+    /**
+     * list of Engine::params safe for templates
+     */
+    private const TEMPLATE_SAFE_PARAMS = [
+        'copyright',
+        'email',
+        'favicon',
+        'logo',
+        'station',
+        'station_full',
+        'station_slogan',
+        'station_title',
+        'stylesheet',
+        'urls',
+    ];
+
+    public function __isset($name) {
+        return in_array($name, self::TEMPLATE_SAFE_PARAMS);
+    }
+
+    public function __get($name) {
+        $this->$name = in_array($name, self::TEMPLATE_SAFE_PARAMS) ?
+                    Engine::param($name) : null;
+        return $this->$name;
+    }
+}
+
 class UIController implements IController {
+    /**
+     * parent directory for Twig templates
+     */
+    private const TEMPLATE_BASE = __DIR__ . '/templates';
+
     protected $ssoUser;
     protected $dn;
     protected $session;
@@ -101,7 +143,8 @@ class UIController implements IController {
      */
     public function composeMenu($action) {
         $result = [];
-        $this->menu->iterate(function($entry) use(&$result, $action) {
+        $active = false;
+        $this->menu->iterate(function($entry) use(&$result, &$active, $action) {
             $item = new MenuEntry($entry);
             $itemAction = $item->action;
             if($item->label && $this->session->isAuth($item->access)) {
@@ -111,11 +154,18 @@ class UIController implements IController {
                         substr($itemAction, -1) == '%' &&
                         substr($itemAction, 0, -1) ==
                                 substr($action, 0, strlen($itemAction) - 1);
+                $active |= $selected;
                 $result[] = [ 'action' => $baseAction,
                               'label' => $item->label,
                               'selected' => $selected ];
             }
         });
+
+        if(!$active && count($result) &&
+                $this->session->isAuth("u") &&
+                $action == "loginValidate")
+            $result[0]['selected'] = true;
+
         return $result;
     }
 
@@ -137,16 +187,57 @@ class UIController implements IController {
             $subaction =  $_REQUEST["subaction"];
             $this->dispatch($action, $subaction);
         } else {
-            ob_start(function($buffer) {
-                if($this->menuItem instanceof MenuItem &&
-                        ($title = $this->menuItem->getTitle()))
-                    $buffer = preg_replace("/<TITLE>/", "<TITLE>" .
-                                    htmlentities($title) . " - ", $buffer, 1);
-                return $buffer;
+            ob_start();
+            $this->emitMain($_REQUEST["action"], $_REQUEST["subaction"]);
+            $data = ob_get_contents();
+            ob_end_clean();
+
+            $app = new LazyLoadParams();
+            $app->content = new \stdClass();
+            $app->content->data = $data;
+            $app->content->template = $this->menuItem ? $this->menuItem->getTemplate() : null;
+            $app->content->title = $this->menuItem ? $this->menuItem->getTitle() : null;
+            $app->extra = $this->menuItem ? $this->menuItem->getExtra() : null;
+            $app->menu = $this->composeMenu($_REQUEST['action']);
+            $app->submenu = $this->menuItem ? $this->menuItem->composeSubmenu($_REQUEST['action'], $_REQUEST['subaction']) : [];
+            $app->tertiary = $this->menuItem ? $this->menuItem->getTertiary() : null;
+            $app->request = $_REQUEST;
+            $app->session = new SafeSession();
+            $app->sso = !empty(Engine::param('sso')['client_id']);
+            $app->version = Engine::VERSION;
+            // var_dump($app);
+
+            $path = [];
+            foreach([
+                Engine::param('custom_template_dir', 'custom'),
+                'default',
+                ''
+            ] as $dir) {
+                $rpath = realpath(self::TEMPLATE_BASE . '/' . $dir);
+                if($rpath)
+                    $path[] = $rpath;
+            }
+
+            $cacheDir = Engine::param('template_cache_enabled') ?
+                            self::TEMPLATE_BASE . '/.cache' : false;
+            if($cacheDir) {
+                if(!is_dir($cacheDir) && !mkdir($cacheDir)) {
+                    error_log("UIController: cannot create $cacheDir");
+                    $cacheDir = false; // disable cache
+                }
+            }
+
+            $loader = new \Twig\Loader\FilesystemLoader($path);
+            $twig = new \Twig\Environment($loader, [ 'cache' => $cacheDir ]);
+            $twig->addGlobal('app', $app);
+
+            $filter = new \Twig\TwigFilter('decorate', function($asset) {
+                return UI::decorate($asset);
             });
-            $this->emitResponseHeader();
-            $this->emitBody();
-            ob_end_flush();
+            $twig->addFilter($filter);
+
+            $template = $twig->load('index.html');
+            echo $template->render($this->menuItem ? $this->menuItem->getTemplateVars() : []);
         }
     }
 
@@ -176,79 +267,28 @@ class UIController implements IController {
         case "logout":
             $this->doLogout();
             break;
+        case "viewDJReviews";
+            // redirect DJ review URLs from v2.x
+            $qs = "?action=viewRecent&subaction=viewDJ&seq=selUser&viewuser=".urlencode($_REQUEST["n"]??'');
+            header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            exit;
+        case "viewList":
+        case "viewListById":
+        case "viewDJ":
+            // redirect playlist URLs from v2.x
+            $_REQUEST["subaction"] = $_REQUEST["action"];
+            $_REQUEST["action"] = "";
+            $qs = "?" . http_build_query($_REQUEST);
+            header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            exit;
         case "viewDate":
             // redirect playlist URLs from the legacy date picker
-            $qs = isset($_REQUEST["playlist"])?"?action=viewListById&playlist=".urlencode($_REQUEST["playlist"]):"?action=viewList";
-            header("Location: ".UI::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            $qs = isset($_REQUEST["playlist"])?"?subaction=viewListById&playlist=".urlencode($_REQUEST["playlist"]):"?subaction=viewList";
+            header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
         }
     }
 
-    protected function emitResponseHeader() {
-        $banner = htmlentities(Engine::param('application'));
-        $station = Engine::param('station');
-        $stationTitle = htmlentities(Engine::param('station_title', $station));
-
-        $banner .= " - " . $stationTitle;
-    ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML>
-<HEAD>
-  <TITLE><?php echo $banner;?></TITLE>
-  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-  <?php
-      $favicon = Engine::param('favicon');
-      if($favicon)
-          echo "<LINK REL=\"icon\" HREF=\"$favicon\">\n";
-  ?>
-  <link rel="stylesheet" type="text/css" href="vendor/mottie/tablesorter/dist/css/theme.default.min.css" />
-  <?php UI::emitCSS('css/zoostyle.css'); ?>
-  <?php UI::emitCSS(Engine::param('stylesheet')); ?>
-  <?php UI::emitCSS('css/about.css'); ?>
-
-  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-  <script>window.jQuery || document.write('<script src="vendor/components/jquery/jquery.min.js"><\/script>')</script>
-  <link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.css" onerror="this.onerror=null;this.href='vendor/components/jqueryui/themes/base/jquery-ui.css';" />
-  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
-  <script>window.jQuery.ui || document.write('<script src="vendor/components/jqueryui/jquery-ui.min.js"><\/script>')</script>
-  <script type="text/javascript" src="vendor/mottie/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
-
-  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $stationTitle; ?> Music Reviews" HREF="zkrss.php?feed=reviews">
-  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $stationTitle; ?> Airplay Charts" HREF="zkrss.php?feed=charts">
-  <LINK REL="alternate" TYPE="application/rss+xml" TITLE="<?php echo $stationTitle; ?> A-File Adds" HREF="zkrss.php?feed=adds">
-  <LINK REL="search" TYPE="application/opensearchdescription+xml" HREF="?target=opensearch" title="<?php echo $banner;?>">
-</HEAD>
-<?php 
-    }
-    
-    protected function emitNavbar($action) {
-        echo "    <P CLASS=\"zktitle\"><A HREF=\"?\">".htmlentities(Engine::param('application'))."</A></P>\n";
-        echo "    <TABLE CELLPADDING=0>\n";
-        $menu = $this->composeMenu($action);
-        foreach($menu as $item) {
-            echo  "      <TR><TD></TD>" .
-                  "<TD><A CLASS=\"" . ($item['selected']?"nav2sel":"nav2") .
-                  "\" HREF=\"" .
-                  "?action=".$item['action']."\"><B>".$item['label'] .
-                  "</B></A></TD></TR>\n";
-        }
-        #echo "      <TR><TD COLSPAN=2>&nbsp;</TD></TR>\n";
-        if($this->session->isAuth("u")) {
-            $logoutDiv = "<DIV style='margin-top:8px'><A CLASS='nav3' HREF='" .  "?action=logout'><B>Logout</B></A></DIV>";
-            $userNameDiv = "<DIV class='nav3s'>(". $this->session->getDN() . ")</DIV>";
-            echo "<TR><TD></TD><TD>" . $logoutDiv . $userNameDiv . "</TD></TR>\n";
-        } else if(!empty(Engine::param('sso')['client_id'])) {
-            echo "      <TR><TD></TD><TD><DIV style='margin-top:8px'><A CLASS=\"nav3\" HREF=\"" .
-                 "ssoLogin.php\"><B>Login</B></A>&nbsp;&nbsp;" .
-                 "<A STYLE=\"font-size: 90%;\" HREF=\"?action=loginHelp\">(help)</A></DIV></TD></TR>\n";
-        } else {
-            // no SSO configured; emit classic login link
-            echo "      <TR><TD></TD><TD><DIV style='margin-top:8px'><A CLASS=\"nav3\" HREF=\"" .
-                 "?action=login\"><B>Login</B></A></DIV></TD></TR>\n";
-        }
-        echo "    </TABLE>\n";
-    }
-    
     protected function emitMain($action, $subaction) {
         switch($action) {
         case "login":
@@ -286,60 +326,6 @@ class UIController implements IController {
         }
     }
 
-    protected function emitBodyHeader() {
-        $urls = Engine::param('urls');
-        $stationFull = htmlentities(Engine::param('station_full'));
-?>
-    <DIV CLASS="headerLogo">
-      <A HREF="<?php echo $urls['home']; ?>">
-        <IMG SRC="<?php echo Engine::param('logo'); ?>" ALT="<?php echo $stationFull; ?>" TITLE="<?php echo $stationFull; ?>">
-      </A>
-    </DIV>
-    <DIV CLASS="headerNavbar">
-      <SPAN><?php echo htmlentities(Engine::param('station_slogan')); ?></SPAN>
-    </DIV>
-<?php
-    }
-    
-    protected function emitBody() {
-?>
-<BODY>
-<DIV CLASS="box">
-  <DIV CLASS="header">
-<?php
-        $this->emitBodyHeader();
-        echo "  </DIV>\n";
-        echo "  <DIV CLASS=\"leftNav\">\n";
-        $this->emitNavBar($_REQUEST["action"]);
-        echo "  </DIV>\n";
-        echo "  <DIV CLASS=\"content\">\n";
-        $this->emitMain($_REQUEST["action"], $_REQUEST["subaction"]);
-?>
-  </DIV>
-  <DIV CLASS="footer">
-    <?php echo Engine::param('copyright'); ?><BR>
-    <A HREF="#about">Zookeeper Online &copy; 1997-2023 J Mason. All rights reserved.</A>
-    <A HREF="PRIVACY.md" TARGET="_blank">Privacy policy</A>
-  </DIV>
-</DIV>
-<DIV CLASS="lightbox" ID="about">
-  <DIV CLASS="lightbox-modal">
-    <DIV CLASS="close"><A HREF="#">[x]</A></DIV>
-    <DIV CLASS="body">
-      <P class="title">Zookeeper Online version <?php echo Engine::VERSION; ?></P>
-      <P>Zookeeper Online &copy; 1997-2023 J Mason &lt;jmason@ibinx.com&gt;</P>
-      <P>This program is free software; you are welcome to redistribute it
-      under certain conditions.  See the <A HREF="LICENSE" TARGET="_blank">LICENSE</A>
-      for details.</P>
-      <P><A HREF="https://zookeeper.ibinx.com/" TARGET="_blank">Zookeeper Online project homepage</A></P>
-    </DIV>
-  </DIV>
-</DIV>
-</BODY>
-</HTML>
-<?php 
-    }
-
     protected function emitLogin($invalid="") {
 ?>
     <FORM ACTION="?" METHOD=POST>
@@ -367,7 +353,7 @@ class UIController implements IController {
             echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">There was a problem accessing Google authentication.  Please try again later.</FONT></B></TD></TR>\n";
             break;
         case "cookiesDisabled":
-            echo "  <TR><TD>&nbsp;</TD><TD><P><B><FONT CLASS=\"error\">You must enable cookies to login to ".htmlentities(Engine::param('application')).".</FONT></B></P>".
+            echo "  <TR><TD>&nbsp;</TD><TD><P><B><FONT CLASS=\"error\">You must enable cookies to login to Zookeeper Online.</FONT></B></P>".
             "<P>Enable cookies in your browser for the website '".
             $_SERVER['REQUEST_SCHEME']."://".$_SERVER['SERVER_NAME'].
             "/' and try again.</P>".
@@ -386,7 +372,7 @@ class UIController implements IController {
       <TR><TD ALIGN=RIGHT>Password:</TD>
           <TD><INPUT TYPE=PASSWORD NAME=password CLASS=input></TD></TR>
       <TR><TD>&nbsp;</TD>
-          <TD><INPUT TYPE=SUBMIT VALUE="  OK  "></TD></TR>
+          <TD><INPUT TYPE=SUBMIT class="submit" VALUE="  OK  "></TD></TR>
 <?php if(!empty(Engine::param('sso')['client_id'])) { ?>
       <TR><TD>&nbsp;</TD>
           <TD><DIV STYLE="margin-left:50px;margin-top:10px;">&mdash; or &mdash;</DIV></TD></TR>
@@ -403,17 +389,17 @@ class UIController implements IController {
     protected function emitLoginHelp() {
         $station = htmlentities(Engine::param('station'));
     ?>
-    <DIV CLASS="subhead">login help</DIV>
+    <h2>login help</h2>
     <P>Google single sign-on provides integrated access to your existing
-    <?php echo htmlentities(Engine::param('application')); ?> account.  Select the 'login' link in the
-    left-hand navigation and enter your <?php echo $station; ?> Google account credentials
+    Zookeeper Online account.  Select the 'Login' link
+    and enter your <?php echo $station; ?> Google account credentials
     if challenged.</P>
     <P>If you do not yet have a <?php echo $station; ?> Google account, contact the
     <A HREF="mailto:<?php echo Engine::param('email')['pd']; ?>">Program Director</A>.</P>
-    <DIV CLASS="subhead">classic login</DIV>
+    <h2>classic login</h2>
     <P>If you need immediate access but do not yet have a <?php echo $station; ?> Google account,
     go to the <A HREF="?action=login">classic login</A> page and enter your
-    existing <?php echo htmlentities(Engine::param('application')); ?> user name and password.
+    existing Zookeeper Online user name and password.
     <B>Classic login may be deprecated or restricted in future.</B></P>
 <?php 
     }
@@ -432,7 +418,7 @@ class UIController implements IController {
     
     protected function emitLogout() {
         $logoutURI = Engine::param('sso')['logout_uri'];
-        $logoutURI = str_replace("{base_url}", urlencode(UI::getBaseUrl()."?action=logout"), $logoutURI);
+        $logoutURI = str_replace("{base_url}", urlencode(Engine::getBaseUrl()."?action=logout"), $logoutURI);
 
         $dn = $this->session->getDN()?$this->session->getDN():$this->dn;
     
@@ -465,7 +451,7 @@ class UIController implements IController {
         }
 
         // do the redirection
-        SSOCommon::zkHttpRedirect(UI::getBaseURL(), $rq);
+        SSOCommon::zkHttpRedirect(Engine::getBaseURL(), $rq);
         return true;
     }
 
@@ -574,12 +560,12 @@ class UIController implements IController {
               <TR><TD ALIGN=RIGHT>Password:</TD>
                   <TD><INPUT TYPE=PASSWORD NAME=password CLASS=input></TD></TR>
               <TR><TD>&nbsp;</TD>
-                  <TD><INPUT TYPE=SUBMIT VALUE="  Continue  "></TD></TR>
+                  <TD><INPUT TYPE=SUBMIT class="submit" VALUE="  Continue  "></TD></TR>
           </TABLE>
       </DIV>
       <P><INPUT TYPE="radio" NAME="account" VALUE="new" onClick="showNew();">I would like to create a new Zookeeper account</P>
       <DIV ID="newSect" style="display:none;margin-left:50px;">
-         <INPUT TYPE=SUBMIT VALUE="  Continue  ">
+         <INPUT TYPE=SUBMIT class="submit" VALUE="  Continue  ">
       </DIV>
       <INPUT TYPE="hidden" NAME="action" VALUE="ssoOptions">
       <INPUT TYPE="hidden" NAME="ssoOptions" VALUE="<?php echo $_REQUEST["ssoOptions"]; ?>">

@@ -24,15 +24,22 @@
 
 $().ready(function(){
     function localTime(date) {
-        var hour = date.getHours();
-        var ampm = hour >= 12?"pm":"am";
         var m = date.getMinutes();
         var min = m == 0?'':':' + String(m).padStart(2, '0');
-        if(hour > 12)
-            hour -= 12;
-        else if(hour == 0)
-            hour = 12;
-        return hour + min + ampm;
+        var hour = date.getHours();
+        switch(hour) {
+        case 0:
+            return m ? "12" + min + "am" : "midnight";
+        case 12:
+            return m ? hour + min + "pm" : "noon";
+        default:
+            var ampm = hour >= 12?"pm":"am";
+            if(hour > 12)
+                hour -= 12;
+            else if(hour == 0)
+                hour = 12;
+            return hour + min + ampm;
+        }
     }
 
     function serverDate(s) {
@@ -101,12 +108,28 @@ $().ready(function(){
         if(before != null)
             url += "&before=" + encodeURIComponent(before);
 
+        var width = $(document).width();
+        var count;
+        // widths correspond to the recently-played
+        // @media settings in zoostyle.css
+        if(width > 1150)
+            count = 12;
+        else if(width > 900)
+            count = 10;
+        else if(width > 700)
+            count = 8;
+        else
+            count = 6;
+        url += "&count=" + encodeURIComponent(count);
+
         $("div.content").css("background-color", "#eee");
 
         // hack to keep white body in sync
         var color = $("body").css("background-color");
-        if(color == "rgb(255, 255, 255)")
+        if(color == "rgb(255, 255, 255)") {
             $("body").css("background-color", "#eee");
+            $(".breadcrumbs li span.fa-chevron-right").css("color", "#eee");
+        }
 
         $.ajax({
             dataType: 'json',
@@ -130,56 +153,24 @@ $().ready(function(){
         });
     }
 
-    $.fn.extend({
-        fadeout: function() {
-            return this.removeClass("zk-fade-visible").addClass("zk-fade-hidden");
-        },
-        fadein: function() {
-            return this.removeClass("zk-fade-hidden").addClass("zk-fade-visible");
-        }
-    });
-
     function connect(last) {
         var socket = new WebSocket($("#push-subscribe").val());
         socket.last = last;
         socket.onmessage = function(message) {
-            if(this.last.fader != null) {
-                clearInterval(this.last.fader);
-                this.last.fader = null;
-            }
-
             var onnow = JSON.parse(message.data);
             if(onnow.show_id == 0) {
-                $(".home-show").html("");
-                $(".home-currenttrack").fadeout();
-                $(".home-datetime").html("[No playlist available]").fadein();
+                $(".home-title").html("On Now");
+                $(".home-show").html("[No playlist available]");
+                $(".home-currenttrack").html("&nbsp;");
             } else {
                 var start = serverDate(onnow.show_start);
                 var end = serverDate(onnow.show_end);
-                $(".home-show").html("<A HREF='?action=viewDate&amp;seq=selList&amp;playlist=" + onnow.show_id + "' CLASS='nav'>" + onnow.name + "</A>&nbsp;with&nbsp;" + onnow.airname);
-                $(".home-datetime").html(start.toLocaleString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) + " " + localTime(start) + " - " + localTime(end) + " " + $("#tz").val());
+                $(".home-show").html("<A HREF='?subaction=viewListById&amp;playlist=" + onnow.show_id + "' CLASS='nav'>" + onnow.name + "</A>&nbsp;with&nbsp;" + onnow.airname);
+                $(".home-title").html("On Now: <span class='show-time'>" + localTime(start) + " - " + localTime(end) + " " + $("#tz").val() + "</span>");
                 if(onnow.id == 0) {
-                    $(".home-currenttrack").fadeout();
-                    $(".home-datetime").fadein();
+                    $(".home-currenttrack").html("&nbsp;");
                 } else {
-                    $(".home-datetime").fadeout();
-                    $(".home-currenttrack").html(onnow.track_artist + " &#8211; <I>" + onnow.track_title + "</I> (" + onnow.track_album + ")").fadein();
-                    this.last.current = 0;
-                    this.last.fader = setInterval(function() {
-                        switch(socket.last.current++) {
-                        case 0:
-                            break;
-                        case 1:
-                            $(".home-currenttrack").fadeout();
-                            $(".home-datetime").fadein();
-                            break;
-                        case 2:
-                            $(".home-datetime").fadeout();
-                            $(".home-currenttrack").fadein();
-                            socket.last.current = 0;
-                            break;
-                        }
-                    }, 5000);
+                    $(".home-currenttrack").html(onnow.track_artist + " &#8211; <I>" + onnow.track_title + "</I> (" + onnow.track_album + ")");
 
                     var time = $("#time").val();
                     var nowPlaying = $(".recently-played");
@@ -213,7 +204,7 @@ $().ready(function(){
         };
     };
 
-    $("#date").on('change', function() {
+    $("#date").on('change selectmenuchange', function() {
         var date = $(this).val();
         var url = '?subaction=times&date=' + encodeURIComponent(date);
 
@@ -223,16 +214,16 @@ $().ready(function(){
             accept: 'application/json; charset=utf-8',
             url: url
         }).done(function (response) {
-            $("#time").empty().append(response.times);
+            $("#time").empty().append(response.times).selectmenu('refresh');
             var time = $("#time").val();
             populateCards(true, time == 'now' ? null : (date + " " + time));
         });
-    });
+    }).selectmenu({width: 145});
 
-    $("#time").on('change', function() {
+    $("#time").on('change selectmenuchange', function() {
         var time = $(this).val();
         populateCards(true, time == 'now' ? null : ($("#date").val() + " " + time));
-    });
+    }).selectmenu({width: 145});
 
     $("#more").on('click', function() {
         var last = $(".card").last().data("time");
@@ -241,5 +232,5 @@ $().ready(function(){
     });
 
     populateCards(false, null);
-    connect({ fader: null, open: false });
+    connect({ open: false });
 });

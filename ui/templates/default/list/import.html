@@ -1,0 +1,91 @@
+<script type="text/javascript" src="{{ 'js/jquery.fxtime.js' | decorate }}"></script>
+<script type="text/javascript" src="{{ 'js/playlists.import.js' | decorate }}"></script>
+{% if errorMessage %}
+{{ errorMessage | raw }}
+{% endif %}
+<form class='import-form import-csv' enctype='multipart/form-data' action='?' method='post'>
+  <input type='hidden' name='action' value=''>
+  <input type='hidden' name='subaction' value='import'>
+  <input type='hidden' name='validate' value='edit'>
+  <input type='hidden' name='MAX_FILE_SIZE' value='100000'>
+  <input type='hidden' name='date' id='date' value='{{ date }}'>
+  <input type='hidden' name='fromtime' id='fromtime' value='{{ fromtime }}'>
+  <input type='hidden' name='totime' id='totime' value='{{ totime }}'>
+  <input type='hidden' id='date-format' value='{{ dateformat }}'>
+  <datalist id='airnames'>
+{% for airname in airnames %}
+    <option value='{{ airname }}'>
+{% endfor %}
+  </datalist>
+  <div>
+    <label>Import from:</label>
+    <div class='group file-area'>
+      <input type='file' name='userfile' required>
+      <div class='file-overlay'>
+        <div class='default'>Drag&hairsp;&amp;&hairsp;Drop file here or <span class='pseudo-button'>Browse Files</span></div>
+        <div class='success'>Your file is selected.</div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <label>Format:</label>
+    <div class='group'>
+      <input type='radio' name='format' value='json' {% if format == 'json' %}checked{% endif %}> JSON
+      <div class='pull-right'>
+        CSV <input type='radio' name='format' value='csv' {% if format == 'csv' %}checked{% endif %}>
+      </div>
+    </div>
+  </div>
+  <div class='csv-fields'{% if format == 'json' %} style='display: none'{% endif %}>
+    <div>
+      <label>Delimiter:</label>
+      <div class='group'>
+        <input type='text' class='delimiter' name='delimiter' maxlength='1' value='{{ delimiter }}'> (empty for tab)
+        <div class='pull-right'>
+          Field enclosure:
+          <input type='text' class='delimiter' name='enclosure' maxlength='1' value='{{ enclosure }}'>
+        </div>
+      </div>
+    </div>
+    <div>
+      <label>Show Name:</label>
+      <input type='text' id='description' name='description' value='{{ description }}' maxlength='{{ MAX_DESCRIPTION_LENGTH }}' class='csv-required'>
+    </div>
+    <div>
+      <label>DJ:</label>
+      <input type='text' id='airname' name='airname' value='{{ airname }}' maxlength='{{ MAX_AIRNAME_LENGTH }}' class='csv-required'>
+    </div>
+    <div>
+      <label>Date / Time:</label>
+      <div class='group'>
+        <input type='text' class='date csv-required'>
+        <div class='pull-right'>
+          <input type='text' id='fromtime-entry' class='time csv-required'>
+          <div class='time-spacer'>-</div>
+          <input type='text' id='totime-entry' class='time csv-required'>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <label></label>
+    <input type='submit' value=' Import Playlist '>
+  </div>
+  <div>
+    <label></label>
+    <div class='user-tip sub info-json' style='{% if format == 'json' %}display: inline-block; {% endif %}max-width: 550px;'>
+      <p>File must be a UTF-8 encoded JSON playlist,
+      such as previously exported via Export JSON.</p>
+    </div>
+    <div class='user-tip sub info-csv' style='{% if format == 'csv' %}display: inline-block; {% endif %}max-width: 550px;'>
+      <h4>CSV Format</h4>
+      <p>File must be UTF-8 encoded, with one
+      track per line.  Each line may contain 4, 5, or 6 columns:</p>
+      <pre style='padding-left: 20px; white-space: normal;'><b>artist&nbsp; track&nbsp; album&nbsp; label</b> &nbsp;<i>or</i><br>
+      <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label</b> &nbsp;<i>or</i><br>
+      <b>artist&nbsp; track&nbsp; album&nbsp; tag&nbsp;&nbsp; label&nbsp; timestamp</b></pre>
+      <p>where each column is optionally enclosed by the specified field enclosure character, and separated by a delimiter character.  If no delimiter is specified, tab is used.</p>
+      <p>Any file data not in this format will be ignored.</p>
+    </div>
+  </div>
+</form>

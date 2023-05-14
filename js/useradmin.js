@@ -38,15 +38,14 @@ $().ready(function(){
         type: 'text'
     });
 
-    var sortTable = $('.sortable-table');
-    sortTable.tablesorter({
+    var INITIAL_SORT_COL = 0;
+    $('.sortable-table').tablesorter({
         headers: {
             0: { sorter: 'text' },
             [$("#nameCol").val()]: { sorter: 'fullName' }
-        }
-    });
-
-    sortTable.find('TH.initial-sort-col').trigger('sort');
+        },
+        sortList: [[ INITIAL_SORT_COL, 0 ]],
+    }).css('display','table');
 
     $("*[data-focus]").trigger('focus');
 });

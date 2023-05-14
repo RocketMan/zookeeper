@@ -1,4 +1,4 @@
-## Example Zookeeper JSON:API playlist import
+## Example Zookeeper Online JSON:API playlist import
 
 In the following example, we import a playlist, inclusive of all its
 events, in a single request.
@@ -59,7 +59,7 @@ Content-Type: application/vnd.api+json
 ````
 ---
 
-The zookeeper album tag, if any, is specified in the xa:relationships
+The album tag, if any, is specified in the xa:relationships
 element.  For more information, see the [Complex Attribute
 Extension](xa.md).
 

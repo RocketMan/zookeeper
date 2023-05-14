@@ -279,8 +279,10 @@ class LibraryImpl extends DBO implements ILibrary {
                      "size, a.created, a.updated, a.pubkey, location, bin, a.tag, iscoll, ".
                      "p.name, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed ".
                      "FROM reviews r LEFT JOIN albumvol a ON a.tag = r.tag ".
-                     "LEFT JOIN publist p ON p.pubkey = a.pubkey ".
-                     "WHERE r.airname = ? ";
+                     "LEFT JOIN publist p ON p.pubkey = a.pubkey ";
+            $query .= is_numeric($search) ?
+                     "WHERE r.airname = ? " :
+                     "WHERE r.user = ? AND r.airname IS NULL ";
             if(!Engine::session()->isAuth("u"))
                 $query .= "AND r.private = 0 ";
             $query .= self::orderBy($sortBy);

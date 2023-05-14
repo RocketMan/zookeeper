@@ -1,7 +1,25 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+
 /*
  * IMPORTANT:  As this file is referenced from XHTML (the RSS viewer),
  * element names should be lower case only!
  */
+
+:root {
+    --theme-nav-background-colour: #171c24;
+    --theme-nav-highlight-colour: #333;
+    --theme-nav-foreground-colour: #fff;
+    --theme-nav-separator: 1px solid #333;
+    --theme-subnav-active: 3px solid #c00;
+    --theme-menu-background-colour: #14181f;
+    --theme-search-background-colour: #1e232b;
+
+    --theme-button-foreground-colour: #fff;
+    --theme-button-background-colour: #333;
+
+    --theme-secdiv-background-colour: #333;
+    --theme-secdiv-lite-background-colour: #333;
+}
 
 /* Use a CSS reset to smooth out browser incongruities. */
 /* CSS Reset from meyerweb.com v1.0 | 20080212 */
@@ -65,8 +83,9 @@ body {
     margin: 0;
     padding: 10px 0px 30px 0px;
     font-size: 10pt;
-    font-family: Helvetica, Verdana, Arial, sans-serif;
+    font-family: 'Roboto', Helvetica, sans-serif;
     line-height: 1.2;
+    background-color: #fff;
 }
 h1 {
     font-size: 16pt;
@@ -75,13 +94,17 @@ h1 {
     padding-top: 0;
 }
 h2, .subhead  {
-    color: #d83d04;
+    color: #000;
     font-size: 14pt;
     font-weight: bold;
     margin-top: 0;
     margin-bottom: 8px;
     padding-top: 0;
     text-align: left;
+}
+.no-margin {
+    margin-top: 0;
+    margin-bottom: 0;
 }
 h3 {
     font-size: 12pt;
@@ -94,11 +117,11 @@ th.subhead {
 }
     
 div.subhead {
-    padding-top: 4px;
-    border-top: 1px solid gray;
+    padding-bottom: 8px;
+    margin-bottom: 0;
     border-bottom: 1px solid gray;
 }
-   
+
 .subhead2.coming-up {
     color: gray;
     font-size: 12pt;
@@ -122,6 +145,52 @@ ol, ul {
 ol ul, ul ol, ul ul, ol ol {
     margin-top: 0;
     margin-bottom: 0;
+}
+
+/* default button styling */
+div.content input[type=button]:not(.submit),
+div.content input[type=submit]:not(.submit,.editorUp,.editorDown) {
+    color: #000;
+    background-color: #f4f4f4;
+    border-radius: 4px;
+    border: 1px solid #cdcdcd;
+    padding: 4px 6px;
+}
+div.content input[type=button]:not(.submit):hover,
+div.content input[type=submit]:not(.submit,.editorUp,.editorDown):hover {
+    background-color: #f8f8f8;
+}
+div.content input[type=button]:not(.submit):active,
+div.content input[type=submit]:not(.submit,.editorUp,.editorDown):active {
+    background-color: #d6d6d6;
+}
+
+/* input fields */
+div.content .textsp {
+    border: 1px solid #ccc;
+}
+div.content input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
+div.content select[size='1'] {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+@media (max-width: 700px) {
+    div.content #playlist-date,
+    div.content table input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
+    div.content table select[size='1'] {
+        font-size: 14px;
+        height: 24px;
+    }
+    div.content div.pl-form-entry input,
+    div.content div.pl-form-entry button {
+	height: 30px;
+    }
+    div.content select[size='1'] {
+        height: 26px;
+    }
+    div.content .listbox {
+        font-size: 16px;
+    }
 }
 
 /* afile activity page */
@@ -153,9 +222,21 @@ table.afileactivity {
 }
 
 /* charts */
-.top30 {
+.top30 .sub {
     font-size: 10pt;
     vertical-align: top;
+}
+.top30 th.sub {
+    line-height: 24px;
+}
+table.top30,
+table.top30 table {
+    width: 100%;
+}
+@media (max-width: 700px) {
+    td.top30:last-child:not(:only-child) table {
+	display: none;
+    }
 }
 
 /* Find It! */
@@ -206,24 +287,31 @@ span.review-categories > span.zk-hidden {
     -o-transition: visibility 0s 2s, opacity 2s linear;
     transition: visibility 0s 2s, opacity 2s linear;
 }
-.home-showbox {
-    position: relative;
-    height: 25px;
+.home-nowplaying {
+    font-size: 12pt;
+    line-height: 1.5;
+    font-weight: 600;
+    border-bottom: 1px solid gray;
+    max-height: 80px;
 }
-.home-datetime {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    font-size: 10pt;
-    padding-top: 4px;
-    padding-bottom: 4px;
+.home-title .show-time {
+    padding-left: 5px;
+    font-weight: normal;
+}
+.home-show {
+    font-weight: 600;
+    font-size: 12pt;
+    white-space: nowrap;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+}
+.home-trackbox {
+    position: relative;
+    max-height: 25px;
+    overflow: hidden;
 }
 .home-currenttrack {
-    position: absolute;
-    bottom: 0;
-    left: 0;
     font-weight: normal;
-    padding-top: 4px;
     padding-bottom: 4px;
     width: 100%;
     white-space: nowrap;
@@ -268,6 +356,9 @@ span.review-categories > span.zk-hidden {
     font-size: 80%;
     color: #000000;
 }
+td.review {
+    font-size: 10pt;
+}
 
 /* DJ Zone! */
 .recentPlays, .recentReviews {
@@ -275,6 +366,9 @@ span.review-categories > span.zk-hidden {
 }
 table.djzone td:last-child {
     width: 100%;
+}
+table.djzone a {
+    white-space: nowrap;
 }
 
 /* library editor */
@@ -317,10 +411,10 @@ td.label-form {
     height: 18px;
     border: 0;
     border-radius: 3px 3px 0 0;
-    color: #ffffff;
+    color: var(--theme-button-foreground-colour);
     font-family: courier;
     font-weight: 900;
-    background-color: #2530a7;
+    background-color: var(--theme-button-background-colour);
 }
 .editorDown {
     top: 0;
@@ -330,8 +424,8 @@ td.label-form {
     border-radius: 0 0 3px 3px;
     font-family: courier;
     font-weight: 900;
-    color: #ffffff;
-    background-color: #2530a7;
+    color: var(--theme-button-foreground-colour);
+    background-color: var(--theme-button-background-colour);
 }
 .editorChooser {
     width: 218px;
@@ -343,10 +437,6 @@ td.label-form {
     border-radius: 2px;
     box-shadow: -1px -19px 0 1px #637789, 1px 19px 0 1px #637789, -1px 19px 0 1px #637789, 1px -19px 0 1px #637789;
     outline: 0;
-}
-
-.trackEditor {
-    width: 100%;
 }
 
 .trackEditor th {
@@ -430,16 +520,6 @@ div.content {
     margin-right: auto;
     overflow: auto;
 }
-div.footer {
-    width: auto;
-    clear: both;
-    text-align: right;
-    padding-top: 15px;
-    padding-bottom: 10px;
-}
-div.footer a:hover {
-    text-decoration: underline;
-}
 p.zktitle a {
     color: #000000;
     font-size: 18px;
@@ -465,24 +545,59 @@ p.zktitle a {
     margin-top: 10px;
 }
 
+ul.listbox.selector {
+    height: 150px;
+    min-width: 300px;
+    max-width: 600px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    overflow-y: scroll;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+ul.listbox.selector:focus {
+    outline-color: auto;/*#637789;*/
+    outline-style: auto;
+    outline-width: 3px;
+    outline-offset: -2px;
+}
+/* mobile */
+@media (max-width: 700px) {
+    ul.listbox.selector {
+        border-radius: 8px;
+        font-size: 16px;
+        padding: 0;
+	height: 200px;
+    }
+    ul.listbox.selector li {
+        padding: 8px;
+        border-top: 1px solid #c5c5c5;
+    }
+    form.selector input[type=button],
+    form.selector input[type=submit] {
+	height: 30px;
+    }
+}
+
 /* primary navigation */
-.nav:link { color: #990010; }
-.nav:visited { color: #990010; }
-.nav:active { color: #990010; }
-.nav2:link { color: #000000; }
-.nav2:visited { color: #000000; }
+.nav:link { color: #2530a7; }
+.nav:visited { color: #2530a7; }
+.nav:active { color: #2530a7; }
+.nav2:link { color: #fff; }
+.nav2:visited { color: #fff; }
 .nav2:active { color: #ff0000; }
 .nav2sel:link { color: #91a3ce; }
 .nav2sel:visited { color: #91a3ce; }
 .nav2sel:active { color: #ff0000; }
-.nav3:link { color: #d83d04; }
-.nav3:visited { color: #d83d04; }
-.nav3:active { color: #d83d04; }
-.nav3s { color: #d83d04; font-size: 80%; }
+.nav3:link { color: var(--theme-nav-highlight-colour); }
+.nav3:visited { color: var(--theme-nav-highlight-colour); }
+.nav3:active { color: var(--theme-nav-highlight-colour); }
+.nav3s { color: var(--theme-nav-highlight-colour); font-size: 80%; }
 
 /* secondary navigation */
 .linkhead {
-    font-family: verdana, arial, helvetica, sans-serif;
+    font-family: 'Roboto', Helvetica, sans-serif;
 }
 .linkhead:active {
     font-size: 100%;
@@ -504,21 +619,21 @@ p.zktitle a {
 }
 .linkrow {
     line-height: 5px;
-    background-color: #2530a7;
+    background-color: var(--theme-secdiv-background-colour);
 }
 .secNorm {
     padding-top: 2px;
-    background-color: #5863da;
+    background-color: var(--theme-secdiv-lite-background-colour);
 }
 .secSel {
     padding-top: 2px;
-    background-color: #2530a7;
+    background-color: var(--theme-secdiv-background-colour);
     color: #ffffff;
 }
 .secSelSub {
-    background-color: #2530a7;
+    background-color: var(--theme-secdiv-lite-background-colour);
     color: #ffffff;
-    font-family: verdana, arial, helvetica, sans-serif;
+    font-family: 'Roboto', Helvetica, sans-serif;
     font-size: 80%;
 }
 .secCell {
@@ -532,11 +647,11 @@ p.zktitle a {
     font-size: 11pt;
     font-weight: bold;
     color: white;
-    background-color: #2530A7;
+    background-color: var(--theme-secdiv-background-colour);
     line-height: 24px;
     margin-bottom: 4px;
     display: inline-block;
-    width: 710px;
+    width: 100%;
 }
 .playlistBanner span {
     display: inline-block;
@@ -566,13 +681,16 @@ p.zktitle a {
 }
 th.sec {
     color: white;
-    background-color: #2530a7;
+    background-color: #333;
     text-align: left;
 }
 .secdiv, .secdiv th, th.sec {
-    padding-left: 4px;
+    padding: 0 4px;
+    line-height: 22px;
+    font-size: 11pt;
     color: white;
-    background-color: #2530a7;
+    font-weight: bold;
+    background-color: var(--theme-secdiv-background-colour);
 }
 .error {
     font-weight: bold;
@@ -582,13 +700,13 @@ th.sec {
 .sel:link { color: #ff0000; }
 .sel:visited { color: #ff0000; }
 .sel:active { color: #ff0000; }
-table.recentAirplay td, .sub {
-    font-family: verdana, arial, helvetica, sans-serif;
+.sub {
+    font-family: 'Roboto', Helvetica, sans-serif;
     font-size: 8pt;
     color: #000000;
 }
 .sub2 {
-    font-family: verdana, arial, helvetica, sans-serif;
+    font-family: 'Roboto', Helvetica, sans-serif;
     font-size: 8pt;
     color: #ffffff;
 }
@@ -596,17 +714,17 @@ table.recentAirplay td, .sub {
     color: #000000;
 }
 .subhead2 {
-    color: #d83d04;
+    color: #000;
     font-size: 10pt;
     font-weight: bold;
     padding-top: 10px;
     margin-bottom: 5px;
 }
 .submit {
-    color: #ffffff;
-    background-color: #5863da;
+    color: var(--theme-button-foreground-colour);
+    background-color: var(--theme-button-background-colour);
     border-width: 1px;
-    border-color: #5863da;
+    border-color: var(--theme-button-background-colour);
     border-radius: 3px;
     padding: 3px 8px;
     border-style: solid;
@@ -653,6 +771,37 @@ table.recentAirplay td, .sub {
     border-radius: 3px;
     width: 120px;
 }
+
+/* try to make selectmenu ui more consistent with browser defaults */
+.ui-selectmenu-button.ui-button {
+    font-family: 'Roboto', Helvetica, sans-serif;
+    padding: 3px 5px;
+}
+.ui-selectmenu-button.ui-button:focus {
+    outline-color: auto;
+    outline-style: auto;
+    outline-width: 3px;
+    outline-offset: -2px;
+}
+li.ui-menu-item {
+    font-family: 'Roboto', Helvetica, sans-serif;
+}
+li.ui-menu-item .ui-state-active,
+.ui-selectmenu-button.ui-button:active {
+    color: #000;
+    background: #ccc;
+    border-color: transparent;
+}
+@media (max-width: 700px) {
+    .ui-selectmenu-button.ui-button {
+        font-size: 14px;
+        padding: 6px;
+    }
+    li.ui-menu-item {
+        font-size: 14px;
+    }
+}
+
 @-moz-document url-prefix() {
     /* combo is a tad gaunt on fx */
     .textsp {
@@ -804,6 +953,10 @@ table.recentAirplay td, .sub {
     overflow: auto;
     background-color: rgba(0,0,0,0.4);
 }
+.zk-popup:target {
+    outline: none;
+    display: block;
+}
 .zk-popup .zk-popup-content {
     position: relative;
     margin: auto;
@@ -870,7 +1023,6 @@ input[type="checkbox"]:checked:active {
  */
 .searchTable {
     text-align:left;
-    margin: -2px;
     border: 0;
     border-spacing: 0;
 }
@@ -931,11 +1083,14 @@ input[type="checkbox"]:checked:active {
     width: 10px;
     height: 4px;
 }
-
 .songEdit {
     top: -2px;
-    left: 14px;
-    font-size:14px;
+    left: 16px;
+    font-size: 14px;
+}
+
+.currentsEdit {
+    padding-left: 5px;
 }
 
 .songLabel {
@@ -1007,6 +1162,7 @@ input[type="checkbox"]:checked:active {
 }
 
 .grab {
+    color: #333;
     position: absolute;
     line-height: 1.4;
     cursor: grab;
@@ -1044,7 +1200,7 @@ input[type="checkbox"]:checked:active {
     background-color: #ff9;
 }
 
-.date, .time {
+.date, .time, .nowrap {
     white-space: nowrap;
 }
 
@@ -1061,11 +1217,12 @@ a:hover.copy {
     margin-top: 0;
     padding-top: 0;
     transition: all 1000ms ease-in-out;
+    max-width: 1210px;
 }
 
 .recently-played .card {
     display: inline-block;
-    width: calc(20% - 16px);
+    width: 170px;/*calc(20% - 16px);*/
     vertical-align: top;
     margin: 7px;
 
@@ -1079,8 +1236,7 @@ a:hover.copy {
 
 .recently-played .card .artwork {
     width: 100%;
-    max-height: 126px;
-    min-height: 126px;
+    aspect-ratio: 1 / 1;
     display: block;
     top: 0;
     left: 0;
@@ -1133,6 +1289,7 @@ a:hover.copy {
 
 .recently-played-date-picker {
     position: relative;
+    max-width: 1120px;
 }
 
 .recently-played-date-picker h3 {
@@ -1150,9 +1307,56 @@ a:hover.copy {
     margin-left: 10px;
 }
 
+/*
+ * if you change @media settings for the recently played cards,
+ * update the corresponding widths in home.js
+ */
+@media (max-width: 1150px) {
+    .recently-played .card {
+	width: calc(20% - 16px);
+    }
+}
+@media (max-width: 900px) {
+    .recently-played .card {
+	width: calc(25% - 15px);
+    }
+}
+@media (max-width: 700px) {
+    .recently-played .card {
+	width: calc(33.333% - 15px);
+    }
+}
+@media (max-width: 525px) {
+    .recently-played-date-picker div {
+	display: inline;
+	position: relative;
+    }
+    .recently-played-date-picker select:first-of-type {
+	margin-left: 0;
+    }
+    .recently-played .card {
+	display: flex;
+	width: auto;
+	margin-right: 20px;
+    }
+    .recently-played .card .artwork {
+	min-width: 126px;
+	max-width: 126px; /* fixes issue in webkit with svg */
+    }
+    .recently-played .card .info {
+	width: calc(100% - 126px);
+    }
+    .recently-played .card .time {
+	position: absolute;
+	bottom: 0;
+	left: 126px;
+    }
+}
+
 .show-more {
     text-align: center;
     padding-bottom: 20px;
+    max-width: 1210px;
 }
 
 /* artwork on album details page */
@@ -1239,6 +1443,11 @@ div.toggle-time-entry div {
 }
 .import-form .group div {
     display: inline-block;
+}
+.import-form input[type=radio] {
+    width: 15px;
+    height: 15px;
+    margin-right: 0;
 }
 .import-csv div.time-spacer {
     min-width: 5px;
@@ -1344,11 +1553,18 @@ div.toggle-time-entry div {
     user-select: none;
 }
 
+.playlist-by-date {
+    margin-top: 2px;
+    /*max-width: 1400px;/*TEST*/
+    /*margin: 0 auto;/*TEST*/
+}
 .playlist-accordion.ui-accordion {
     height: 520px;
+    /*max-width: 1400px;/*TEST*/
+    /*margin: 0 auto;/*TEST*/
 }
 .playlist-accordion.ui-accordion .ui-accordion-header {
-    color: #d83d04;
+    color: #5863da;
     font-size: 14pt;
     font-weight: bold;
     margin-top: 0;
@@ -1359,12 +1575,15 @@ div.toggle-time-entry div {
     padding: 0;
 }
 .playlist-accordion.ui-accordion .ui-accordion-header-icon {
-    filter: brightness(0) saturate(100%) invert(24%) sepia(57%) saturate(3719%) hue-rotate(16deg) brightness(97%) contrast(105%); /* #d83d04 see https://codepen.io/sosuke/pen/Pjoqqp */
+    filter: brightness(0) saturate(100%) invert(32%) sepia(90%) saturate(767%) hue-rotate(207deg) brightness(99%) contrast(94%); /* #5863da see https://codepen.io/sosuke/pen/Pjoqqp */
+}
+.playlist-accordion.ui-accordion h3.ui-accordion-header-collapsed:hover {
+    text-decoration: underline;
 }
 .playlist-accordion.ui-accordion .ui-accordion-content {
     padding: 0;
     border: none;
-    font-family: Helvetica, Verdana, Arial, sans-serif;
+    font-family: 'Roboto', Helvetica, sans-serif;
 }
 
 .float-error {
@@ -1421,7 +1640,7 @@ div.toggle-time-entry div {
 .playlist-grid input,
 .playlist-accordion.ui-accordion .ui-accordion-content input {
     font-size: 10pt;
-    font-family: Helvetica, Verdana, Arial, sans-serif;
+    font-family: 'Roboto', Helvetica, sans-serif;
     margin: 0;
     padding: 1px 2px;
     border: 1px solid #666;
@@ -1429,7 +1648,7 @@ div.toggle-time-entry div {
     height: 16px;
 }
 .playlist-accordion.ui-accordion .ui-accordion-content button {
-    font-family: Helvetica, Verdana, Arial, sans-serif;
+    font-family: 'Roboto', Helvetica, sans-serif;
 }
 .playlist-grid input.description {
     width: 160px;
@@ -1556,14 +1775,14 @@ a.listEdit {
 
 /*@media (min-width: 9999px) {*/
 /* desktop */
-@media (min-width: 1024px) {
+@media (min-width: 700px) {
     .playlist-grid tbody tr {
         line-height: 30px;
     }
 }
 /*@media (max-width: 9999px) {*/
 /* mobile */
-@media (max-width: 1024px) {
+@media (max-width: 700px) {
     .playlist-grid tbody tr {
         line-height: 40px;
     }
@@ -1586,12 +1805,18 @@ ul.pagination {
     text-align: center;
     font-weight: bold;
 }
-ul.pagination li {
-    width: 22px;
+ul.pagination li:not(.more) {
+    width: 30px;
+    line-height: 30px;
     margin: 0;
 }
 ul.pagination li a {
     display: block;
+    border-radius: 50%;
+}
+ul.pagination li:not(.more) a:hover {
+    background-color: rgba(0,0,0,0.2);
+    text-decoration: none;
 }
 
 ul.listbox {
@@ -1634,7 +1859,7 @@ ul.listbox li {
 
 /* try to make autocomplete ui more consistent with browser defaults */
 .ui-autocomplete.ui-widget {
-    font-family: sans-serif;
+    font-family: 'Roboto', Helvetica, sans-serif;
     padding: 1px;
 }
 .ui-autocomplete.ui-widget .ui-menu-item {
@@ -1647,7 +1872,7 @@ ul.listbox .state-active,
     border-color: transparent;
 }
 /* make autocomplete mobile ui more consistent with mobile datalist */
-@media (max-width: 1024px) {
+@media (max-width: 700px) {
     .ui-autocomplete {
         max-height: 500px;
         max-width: 100%;

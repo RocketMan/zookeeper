@@ -73,9 +73,9 @@ class PlaylistBuilder extends PlaylistObserver {
     }
 
     protected function makeEditDiv($entry) {
-        $href = "?id=" . $entry->getId() . "&amp;action=" . $this->params["action"] . "&amp;seq=editTrack";
-        $editLink = "<a class='songEdit nav' href='$href'>&#x270f;</a>";
-        $dnd = "<div class='grab' data-id='" . $entry->getId() . "'>&#x2630;</div>";
+        $href = "?id=" . $entry->getId() . "&amp;subaction=" . $this->params["action"] . "&amp;seq=editTrack";
+        $editLink = "<a class='songEdit nav' href='$href'><span class='fas fa-edit'></span></a>";
+        $dnd = "<div class='grab fas fa-grip-vertical' data-id='" . $entry->getId() . "'></div>";
         return "<div class='songManager'>" . $dnd . $editLink . "</div>";
     }
 

@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -47,6 +47,7 @@ interface ILibrary {
     const MEDIA = [
         "C"=>"CD",
         "M"=>"Cassette",
+        "D"=>"Digital",
         "S"=>"7\"",
         "T"=>"10\"",
         "V"=>"12\"",

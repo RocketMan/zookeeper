@@ -12,6 +12,22 @@
  * value of the config/config.php file.
  */
 
+:root {
+    --theme-nav-background-colour: #2530a7;
+    --theme-nav-highlight-colour: #5863da;
+    --theme-nav-foreground-colour: #fff;
+    --theme-nav-separator: 1px solid #5863da;
+    --theme-subnav-active: 3px solid #b1040e;
+    --theme-menu-background-colour: #820000;
+    --theme-search-background-colour: #820000;
+
+    --theme-button-foreground-colour: #fff;
+    --theme-button-background-colour: #2530a7;
+
+    --theme-secdiv-background-colour: #2530a7;
+    --theme-secdiv-lite-background-colour: #5863da;
+}
+
 body {
     background-color: #ffffff;
 }
@@ -43,6 +59,7 @@ hr {
     color: #2d3bce;
 }
 a {
+    color: #2530a7;
     text-decoration: none;
 }
 a:hover {
@@ -58,3 +75,6 @@ div.playlistBanner a {
 .nav:link { color: #2530a7; }
 .nav:visited { color: #2530a7; }
 .nav:active { color: #2530a7; }
+.nav2:link { color: #000; }
+.nav2:visited { color: #000; }
+.nav2:active { color: #000; }

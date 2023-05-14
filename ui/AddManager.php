@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -80,6 +80,10 @@ class AddManager extends MenuItem {
         }
     }
 
+    public function getSubactions($action) {
+        return self::$subactions;
+    }
+
     public function processLocal($action, $subaction) {
         $extra = "";
         if(!$subaction &&
@@ -87,7 +91,7 @@ class AddManager extends MenuItem {
             $extra .= "<A CLASS='nav' HREF='#top' onClick=window.open('?target=afile')>Print View</A>&nbsp;&nbsp;";
         $extra .= "<SPAN CLASS='sub'><B>Adds Feed:</B></SPAN> <A TYPE='application/rss+xml' HREF='zkrss.php?feed=adds'><IMG SRC='img/rss.png' ALT='rss'></A><BR><IMG SRC='img/blank.gif' WIDTH=1 HEIGHT=2 BORDER=0 ALT=''>";
 
-        return $this->dispatchSubAction($action, $subaction, self::$subactions, $extra);
+        return $this->dispatchSubaction($action, $subaction, $extra);
     }
 
     private static function afileDefaultSort($a, $b) {
@@ -124,10 +128,10 @@ class AddManager extends MenuItem {
        $hrefDate= "?action=addmgr&amp;subaction=adds&amp;date=$date ";
        $class = ($requestId && $requestId == $albumId) ? "sel" : "nav";
        $cellDate = "<A CLASS='nav' HREF='" . $hrefDate .
-          "' onClick='ConfirmDelete(" . $albumId . "); return false;'>[x]</A>&nbsp;";
+          "' onClick='ConfirmDelete(" . $albumId . "); return false;'><span class='fas fa-trash'></span></A>&nbsp;";
 
        $hrefId = "?action=addmgr&amp;subaction=addsedit&amp;id=" . $albumId;
-       $cellId = "<A CLASS='songEdit' HREF='" . $hrefId . "'>&#x270f;</A>";
+       $cellId = "<A CLASS='currentsEdit' HREF='" . $hrefId . "'><span class='fas fa-edit'></span></A>";
 
        return "<TD>" . $cellDate . $cellId . "</TD>";
     }
@@ -144,7 +148,7 @@ class AddManager extends MenuItem {
                                "<TH class='sorter-false'></TH>" : */ "";
         $playableCell = $showReview && $isAuthenticated ? "<TH class='sorter-false'></TH>" : "";
 
-        echo "<TABLE class='sortable-table' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
+        echo "<TABLE class='sortable-table' style='display: none' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
              "<TH class='initial-sort-col'>Cat</TH>" .  $reviewCell .
              "<TH>ID</TH>" .
              "<TH>Artist</TH>" . $legacyReviewCell . $playableCell .
@@ -239,18 +243,15 @@ class AddManager extends MenuItem {
                  "minimum of 7 days.  Sizzle = (raw spin count while in the ".
                  "A-File / days in A-File) * 100, where days in A-File &gt; 7.</P>\n";
     
-        if($showEdit) {
-            $this->emitConfirmID("Delete",
-                        "Delete this album from the add?",
-                        "action=addmgr&subaction=addsdel",
-                        "id");
-        }
+        if($showEdit)
+            $this->emitConfirmDelete();
     ?>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
     $().ready(function(){
-        var $sortTable = $('.sortable-table');
-        $sortTable.tablesorter({});
-        $sortTable.find('th.initial-sort-col').trigger('sort');
+        var INITIAL_SORT_COL = 1; // cat
+        $('.sortable-table').tablesorter({
+            sortList: [[INITIAL_SORT_COL, 0]],
+        }).css('display','table');
 
         $("*[data-focus]").trigger('focus');
     });
@@ -283,7 +284,7 @@ class AddManager extends MenuItem {
       <TABLE CELLPADDING=2 CELLSPACING=0 WIDTH="100%" BORDER=0>
         <TR>
           <TH ALIGN=LEFT>
-            <FORM ACTION="" METHOD=POST>
+            <FORM id='add-manager' ACTION="" METHOD=POST>
               Adds for:
               <SELECT NAME=date data-focus onChange='this.form.submit()'>
     <?php 
@@ -303,7 +304,7 @@ class AddManager extends MenuItem {
           </TH>
     <?php if($this->session->isAuth("n")) { ?>
           <TD ALIGN=RIGHT>
-            <FORM ACTION="?" METHOD=POST>
+            <FORM id='export-target' ACTION="?" METHOD=POST>
               <SELECT NAME=os>
                   <OPTION VALUE="win">Windows
                   <OPTION VALUE="mac">Mac OS 9
@@ -331,12 +332,12 @@ class AddManager extends MenuItem {
     <?php ob_start([JSMin::class, 'minify']); ?>
 
     function onExport() {
-      if(document.forms[1].os.value == "email") {
-        document.forms[0].subaction.value = "addsemail";
-        document.forms[0].submit();
+      if(document.getElementById('export-target').os.value == "email") {
+        document.getElementById('add-manager').subaction.value = "addsemail";
+        document.getElementById('add-manager').submit();
       } else {
-        document.forms[1].date.value = document.forms[0].date.value;
-        document.forms[1].submit();
+        document.getElementById('export-target').date.value = document.getElementById('add-manager').date.value;
+        document.getElementById('export-target').submit();
       }
     }
     <?php ob_end_flush(); ?>
@@ -363,33 +364,19 @@ class AddManager extends MenuItem {
         }
         return $medium;
     }
-    
-    private function emitConfirmID($name, $message, $action, $id="", $rtaction="") {
+
+    private function emitConfirmDelete() {
     ?>
+    <FORM id='add-delete' ACTION="?action=addmgr&subaction=addsdel" METHOD=POST>
+        <INPUT TYPE='hidden' NAME='id' VALUE='' />
+    </FORM>
     <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-    <?php ob_start([JSMin::class, 'minify']); ?>
-    function Confirm<?php echo $name; ?>(<?php if($id) echo "id"; ?>)
-    {
-    <?php if($rtaction) { ?>
-      if(document.forms[0].<?php echo $rtaction; ?>.selectedIndex >= 0) {
-        action = document.forms[0].<?php echo $rtaction; ?>.options[document.forms[0].<?php echo $rtaction; ?>.selectedIndex].value;
-      } else {
-        return;
-      }
-    <?php } ?>
-      answer = confirm("<?php echo $message; ?>");
-      if(answer != 0) {
-        location = "<?php 
-           echo "?$action";
-           if($rtaction)
-              echo "&$rtaction=\" + action";
-           else if($id)
-              echo "&$id=\" + id";
-           else
-              echo "\""; ?>;
+    function ConfirmDelete(id) {
+      if(confirm("Delete this album from the add?")) {
+        $('#add-delete input[name=id]').val(id);
+        $('#add-delete').submit();
       }
     }
-    <?php ob_end_flush(); ?>
     // -->
     </SCRIPT>
     <?php 
@@ -678,7 +665,7 @@ class AddManager extends MenuItem {
             if($i == 1) {
                 // Emit header
                 $title = $this->addManagerGetTitle($seq);
-                echo "  <FORM ACTION=\"\" METHOD=POST>\n";
+                echo "  <FORM id='add-manager' ACTION=\"\" METHOD=POST>\n";
                 echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>\n      <TR><TH ALIGN=LEFT>$title</TH></TR>\n      <TR><TD HEIGHT=130 VALIGN=MIDDLE>\n";
     
             }
@@ -775,7 +762,7 @@ class AddManager extends MenuItem {
             if($i == 1 && $seq != "fin") {
                 // Emit header
                 $title = $this->addManagerGetTitle($seq);
-                echo "  <FORM ACTION=\"\" METHOD=POST>\n";
+                echo "  <FORM id='add-manager' ACTION=\"\" METHOD=POST>\n";
                 echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>\n      <TR><TH ALIGN=LEFT>$title</TH></TR>\n      <TR><TD HEIGHT=130 VALIGN=MIDDLE>\n";
     
             }
@@ -833,7 +820,7 @@ class AddManager extends MenuItem {
             $_REQUEST["date"] = $row["adddate"];
         }
     
-        if($_SERVER['REQUEST_METHOD'] == 'POST')
+        if($id && $_SERVER['REQUEST_METHOD'] == 'POST')
             Engine::api(IChart::class)->deleteAlbum($id);
         $this->addManagerShowAdd();
     }
@@ -852,7 +839,7 @@ class AddManager extends MenuItem {
             }
         }
     ?>
-      <FORM ACTION="" METHOD=POST>
+      <FORM id='add-manager' ACTION="" METHOD=POST>
         <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
           <TR><TH>&nbsp;</TH><TH>Category</TH><TH>Code&nbsp;</TH><TH>Director</TH><TH>E-Mail Address</TH></TR>
     <?php 
@@ -866,7 +853,7 @@ class AddManager extends MenuItem {
         }
     ?>
           <TR><TD>&nbsp;</TD>
-              <TD COLSPAN=4 ALIGN=LEFT><INPUT TYPE=SUBMIT VALUE=" Update Categories "></TD></TR>
+              <TD COLSPAN=4 ALIGN=LEFT><INPUT TYPE=SUBMIT class="submit" VALUE=" Update Categories "></TD></TR>
     <?php 
         if($seq == "update") {
             if($success)
@@ -1000,7 +987,7 @@ class AddManager extends MenuItem {
             echo "  <HR>\n";
         }
     ?>
-      <FORM ACTION="" METHOD=POST>
+      <FORM id='add-manager' ACTION="" METHOD=POST>
         <TABLE CELLPADDING=2 BORDER=0>
           <TR><TD ALIGN=RIGHT>Add For:</TD><TD ALIGN=LEFT><?php echo date("j F Y", mktime(0,0,0,$m,$d,$y));?></TD></TR>
           <TR><TD ALIGN=RIGHT>E-Mail To:</TD><TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=address VALUE="<?php echo htmlentities($address);?>" CLASS=INPUT SIZE=30></TD></TR>
@@ -1117,7 +1104,7 @@ class AddManager extends MenuItem {
         $lastShowEnd = null;
         $lastDate = null;
     
-        echo "<TABLE class='sortable-table' CLASS='afileactivity'>";
+        echo "<TABLE class='sortable-table afileactivity' style='display: none'>";
         echo "<THEAD><TR>";
         echo "<TH style='width:90px'>Date</TH>";
         echo "<TH>DJ</TH>";
@@ -1239,7 +1226,7 @@ class AddManager extends MenuItem {
         var INITIAL_SORT_COL = 0; //date
         $('.sortable-table').tablesorter({
             sortList: [[INITIAL_SORT_COL, 0]],
-        });
+        }).css('display','table');
     });
     <?php ob_end_flush(); ?>
     // -->

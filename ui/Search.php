@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -33,7 +33,6 @@ use ZK\UI\UICommon as UI;
 
 class Search extends MenuItem {
     private static $actions = [
-        [ "find", "ftSearch" ],
         [ "findAlbum", "findAlbum" ],
         [ "search", "doSearch" ],
     ];
@@ -46,34 +45,20 @@ class Search extends MenuItem {
         [ "byTrack", "searchForm" ],
         [ "byLabel", "searchForm" ],
         [ "byLabelKey", "searchForm" ],
-        [ "byReviewer", "searchByReviewer" ],
     ];
 
     // can be overridden by request params 'q' and 'chunksize', respectively
-    private $maxresults = 50;
-    private $chunksize = 15;
+    public $maxresults = 50;
+    public $chunksize = 15;
 
-    private $exactMatch = false;
+    public $exactMatch = false;
 
-    private $searchText;
+    public $searchText;
 
-    private $searchType;
+    public $searchType;
 
     public function processLocal($action, $subaction) {
         return $this->dispatchAction($action, self::$actions);
-    }
-
-    public function ftSearch() {
-        UI::emitJS('js/search.findit.js');
-
-        $search = array_key_exists("search", $_REQUEST)?$_REQUEST["search"]:"";
-        echo "<FORM ACTION=\"?\" METHOD=\"POST\">\n";
-        echo "<P><B>Find It:</B>&nbsp;&nbsp;<INPUT TYPE=TEXT CLASS=text STYLE=\"width:214px;\" NAME=search id='search' VALUE=\"$search\" autocomplete=off>&nbsp;&nbsp;<SPAN ID=\"total\"></SPAN></P>\n";
-        echo "<INPUT TYPE=HIDDEN NAME=action VALUE=\"find\">\n";
-        echo "<INPUT TYPE=HIDDEN NAME=key id='key' VALUE=''>\n";
-        echo "</FORM>\n";
-        echo "<SPAN ID=\"results\">Search the database for music, reviews, and playlists.";
-        echo "</SPAN>\n";
     }
 
     private function HTMLify($arg, $size) {
@@ -168,7 +153,7 @@ class Search extends MenuItem {
         echo htmlentities($albums[0]["album"]) . "</A></B></TD>";
     
         $medium = " " . ILibrary::MEDIA[$albums[0]["medium"]];
-        if($medium == " CD") $medium = "";
+        if($albums[0]["medium"] == "C") $medium = ""; // CD
     
         $showMissing = "missing";
         echo "<TD WIDTH=80>&nbsp;</TD>" .
@@ -182,6 +167,9 @@ class Search extends MenuItem {
             echo "<I>Missing</I>";
             $showMissing = "found";
             break;
+        case 'C':
+            echo "<I>A-File</I>";
+            break;
         case 'E':
             echo "<I>Review Shelf</I>";
             break;
@@ -193,7 +181,11 @@ class Search extends MenuItem {
             $showMissing = 0;
             break;
         default:
-            echo ILibrary::GENRES[$albums[0]["category"]] . $medium;
+            if($albums[0]["medium"] == "D") { // Digital
+                echo "<I>Digital</I>";
+                $showMissing = 0;
+            } else
+                echo ILibrary::GENRES[$albums[0]["category"]] . $medium;
             break;
         }
         echo "</B>";
@@ -315,114 +307,7 @@ class Search extends MenuItem {
     }
     
     public function searchForm() {
-        UI::emitJS('js/jquery.bahashchange.min.js');
-        UI::emitJS('js/search.library.js');
-
-        switch($this->searchType){
-        case "byArtist":
-        case "byCollArtist":
-            $chkArtist = " checked";
-            break;
-        case "byAlbum":
-            $chkAlbum = " checked";
-            break;
-        case "byTrack":
-        case "byCollTrack":
-            $chkTrack = " checked";
-            break;
-        case "byLabel":
-            $chkLabel = " checked";
-            break;
-        case "byLabelKey":
-            $labelKey = 1;
-            break;
-        }
-        if ($chkArtist || $chkAlbum || $chkTrack || $chkLabel ) {
-            if($this->exactMatch)
-                $chkExact =" checked";
-            if($this->searchText)
-                $searchFor =" VALUE=\"".htmlspecialchars($this->searchText)."\"";
-        } else {
-            // Default to search by artist
-            $chkArtist = " checked";
-        }
-    
-        switch ($this->maxresults) {
-        case 15:
-            $o_fifteen = " SELECTED";
-            break;
-        case 20:
-            $o_twenty = " SELECTED";
-            break;
-        case 50:
-            $o_fifty = " SELECTED";
-            break;
-        default:
-            $o_ten = " SELECTED";
-            break;
-        }
-    ?>
-    <FORM ACTION="?" METHOD=POST id='search'>
-    <TABLE WIDTH="100%">
-      <TR><TD>
-        <TABLE CELLPADDING=2>
-          <TR>
-            <TD ALIGN=RIGHT><B>Search by:</B></TD>
-            <TD><INPUT TYPE=RADIO NAME=s VALUE="artists" data-sort="Artist"<?php echo $chkArtist;?>>Artist</TD>
-            <TD><INPUT TYPE=RADIO NAME=s VALUE="albums" data-sort="Album"<?php echo $chkAlbum;?>>Album</TD>
-            <TD><INPUT TYPE=RADIO NAME=s VALUE="tracks" data-sort="Track"<?php echo $chkTrack;?>>Track</TD>
-            <TD><INPUT TYPE=RADIO NAME=s VALUE="labels" data-sort=""<?php echo $chkLabel;?>>Label</TD>
-          </TR>
-          <TR>
-            <TD ALIGN=RIGHT><b>For:</b></TD>
-            <TD COLSPAN=4><INPUT TYPE=TEXT id='n'<?php echo $searchFor;?> SIZE=35 CLASS=input autocomplete=off></TD>
-          </TR>
-          <TR>
-            <TD></TD>
-            <TD><INPUT TYPE=SUBMIT VALUE="Search"></TD>
-            <TD COLSPAN=2><INPUT TYPE=CHECKBOX id='m' VALUE=1<?php echo $chkExact;?>>Exact match</TD>
-            <!-- fix page size to maxresults -->
-            <TD><input type='hidden' id='maxresults' value='<?php echo $this->maxresults; ?>'></TD>
-          </TR>
-        </TABLE>
-      </TD></TR>
-    </TABLE>
-    <INPUT TYPE=HIDDEN id='sortBy' value=''>
-    <INPUT TYPE=HIDDEN id='type' value='<?php echo $labelKey?"albumsByPubkey":""; ?>'>
-    <INPUT TYPE=HIDDEN id='key' value='<?php echo $labelKey?htmlspecialchars($this->searchText):""; ?>'>
-    <INPUT TYPE=HIDDEN id='chunksize' value='<?php echo $this->chunksize; ?>'>
-    </FORM>
-    <BR>
-    <TABLE class='searchTable' CELLPADDING=2 CELLSPACING=0 BORDER=0>
-    <TR><TD><B>Tip:  For a more extensive search,
-               try <A HREF="?action=find" CLASS="nav">Find It!</A></B></TD></TR>
-    </TABLE>
-    <?php 
-    }
-    
-    public function searchByReviewer() {
-        $sortBy = array_key_exists("sortBy", $_REQUEST)?$_REQUEST["sortBy"]:"";
-        if(!$sortBy)$sortBy="Artist";
-    
-        if($this->searchText) {
-            $airnames = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), $this->searchText);
-            if ($arow = $airnames->fetch())
-                $name = $arow["airname"];
-        }
-    
-        if($name) {
-            UI::emitJS('js/jquery.bahashchange.min.js');
-            UI::emitJS('js/search.library.js');
-            echo "<form>\n<input id='showTag' type='hidden' value='" . ($this->session->isAuth('u')?'true':'false') . "'>\n";
-            echo "<input id='type' type='hidden' value='reviews'>\n";
-            echo "<input id='sortBy' type='hidden' value='".$sortBy."'>\n";
-            echo "<input id='key' type='hidden' value='" . $this->searchText . "'>\n";
-            echo "<input id='maxresults' type='hidden' value='" . $this->maxresults . "'>\n";
-            echo "<input id='chunksize' type='hidden' value='" . $this->chunksize . "'\n>";
-            echo "</form>\n";
-            echo "<h2>$name's Album Reviews</h2>\n";
-            echo "<table class='searchTable' id='results'></table>\n";
-        } else
-            echo "<h2>Unknown DJ</h2>\n";
+        $this->template = 'search.library.html';
+        $this->addVar('search', $this);
     }
 }

@@ -1,0 +1,87 @@
+<h4 style='margin-top: 0'>Review Album:&nbsp;&nbsp;{{ album.artist }} / {{ album.album }}</h4>
+{{ errorMessage | raw }}
+<form class="review" action="?" method=post>
+<datalist id='airnames'>
+{% for airname in airnames %}
+  <option value='{{ airname }}'>
+{% endfor %}
+</datalist>
+<table>
+  <tr>
+    <td style='width: 60px'>Reviewer:</td>
+    <td align=left>
+      <input type='text' id='airname' name='airname' value='{{ airname ?: self }}' maxlength='{{ MAX_AIRNAME_LENGTH }}' required>
+    </td>
+  </tr>
+  <tr>
+    <td>Review:</td>
+    <td align=right>
+      <input type=radio name=private value=0 {{ not private ? 'checked' }}>Public&nbsp;&nbsp;
+      <input type=radio name=private value=1 {{ private ? 'checked' }} >Private
+    </td>
+  </tr>
+  <tr>
+    <td colspan=2>
+      <span class=input><textarea wrap=virtual name=review maxlength={{ MAX_REVIEW_LENGTH }} cols=50 rows=20>{{ review }}</textarea></span><br>
+    </td>
+  </tr>
+  <tr>
+    <td align=left colspan=2>
+{% if id %}
+      <input type=submit name=button value=" Update Review ">&nbsp;&nbsp;&nbsp;
+      <input type=submit name=button id='delrev' value= " Delete Review ">
+{% else %}
+      <input type=submit name=button value=" Post Review! ">
+{% endif %}
+    </td>
+  </tr>
+  <tr>
+    <td align=left colspan=2>
+      <input type=checkbox name=noise {{ not id ? 'checked' }}>E-mail review to Noise
+    </td>
+  </tr>
+</table>
+<input type=hidden name=tag value="{{ album.tag }}">
+<input type=hidden name=action value="searchReviewEdit">
+<input type=hidden name=validate value="y">
+</form>
+<script type="text/javascript"><!--
+$().ready(function() {
+    $("#airname").on('click', function() {
+        $(this).autocomplete('search', '');
+    }).autocomplete({
+        minLength: 0,
+        source: function(rq, rs) {
+            var term = rq.term.toLowerCase();
+            rs($("#airnames option").map(function() {
+                return this.value;
+            }).filter(function() {
+                return this.toLowerCase().includes(term);
+            }));
+            $(".ui-menu").scrollTop(0);
+        }
+    });
+
+    function escQuote(s) {
+        return String(s).replace(/\'/g, '\\\'');
+    }
+
+    $("form.review").on('submit', function(e) {
+        var airname = $("#airname").val().trim();
+        if(airname.length == 0 ||
+               $("#airnames option[value='" + escQuote(airname) + "' i]").length == 0 && !confirm('Create new airname "' + airname + '"?')) {
+            $("#airname").val('').trigger('focus');
+            e.preventDefault();
+            return;
+        }
+    });
+
+    $("#delrev").on('click', function(e) {
+        if(!confirm("Delete the review?"))
+            e.preventDefault();
+    });
+
+    $("*[name=review]").focus();
+});
+// -->
+</script>

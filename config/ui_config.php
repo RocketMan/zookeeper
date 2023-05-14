@@ -31,20 +31,13 @@
 
 $menu = [
 //  access, action,        menu label,              implementation class
-    [ 'a', 'home',         0,                       ZK\UI\Home::class ],
-    [ 'a', 'find%',        'Find It!',              ZK\UI\Search::class ],
-    [ 'a', 'search',       'Classic Search',        ZK\UI\Search::class ],
-    [ 'm', 'editor',       'Library Editor',        ZK\UI\Editor::class ],
-    [ 'a', 'viewRecent%',  'Recent Reviews',        ZK\UI\Reviews::class ],
+    [ 'a', '',             'Playlists',		    ZK\UI\Playlists::class ],
+    [ 'a', 'viewRecent%',  'Reviews',               ZK\UI\Reviews::class ],
+    [ 'a', 'search',       0,                       ZK\UI\Search::class ],
     [ 'a', 'searchReview%', 0,                      ZK\UI\Reviews::class ],
-    [ 'a', 'addmgr',       'A-File',                ZK\UI\AddManager::class ],
-    [ 'u', 'editList%',    'My Playlists',          ZK\UI\Playlists::class ],
-    [ 'u', 'importExport', 'Import/Export',         ZK\UI\Playlists::class ],
-    [ 'u', 'updateDJInfo', 'Edit Profile',          ZK\UI\Playlists::class ],
-    [ 'a', 'viewDJ%',      'DJ Zone!',              ZK\UI\Playlists::class ],
-    [ 'a', 'viewList%',    'Playlists by Date',     ZK\UI\Playlists::class ],
-    [ 'U', 'changePass',   'Change Password',       ZK\UI\ChangePass::class ],
-    [ 'e', 'deepStorage',  'Deep Storage',          ZK\UI\DeepStorage::class ],
-    [ 'x', 'adminUsers',   'Administer Users',      ZK\UI\UserAdmin::class ],
-    [ 'a', 'viewChart',    'Airplay Charts',        ZK\UI\Charts::class ],
+    [ 'a', 'addmgr',       'Currents',              ZK\UI\AddManager::class ],
+    [ 'a', 'viewChart',    'Charts',                ZK\UI\Charts::class ],
+    [ 'm', 'editor',       'Library',               ZK\UI\Editor::class ],
+    [ 'u', 'adminUsers',   "\u{2699}",              ZK\UI\UserAdmin::class ],
+    [ 'a', 'contact%',     0,                       ZK\UI\UserAdmin::class ],
 ];

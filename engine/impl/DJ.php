@@ -75,7 +75,7 @@ class DJImpl extends DBO implements IDJ {
     public function getActiveAirnames($viewAll=0) {
         $query = "SELECT a.id, a.airname FROM lists l, airnames a " .
                  "WHERE a.id = l.airname AND l.airname IS NOT NULL ";
-         if(!$viewAll)
+        if(!$viewAll)
             $query .= "AND ADDDATE(l.showdate, 12*7) > NOW() ";
         $query .=  "GROUP BY a.airname ORDER BY a.airname";
         $stmt = $this->prepare($query);

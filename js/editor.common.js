@@ -193,7 +193,7 @@ $().ready(function() {
     });
 
     function nextTrack() {
-        var form = document.forms[0];
+        var form = document.getElementById('editor');
         for(var i=1; typeof(eval('form.track'+i)) != 'undefined'; i++);
         return i;
     }
@@ -204,7 +204,7 @@ $().ready(function() {
         $("INPUT[name=" + (disabled ? "album" : "artist") + "]").trigger('focus');
     });
 
-    $("#location").on('change', function(e) {
+    $("#location").on('change selectmenuchange', function(e) {
         var storage = $("SELECT[name=location]").val() == 'G';
         $("INPUT[name=bin], #lbin").css("visibility", storage ? 'visible' : 'hidden');
         if(storage)
@@ -562,6 +562,8 @@ $().ready(function() {
             }, 100);
         });
     });
+
+    $("select.textsp").selectmenu();
 
     $("*[data-focus]").trigger('focus');
 });

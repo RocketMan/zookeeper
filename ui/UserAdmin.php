@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -32,14 +32,183 @@ use ZK\Engine\IUser;
 use ZK\UI\UICommon as UI;
 
 class UserAdmin extends MenuItem {
+    private static $actions = [
+        [ "adminUsers", "settings" ],
+        [ "contact", "contact" ],
+        [ "contactGuidelines", "contact" ],
+    ];
+
     private static $subactions = [
-        [ "x", "", "Users", "adminUsers" ],
+        [ "u", "", "Profile", "updateAirnames" ],
+        [ "u", "manageKeys", "API Keys", "manageKeys" ],
+        [ "U", "changePass", "Change Password", "changePass" ],
+        [ "x", "users", "Users", "adminUsers" ],
         [ "x", "airnames", "Airnames", "adminAirnames" ],
     ];
 
+    private $action;
+    private $subaction;
+
+    public function getSubactions($action) {
+        return self::$subactions;
+    }
+
     public function processLocal($action, $subaction) {
-        UI::emitJS("js/useradmin.js");
-        return $this->dispatchSubAction($action, $subaction, self::$subactions);
+        $this->action = $action;
+        $this->subaction = $subaction;
+        $this->dispatchAction($action, self::$actions);
+    }
+
+    public function settings() {
+        if(substr($this->subaction, -1) != "_")
+            UI::emitJS("js/useradmin.js");
+        return $this->dispatchSubaction($this->action, $this->subaction);
+    }
+
+    public function contact() {
+        $this->setTemplate("contact.html");
+    }
+
+    public function updateAirnames() {
+        UI::emitJS("js/playlists.pick.js");
+
+        $validate = $_POST["validate"];
+        $multi = $_REQUEST["multi"];
+        $url = $_REQUEST["url"];
+        $email = $_REQUEST["email"];
+        $airname = $_REQUEST["airname"];
+        $name = trim($_REQUEST["name"]);
+
+        if($validate && $airname) {
+            // Update DJ info
+            $success = Engine::api(IDJ::class)->updateAirname($name,
+                     $this->session->getUser(), $url, $email,
+                     $multi?0:$airname);
+            if($success) {
+                echo "<B>Your airname has been updated.</B>\n";
+                return;
+            } else
+                echo "<B><FONT CLASS=\"error\">'$name' is invalid or already exists.</FONT></B>";
+            // fall through...
+        }
+        $airnames = Engine::api(IDJ::class)->getAirnames(
+                     $this->session->getUser(), $airname)->asArray();
+
+        switch(sizeof($airnames)) {
+        case 0:
+            // No airnames
+    ?>
+    <P><B><FONT CLASS="error">You have no airnames</FONT></B></P>
+    <P>Publish at least one playlist or music review to create
+       an airname.</P>
+    <?php
+            break;
+        case 1:
+            // Only one airname; emit form
+    ?>
+    <FORM id="update-airname" ACTION="?" METHOD=POST>
+    <h3 class='no-margin'>Update airname '<?php echo $airnames[0]['airname'];?>'</h3>
+    <TABLE CELLPADDING=2 BORDER=0>
+      <TR><TD ALIGN=RIGHT>Airname:</TD>
+        <TD><INPUT id='name' TYPE=TEXT NAME=name required VALUE="<?php echo $name?$name:$airnames[0]['airname'];?>" CLASS=input MAXLENGTH=<?php echo IDJ::MAX_AIRNAME_LENGTH . ($name?" data-focus":"");?> SIZE=40></TD></TR>
+      <TR><TD ALIGN=RIGHT>URL:</TD>
+        <TD><INPUT TYPE=TEXT NAME=url VALUE="<?php echo $url?$url:$airnames[0]['url'];?>" CLASS=input SIZE=40 MAXLENGTH=80<?php echo $name?"":" data-focus"; ?>></TD></TR>
+      <TR><TD ALIGN=RIGHT>e-mail:</TD>
+        <TD><INPUT TYPE=TEXT NAME=email VALUE="<?php echo $email?$email:$airnames[0]['email'];?>" CLASS=input SIZE=40 MAXLENGTH=80></TD></TR>
+    <?php
+            // Suppress the account update option for local-only accounts,
+            // as they tend to be shared.
+            if($multi && !$this->session->isAuth("g"))
+                echo "  <TR><TD>&nbsp</TD><TD><INPUT id='multi' TYPE=CHECKBOX NAME=multi>&nbsp;Check here to apply the URL and e-mail to all of your DJ airnames</TD></TR>";
+    ?>
+      <TR><TD COLSPAN=2>&nbsp;</TD></TR>
+      <TR><TD>&nbsp;</TD><TD><INPUT TYPE=SUBMIT VALUE="  Update  ">
+              <INPUT TYPE=HIDDEN NAME=airname VALUE="<?php echo $airnames[0]['id'];?>">
+              <INPUT TYPE=HIDDEN id='oldname' VALUE="<?php echo $airnames[0]['airname'];?>">
+              <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
+              <INPUT TYPE=HIDDEN NAME=validate VALUE="y"></TD></TR>
+    </TABLE>
+    </FORM>
+    <?php
+            break;
+        default:
+            // Multiple airnames; emit airname selection form
+    ?>
+    <FORM class="selector" ACTION="?" METHOD=POST>
+    <h3 class='no-margin'>Select Airname:</h3>
+    <TABLE CELLPADDING=0 BORDER=0><TR><TD>
+    <ul tabindex='0' class='selector listbox no-text-select'>
+    <?php
+            foreach($airnames as $row) {
+                 echo "  <li data-value=\"$row[0]\">$row[1]</li>\n";
+            }
+    ?>
+    </ul></TD></TR>
+    <TR><TD>
+        <SCRIPT TYPE="text/javascript"><!--
+           $().ready(function() {
+               $("ul.selector").on('keydown', function(e) {
+                   var cur = $(this).find('.state-active').index();
+                   switch(e.originalEvent.keyCode) {
+                   case 13: // enter
+                       $(this).closest("form").submit();
+                       e.preventDefault();
+                       return;
+                   case 38: // up
+                       if(cur)
+                           cur--;
+                       e.preventDefault();
+                       break;
+                   case 40: // down
+                       if(cur < $(this).find('li').length - 1)
+                           cur++;
+                       e.preventDefault();
+                       break;
+                   }
+                   $(this).find('li').eq(cur).trigger('mousedown');
+               }).trigger('focus');
+               $("ul.selector li").on('mousedown', function() {
+                   $("ul.selector li").removeClass('state-active');
+                   $("INPUT[NAME=airname]").val($(this).addClass('state-active').data('value'));
+               }).on('dblclick', function() {
+                   $(this).closest("form").submit();
+               }).first().trigger('mousedown');
+           });
+        // -->
+        </SCRIPT>
+    <INPUT TYPE=SUBMIT VALUE=" Next &gt;&gt; ">
+    <INPUT TYPE=HIDDEN NAME=airname VALUE="">
+    <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
+    <INPUT TYPE=HIDDEN NAME=multi VALUE="y">
+    </TD></TR></TABLE>
+    </FORM>
+    <?php
+            break;
+        }
+    }
+
+    public function manageKeys() {
+        $api = Engine::api(IUser::class);
+        if($_POST["newKey"]) {
+            $newKey = sha1(uniqid(rand()));
+            $api->addAPIKey($this->session->getUser(), $newKey);
+        } else if($_POST["deleteKey"]) {
+            $selKeys = [];
+            foreach($_POST as $key => $value) {
+                if(substr($key, 0, 2) == "id" && $value == "on")
+                    $selKeys[] = substr($key, 2);
+            }
+            if(sizeof($selKeys))
+                $api->deleteAPIKeys($this->session->getUser(), $selKeys);
+        }
+
+        $keys = $api->getAPIKeys($this->session->getUser())->asArray();
+        $this->setTemplate("apikeys.html");
+        $this->addVar("keys", $keys);
+    }
+
+    public function changePass() {
+        $this->newEntity(ChangePass::class)->processLocal("adminUsers", "changePass");
     }
 
     private function emitColumnHeader($header, $selected = false) {
@@ -115,6 +284,7 @@ class UserAdmin extends MenuItem {
       </TR>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
+    <INPUT TYPE=HIDDEN NAME=subaction VALUE="users">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="addUser">
     </FORM>
     <?php
@@ -128,7 +298,7 @@ class UserAdmin extends MenuItem {
     <TABLE CELLPADDING=2 CELLSPACING=2>
       <TR>
         <TD>&nbsp;</TD>
-        <TD WIDTH="100%"><B><FONT SIZE="+1"><?php echo $uid;?></FONT></B></TD>
+        <TD WIDTH="100%"><h3 class='no-margin'><?php echo $uid;?></h3></TD>
       </TR><TR>
         <TD>&nbsp;</TD>
         <TD>&nbsp;</TD>
@@ -163,6 +333,7 @@ class UserAdmin extends MenuItem {
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=uid VALUE="<?php echo $uid;?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
+    <INPUT TYPE=HIDDEN NAME=subaction VALUE="users">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="editUser">
     </FORM>
     <?php
@@ -174,13 +345,14 @@ class UserAdmin extends MenuItem {
     <FORM ACTION="?" METHOD=POST>
     <INPUT TYPE=SUBMIT CLASS=submit VALUE="  New User  ">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
+    <INPUT TYPE=HIDDEN NAME=subaction VALUE="users">
     <INPUT TYPE=HIDDEN NAME=seq VALUE="newUser">
     <INPUT TYPE=HIDDEN id='nameCol' VALUE='1'>
     </FORM>
     </P>
     <?php 
         // Emit the column headers
-        echo "<P><TABLE class='sortable-table'>\n  <THEAD><TR>\n";
+        echo "<P><TABLE class='sortable-table' style='display: none'>\n  <THEAD><TR>\n";
         $this->emitColumnHeader("User", true);
         $this->emitColumnHeader("Name");
         $this->emitColumnHeader("Groups");
@@ -199,7 +371,7 @@ class UserAdmin extends MenuItem {
                 $class = "noQuota";
             else
                 $class = "hborder"; 
-            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?action=adminUsers&amp;seq=selUser&amp;uid=" . $user["name"] . "\">" . $user["name"] . "</A></TD><TD>" .
+            echo "  <TR CLASS=\"$class\"><TD><A CLASS=\"nav\" HREF=\"?action=adminUsers&amp;subaction=users&amp;seq=selUser&amp;uid=" . $user["name"] . "\">" . $user["name"] . "</A></TD><TD>" .
                         $this->emitFullName($user["realname"]) . "</TD><TD>" .
                         $user["groups"] . "&nbsp;</TD><TD CLASS='date'>" .
                         $user["expires"] . "&nbsp;</TD><TD CLASS='date'>" .
@@ -241,7 +413,7 @@ class UserAdmin extends MenuItem {
     <TABLE CELLPADDING=2 CELLSPACING=2 WIDTH="100%">
       <TR>
         <TD>&nbsp;</TD>
-        <TD WIDTH="100%"><B><FONT SIZE="+1"><?php echo $row["airname"];?></FONT></B></TD>
+        <TD WIDTH="100%"><h3 class='no-margin'><?php echo $row["airname"];?></h3></TD>
       </TR><TR>
         <TD>&nbsp;</TD>
         <TD>&nbsp;</TD>
@@ -252,7 +424,7 @@ class UserAdmin extends MenuItem {
         <TD ALIGN=RIGHT VALIGN=TOP>Move&nbsp;To:</TD>
         <TD>
           <SELECT NAME=uid SIZE=10>
-    <?php 
+    <?php
             $result = Engine::api(IUser::class)->getUsers();
             while($row = $result->fetch()) {
                 echo "        <OPTION VALUE=\"".$row["name"]."\">".$row["name"].
@@ -276,7 +448,7 @@ class UserAdmin extends MenuItem {
         }
     
         // Emit the column headers
-        echo "<P><TABLE class='sortable-table'>\n  <THEAD><TR>\n";
+        echo "<P><TABLE class='sortable-table' style='display: none'>\n  <THEAD><TR>\n";
         $this->emitColumnHeader("Airname", true);
         $this->emitColumnHeader("User");
         $this->emitColumnHeader("Name");

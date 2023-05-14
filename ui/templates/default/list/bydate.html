@@ -1,0 +1,11 @@
+<div class='playlist-by-date'>
+<b>Playlist Date:&nbsp;</b>
+<input id='playlist-start-date' type='hidden' value='{{ startDate }}' />
+<input id='playlist-date'/>
+<input id='playlist-datepicker' readonly='true' type='hidden' autocomplete='off' />
+<img id='playlist-calendar' src='img/calendar-icon.svg'></img>
+<table id='playlist-list'>
+<thead><tr><th textalign='left' colspan='2' class='subhead'></th></tr></thead>
+<tbody></tbody></table>
+</div>
+<script type="text/javascript" src="{{ 'js/playlists.view.js' | decorate }}"></script>

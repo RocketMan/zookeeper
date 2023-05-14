@@ -1,4 +1,4 @@
-## Zookeeper JSON:API :: Album
+## Zookeeper Online JSON:API :: Album
 
 This is specific API information for the 'album' type.  For generic API
 information, see the [JSON:API main page](./API.md).
@@ -72,7 +72,7 @@ below.  Suffix with a '-' to reverse the sense of the sort.
   * track
 
 **TIP:** It is often useful to access the name of the music label
-associated with an album.  Zookeeper denormalizes the label name and
+associated with an album.  Zookeeper Online denormalizes the label name and
 makes it availble as metadata in the album's label relationship.  In
 this way, it is not necessary to request separately the label
 information just to obtain the name.
@@ -113,7 +113,7 @@ There are three possibilities for specifying the music label:
 2. By name.  If you do not know the label's ID, then provide the name in
    an `included` object of type label.  Assign a locally generated ID
    for the included object, and specify this value for the album's
-   `relationships.label.data.id`.  Zookeeper will lookup and assign the
+   `relationships.label.data.id`.  Zookeeper Online will lookup and assign the
    album by name.  (The locally generated ID will be discarded.)
 ````
    {"data":[{
@@ -134,7 +134,7 @@ There are three possibilities for specifying the music label:
     }]}
 ````
 3. New label.  This is a variant of the second case above, but where name
-   does not already exist.  In this case, Zookeeper will create a new label.
+   does not already exist.  In this case, Zookeeper Online will create a new label.
    Specify any other desired label attributes in the `included` object's
    attributes.
 

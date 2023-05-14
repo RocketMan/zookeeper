@@ -1,4 +1,4 @@
-## Example Zookeeper JSON:API documents
+## Example Zookeeper Online JSON:API documents
 
 The following are sample documents for each of the data types.
 

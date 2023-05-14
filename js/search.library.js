@@ -22,6 +22,7 @@
 
 /*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
+$().ready(function() {
 // can be overridden by request params 'q' and 'chunksize', respectively
 var maxresults = 50, chunksize = 15;
 
@@ -425,7 +426,6 @@ function search(size, offset) {
     });
 }
 
-$().ready(function() {
     $(window).on('pageshow', function(e) {
         if(e.originalEvent.persisted) {
             // restore search fields from bfcache

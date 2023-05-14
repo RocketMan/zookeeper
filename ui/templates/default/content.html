@@ -1,0 +1,11 @@
+<div class="content">
+{% block header %}
+{% endblock %}
+{% if app.content.template is not empty -%}
+  {%~ include(app.content.template) %}
+{% elseif app.content.data is not empty -%}
+  {{ app.content.data | raw }}
+{% endif %}
+{% block footer %}
+{% endblock %}
+</div>

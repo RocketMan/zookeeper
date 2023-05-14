@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -31,6 +31,8 @@ use ZK\UI\UICommon as UI;
 
 class ChangePass extends MenuItem {
     public function processLocal($action, $subaction) {
+        $message = "Change Password";
+        $form = true;
         if(isset($_POST["validate"])) {
             $userAPI = Engine::api(IUser::class);
             if($userAPI->validatePassword($this->session->getUser(), $_REQUEST["oldPass"], 0)) {
@@ -39,40 +41,22 @@ class ChangePass extends MenuItem {
                     if($newPass == $_REQUEST["newPass2"]) {
                         // Update password
                         if($userAPI->updateUser($this->session->getUser(), $newPass)) {
-                            echo "<B>Your password has been changed.</B>\n";
-                            UI::setFocus();
-                            return;
+                            $message = "<B>Your password has been changed.</B>\n";
+                            $form = false;
                         } else
-                            echo "<B><FONT CLASS=\"error\">Password update failed.  Try again later.</FONT></B>\n";
+                            $message = "<B><FONT CLASS=\"error\">Password update failed.  Try again later.</FONT></B>\n";
                     } else
-                        echo "<B><FONT CLASS=\"error\">New Passwords do not match.</FONT></B>\n";
+                        $message = "<B><FONT CLASS=\"error\">New Passwords do not match.</FONT></B>\n";
                 } else
-                    echo "<B><FONT CLASS=\"error\">New Password must not be blank.</FONT></B>\n";
-            } else
-                echo "<B><FONT CLASS=\"error\">Old Password is not valid.</FONT></B>\n";
+                    $message = "<B><FONT CLASS=\"error\">New Password must not be blank.</FONT></B>\n";
+            } else {
+                $message = "<B><FONT CLASS=\"error\">Old Password is not valid.</FONT></B>\n";
+                $_REQUEST["oldPass"] = "";
+            }
         }
-    ?>
-    <P CLASS="header">Change Password</P>
-    <FORM ACTION="?" METHOD=POST>
-    <TABLE CELLPADDING=0 CELLSPACING=0>
-      <TR>
-        <TD ALIGN=RIGHT>Old Password:</TD>
-        <TD><INPUT TYPE=PASSWORD NAME=oldPass VALUE="<?php echo $_REQUEST["oldPass"];?>" CLASS=input SIZE=15></TD>
-      </TR><TR>
-        <TD ALIGN=RIGHT>New Password:</TD>
-        <TD><INPUT TYPE=PASSWORD NAME=newPass CLASS=input SIZE=15></TD>
-      </TR><TR>
-        <TD ALIGN=RIGHT>New Password (again):</TD>
-        <TD><INPUT TYPE=PASSWORD NAME=newPass2 CLASS=input SIZE=15></TD>
-      </TR><TR>
-        <TD>&nbsp;</TD>
-        <TD><INPUT TYPE=SUBMIT VALUE=" Change Password "></TD>
-      </TR>
-    </TABLE>
-    <INPUT TYPE=HIDDEN NAME=action VALUE="changePass">
-    <INPUT TYPE=HIDDEN NAME=validate VALUE="y">
-    </FORM>
-    <?php 
-        UI::setFocus("oldPass");
+
+        $this->setTemplate("changepass.html");
+        $this->addVar("message", $message);
+        $this->addVar("form", $form);
     }
 }

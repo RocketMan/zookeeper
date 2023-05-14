@@ -1,4 +1,4 @@
-## Example Zookeeper JSON:API playlist creation
+## Example Zookeeper Online JSON:API playlist creation
 
 The following example illustrates dynamic playlist creation, where
 we create an empty playlist and add events to it.
@@ -122,11 +122,11 @@ Content-Type: application/vnd.api+json
 }
 ````
 ---
-Use `relationships` as illustrated above to link to a Zookeeper album.
+Use `relationships` as illustrated above to link to a Zookeeper Online album.
 The album id is the tag number.
 
 Linking in this way places a hyperlink in your playlist to the
-Zookeeper album.  As well, it ensures the spin counts toward charting,
+Zookeeper Online album.  As well, it ensures the spin counts toward charting,
 if the album is in the A-File.
 
 **Tip:** If you link to an album in this way, you need supply only the
