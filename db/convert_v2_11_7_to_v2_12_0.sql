@@ -49,8 +49,8 @@ ALTER TABLE `tagqueue` MODIFY `keyed` datetime NOT NULL;
 ALTER TABLE `users` MODIFY `name` varchar(8) NOT NULL;
 
 ALTER TABLE `albumvol` ADD INDEX `location` (`location`);
-UPDATE albumvol a SET location='L' WHERE location='C';
-UPDATE albumvol a INNER JOIN currents c ON a.tag = c.tag AND adddate <= CURDATE() AND pulldate > CURDATE() SET location='C' WHERE location='L';
+UPDATE albumvol SET location='L' WHERE location='C';
+UPDATE albumvol a INNER JOIN currents c ON a.tag = c.tag AND adddate <= CURDATE() AND pulldate > CURDATE() SET location='C';
 
 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT;
 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS;
