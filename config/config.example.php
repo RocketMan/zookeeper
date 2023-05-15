@@ -18,7 +18,7 @@ $config = [
      */
     'station' => 'Example Radio',
 
-    // 'station_title' => 'Example Radio',  // if omitted, uses 'station' value
+    'station_title' => 'Example Radio',
 
     'station_medium' => 'Example Radio 99.9FM',
 
@@ -28,7 +28,7 @@ $config = [
 
     'station_slogan' => 'Music with a difference...',
 
-    'copyright' => '&copy; 2002-2019 Fictitious Radio, LTD.  All rights reserved.',
+    'copyright' => '&copy; Fictitious Radio, LTD.  All rights reserved.',
 
     'logo' => 'img/example_banner.png',
     'favicon' => 'img/favicon.ico',
