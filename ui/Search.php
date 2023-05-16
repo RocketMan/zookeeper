@@ -291,7 +291,7 @@ class Search extends MenuItem {
         if($this->maxresults < $this->chunksize)
             $this->maxresults = $this->chunksize;
 
-        $this->searchType = $this->searchText &&
+        $this->searchType =
                 array_key_exists('s', $_REQUEST)?$_REQUEST['s']:"";
         $this->dispatchAction($this->searchType, self::$legacySearchActions);
     }
