@@ -22,10 +22,10 @@
   {%~ if dot %}&nbsp;&nbsp;&#8226;&nbsp; {% else %}
     {%~ set dot = true %}
   {%~ endif %}
-    <a class="nav" href="?action={{ app.request.action }}&subaction={{ app.request.subaction }}&amp;seq=selUser&amp;viewuser={{ dj.id }}">{{ dj.airname }}</a>
+    <a class="nav" href="?action={{ app.request.action }}&amp;subaction={{ app.request.subaction }}&amp;seq=selUser&amp;viewuser={{ dj.id }}">{{ dj.airname }}</a>
 {%- endfor %}
   </td></tr>
 </table>
 {% if app.request.subaction == "viewDJ" %}
-<h4>Didn't find the DJ you were looking for?  Show <a href='?action={{ app.request.action }}&subaction={{ app.request.subaction }}All'>All DJs</a>.</h4>
+<h4>Didn't find the DJ you were looking for?  Show <a href='?action={{ app.request.action }}&amp;subaction={{ app.request.subaction }}All'>All DJs</a>.</h4>
 {% endif %}

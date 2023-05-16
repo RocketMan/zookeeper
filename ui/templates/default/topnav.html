@@ -31,7 +31,7 @@ Credits:
   {%~ if item.selected %}
     <ul>
     {%~ for subitem in app.submenu %}
-      <li {{ subitem.selected ? "class='selected'" }}><a href='?action={{ item.action }}&subaction={{ subitem.subaction }}'>{{ subitem.label }}</a></li>
+      <li {{ subitem.selected ? "class='selected'" }}><a href='?action={{ item.action }}&amp;subaction={{ subitem.subaction }}'>{{ subitem.label }}</a></li>
     {%~ endfor %}
     </ul>
   {%~ endif %}
