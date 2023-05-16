@@ -5,7 +5,7 @@ collected and processed by Zookeeper Online.
 
 ### What is Zookeeper Online?
 
-Zookeeper Online is free and open source (FOSS) software that assists
+Zookeeper Online is free and open source software (FOSS) that assists
 in the management of various radio station functions such as music
 library, playlists, and charting.  The source code is available at
 <https://zookeeper.ibinx.com/>.
