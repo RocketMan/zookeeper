@@ -33,7 +33,10 @@ $config = [
     'logo' => 'img/example_banner.png',
     'favicon' => 'img/favicon.ico',
 
-    'stylesheet' => 'css/example_style.css',
+    /**
+     * optional custom stylesheet
+     */
+//    'stylesheet' => 'css/example_style.css',
 
     /**
      * subdirectory for custom Twig templates
