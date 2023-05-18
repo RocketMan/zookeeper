@@ -279,7 +279,7 @@ class AddManager extends MenuItem {
     public function addManagerShowAdd() {
         $date = $_REQUEST["date"] ?? "";
     ?>
-      <TABLE CELLPADDING=2 CELLSPACING=0 WIDTH="100%" BORDER=0>
+      <TABLE CELLPADDING=2 CELLSPACING=0 WIDTH="100%" BORDER=0 style='display: none'>
         <TR>
           <TH ALIGN=LEFT>
             <FORM id='add-manager' ACTION="" METHOD=POST>
@@ -324,7 +324,8 @@ class AddManager extends MenuItem {
                 this.form.subaction.value = 'adds';
                 this.form.submit();
             })
-            .selectmenu('widget').trigger('focus');
+            .closest("table").css('display', 'table');
+        $("select[name=date]").selectmenu('widget').trigger('focus');
         $("select[name=os]").selectmenu({width: 100});
         $("select").selectmenu("menuWidget").css("max-height", "300px");
     });

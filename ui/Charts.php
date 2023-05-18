@@ -81,7 +81,7 @@ class Charts extends MenuItem {
     
     public function emitChartYearNav($currentYear, $header=0) {
 ?>
-  <div class="chart-year-pick">
+  <div class="chart-year-pick" style="display: none">
   <form action="?" method="POST" autocomplete="off">
   <input type="hidden" name="action" value="viewChart">
   <input type="hidden" name="subaction" value="weekly">
@@ -107,8 +107,10 @@ class Charts extends MenuItem {
           .on('change selectmenuchange', function() {
               this.form.submit();
           })
-          .selectmenu('widget').trigger('focus');
-      $("div.chart-year-pick select").selectmenu('menuWidget').css('max-height', '300px');
+          .selectmenu('menuWidget').css('max-height', '300px');
+      $("div.chart-year-pick").css('display', 'block')
+          .find('select').selectmenu('widget').trigger('focus');
+      $("div.content table").css('display', 'table');
   });
   // -->
   </script>
@@ -151,7 +153,7 @@ class Charts extends MenuItem {
          week.</P-->
 <?php
             $isOldestYear = $this->emitChartYearNav($year, 1);
-            echo "  <TABLE WIDTH=\"100%\">\n";
+            echo "  <TABLE WIDTH=\"100%\" style='display: none'>\n";
             echo "    <TR><TD>\n      <UL>\n";
             $weeks = $chartAPI->getChartDatesByYear($year);
             while($weeks && ($week = $weeks->fetch())) {
