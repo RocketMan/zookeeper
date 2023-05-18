@@ -320,6 +320,8 @@ class AddManager extends MenuItem {
     $().ready(function() {
         $("select[name=date]").selectmenu({width: 'auto'})
             .on('change selectmenuchange', function() {
+                // fixup subaction possibly changed by e-mail export
+                this.form.subaction.value = 'adds';
                 this.form.submit();
             })
             .selectmenu('widget').trigger('focus');
