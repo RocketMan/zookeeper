@@ -86,7 +86,7 @@ class Charts extends MenuItem {
   <input type="hidden" name="action" value="viewChart">
   <input type="hidden" name="subaction" value="weekly">
   Weekly charts for
-  <select name="year">
+  <select name="year" style='display: none'>
 <?php
         $oldestYear = null;
         $years = Engine::api(IChart::class)->getChartYears();

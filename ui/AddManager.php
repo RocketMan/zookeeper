@@ -284,7 +284,7 @@ class AddManager extends MenuItem {
           <TH ALIGN=LEFT>
             <FORM id='add-manager' ACTION="" METHOD=POST>
               Adds for:
-              <SELECT NAME=date>
+              <SELECT NAME=date style='display: none'>
     <?php 
         $records = Engine::api(IChart::class)->getAddDates(52);
         $datevalid = false;
@@ -303,7 +303,7 @@ class AddManager extends MenuItem {
     <?php if($this->session->isAuth("n")) { ?>
           <TD ALIGN=RIGHT>
             <FORM id='export-target' class='selector' ACTION="?" METHOD=POST>
-              <SELECT NAME=os>
+              <SELECT NAME=os style='display: none'>
                   <OPTION VALUE="win">Windows
                   <OPTION VALUE="unix">Unix/OS X
                   <OPTION VALUE="email">E-Mail
