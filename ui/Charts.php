@@ -102,9 +102,13 @@ class Charts extends MenuItem {
   </form>
   </div>
   <script type="text/javascript"><!--
-  $("div.chart-year-pick select").on('change', function() {
-    $(this).closest("form").submit();
-  }).trigger('focus');
+  $().ready(function() {
+      $("div.chart-year-pick select").selectmenu({width: 'auto'})
+          .on('change selectmenuchange', function() {
+              this.form.submit();
+          })
+          .selectmenu('widget').trigger('focus');
+  });
   // -->
   </script>
 <?php

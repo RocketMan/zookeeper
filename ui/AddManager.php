@@ -252,8 +252,6 @@ class AddManager extends MenuItem {
         $('.sortable-table').tablesorter({
             sortList: [[INITIAL_SORT_COL, 0]],
         }).css('display','table');
-
-        $("*[data-focus]").trigger('focus');
     });
     // -->
     </SCRIPT>
@@ -286,7 +284,7 @@ class AddManager extends MenuItem {
           <TH ALIGN=LEFT>
             <FORM id='add-manager' ACTION="" METHOD=POST>
               Adds for:
-              <SELECT NAME=date data-focus onChange='this.form.submit()'>
+              <SELECT NAME=date>
     <?php 
         $records = Engine::api(IChart::class)->getAddDates(52);
         $datevalid = false;
@@ -304,10 +302,9 @@ class AddManager extends MenuItem {
           </TH>
     <?php if($this->session->isAuth("n")) { ?>
           <TD ALIGN=RIGHT>
-            <FORM id='export-target' ACTION="?" METHOD=POST>
+            <FORM id='export-target' class='selector' ACTION="?" METHOD=POST>
               <SELECT NAME=os>
                   <OPTION VALUE="win">Windows
-                  <OPTION VALUE="mac">Mac OS 9
                   <OPTION VALUE="unix">Unix/OS X
                   <OPTION VALUE="email">E-Mail
               </SELECT>
@@ -319,6 +316,17 @@ class AddManager extends MenuItem {
     <?php  } ?>
         </TR>
       </TABLE>
+    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    $().ready(function() {
+        $("select[name=date]").selectmenu({width: 'auto'})
+            .on('change selectmenuchange', function() {
+                this.form.submit();
+            })
+            .selectmenu('widget').trigger('focus');
+        $("select[name=os]").selectmenu({width: 100});
+    });
+    // -->
+    </SCRIPT>
     <?php 
         if(!$datevalid && $first) $date = $first;
         if($date) {
@@ -1194,7 +1202,7 @@ class AddManager extends MenuItem {
           <TH ALIGN=LEFT>
             <FORM ACTION="" METHOD=POST>
               Activity for week ending:
-              <SELECT NAME=date onChange='this.form.submit()'>
+              <SELECT NAME=date>
     <?php 
         $records = Engine::api(IChart::class)->getChartDates(52);
         $datevalid = false;
@@ -1212,6 +1220,16 @@ class AddManager extends MenuItem {
           </TH>
         </TR>
       </TABLE>
+      <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+      $().ready(function() {
+          $("select[name=date]").selectmenu({width: 'auto'})
+              .on('change selectmenuchange', function() {
+                  this.form.submit();
+              })
+              .selectmenu('widget').trigger('focus');
+      });
+      // -->
+      </SCRIPT>
     <?php 
         if(!$datevalid && $first) $date = $first;
         if($date) {

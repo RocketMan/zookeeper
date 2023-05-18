@@ -896,6 +896,8 @@ class Playlists extends MenuItem {
     }
     
     public function emitViewDJ() {
+        UI::emitJS('js/zklistbox.js');
+
         $seq = $_REQUEST["seq"];
         $viewuser = $_REQUEST["viewuser"];
         $playlist = $_REQUEST["playlist"];
@@ -975,7 +977,7 @@ class Playlists extends MenuItem {
     <TABLE>
       <TR><TH ALIGN=LEFT><?php echo $row['airname'];?>'s playlists:</TH></TR>
       <TR><TD>
-         <ul tabindex='0' class='selector listbox no-text-select'>
+         <ul tabindex='0' class='selector listbox no-text-select' data-name='playlist'>
     <?php 
             // Run the query
             $records = Engine::api(IPlaylist::class)->getPlaylists(0, 0, 0, $viewuser);
@@ -986,32 +988,7 @@ class Playlists extends MenuItem {
       <TR><TD>
         <SCRIPT TYPE="text/javascript"><!--
            $().ready(function() {
-               $("ul.selector").on('keydown', function(e) {
-                   var cur = $(this).find('.state-active').index();
-                   switch(e.originalEvent.keyCode) {
-                   case 13: // enter
-                       $(this).closest("form").submit();
-                       e.preventDefault();
-                       return;
-                   case 38: // up
-                       if(cur)
-                           cur--;
-                       e.preventDefault();
-                       break;
-                   case 40: // down
-                       if(cur < $(this).find('li').length - 1)
-                           cur++;
-                       e.preventDefault();
-                       break;
-                   }
-                   $(this).find('li').eq(cur).trigger('mousedown');
-               }).trigger('focus');
-               $("ul.selector li").on('mousedown', function() {
-                   $("ul.selector li").removeClass('state-active');
-                   $("INPUT[NAME=playlist]").val($(this).addClass('state-active').data('value'));
-               }).on('dblclick', function() {
-                   $(this).closest("form").submit();
-               }).first().trigger('mousedown');
+               $("ul.selector").zklistbox().trigger('focus');
            });
         // -->
         </SCRIPT>

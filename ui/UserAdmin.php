@@ -60,8 +60,10 @@ class UserAdmin extends MenuItem {
     }
 
     public function settings() {
-        if(substr($this->subaction, -1) != "_")
+        if(substr($this->subaction, -1) != "_") {
             UI::emitJS("js/useradmin.js");
+            UI::emitJS("js/zklistbox.js");
+        }
         return $this->dispatchSubaction($this->action, $this->subaction);
     }
 
@@ -137,7 +139,7 @@ class UserAdmin extends MenuItem {
     <FORM class="selector" ACTION="?" METHOD=POST>
     <h3 class='no-margin'>Select Airname:</h3>
     <TABLE CELLPADDING=0 BORDER=0><TR><TD>
-    <ul tabindex='0' class='selector listbox no-text-select'>
+    <ul tabindex='0' class='selector listbox no-text-select' data-name='airname'>
     <?php
             foreach($airnames as $row) {
                  echo "  <li data-value=\"$row[0]\">$row[1]</li>\n";
@@ -147,32 +149,7 @@ class UserAdmin extends MenuItem {
     <TR><TD>
         <SCRIPT TYPE="text/javascript"><!--
            $().ready(function() {
-               $("ul.selector").on('keydown', function(e) {
-                   var cur = $(this).find('.state-active').index();
-                   switch(e.originalEvent.keyCode) {
-                   case 13: // enter
-                       $(this).closest("form").submit();
-                       e.preventDefault();
-                       return;
-                   case 38: // up
-                       if(cur)
-                           cur--;
-                       e.preventDefault();
-                       break;
-                   case 40: // down
-                       if(cur < $(this).find('li').length - 1)
-                           cur++;
-                       e.preventDefault();
-                       break;
-                   }
-                   $(this).find('li').eq(cur).trigger('mousedown');
-               }).trigger('focus');
-               $("ul.selector li").on('mousedown', function() {
-                   $("ul.selector li").removeClass('state-active');
-                   $("INPUT[NAME=airname]").val($(this).addClass('state-active').data('value'));
-               }).on('dblclick', function() {
-                   $(this).closest("form").submit();
-               }).first().trigger('mousedown');
+               $("ul.selector").zklistbox().trigger('focus');
            });
         // -->
         </SCRIPT>
@@ -423,21 +400,28 @@ class UserAdmin extends MenuItem {
       </TR><TR>
         <TD ALIGN=RIGHT VALIGN=TOP>Move&nbsp;To:</TD>
         <TD>
-          <SELECT NAME=uid SIZE=10>
+          <ul tabindex='0' class='selector listbox no-text-select' data-name='uid'>
     <?php
             $result = Engine::api(IUser::class)->getUsers();
             while($row = $result->fetch()) {
-                echo "        <OPTION VALUE=\"".$row["name"]."\">".$row["name"].
-                     " (".$row["realname"].")\n";
+                echo "        <li data-value=\"".$row["name"]."\">".$row["name"].
+                     " (".$row["realname"].")</li>\n";
             }
     ?>
-          </SELECT>
+          </ul>
         </TD>
       </TR><TR>
         <TD>&nbsp;</TD>
         <TD><INPUT TYPE=SUBMIT CLASS=submit VALUE=" Move Airname "></TD>
       </TR>
     </TABLE>
+    <SCRIPT TYPE="text/javascript"><!--
+    $().ready(function() {
+        $("ul.selector").zklistbox().trigger('focus');
+    });
+    // -->
+    </SCRIPT>
+    <INPUT TYPE=HIDDEN NAME=uid VALUE="">
     <INPUT TYPE=HIDDEN NAME=aid VALUE="<?php echo $aid;?>">
     <INPUT TYPE=HIDDEN NAME=action VALUE="adminUsers">
     <INPUT TYPE=HIDDEN NAME=subaction VALUE="airnames">
