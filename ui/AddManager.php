@@ -324,6 +324,7 @@ class AddManager extends MenuItem {
             })
             .selectmenu('widget').trigger('focus');
         $("select[name=os]").selectmenu({width: 100});
+        $("select").selectmenu("menuWidget").css("max-height", "300px");
     });
     // -->
     </SCRIPT>
@@ -1227,6 +1228,7 @@ class AddManager extends MenuItem {
                   this.form.submit();
               })
               .selectmenu('widget').trigger('focus');
+          $("select[name=date]").selectmenu("menuWidget").css("max-height", "300px");
       });
       // -->
       </SCRIPT>

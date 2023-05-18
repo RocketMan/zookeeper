@@ -108,6 +108,7 @@ class Charts extends MenuItem {
               this.form.submit();
           })
           .selectmenu('widget').trigger('focus');
+      $("div.chart-year-pick select").selectmenu('menuWidget').css('max-height', '300px');
   });
   // -->
   </script>
