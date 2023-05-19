@@ -308,7 +308,7 @@ class AddManager extends MenuItem {
                   <OPTION VALUE="unix">Unix/OS X
                   <OPTION VALUE="email">E-Mail
               </SELECT>
-              <INPUT TYPE=BUTTON NAME=button onClick="onExport();" VALUE=" Export ">
+              <INPUT TYPE=BUTTON NAME=button onClick="onExport();" VALUE=" Export " style='vertical-align: middle'>
               <INPUT TYPE=HIDDEN NAME=date VALUE="">
               <INPUT TYPE=HIDDEN NAME=target VALUE="addexp">
             </FORM>
