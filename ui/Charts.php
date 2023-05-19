@@ -81,7 +81,7 @@ class Charts extends MenuItem {
     
     public function emitChartYearNav($currentYear, $header=0) {
 ?>
-  <div class="chart-year-pick" style="display: none">
+  <div class="chart-year-pick">
   <form action="?" method="POST" autocomplete="off">
   <input type="hidden" name="action" value="viewChart">
   <input type="hidden" name="subaction" value="weekly">
@@ -108,9 +108,8 @@ class Charts extends MenuItem {
               this.form.submit();
           })
           .selectmenu('menuWidget').css('max-height', '300px');
-      $("div.chart-year-pick").css('display', 'block')
-          .find('select').selectmenu('widget').trigger('focus');
-      $("div.content table").css('display', 'table');
+      $("div.content > div").css('display', 'block');
+      $("div.chart-year-pick select").selectmenu('widget').trigger('focus');
   });
   // -->
   </script>
@@ -152,8 +151,9 @@ class Charts extends MenuItem {
          our current new releases which received airplay during the charting
          week.</P-->
 <?php
+            echo "  <div style='display: none'>\n";
             $isOldestYear = $this->emitChartYearNav($year, 1);
-            echo "  <TABLE WIDTH=\"100%\" style='display: none'>\n";
+            echo "  <TABLE WIDTH=\"100%\">\n";
             echo "    <TR><TD>\n      <UL>\n";
             $weeks = $chartAPI->getChartDatesByYear($year);
             while($weeks && ($week = $weeks->fetch())) {
@@ -172,6 +172,7 @@ class Charts extends MenuItem {
             $urls = Engine::param('urls');
             if($isOldestYear && array_key_exists('old_charts', $urls))
                 echo "  <P><A HREF=\"".$urls['old_charts']."\">Older airplay charts</A> are available here.</P>\n";
+            echo "  </div>\n";
 
             $this->title = "Weekly charts for $year";
             return;
