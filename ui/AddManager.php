@@ -147,8 +147,9 @@ class AddManager extends MenuItem {
         $legacyReviewCell = /* $showReview && !$isAuthenticated && !$static ?
                                "<TH class='sorter-false'></TH>" : */ "";
         $playableCell = $showReview && $isAuthenticated ? "<TH class='sorter-false'></TH>" : "";
+        $display = $static ? "" : " style='display: none'";
 
-        echo "<TABLE class='sortable-table' style='display: none' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
+        echo "<TABLE class='sortable-table'$display CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
              "<TH class='initial-sort-col'>Cat</TH>" .  $reviewCell .
              "<TH>ID</TH>" .
              "<TH>Artist</TH>" . $legacyReviewCell . $playableCell .
