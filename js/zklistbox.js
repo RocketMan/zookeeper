@@ -39,9 +39,25 @@
  */
 
 (function($) {
+    function isVisible(e) {
+        var erect = e.getBoundingClientRect();
+        var crect = e.parentNode.getBoundingClientRect();
+        return erect.y >= crect.y &&
+            erect.y + erect.height <= crect.y + crect.height;
+    }
+
+    function getCount(e) {
+        if(!e) return 0;
+        var erect = e.getBoundingClientRect();
+        var crect = e.parentNode.getBoundingClientRect();
+        return Math.floor(crect.height / erect.height);
+    }
+
     $.fn.zklistbox = function() {
         this.on('keydown', function(e) {
+            var elts = $(this).find('li');
             var cur = $(this).find('.state-active').index();
+            var up = false;
             switch(e.originalEvent.keyCode) {
             case 13: // enter
                 $(this).closest("form").submit();
@@ -50,15 +66,36 @@
             case 38: // up
                 if(cur)
                     cur--;
+                up = true;
                 e.preventDefault();
                 break;
             case 40: // down
-                if(cur < $(this).find('li').length - 1)
+                if(cur < elts.length - 1)
                     cur++;
                 e.preventDefault();
                 break;
+            case 33: // page up
+                cur = Math.max(cur - getCount(elts.get(0)), 0);
+                up = true;
+                e.preventDefault();
+                break;
+            case 34: // page down
+                cur = Math.min(cur + getCount(elts.get(0)), elts.length - 1);
+                e.preventDefault();
+                break;
+            case 35: // end
+                cur = elts.length - 1;
+                e.preventDefault();
+                break;
+            case 36: // home
+                cur = 0;
+                up = true;
+                e.preventDefault();
+                break;
             }
-            $(this).find('li').eq(cur).trigger('mousedown');
+            var elt = elts.eq(cur).trigger('mousedown').get(0);
+            if(!isVisible(elt))
+                elt.scrollIntoView({block: up ? 'start' : 'end'});
         }).find('li').on('mousedown', function() {
             var jqthis = $(this);
             jqthis.siblings('li').removeClass('state-active');
