@@ -792,6 +792,9 @@ li.ui-menu-item .ui-state-active,
     background: #ccc;
     border-color: transparent;
 }
+/*.ui-selectmenu-menu {
+    max-height: 300px;
+}*/
 @media (max-width: 700px) {
     .ui-selectmenu-button.ui-button {
         font-size: 14px;

@@ -328,7 +328,7 @@ class AddManager extends MenuItem {
             .closest("table").css('display', 'table');
         $("select[name=date]").selectmenu('widget').trigger('focus');
         $("select[name=os]").selectmenu({width: 100});
-        $("select").selectmenu("menuWidget").css("max-height", "300px");
+        $("select[name=date]").selectmenu("menuWidget").css("max-height", "300px");
     });
     // -->
     </SCRIPT>
