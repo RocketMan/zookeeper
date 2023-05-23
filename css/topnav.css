@@ -75,6 +75,8 @@ nav .nav-items > li a {
 }
 
 nav .login-search {
+  flex: 1;
+  margin-left: 60px;
 }
 
 nav .login-search .login,
@@ -96,13 +98,12 @@ nav .nav-items.active > li.selected.open ul li {
 nav form {
   height: 40px;
   padding: 2px;
-/*  background: #1e232b;*/
   border: none;
+  position: relative;
 }
-
 nav form .search-data {
   height: 100%;
-  width: 248px;
+  width: 100%;
   padding: 0 10px;
   color: #000;
   font-size: 17px;
@@ -113,18 +114,42 @@ nav form .search-data {
   border-radius: 6px;
 }
 
-nav form button {
-  padding: 0 15px;
-  color: #fff;
-  font-size: 17px;
-  background: #ff3d00;
-  border: none;
-  border-radius: 2px;
-  cursor: pointer;
+#search-filter-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 10px 5px 10px 10px;
+  border: 0;
+  border-left: 1px solid #888;
+  border-radius: 0 6px 6px 0;
+  background-color: #fff;
+  color: #000;
+  font-family: "Montserrat", sans-serif;
+  font-size: inherit;
 }
-
-nav form button:hover {
-  background: #e63600;
+#search-filter-button .ui-selectmenu-text {
+  margin-right: 5px;
+}
+ul#search-filter-menu li {
+  font-family: "Montserrat", sans-serif;
+}
+#search-filter-button.override {
+  background-color: #ffffe0;
+}
+#search-filter-button:hover {
+  filter: brightness(95%);
+}
+#search-filter-menu {
+  font-size: 16px;
+  background-color: #fff;
+  border-top: 0;
+  border-radius: 4px;
+}
+#search-filter-menu li {
+  border-top: 1px solid #c5c5c5;
+}
+#search-filter-menu li div {
+  padding: 8px;
 }
 
 nav .menu-icon,
@@ -303,6 +328,13 @@ nav .search-icon {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
+  }
+  nav .login-search {
+    flex: 0;
+    margin-left: 0;
+  }
+  nav form .search-data {
+    width: 248px;
   }
   nav .menu-icon{
     display: block;

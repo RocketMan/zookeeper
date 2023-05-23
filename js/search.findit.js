@@ -360,10 +360,39 @@ var lists = {
     }
 };
 
+function encobj(o, html) {
+    // we're encoding for the URI fragment, which can contain ':' and ','
+    // so we pass those through unescaped for better readability
+    var e = encodeURIComponent(JSON.stringify(o)).
+        replace(/%3A/g, ':').replace(/%2C/g, ',');
+    // for inclusion in HTML, we need to escape ampersand and single quote
+    return html?e.replace(/%26/g, '&amp;').replace(/\'/g, '%27'):e;
+}
+
 function searchAll() {
-    var url = "api/v1/search?filter[*]=" +
-                encodeURIComponent($("#fkey").val());
-    search(null, url, 5, -1);
+    var type = $("#search-filter").val();
+    var sortBy;
+    switch(type) {
+    case "artists":
+        sortBy = "Artist";
+        break;
+    case "albums":
+        sortBy = "Album";
+        break;
+    case "tracks":
+        sortBy = "Track";
+        break;
+    default:
+        sortBy = "";
+        break;
+    }
+    if(field.val().trim().length) {
+        document.location = "#" + encobj({
+            type: type,
+            fkey: field.val() + "*",
+            sortBy: sortBy
+        }, false);
+    }
 }
 
 function search(type, url, size, offset) {
@@ -412,10 +441,6 @@ function search(type, url, size, offset) {
                 var type = list.type;
                 lists[type](newTable(results, type), response, list);
             });
-
-            if(total == '0') {
-                results.html('Didn\'t find what you were looking for?  Try the <a href="?action=search&s=byArtist&n=' + encodeURIComponent(search) + '">Classic Search</a>.');
-            }
         },
         error: function(jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
@@ -438,15 +463,27 @@ function search(type, url, size, offset) {
             // restore search string on Back
             // schedule for later to avoid webkit's autocomplete=off blanking
             setTimeout(function() {
-                $(".search-data").val($("#fkey").val());
+                if($("#type").val() == "albumsByPubkey")
+                    return;
+
+                var key = $("#fkey").val();
+                if(key.slice(-1) == "*")
+                    key = key.substr(0, key.length-1);
+                $(".search-data").val(key);
             }, 100);
         }
     });
 
+    $("#type").on('fsearch', function() {
+        var url = "api/v1/search?filter[*]=" +
+                    encodeURIComponent($("#fkey").val());
+        search(null, url, 5, -1);
+    });
+
     var field = $(".search-data");
-    field.keyup(function(e) {
+    field.on('keyup typechange', function(e) {
         // nothing to do if search field has not changed
-        if(this.value == $("#fkey").val())
+        if(e.type == 'keyup' && this.value == $("#fkey").val())
             return;
 
         var sync = field.closest("form").get(0); // access underlying DOM element
@@ -461,10 +498,4 @@ function search(type, url, size, offset) {
         // run on next tick, as pasted data is not yet in the field
         setTimeout(onSearchNow, 0);
     });
-
-    field.trigger('focus');
-    var val = field.val();
-    if(val.length > 0)
-        onSearchNow();
-    field.val(val); // reset value to force cursor to end
 });

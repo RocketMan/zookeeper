@@ -1,10 +1,13 @@
-<script type="text/javascript" SRC="js/jquery.bahashchange.min.js"></script>
-<script type="text/javascript" src="{{ 'js/search.library.js' | decorate }}"></script>
+<script type="text/javascript"><!--
+$().ready(function() {
+    $("#sortBy").val("Artist");
+    $("#fkey").val("{{ key }}");
+    $("#type").val("reviews").trigger('lsearch');
+});
+// -->
+</script>
 <form>
   <input id='showTag' type='hidden' value='{{ app.session.isAuth("u") ? 'true' : 'false' }}'>
-  <input id='type' type='hidden' value='reviews'>
-  <input id='sortBy' type='hidden' value='Artist'>
-  <input id='key' type='hidden' value='{{ key }}'>
   <input id='maxresults' type='hidden' value='50'>
   <input id='chunksize' type='hidden' value='15'>
 </form>

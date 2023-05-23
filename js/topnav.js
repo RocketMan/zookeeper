@@ -87,4 +87,21 @@ $().ready(function() {
                 $(".cancel-icon.show").length)
             $(".cancel-icon").trigger('click');
     });
+
+    $("#search-filter").selectmenu({width: 'auto', position: {
+        my: 'right+2 top', at: 'right bottom'}});
+    var width = $("#search-filter-button").get(0).offsetWidth;
+    $(".search-data").css('padding-right', (width + 6) + "px");
+
+    $("#search-filter").on('change selectmenuchange', function() {
+        var button = $("#search-filter-button");
+        if($("#search-filter option[value='" + this.value + "']").data("default"))
+            button.removeClass('override');
+        else
+            button.addClass('override');
+
+        var width = button.get(0).offsetWidth;
+        $(".search-data").css('padding-right', (width + 6) + "px")
+            .trigger('focus').trigger('typechange');
+    });
 });

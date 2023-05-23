@@ -47,6 +47,14 @@ class Search extends MenuItem {
         [ "byLabelKey", "searchForm" ],
     ];
 
+    private static $typeFromLegacy = [
+        "byAlbum" => "albums",
+        "byArtist" => "artists",
+        "byTrack" => "tracks",
+        "byLabel" => "labels",
+        "byLabelKey" => "albumsByPubkey"
+    ];
+
     // can be overridden by request params 'q' and 'chunksize', respectively
     public $maxresults = 50;
     public $chunksize = 15;
@@ -307,7 +315,8 @@ class Search extends MenuItem {
     }
     
     public function searchForm() {
-        $this->template = 'search.library.html';
+        $this->setTemplate("search.library.html");
         $this->addVar('search', $this);
+        $this->addVar('type', self::$typeFromLegacy[$this->searchType]);
     }
 }
