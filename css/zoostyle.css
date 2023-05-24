@@ -1813,6 +1813,7 @@ ul.pagination li:not(.more) {
 ul.pagination li a {
     display: block;
     border-radius: 50%;
+    text-decoration: none;
 }
 ul.pagination li:not(.more) a:hover {
     background-color: rgba(0,0,0,0.2);
