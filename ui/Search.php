@@ -317,6 +317,7 @@ class Search extends MenuItem {
     public function searchForm() {
         $this->setTemplate("search.library.html");
         $this->addVar('search', $this);
-        $this->addVar('type', self::$typeFromLegacy[$this->searchType]);
+        $this->addVar('type', self::$typeFromLegacy[$this->searchType] ?? "all");
+        $this->addVar('welcome', empty($this->searchType));
     }
 }

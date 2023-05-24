@@ -9,7 +9,8 @@ $().ready(function() {
     $(".search-data").val(text)
         .css('padding-right', (width + 6) + "px");
     $("#search-filter").val(type).selectmenu('refresh');
-    $("#search-filter-button").addClass('override');
+    if(type != 'all')
+        $("#search-filter-button").addClass('override');
 
     var sortBy;
     switch(type) {
@@ -27,8 +28,12 @@ $().ready(function() {
         break;
     }
     $("#sortBy").val(sortBy);
-{% endif %}
     $("#type").val(type).trigger('lsearch');
+{% endif %}
 });
 // -->
 </script>
+{% if welcome %}
+<h4>Classic search is now available in the search bar at the top of the page.</h4>
+<p>Use the filter on the right to search by artist, album, track, or record label.</p>
+{% endif %}
