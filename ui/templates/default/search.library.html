@@ -5,7 +5,7 @@
 <script type="text/javascript"><!--
 $().ready(function() {
     var type = '{{ type }}';
-    var text = '{{ search.searchText | raw }}';
+    var text = '{{ search.searchText | replace({"'": "\\'"}) | raw }}';
 {% if type == "albumsByPubkey" %}
     $("#fkey").val(text);
 {% else %}
