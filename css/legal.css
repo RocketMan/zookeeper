@@ -40,11 +40,11 @@ div.legal a[href='#about'] {
     }
 }
     
-.legal-lightbox-modal P {
+.legal-lightbox-modal p {
     padding-bottom: 10px;
     text-align: left;
 }
-.legal-lightbox-modal A {
+.legal-lightbox-modal a {
     color: #cc0000;
 }
 .legal-lightbox-modal .close {
@@ -52,12 +52,12 @@ div.legal a[href='#about'] {
     width: 20px;
     display: inline-block;
 }
-.legal-lightbox-modal .close A {
+.legal-lightbox-modal .close a {
     text-decoration: none;
     font-size: 20px;
     color: #666;
 }
-.legal-lightbox-modal .close A:hover {
+.legal-lightbox-modal .close a:hover {
     color: #333;
 }
 .legal-lightbox-modal .body {

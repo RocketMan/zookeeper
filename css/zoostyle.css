@@ -1555,13 +1555,9 @@ div.toggle-time-entry div {
 
 .playlist-by-date {
     margin-top: 2px;
-    /*max-width: 1400px;/*TEST*/
-    /*margin: 0 auto;/*TEST*/
 }
 .playlist-accordion.ui-accordion {
     height: 520px;
-    /*max-width: 1400px;/*TEST*/
-    /*margin: 0 auto;/*TEST*/
 }
 .playlist-accordion.ui-accordion .ui-accordion-header {
     color: #5863da;
