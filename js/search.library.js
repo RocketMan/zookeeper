@@ -452,7 +452,7 @@ function search(size, offset) {
                 if($("#m").is(":checked"))
                     results.append('Hint: Uncheck "Exact match" box to broaden search.');
                 else
-                    results.append("<p>Select 'All' in the Search box to expand your search.</p>")
+                    results.append("<p>Select 'All' in the Search bar to expand your search.</p>")
             }
             var field = $("input.search-data");
             var val = field.val();
