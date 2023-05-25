@@ -463,13 +463,17 @@ function search(type, url, size, offset) {
             // restore search string on Back
             // schedule for later to avoid webkit's autocomplete=off blanking
             setTimeout(function() {
-                if($("#type").val() == "albumsByPubkey")
-                    return;
-
-                var key = $("#fkey").val();
-                if(key.slice(-1) == "*")
-                    key = key.substr(0, key.length-1);
-                $(".search-data").val(key);
+                switch($("#type").val()) {
+                case "albumsByPubkey":
+                case "reviews":
+                    break;
+                default:
+                    var key = $("#fkey").val();
+                    if(key.slice(-1) == "*")
+                        key = key.substr(0, key.length-1);
+                    $(".search-data").val(key);
+                    break;
+                }
             }, 100);
         }
     });
