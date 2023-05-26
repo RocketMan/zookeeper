@@ -10,7 +10,7 @@
     --theme-nav-highlight-colour: #333;
     --theme-nav-foreground-colour: #fff;
     --theme-nav-separator: 1px solid #333;
-    --theme-subnav-active: 3px solid #c00;
+    --theme-subnav-active: 3px solid #5863da;
     --theme-menu-background-colour: #14181f;
     --theme-search-background-colour: #1e232b;
 
@@ -581,6 +581,12 @@ ul.listbox.selector:focus {
 }
 
 /* primary navigation */
+a {
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
 .nav:link { color: #2530a7; }
 .nav:visited { color: #2530a7; }
 .nav:active { color: #2530a7; }
