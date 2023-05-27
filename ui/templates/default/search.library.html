@@ -9,11 +9,11 @@ $().ready(function() {
 {% if type == "albumsByPubkey" %}
     $("#fkey").val(text);
 {% else %}
+    $("#search-filter").val(type).selectmenu('refresh');
+    $("#search-filter-button").addClass('override');
     var width = $("#search-filter-button").get(0).offsetWidth;
     $(".search-data").val(text)
         .css('padding-right', (width + 6) + "px");
-    $("#search-filter").val(type).selectmenu('refresh');
-    $("#search-filter-button").addClass('override');
 
     var sortBy;
     switch(type) {
