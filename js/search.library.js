@@ -513,7 +513,7 @@ function search(size, offset) {
                 $("#search-filter").val(params.type).selectmenu('refresh');
                 var width = $("#search-filter-button").get(0).offsetWidth;
                 $(".search-data").val(key)
-                    .css('padding-right', (width + 6) + "px");
+                    .css('padding-left', (width + 8) + "px");
                 if(params.type == "all")
                     $("#search-filter-button").removeClass('override');
                 else

@@ -59,7 +59,6 @@ Credits:
 {% endif %}
     </div>
     <form action="#">
-      <input type="search" class="search-data" placeholder="Search" required>
       <select id="search-filter" style="display: none">
         <option value="all" data-default="true" selected>All</option>
         <option value="artists">Artists</option>
@@ -67,6 +66,8 @@ Credits:
         <option value="tracks">Tracks</option>
         <option value="labels">Labels</option>
       </select>
+      <input type="search" class="search-data" placeholder="Search" required>
+      <button type="submit" id="search-submit" class="fas fa-search">
       <input type="hidden" id="fkey">
       <input type="hidden" id="sortBy">
       <input type="hidden" id="type">
