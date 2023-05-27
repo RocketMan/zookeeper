@@ -74,9 +74,12 @@ nav .nav-items > li a {
   border-right: var(--theme-nav-separator);
 }
 
+nav .login-search .login {
+  white-space: nowrap;
+}
 nav .login-search {
   flex: 1;
-  margin-left: 60px;
+  margin-left: 50px;
 }
 
 nav .login-search .login,
