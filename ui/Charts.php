@@ -140,17 +140,6 @@ class Charts extends MenuItem {
                 $month = $today["mon"];
             }
     
-    ?>
-      <!--P>These charts are based on actual airplay, and are what we
-         report on. (For those of you outside the college radio biz, this is
-         unusual.) <A HREF="http://www.cmjmusic.com/" TARGET="_blank">College
-         Media Journal</A> and <A HREF="http://www.gavin.com/"
-         TARGET="_blank">Gavin</A> include our weekly numbers in their reports.</P>
-    
-      <P>Note that the 'Main' section of our weekly charts now lists all of
-         our current new releases which received airplay during the charting
-         week.</P-->
-<?php
             echo "  <div style='display: none'>\n";
             $isOldestYear = $this->emitChartYearNav($year, 1);
             echo "  <TABLE WIDTH=\"100%\">\n";
@@ -239,13 +228,6 @@ class Charts extends MenuItem {
                 $today = getdate(time());
                 $month = $today["mon"];
     
-    ?>
-      <!--P>These charts are based on actual airplay, and are what we
-         report on. (For those of you outside the college radio biz, this is
-         unusual.) <A HREF="http://www.cmjmusic.com/" TARGET="_blank">College
-         Media Journal</A> and <A HREF="http://www.gavin.com/"
-         TARGET="_blank">Gavin</A> include our weekly numbers in their reports.</P-->
-    <?php 
                 echo "  <TABLE WIDTH=\"100%\">\n";
     
                 // Determine if we need to include the current month
