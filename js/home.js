@@ -231,6 +231,8 @@ $().ready(function(){
             populateCards(false, last);
     });
 
+    $(".search-data").trigger('focus');
+
     populateCards(false, null);
     connect({ open: false });
 });
