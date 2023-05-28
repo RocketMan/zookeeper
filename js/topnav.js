@@ -87,15 +87,16 @@ $().ready(function() {
                 $(".cancel-icon.show").length)
             $(".cancel-icon").trigger('click');
 
+        var width = $("#search-submit").get(0).offsetWidth;
         $(".search-data")
-            .css('padding-right', ($("#search-submit").get(0).offsetWidth + 4) + "px");
+            .css('padding-left', (width ? width + 6 : 10) + "px");
     });
 
     $("#search-filter").selectmenu({width: 'auto', position: {
-        my: 'left+1 top', at: 'left bottom'}});
+        my: 'right+2 top', at: 'right bottom'}});
     var width = $("#search-filter-button").get(0).offsetWidth;
-    $(".search-data").css('padding-left', (width + 8) + "px")
-        .css('padding-right', ($("#search-submit").get(0).offsetWidth + 4) + "px");
+    $(".search-data").css('padding-left', "38px")
+        .css('padding-right', (width + 6) + "px");
 
     $("nav form").on('submit', function() {
         // trigger paste for immediate search
@@ -111,7 +112,7 @@ $().ready(function() {
             button.addClass('override');
 
         var width = button.get(0).offsetWidth;
-        $(".search-data").css('padding-left', (width + 8) + "px")
+        $(".search-data").css('padding-right', (width + 6) + "px")
             .trigger('focus').trigger('typechange');
     });
 });
