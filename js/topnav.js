@@ -87,15 +87,16 @@ $().ready(function() {
                 $(".cancel-icon.show").length)
             $(".cancel-icon").trigger('click');
 
-        var width = $("#search-submit").get(0).offsetWidth;
+        var submit = $("#search-submit").is(":visible");
         $(".search-data")
-            .css('padding-left', (width ? width + 6 : 10) + "px");
+            .css('padding-left', submit ? "38px" : "10px");
     });
 
     $("#search-filter").selectmenu({width: 'auto', position: {
         my: 'right+2 top', at: 'right bottom'}});
     var width = $("#search-filter-button").get(0).offsetWidth;
-    $(".search-data").css('padding-left', "38px")
+    var submit = $("#search-submit").is(":visible");
+    $(".search-data").css('padding-left', submit ? "38px" : "10px")
         .css('padding-right', (width + 6) + "px");
 
     $("nav form").on('submit', function() {
