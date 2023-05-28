@@ -355,6 +355,9 @@ nav .search-icon {
   nav form .search-data {
     width: 268px;
   }
+  #search-submit {
+    display: none;
+  }
   nav .menu-icon{
     display: block;
   }

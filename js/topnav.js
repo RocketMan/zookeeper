@@ -83,9 +83,12 @@ $().ready(function() {
     });
 
     $(window).on('resize', function() {
-        if(document.documentElement.clientWidth >= 1024 &&
+        if(document.documentElement.clientWidth >= 1000 &&
                 $(".cancel-icon.show").length)
             $(".cancel-icon").trigger('click');
+
+        $(".search-data")
+            .css('padding-right', ($("#search-submit").get(0).offsetWidth + 4) + "px");
     });
 
     $("#search-filter").selectmenu({width: 'auto', position: {
