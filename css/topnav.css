@@ -115,6 +115,7 @@ nav form .search-data {
   background: none;
   background-color: #fff;
   border-radius: 6px;
+  padding-left: 38px;
 }
 
 #search-filter-button {
