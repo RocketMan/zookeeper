@@ -858,6 +858,9 @@ class Playlists extends MenuItem {
             return;
         }
 
+        if($this->subaction == "viewDJ" && $row['airname'])
+            $this->tertiary = $row['airname'];
+
         $this->emitPlaylistBanner($playlistId, $row, false);
         $this->emitPlaylistBody($playlistId, false);
     }
