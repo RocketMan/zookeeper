@@ -19,6 +19,8 @@
 
     --theme-secdiv-background-colour: #333;
     --theme-secdiv-lite-background-colour: #333;
+
+    --theme-content-background-colour: #fff;
 }
 
 /* Use a CSS reset to smooth out browser incongruities. */
@@ -85,7 +87,7 @@ body {
     font-size: 10pt;
     font-family: 'Roboto', Helvetica, sans-serif;
     line-height: 1.2;
-    background-color: #fff;
+    background-color: var(--theme-content-background-colour);
 }
 h1 {
     font-size: 16pt;
