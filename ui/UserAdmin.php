@@ -147,7 +147,7 @@ class UserAdmin extends MenuItem {
     ?>
     </ul></TD></TR>
     <TR><TD>
-        <SCRIPT TYPE="text/javascript"><!--
+        <SCRIPT><!--
            $().ready(function() {
                $("ul.selector").zklistbox().trigger('focus');
            });
@@ -415,7 +415,7 @@ class UserAdmin extends MenuItem {
         <TD><INPUT TYPE=SUBMIT CLASS=submit VALUE=" Move Airname "></TD>
       </TR>
     </TABLE>
-    <SCRIPT TYPE="text/javascript"><!--
+    <SCRIPT><!--
     $().ready(function() {
         $("ul.selector").zklistbox().trigger('focus');
     });

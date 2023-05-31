@@ -21,9 +21,9 @@
   <input type=hidden id='tz' value='{{ tz }}'>
   <input type=hidden id='push-subscribe' value='{{ push }}'>
 </form>
-<script type="text/javascript" src="{{ "js/home.js" | decorate }}"></script>
+<script src="{{ "js/home.js" | decorate }}"></script>
 {% else %}
-<script type="text/javascript"><!--
+<script><!--
 $().ready(function() {
     $(".search-data").trigger('focus');
 });

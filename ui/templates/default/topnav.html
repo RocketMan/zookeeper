@@ -14,12 +14,11 @@ Credits:
       link: https://codepen.io/fainder/pen/qBwBeO
       website: https://www.creaticode.com/
 #}
-<meta name="viewport" content="width=device-width, initial-scale=0.86, user-scalable=yes" />
 <link rel="stylesheet" type="text/css" href="{{ "css/topnav.css" | decorate }}" />
-<script type="text/javascript" src="{{ "js/topnav.js" | decorate }}"></script>
-<script type="text/javascript" src="{{ "js/search.findit.js" | decorate }}"></script>
-<script type="text/javascript" src="js/jquery.bahashchange.min.js"></script>
-<script type="text/javascript" src="{{ "js/search.library.js" | decorate }}"></script>
+<script src="{{ "js/topnav.js" | decorate }}"></script>
+<script src="{{ "js/search.findit.js" | decorate }}"></script>
+<script src="js/jquery.bahashchange.min.js"></script>
+<script src="{{ "js/search.library.js" | decorate }}"></script>
 <nav>
   <div class="menu-icon">
     <span class="fas fa-bars"></span>
@@ -27,19 +26,19 @@ Credits:
   <div class="logo">
     {{ app.station_title }}
   </div>
-  <div class="nav-items">
+  <menu class="nav-items">
 {% for item in app.menu %}
-  <li {{ item.selected ? "class='selected'" }} data-action='{{ item.action }}'><a href='?action={{ item.action }}'><span class="chevron-right"></span>{{ item.label }}</a>
+    <li {{ item.selected ? "class='selected'" }} data-action='{{ item.action }}'><a href='?action={{ item.action }}'><span class="chevron-right"></span>{{ item.label }}</a>
   {%~ if item.selected %}
-    <ul>
+      <ul>
     {%~ for subitem in app.submenu %}
-      <li {{ subitem.selected ? "class='selected'" }}><a href='?action={{ item.action }}&amp;subaction={{ subitem.subaction }}'>{{ subitem.label }}</a></li>
+        <li {{ subitem.selected ? "class='selected'" }}><a href='?action={{ item.action }}&amp;subaction={{ subitem.subaction }}'>{{ subitem.label }}</a></li>
     {%~ endfor %}
-    </ul>
+      </ul>
   {%~ endif %}
-  </li>
+    </li>
 {% endfor %}
-  </div>
+  </menu>
   <div class="search-icon">
     <span class="fas fa-search"></span>
   </div>

@@ -708,7 +708,7 @@ class Editor extends MenuItem {
         }
         $this->emitHidden("selcount", $selCount);
         $merged = implode(",", $selLabels);
-        echo "        <SCRIPT TYPE=\"text/javascript\" LANGUAGE=\"JavaScript\"><!--\n";
+        echo "        <SCRIPT><!--\n";
         echo "        window.open('?target=print&form=".$form["code"]."&tags=$merged', '_blank', 'toolbar=no,location=no,width=800,height=800');\n";
         echo "        // -->\n";
         echo "        </SCRIPT>\n";

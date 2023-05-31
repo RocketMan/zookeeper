@@ -220,7 +220,7 @@ class Reviews extends MenuItem {
         UI::setFocus();
       ?>
 
-      <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+      <SCRIPT><!--
     <?php ob_start([JSMin::class, 'minify']); ?>
         $().ready(function(){
             var INITIAL_SORT_COL = 0; //date

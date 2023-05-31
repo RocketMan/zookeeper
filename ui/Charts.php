@@ -101,7 +101,7 @@ class Charts extends MenuItem {
   </select>
   </form>
   </div>
-  <script type="text/javascript"><!--
+  <script><!--
   $().ready(function() {
       $("div.chart-year-pick select").selectmenu({width: 'auto'})
           .on('change selectmenuchange', function() {

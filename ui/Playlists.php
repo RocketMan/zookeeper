@@ -319,7 +319,7 @@ class Playlists extends MenuItem {
 
         echo "<div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>".htmlentities($showName, ENT_QUOTES, 'UTF-8')."</span> <span id='banner-dj'>with $djLink</span></span><div>{$showDateTime}&nbsp;</div></div>\n";
 ?>
-    <SCRIPT TYPE="text/javascript"><!--
+    <SCRIPT><!--
     <?php ob_start([JSMin::class, 'minify']); ?>
     // Truncate the show name (banner-description) so that the combined
     // show name, DJ name, and date/time fit on one line.
@@ -722,7 +722,7 @@ class Playlists extends MenuItem {
 
                         // display the editor
 ?>
-    <SCRIPT TYPE="text/javascript"><!--
+    <SCRIPT><!--
         window.open("?subaction=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
     // -->
     </SCRIPT>
@@ -837,7 +837,7 @@ class Playlists extends MenuItem {
 
             $this->lazyLoadImages($playlist);
 ?>
-    <SCRIPT TYPE="text/javascript"><!--
+    <SCRIPT><!--
         window.open("?subaction=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
     // -->
     </SCRIPT>
@@ -989,7 +989,7 @@ class Playlists extends MenuItem {
     ?>
         </ul></TD></TR>
       <TR><TD>
-        <SCRIPT TYPE="text/javascript"><!--
+        <SCRIPT><!--
            $().ready(function() {
                $("ul.selector").zklistbox().trigger('focus');
            });

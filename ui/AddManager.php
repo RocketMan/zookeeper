@@ -247,7 +247,7 @@ class AddManager extends MenuItem {
         if($showEdit)
             $this->emitConfirmDelete();
     ?>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <SCRIPT><!--
     $().ready(function(){
         var INITIAL_SORT_COL = 1; // cat
         $('.sortable-table').tablesorter({
@@ -317,7 +317,7 @@ class AddManager extends MenuItem {
     <?php  } ?>
         </TR>
       </TABLE>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <SCRIPT><!--
     $().ready(function() {
         $("select[name=date]").selectmenu({width: 'auto'})
             .on('change selectmenuchange', function() {
@@ -341,7 +341,7 @@ class AddManager extends MenuItem {
         if($this->session->isAuth("n")) {
     ?>
 
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <SCRIPT><!--
     <?php ob_start([JSMin::class, 'minify']); ?>
 
     function onExport() {
@@ -383,7 +383,7 @@ class AddManager extends MenuItem {
     <FORM id='add-delete' ACTION="?action=addmgr&subaction=addsdel" METHOD=POST>
         <INPUT TYPE='hidden' NAME='id' VALUE='' />
     </FORM>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <SCRIPT><!--
     function ConfirmDelete(id) {
       if(confirm("Delete this album from the add?")) {
         $('#add-delete input[name=id]').val(id);
@@ -1225,7 +1225,7 @@ class AddManager extends MenuItem {
           </TH>
         </TR>
       </TABLE>
-      <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+      <SCRIPT><!--
       $().ready(function() {
           $("select[name=date]").selectmenu({width: 'auto'})
               .on('change selectmenuchange', function() {
@@ -1244,7 +1244,7 @@ class AddManager extends MenuItem {
         }
         UI::setFocus();
     ?>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <SCRIPT><!--
     <?php ob_start([JSMin::class, 'minify']); ?>
     $().ready(function(){
         var INITIAL_SORT_COL = 0; //date
