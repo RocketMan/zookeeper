@@ -373,11 +373,21 @@ var lists = {
 };
 
 function search(size, offset) {
-    var type = $("#type").val();
+    var suffix, type = $("#type").val();
     if(!type || !requestMap[type])
         return;
+    switch(type) {
+    case "albumsByPubkey":
+    case "reviews":
+        suffix = "";
+        break;
+    default:
+        suffix = "*";
+        break;
+    }
+
     var url = "api/v1/" + requestMap[type] +
-        encodeURIComponent($("#fkey").val()) +
+        encodeURIComponent($("#fkey").val() + suffix) +
         "&sort=" + $("#sortBy").val() +
         "&fields[label]=name,city,state,modified";
 
@@ -473,16 +483,12 @@ function search(size, offset) {
             // restore search fields from bfcache
             // schedule for later to avoid webkit's autocomplete=off blanking
             setTimeout(function() {
-                var key, type = $("#type").val();
-                switch(type) {
+                switch($("#type").val()) {
                 case "artists":
                 case "albums":
                 case "tracks":
                 case "labels":
-                    key = $("#fkey").val();
-                    if(key.slice(-1) == "*")
-                        key = key.substr(0, key.length-1);
-                    $(".search-data").val(key);
+                    $(".search-data").val($("#fkey").val());
                     break;
                 default:
                     break;
@@ -498,12 +504,13 @@ function search(size, offset) {
             for(property in params)
                 $("#" + property).val(params[property]);
 
-            var key = params.fkey;
-            if(key.slice(-1) == "*")
-                key = key.substr(0, key.length-1);
-
             switch(params.type) {
             case "albumsByPubkey":
+                $("#search-filter").val('all').selectmenu('refresh');
+                var width = $("#search-filter-button").get(0).offsetWidth;
+                $(".search-data").val('')
+                    .css('padding-right', (width + 6) + "px");
+                $("#search-filter-button").removeClass('override');
                 break;
             case "all":
             case "artists":
@@ -512,7 +519,7 @@ function search(size, offset) {
             case "labels":
                 $("#search-filter").val(params.type).selectmenu('refresh');
                 var width = $("#search-filter-button").get(0).offsetWidth;
-                $(".search-data").val(key)
+                $(".search-data").val(params.fkey)
                     .css('padding-right', (width + 6) + "px");
                 if(params.type == "all")
                     $("#search-filter-button").removeClass('override');

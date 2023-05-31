@@ -14,6 +14,7 @@ $().ready(function() {
     var width = $("#search-filter-button").get(0).offsetWidth;
     $(".search-data").val(text)
         .css('padding-right', (width + 6) + "px");
+    $("#fkey").val(text);
 
     var sortBy;
     switch(type) {

@@ -389,7 +389,7 @@ function searchAll() {
     if(field.val().trim().length) {
         document.location = "#" + encobj({
             type: type,
-            fkey: field.val() + "*",
+            fkey: field.val(),
             sortBy: sortBy
         }, false);
     }
@@ -468,10 +468,7 @@ function search(type, url, size, offset) {
                 case "reviews":
                     break;
                 default:
-                    var key = $("#fkey").val();
-                    if(key.slice(-1) == "*")
-                        key = key.substr(0, key.length-1);
-                    $(".search-data").val(key);
+                    $(".search-data").val($("#fkey").val());
                     break;
                 }
             }, 100);
