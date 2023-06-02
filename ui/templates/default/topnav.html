@@ -28,7 +28,7 @@ Credits:
   </div>
   <menu class="nav-items">
 {% for item in app.menu %}
-    <li {{ item.selected ? "class='selected'" }} data-action='{{ item.action }}'><a href='?action={{ item.action }}'><span class="chevron-right"></span>{{ item.label }}</a>
+    <li {{ item.selected ? "class='selected'" }} data-action='{{ item.action }}'><a href='?action={{ item.action }}'>{{ item.label }}</a>
   {%~ if item.selected %}
       <ul>
     {%~ for subitem in app.submenu %}

@@ -217,13 +217,13 @@ nav .search-icon {
     padding-left: 100px;
 }
 
-.nav-items.active li span.chevron-right {
-    display: inline-block;
-    color: var(--theme-nav-foreground-colour);
-    left: 12px;
-    right: auto;
+.nav-items.active > li > a:before {
+    content: "\f054"; /* fa-chevron-right */
+    font-family: "Font Awesome 5 Free";
     font-size: 16px;
     font-weight: bold;
+    display: inline-block;
+    color: var(--theme-nav-foreground-colour);
     padding-right: 20px;
 
     -webkit-transition: all 0.4s ease;
@@ -231,11 +231,7 @@ nav .search-icon {
     transition: all 0.4s ease;
     transform-origin: 5px center;
 }
-.nav-items.active li span.chevron-right:before {
-    content: "\f054"; /* fa-chevron-right */
-    font-family: "Font Awesome 5 Free";
-}
-.nav-items.active li.open span.chevron-right {
+.nav-items.active > li.open > a:before {
     -webkit-transform: rotate(90deg);
     -ms-transform: rotate(90deg);
     -o-transform: rotate(90deg);
@@ -290,9 +286,6 @@ nav .search-icon {
     }
     nav .nav-items li {
         margin: 0;
-    }
-    nav .nav-items li .chevron-right {
-        display: inline-block;
     }
     nav .nav-items li > a {
         padding-left: 50px;
