@@ -432,7 +432,7 @@ nav .search-icon {
     position: relative;
     height: 30px;
     line-height: 30px;
-    padding: 0 10px 0 5px;
+    padding: 0 35px 0 5px;
     margin-right: -1px; /* fixes subpixel rendering issue in Chrome */
     text-align: center;
 }
@@ -448,22 +448,20 @@ nav .search-icon {
     right: 0;
     color: var(--theme-content-background-colour);
 }
-.breadcrumbs li:last-of-type:after {
+.breadcrumbs li:first-child {
+    border-radius: 4px 0 0 4px;
+}
+.breadcrumbs li:last-child {
+    border-radius: 0 4px 4px 0;
+    padding-right: 10px;
+}
+.breadcrumbs li:last-child:after {
     display: none;
 }
 .breadcrumbs li span.fa-home {
     line-height: 28px;
     position: relative;
     left: 5px;
-}
-.breadcrumbs li:not(:last-of-type) {
-    padding-right: 35px;
-}
-.breadcrumbs li:first-child {
-    border-radius: 4px 0 0 4px;
-}
-.breadcrumbs li:last-child {
-    border-radius: 0 4px 4px 0;
 }
 @media (min-width: 1000px) {
     .breadcrumbs {
