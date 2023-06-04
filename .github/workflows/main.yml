@@ -16,31 +16,31 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-	  php-version: 8.2
+          php-version: 8.2
 
       - name: Setup Apache
         uses: thunder/apache-shiva-php-action@v1
-	with:
-	  php-version: 8.2
-	  site-directory: $GITHUB_WORKSPACE
-	  http-port: 8080
+        with:
+          php-version: 8.2
+          site-directory: $GITHUB_WORKSPACE
+          http-port: 8080
 
       - name: Install Composer packages
         uses: ramsey/composer-install@v2
 
       - name: Configuration
         run: |
-	  phpenv config-add build/zookeeper.ini
-	  cp config/config.example.php config/config.php
+          phpenv config-add build/zookeeper.ini
+          cp config/config.example.php config/config.php
 
       - name: Database
-	run: |
-	  sudo systemctl start mysql.service
-	  mysql -u root -proot zookeeper < db/zkdbSchema.sql
-	  mysql -u root -proot zookeeper < db/categories.sql
-	  mysql -u root -proot zookeeper < db/chartemail.sql
-	  mysql -u root -proot zookeeper < db/bootstrapUser.sql
+        run: |
+          sudo systemctl start mysql.service
+          mysql -u root -proot zookeeper < db/zkdbSchema.sql
+          mysql -u root -proot zookeeper < db/categories.sql
+          mysql -u root -proot zookeeper < db/chartemail.sql
+          mysql -u root -proot zookeeper < db/bootstrapUser.sql
 
       - name: Validate
-	run: |
-	  php zk validate url=http://127.0.0.1:8080/
+        run: |
+          php zk validate url=http://127.0.0.1:8080/
