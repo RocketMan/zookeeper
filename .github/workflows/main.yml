@@ -30,18 +30,18 @@ jobs:
           site-directory: $GITHUB_WORKSPACE
           http-port: 8080
 
-      - name: Install Composer packages
+      - name: Install Composer dependencies
         uses: ramsey/composer-install@v2
         with:
           composer-options: "--no-dev"
 
-      - name: Configuration
+      - name: Create configuration
         run: |
           cp config/config.example.php config/config.php
           sed -i -e "s,'pass' => '','pass' => 'root',g" config/config.php
           printf "[client]\nuser=root\npassword=root\n" > ~/.my.cnf
 
-      - name: Database
+      - name: Setup database
         run: |
           sudo systemctl start mysql.service
           mysql -e 'CREATE DATABASE zookeeper'
@@ -51,5 +51,4 @@ jobs:
           mysql zookeeper < db/bootstrapUser.sql
 
       - name: Validate
-        run: |
-          php zk validate url=http://127.0.0.1:8080/
+        run: php zk validate url=http://127.0.0.1:8080/
