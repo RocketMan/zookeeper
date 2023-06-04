@@ -36,15 +36,16 @@ jobs:
         run: |
           cp config/config.example.php config/config.php
           sed -i -e "s,'pass' => '','pass' => 'root',g" config/config.php
+          printf "[mysql]\nuser=root\npassword=root\n" > build/ci-creds
 
       - name: Database
         run: |
           sudo systemctl start mysql.service
-          mysql -u root -proot -e 'CREATE DATABASE zookeeper'
-          mysql -u root -proot zookeeper < db/zkdbSchema.sql
-          mysql -u root -proot zookeeper < db/categories.sql
-          mysql -u root -proot zookeeper < db/chartemail.sql
-          mysql -u root -proot zookeeper < db/bootstrapUser.sql
+          mysql --login-path=build/ci-creds -e 'CREATE DATABASE zookeeper'
+          mysql --login-path=build/ci-creds zookeeper < db/zkdbSchema.sql
+          mysql --login-path=build/ci-creds zookeeper < db/categories.sql
+          mysql --login-path=build/ci-creds zookeeper < db/chartemail.sql
+          mysql --login-path=build/ci-creds zookeeper < db/bootstrapUser.sql
 
       - name: Validate
         run: |
