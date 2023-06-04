@@ -700,10 +700,10 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $tagName  = $haveTag ? ", tag" : "";
         $tagValue = $haveTag ? ", ?"   : "";
     
-        $names = "(list, artist, track, album, label, seq, created ${tagName})";
-        $values = "VALUES (?, ?, ?, ?, ?, ?, ? ${tagValue});";
+        $names = "(list, artist, track, album, label, seq, created {$tagName})";
+        $values = "VALUES (?, ?, ?, ?, ?, ?, ? {$tagValue});";
 
-        $query = "INSERT INTO tracks ${names} ${values}";
+        $query = "INSERT INTO tracks {$names} {$values}";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$playlistId, \PDO::PARAM_INT); 
         $stmt->bindValue(2, $artist);

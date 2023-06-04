@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest]
+        php-versions: ['7.4', '8.0', '8.2']
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          ini-values: date.timezone="Europe/London"
+
+      - name: Setup Apache
+        uses: thunder/apache-shiva-php-action@v1
+        with:
+          php-version: ${{ matrix.php-versions }}
+          site-directory: $GITHUB_WORKSPACE
+          http-port: 8080
+
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@v2
+        with:
+          composer-options: "--no-dev"
+
+      - name: Create configuration
+        run: |
+          cp config/config.example.php config/config.php
+          sed -i -e "s,'pass' => '','pass' => 'root',g" config/config.php
+          printf "[client]\nuser=root\npassword=root\n" > ~/.my.cnf
+
+      - name: Setup database
+        run: |
+          sudo systemctl start mysql.service
+          mysql -e 'CREATE DATABASE zookeeper'
+          mysql zookeeper < db/zkdbSchema.sql
+          mysql zookeeper < db/categories.sql
+          mysql zookeeper < db/chartemail.sql
+          mysql zookeeper < db/bootstrapUser.sql
+
+      - name: Validate
+        run: php zk validate url=http://127.0.0.1:8080/

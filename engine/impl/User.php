@@ -200,7 +200,7 @@ class UserImpl extends DBO implements IUser {
             $comma = ",";
         }
         if($groups != "XXZZ") {
-            $query .= $comma." groups=?";
+            $query .= $comma." `groups`=?";
             $comma = ",";
         }
         if($expiration != "XXZZ")
@@ -226,7 +226,7 @@ class UserImpl extends DBO implements IUser {
     
     public function insertUser($user, $password, $realname, $groups, $expiration) {
         $salt = substr(md5(uniqid(rand())), 0, 2);
-        $query = "INSERT INTO users (name, password, realname, groups, expires) VALUES (?, ?, ?, ?, ?)";
+        $query = "INSERT INTO users (name, password, realname, `groups`, expires) VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $user);
         $stmt->bindValue(2, $salt.md5($salt.$password));
@@ -292,7 +292,7 @@ class UserImpl extends DBO implements IUser {
     }
 
     public function lookupAPIKey($apikey) {
-        $query = "SELECT user, groups, realname FROM apikeys a ".
+        $query = "SELECT user, `groups`, realname FROM apikeys a ".
                  "LEFT JOIN users u ON a.user = u.name ".
                  "WHERE apikey=?";
         $stmt = $this->prepare($query);
