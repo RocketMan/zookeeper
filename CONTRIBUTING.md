@@ -38,9 +38,6 @@ The following is an overview of the source code directory structure:
         api/
             JSON:API implementation.
 
-        build/
-            files for continuous integration
-
         config/
             config.php
                  This is the main configuration file.  It includes
