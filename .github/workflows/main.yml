@@ -30,7 +30,6 @@ jobs:
 
       - name: Configuration
         run: |
-          phpenv config-add build/zookeeper.ini
           cp config/config.example.php config/config.php
 
       - name: Database
