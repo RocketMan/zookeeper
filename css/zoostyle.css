@@ -507,11 +507,9 @@ p.zktitle a {
 }
 
 #playlist-calendar {
-    height: 15px;
-    width: 17px;
+    font-size: 15px;
     padding: 1px 1px 2px;
     position: relative;
-    top: 4px;
 }
 
 #playlist-list {
