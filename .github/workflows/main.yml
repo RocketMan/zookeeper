@@ -39,7 +39,7 @@ jobs:
         run: |
           cp config/config.example.php config/config.php
           sed -i -e "s,'pass' => '','pass' => 'root',g" config/config.php
-          printf "[mysql]\nuser=root\npassword=root\n" > .my.cnf
+          printf "[client]\nuser=root\npassword=root\n" > .my.cnf
 
       - name: Database
         run: |
