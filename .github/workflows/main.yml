@@ -31,6 +31,8 @@ jobs:
 
       - name: Install Composer packages
         uses: ramsey/composer-install@v2
+        with:
+          args: --no-dev
 
       - name: Configuration
         run: |
