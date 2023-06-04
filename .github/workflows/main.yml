@@ -31,6 +31,7 @@ jobs:
       - name: Configuration
         run: |
           cp config/config.example.php config/config.php
+          sed -i -e "s,'pass' => '','pass' => 'root',g" config/config.php
 
       - name: Database
         run: |
