@@ -44,11 +44,12 @@ jobs:
       - name: Database
         run: |
           sudo systemctl start mysql.service
-          mysql --defaults-extra-file=build/ci-creds -e 'CREATE DATABASE zookeeper'
-          mysql --defaults-extra-file=build/ci-creds zookeeper < db/zkdbSchema.sql
-          mysql --defaults-extra-file=build/ci-creds zookeeper < db/categories.sql
-          mysql --defaults-extra-file=build/ci-creds zookeeper < db/chartemail.sql
-          mysql --defaults-extra-file=build/ci-creds zookeeper < db/bootstrapUser.sql
+          mysqlf() { mysql --defaults-extra-file=build/ci-creds $@ ; }
+          mysqlf -e 'CREATE DATABASE zookeeper'
+          mysqlf zookeeper < db/zkdbSchema.sql
+          mysqlf zookeeper < db/categories.sql
+          mysqlf zookeeper < db/chartemail.sql
+          mysqlf zookeeper < db/bootstrapUser.sql
 
       - name: Validate
         run: |
