@@ -7,7 +7,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest]
+        php-versions: ['7.4', '8.0', '8.2']
 
     steps:
       - name: Checkout source
@@ -16,12 +20,12 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.2
+          php-version: ${{ matrix.php-versions }}
 
       - name: Setup Apache
         uses: thunder/apache-shiva-php-action@v1
         with:
-          php-version: 8.2
+          php-version: ${{ matrix.php-versions }}
           site-directory: $GITHUB_WORKSPACE
           http-port: 8080
 
