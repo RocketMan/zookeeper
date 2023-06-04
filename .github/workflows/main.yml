@@ -21,6 +21,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-versions }}
+          ini-values: date.timezone="Europe/London"
 
       - name: Setup Apache
         uses: thunder/apache-shiva-php-action@v1
