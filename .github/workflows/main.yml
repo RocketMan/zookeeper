@@ -41,11 +41,11 @@ jobs:
       - name: Database
         run: |
           sudo systemctl start mysql.service
-          mysql --login-path=build/ci-creds -e 'CREATE DATABASE zookeeper'
-          mysql --login-path=build/ci-creds zookeeper < db/zkdbSchema.sql
-          mysql --login-path=build/ci-creds zookeeper < db/categories.sql
-          mysql --login-path=build/ci-creds zookeeper < db/chartemail.sql
-          mysql --login-path=build/ci-creds zookeeper < db/bootstrapUser.sql
+          mysql --defaults-extra-file=build/ci-creds -e 'CREATE DATABASE zookeeper'
+          mysql --defaults-extra-file=build/ci-creds zookeeper < db/zkdbSchema.sql
+          mysql --defaults-extra-file=build/ci-creds zookeeper < db/categories.sql
+          mysql --defaults-extra-file=build/ci-creds zookeeper < db/chartemail.sql
+          mysql --defaults-extra-file=build/ci-creds zookeeper < db/bootstrapUser.sql
 
       - name: Validate
         run: |
