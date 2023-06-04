@@ -35,6 +35,7 @@ jobs:
       - name: Database
         run: |
           sudo systemctl start mysql.service
+          mysql -u root -proot -e 'CREATE DATABASE zookeeper'
           mysql -u root -proot zookeeper < db/zkdbSchema.sql
           mysql -u root -proot zookeeper < db/categories.sql
           mysql -u root -proot zookeeper < db/chartemail.sql
