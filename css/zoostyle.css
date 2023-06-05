@@ -16,7 +16,7 @@
     --theme-search-background-colour: #1e232b;
 
     --theme-button-foreground-colour: #fff;
-    --theme-button-background-colour: #333;
+    --theme-button-background-colour: #2530a7;
 
     --theme-secdiv-background-colour: #333;
     --theme-secdiv-lite-background-colour: #333;
@@ -1012,14 +1012,20 @@ input[type="checkbox"]:checked:active {
 .searchTable td {
     padding: 2px;
 }
-.albumReview {
-    background-image: URL('../img/rinfo.gif');
-    width:11px;
-    height:11px;
+.albumReview:before {
+    content: 'i';
+    font-family: monospace;
+    font-size: 10px;
+    padding: 0 3px;
+    margin-right: 2px;
+    vertical-align: 13%;
+    border-radius: 2px;
+    background-color: var(--theme-button-background-colour);
+    color: var(--theme-button-foreground-colour);
 }
 .albumNoReview {
-    width:11px;
-    height:11px;
+    width: 10px;
+    height: 10px;
 }
 .albumPlayable {
     float: right;

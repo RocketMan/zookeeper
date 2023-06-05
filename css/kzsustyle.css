@@ -30,10 +30,6 @@ div.playTrack a {
 .nav:visited { color: #990010; }
 .nav:active { color: #990010; }
 
-.albumReview {
-    background-image: URL('../img/kzsu/kzsu_rinfo.gif');
-}
-
 .playlist-accordion.ui-accordion .ui-accordion-header {
     color: var(--theme-nav-highlight-colour);
 }
