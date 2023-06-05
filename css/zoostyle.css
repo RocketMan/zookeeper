@@ -408,6 +408,9 @@ td.label-form {
     margin: 0;
     box-shadow:5px 5px 8px #888888;
 }
+.share-link {
+    cursor: pointer;
+}
 .editorUp {
     top: 0;
     width: 220px;
@@ -558,8 +561,9 @@ a {
 a:hover {
     text-decoration: underline;
 }
-.nav:link { color: #2530a7; }
-.nav:visited { color: #2530a7; }
+.nav,
+.nav:link,
+.nav:visited,
 .nav:active { color: #2530a7; }
 .nav2:link { color: #fff; }
 .nav2:visited { color: #fff; }

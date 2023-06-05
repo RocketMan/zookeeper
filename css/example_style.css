@@ -102,8 +102,9 @@ div.playlistBanner a {
     color: #fff !important;
     text-decoration: underline;
 }
-.nav:link { color: #2530a7; }
-.nav:visited { color: #2530a7; }
+.nav,
+.nav:link,
+.nav:visited,
 .nav:active { color: #2530a7; }
 .nav2:link { color: #000; }
 .nav2:visited { color: #000; }
