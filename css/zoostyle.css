@@ -647,6 +647,11 @@ a:hover {
     font-size: 10px;
     max-height: 24px;
 }
+.playlistBanner .dup-playlist {
+    color: white;
+    vertical-align: inherit;
+    padding: 0 5px;
+}
 
 .playlistHdr {
     border-bottom: 1px solid gray;
