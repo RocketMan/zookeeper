@@ -132,7 +132,7 @@ class PlaylistBuilder extends PlaylistObserver {
                  "<td class='time' data-utc='$created'>$timeplayed</td>" .
                  "<td>" . UI::smartURL($artistName) . "</td>" .
                  "<td>" . UI::smartURL($entry->getTrack()) . "</td>" .
-                 "<td>$reviewCell</td>" .
+                 "<td style='width: 15px'>$reviewCell</td>" .
                  "<td>$albumLink</td>" .
                  "</tr>\n";
             $this->break = false;
