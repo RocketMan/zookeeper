@@ -929,7 +929,7 @@ class Playlists extends MenuItem {
     <?php 
             // Emit optional URL and/or e-mail for DJ
             if($row['url']) {
-                echo "      <A HREF=\"".$row['url']."\" CLASS=\"nav\"><B>Go to ".$row['airname']."'s website</B></A>\n";
+                echo "      <A HREF=\"".$row['url']."\" CLASS=\"nav\" target='_blank'><B>Go to ".$row['airname']."'s website</B></A>\n";
                 if($row['email'])
                     echo "      &nbsp; | &nbsp;\n";
             }
