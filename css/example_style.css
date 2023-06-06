@@ -26,11 +26,11 @@
 
     --theme-secdiv-background-colour: #2530a7;
     --theme-secdiv-lite-background-colour: #5863da;
+
+    --theme-link-colour: #2530a7;
+    --theme-content-background-colour: #fff;
 }
 
-body {
-    background-color: #ffffff;
-}
 div.headerNavbar {
     font-size: 20px;
     text-align: right;
@@ -88,13 +88,6 @@ div.content {
 hr {
     color: #2d3bce;
 }
-a {
-    color: #2530a7;
-    text-decoration: none;
-}
-a:hover {
-    text-decoration: underline;
-}
 p {
     margin: 10px 0;
 }
@@ -102,10 +95,7 @@ div.playlistBanner a {
     color: #fff !important;
     text-decoration: underline;
 }
-.nav,
-.nav:link,
-.nav:visited,
-.nav:active { color: #2530a7; }
+
 .nav2:link { color: #000; }
 .nav2:visited { color: #000; }
 .nav2:active { color: #000; }
