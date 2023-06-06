@@ -293,6 +293,7 @@ class Playlists extends MenuItem {
         }
         echo "</TBODY></TABLE>\n";
 
+        UI::emitJS('js/clipboard.js');
         if($editMode) {
             UI::emitJS('js/jquery.fxtime.js');
             UI::emitJS('js/playlists.track.js');
