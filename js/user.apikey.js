@@ -29,8 +29,9 @@ $().ready(function() {
     });
     $("A.copy").on('click', function() {
         var key = $(this).closest("TR").children("TD.apikey").html();
-        copyToClipboard(key);
-        alert('Key copied to clipboard!');
+        copyToClipboard(key, function() {
+            alert('Key copied to clipboard!');
+        });
     });
     $("INPUT[name=deleteKey]").on('click', function(e) {
         if($("INPUT:checkbox:checked").length == 0 ||

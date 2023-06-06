@@ -22,17 +22,25 @@
 
 /*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
-function copyToClipboard(text) {
+function copyToClipboard(text, success) {
+    if(navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(success);
+        return;
+    }
+
+    // navigator.clipboard unsupported; fallback to legacy copy
     var temp = $("<input>");
     $("body").append(temp);
     temp.val(text).trigger('select');
     document.execCommand("copy");
     temp.remove();
+    success();
 }
 
 $().ready(function() {
     $(".share-link").on('click', function() {
-        copyToClipboard($(this).data('link'));
-        alert('Playlist URL copied to the clipboard!');
+        copyToClipboard($(this).data('link'), function() {
+            alert('Playlist URL copied to the clipboard!');
+        });
     });
 });
