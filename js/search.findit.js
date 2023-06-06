@@ -434,6 +434,7 @@ function search(type, url, size, offset) {
             rcount.html((total ? total : "No") + " items found");
             $(".nav-items li").removeClass("selected");
             $(".breadcrumbs").hide();
+            $(".topnav-extra").hide();
             var results = $(".content");
             results.empty();
             response.all = true;

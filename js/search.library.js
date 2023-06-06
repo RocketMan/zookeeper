@@ -437,6 +437,7 @@ function search(size, offset) {
                 rcount.html((total ? total : "No") + " " + ttype + " found");
                 $(".nav-items li").removeClass("selected");
                 $(".breadcrumbs").hide();
+                $(".topnav-extra").hide();
 
                 // always re-create the table, even if it exists,
                 // to clear out any other possible content (review header)
