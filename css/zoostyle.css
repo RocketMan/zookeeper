@@ -1030,8 +1030,8 @@ input[type="checkbox"]:checked:active {
     padding: 0 3px;
     vertical-align: 13%;
     border-radius: 2px;
-    background-color: var(--theme-link-colour);
-    color: var(--theme-button-foreground-colour);
+    background-color: #333;
+    color: #fff;
 }
 .albumNoReview {
     width: 10px;
