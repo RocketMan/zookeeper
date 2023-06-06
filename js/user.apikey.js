@@ -23,18 +23,18 @@
 /*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function() {
-    $("INPUT:checkbox#all").on('click', function() {
+    $("input:checkbox#all").on('click', function() {
         var all = $(this).is(":checked");
-        $("INPUT:checkbox").prop('checked', all);
+        $("input:checkbox").prop('checked', all);
     });
-    $("A.copy").on('click', function() {
-        var key = $(this).closest("TR").children("TD.apikey").html();
-        copyToClipboard(key, function() {
+    $("a.copy").on('click', function() {
+        var key = $(this).closest("tr").children("td.apikey").html();
+        navigator.clipboard.writeText(key).then(function() {
             alert('Key copied to clipboard!');
         });
     });
-    $("INPUT[name=deleteKey]").on('click', function(e) {
-        if($("INPUT:checkbox:checked").length == 0 ||
+    $("input[name=deleteKey]").on('click', function(e) {
+        if($("input:checkbox:checked").length == 0 ||
            !confirm('Delete the selected keys?\n\nCAUTION: THIS CANNOT BE UNDONE.')) {
             return false;
         }

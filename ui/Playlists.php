@@ -293,7 +293,6 @@ class Playlists extends MenuItem {
         }
         echo "</TBODY></TABLE>\n";
 
-        UI::emitJS('js/clipboard.js');
         if($editMode) {
             UI::emitJS('js/jquery.fxtime.js');
             UI::emitJS('js/playlists.track.js');
@@ -333,6 +332,12 @@ class Playlists extends MenuItem {
             var width = maxWidth - $("#banner-dj").outerWidth() - dateWidth - 12;
             $("#banner-description").outerWidth(width);
         }
+
+        $(".share-link").on('click', function() {
+            navigator.clipboard.writeText($(this).data('link')).then(function() {
+                alert('Playlist URL copied to the clipboard!');
+            });
+        });
     });
     <?php ob_end_flush(); ?>
     // -->
