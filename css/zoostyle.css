@@ -21,6 +21,7 @@
     --theme-secdiv-background-colour: #333;
     --theme-secdiv-lite-background-colour: #333;
 
+    --theme-link-colour: #2530a7;
     --theme-content-background-colour: #fff;
 }
 
@@ -556,6 +557,7 @@ ul.listbox.selector:focus {
 
 /* primary navigation */
 a {
+    color: var(--theme-link-colour);
     text-decoration: none;
 }
 a:hover {
@@ -564,7 +566,7 @@ a:hover {
 .nav,
 .nav:link,
 .nav:visited,
-.nav:active { color: #2530a7; }
+.nav:active { color: var(--theme-link-colour); }
 .nav2:link { color: #fff; }
 .nav2:visited { color: #fff; }
 .nav2:active { color: #ff0000; }
@@ -1028,7 +1030,7 @@ input[type="checkbox"]:checked:active {
     padding: 0 3px;
     vertical-align: 13%;
     border-radius: 2px;
-    background-color: var(--theme-button-background-colour);
+    background-color: var(--theme-link-colour);
     color: var(--theme-button-foreground-colour);
 }
 .albumNoReview {

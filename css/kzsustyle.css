@@ -12,24 +12,13 @@
 
     --theme-secdiv-background-colour: #980000;
     --theme-secdiv-lite-background-colour: #c80000;
-}
 
-a {
-    color: #990010;
-    text-decoration: none;
-}
-a:hover {
-    text-decoration: underline;
+    --theme-link-colour: #990010;
 }
 
 div.playTrack a {
-    filter: invert(0.3) sepia(1) saturate(5) hue-rotate(310deg);
+    filter: invert(0.3) sepia(1) saturate(5) hue-rotate(310deg); /* #990010 see https://codepen.io/sosuke/pen/Pjoqqp */
 }
-
-.nav,
-.nav:link,
-.nav:visited,
-.nav:active { color: #990010; }
 
 .playlist-accordion.ui-accordion .ui-accordion-header {
     color: var(--theme-nav-highlight-colour);
