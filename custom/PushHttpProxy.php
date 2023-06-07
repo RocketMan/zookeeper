@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -76,7 +76,7 @@ class PushHttpProxy {
     public function __construct(\React\EventLoop\LoopInterface $loop) {
         $this->loop = $loop;
         $this->subscriber = new \Ratchet\Client\Connector($loop);
-        $this->httpClient = new \React\Http\Browser($loop);
+        $this->httpClient = new \React\Http\Browser(null, $loop);
     }
 
     protected function reconnect() {
@@ -108,10 +108,16 @@ class PushHttpProxy {
     }
 
     public function message(\Ratchet\RFC6455\Messaging\Message $msg) {
-        foreach($this->httpEndpoints as $key => $endpoint)
-            if(!is_string($key))
-                $this->httpClient->post($endpoint,
-                            ['Content-Type' => 'application/json'], $msg);
+        foreach($this->httpEndpoints as $key => $endpoint) {
+            if(!is_string($key)) {
+                try {
+                    $this->httpClient->post($endpoint,
+                            ['Content-Type' => 'application/json'], (string)$msg);
+                } catch(\Exception $e) {
+                    error_log("PushHttpProxy: " . $e->getMessage());
+                }
+           }
+        }
     }
 
     public function dispatch(\Ratchet\RFC6455\Messaging\Message $msg) {
