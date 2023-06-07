@@ -311,15 +311,17 @@ class Playlists extends MenuItem {
 
         $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
 
+        $this->extra = "<span class='sub'><b>Share Playlist:</b></span> <a class='nav share-link' data-link='".Engine::getBaseURL()."?subaction=viewListById&amp;playlist=$playlistId'><span class='fas fa-link'></span></a></span>";
+
         if(!$editMode && $this->session->isAuth("v"))
-            $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'>&#x1f4cb;</A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='subaction' VALUE='editList'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
+            $showDateTime .= "&nbsp;<A HREF='javascript:document.duplist.submit();' TITLE='Duplicate Playlist'><span class='fas fa-clone dup-playlist'></span></A><FORM NAME='duplist' ACTION='?' METHOD='POST'><INPUT TYPE='hidden' NAME='subaction' VALUE='editList'><INPUT TYPE='hidden' NAME='duplicate' VALUE='1'><INPUT TYPE='hidden' NAME='playlist' VALUE='$playlistId'></FORM>";
 
         $djName = htmlentities($djName, ENT_QUOTES, 'UTF-8');
         $djLink = $djId ? "<a href='?subaction=viewDJ&amp;seq=selUser&amp;viewuser=$djId' class='nav2'>$djName</a>" : $djName;
 
         echo "<div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>".htmlentities($showName, ENT_QUOTES, 'UTF-8')."</span> <span id='banner-dj'>with $djLink</span></span><div>{$showDateTime}&nbsp;</div></div>\n";
 ?>
-    <SCRIPT TYPE="text/javascript"><!--
+    <SCRIPT><!--
     <?php ob_start([JSMin::class, 'minify']); ?>
     // Truncate the show name (banner-description) so that the combined
     // show name, DJ name, and date/time fit on one line.
@@ -330,6 +332,12 @@ class Playlists extends MenuItem {
             var width = maxWidth - $("#banner-dj").outerWidth() - dateWidth - 12;
             $("#banner-description").outerWidth(width);
         }
+
+        $(".share-link").on('click', function() {
+            navigator.clipboard.writeText($(this).data('link')).then(function() {
+                alert('Playlist URL copied to the clipboard!');
+            });
+        });
     });
     <?php ob_end_flush(); ?>
     // -->
@@ -371,7 +379,7 @@ class Playlists extends MenuItem {
                   <div class='dot-menu-dots no-text-select'>&#x22ee;</div>
                   <div class='dot-menu-content'>
                     <ul>
-                      <li><a href='#' class='nav' data-link='<?php echo Engine::getBaseURL()."?subaction=viewListById&amp;playlist=$playlistId"; ?>' id='copy-link' title='copy playlist URL to the clipboard'>Link to Playlist</a>
+                      <li><a href='#' class='nav share-link' data-link='<?php echo Engine::getBaseURL()."?subaction=viewListById&amp;playlist=$playlistId"; ?>' title='copy playlist URL to the clipboard'>Link to Playlist</a>
                       <li><a href='?target=export&amp;playlist=<?php echo $playlistId; ?>&amp;format=csv' class='nav' download='playlist.csv' title='export playlist as CSV'>Export CSV</a>
                       <li><a href='api/v1/playlist/<?php echo $playlistId; ?>' class='nav' download='playlist.json' title='export playlist as JSON'>Export JSON</a>
                       <li><a href='?target=export&amp;playlist=<?php echo $playlistId; ?>&amp;format=html' class='nav' target='_blank' title='printable playlist (opens in new window)'>Print View</a>
@@ -722,7 +730,7 @@ class Playlists extends MenuItem {
 
                         // display the editor
 ?>
-    <SCRIPT TYPE="text/javascript"><!--
+    <SCRIPT><!--
         window.open("?subaction=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
     // -->
     </SCRIPT>
@@ -837,7 +845,7 @@ class Playlists extends MenuItem {
 
             $this->lazyLoadImages($playlist);
 ?>
-    <SCRIPT TYPE="text/javascript"><!--
+    <SCRIPT><!--
         window.open("?subaction=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
     // -->
     </SCRIPT>
@@ -857,6 +865,9 @@ class Playlists extends MenuItem {
             echo "<B>Sorry, the playlist you have requested does not exist.</B>";
             return;
         }
+
+        if($this->subaction == "viewDJ" && $row['airname'])
+            $this->tertiary = $row['airname'];
 
         $this->emitPlaylistBanner($playlistId, $row, false);
         $this->emitPlaylistBody($playlistId, false);
@@ -896,6 +907,8 @@ class Playlists extends MenuItem {
     }
     
     public function emitViewDJ() {
+        UI::emitJS('js/zklistbox.js');
+
         $seq = $_REQUEST["seq"];
         $viewuser = $_REQUEST["viewuser"];
         $playlist = $_REQUEST["playlist"];
@@ -916,7 +929,7 @@ class Playlists extends MenuItem {
     <?php 
             // Emit optional URL and/or e-mail for DJ
             if($row['url']) {
-                echo "      <A HREF=\"".$row['url']."\" CLASS=\"nav\"><B>Go to ".$row['airname']."'s website</B></A>\n";
+                echo "      <A HREF=\"".$row['url']."\" CLASS=\"nav\" target='_blank'><B>Go to ".$row['airname']."'s website</B></A>\n";
                 if($row['email'])
                     echo "      &nbsp; | &nbsp;\n";
             }
@@ -975,7 +988,7 @@ class Playlists extends MenuItem {
     <TABLE>
       <TR><TH ALIGN=LEFT><?php echo $row['airname'];?>'s playlists:</TH></TR>
       <TR><TD>
-         <ul tabindex='0' class='selector listbox no-text-select'>
+         <ul tabindex='0' class='selector listbox no-text-select' data-name='playlist'>
     <?php 
             // Run the query
             $records = Engine::api(IPlaylist::class)->getPlaylists(0, 0, 0, $viewuser);
@@ -984,34 +997,9 @@ class Playlists extends MenuItem {
     ?>
         </ul></TD></TR>
       <TR><TD>
-        <SCRIPT TYPE="text/javascript"><!--
+        <SCRIPT><!--
            $().ready(function() {
-               $("ul.selector").on('keydown', function(e) {
-                   var cur = $(this).find('.state-active').index();
-                   switch(e.originalEvent.keyCode) {
-                   case 13: // enter
-                       $(this).closest("form").submit();
-                       e.preventDefault();
-                       return;
-                   case 38: // up
-                       if(cur)
-                           cur--;
-                       e.preventDefault();
-                       break;
-                   case 40: // down
-                       if(cur < $(this).find('li').length - 1)
-                           cur++;
-                       e.preventDefault();
-                       break;
-                   }
-                   $(this).find('li').eq(cur).trigger('mousedown');
-               }).trigger('focus');
-               $("ul.selector li").on('mousedown', function() {
-                   $("ul.selector li").removeClass('state-active');
-                   $("INPUT[NAME=playlist]").val($(this).addClass('state-active').data('value'));
-               }).on('dblclick', function() {
-                   $(this).closest("form").submit();
-               }).first().trigger('mousedown');
+               $("ul.selector").zklistbox().trigger('focus');
            });
         // -->
         </SCRIPT>

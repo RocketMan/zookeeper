@@ -83,8 +83,37 @@ $().ready(function() {
     });
 
     $(window).on('resize', function() {
-        if(document.documentElement.clientWidth >= 1024 &&
+        if(document.documentElement.clientWidth >= 1000 &&
                 $(".cancel-icon.show").length)
             $(".cancel-icon").trigger('click');
+
+        var submit = $("#search-submit").is(":visible");
+        $(".search-data")
+            .css('padding-left', submit ? "38px" : "10px");
+    });
+
+    $("#search-filter").selectmenu({width: 'auto', position: {
+        my: 'right+2 top', at: 'right bottom'}});
+    var width = $("#search-filter-button").get(0).offsetWidth;
+    var submit = $("#search-submit").is(":visible");
+    $(".search-data").css('padding-left', submit ? "38px" : "10px")
+        .css('padding-right', (width + 6) + "px");
+
+    $("nav form").on('submit', function() {
+        // trigger paste for immediate search
+        $(".search-data").trigger('focus').trigger('paste');
+        return false;
+    });
+
+    $("#search-filter").on('change selectmenuchange', function() {
+        var button = $("#search-filter-button");
+        if($("#search-filter option[value='" + this.value + "']").data("default"))
+            button.removeClass('override');
+        else
+            button.addClass('override');
+
+        var width = button.get(0).offsetWidth;
+        $(".search-data").css('padding-right', (width + 6) + "px")
+            .trigger('focus').trigger('typechange');
     });
 });

@@ -86,7 +86,7 @@ class Charts extends MenuItem {
   <input type="hidden" name="action" value="viewChart">
   <input type="hidden" name="subaction" value="weekly">
   Weekly charts for
-  <select name="year">
+  <select name="year" style='display: none'>
 <?php
         $oldestYear = null;
         $years = Engine::api(IChart::class)->getChartYears();
@@ -101,10 +101,16 @@ class Charts extends MenuItem {
   </select>
   </form>
   </div>
-  <script type="text/javascript"><!--
-  $("div.chart-year-pick select").on('change', function() {
-    $(this).closest("form").submit();
-  }).trigger('focus');
+  <script><!--
+  $().ready(function() {
+      $("div.chart-year-pick select").selectmenu({width: 'auto'})
+          .on('change selectmenuchange', function() {
+              this.form.submit();
+          })
+          .selectmenu('menuWidget').css('max-height', '300px');
+      $("div.content > div").css('display', 'block');
+      $("div.chart-year-pick select").selectmenu('widget').trigger('focus');
+  });
   // -->
   </script>
 <?php
@@ -134,17 +140,7 @@ class Charts extends MenuItem {
                 $month = $today["mon"];
             }
     
-    ?>
-      <!--P>These charts are based on actual airplay, and are what we
-         report on. (For those of you outside the college radio biz, this is
-         unusual.) <A HREF="http://www.cmjmusic.com/" TARGET="_blank">College
-         Media Journal</A> and <A HREF="http://www.gavin.com/"
-         TARGET="_blank">Gavin</A> include our weekly numbers in their reports.</P>
-    
-      <P>Note that the 'Main' section of our weekly charts now lists all of
-         our current new releases which received airplay during the charting
-         week.</P-->
-<?php
+            echo "  <div style='display: none'>\n";
             $isOldestYear = $this->emitChartYearNav($year, 1);
             echo "  <TABLE WIDTH=\"100%\">\n";
             echo "    <TR><TD>\n      <UL>\n";
@@ -165,6 +161,7 @@ class Charts extends MenuItem {
             $urls = Engine::param('urls');
             if($isOldestYear && array_key_exists('old_charts', $urls))
                 echo "  <P><A HREF=\"".$urls['old_charts']."\">Older airplay charts</A> are available here.</P>\n";
+            echo "  </div>\n";
 
             $this->title = "Weekly charts for $year";
             return;
@@ -231,13 +228,6 @@ class Charts extends MenuItem {
                 $today = getdate(time());
                 $month = $today["mon"];
     
-    ?>
-      <!--P>These charts are based on actual airplay, and are what we
-         report on. (For those of you outside the college radio biz, this is
-         unusual.) <A HREF="http://www.cmjmusic.com/" TARGET="_blank">College
-         Media Journal</A> and <A HREF="http://www.gavin.com/"
-         TARGET="_blank">Gavin</A> include our weekly numbers in their reports.</P-->
-    <?php 
                 echo "  <TABLE WIDTH=\"100%\">\n";
     
                 // Determine if we need to include the current month

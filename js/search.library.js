@@ -159,7 +159,7 @@ function emitAlbumsEx(table, data) {
             td.append(
                 $("<A href='#" + encobj({
                     type: 'artists',
-                    key: attrs.artist,
+                    fkey: attrs.artist,
                     sortBy: 'Artist',
                     form: true
                 }, true) + "'>").append(getArtist(attrs)));
@@ -193,7 +193,7 @@ function emitAlbumsEx(table, data) {
             tr.append($("<TD>").append(
                 $("<A href='#" + encobj({
                     type: 'albumsByPubkey',
-                    key: label.data.id,
+                    fkey: label.data.id,
                     sortBy: '',
                     n: ''
                 }, true) + "'>").append(htmlify(label.meta.name))));
@@ -247,7 +247,7 @@ var lists = {
                 td.append(
                     $("<A href='#" + encobj({
                         type: 'artists',
-                        key: artist,
+                        fkey: artist,
                         sortBy: 'Artist',
                         form: true
                     }, true) + "'>").append(htmlify(artist)));
@@ -261,7 +261,7 @@ var lists = {
                 tr.append($("<TD>").append(
                     $("<A href='#" + encobj({
                         type: 'tracks',
-                        key: track.track,
+                        fkey: track.track,
                         sortBy: 'Track',
                         form: true
                     }, true) + "'>").append(htmlify(track.track))));
@@ -276,7 +276,7 @@ var lists = {
                     tr.append($("<TD>").append(
                         $("<A href='#" + encobj({
                             type: 'albumsByPubkey',
-                            key: label.data.id,
+                            fkey: label.data.id,
                             sortBy: '',
                             n: ''
                         }, true) + "'>").append(htmlify(label.meta.name))));
@@ -303,7 +303,7 @@ var lists = {
             tr.append($("<TD>").append(
                 $("<A href='#" + encobj({
                     type: 'albumsByPubkey',
-                    key: entry.id,
+                    fkey: entry.id,
                     sortBy: '',
                     n: ''
                 }, true) + "'>").append(htmlify(attrs.name))));
@@ -373,9 +373,21 @@ var lists = {
 };
 
 function search(size, offset) {
-    var type = $("#type").val();
+    var suffix, type = $("#type").val();
+    if(!type || !requestMap[type])
+        return;
+    switch(type) {
+    case "albumsByPubkey":
+    case "reviews":
+        suffix = "";
+        break;
+    default:
+        suffix = "*";
+        break;
+    }
+
     var url = "api/v1/" + requestMap[type] +
-        encodeURIComponent($("#key").val()) +
+        encodeURIComponent($("#fkey").val() + suffix) +
         "&sort=" + $("#sortBy").val() +
         "&fields[label]=name,city,state,modified";
 
@@ -398,11 +410,49 @@ function search(size, offset) {
         accept: 'application/json; charset=utf-8',
         url: url,
         success: function(response) {
-            var results = $(".searchTable");
+            var total = response.links.first.meta.total;
+            var results;
+            if(type == "reviews") {
+                // reviews uses pre-existing table, as there is
+                // some other content already on the page (the header)
+                results = $(".searchTable");
+            } else {
+                var rcount = $("#total");
+                if(!rcount.length) {
+                    rcount = $("<div>", {
+                        class: 'result-count',
+                        id: 'total'
+                    });
+                    $("body").append(rcount);
+                }
+                var ttype;
+                switch(type) {
+                case "albumsByPubkey":
+                    ttype = "albums";
+                    break;
+                default:
+                    ttype = type;
+                    break;
+                }
+                rcount.html((total ? total : "No") + " " + ttype + " found");
+                $(".nav-items li").removeClass("selected");
+                $(".breadcrumbs").hide();
+                $(".topnav-extra").hide();
+
+                // always re-create the table, even if it exists,
+                // to clear out any other possible content (review header)
+                results = $("<table>", {
+                    class: 'searchTable',
+                    cellpadding: 2,
+                    cellspacing: 0,
+                    border: 0
+                });
+                $(".content").empty().append(results);
+            }
             results.empty();
-            if(response.links.first.meta.total > 0) {
+            if(total > 0) {
                 // if this is not the entire result set, paginate
-                if(response.data.length < response.links.first.meta.total &&
+                if(response.data.length < total &&
                    response.data.length > chunksize)
                     response.data = response.data.slice(0, chunksize);
                 // default is sort by artist
@@ -410,12 +460,15 @@ function search(size, offset) {
                     $("#sortBy").val("Artist");
                 lists[type](results, response);
             } else {
-                results.append("<H2>No " + type.replace(/[A-Z].*/, '') +
-                               " found</H2>");
                 if($("#m").is(":checked"))
                     results.append('Hint: Uncheck "Exact match" box to broaden search.');
+                else
+                    results.append("<p>Select 'All' in the Search bar to expand your search.</p>")
             }
-            $("#n").trigger('focus');
+            var field = $("input.search-data");
+            var val = field.val();
+            field.get(0).setSelectionRange(val.length, val.length);
+            field.trigger('focus');
         },
         error: function(jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
@@ -431,17 +484,12 @@ function search(size, offset) {
             // restore search fields from bfcache
             // schedule for later to avoid webkit's autocomplete=off blanking
             setTimeout(function() {
-                var key, type = $("#type").val();
-                switch(type) {
+                switch($("#type").val()) {
                 case "artists":
                 case "albums":
                 case "tracks":
                 case "labels":
-                    key = $("#key").val();
-                    if(key.slice(-1) == "*")
-                        key = key.substr(0, key.length-1);
-                    $("#n").val(key);
-                    $("INPUT[NAME=s][VALUE=" + type +"]").prop('checked', true);
+                    $(".search-data").val($("#fkey").val());
                     break;
                 default:
                     break;
@@ -457,43 +505,44 @@ function search(size, offset) {
             for(property in params)
                 $("#" + property).val(params[property]);
 
-            if(params.form) {
-                var key = params.key;
-                if(key.slice(-1) == "*")
-                    key = key.substr(0, key.length-1);
-                $("#n").val(key);
-                $("INPUT[NAME=s][VALUE=" + params.type +"]").prop('checked', true);
+            switch(params.type) {
+            case "albumsByPubkey":
+                $("#search-filter").val('all').selectmenu('refresh');
+                var width = $("#search-filter-button").get(0).offsetWidth;
+                $(".search-data").val('')
+                    .css('padding-right', (width + 6) + "px");
+                $("#search-filter-button").removeClass('override');
+                break;
+            case "all":
+            case "artists":
+            case "albums":
+            case "tracks":
+            case "labels":
+                $("#search-filter").val(params.type).selectmenu('refresh');
+                var width = $("#search-filter-button").get(0).offsetWidth;
+                $(".search-data").val(params.fkey)
+                    .css('padding-right', (width + 6) + "px");
+                if(params.type == "all")
+                    $("#search-filter-button").removeClass('override');
+                else
+                    $("#search-filter-button").addClass('override');
+                break;
             }
 
-            search(maxresults, 0);
+            if(params.type == "all")
+                $("#type").trigger('fsearch');
+            else
+                search(maxresults, 0);
+        } else {
+            $(".search-data").val("");
+            $("#search-filter").val("all").selectmenu('refresh');
+            $("#search-filter-button").removeClass('override');
         }
     });
 
-    $("FORM#search").submit(function(e) {
-        var n = $("#n").val();
-        if(n.length > 0) {
-            if($("#m").is(":not(:checked)"))
-                n += "*";
-            var sel = $('INPUT[NAME=s]:checked');
-            location.href='#' + encobj({
-                type: sel.val(),
-                key: n,
-                sortBy: sel.data('sort'),
-                form: true
-            });
-        }
-        e.preventDefault();
-    });
-
-    if($("#maxresults").length > 0)
-        maxresults = $("#maxresults").val();
-    if($("#chunksize").length > 0)
-        chunksize = $("#chunksize").val();
-
-    if($("#key").val().length > 0) {
+    $("#type").on('lsearch', function() {
+        if($("#fkey").val().length == 0)
+            $("#fkey").val($(".search-data").val());
         search(maxresults, 0);
-    } else if($("#n").val().length > 0)
-        $("FORM#search").submit();
-
-    $("#n").trigger('focus');
+    });
 });

@@ -147,8 +147,9 @@ class AddManager extends MenuItem {
         $legacyReviewCell = /* $showReview && !$isAuthenticated && !$static ?
                                "<TH class='sorter-false'></TH>" : */ "";
         $playableCell = $showReview && $isAuthenticated ? "<TH class='sorter-false'></TH>" : "";
+        $display = $static ? "" : " style='display: none'";
 
-        echo "<TABLE class='sortable-table' style='display: none' CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
+        echo "<TABLE class='sortable-table'$display CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
              "<TH class='initial-sort-col'>Cat</TH>" .  $reviewCell .
              "<TH>ID</TH>" .
              "<TH>Artist</TH>" . $legacyReviewCell . $playableCell .
@@ -246,14 +247,12 @@ class AddManager extends MenuItem {
         if($showEdit)
             $this->emitConfirmDelete();
     ?>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <SCRIPT><!--
     $().ready(function(){
         var INITIAL_SORT_COL = 1; // cat
         $('.sortable-table').tablesorter({
             sortList: [[INITIAL_SORT_COL, 0]],
         }).css('display','table');
-
-        $("*[data-focus]").trigger('focus');
     });
     // -->
     </SCRIPT>
@@ -281,12 +280,12 @@ class AddManager extends MenuItem {
     public function addManagerShowAdd() {
         $date = $_REQUEST["date"] ?? "";
     ?>
-      <TABLE CELLPADDING=2 CELLSPACING=0 WIDTH="100%" BORDER=0>
+      <TABLE CELLPADDING=2 CELLSPACING=0 WIDTH="100%" BORDER=0 style='display: none'>
         <TR>
           <TH ALIGN=LEFT>
             <FORM id='add-manager' ACTION="" METHOD=POST>
               Adds for:
-              <SELECT NAME=date data-focus onChange='this.form.submit()'>
+              <SELECT NAME=date style='display: none'>
     <?php 
         $records = Engine::api(IChart::class)->getAddDates(52);
         $datevalid = false;
@@ -304,14 +303,13 @@ class AddManager extends MenuItem {
           </TH>
     <?php if($this->session->isAuth("n")) { ?>
           <TD ALIGN=RIGHT>
-            <FORM id='export-target' ACTION="?" METHOD=POST>
-              <SELECT NAME=os>
+            <FORM id='export-target' class='selector' ACTION="?" METHOD=POST>
+              <SELECT NAME=os style='display: none'>
                   <OPTION VALUE="win">Windows
-                  <OPTION VALUE="mac">Mac OS 9
                   <OPTION VALUE="unix">Unix/OS X
                   <OPTION VALUE="email">E-Mail
               </SELECT>
-              <INPUT TYPE=BUTTON NAME=button onClick="onExport();" VALUE=" Export ">
+              <INPUT TYPE=BUTTON NAME=button onClick="onExport();" VALUE=" Export " style='vertical-align: middle'>
               <INPUT TYPE=HIDDEN NAME=date VALUE="">
               <INPUT TYPE=HIDDEN NAME=target VALUE="addexp">
             </FORM>
@@ -319,6 +317,21 @@ class AddManager extends MenuItem {
     <?php  } ?>
         </TR>
       </TABLE>
+    <SCRIPT><!--
+    $().ready(function() {
+        $("select[name=date]").selectmenu({width: 'auto'})
+            .on('change selectmenuchange', function() {
+                // fixup subaction possibly changed by e-mail export
+                this.form.subaction.value = 'adds';
+                this.form.submit();
+            })
+            .closest("table").css('display', 'table');
+        $("select[name=date]").selectmenu('widget').trigger('focus');
+        $("select[name=os]").selectmenu({width: 100});
+        $("select[name=date]").selectmenu("menuWidget").css("max-height", "300px");
+    });
+    // -->
+    </SCRIPT>
     <?php 
         if(!$datevalid && $first) $date = $first;
         if($date) {
@@ -328,7 +341,7 @@ class AddManager extends MenuItem {
         if($this->session->isAuth("n")) {
     ?>
 
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <SCRIPT><!--
     <?php ob_start([JSMin::class, 'minify']); ?>
 
     function onExport() {
@@ -370,7 +383,7 @@ class AddManager extends MenuItem {
     <FORM id='add-delete' ACTION="?action=addmgr&subaction=addsdel" METHOD=POST>
         <INPUT TYPE='hidden' NAME='id' VALUE='' />
     </FORM>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <SCRIPT><!--
     function ConfirmDelete(id) {
       if(confirm("Delete this album from the add?")) {
         $('#add-delete input[name=id]').val(id);
@@ -1194,7 +1207,7 @@ class AddManager extends MenuItem {
           <TH ALIGN=LEFT>
             <FORM ACTION="" METHOD=POST>
               Activity for week ending:
-              <SELECT NAME=date onChange='this.form.submit()'>
+              <SELECT NAME=date>
     <?php 
         $records = Engine::api(IChart::class)->getChartDates(52);
         $datevalid = false;
@@ -1212,6 +1225,17 @@ class AddManager extends MenuItem {
           </TH>
         </TR>
       </TABLE>
+      <SCRIPT><!--
+      $().ready(function() {
+          $("select[name=date]").selectmenu({width: 'auto'})
+              .on('change selectmenuchange', function() {
+                  this.form.submit();
+              })
+              .selectmenu('widget').trigger('focus');
+          $("select[name=date]").selectmenu("menuWidget").css("max-height", "300px");
+      });
+      // -->
+      </SCRIPT>
     <?php 
         if(!$datevalid && $first) $date = $first;
         if($date) {
@@ -1220,7 +1244,7 @@ class AddManager extends MenuItem {
         }
         UI::setFocus();
     ?>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <SCRIPT><!--
     <?php ob_start([JSMin::class, 'minify']); ?>
     $().ready(function(){
         var INITIAL_SORT_COL = 0; //date

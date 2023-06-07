@@ -17,20 +17,20 @@
     --theme-nav-highlight-colour: #5863da;
     --theme-nav-foreground-colour: #fff;
     --theme-nav-separator: 1px solid #5863da;
-    --theme-subnav-active: 3px solid #b1040e;
-    --theme-menu-background-colour: #820000;
-    --theme-search-background-colour: #820000;
+    --theme-subnav-active: 3px solid #5863da;
+    --theme-menu-background-colour: #2530a7;
+    --theme-search-background-colour: #2530a7;
 
     --theme-button-foreground-colour: #fff;
     --theme-button-background-colour: #2530a7;
 
     --theme-secdiv-background-colour: #2530a7;
     --theme-secdiv-lite-background-colour: #5863da;
+
+    --theme-link-colour: #2530a7;
+    --theme-content-background-colour: #fff;
 }
 
-body {
-    background-color: #ffffff;
-}
 div.headerNavbar {
     font-size: 20px;
     text-align: right;
@@ -49,21 +49,44 @@ div.headerNavbar span {
     position: absolute;
 }
 div.leftNav {
+    float: left;
+    margin-top: 0;
+    margin-left: 2px;
+    text-align: left;
+    width: 165px;
+}
+div.leftNav a {
+    color: #000000;
+    text-decoration: none;
+    font-size: 12pt;
+}
+div.leftNav td a:hover {
+    color: #91a3ce;
+    text-decoration: underline;
+}
+div.leftNav {
     clear:both;
     padding-left: 6px;
+}
+div.headerListen p a {
+    text-align: right;
+    font-size: 14px;
+    line-height: 14px;
+}
+div.headerLogo {
+    float: left;
+    width: 200px;
+    line-height: 1.1;
+}
+div.headerLogo img {
+    padding-top: 8px;
+    width: 200px;
 }
 div.content {
     width: 704px;
 }
 hr {
     color: #2d3bce;
-}
-a {
-    color: #2530a7;
-    text-decoration: none;
-}
-a:hover {
-    text-decoration: underline;
 }
 p {
     margin: 10px 0;
@@ -72,9 +95,7 @@ div.playlistBanner a {
     color: #fff !important;
     text-decoration: underline;
 }
-.nav:link { color: #2530a7; }
-.nav:visited { color: #2530a7; }
-.nav:active { color: #2530a7; }
+
 .nav2:link { color: #000; }
 .nav2:visited { color: #000; }
 .nav2:active { color: #000; }

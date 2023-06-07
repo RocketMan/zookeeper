@@ -424,7 +424,7 @@ class UIController implements IController {
     
         echo "<H2>$dn logged out</H2>\n";
         if($this->ssoUser) {
-            echo "<SCRIPT TYPE=\"text/javascript\"><!--\n";
+            echo "<SCRIPT><!--\n";
             echo "\$().ready(function(){";
             echo "window.location.replace(\"$logoutURI\");";
             echo "}); // -->\n</SCRIPT>\n";
@@ -571,7 +571,7 @@ class UIController implements IController {
       <INPUT TYPE="hidden" NAME="ssoOptions" VALUE="<?php echo $_REQUEST["ssoOptions"]; ?>">
     </FORM>
     </DIV>
-    <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+    <SCRIPT><!--
     <?php ob_start([JSMin::class, 'minify']); ?>
     function showOld() {
         document.getElementById("oldSect").style.display = "block";

@@ -274,7 +274,7 @@ class UICommon {
      * @param asset path to target stylesheet
      */
     public static function emitCSS($asset) {
-        echo "<LINK REL=\"stylesheet\" HREF=\"" .
+        echo "<link rel=\"stylesheet\" href=\"" .
              self::decorate($asset) . "\">\n";
     }
 
@@ -284,8 +284,8 @@ class UICommon {
      * @param asset path to target JavaScript resource
      */
     public static function emitJS($asset) {
-        echo "<SCRIPT TYPE=\"text/javascript\" SRC=\"" .
-             self::decorate($asset) . "\"></SCRIPT>\n";
+        echo "<script src=\"" .
+             self::decorate($asset) . "\"></script>\n";
     }
 
     /**
@@ -295,7 +295,7 @@ class UICommon {
      * @param $value variable value (can be scalar, object, or array)
      */
     public static function emitJSVar($name, $value) {
-        echo "<script type='text/javascript'><!--\n";
+        echo "<script><!--\n";
         echo "var $name = " . json_encode($value) . ";\n";
         echo "// -->\n</script>\n";
     }
@@ -307,7 +307,7 @@ class UICommon {
      */
     public static function setFocus($control = "") {
         if($control) {
-            echo "<SCRIPT TYPE=\"text/javascript\"><!--\n".
+            echo "<SCRIPT><!--\n".
                  "$().ready(function(){".
                  "$('*[name=$control]').focus();".
                  "}); // -->\n</SCRIPT>\n";

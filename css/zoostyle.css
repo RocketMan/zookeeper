@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css');
 
 /*
  * IMPORTANT:  As this file is referenced from XHTML (the RSS viewer),
@@ -10,15 +11,18 @@
     --theme-nav-highlight-colour: #333;
     --theme-nav-foreground-colour: #fff;
     --theme-nav-separator: 1px solid #333;
-    --theme-subnav-active: 3px solid #c00;
+    --theme-subnav-active: 3px solid #5863da;
     --theme-menu-background-colour: #14181f;
     --theme-search-background-colour: #1e232b;
 
     --theme-button-foreground-colour: #fff;
-    --theme-button-background-colour: #333;
+    --theme-button-background-colour: #2530a7;
 
     --theme-secdiv-background-colour: #333;
     --theme-secdiv-lite-background-colour: #333;
+
+    --theme-link-colour: #2530a7;
+    --theme-content-background-colour: #fff;
 }
 
 /* Use a CSS reset to smooth out browser incongruities. */
@@ -85,7 +89,7 @@ body {
     font-size: 10pt;
     font-family: 'Roboto', Helvetica, sans-serif;
     line-height: 1.2;
-    background-color: #fff;
+    background-color: var(--theme-content-background-colour);
 }
 h1 {
     font-size: 16pt;
@@ -405,6 +409,9 @@ td.label-form {
     margin: 0;
     box-shadow:5px 5px 8px #888888;
 }
+.share-link {
+    cursor: pointer;
+}
 .editorUp {
     top: 0;
     width: 220px;
@@ -480,36 +487,6 @@ div.box {
     margin-left: auto;
     margin-right: auto;
 }
-div.leftNav {
-    float: left;
-    margin-top: 0;
-    margin-left: 2px;
-    text-align: left;
-    width: 165px;
-}
-div.leftNav a {
-    color: #000000;
-    text-decoration: none;
-    font-size: 12pt;
-}
-div.leftNav td a:hover {
-    color: #91a3ce;
-    text-decoration: underline;
-}
-div.headerListen p a {
-    text-align: right;
-    font-size: 14px;
-    line-height: 14px;
-}
-div.headerLogo {
-    float: left;
-    width: 200px;
-    line-height: 1.1;
-}
-div.headerLogo img {
-    padding-top: 8px;
-    width: 200px;
-}
 div.content {
     position: relative;
     float: right;
@@ -534,11 +511,9 @@ p.zktitle a {
 }
 
 #playlist-calendar {
-    height: 15px;
-    width: 17px;
+    font-size: 15px;
     padding: 1px 1px 2px;
     position: relative;
-    top: 4px;
 }
 
 #playlist-list {
@@ -581,9 +556,17 @@ ul.listbox.selector:focus {
 }
 
 /* primary navigation */
-.nav:link { color: #2530a7; }
-.nav:visited { color: #2530a7; }
-.nav:active { color: #2530a7; }
+a {
+    color: var(--theme-link-colour);
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+.nav,
+.nav:link,
+.nav:visited,
+.nav:active { color: var(--theme-link-colour); }
 .nav2:link { color: #fff; }
 .nav2:visited { color: #fff; }
 .nav2:active { color: #ff0000; }
@@ -665,6 +648,11 @@ ul.listbox.selector:focus {
     float: right;
     font-size: 10px;
     max-height: 24px;
+}
+.playlistBanner .dup-playlist {
+    color: white;
+    vertical-align: inherit;
+    padding: 0 5px;
 }
 
 .playlistHdr {
@@ -933,7 +921,7 @@ li.ui-menu-item .ui-state-active,
 }
 .pl-form-entry .dot-menu-content {
     margin-top: 5px;
-    margin-left: -86px;
+    margin-left: -82px;
     box-shadow: 0 2px 8px 0 rgba(0,0,0,0.2);
     opacity: 0;
     display: inherit;
@@ -1035,14 +1023,19 @@ input[type="checkbox"]:checked:active {
 .searchTable td {
     padding: 2px;
 }
-.albumReview {
-    background-image: URL('../img/rinfo.gif');
-    width:11px;
-    height:11px;
+.albumReview:before {
+    content: 'i';
+    font-family: monospace;
+    font-size: 10px;
+    padding: 0 3px;
+    vertical-align: 13%;
+    border-radius: 2px;
+    background-color: #333;
+    color: #fff;
 }
 .albumNoReview {
-    width:11px;
-    height:11px;
+    width: 10px;
+    height: 10px;
 }
 .albumPlayable {
     float: right;
@@ -1555,13 +1548,9 @@ div.toggle-time-entry div {
 
 .playlist-by-date {
     margin-top: 2px;
-    /*max-width: 1400px;/*TEST*/
-    /*margin: 0 auto;/*TEST*/
 }
 .playlist-accordion.ui-accordion {
     height: 520px;
-    /*max-width: 1400px;/*TEST*/
-    /*margin: 0 auto;/*TEST*/
 }
 .playlist-accordion.ui-accordion .ui-accordion-header {
     color: #5863da;
@@ -1813,6 +1802,7 @@ ul.pagination li:not(.more) {
 ul.pagination li a {
     display: block;
     border-radius: 50%;
+    text-decoration: none;
 }
 ul.pagination li:not(.more) a:hover {
     background-color: rgba(0,0,0,0.2);

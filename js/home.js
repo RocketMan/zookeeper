@@ -126,10 +126,8 @@ $().ready(function(){
 
         // hack to keep white body in sync
         var color = $("body").css("background-color");
-        if(color == "rgb(255, 255, 255)") {
-            $("body").css("background-color", "#eee");
-            $(".breadcrumbs li span.fa-chevron-right").css("color", "#eee");
-        }
+        if(color == "rgb(255, 255, 255)")
+            $("body").css("--theme-content-background-colour", "#eee");
 
         $.ajax({
             dataType: 'json',
@@ -230,6 +228,8 @@ $().ready(function(){
         if(last)
             populateCards(false, last);
     });
+
+    $(".search-data").trigger('focus');
 
     populateCards(false, null);
     connect({ open: false });

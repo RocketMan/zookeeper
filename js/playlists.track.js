@@ -778,15 +778,6 @@ $().ready(function(){
 
     $(".playlistTable .grab").on('mousedown', grabStart);
 
-    // from user.apikey.js
-    function copyToClipboard(text) {
-        var temp = $("<input>");
-        $("body").append(temp);
-        temp.val(text).trigger('select');
-        document.execCommand("copy");
-        temp.remove();
-    }
-
     // from home.js
     function localTime(date) {
         var hour = date.getHours();
@@ -1032,11 +1023,6 @@ $().ready(function(){
 
     // stretch track-play if track-add is hidden
     $("#track-add.zk-hidden").prev().outerWidth($("#track-type-pick").outerWidth());
-
-    $("#copy-link").on('click', function() {
-        copyToClipboard($(this).data('link'));
-        alert('Playlist URL copied to the clipboard!');
-    });
 
     $("*[data-focus]").trigger('focus');
 });

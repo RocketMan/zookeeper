@@ -22,7 +22,7 @@
 <input type=hidden name=subaction value="{{ app.request.subaction }}">
 <input type=hidden name=validate value="y">
 </form>
-<script type="text/javascript"><!--
+<script><!--
 $().ready(function() {
     $("input[name={{ app.request.oldPass ? 'newPass' : 'oldPass' }}]").trigger('focus');
 });
