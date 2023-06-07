@@ -118,8 +118,8 @@ class Search extends MenuItem {
         if($image && ($uuid = $image["image_uuid"])) {
             $url = $imageApi->getCachePath($uuid);
             $target = ($info = $image["info_url"])?
-                "<A HREF='$info' TARGET='_blank'><IMG SRC='$url' title='View album in Discogs'></IMG></A>" :
-                "<IMG SRC='$url'></IMG>";
+                "<A HREF='$info' TARGET='_blank'><IMG SRC='$url' title='View album in Discogs' /></A>" :
+                "<IMG SRC='$url' />";
             echo "<div class='album-thumb'>$target</div>";
             return "style='max-width: 564px'";
         }
