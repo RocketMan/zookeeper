@@ -76,7 +76,7 @@ class PushHttpProxy {
     public function __construct(\React\EventLoop\LoopInterface $loop) {
         $this->loop = $loop;
         $this->subscriber = new \Ratchet\Client\Connector($loop);
-        $this->httpClient = new \React\Http\Browser(null, $loop);
+        $this->httpClient = new \React\Http\Browser($loop);
     }
 
     protected function reconnect() {
@@ -114,9 +114,9 @@ class PushHttpProxy {
                     $this->httpClient->post($endpoint,
                             ['Content-Type' => 'application/json'], (string)$msg);
                 } catch(\Exception $e) {
-                    error_log("PushHttpProxy: " . $e->getMessage());
+                    error_log("PushHttpProxy: $endpoint:" . $e->getMessage());
                 }
-           }
+            }
         }
     }
 
