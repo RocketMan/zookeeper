@@ -178,7 +178,7 @@ div.content select[size='1'] {
     border: 1px solid #ccc;
     border-radius: 3px;
 }
-@media (max-width: 700px) {
+@media (max-width: 800px) {
     div.content #playlist-date,
     div.content table input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
     div.content table select[size='1'] {
@@ -237,7 +237,7 @@ table.top30,
 table.top30 table {
     width: 100%;
 }
-@media (max-width: 700px) {
+@media (max-width: 800px) {
     td.top30:last-child:not(:only-child) table {
 	display: none;
     }
@@ -538,7 +538,7 @@ ul.listbox.selector:focus {
     outline-offset: -2px;
 }
 /* mobile */
-@media (max-width: 700px) {
+@media (max-width: 800px) {
     ul.listbox.selector {
         border-radius: 8px;
         font-size: 16px;
@@ -780,13 +780,19 @@ li.ui-menu-item .ui-state-active,
     background: #ccc;
     border-color: transparent;
 }
-@media (max-width: 700px) {
+@media (max-width: 800px) {
     .ui-selectmenu-button.ui-button {
         font-size: 14px;
         padding: 6px;
     }
+
     li.ui-menu-item {
-        font-size: 14px;
+        font-size: 16px;
+        border-top: 1px solid #c5c5c5;
+    }
+
+    li.ui-menu-item div.ui-menu-item-wrapper {
+        padding: 8px;
     }
 }
 
@@ -1764,14 +1770,14 @@ a.listEdit {
 
 /*@media (min-width: 9999px) {*/
 /* desktop */
-@media (min-width: 700px) {
+@media (min-width: 800px) {
     .playlist-grid tbody tr {
         line-height: 30px;
     }
 }
 /*@media (max-width: 9999px) {*/
 /* mobile */
-@media (max-width: 700px) {
+@media (max-width: 800px) {
     .playlist-grid tbody tr {
         line-height: 40px;
     }
@@ -1862,7 +1868,7 @@ ul.listbox .state-active,
     border-color: transparent;
 }
 /* make autocomplete mobile ui more consistent with mobile datalist */
-@media (max-width: 700px) {
+@media (max-width: 800px) {
     .ui-autocomplete {
         max-height: 500px;
         max-width: 100%;
@@ -1873,7 +1879,9 @@ ul.listbox .state-active,
         padding: 0;
     }
     .ui-autocomplete.ui-widget .ui-menu-item {
-        padding: 8px;
         border-top: 1px solid #c5c5c5;
+    }
+    .ui-autocomplete.ui-widget .ui-menu-item div.ui-menu-item-wrapper {
+        padding: 8px;
     }
 }
