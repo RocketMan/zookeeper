@@ -108,16 +108,10 @@ class PushHttpProxy {
     }
 
     public function message(\Ratchet\RFC6455\Messaging\Message $msg) {
-        foreach($this->httpEndpoints as $key => $endpoint) {
-            if(!is_string($key)) {
-                try {
-                    $this->httpClient->post($endpoint,
+        foreach($this->httpEndpoints as $key => $endpoint)
+            if(!is_string($key))
+                $this->httpClient->post($endpoint,
                             ['Content-Type' => 'application/json'], (string)$msg);
-                } catch(\Exception $e) {
-                    error_log("PushHttpProxy: $endpoint:" . $e->getMessage());
-                }
-            }
-        }
     }
 
     public function dispatch(\Ratchet\RFC6455\Messaging\Message $msg) {
