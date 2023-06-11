@@ -477,6 +477,7 @@ class Playlists extends MenuItem {
             ?>
             <div>
                 <label></label>
+                <div class='action-area'>
                 <?php if($editTrack) { ?>
                 <button type='button' id='edit-save' class='edit-mode default'>Save</button>
                 <button type='button' id='edit-delete' class='edit-mode'>Delete</button>
@@ -485,6 +486,7 @@ class Playlists extends MenuItem {
                 <button type='button' disabled id='track-play' class='track-submit default'>Add <?php echo $isLiveShow?"(Playing Now)<img src='img/play.svg' />":"Item";?></button>
                 <button type='button' disabled id='track-add' class='track-submit<?php if(!$isLiveShow) echo " zk-hidden"; ?>'>Add (Upcoming)<img src='img/play-pause.svg' /></button>
                 <?php } ?>
+                </div>
             </div>
             <div class='toggle-time-entry<?php if (!$isLiveShow) echo " zk-hidden"; ?>'><div><!--&#x1f551;--></div></div>
         </div> <!-- track-editor -->

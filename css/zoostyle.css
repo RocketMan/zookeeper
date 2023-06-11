@@ -834,6 +834,14 @@ li.ui-menu-item .ui-state-active,
     margin-bottom: 4px;
 }
 
+.pl-form-entry .action-area {
+    display: inline-flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 300px;
+}
+
 .pl-form-entry button:not(.edit-mode) {
     width: 148px;
     height: 24px;
