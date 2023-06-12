@@ -23,4 +23,24 @@ if you trust the external application.
   <input type=hidden name=action value='{{ app.request.action }}'>
   <input type=hidden name=subaction value='{{ app.request.subaction }}'>
 </form>
-<script src="{{ "js/user.apikey.js" | decorate }}"></script>
+<script><!--
+$().ready(function() {
+    $("input:checkbox#all").on('click', function() {
+        var all = $(this).is(":checked");
+        $("input:checkbox").prop('checked', all);
+    });
+    $("a.copy").on('click', function() {
+        var key = $(this).closest("tr").children("td.apikey").html();
+        navigator.clipboard.writeText(key).then(function() {
+            alert('Key copied to clipboard!');
+        });
+    });
+    $("input[name=deleteKey]").on('click', function(e) {
+        if($("input:checkbox:checked").length == 0 ||
+           !confirm('Delete the selected keys?\n\nCAUTION: THIS CANNOT BE UNDONE.')) {
+            return false;
+        }
+    });
+});
+// -->
+</script>
