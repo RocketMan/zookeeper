@@ -167,7 +167,19 @@ class Search extends MenuItem {
         // currents
         $chartApi = Engine::api(IChart::class);
         $rows = $chartApi->getAlbumByTag($tag);
-        foreach($rows as &$row) {
+        $accepted = [];
+        foreach($rows as $id => &$row) {
+            // suppress overlapping charting periods
+            // n^2 complexity, but n will generally be 0,
+            // as multiple charting periods are rare
+            foreach($accepted as $accept) {
+                if($row["adddate"] >= $accept["adddate"] && $row["adddate"] <= $accept["pulldate"] ||
+                        $row["pulldate"] >= $accept["adddate"] && $row["pulldate"] <= $accept["pulldate"]) {
+                    unset($rows[$id]);
+                    continue 2;
+                }
+            }
+            $accepted[] = $row;
             $plays = $chartApi->getAlbumPlays($tag, $row["adddate"], $row["pulldate"], 8)->asArray();
             $row['spins'] = $plays;
         }
