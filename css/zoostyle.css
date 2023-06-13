@@ -469,6 +469,7 @@ div.playTrack a {
     filter: invert(59%) sepia(98%) saturate(1900%) hue-rotate(204deg) brightness(94%) contrast(88%); /* #828ae3 see https://codepen.io/sosuke/pen/Pjoqqp */
     padding-right: 2px;
     padding-bottom: 2px;
+    vertical-align: middle;
     display: inline-block;
     width: 18px;
     height: 18px;
