@@ -174,7 +174,8 @@ class Search extends MenuItem {
             // as multiple charting periods are rare
             foreach($accepted as $accept) {
                 if($row["adddate"] >= $accept["adddate"] && $row["adddate"] <= $accept["pulldate"] ||
-                        $row["pulldate"] >= $accept["adddate"] && $row["pulldate"] <= $accept["pulldate"]) {
+                        $row["pulldate"] >= $accept["adddate"] && $row["pulldate"] <= $accept["pulldate"] ||
+                        $row["adddate"] <= $accept["adddate"] && $row["pulldate"] >= $accept["pulldate"]) {
                     unset($rows[$id]);
                     continue 2;
                 }
