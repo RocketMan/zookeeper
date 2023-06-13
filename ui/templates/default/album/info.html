@@ -27,6 +27,8 @@
 {% elseif album.location == 'M' %}
       <i>Missing</i>
   {%~ set showMissing = 'found' %}
+{% elseif album.location == 'C' %}
+      <i>A-File</i>
 {% elseif album.location == 'E' %}
       <i>Review Shelf</i>
 {% elseif album.location == 'F' %}
