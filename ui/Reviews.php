@@ -64,13 +64,6 @@ class Reviews extends MenuItem {
         $this->dispatchSubaction('', $this->subaction);
     }
 
-    public function emitReviewHook($tag=0) {
-        if(!$tag)
-            $tag = $_REQUEST["n"];
-        if($this->session->isAuth("u"))
-            echo "<A HREF=\"?action=searchReviewEdit&amp;tag=$tag\" CLASS=\"nav\"><B>Write a review of this album</B></A>";
-    }
-
     public function emitViewDJMain() {
         $viewAll = $this->subaction == "viewDJAll";
 
@@ -286,46 +279,6 @@ class Reviews extends MenuItem {
 
     public function viewReview() {
         $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
-    }
-    
-    public function viewReview2($tag=0) {
-        if(!$tag)
-            $tag = $_REQUEST["n"];
-        $records = Engine::api(IReview::class)->getReviews($tag, 1, "", $this->session->isAuth("u"));
-    
-        if($count = sizeof($records)) {
-            $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
-            echo "<TABLE WIDTH=\"100%\">\n";
-            echo "  <TR><TH ALIGN=LEFT CLASS=\"secdiv\">Album Review" . ($count>1?"s":"") ."</TH>";
-            echo "</TR>\n</TABLE>\n";
-            $space = 0;
-    
-            echo "<TABLE CELLPADDING=2 CELLSPACING=2 WIDTH=\"100%\">\n";
-            foreach($records as $row) {
-                if($row[5])
-                    $djname = $row[5];
-                else {
-                    $djs = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $row[4]);
-                    $djname = $djs[0]["realname"];
-                }
-                if($space++)
-                    echo "  <TR><TD COLSPAN=3>&nbsp;</TD></TR>\n";
-    
-                echo "  <TR><TD><B>".htmlentities($djname)."</B><BR>\n";
-                echo "      <SPAN CLASS=\"sub\">Reviewed " .
-                        substr($row[1], 0, 10);
-                echo $row[3]?" <FONT COLOR=\"#cc0000\">(private)</FONT>":"&nbsp;";
-                echo "</SPAN></TD></TR>\n";
-    
-                if($this->session->getUser() == $row[4])
-                    echo "  <TR COLSPAN=3><TD><FONT SIZE=-1><A HREF=\"?action=searchReviewEdit&amp;tag=$tag\">[This is my review and I want to edit it]</A></FONT></TD></TR>\n";
-                echo "  <TR><TD COLSPAN=3 CLASS=\"review\">\n";
-                echo nl2br(htmlentities($row[2]));
-                echo "\n  </TD></TR>\n";
-            }
-    
-            echo "</TABLE><BR>\n";
-        }
     }
     
     private function eMailReview($tag, $airname, $review) {

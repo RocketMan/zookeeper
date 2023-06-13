@@ -1,0 +1,69 @@
+{% set artist = album.iscoll ? 'Various Artists' : album.artist %}
+<div class='secdiv'>{{ artist }} / {{ album.album }}
+{% if app.session.isAuth("u") %}
+&nbsp;&nbsp;(Tag #{{ album.tag }})
+{% endif %}
+</div>
+
+{% if image_url %}
+<div class='album-thumb'>
+  {%~ if info_url %}
+  <a href='{{ info_url }}' target='_blank'><img src='{{ image_url }}' title='View album in Discogs' /></a>
+  {%~ else %}
+  <img src='{{ image_url }}' />
+  {%~ endif %}
+</div>
+{% endif %}
+
+<table class='album-info' {{ image_url ? "style='max-width: 564px'" }}>
+  <tr>
+    <td align=right>Album:</td>
+    <td><b><a href="?s=byAlbum&amp;n={{ album.album }}&amp;q={{ maxresults }}&amp;action=search" class="nav">{{ album.album }}</a></b></td>
+    <td width=80>&nbsp;</td>
+    <td align=right>Collection:</td><td style='white-space: nowrap'><b>
+{% set showMissing = 'missing' %}
+{% if album.location == 'G' %}
+      <i>Deep Storage {{ album.bin }}</i>
+{% elseif album.location == 'M' %}
+      <i>Missing</i>
+  {%~ set showMissing = 'found' %}
+{% elseif album.location == 'E' %}
+      <i>Review Shelf</i>
+{% elseif album.location == 'F' %}
+      <i>Out for Review</i>
+{% elseif album.location == 'U' %}
+      <i>Deaccessioned</i>
+  {%~ set showMissing = false %}
+{% elseif album.medium == 'D' %}
+      <i>Digital</i>
+  {%~ set showMissing = false %}
+{% else %}
+      {{ GENRES[album.category] }} {{ album.medium != 'C' ? MEDIA[album.medium] }}
+{% endif %}
+</b>
+{% if app.session.isAuth('u') and showMissing %}
+<a href="{{ report_missing_url }}" class="nav" style="margin-left: 5px" target="_blank">[report {{ showMissing }}...]</a>
+{% endif ~%}
+</td></tr>
+<tr><td align=right>Artist:</td><td><b>
+{% if album.iscoll %}
+{{ artist }}
+{% else %}
+<A HREF="?s=byArtist&amp;n={{ artist }}&amp;q=50&amp;action=search" class="nav">{{ artist }}</a>
+{% endif %}
+</b></td>
+<td>&nbsp;</td>
+<td align=right>Added:</td><td class='date'><b>{{ album.created | date('M Y') }}</b></td></tr>
+<tr><td align=right>Label:</td><td><b>
+{% if album.pubkey %}
+<a href="?s=byLabelKey&amp;n={{ album.pubkey }}&amp;q=50&amp;action=search" class="nav">{{ album.name }}</a>
+{% else %}
+(Unknown)
+{% endif %}
+</b></td><td colspan=2>&nbsp;</td><td>
+{% if app.session.isAuth('u') %}
+<a href="?action=searchReviewEdit&amp;tag={{ album.tag }}" class="nav"><b>Write a review of this album</b></a>
+{% endif ~%}
+</td></tr>
+</table>
+<br>

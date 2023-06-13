@@ -1,0 +1,50 @@
+{% macro tracklink(search, name) %}
+<a href='?s={{ search }}&amp;n={{ name }}&amp;action=search'>{{ name }}</a>
+{% endmacro -%}
+
+<table class='trackTable'>
+  {%~ if album.iscoll %}
+  <tr><th>&nbsp;</th><th></th><th align=left style='min-width:200px'>Artist</th><th align=left>Track Name</th></tr>
+  {%~ for track in tracks %}
+  <tr>
+    <td>
+    {%~ if track.url %}
+      <div class='playTrack'><a target='_blank' href='{{ track.url }}'></a></div>
+    {%~ endif %}
+    </td>
+    <td>{{ track.seq }}.</td>
+    <td>{{ _self.tracklink('byArtist', track.artist) }}</td>
+    <td>{{ _self.tracklink('byTrack', track.track) }}</td>
+  </tr>
+  {%~ endfor %}
+  {%~ else %}
+  {%~ set mid = tracks | length / 2 %}
+  {%~ for i in 0..(mid | round - 1) %}
+  <tr>
+    {#~ left side #}
+    {%~ if mid - i < 1 %}
+    <td colspan=4>&nbsp;</td>
+    {%~ else %}
+      {%~ set track = tracks[i] %}
+    <td>
+      {%~ if track.url %}
+      <div class='playTrack'><a target='_blank' href='{{ track.url }}'></a></div>
+      {%~ endif %}
+    </td>
+    <td>{{ track.seq }}.</td>
+    <td>{{ _self.tracklink('byTrack', track.track) }}</td>
+    <td>&nbsp;</td>
+    {%~ endif %}
+    {#~ right side #}
+    {%~ set track = tracks[mid + i] %}
+    <td>
+      {%~ if track.url %}
+      <div class='playTrack'><a target='_blank' href='{{ track.url }}'></a></div>
+      {%~ endif %}
+    </td>
+    <td>{{ track.seq }}.</td>
+    <td>{{ _self.tracklink('byTrack', track.track) }}</td>
+  </tr>
+  {%~ endfor %}
+  {%~ endif %}
+</table>

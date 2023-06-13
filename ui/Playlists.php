@@ -1089,51 +1089,5 @@ class Playlists extends MenuItem {
         }
         echo json_encode(["count" => $count, "tbody" => $tbody]);
     }
-
-    public function viewLastPlays($tag, $count=0) {
-        $plays = Engine::api(IPlaylist::class)->getLastPlays($tag, $count);
-        if($plays) {
-            echo "<DIV class='secdiv'>Recent Airplay</DIV>";
-    
-            echo "<TABLE class='recentAirplay' CELLPADDING=2 CELLSPACING=0 BORDER=0>\n";
-    
-            // Setup date format based on locale
-            $dateSpec = UI::isUsLocale() ? 'M d, Y' : 'd M Y';
-    
-            // Ensure we have an even number of plays
-            if(sizeof($plays)%2)
-                $plays[] = ["description" => ""];
-     
-            $mid = sizeof($plays)/2;
-            for($i=0; $i < sizeof($plays); $i++) {
-                if($i%2 == 0) {
-                    echo "<TR>";
-                    $idx = ($i+2)/2 - 1;
-                } else {
-                    $idx = $mid + ($i+1)/2 - 1;
-                }
-                $play = $plays[$idx];
-    
-                if($play["description"]) {
-                    $showDate = date($dateSpec, strtotime($play["showdate"]));
-                    $showLink = "<A HREF='".
-                         "?subaction=viewDJ&amp;playlist=".$play["id"].
-                         "&amp;seq=selList'>".$play["description"]."</A>";
-
-                    $trackList = implode(", ", $play["tracks"]);    
-                    $playNum = $idx + 1;
-                    echo "<TD>$playNum.</TD>";
-                    echo "<TD class='date' style='min-width:80px'>$showDate:</TD>";
-                    echo "<TD>$showLink  <BR> $trackList";
-                } else
-                    echo "<TD COLSPAN=3></TD>";
-                if($i%2)
-                    echo "</TR>\n";
-                else
-                    echo "<TD WIDTH=20></TD>\n";
-            }
-            echo "</TABLE><BR>\n";
-        }
-    }
 }
 

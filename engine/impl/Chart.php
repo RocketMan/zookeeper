@@ -264,7 +264,7 @@ class ChartImpl extends DBO implements IChart {
         $query = "SELECT * FROM currents WHERE tag = ? ORDER BY adddate DESC";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
-        return $stmt->executeAndFetch(\PDO::FETCH_BOTH);
+        return $stmt->executeAndFetchAll();
     }
     
     public function getAlbumPlays($tag, $startDate="", $endDate="", $limit="") {
