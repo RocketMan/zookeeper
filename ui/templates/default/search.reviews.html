@@ -8,8 +8,6 @@ $().ready(function() {
 </script>
 <form>
   <input id='showTag' type='hidden' value='{{ app.session.isAuth("u") ? 'true' : 'false' }}'>
-  <input id='maxresults' type='hidden' value='50'>
-  <input id='chunksize' type='hidden' value='15'>
 </form>
 <h2>{{ airname }}'s Album Reviews</h2>
 <table class='searchTable' id='results'></table>

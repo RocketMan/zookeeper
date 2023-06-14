@@ -57,22 +57,12 @@ class Search extends MenuItem {
         "byLabelKey" => "albumsByPubkey"
     ];
 
-    // can be overridden by request params 'q' and 'chunksize', respectively
-    public $maxresults = 50;
-    public $chunksize = 15;
-
-    public $exactMatch = false;
-
     public $searchText;
 
     public $searchType;
 
     public function processLocal($action, $subaction) {
         return $this->dispatchAction($action, self::$actions);
-    }
-
-    private function HTMLify($arg, $size) {
-        return UI::HTMLify($arg, $size, false);
     }
 
     public function findAlbum() {
@@ -177,16 +167,8 @@ class Search extends MenuItem {
     }
 
     public function doSearch() {
-        if(array_key_exists('m', $_REQUEST))
-            $this->exactMatch = $_REQUEST['m'];
         if(array_key_exists('n', $_REQUEST))
             $this->searchText = stripslashes($_REQUEST['n']);
-        if(array_key_exists('q', $_REQUEST) && $_REQUEST['q'])
-            $this->maxresults = (integer)$_REQUEST['q'];
-        if(array_key_exists('chunksize', $_REQUEST) && $_REQUEST['chunksize'])
-            $this->chunksize = (integer)$_REQUEST['chunksize'];
-        if($this->maxresults < $this->chunksize)
-            $this->maxresults = $this->chunksize;
 
         $this->searchType =
                 array_key_exists('s', $_REQUEST)?$_REQUEST['s']:"";

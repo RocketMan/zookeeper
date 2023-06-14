@@ -123,7 +123,7 @@ function emitAlbumsEx(table, response, odata, header, tag) {
             tagId = "Tag #" + album.id + "&nbsp;&#8226;&nbsp;";
         td = $("<TD>").html(tagId + '<A HREF="?s=byArtist&n=' +
                             encodeURIComponent(album.attributes.artist) +
-                            '&q=10&action=search" CLASS="nav">' +
+                            '&action=search" CLASS="nav">' +
                             getArtist(album.attributes) + '</A>' +
                             "&nbsp;&#8226;&nbsp;");
         var albumx = $("<I>").html('<A HREF="?action=search&s=byAlbumKey&n=' + album.id +
@@ -204,7 +204,7 @@ var lists = {
                 tr = $("<TR>").append(indent());
                 var td = $("<TD>").html('<A HREF="?s=byArtist&n=' +
                                     encodeURIComponent(track.artist) +
-                                    '&q=10&action=search" CLASS="nav">' + getArtist(track) + '</A>' +
+                                    '&action=search" CLASS="nav">' + getArtist(track) + '</A>' +
                                     "&nbsp;&#8226;&nbsp;");
                 var albumx = $("<I>").html('<A HREF="?action=search&s=byAlbumKey&n=' + entry.id +
                                       '" CLASS="nav">' + htmlify(album.attributes.album) + '</A>');
@@ -233,7 +233,7 @@ var lists = {
                         response.included.find(x => { return x.id == entry.id && x.type == 'label'; }) : entry;
             tr = $("<TR>").append(indent());
             var td = $("<TD>").html('<A HREF="?s=byLabelKey&n=' +
-                                    entry.id + '&q=10&action=search" CLASS="nav">' +
+                                    entry.id + '&action=search" CLASS="nav">' +
                                     htmlify(label.attributes.name) + '</A>');
             if(label.attributes.city)
                 td.append("&nbsp;&#8226; " + htmlify(label.attributes.city) + "&nbsp;" +
@@ -310,7 +310,7 @@ var lists = {
             tr = $("<TR>").append(indent());
             var td = $("<TD>").html('<A HREF="?s=byArtist&n=' +
                                     encodeURIComponent(album.meta.artist) +
-                                    '&q=10&action=search" CLASS="nav">' +
+                                    '&action=search" CLASS="nav">' +
                                     getArtist(album.meta) + '</A>' +
                                     '&nbsp;&#8226;&nbsp;' +
                                     '<I><A HREF="?action=search&s=byAlbumKey&n=' +
@@ -343,7 +343,7 @@ var lists = {
                 var td = $("<TD>");
                 td.html('<A HREF="?s=byArtist&n=' +
                         encodeURIComponent(album.attributes.artist) +
-                        '&q=10&action=search" CLASS="nav">' +
+                        '&action=search" CLASS="nav">' +
                         getArtist(album.attributes) + '</A>' +
                         "&nbsp;&#8226;&nbsp;" +
                         "<I>" +

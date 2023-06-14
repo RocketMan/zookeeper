@@ -152,7 +152,6 @@ function emitAlbumsEx(table, data) {
             td.html($("<A>", {
                 href: "?s=byAlbumKey&n=" +
                     encodeURIComponent(entry.id) +
-                    "&q=" + maxresults +
                     "&action=search"
             }).html(getArtist(attrs)));
         } else {
@@ -174,7 +173,6 @@ function emitAlbumsEx(table, data) {
         tr.append($("<TD>").html($("<A>", {
             href: "?s=byAlbumKey&n=" +
                 encodeURIComponent(entry.id) +
-                "&q=" + maxresults +
                 "&action=search"
         }).html(htmlify(attrs.album))));
         var collection = attrs.location;
@@ -255,7 +253,6 @@ var lists = {
                 tr.append($("<TD>").html($("<A>", {
                     href: "?s=byAlbumKey&n=" +
                         encodeURIComponent(entry.id) +
-                        "&q=" + maxresults +
                         "&action=search"
                 }).html(htmlify(attrs.album))));
                 tr.append($("<TD>").append(
@@ -334,21 +331,18 @@ var lists = {
                 td.html($("<A>", {
                     href: "?s=byAlbumKey&n=" +
                         encodeURIComponent(entry.id) +
-                        "&q=" + maxresults +
                         "&action=search"
                 }).html(getArtist(attrs)));
             } else {
                 td.html($("<A>", {
                     href: "?s=byArtist&n=" +
                         encodeURIComponent(attrs.artist) +
-                        "&q=" + maxresults +
                         "&action=search"
                 }).html(getArtist(attrs)));
             }
             tr.append(td);
             tr.append($("<TD>").html($("<A>", {
                 href: "?s=byAlbumKey&n=" + encodeURIComponent(entry.id) +
-                    "&q=" + maxresults +
                     "&action=search"
             }).html(htmlify(attrs.album))).append(showTag == 'true'?
                                          " <FONT CLASS='sub'>(Tag&nbsp;#" +
@@ -358,7 +352,6 @@ var lists = {
                 tr.append($("<TD>").html($("<A>", {
                     href: "?s=byLabelKey&n=" +
                         encodeURIComponent(label.data.id) +
-                        "&q=" + maxresults +
                         "&action=search"
                 }).html(htmlify(label.meta.name))));
             } else {
