@@ -40,7 +40,7 @@ class Search extends MenuItem {
     ];
 
     private static $legacySearchActions = [
-        [ "", "legacySearchLandingPage" ],
+        [ "", "searchForm" ],
         [ "byAlbum", "searchForm" ],
         [ "byAlbumKey", "searchByAlbumKey" ],
         [ "byArtist", "searchForm" ],
@@ -77,54 +77,6 @@ class Search extends MenuItem {
 
     public function findAlbum() {
         $this->searchByAlbumKey($_REQUEST["n"]);
-    }
-
-
-    // return link to artist or track info.
-    private function makeTrackLink($searchBy, $name, $length) {
-        $linkUrl = UI::URLify($name);
-        $linkHtml = $this->HTMLify($name, $length);
-        $link = "<A HREF='?s=${searchBy}&amp;n=$linkUrl" .
-                      "&amp;q=". $this->maxresults.
-                      "&amp;action=search'>$linkHtml</A>";
-        return $link;
-    }
-
-    private function emitTrackInfo($trackInfo, $showArtist, $isAuth, $internalLinks, $enableExternalLinks) {
-        $url = $trackInfo["url"];
-
-        // if external links are enabled, suppress internal URLs for
-        // non-authenticated users; otherwise, suppress all but internal
-        // URLs for authenticated users
-        if($enableExternalLinks ?
-                $internalLinks && preg_match($internalLinks, $url) && !$isAuth :
-                !$internalLinks || !preg_match($internalLinks, $url) || !$isAuth)
-            $url = '';
-
-        $playLink = $url == '' ? '' : "<DIV class='playTrack'><A target='_blank' href='$url'></A></DIV>";
-        echo "<TD>$playLink</TD>";
-        echo "<TD>${trackInfo['seq']}.</TD>";
-
-        if ($showArtist) { // collection only
-            $artistLink = $this->makeTrackLink('byArtist', $trackInfo['artist'], 20);
-            echo "<TD>$artistLink</TD>";
-        }
-
-        $titleLink = $this->makeTrackLink('byTrack', $trackInfo['track'], 32);
-        echo "<TD>$titleLink</TD>";
-    }
-
-    private function emitDiscogsHook($tag) {
-        $imageApi = Engine::api(IArtwork::class);
-        $image = $imageApi->getAlbumArt($tag);
-        if($image && ($uuid = $image["image_uuid"])) {
-            $url = $imageApi->getCachePath($uuid);
-            $target = ($info = $image["info_url"])?
-                "<A HREF='$info' TARGET='_blank'><IMG SRC='$url' title='View album in Discogs' /></A>" :
-                "<IMG SRC='$url' />";
-            echo "<div class='album-thumb'>$target</div>";
-            return "style='max-width: 564px'";
-        }
     }
 
     public function searchByAlbumKey($key = null) {
@@ -168,7 +120,7 @@ class Search extends MenuItem {
         $chartApi = Engine::api(IChart::class);
         $rows = $chartApi->getAlbumByTag($tag);
         $accepted = [];
-        foreach($rows as $id => &$row) {
+        foreach($rows as &$row) {
             // suppress overlapping charting periods
             // n^2 complexity, but n will generally be 0,
             // as multiple charting periods are rare
@@ -176,15 +128,14 @@ class Search extends MenuItem {
                 if($row["adddate"] >= $accept["adddate"] && $row["adddate"] <= $accept["pulldate"] ||
                         $row["pulldate"] >= $accept["adddate"] && $row["pulldate"] <= $accept["pulldate"] ||
                         $row["adddate"] <= $accept["adddate"] && $row["pulldate"] >= $accept["pulldate"]) {
-                    unset($rows[$id]);
                     continue 2;
                 }
             }
-            $accepted[] = $row;
             $plays = $chartApi->getAlbumPlays($tag, $row["adddate"], $row["pulldate"], 8)->asArray();
             $row['spins'] = $plays;
+            $accepted[] = $row;
         }
-        $this->addVar("currents", $rows);
+        $this->addVar("currents", $accepted);
         $this->addVar("CATMAP", $chartApi->getCategories());
 
         // recent airplay
@@ -240,16 +191,6 @@ class Search extends MenuItem {
         $this->searchType =
                 array_key_exists('s', $_REQUEST)?$_REQUEST['s']:"";
         $this->dispatchAction($this->searchType, self::$legacySearchActions);
-    }
-    
-    public function legacySearchLandingPage() {
-        $this->searchForm();
-    }
-    
-    // returns closing tag for output
-    private function closeList() {
-        $close = "</TABLE>\n";
-        return $close;
     }
     
     public function searchForm() {
