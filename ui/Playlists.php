@@ -895,7 +895,6 @@ class Playlists extends MenuItem {
             if($result[$i]["tag"])
                  echo "<A CLASS=\"nav\" HREF=\"".
                       "?s=byAlbumKey&amp;n=". UI::URLify($result[$i]["tag"]).
-                      "&amp;q=". $maxresults.
                       "&amp;action=search\">";
     
             echo UI::smartURL($result[$i]["album"], !$result[$i]["tag"]);
