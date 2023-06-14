@@ -1,5 +1,5 @@
-{% macro tracklink(search, name) %}
-<a href='?s={{ search | e('url') }}&amp;n={{ name | e('url') }}&amp;action=search'>{{ name }}</a>
+{% macro tracklink(searchBy, name) %}
+<a href='?s={{ searchBy }}&amp;n={{ name | e('url') }}&amp;action=search'>{{ name }}</a>
 {% endmacro -%}
 
 <table class='trackTable'>
