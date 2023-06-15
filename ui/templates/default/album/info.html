@@ -1,8 +1,8 @@
 {% set artist = album.iscoll ? 'Various Artists' : album.artist %}
 <div class='secdiv'>{{ artist }} / {{ album.album }}
-{% if app.session.isAuth("u") %}
-&nbsp;&nbsp;(Tag #{{ album.tag }})
-{% endif %}
+{%- if app.session.isAuth("u") %}
+  <span style='margin-left: 0.25em'>(Tag #{{ album.tag }})</span>
+{% endif -%}
 </div>
 
 {% if image_url %}
@@ -21,31 +21,31 @@
     <td><b><a href="?s=byAlbum&amp;n={{ album.album | e('url') }}&amp;action=search" class="nav">{{ album.album }}</a></b></td>
     <td width=80>&nbsp;</td>
     <td align=right>Collection:</td><td style='white-space: nowrap'><b>
-{% set showMissing = 'missing' %}
-{% if album.location == 'G' %}
+{%- set showMissing = 'missing' -%}
+{%- if album.location == 'G' -%}
       <i>Deep Storage {{ album.bin }}</i>
-{% elseif album.location == 'M' %}
+{%- elseif album.location == 'M' -%}
       <i>Missing</i>
-  {%~ set showMissing = 'found' %}
-{% elseif album.location == 'C' %}
+  {%- set showMissing = 'found' -%}
+{%- elseif album.location == 'C' -%}
       <i>A-File</i>
-{% elseif album.location == 'E' %}
+{%- elseif album.location == 'E' -%}
       <i>Review Shelf</i>
-{% elseif album.location == 'F' %}
+{%- elseif album.location == 'F' -%}
       <i>Out for Review</i>
-{% elseif album.location == 'U' %}
+{%- elseif album.location == 'U' -%}
       <i>Deaccessioned</i>
-  {%~ set showMissing = false %}
-{% elseif album.medium == 'D' %}
+  {%- set showMissing = false -%}
+{%- elseif album.medium == 'D' -%}
       <i>Digital</i>
-  {%~ set showMissing = false %}
-{% else %}
+  {%- set showMissing = false -%}
+{%- else -%}
       {{ GENRES[album.category] }} {{ album.medium != 'C' ? MEDIA[album.medium] }}
-{% endif %}
+{%- endif -%}
 </b>
 {% if app.session.isAuth('u') and showMissing %}
-<a href="{{ report_missing_url }}" class="nav" style="margin-left: 5px" target="_blank">[report {{ showMissing }}...]</a>
-{% endif ~%}
+    <a href="{{ report_missing_url }}" class="nav" style="margin-left: 5px" target="_blank">[report {{ showMissing }}...]</a>
+{% endif -%}
 </td></tr>
 <tr><td align=right>Artist:</td><td><b>
 {% if album.iscoll %}

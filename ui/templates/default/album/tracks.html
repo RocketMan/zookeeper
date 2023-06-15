@@ -1,6 +1,6 @@
 {% macro tracklink(searchBy, name) %}
 <a href='?s={{ searchBy }}&amp;n={{ name | e('url') }}&amp;action=search'>{{ name }}</a>
-{% endmacro -%}
+{%- endmacro -%}
 
 <table class='trackTable'>
   {%~ if album.iscoll %}
