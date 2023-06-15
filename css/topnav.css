@@ -258,7 +258,7 @@ nav .search-icon {
         z-index: 99;
         top: 70px;
         width: 100%;
-        left: -100%;
+        left: calc(-100% - 10px);
         height: 100%;
         padding: 10px 50px 0 50px;
         background: var(--theme-menu-background-colour);
