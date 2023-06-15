@@ -162,7 +162,7 @@ div.content input[type=submit]:not(.submit,.editorUp,.editorDown) {
 }
 div.content input[type=button]:not(.submit):hover,
 div.content input[type=submit]:not(.submit,.editorUp,.editorDown):hover {
-    background-color: #fcfcfc;
+    background-color: #f8f8f8;
 }
 div.content input[type=button]:not(.submit):active,
 div.content input[type=submit]:not(.submit,.editorUp,.editorDown):active {
