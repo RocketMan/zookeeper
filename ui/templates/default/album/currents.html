@@ -9,7 +9,13 @@
     {{ names | join(', ') }}
 {% endmacro -%}
 
-<div class='secdiv'>A-File Activity</div>
+{%- set today = "now" | date("Y-m-d") %}
+{%- set afile_number = app.session.isAuth('u')
+        and currents | length
+        and currents[0].adddate <= today
+        and currents[0].pulldate > today ?
+    "<span style='margin-left: 0.25em'>(File #" ~ currents[0].afile_number | e ~ ")</span>" %}
+<div class='secdiv'>A-File Activity {{ afile_number | raw }}</div>
 {% for current in currents %}
 <table cellpadding=2 cellspacing=2>
   <tr><td align=right>Add Date:</td>
