@@ -366,7 +366,7 @@ class Playlists extends MenuItem {
         }
 
     ?>
-        <div class='pl-form-entry'>
+        <div class='pl-form-entry form-entry'>
             <input id='show-time' type='hidden' value="<?php echo $playlist['showtime']; ?>" >
             <input id='timezone-offset' type='hidden' value="<?php echo round(date('Z')/-60, 2); /* server TZ equivalent of javascript Date.getTimezoneOffset() */ ?>" >
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>

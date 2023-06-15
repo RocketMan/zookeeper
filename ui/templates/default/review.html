@@ -1,6 +1,6 @@
 <h4 style='margin-top: 0'>Review Album:&nbsp;&nbsp;{{ album.artist }} / {{ album.album }}</h4>
 {{ errorMessage | raw }}
-<form class="review pl-form-entry" action="?" method=post>
+<form class="review form-entry" action="?" method=post>
 <datalist id='airnames'>
 {% for airname in airnames %}
   <option value='{{ airname }}'>
