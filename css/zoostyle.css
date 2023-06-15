@@ -866,23 +866,22 @@ li.ui-menu-item .ui-state-active,
 .pl-form-entry button.edit-mode:active {
     background-color: #d6d6d6;
 }
-.pl-form-entry button#edit-save {
+.pl-form-entry button.edit-mode.default {
     color: #fff;
     border: 1px solid #5796ed;
     background-color: #5897ee;
 }
-.pl-form-entry button#edit-save:disabled {
+.pl-form-entry button.edit-mode.default:disabled {
     color: gray;
     border: 1px solid #ccc;
     background-color: #ccc;
 }
-.pl-form-entry button#edit-save:hover:not(:disabled) {
+.pl-form-entry button.edit-mode.default:not(:disabled) {
     background-color: #5ba4fc;
 }
-.pl-form-entry button#edit-save:active:not(:disabled) {
+.pl-form-entry button.edit-mode.default:active:not(:disabled) {
     background-color: #5897ee;
 }
-.review input#delrev,
 .pl-form-entry button#edit-delete {
     color: #e33437;
     border-color: #e33437;

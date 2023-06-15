@@ -384,7 +384,7 @@ class Reviews extends MenuItem {
             }
 
             switch($_REQUEST["button"]) {
-            case " Post Review! ":
+            case "post-review":
                 Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
                 $success = Engine::api(IReview::class)->insertReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
                 if($success >= 1) {
@@ -396,7 +396,7 @@ class Reviews extends MenuItem {
                 }
                 $errorMessage = "<B><FONT COLOR=\"#cc0000\">Review not posted.  Try again later.</FONT></B>\n";
                 break;
-            case " Update Review ":
+            case "edit-save":
                 $review = mb_substr(trim($_REQUEST["review"]), 0, IReview::MAX_REVIEW_LENGTH);
                 $success = Engine::api(IReview::class)->updateReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
                 if($success >= 0) {
@@ -408,7 +408,7 @@ class Reviews extends MenuItem {
                 }
                 $errorMessage = "<B><FONT COLOR=\"#cc0000\">Review not updated.  Try again later.</FONT></B>\n";
                 break;
-            case " Delete Review ":
+            case "edit-delete":
                 $success = Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
                 if($success >= 1) {
                     echo "<B><FONT COLOR=\"#ffcc33\">Your review has been deleted.</FONT></B>\n";
