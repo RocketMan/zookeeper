@@ -31,11 +31,11 @@
       <div class='action-area'>
       <button type=submit class='edit-mode default' id='edit-save'>Save</button>
       <button type=submit class='edit-mode' id='edit-delete'>Delete</button>
-      <button type=submit class='edit-mode' id='edit-cancel'>Cancel</button>
+      <button type=button class='edit-mode' id='edit-cancel'>Cancel</button>
       </div>
 {% else %}
       <button type=submit class='edit-mode default' id='post-review'>Post Review!</button>
-      <button type=submit class='edit-mode' id='edit-cancel'>Cancel</button>
+      <button type=button class='edit-mode' id='edit-cancel'>Cancel</button>
 {% endif %}
     </td>
   </tr>
@@ -75,12 +75,6 @@ $().ready(function() {
         var id = document.activeElement.id;
         $("input[name=button]").val(id);
 
-        if(id == 'edit-cancel') {
-            location.href = "?action=search&s=byAlbumKey&n=" + $("input[name=tag]").val();
-            e.preventDefault();
-            return;
-        }
-
         var airname = $("#airname").val().trim();
         if(airname.length == 0 ||
                $("#airnames option[value='" + escQuote(airname) + "' i]").length == 0 && !confirm('Create new airname "' + airname + '"?')) {
@@ -92,6 +86,12 @@ $().ready(function() {
     $("#edit-delete").on('click', function(e) {
         if(!confirm("Delete the review?"))
             e.preventDefault();
+        else if(!$("#airname").val().trim().length)
+            $("#airname").val('{{ airname ?: self | e("js") }}');
+    });
+
+    $("#edit-cancel").on('click', function() {
+        location.href = "?action=search&s=byAlbumKey&n=" + $("input[name=tag]").val();
     });
 
     $("*[name=review]").focus();
