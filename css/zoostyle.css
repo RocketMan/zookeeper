@@ -177,26 +177,7 @@ div.content input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
 div.content select[size='1'] {
     border: 1px solid #ccc;
     border-radius: 3px;
-}
-@media (max-width: 800px) {
-    div.content #playlist-date,
-    div.content table input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
-    div.content table select[size='1'] {
-        font-size: 14px;
-        height: 24px;
-    }
-    div.content form.form-entry input#airname,
-    div.content form.form-entry button,
-    div.content div.pl-form-entry input,
-    div.content div.pl-form-entry button {
-	height: 30px;
-    }
-    div.content select[size='1'] {
-        height: 26px;
-    }
-    div.content .listbox {
-        font-size: 16px;
-    }
+    min-height: 24px;
 }
 
 /* afile activity page */
@@ -411,9 +392,6 @@ td.label-form {
     margin: 0;
     box-shadow:5px 5px 8px #888888;
 }
-.share-link {
-    cursor: pointer;
-}
 .editorUp {
     top: 0;
     width: 220px;
@@ -521,6 +499,10 @@ p.zktitle a {
 
 #playlist-list {
     margin-top: 10px;
+}
+
+.share-link {
+    cursor: pointer;
 }
 
 ul.listbox.selector {
@@ -797,6 +779,10 @@ li.ui-menu-item .ui-state-active,
     li.ui-menu-item div.ui-menu-item-wrapper {
         padding: 8px;
     }
+
+    div.ui-datepicker {
+	font-size: 16px;
+    }
 }
 
 @-moz-document url-prefix() {
@@ -946,8 +932,34 @@ li.ui-menu-item .ui-state-active,
     transition: all 0.5s ease-out;
 }
 
-.form-entry input#airname {
-    height: 20px;
+@media (max-width: 800px) {
+    div.content input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
+    div.content select[size='1'] {
+        font-size: 14px;
+        height: 24px;
+    }
+    div.content input:not([type=radio],[type=checkbox],.editorUp,.editorDown),
+    div.content .form-entry button,
+    div.content button {
+	height: 30px;
+    }
+    div.content input:is(.editorUp,.editorDown) {
+	height: 24px;
+    }
+    div.content .editorChooser:focus-visible {
+        border-radius: 2px;
+        box-shadow: -1px -25px 0 1px #637789, 1px 25px 0 1px #637789, -1px 25px 0 1px #637789, 1px -25px 0 1px #637789;
+        outline: 0;
+    }
+    div.content select[size='1'] {
+        height: 26px;
+    }
+    div.content .listbox {
+        font-size: 16px;
+    }
+    div.content .import-form .group {
+	height: 30px;
+    }
 }
 
 .zk-popup {

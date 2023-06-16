@@ -168,7 +168,7 @@ class Reviews extends MenuItem {
         $isAuthorized = $this->session->isAuth("u");
         $author = $isAuthorized && trim($_GET["dj"]) == 'Me' ? $this->session->getUser() : '';        
 
-        echo "<DIV class='categoryPicker form-entry'>";
+        echo "<DIV class='categoryPicker'>";
         $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <A TYPE='application/rss+xml' HREF='zkrss.php?feed=reviews'>" .
              "<IMG SRC='img/rss.png' ALT='rss'></A>";
 
@@ -184,8 +184,8 @@ class Reviews extends MenuItem {
         echo "</DIV>";
 
         if ($isAuthorized) {
-            echo "<div style='display:inline-block' class='form-entry' >";
-            echo "<label class='reviewLabel'>Reviewer:</label>";
+            echo "<div style='display:inline-block' >";
+            echo "<label class='reviewLabel'>Reviewer:</label> ";
             echo "<select id='djPicker' name='dj'>";
             $selectedOpt = empty($author) ? ' selected ' : '';
             echo "<option ${selectedOpt}>All</option>";
