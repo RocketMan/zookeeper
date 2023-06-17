@@ -177,24 +177,7 @@ div.content input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
 div.content select[size='1'] {
     border: 1px solid #ccc;
     border-radius: 3px;
-}
-@media (max-width: 800px) {
-    div.content #playlist-date,
-    div.content table input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
-    div.content table select[size='1'] {
-        font-size: 14px;
-        height: 24px;
-    }
-    div.content div.pl-form-entry input,
-    div.content div.pl-form-entry button {
-	height: 30px;
-    }
-    div.content select[size='1'] {
-        height: 26px;
-    }
-    div.content .listbox {
-        font-size: 16px;
-    }
+    min-height: 24px;
 }
 
 /* afile activity page */
@@ -409,9 +392,6 @@ td.label-form {
     margin: 0;
     box-shadow:5px 5px 8px #888888;
 }
-.share-link {
-    cursor: pointer;
-}
 .editorUp {
     top: 0;
     width: 220px;
@@ -469,6 +449,7 @@ div.playTrack a {
     filter: invert(59%) sepia(98%) saturate(1900%) hue-rotate(204deg) brightness(94%) contrast(88%); /* #828ae3 see https://codepen.io/sosuke/pen/Pjoqqp */
     padding-right: 2px;
     padding-bottom: 2px;
+    vertical-align: middle;
     display: inline-block;
     width: 18px;
     height: 18px;
@@ -518,6 +499,10 @@ p.zktitle a {
 
 #playlist-list {
     margin-top: 10px;
+}
+
+.share-link {
+    cursor: pointer;
 }
 
 ul.listbox.selector {
@@ -794,6 +779,10 @@ li.ui-menu-item .ui-state-active,
     li.ui-menu-item div.ui-menu-item-wrapper {
         padding: 8px;
     }
+
+    div.ui-datepicker {
+	font-size: 16px;
+    }
 }
 
 @-moz-document url-prefix() {
@@ -834,7 +823,7 @@ li.ui-menu-item .ui-state-active,
     margin-bottom: 4px;
 }
 
-.pl-form-entry .action-area {
+.form-entry .action-area {
     display: inline-flex;
     align-items: center;
     flex-direction: row;
@@ -842,7 +831,7 @@ li.ui-menu-item .ui-state-active,
     width: 300px;
 }
 
-.pl-form-entry button:not(.edit-mode) {
+.form-entry button:not(.edit-mode) {
     width: 148px;
     height: 24px;
     padding-left: 0;
@@ -851,7 +840,7 @@ li.ui-menu-item .ui-state-active,
     white-space: nowrap;
 }
 
-.pl-form-entry button.edit-mode {
+.form-entry button.edit-mode {
     width: 97px;
     height: 24px;
     color: #000;
@@ -859,34 +848,34 @@ li.ui-menu-item .ui-state-active,
     border-radius: 4px;
     border: 1px solid #cdcdcd;
 }
-.pl-form-entry button.edit-mode:hover {
+.form-entry button.edit-mode:hover {
     background-color: #f8f8f8;
 }
-.pl-form-entry button.edit-mode:active {
+.form-entry button.edit-mode:active {
     background-color: #d6d6d6;
 }
-.pl-form-entry button#edit-save {
+.form-entry button.edit-mode.default {
     color: #fff;
     border: 1px solid #5796ed;
     background-color: #5897ee;
 }
-.pl-form-entry button#edit-save:disabled {
+.form-entry button.edit-mode.default:disabled {
     color: gray;
     border: 1px solid #ccc;
     background-color: #ccc;
 }
-.pl-form-entry button#edit-save:hover:not(:disabled) {
+.form-entry button.edit-mode.default:hover:not(:disabled) {
     background-color: #5ba4fc;
 }
-.pl-form-entry button#edit-save:active:not(:disabled) {
+.form-entry button.edit-mode.default:active:not(:disabled) {
     background-color: #5897ee;
 }
-.pl-form-entry button#edit-delete {
+.form-entry button#edit-delete {
     color: #e33437;
     border-color: #e33437;
 }
 
-.form-entry label, .pl-form-entry label {
+.form-entry label {
     display:inline-block;
     font-weight: bold;
 }
@@ -941,6 +930,36 @@ li.ui-menu-item .ui-state-active,
     display: inherit;
     z-index: -1;
     transition: all 0.5s ease-out;
+}
+
+@media (max-width: 800px) {
+    div.content input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
+    div.content select[size='1'] {
+        font-size: 14px;
+        height: 24px;
+    }
+    div.content input:not([type=radio],[type=checkbox],.editorUp,.editorDown),
+    div.content .form-entry button,
+    div.content button {
+	height: 30px;
+    }
+    div.content input:is(.editorUp,.editorDown) {
+	height: 24px;
+    }
+    div.content .editorChooser:focus-visible {
+        border-radius: 2px;
+        box-shadow: -1px -25px 0 1px #637789, 1px 25px 0 1px #637789, -1px 25px 0 1px #637789, 1px -25px 0 1px #637789;
+        outline: 0;
+    }
+    div.content select[size='1'] {
+        height: 26px;
+    }
+    div.content .listbox {
+        font-size: 16px;
+    }
+    div.content .import-form .group {
+	height: 30px;
+    }
 }
 
 .zk-popup {

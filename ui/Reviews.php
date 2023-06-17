@@ -64,13 +64,6 @@ class Reviews extends MenuItem {
         $this->dispatchSubaction('', $this->subaction);
     }
 
-    public function emitReviewHook($tag=0) {
-        if(!$tag)
-            $tag = $_REQUEST["n"];
-        if($this->session->isAuth("u"))
-            echo "<A HREF=\"?action=searchReviewEdit&amp;tag=$tag\" CLASS=\"nav\"><B>Write a review of this album</B></A>";
-    }
-
     public function emitViewDJMain() {
         $viewAll = $this->subaction == "viewDJAll";
 
@@ -175,7 +168,7 @@ class Reviews extends MenuItem {
         $isAuthorized = $this->session->isAuth("u");
         $author = $isAuthorized && trim($_GET["dj"]) == 'Me' ? $this->session->getUser() : '';        
 
-        echo "<DIV class='categoryPicker form-entry'>";
+        echo "<DIV class='categoryPicker'>";
         $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <A TYPE='application/rss+xml' HREF='zkrss.php?feed=reviews'>" .
              "<IMG SRC='img/rss.png' ALT='rss'></A>";
 
@@ -191,8 +184,8 @@ class Reviews extends MenuItem {
         echo "</DIV>";
 
         if ($isAuthorized) {
-            echo "<div style='display:inline-block' class='form-entry' >";
-            echo "<label class='reviewLabel'>Reviewer:</label>";
+            echo "<div style='display:inline-block' >";
+            echo "<label class='reviewLabel'>Reviewer:</label> ";
             echo "<select id='djPicker' name='dj'>";
             $selectedOpt = empty($author) ? ' selected ' : '';
             echo "<option ${selectedOpt}>All</option>";
@@ -286,46 +279,6 @@ class Reviews extends MenuItem {
 
     public function viewReview() {
         $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
-    }
-    
-    public function viewReview2($tag=0) {
-        if(!$tag)
-            $tag = $_REQUEST["n"];
-        $records = Engine::api(IReview::class)->getReviews($tag, 1, "", $this->session->isAuth("u"));
-    
-        if($count = sizeof($records)) {
-            $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
-            echo "<TABLE WIDTH=\"100%\">\n";
-            echo "  <TR><TH ALIGN=LEFT CLASS=\"secdiv\">Album Review" . ($count>1?"s":"") ."</TH>";
-            echo "</TR>\n</TABLE>\n";
-            $space = 0;
-    
-            echo "<TABLE CELLPADDING=2 CELLSPACING=2 WIDTH=\"100%\">\n";
-            foreach($records as $row) {
-                if($row[5])
-                    $djname = $row[5];
-                else {
-                    $djs = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $row[4]);
-                    $djname = $djs[0]["realname"];
-                }
-                if($space++)
-                    echo "  <TR><TD COLSPAN=3>&nbsp;</TD></TR>\n";
-    
-                echo "  <TR><TD><B>".htmlentities($djname)."</B><BR>\n";
-                echo "      <SPAN CLASS=\"sub\">Reviewed " .
-                        substr($row[1], 0, 10);
-                echo $row[3]?" <FONT COLOR=\"#cc0000\">(private)</FONT>":"&nbsp;";
-                echo "</SPAN></TD></TR>\n";
-    
-                if($this->session->getUser() == $row[4])
-                    echo "  <TR COLSPAN=3><TD><FONT SIZE=-1><A HREF=\"?action=searchReviewEdit&amp;tag=$tag\">[This is my review and I want to edit it]</A></FONT></TD></TR>\n";
-                echo "  <TR><TD COLSPAN=3 CLASS=\"review\">\n";
-                echo nl2br(htmlentities($row[2]));
-                echo "\n  </TD></TR>\n";
-            }
-    
-            echo "</TABLE><BR>\n";
-        }
     }
     
     private function eMailReview($tag, $airname, $review) {
@@ -431,7 +384,7 @@ class Reviews extends MenuItem {
             }
 
             switch($_REQUEST["button"]) {
-            case " Post Review! ":
+            case "post-review":
                 Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
                 $success = Engine::api(IReview::class)->insertReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
                 if($success >= 1) {
@@ -443,7 +396,7 @@ class Reviews extends MenuItem {
                 }
                 $errorMessage = "<B><FONT COLOR=\"#cc0000\">Review not posted.  Try again later.</FONT></B>\n";
                 break;
-            case " Update Review ":
+            case "edit-save":
                 $review = mb_substr(trim($_REQUEST["review"]), 0, IReview::MAX_REVIEW_LENGTH);
                 $success = Engine::api(IReview::class)->updateReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
                 if($success >= 0) {
@@ -455,7 +408,7 @@ class Reviews extends MenuItem {
                 }
                 $errorMessage = "<B><FONT COLOR=\"#cc0000\">Review not updated.  Try again later.</FONT></B>\n";
                 break;
-            case " Delete Review ":
+            case "edit-delete":
                 $success = Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
                 if($success >= 1) {
                     echo "<B><FONT COLOR=\"#ffcc33\">Your review has been deleted.</FONT></B>\n";

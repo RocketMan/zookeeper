@@ -53,6 +53,7 @@ class MenuEntry {
 class SafeSession {
     public function getDN() { return Engine::session()->getDN(); }
     public function getUser() { return Engine::session()->getUser(); }
+    public function isUser($user) { return !strcasecmp($this->getUser(), $user); }
 
     public function isAuth($mode) {
         return Engine::session()->isAuth($mode);

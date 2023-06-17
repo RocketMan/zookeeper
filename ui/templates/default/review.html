@@ -1,12 +1,12 @@
 <h4 style='margin-top: 0'>Review Album:&nbsp;&nbsp;{{ album.artist }} / {{ album.album }}</h4>
 {{ errorMessage | raw }}
-<form class="review" action="?" method=post>
+<form class="review form-entry" action="?" method=post>
 <datalist id='airnames'>
 {% for airname in airnames %}
   <option value='{{ airname }}'>
 {% endfor %}
 </datalist>
-<table>
+<table width='95%'>
   <tr>
     <td style='width: 60px'>Reviewer:</td>
     <td align=left>
@@ -22,16 +22,20 @@
   </tr>
   <tr>
     <td colspan=2>
-      <span class=input><textarea wrap=virtual name=review maxlength={{ MAX_REVIEW_LENGTH }} cols=50 rows=20>{{ review }}</textarea></span><br>
+      <span class=input><textarea wrap=virtual name=review maxlength={{ MAX_REVIEW_LENGTH }} rows=20 style='width: 100%; resize: none'>{{ review }}</textarea></span><br>
     </td>
   </tr>
   <tr>
     <td align=left colspan=2>
 {% if id %}
-      <input type=submit name=button value=" Update Review ">&nbsp;&nbsp;&nbsp;
-      <input type=submit name=button id='delrev' value= " Delete Review ">
+      <div class='action-area'>
+      <button type=submit class='edit-mode default' id='edit-save'>Save</button>
+      <button type=submit class='edit-mode' id='edit-delete'>Delete</button>
+      <button type=button class='edit-mode' id='edit-cancel'>Cancel</button>
+      </div>
 {% else %}
-      <input type=submit name=button value=" Post Review! ">
+      <button type=submit class='edit-mode default' id='post-review'>Post Review!</button>
+      <button type=button class='edit-mode' id='edit-cancel'>Cancel</button>
 {% endif %}
     </td>
   </tr>
@@ -43,6 +47,7 @@
 </table>
 <input type=hidden name=tag value="{{ album.tag }}">
 <input type=hidden name=action value="searchReviewEdit">
+<input type=hidden name=button value="">
 <input type=hidden name=validate value="y">
 </form>
 <script><!--
@@ -67,18 +72,26 @@ $().ready(function() {
     }
 
     $("form.review").on('submit', function(e) {
+        var id = document.activeElement.id;
+        $("input[name=button]").val(id);
+
         var airname = $("#airname").val().trim();
         if(airname.length == 0 ||
                $("#airnames option[value='" + escQuote(airname) + "' i]").length == 0 && !confirm('Create new airname "' + airname + '"?')) {
             $("#airname").val('').trigger('focus');
             e.preventDefault();
-            return;
         }
     });
 
-    $("#delrev").on('click', function(e) {
+    $("#edit-delete").on('click', function(e) {
         if(!confirm("Delete the review?"))
             e.preventDefault();
+        else if(!$("#airname").val().trim().length)
+            $("#airname").val('{{ airname ?: self | e("js") }}');
+    });
+
+    $("#edit-cancel").on('click', function() {
+        location.href = "?action=search&s=byAlbumKey&n=" + $("input[name=tag]").val();
     });
 
     $("*[name=review]").focus();

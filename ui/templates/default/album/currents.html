@@ -1,0 +1,48 @@
+{%- macro catnames(catmap, categories) %}
+    {%~ set names = [] %}
+    {%~ set cats = categories | split(',') %}
+    {%~ for cat in cats -%}
+        {%~ if not (catmap[cat - 1].name starts with '(') %}
+            {%~ set names = names | merge([ catmap[cat - 1].name ]) %}
+        {%~ endif %}
+    {%- endfor %}
+    {{ names | join(', ') }}
+{% endmacro -%}
+
+{%- set today = "now" | date("Y-m-d") %}
+{%- set afile_number = app.session.isAuth('u')
+        and currents | length
+        and currents[0].adddate <= today
+        and currents[0].pulldate > today ?
+    "<span style='margin-left: 0.25em'>(File #" ~ currents[0].afile_number | e ~ ")</span>" %}
+<div class='secdiv'>A-File Activity {{ afile_number | raw }}</div>
+{% for current in currents %}
+<table cellpadding=2 cellspacing=2>
+  <tr><td align=right>Add Date:</td>
+    <td class='date'>{{ current.adddate }}</td><td width=20>&nbsp;</td>
+    <td align=right>Pull Date:</td>
+    <td class='date'>{{ current.pulldate }}</TD><TD WIDTH=20>&nbsp;</td>
+{% if current.category %}
+    <td align=right>Charts:</td>
+    <td>{{ _self.catnames(CATMAP, current.category) }}</td>
+{% endif %}
+  </tr>
+</table>
+{% if current.spins | length %}
+<table cellpadding=4 cellspacing=0 border=0>
+  <tr>
+    <td align=right class="sub">Week Ending:</td>
+    {%~ for week in current.spins %}
+    <td align=center class='currentsTop date'>{{ week.week | date(DATE_FORMAT_SHORT) }}</td>
+    {%~ endfor %}
+  </tr>
+  <tr>
+    <td align=right class="sub">Airplays:</td>
+    {%~ for week in current.spins %}
+    <td align=center class="currentsBottom">{{ week.plays }}</td>
+    {%~ endfor %}
+  </tr>
+</table>
+{% endif %}
+{% endfor %}
+<br>
