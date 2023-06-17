@@ -328,20 +328,48 @@ span.review-categories > span.zk-hidden {
 }
 
 /* album details */
-.currentsTop {
+.currents-details {
+    border-spacing: 2px;
+    border-collapse: separate;
+}
+.currents-details td {
+    padding: 2px;
+}
+.currents-details th {
+    text-align: right;
+    font-size: inherit;
+    font-weight: normal;
+    font-family: inherit;
+}
+.currents-details td {
+    padding-right: 24px;
+    font-family: inherit;
+}
+.currents-activity td,
+.currents-activity th {
+    padding: 4px;
+    text-align: center;
+}
+.currents-activity tr:first-child td {
     border-style: solid;
     border-width: 1px 1px 0 1px;
-    border-color: #cccccc;
+    border-color: #ccc;
     font-size: 80%;
-    background-color: #eeeeee;
-    color: #000000;
+    background-color: #eee;
+    color: #000;
 }
-.currentsBottom {
+.currents-activity tr:last-child td {
     border-style: solid;
     border-width: 0 1px 1px 1px;
-    border-color: #cccccc;
+    border-color: #ccc;
     font-size: 80%;
-    color: #000000;
+    color: #000;
+}
+.currents-activity th {
+    text-align: right;
+    font-weight: normal;
+    font-size: 8pt;
+    font-family: inherit;
 }
 td.review {
     font-size: 10pt;
