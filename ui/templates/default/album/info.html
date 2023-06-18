@@ -15,7 +15,7 @@
 </div>
 {% endif %}
 
-<table class='album-info' {{ image_url ? "style='max-width: 564px'" }}>
+<table class='album-info {{~ image_url ? " with-thumb" }}'>
   <tr>
     <td align=right>Album:</td>
     <td><b><a href="?s=byAlbum&amp;n={{ album.album | e('url') }}&amp;action=search" class="nav">{{ album.album }}</a></b></td>

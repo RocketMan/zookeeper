@@ -1420,6 +1420,9 @@ a:hover.copy {
     vertical-align: top;
     padding-bottom: 10px;
 }
+.album-info.with-thumb {
+    max-width: calc(100% - 140px);
+}
 
 .album-thumb {
     display: inline-block;
