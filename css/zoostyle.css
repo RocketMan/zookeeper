@@ -490,6 +490,37 @@ div.playTrack:hover {
     filter: saturate(10);
 }
 
+/* review editor */
+form.review {
+    margin-top: 10px;
+}
+
+form.review > div {
+    margin-right: 25px;
+}
+
+form.review label {
+    margin-right: 5px;
+    font-weight: 600;
+}
+
+form.review .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+form.review textarea {
+    width: 100%;
+    resize: none;
+}
+
+form.review .action-area,
+form.review .action-area-new {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
 /* layout */
 div.box {
     width: 900px;
@@ -556,7 +587,7 @@ ul.listbox.selector:focus {
         border-radius: 8px;
         font-size: 16px;
         padding: 0;
-	height: 200px;
+        height: 200px;
     }
     ul.listbox.selector li {
         padding: 8px;
@@ -564,7 +595,7 @@ ul.listbox.selector:focus {
     }
     form.selector input[type=button],
     form.selector input[type=submit] {
-	height: 30px;
+        height: 30px;
     }
 }
 
@@ -809,7 +840,7 @@ li.ui-menu-item .ui-state-active,
     }
 
     div.ui-datepicker {
-	font-size: 16px;
+        font-size: 16px;
     }
 }
 
@@ -969,10 +1000,10 @@ li.ui-menu-item .ui-state-active,
     div.content input:not([type=radio],[type=checkbox],.editorUp,.editorDown),
     div.content .form-entry button,
     div.content button {
-	height: 30px;
+        height: 30px;
     }
     div.content input:is(.editorUp,.editorDown) {
-	height: 24px;
+        height: 24px;
     }
     div.content .editorChooser:focus-visible {
         border-radius: 2px;
@@ -986,7 +1017,7 @@ li.ui-menu-item .ui-state-active,
         font-size: 16px;
     }
     div.content .import-form .group {
-	height: 30px;
+        height: 30px;
     }
 }
 

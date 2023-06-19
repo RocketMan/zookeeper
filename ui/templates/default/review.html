@@ -1,4 +1,4 @@
-<h4 style='margin-top: 0'>Review Album:&nbsp;&nbsp;{{ album.artist }} / {{ album.album }}</h4>
+<h3 style='margin-top: 0'>Review Album:&nbsp;&nbsp;{{ album.artist }} / {{ album.album }}</h3>
 {{ errorMessage | raw }}
 <form class="review form-entry" action="?" method=post>
 <datalist id='airnames'>
@@ -6,45 +6,37 @@
   <option value='{{ airname }}'>
 {% endfor %}
 </datalist>
-<table width='95%'>
-  <tr>
-    <td style='width: 60px'>Reviewer:</td>
-    <td align=left>
-      <input type='text' id='airname' name='airname' value='{{ airname ?: self }}' maxlength='{{ MAX_AIRNAME_LENGTH }}' required>
-    </td>
-  </tr>
-  <tr>
-    <td>Review:</td>
-    <td align=right>
+<div>
+  <div>
+    <label>Reviewer:</label>
+    <input type='text' id='airname' name='airname' value='{{ airname ?: self }}' maxlength='{{ MAX_AIRNAME_LENGTH }}' required>
+  </div>
+  <div class='review-header'>
+    <label>Review:</label>
+    <div>
       <input type=radio name=private value=0 {{ not private ? 'checked' }}>Public&nbsp;&nbsp;
       <input type=radio name=private value=1 {{ private ? 'checked' }} >Private
-    </td>
-  </tr>
-  <tr>
-    <td colspan=2>
-      <span class=input><textarea wrap=virtual name=review maxlength={{ MAX_REVIEW_LENGTH }} rows=20 style='width: 100%; resize: none'>{{ review }}</textarea></span><br>
-    </td>
-  </tr>
-  <tr>
-    <td align=left colspan=2>
+    </div>
+  </div>
+  <div>
+    <textarea wrap=virtual name=review maxlength={{ MAX_REVIEW_LENGTH }} rows=20>{{ review }}</textarea>
+  </div>
 {% if id %}
-      <div class='action-area'>
-      <button type=submit class='edit-mode default' id='edit-save'>Save</button>
-      <button type=submit class='edit-mode' id='edit-delete'>Delete</button>
-      <button type=button class='edit-mode' id='edit-cancel'>Cancel</button>
-      </div>
+  <div class='action-area'>
+    <button type=submit class='edit-mode default' id='edit-save'>Save</button>
+    <button type=submit class='edit-mode' id='edit-delete'>Delete</button>
+    <button type=button class='edit-mode' id='edit-cancel'>Cancel</button>
+  </div>
 {% else %}
-      <button type=submit class='edit-mode default' id='post-review'>Post Review!</button>
-      <button type=button class='edit-mode' id='edit-cancel'>Cancel</button>
+  <div class='action-area-new'>
+    <button type=submit class='edit-mode default' id='post-review'>Post Review!</button>
+    <button type=button class='edit-mode' id='edit-cancel'>Cancel</button>
+  </div>
 {% endif %}
-    </td>
-  </tr>
-  <tr>
-    <td align=left colspan=2>
-      <input type=checkbox name=noise {{ not id ? 'checked' }}>E-mail review to Noise
-    </td>
-  </tr>
-</table>
+  <div>
+    <input type=checkbox name=noise {{ not id ? 'checked' }}>E-mail review to the Music list
+  </div>
+</div>
 <input type=hidden name=tag value="{{ album.tag }}">
 <input type=hidden name=action value="searchReviewEdit">
 <input type=hidden name=button value="">
