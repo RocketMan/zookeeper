@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -32,8 +32,6 @@ use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 
 class SSOCommon {
-    const UA = "Zookeeper-SSO/2.0; (+https://zookeeper.ibinx.com/)";
-    
     public static function zkHttpRedirect($url, $params) {
         $qs = http_build_query($params);
         header("Location: " . $url . "?" . $qs, true, 307);
@@ -69,7 +67,7 @@ class SSOCommon {
                 // positive authorization received; get the access token
                 $client = new Client([
                     RequestOptions::HEADERS => [
-                        'User-Agent' => self::UA
+                        'User-Agent' => Engine::UA
                     ]
                 ]);
 

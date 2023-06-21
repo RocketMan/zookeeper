@@ -47,7 +47,6 @@ class NowAiringServer implements MessageComponentInterface {
 
     const DISCOGS_BASE = "https://www.discogs.com";
     const DISCOGS_SEARCH = "https://api.discogs.com/database/search";
-    const UA = "Zookeeper/2.0; (+https://zookeeper.ibinx.com/)";
 
     const QUERY_DELAY = 5;  // in seconds
 
@@ -112,7 +111,7 @@ class NowAiringServer implements MessageComponentInterface {
                 $this->discogs = new Client([
                     'base_uri' => self::DISCOGS_SEARCH,
                     RequestOptions::HEADERS => [
-                        'User-Agent' => self::UA,
+                        'User-Agent' => Engine::UA,
                         'Authorization' => $apiKey ?
                             "Discogs token=$apiKey" :
                             "Discogs key=$clientId, secret=$clientSecret"

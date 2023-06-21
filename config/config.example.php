@@ -137,6 +137,17 @@ $config = [
     ],
 
     /**
+     * Slack integration
+     *
+     * To enable Slack, specify your bot token and target channel IDs
+     */
+    'slack' => [
+        'token' => null,
+        'review_channel' => null,
+        'chart_channel' => null,
+    ],
+
+    /**
      * database settings
      */
     'db' => [
