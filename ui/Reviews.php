@@ -25,6 +25,7 @@
 namespace ZK\UI;
 
 use ZK\Engine\Engine;
+use ZK\Engine\IArtwork;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
@@ -32,10 +33,15 @@ use ZK\Engine\IUser;
 
 use ZK\UI\UICommon as UI;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
+
 use JSMin\JSMin;
 
 class Reviews extends MenuItem {
     const PLAIN_TEXT_WRAP_LEN = 75;
+
+    const SLACK_BASE = "https://slack.com/api/";
 
     private static $actions = [
         [ "viewRecent", "viewRecentDispatch" ],
@@ -281,21 +287,121 @@ class Reviews extends MenuItem {
         $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
     }
     
-    private function eMailReview($tag, $airname, $review) {
+    private function postReview($tag) {
+        // nothing to do if Slack is not configured
+        $config = Engine::param('slack');
+        if(!$config || !($token = $config['token']) ||
+                !($channel = $config['review_channel'])) {
+            echo "  <h4 class='error'>Slack is not configured.</h4>\n";
+            return;
+        }
+
+        // find the album
+        $libAPI = Engine::api(ILibrary::class);
+        $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        if(!count($albums))
+            return;
+
+        // get the album art, if any
+        $imageApi = Engine::api(IArtwork::class);
+        $image = $imageApi->getAlbumArt($tag);
+        $albumArt = $image && ($uuid = $image["image_uuid"]) ?
+                        $imageApi->getCachePath($uuid) : null;
+
+        // find the review
+        $user = $this->session->getUser();
+        $reviews = Engine::api(IReview::class)->getReviews($tag, false, $user, true);
+        if(!count($reviews))
+            return;
+
+        $artist = $albums[0]["iscoll"] ? "Various Artists" : $albums[0]["artist"];
+        $album = $albums[0]["album"];
+
+        $reviewer = $reviews[0]["realname"];
+        $created = $reviews[0]["created"];
+        $review = $reviews[0]["review"];
+
+        $base = Engine::getBaseUrl();
+        $title = Engine::param('station_title');
+
+        // compose the message
+        $header = [
+            'type' => 'section',
+            'text' => [
+                'type' => 'mrkdwn',
+                'text' => ":headphones: *$artist / $album*\n\n$reviewer\nReviewed " . substr($created, 0, 10),
+            ],
+        ];
+
+        if($albumArt) {
+            $header['accessory'] = [
+                'type' => 'image',
+                'image_url' => Engine::getBaseUrl() . $albumArt,
+                'alt_text' => 'album art',
+            ];
+        }
+
+        $body = [
+            'type' => 'section',
+            'text' => [
+                'type' => 'plain_text',
+                'text' => $review,
+            ],
+        ];
+
+        $footer = [
+            'type' => 'section',
+            'text' => [
+                'type' => 'mrkdwn',
+                'text' => "<$base?s=byAlbumKey&amp;n=$tag&amp;action=search|View this review in $title>.",
+            ],
+        ];
+
+        $client = new Client([
+            'base_uri' => self::SLACK_BASE,
+            RequestOptions::HEADERS => [
+                'User-Agent' => Engine::UA,
+                'Authorization' => 'Bearer ' . $token
+            ]
+        ]);
+
+        try {
+            $response = $client->post('chat.postMessage', [
+                RequestOptions::JSON => [
+                    'channel' => $channel,
+                    'text' => "$artist / $album",
+                    'blocks' => [
+                        $header,
+                        $body,
+                        $footer,
+                    ],
+                ]
+            ]);
+
+            // Slack returns success/failure in 'ok' property
+            $body = $response->getBody()->getContents();
+            $json = json_decode($body);
+            if(!$json->ok)
+                error_log("postMessage: $body");
+        } catch(\Exception $e) {
+            error_log("postMessage: " . $e->getMessage());
+        }
+    }
+
+    private function eMailReview($tag) {
         $instance_nobody = Engine::param('email')['nobody'];
         $address = Engine::param('email')['reviewlist'];
 
         if(!isset($address)) {
-            echo "  <B><FONT COLOR=\"#cc0000\">Noise e-mail not configured.</FONT></B>\n";
+            echo "  <h4 class='error'>Noise e-mail not configured.</h4>\n";
             return;
         }
-    
+
         $libAPI = Engine::api(ILibrary::class);
         $revAPI = Engine::api(IReview::class);
-        $records = $revAPI->getReviews($tag, 1, "", 1);
+        $records = $revAPI->getReviews($tag, false, $this->session->getUser(), true);
         if(sizeof($records) && ($row = $records[0])) {
-            $djs = $libAPI->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
-            $name = $djs[0]["realname"];
+            $name = $row["realname"];
     
             // JM 2018-03-16 for now, force all from nobody
             $email = $instance_nobody;
@@ -322,9 +428,9 @@ class Reviews extends MenuItem {
             } else
                 $body .= "Label: (Unknown)\r\n";
     
-            $body .= "\n$name\nReviewed " . substr($row[1], 0, 10) . "\r\n\r\n";
+            $body .= "\n$name\nReviewed " . substr($row["created"], 0, 10) . "\r\n\r\n";
     
-            $review = $row[2];
+            $review = $row["review"];
     
             $body .= wordwrap($review, self::PLAIN_TEXT_WRAP_LEN, "\r\n", true);
     
@@ -337,14 +443,14 @@ class Reviews extends MenuItem {
     
             // Check for errors
             if(!$stat) {
-                echo "  <B><FONT COLOR=\"#cc0000\">Possible Problem Sending E-Mail</FONT></B><BR>\n";
+                echo "  <h4 class='error'>Possible Problem Sending E-Mail</h4><BR>\n";
                 echo "There may have been a problem sending your e-mail.  ";
                 echo "</P>\n";
                 //echo "The mailer reports the following error:<BR>\n  <PRE>\n";
                 //echo error_get_last()['message'];
                 //echo "\n</PRE></FONT></B>\n";
             } else {
-                echo "  <B><FONT COLOR=\"#ffcc33\">E-Mail Sent!</FONT></B><BR>\n";
+                echo "  <h4>E-Mail Sent!</h4><BR>\n";
             }
         }
     }
@@ -389,33 +495,33 @@ class Reviews extends MenuItem {
                 $success = Engine::api(IReview::class)->insertReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
                 if($success >= 1) {
                     if($_REQUEST["noise"])
-                        $this->eMailReview($_REQUEST["tag"], $aid, $review);
-                    echo "<B><FONT COLOR=\"#ffcc33\">Your review has been posted!</FONT></B>\n";
+                        $this->postReview($_REQUEST["tag"]);
+                    echo "<h4>Your review has been posted!</h4>\n";
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
-                $errorMessage = "<B><FONT COLOR=\"#cc0000\">Review not posted.  Try again later.</FONT></B>\n";
+                $errorMessage = "<h4 class='error'>Review not posted.  Try again later.</h4>\n";
                 break;
             case "edit-save":
                 $review = mb_substr(trim($_REQUEST["review"]), 0, IReview::MAX_REVIEW_LENGTH);
                 $success = Engine::api(IReview::class)->updateReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
                 if($success >= 0) {
                     if($_REQUEST["noise"])
-                        $this->eMailReview($_REQUEST["tag"], $aid, $review);
-                    echo "<B><FONT COLOR=\"#ffcc33\">Your review has been updated.</FONT></B>\n";
+                        $this->postReview($_REQUEST["tag"]);
+                    echo "<h4>Your review has been updated.</h4>\n";
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
-                $errorMessage = "<B><FONT COLOR=\"#cc0000\">Review not updated.  Try again later.</FONT></B>\n";
+                $errorMessage = "<h4 class='error'>Review not updated.  Try again later.</h4>\n";
                 break;
             case "edit-delete":
                 $success = Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
                 if($success >= 1) {
-                    echo "<B><FONT COLOR=\"#ffcc33\">Your review has been deleted.</FONT></B>\n";
+                    echo "<h4>Your review has been deleted.</h4>\n";
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
-                $errorMessage = "<B><FONT COLOR=\"#cc0000\">Delete failed.  Try again later.</FONT></B>\n";
+                $errorMessage = "<h4 class='error'>Delete failed.  Try again later.</h4>\n";
                 break;
             }
         }
