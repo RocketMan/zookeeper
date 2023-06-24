@@ -34,19 +34,9 @@ use ZK\Engine\IReview;
 use ZK\UI\UICommon as UI;
 
 class Search extends MenuItem {
-    private static $actions = [
-        [ "findAlbum", "findAlbum" ],
-        [ "search", "doSearch" ],
-    ];
-
     private static $legacySearchActions = [
         [ "", "searchForm" ],
-        [ "byAlbum", "searchForm" ],
         [ "byAlbumKey", "searchByAlbumKey" ],
-        [ "byArtist", "searchForm" ],
-        [ "byTrack", "searchForm" ],
-        [ "byLabel", "searchForm" ],
-        [ "byLabelKey", "searchForm" ],
     ];
 
     private static $typeFromLegacy = [
@@ -62,11 +52,12 @@ class Search extends MenuItem {
     public $searchType;
 
     public function processLocal($action, $subaction) {
-        return $this->dispatchAction($action, self::$actions);
-    }
+        if(array_key_exists('n', $_REQUEST))
+            $this->searchText = stripslashes($_REQUEST['n']);
 
-    public function findAlbum() {
-        $this->searchByAlbumKey($_REQUEST["n"]);
+        $this->searchType =
+                array_key_exists('s', $_REQUEST)?$_REQUEST['s']:"";
+        $this->dispatchAction($this->searchType, self::$legacySearchActions);
     }
 
     public function searchByAlbumKey($key = null) {
@@ -166,15 +157,6 @@ class Search extends MenuItem {
         $this->addVar("tracks", $tracks);
     }
 
-    public function doSearch() {
-        if(array_key_exists('n', $_REQUEST))
-            $this->searchText = stripslashes($_REQUEST['n']);
-
-        $this->searchType =
-                array_key_exists('s', $_REQUEST)?$_REQUEST['s']:"";
-        $this->dispatchAction($this->searchType, self::$legacySearchActions);
-    }
-    
     public function searchForm() {
         $this->setTemplate("search.library.html");
         $this->addVar('search', $this);
