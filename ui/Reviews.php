@@ -125,162 +125,26 @@ class Reviews extends MenuItem {
 
         $this->emitViewDJMain();
     }
-    
-    private function emitReviewRow($row, $album) {
-        // Album
-        $genre = ILibrary::GENRES[$album[0]["category"]];
-        echo "<TR CLASS='hborder ${genre}' data-genre='${genre}'>";
-        echo "<TD><A HREF='?action=viewRecentReview&amp;tag=$row[0]'>";
-        echo htmlentities($album[0]["album"]);
-        echo "</A></TD><TD>";
-    
-        // Artist
-        if (preg_match("/^\[coll\]/i", $album[0]["artist"]))
-            echo "Various Artists";
-        else
-            echo htmlentities($album[0]["artist"]);
-        echo "</TD><TD>";
-    
-        // Genre
-        echo htmlentities($genre);
-        echo "</TD><TD>";
-    
-        // Reviewer
-        if($row[1])
-            $djname = $row[1];
-        else {
-            $djs = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $row[2]);
-            $djname = $djs[0]["realname"];
-        }
-        echo htmlentities($djname);
-    
-        // Date
-        echo "</TD><TD CLASS='date'>";
-        echo $row["reviewed"];
-        echo "</TD></TR>\n";
-    }
-    
-    private function makeRecentReviewsHeader() {
-        return "<THEAD><TR>" .
-             "<TH ALIGN=LEFT>Album</TH>" .
-             "<TH ALIGN=LEFT>Artist</TH>" .
-             "<TH ALIGN=LEFT>Collection</TH>" .
-             "<TH ALIGN=LEFT>Reviewer</TH>" .
-             "<TH ALIGN=LEFT>Date</TH>" .
-             "</TR></THEAD>";
-    }
-    
+
     public function viewRecentReviews() {
-        $isAuthorized = $this->session->isAuth("u");
-        $author = $isAuthorized && trim($_GET["dj"]) == 'Me' ? $this->session->getUser() : '';        
+        $isAuthorized = $this->session->isAuth('u');
+        $author = $isAuthorized && ($_GET['dj'] ?? '') == 'Me' ? $this->session->getUser() : '';
 
-        echo "<DIV class='categoryPicker'>";
-        $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <A TYPE='application/rss+xml' HREF='zkrss.php?feed=reviews'>" .
-             "<IMG SRC='img/rss.png' ALT='rss'></A>";
+        $this->setTemplate("review.recent.html");
+        $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <a type='application/rss+xml' href='zkrss.php?feed=reviews'><img src='img/rss.png' alt='rss'></a>";
+        $this->addVar("GENRES", ILibrary::GENRES);
 
-        echo "<label class='reviewLabel'>Categories:&nbsp;</label>";
-        echo "<span class='review-categories zk-hidden'>";
-        // NOTE: final visibility is set via javascript upon page load.
-        foreach (ILibrary::GENRES as $genre) {
-            echo "<span class='${genre} zk-hidden'>";
-            echo "<input style='margin-right: 2px' type='checkbox' id='${genre}' name='genre' value='${genre}'>";
-            echo "<span for='${genre}'>$genre</span></span>";
-        }
-        echo "</span>";
-        echo "</DIV>";
-
-        if ($isAuthorized) {
-            echo "<div style='display:inline-block' >";
-            echo "<label class='reviewLabel'>Reviewer:</label> ";
-            echo "<select id='djPicker' name='dj'>";
-            $selectedOpt = empty($author) ? ' selected ' : '';
-            echo "<option ${selectedOpt}>All</option>";
-            $selectedOpt = empty($selectedOpt) ? ' selected ' : '';
-            echo "<option ${selectedOpt}>Me</option>";
-            echo "</select>";
-            echo "</div>";
-        }
-        echo "<span id='review-count'></span>";
-
-        $reviewsHeader = $this->makeRecentReviewsHeader();
-        echo "<TABLE class='sortable-table' style='display: none' WIDTH='100%'>";
-        echo $reviewsHeader;
-        echo "<TBODY>";
-
-        $results = Engine::api(IReview::class)->getRecentReviews($author, 0, 200, $isAuthorized);
+        $reviews = Engine::api(IReview::class)->getRecentReviews($author, 0, 200, $isAuthorized)->asArray();
         $libAPI = Engine::api(ILibrary::class);
-        while($results && ($row = $results->fetch())) {
-            $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
-            $this->emitReviewRow($row, $albums);
+        foreach($reviews as &$review) {
+            $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $review['tag']);
+            $review['album'] = $albums[0];
+            if(!$review['airname']) {
+                $users = $libAPI->search(ILibrary::PASSWD_NAME, 0, 1, $review['user']);
+                $review['airname'] = $users[0]['realname'];
+            }
         }
-        echo "</TBODY>";
-        echo "</TABLE>";
-
-        UI::setFocus();
-      ?>
-
-      <SCRIPT><!--
-    <?php ob_start([JSMin::class, 'minify']); ?>
-        $().ready(function(){
-            var INITIAL_SORT_COL = 0; //date
-            $('.sortable-table').tablesorter({
-                sortList: [[INITIAL_SORT_COL, 0]],
-            }).css('display','table');
-
-            function setGenreVisibility(genre, showIt) {
-                let genreClass = 'tr.' + genre;
-                showIt ?  $(genreClass).show() : $(genreClass).hide();
-            }
-
-            let genreMap = {};
-            let reviewCnt = 0;
-            $('.sortable-table > tbody > tr').each(function(e) {
-                reviewCnt++;
-                let genre = $(this).data('genre');
-                if (genreMap[genre] === undefined) {
-                    genreMap[genre] = 0;
-                    $(".review-categories span." + genre).removeClass('zk-hidden');
-                }
-                genreMap[genre]++;
-            });
-            $("span.review-categories").removeClass('zk-hidden');
-            $("#review-count").text(' Found ' + reviewCnt + ' reviews.');
-
-            for (let [genre, count] of Object.entries(genreMap)) {
-                $(`span.${genre} > span`).text(`${genre} (${count})`);
-            }
-
-            let selectedDj = $('#djPicker').children("option:selected").val();
-            let storageKey = 'ReviewCategories-' + selectedDj;
-            let categoryStr = localStorage.getItem(storageKey);
-            let categories = categoryStr ? JSON.parse(categoryStr) : {};
-                
-            $(".categoryPicker input").each(function(e) {
-                let genre  = $(this).val();
-                let isChecked = !(categories[genre] === false);
-                setGenreVisibility(genre, isChecked)
-                $(this).prop('checked', isChecked);
-            });
-
-            $("#djPicker").on('change selectmenuchange', function(e) {
-                let selectedDj = $(this).children("option:selected").val();
-                window.location.assign('?action=viewRecent&dj=' + selectedDj);
-            }).selectmenu();
-            
-            $(".categoryPicker input").on('change', function(e) {
-                let genre = $(this).val();
-                let isChecked = $(this).prop('checked');
-                let rowClass = "tr." + genre;
-                setGenreVisibility(genre, isChecked);
-                categories[genre] = isChecked;
-                localStorage.setItem(storageKey, JSON.stringify(categories));
-            });
-        });
-    <?php ob_end_flush(); ?>
-        // -->
-      </SCRIPT>
-
-    <?php
+        $this->addVar("reviews", $reviews);
     }
 
     public function viewReview() {
@@ -543,7 +407,7 @@ class Reviews extends MenuItem {
            $airnames[] = $row['airname'];
         $airnames[] = $self;
 
-        $this->template = "review.html";
+        $this->template = "review.edit.html";
         $this->addVar("id", $id ?? 0);
         $this->addVar("album", $albums[0]);
         $this->addVar("errorMessage", $errorMessage);

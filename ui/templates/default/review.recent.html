@@ -1,0 +1,105 @@
+<div class='categoryPicker'>
+  <label class='reviewLabel'>Categories:&nbsp;</label>
+  <span class='review-categories zk-hidden'>
+{% for genre in GENRES %}
+    <span class='{{ genre }} zk-hidden'>
+      <input style='margin-right: 2px' type='checkbox' id='{{ genre }}' name='genre' value='{{ genre }}'>
+      <span>{{ genre }}</span>
+    </span>
+{% endfor %}
+  </span>
+</div>
+{% if app.session.isAuth('u') %}
+{% set author = app.request.dj == 'Me' %}
+<div style='display:inline-block' >
+  <label class='reviewLabel'>Reviewer:</label>
+  <select id='djPicker' name='dj'>
+    <option {{ not author ? 'selected'}}>All</option>
+    <option {{ author ? 'selected' }}>Me</option>
+  </select>
+</div>
+{% endif %}
+
+<span id='review-count'></span>
+
+<table class='sortable-table' style='display: none' width='100%'>
+<thead>
+  <tr>
+    <th align=left>Album</th>
+    <th align=left>Artist</th>
+    <th align=left>Collection</th>
+    <th align=left>Reviewer</th>
+    <th align=left>Date</th>
+  </tr>
+</thead>
+<tbody>
+{% for review in reviews %}
+  {%- set genre = GENRES[review.album.category] %}
+  <tr class='hborder {{ genre }}' data-genre='{{ genre }}'>
+    <td><a href='?action=viewRecentReview&amp;tag={{ review.album.tag }}'>{{ review.album.album }}</a></td>
+    <td>{{ review.album.iscoll ? 'Various Artists' : review.album.artist }}</td>
+    <td>{{ genre }}</td>
+    <td>{{ review.airname }}</td>
+    <td class='date'>{{ review.reviewed }}</td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+<script><!--
+  $().ready(function(){
+      var INITIAL_SORT_COL = 4; //date
+      $('.sortable-table').tablesorter({
+          sortList: [[INITIAL_SORT_COL, 1]],
+      }).css('display','table');
+
+      function setGenreVisibility(genre, showIt) {
+          let genreClass = 'tr.' + genre;
+          showIt ?  $(genreClass).show() : $(genreClass).hide();
+      }
+
+      let genreMap = {};
+      let reviewCnt = 0;
+      $('.sortable-table > tbody > tr').each(function(e) {
+          reviewCnt++;
+          let genre = $(this).data('genre');
+          if (genreMap[genre] === undefined) {
+              genreMap[genre] = 0;
+              $(".review-categories span." + genre).removeClass('zk-hidden');
+          }
+          genreMap[genre]++;
+      });
+      $("span.review-categories").removeClass('zk-hidden');
+      $("#review-count").text(' Found ' + reviewCnt + ' reviews.');
+
+      for (let [genre, count] of Object.entries(genreMap)) {
+          $(`span.${genre} > span`).text(`${genre} (${count})`);
+      }
+
+      let selectedDj = $('#djPicker').children("option:selected").val();
+      let storageKey = 'ReviewCategories-' + selectedDj;
+      let categoryStr = localStorage.getItem(storageKey);
+      let categories = categoryStr ? JSON.parse(categoryStr) : {};
+
+      $(".categoryPicker input").each(function(e) {
+          let genre  = $(this).val();
+          let isChecked = !(categories[genre] === false);
+          setGenreVisibility(genre, isChecked)
+          $(this).prop('checked', isChecked);
+      });
+
+      $("#djPicker").on('change selectmenuchange', function(e) {
+          let selectedDj = $(this).children("option:selected").val();
+          window.location.assign('?action=viewRecent&dj=' + selectedDj);
+      }).selectmenu();
+
+      $(".categoryPicker input").on('change', function(e) {
+          let genre = $(this).val();
+          let isChecked = $(this).prop('checked');
+          let rowClass = "tr." + genre;
+          setGenreVisibility(genre, isChecked);
+          categories[genre] = isChecked;
+          localStorage.setItem(storageKey, JSON.stringify(categories));
+      });
+  });
+  // -->
+</script>
