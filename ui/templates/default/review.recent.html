@@ -2,8 +2,8 @@
   <label class='reviewLabel'>Categories:&nbsp;</label>
   <span class='review-categories zk-hidden'>
 {% for genre in GENRES %}
-    <span class='{{ genre }} zk-hidden'>
-      <input style='margin-right: 2px' type='checkbox' id='{{ genre }}' name='genre' value='{{ genre }}'>
+    <span class='{{ genre | replace({' ': '-'}) }} zk-hidden'>
+      <input type='checkbox' value='{{ genre }}'>
       <span>{{ genre }}</span>
     </span>
 {% endfor %}
@@ -11,9 +11,9 @@
 </div>
 {% if app.session.isAuth('u') %}
 {% set author = app.request.dj == 'Me' %}
-<div style='display:inline-block' >
+<div style='display: inline-block; margin-right: 8px'>
   <label class='reviewLabel'>Reviewer:</label>
-  <select id='djPicker' name='dj'>
+  <select id='djPicker'>
     <option {{ not author ? 'selected'}}>All</option>
     <option {{ author ? 'selected' }}>Me</option>
   </select>
@@ -35,7 +35,7 @@
 <tbody>
 {% for review in reviews %}
   {%- set genre = GENRES[review.album.category] %}
-  <tr class='hborder {{ genre }}' data-genre='{{ genre }}'>
+  <tr class='hborder {{ genre | replace({' ': '-'}) }}' data-genre='{{ genre }}'>
     <td><a href='?action=viewRecentReview&amp;tag={{ review.album.tag }}'>{{ review.album.album }}</a></td>
     <td>{{ review.album.iscoll ? 'Various Artists' : review.album.artist }}</td>
     <td>{{ genre }}</td>
@@ -53,7 +53,7 @@
       }).css('display','table');
 
       function setGenreVisibility(genre, showIt) {
-          let genreClass = 'tr.' + genre;
+          let genreClass = 'tr.' + genre.replace(/ /g, '-');
           showIt ?  $(genreClass).show() : $(genreClass).hide();
       }
 
@@ -64,7 +64,7 @@
           let genre = $(this).data('genre');
           if (genreMap[genre] === undefined) {
               genreMap[genre] = 0;
-              $(".review-categories span." + genre).removeClass('zk-hidden');
+              $(".review-categories span." + genre.replace(/ /g, '-')).removeClass('zk-hidden');
           }
           genreMap[genre]++;
       });
@@ -72,7 +72,7 @@
       $("#review-count").text(' Found ' + reviewCnt + ' reviews.');
 
       for (let [genre, count] of Object.entries(genreMap)) {
-          $(`span.${genre} > span`).text(`${genre} (${count})`);
+          $('span.' + genre.replace(/ /g, '-') + ' > span').text(`${genre} (${count})`);
       }
 
       let selectedDj = $('#djPicker').children("option:selected").val();
@@ -95,7 +95,6 @@
       $(".categoryPicker input").on('change', function(e) {
           let genre = $(this).val();
           let isChecked = $(this).prop('checked');
-          let rowClass = "tr." + genre;
           setGenreVisibility(genre, isChecked);
           categories[genre] = isChecked;
           localStorage.setItem(storageKey, JSON.stringify(categories));

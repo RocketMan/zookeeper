@@ -233,24 +233,26 @@ td.ind {
 
 /* recent reivews page */
 label.reviewLabel {
-       width: 80px;
+    display: inline-block;
+    width: 80px;
+    font-weight: 600;
 }
 
 #review-count {
-	color: #3e873b;
-}
-span.review-categories > span {
-        display: inline-block;
-        padding-right: 8px;
+    color: #3e873b;
 }
 
-span.review-count {
-	display:inline-block;
-	margin-left: 8px;
+span.review-categories > span {
+    display: inline-block;
+    padding-right: 8px;
+}
+
+span.review-categories input {
+    margin-right: 2px;
 }
 
 span.review-categories > span.zk-hidden {
-	display:none;
+    display:none;
 }
 
 /* home page */
