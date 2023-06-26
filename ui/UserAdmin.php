@@ -217,6 +217,9 @@ class UserAdmin extends MenuItem {
                 echo "<B><FONT COLOR=\"#ff0000\">Invalid user.  Update failed.</FONT></B>\n";
         } else if($seq == "addUser" && $_SERVER['REQUEST_METHOD'] == 'POST') {
           if($uid) {
+             // force dummy password for new user if none supplied
+             if(!strlen(trim($auPass)))
+                 $auPass = md5(uniqid(rand()));
              if(Engine::api(IUser::class)->insertUser($uid, $auPass, $auName, $auGroups, $auExpire))
                echo "<B><FONT CLASS=\"subhead2\">$uid successfully added</FONT></B>\n";
              else
