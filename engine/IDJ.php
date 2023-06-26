@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -35,5 +35,5 @@ interface IDJ {
     function getAirname($djname, $user="");
     function updateAirname($djname, $user, $url, $email, $id=0);
     function insertAirname($djname, $user);
-    function reassignAirname($id, $user);
+    function reassignAirname($id, $fromUser, $toUser);
 }

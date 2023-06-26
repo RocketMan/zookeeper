@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -122,24 +122,25 @@ class DJImpl extends DBO implements IDJ {
         return $stmt->execute()?$stmt->rowCount():0;
     }
 
-    public function reassignAirname($id, $user) {
+    public function reassignAirname($id, $fromUser, $toUser) {
         $query = "UPDATE airnames SET dj=? WHERE id=?";
         $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $user);
+        $stmt->bindValue(1, $toUser);
         $stmt->bindValue(2, (int)$id, \PDO::PARAM_INT);
         $success = $stmt->execute()?$stmt->rowCount():0;
         if($success > 0) {
             // Reassign the playlists
-            $query = "UPDATE lists SET dj=? WHERE airname=?";
+            $query = "UPDATE lists SET dj=? WHERE dj=? AND airname=?";
             $stmt = $this->prepare($query);
-            $stmt->bindValue(1, $user);
-            $stmt->bindValue(2, (int)$id, \PDO::PARAM_INT);
+            $stmt->bindValue(1, $toUser);
+            $stmt->bindValue(2, $fromUser);
+            $stmt->bindValue(3, (int)$id, \PDO::PARAM_INT);
             $stmt->execute();
 
             // Reassign the reviews
             $query = "UPDATE reviews SET user=? WHERE airname=?";
             $stmt = $this->prepare($query);
-            $stmt->bindValue(1, $user);
+            $stmt->bindValue(1, $toUser);
             $stmt->bindValue(2, (int)$id, \PDO::PARAM_INT);
             $stmt->execute();
         }

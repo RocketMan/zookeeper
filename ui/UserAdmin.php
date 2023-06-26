@@ -373,7 +373,7 @@ class UserAdmin extends MenuItem {
               $row = $result->fetch();
     
               // Reassign the airname, playlists, and reviews
-              $success = Engine::api(IDJ::class)->reassignAirname($aid, $uid) > 0;
+              $success = Engine::api(IDJ::class)->reassignAirname($aid, $row['name'], $uid) > 0;
     
               if($success) {
                   echo "<B><FONT CLASS=\"subhead2\">".$row["airname"]." successfully updated</FONT></B>\n";
