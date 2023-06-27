@@ -323,7 +323,7 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   `private` int(11) DEFAULT NULL,
   `airname` int(11) DEFAULT NULL,
   `review` mediumtext,
-  `exportid` varchar(80) default null,
+  `exportid` varchar(80) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `user` (`user`),
   KEY `tag` (`tag`),
