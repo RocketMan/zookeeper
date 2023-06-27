@@ -174,7 +174,8 @@ class Reviews extends MenuItem {
 
         // find the review
         $user = $this->session->getUser();
-        $reviews = Engine::api(IReview::class)->getReviews($tag, false, $user, true);
+        $reviewApi = Engine::api(IReview::class);
+        $reviews = $reviewApi->getReviews($tag, false, $user, true);
         if(!count($reviews))
             return;
 
@@ -184,6 +185,7 @@ class Reviews extends MenuItem {
         $reviewer = $reviews[0]["realname"];
         $created = $reviews[0]["created"];
         $review = $reviews[0]["review"];
+        $exportid = $reviews[0]["exportid"];
 
         $base = Engine::getBaseUrl();
         $title = Engine::param('station_title');
@@ -230,15 +232,62 @@ class Reviews extends MenuItem {
         ]);
 
         try {
-            $response = $client->post('chat.postMessage', [
+            $options = [
+                'channel' => $channel,
+                'text' => "$artist / $album",
+                'blocks' => [
+                    $header,
+                    $body,
+                    $footer,
+                ],
+            ];
+
+            if($exportid) {
+                $options['ts'] = $exportid;
+                $method = 'chat.update';
+            } else
+                $method = 'chat.postMessage';
+
+            $response = $client->post($method, [
+                RequestOptions::JSON => $options
+            ]);
+
+            // Slack returns success/failure in 'ok' property
+            $body = $response->getBody()->getContents();
+            $json = json_decode($body);
+            if($json->ok) {
+                if(!$exportid) {
+                    $exportid = $json->ts;
+                    $reviewApi->setExportId($tag, $user, $exportid);
+                }
+            } else
+                error_log("postMessage: $body");
+        } catch(\Exception $e) {
+            error_log("postMessage: " . $e->getMessage());
+        }
+    }
+
+    private function unpostReview($exportId) {
+        // nothing to do if not exported or Slack is not configured
+        $config = Engine::param('slack');
+        if(!$exportId || !$config || !($token = $config['token']) ||
+                !($channel = $config['review_channel'])) {
+            return;
+        }
+
+        $client = new Client([
+            'base_uri' => self::SLACK_BASE,
+            RequestOptions::HEADERS => [
+                'User-Agent' => Engine::UA,
+                'Authorization' => 'Bearer ' . $token
+            ]
+        ]);
+
+        try {
+            $response = $client->post('chat.delete', [
                 RequestOptions::JSON => [
                     'channel' => $channel,
-                    'text' => "$artist / $album",
-                    'blocks' => [
-                        $header,
-                        $body,
-                        $footer,
-                    ],
+                    'ts' => $exportId
                 ]
             ]);
 
@@ -246,9 +295,9 @@ class Reviews extends MenuItem {
             $body = $response->getBody()->getContents();
             $json = json_decode($body);
             if(!$json->ok)
-                error_log("postMessage: $body");
+                error_log("unpostMessage: $body");
         } catch(\Exception $e) {
-            error_log("postMessage: " . $e->getMessage());
+            error_log("unpostMessage: " . $e->getMessage());
         }
     }
 
@@ -379,8 +428,12 @@ class Reviews extends MenuItem {
                 $errorMessage = "<h4 class='error'>Review not updated.  Try again later.</h4>\n";
                 break;
             case "edit-delete":
+                $reviews = Engine::api(IReview::class)->getReviews($_REQUEST["tag"], false, $this->session->getUser(), true);
                 $success = Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
                 if($success >= 1) {
+                    if(count($reviews))
+                        $this->unpostReview($reviews[0]['exportid']);
+
                     echo "<h4>Your review has been deleted.</h4>\n";
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
@@ -416,6 +469,7 @@ class Reviews extends MenuItem {
         $this->addVar("self", $self);
         $this->addVar("review", $review);
         $this->addVar("private", $_REQUEST["private"] ?? 0);
+        $this->addVar("exported", isset($exportid));
         $this->addVar("MAX_AIRNAME_LENGTH", IDJ::MAX_AIRNAME_LENGTH);
         $this->addVar("MAX_REVIEW_LENGTH", IReview::MAX_REVIEW_LENGTH);
     }

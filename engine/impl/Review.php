@@ -115,13 +115,14 @@ class ReviewImpl extends DBO implements IReview {
         settype($tag, "integer");
         if($byName)
             $query = "SELECT r.id, r.created, r.review, " .
-                     "r.private, r.user, a.airname, r.tag, realname " .
+                     "r.private, r.user, a.airname, r.tag, realname, exportid " .
                      "FROM reviews r " .
                      "LEFT JOIN users u ON u.name = r.user " .
                      "LEFT JOIN airnames a ON a.id = r.airname ";
         else
             $query = "SELECT r.id, created, review, " .
-                     "private, user, airname, tag, realname FROM reviews r " .
+                     "private, user, airname, tag, realname, exportid " .
+                     "FROM reviews r " .
                      "LEFT JOIN users u ON u.name = r.user ";
         $query .= $byId?"WHERE r.id=? ":"WHERE tag=? ";
         if($user)
@@ -158,7 +159,7 @@ class ReviewImpl extends DBO implements IReview {
                  ($airname?"airname=?, ":
                            "airname=NULL, ") .
                  "review=? " .
-                 "WHERE tag=? and user=?";
+                 "WHERE tag=? AND user=?";
         $stmt = $this->prepare($query);
         $p = 1;
         $stmt->bindValue($p++, $private);
@@ -172,10 +173,20 @@ class ReviewImpl extends DBO implements IReview {
     
     public function deleteReview($tag, $user) {
         $query = "DELETE FROM reviews " .
-                 "WHERE tag=? and user=?";
+                 "WHERE tag=? AND user=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
         $stmt->bindValue(2, $user);
+        return $stmt->execute()?$stmt->rowCount():0;
+    }
+
+    public function setExportId($tag, $user, $exportId) {
+        $query = "UPDATE reviews SET exportid=? " .
+                 "WHERE tag=? AND user=?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $exportId);
+        $stmt->bindValue(2, $tag);
+        $stmt->bindValue(3, $user);
         return $stmt->execute()?$stmt->rowCount():0;
     }
 }

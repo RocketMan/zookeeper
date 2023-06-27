@@ -34,7 +34,11 @@
   </div>
 {% endif %}
   <div>
+{% if exported %}
+    <input type=hidden name=noise value="on">
+{% else %}
     <input type=checkbox name=noise {{ not id ? 'checked' }}>Post review to Slack
+{% endif %}
   </div>
 </div>
 <input type=hidden name=tag value="{{ album.tag }}">
