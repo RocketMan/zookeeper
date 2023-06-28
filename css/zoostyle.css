@@ -1218,6 +1218,12 @@ input[type="checkbox"]:checked:active {
     /* comment details in playlist editor */
 }
 
+/* negate englobing paragraph in playlist editor comment row */
+/* see https://github.com/erusev/parsedown/issues/43 */
+.commentRowEdit > td > p {
+    margin: 0;
+}
+
 .markdown-help {
     padding: 10px 0;
     display: none;
