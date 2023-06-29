@@ -175,7 +175,7 @@ class Reviews extends MenuItem {
         // find the review
         $user = $this->session->getUser();
         $reviewApi = Engine::api(IReview::class);
-        $reviews = $reviewApi->getReviews($tag, false, $user, true);
+        $reviews = $reviewApi->getReviews($tag, true, $user, true);
         if(!count($reviews))
             return;
 
@@ -186,6 +186,10 @@ class Reviews extends MenuItem {
         $created = $reviews[0]["created"];
         $review = $reviews[0]["review"];
         $exportid = $reviews[0]["exportid"];
+
+        // append reviewer airname, if any
+        if($reviews[0]["airname"] && strcasecmp($reviewer, $reviews[0]["airname"]))
+            $reviewer .= " (" . $reviews[0]["airname"] . ")";
 
         // truncate the review at the track breakout
         if(preg_match('/(.+?)(?=(\r?\n)\**\d+\.\s)/s', $review, $matches) && $matches[1])
