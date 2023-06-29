@@ -187,6 +187,10 @@ class Reviews extends MenuItem {
         $review = $reviews[0]["review"];
         $exportid = $reviews[0]["exportid"];
 
+        // truncate the review at the track breakout
+        if(preg_match('/(.+?)(?=(\r?\n)\d+\.\s)/s', $review, $matches) && $matches[1])
+            $review = $matches[1];
+
         $base = Engine::getBaseUrl();
         $title = Engine::param('station_title');
 
