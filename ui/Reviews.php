@@ -223,7 +223,7 @@ class Reviews extends MenuItem {
             'type' => 'section',
             'text' => [
                 'type' => 'mrkdwn',
-                'text' => "<$base?s=byAlbumKey&amp;n=$tag&amp;action=search|View this review in $title>.",
+                'text' => "<$base?s=byAlbumKey&amp;n=$tag&amp;action=search|View full review in $title>.",
             ],
         ];
 
