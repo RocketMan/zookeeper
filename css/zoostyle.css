@@ -255,6 +255,10 @@ span.review-categories > span.zk-hidden {
     display:none;
 }
 
+table.recent-reviews {
+    width: calc(100% - 5px);
+}
+
 /* home page */
 .top-albums {
     margin-top: 4px;
