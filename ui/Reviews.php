@@ -188,7 +188,7 @@ class Reviews extends MenuItem {
         $exportid = $reviews[0]["exportid"];
 
         // append reviewer airname, if any
-        if($reviews[0]["airname"] && strcasecmp($reviewer, $reviews[0]["airname"]))
+        if($reviews[0]["airname"] && strncasecmp($reviewer, $reviews[0]["airname"], strlen($reviews[0]["airname"])))
             $reviewer .= " (" . $reviews[0]["airname"] . ")";
 
         // truncate the review at the track breakout
