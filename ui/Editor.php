@@ -920,6 +920,8 @@ class Editor extends MenuItem {
             $this->albumAdded = $_REQUEST["new"];
             $this->albumUpdated = !$_REQUEST["new"];
             $this->skipVar("name");
+            $this->skipVar("imageUrl");
+            $this->skipVar("infoUrl");
         }
 
         return $result;
