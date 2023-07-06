@@ -156,7 +156,6 @@ class Reviews extends MenuItem {
         $config = Engine::param('slack');
         if(!$config || !($token = $config['token']) ||
                 !($channel = $config['review_channel'])) {
-            echo "  <h4 class='error'>Slack is not configured.</h4>\n";
             return;
         }
 
@@ -269,9 +268,9 @@ class Reviews extends MenuItem {
                     $reviewApi->setExportId($tag, $user, $exportid);
                 }
             } else
-                error_log("postMessage: $body");
+                error_log("postReview: $body");
         } catch(\Exception $e) {
-            error_log("postMessage: " . $e->getMessage());
+            error_log("postReview: " . $e->getMessage());
         }
     }
 
@@ -303,9 +302,9 @@ class Reviews extends MenuItem {
             $body = $response->getBody()->getContents();
             $json = json_decode($body);
             if(!$json->ok)
-                error_log("unpostMessage: $body");
+                error_log("unpostReview: $body");
         } catch(\Exception $e) {
-            error_log("unpostMessage: " . $e->getMessage());
+            error_log("unpostReview: " . $e->getMessage());
         }
     }
 
@@ -314,7 +313,6 @@ class Reviews extends MenuItem {
         $address = Engine::param('email')['reviewlist'];
 
         if(!isset($address)) {
-            echo "  <h4 class='error'>Noise e-mail not configured.</h4>\n";
             return;
         }
 
@@ -361,18 +359,6 @@ class Reviews extends MenuItem {
     
             // send the mail
             $stat = mail($address, $subject, $body, $headers);
-    
-            // Check for errors
-            if(!$stat) {
-                echo "  <h4 class='error'>Possible Problem Sending E-Mail</h4><BR>\n";
-                echo "There may have been a problem sending your e-mail.  ";
-                echo "</P>\n";
-                //echo "The mailer reports the following error:<BR>\n  <PRE>\n";
-                //echo error_get_last()['message'];
-                //echo "\n</PRE></FONT></B>\n";
-            } else {
-                echo "  <h4>E-Mail Sent!</h4><BR>\n";
-            }
         }
     }
     
@@ -417,7 +403,6 @@ class Reviews extends MenuItem {
                 if($success >= 1) {
                     if($_REQUEST["noise"])
                         $this->postReview($_REQUEST["tag"]);
-                    echo "<h4>Your review has been posted!</h4>\n";
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
@@ -429,7 +414,6 @@ class Reviews extends MenuItem {
                 if($success >= 0) {
                     if($_REQUEST["noise"])
                         $this->postReview($_REQUEST["tag"]);
-                    echo "<h4>Your review has been updated.</h4>\n";
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
@@ -442,7 +426,6 @@ class Reviews extends MenuItem {
                     if(count($reviews))
                         $this->unpostReview($reviews[0]['exportid']);
 
-                    echo "<h4>Your review has been deleted.</h4>\n";
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
