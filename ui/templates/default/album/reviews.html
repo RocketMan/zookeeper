@@ -1,21 +1,27 @@
 <div class='secdiv'>Album Review{{ reviews | length > 1 ? "s" }}</div>
+<div class='reviews'>
 {% set space = false %}
-<table cellpadding=2 cellspacing=2 width="100%">
 {% for review in reviews %}
   {%~ if space %}
-  <tr><td colspan=3>&nbsp;</td></tr>
+  <div>&nbsp;</div>
   {%~ endif %}
   {%~ set space = true %}
-  <tr><td><b>{{ review.airname }}</b><br>
-  <span class="sub">Reviewed {{ review.created | slice(0, 10) }}
-    {{ review.private ? ' <font color="#cc0000">(private)</font>' : '&nbsp;' }}
-  </span></td></tr>
-
+  <div><b>{{ review.airname }}</b><br>
+    <span class='sub'>Reviewed {{ review.created | slice(0, 10) }}
+    {{- review.private ? ' <font color="#cc0000">(private)</font>' -}}
+    </span>
+  </div>
   {%~ if app.session.isUser(review.user) %}
-    <tr colspan=3><td><font size=-1><a href="?action=searchReviewEdit&amp;tag={{ review.tag }}">[This is my review and I want to edit it]</a></font></td></tr>
+  <div class='edit-mine'>
+    <a href='?action=searchReviewEdit&amp;tag={{ review.tag }}'>[This is my review and I want to edit it]</a>
+  </div>
   {%~ endif %}
-    <tr><td colspan=3 class="review">
-{{ review.review | nl2br }}
-    </td></tr>
+  <div class='review-body'>
+    {{~ review.review | nl2br }}
+  </div>
+  <div class='view-more'>
+    <a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&amp;viewuser={{ review.aid ?? review.user }}'>View more reviews by {{ review.airname }}</a>
+  </div>
 {% endfor %}
-</table><br>
+</div>
+<br>

@@ -377,8 +377,16 @@ table.recent-reviews {
     font-size: 8pt;
     font-family: inherit;
 }
-td.review {
+
+div.reviews > div {
+    padding: 2px;
+}
+div.reviews > div.edit-mine,
+div.reviews > div.review-body {
     font-size: 10pt;
+}
+div.reviews > div.view-more {
+    padding-top: 8px;
 }
 
 /* DJ Zone! */
