@@ -458,10 +458,14 @@ function search(size, offset) {
                 else
                     results.append("<p>Select 'All' in the Search bar to expand your search.</p>")
             }
-            var field = $("input.search-data");
-            var val = field.val();
-            field.get(0).setSelectionRange(val.length, val.length);
-            field.trigger('focus');
+
+            // set focus only for non-review, non-pubkey search
+            if(suffix) {
+                var field = $("input.search-data");
+                var val = field.val();
+                field.get(0).setSelectionRange(val.length, val.length);
+                field.trigger('focus');
+            }
         },
         error: function(jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);
