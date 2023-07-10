@@ -177,7 +177,7 @@ div.content input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
 div.content select[size='1'] {
     border: 1px solid #ccc;
     border-radius: 3px;
-    min-height: 24px;
+    min-height: 22px;
 }
 
 /* afile activity page */
