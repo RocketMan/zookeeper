@@ -134,12 +134,14 @@ class Reviews extends MenuItem {
         $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <a type='application/rss+xml' href='zkrss.php?feed=reviews'><img src='img/rss.png' alt='rss'></a>";
         $this->addVar("GENRES", ILibrary::GENRES);
 
-        $reviews = Engine::api(IReview::class)->getRecentReviews($author, 0, 200, $isAuthorized);
+        $reviews = Engine::api(IReview::class)->getRecentReviews($author, 0, 200, $isAuthorized)->asArray();
         $libAPI = Engine::api(ILibrary::class);
         foreach($reviews as &$review) {
+            $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $review['tag']);
+            $review['album'] = $albums[0];
             if(!$review['airname']) {
                 $users = $libAPI->search(ILibrary::PASSWD_NAME, 0, 1, $review['user']);
-                $review['realname'] = $users[0]['realname'];
+                $review['airname'] = $users[0]['realname'];
             }
         }
         $this->addVar("reviews", $reviews);
