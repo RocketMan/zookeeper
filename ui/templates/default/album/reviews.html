@@ -6,7 +6,7 @@
   <div>&nbsp;</div>
   {%~ endif %}
   {%~ set space = true %}
-  <div><b>{{ review.airname }}</b><br>
+  <div><b>{{ review.airname ?? review.realname }}</b><br>
     <span class='sub'>Reviewed {{ review.created | slice(0, 10) }}
     {{- review.private ? ' <font color="#cc0000">(private)</font>' -}}
     </span>
@@ -20,7 +20,7 @@
     {{~ review.review | nl2br }}
   </div>
   <div class='view-more'>
-    <a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&amp;viewuser={{ review.aid ?? review.user }}'>View more reviews by {{ review.airname }}</a>
+    <a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&amp;viewuser={{ review.aid ?? review.user }}'>View more reviews by {{ review.airname ?? review.realname }}</a>
   </div>
 {% endfor %}
 </div>

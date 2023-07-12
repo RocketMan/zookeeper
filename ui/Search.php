@@ -125,12 +125,6 @@ class Search extends MenuItem {
 
         // reviews
         $reviews = Engine::api(IReview::class)->getReviews($tag, 1, "", $loggedIn);
-        foreach($reviews as &$review) {
-            if(!$review['airname']) {
-                $djs = $libraryApi->search(ILibrary::PASSWD_NAME, 0, 1, $review['user']);
-                $review['airname'] = $djs[0]['realname'];
-            }
-        }
         $this->addVar("reviews", $reviews);
 
         // tracks
