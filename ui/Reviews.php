@@ -136,6 +136,12 @@ class Reviews extends MenuItem {
 
         $reviews = Engine::api(IReview::class)->getRecentReviews($author, 0, 200, $isAuthorized);
         $libAPI = Engine::api(ILibrary::class);
+        foreach($reviews as &$review) {
+            if(!$review['airname']) {
+                $users = $libAPI->search(ILibrary::PASSWD_NAME, 0, 1, $review['user']);
+                $review['realname'] = $users[0]['realname'];
+            }
+        }
         $this->addVar("reviews", $reviews);
     }
 

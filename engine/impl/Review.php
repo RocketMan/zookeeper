@@ -31,10 +31,9 @@ namespace ZK\Engine;
 class ReviewImpl extends DBO implements IReview {
     private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0) {
         // IMPORTANT: If columns change, revisit getRecentReviews below
-        $query = "SELECT a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id as rid, u.realname, r.tag, v.category, v.album, v.artist, v.iscoll FROM reviews r ";
+        $query = "SELECT a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id as rid, r.tag, v.category, v.album, v.artist, v.iscoll FROM reviews r ";
 
         $query .= "LEFT JOIN albumvol v ON r.tag = v.tag ";
-        $query .= "LEFT JOIN users u ON r.user = u.name ";
 
         if($weeks < 0)
             $query .= "LEFT JOIN currents c ON c.tag = r.tag AND " .
@@ -68,7 +67,7 @@ class ReviewImpl extends DBO implements IReview {
             // See: https://www.techfounder.net/2008/10/15/optimizing-or-union-operations-in-mysql/
             //
             // IMPORTANT:  If columns change, revisit loop below
-            $query = "SELECT z.airname, z.user, z.reviewed, z.rid, z.realname, z.tag, z.category, z.album, z.artist, z.iscoll FROM (";
+            $query = "SELECT z.airname, z.user, z.reviewed, z.rid, z.tag, z.category, z.album, z.artist, z.iscoll FROM (";
             $query .= $this->getRecentSubquery($user, $weeks, $loggedIn);
             $query .= "UNION ";
             $query .= $this->getRecentSubquery($user, -1, $loggedIn);
@@ -103,8 +102,8 @@ class ReviewImpl extends DBO implements IReview {
 
         // move album columns into 'album' property
         foreach($reviews as &$review) {
-            $album = array_slice($review, 5);
-            array_splice($review, 5);
+            $album = array_slice($review, 4);
+            array_splice($review, 4);
             $review['album'] = $album;
         }
 
