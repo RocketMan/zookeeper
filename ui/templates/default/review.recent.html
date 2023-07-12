@@ -39,7 +39,7 @@
     <td><a href='?action=viewRecentReview&amp;tag={{ review.album.tag }}'>{{ review.album.album }}</a></td>
     <td>{{ review.album.iscoll ? 'Various Artists' : review.album.artist }}</td>
     <td>{{ genre }}</td>
-    <td>{{ review.airname }}</td>
+    <td>{{ review.airname ?? review.realname }}</td>
     <td class='date'>{{ review.reviewed }}</td>
   </tr>
 {% endfor %}
