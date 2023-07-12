@@ -40,6 +40,7 @@ SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION;
 SET NAMES utf8mb4;
 
 ALTER TABLE `airnames` MODIFY `dj` varchar(8) NOT NULL;
+ALTER TABLE `albumvol` MODIFY `tag` int(11) NOT NULL;
 ALTER TABLE `lists` MODIFY `dj` varchar(8) NOT NULL;
 ALTER TABLE `reviews` MODIFY `user` varchar(8) NOT NULL;
 ALTER TABLE `sessions` MODIFY `user` varchar(8) NOT NULL;
