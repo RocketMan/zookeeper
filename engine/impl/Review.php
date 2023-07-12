@@ -30,12 +30,8 @@ namespace ZK\Engine;
  */
 class ReviewImpl extends DBO implements IReview {
     private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0) {
-        // IMPORTANT: If columns change, revisit getRecentReviews below
-        $query = "SELECT a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id as rid, u.realname, r.tag, v.category, v.album, v.artist, v.iscoll FROM reviews r ";
-
-        $query .= "INNER JOIN albumvol v ON r.tag = v.tag ";
-        $query .= "INNER JOIN users u ON r.user = u.name ";
-
+        $query = "SELECT r.tag, a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id as rid FROM reviews r ";
+        
         if($weeks < 0)
             $query .= "LEFT JOIN currents c ON c.tag = r.tag AND " .
                       "c.adddate <= NOW() AND c.pulldate > NOW() ";
@@ -66,9 +62,7 @@ class ReviewImpl extends DBO implements IReview {
             // avoiding a table scan, which MySQL would do otherwise.
             //
             // See: https://www.techfounder.net/2008/10/15/optimizing-or-union-operations-in-mysql/
-            //
-            // IMPORTANT:  If columns change, revisit loop below
-            $query = "SELECT z.airname, z.user, z.reviewed, z.rid, z.realname, z.tag, z.category, z.album, z.artist, z.iscoll FROM (";
+            $query = "SELECT z.tag, z.airname, z.user, z.reviewed, z.rid FROM (";
             $query .= $this->getRecentSubquery($user, $weeks, $loggedIn);
             $query .= "UNION ";
             $query .= $this->getRecentSubquery($user, -1, $loggedIn);
@@ -98,17 +92,7 @@ class ReviewImpl extends DBO implements IReview {
         }
         if($limit)
             $stmt->bindValue($p++, (int)$limit, \PDO::PARAM_INT);
-
-        $reviews = $stmt->executeAndFetchAll();
-
-        // move album columns into 'album' property
-        foreach($reviews as &$review) {
-            $album = array_slice($review, 5);
-            array_splice($review, 5);
-            $review['album'] = $album;
-        }
-
-        return $reviews;
+        return $stmt->iterate(\PDO::FETCH_BOTH);
     }
 
     public function getActiveReviewers($viewAll = 0) {
