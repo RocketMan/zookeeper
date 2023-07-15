@@ -72,7 +72,7 @@ class ReviewImpl extends DBO implements IReview {
             $query .= $this->getRecentSubquery($user, $weeks, $loggedIn);
             $query .= "UNION ";
             $query .= $this->getRecentSubquery($user, -1, $loggedIn);
-            $query .= ") AS z ORDER BY z.reviewed DESC";
+            $query .= ") AS z GROUP BY z.tag ORDER BY z.rid DESC";
         } else {
             $query = $this->getRecentSubquery($user, 0, $loggedIn);
             $query .= "ORDER BY r.created DESC";

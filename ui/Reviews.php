@@ -200,7 +200,7 @@ class Reviews extends MenuItem {
         if($albumArt) {
             $header['accessory'] = [
                 'type' => 'image',
-                'image_url' => Engine::getBaseUrl() . $albumArt,
+                'image_url' => $base . $albumArt,
                 'alt_text' => 'album art',
             ];
         }
