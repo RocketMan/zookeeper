@@ -196,6 +196,9 @@ class ZootopiaListener {
                 if($showLen > IPlaylist::MAX_SHOW_LEN * 60 || $showLen < 0) {
                     $end = clone $now;
                     $end->modify("+" . floor(IPlaylist::MAX_SHOW_LEN / 2) . " minutes");
+                    $min = intval($end->format("i"));
+                    if($min)
+                        $end->modify("-$min minutes");
                 } else if($showLen < IPlaylist::MIN_SHOW_LEN * 60)
                     return new RejectedPromise("show too short");
 
