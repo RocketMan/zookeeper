@@ -193,7 +193,7 @@ class ZootopiaListener {
                     $end->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 
                 $showLen = $end->getTimestamp() - $now->getTimestamp();
-                if($showLen > IPlaylist::MAX_SHOW_LEN * 60) {
+                if($showLen > IPlaylist::MAX_SHOW_LEN * 60 || $showLen < 0) {
                     $end = clone $now;
                     $end->modify("+" . floor(IPlaylist::MAX_SHOW_LEN / 2) . " minutes");
                 } else if($showLen < IPlaylist::MIN_SHOW_LEN * 60)
