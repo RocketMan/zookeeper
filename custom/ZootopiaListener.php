@@ -278,7 +278,6 @@ class ZootopiaListener {
 
                 // End our show now
                 $time = explode('-', $zootopia->attributes->time);
-                $now->modify("-1 minutes");
                 $end = $now->format("Hi");
                 // delete if new end time is at or before start time,
                 // if new end time rolled to previous day, or if the
