@@ -109,6 +109,17 @@ $config = [
     ],
 
     /**
+     * Slack integration
+     *
+     * To enable Slack, specify your bot token and target channel IDs
+     */
+    'slack' => [
+        'token' => null,
+        'review_channel' => null,
+        'chart_channel' => null,
+    ],
+
+    /**
      * database settings
      */
     'db' => [
@@ -195,7 +206,7 @@ $config = [
                  'airname' => 'Team KZSU',
                  'title' => 'Zootopia',
                  'tz' => null,
-                 'caption' => "This playlist was automatically generated from notable music of the past 20 years, curated by the KZSU Music Department and selected for airplay by KZSU DJs.\n\nVisit Zootopia at http://kzsu.rocks/\n",
+                 'caption' => "This playlist was automatically generated from notable music of the past 25 years, curated by the KZSU Music Department and selected for airplay by KZSU DJs.\n\nVisit Zootopia at http://kzsu.rocks/\n",
              ],
         ],
     ],

@@ -193,9 +193,12 @@ class ZootopiaListener {
                     $end->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 
                 $showLen = $end->getTimestamp() - $now->getTimestamp();
-                if($showLen > IPlaylist::MAX_SHOW_LEN * 60) {
+                if($showLen > IPlaylist::MAX_SHOW_LEN * 60 || $showLen < 0) {
                     $end = clone $now;
                     $end->modify("+" . floor(IPlaylist::MAX_SHOW_LEN / 2) . " minutes");
+                    $min = intval($end->format("i"));
+                    if($min)
+                        $end->modify("-$min minutes");
                 } else if($showLen < IPlaylist::MIN_SHOW_LEN * 60)
                     return new RejectedPromise("show too short");
 
@@ -275,7 +278,6 @@ class ZootopiaListener {
 
                 // End our show now
                 $time = explode('-', $zootopia->attributes->time);
-                $now->modify("-1 minutes");
                 $end = $now->format("Hi");
                 // delete if new end time is at or before start time,
                 // if new end time rolled to previous day, or if the

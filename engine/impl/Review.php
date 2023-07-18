@@ -30,8 +30,12 @@ namespace ZK\Engine;
  */
 class ReviewImpl extends DBO implements IReview {
     private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0) {
-        $query = "SELECT r.tag, a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id as rid FROM reviews r ";
-        
+        // IMPORTANT: If columns change, revisit getRecentReviews below
+        $query = "SELECT a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id as rid, u.realname, r.tag, v.category, v.album, v.artist, v.iscoll FROM reviews r ";
+
+        $query .= "INNER JOIN albumvol v ON r.tag = v.tag ";
+        $query .= "INNER JOIN users u ON r.user = u.name ";
+
         if($weeks < 0)
             $query .= "LEFT JOIN currents c ON c.tag = r.tag AND " .
                       "c.adddate <= NOW() AND c.pulldate > NOW() ";
@@ -62,14 +66,16 @@ class ReviewImpl extends DBO implements IReview {
             // avoiding a table scan, which MySQL would do otherwise.
             //
             // See: https://www.techfounder.net/2008/10/15/optimizing-or-union-operations-in-mysql/
-            $query = "SELECT z.tag, z.airname, z.user, z.reviewed, z.rid FROM (";
+            //
+            // IMPORTANT:  If columns change, revisit loop below
+            $query = "SELECT z.airname, z.user, z.reviewed, z.rid, z.realname, z.tag, z.category, z.album, z.artist, z.iscoll FROM (";
             $query .= $this->getRecentSubquery($user, $weeks, $loggedIn);
             $query .= "UNION ";
             $query .= $this->getRecentSubquery($user, -1, $loggedIn);
-            $query .= ") AS z GROUP BY z.tag ORDER BY z.reviewed DESC, z.rid DESC";
+            $query .= ") AS z GROUP BY z.tag ORDER BY z.rid DESC";
         } else {
             $query = $this->getRecentSubquery($user, 0, $loggedIn);
-            $query .= "GROUP BY r.tag ORDER BY reviewed DESC, rid DESC";
+            $query .= "ORDER BY r.created DESC";
         }
             
         if($limit && $limit > 0)
@@ -92,7 +98,17 @@ class ReviewImpl extends DBO implements IReview {
         }
         if($limit)
             $stmt->bindValue($p++, (int)$limit, \PDO::PARAM_INT);
-        return $stmt->iterate(\PDO::FETCH_BOTH);
+
+        $reviews = $stmt->executeAndFetchAll();
+
+        // move album columns into 'album' property
+        foreach($reviews as &$review) {
+            $album = array_slice($review, 5);
+            array_splice($review, 5);
+            $review['album'] = $album;
+        }
+
+        return $reviews;
     }
 
     public function getActiveReviewers($viewAll = 0) {
@@ -115,13 +131,14 @@ class ReviewImpl extends DBO implements IReview {
         settype($tag, "integer");
         if($byName)
             $query = "SELECT r.id, r.created, r.review, " .
-                     "r.private, r.user, a.airname, r.tag, realname " .
+                     "r.private, r.user, a.airname, r.tag, realname, exportid, r.airname as aid " .
                      "FROM reviews r " .
                      "LEFT JOIN users u ON u.name = r.user " .
                      "LEFT JOIN airnames a ON a.id = r.airname ";
         else
             $query = "SELECT r.id, created, review, " .
-                     "private, user, airname, tag, realname FROM reviews r " .
+                     "private, user, airname, tag, realname, exportid " .
+                     "FROM reviews r " .
                      "LEFT JOIN users u ON u.name = r.user ";
         $query .= $byId?"WHERE r.id=? ":"WHERE tag=? ";
         if($user)
@@ -158,7 +175,7 @@ class ReviewImpl extends DBO implements IReview {
                  ($airname?"airname=?, ":
                            "airname=NULL, ") .
                  "review=? " .
-                 "WHERE tag=? and user=?";
+                 "WHERE tag=? AND user=?";
         $stmt = $this->prepare($query);
         $p = 1;
         $stmt->bindValue($p++, $private);
@@ -172,10 +189,20 @@ class ReviewImpl extends DBO implements IReview {
     
     public function deleteReview($tag, $user) {
         $query = "DELETE FROM reviews " .
-                 "WHERE tag=? and user=?";
+                 "WHERE tag=? AND user=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
         $stmt->bindValue(2, $user);
+        return $stmt->execute()?$stmt->rowCount():0;
+    }
+
+    public function setExportId($tag, $user, $exportId) {
+        $query = "UPDATE reviews SET exportid=? " .
+                 "WHERE tag=? AND user=?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $exportId);
+        $stmt->bindValue(2, $tag);
+        $stmt->bindValue(3, $user);
         return $stmt->execute()?$stmt->rowCount():0;
     }
 }

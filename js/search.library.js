@@ -152,7 +152,6 @@ function emitAlbumsEx(table, data) {
             td.html($("<A>", {
                 href: "?s=byAlbumKey&n=" +
                     encodeURIComponent(entry.id) +
-                    "&q=" + maxresults +
                     "&action=search"
             }).html(getArtist(attrs)));
         } else {
@@ -174,7 +173,6 @@ function emitAlbumsEx(table, data) {
         tr.append($("<TD>").html($("<A>", {
             href: "?s=byAlbumKey&n=" +
                 encodeURIComponent(entry.id) +
-                "&q=" + maxresults +
                 "&action=search"
         }).html(htmlify(attrs.album))));
         var collection = attrs.location;
@@ -255,7 +253,6 @@ var lists = {
                 tr.append($("<TD>").html($("<A>", {
                     href: "?s=byAlbumKey&n=" +
                         encodeURIComponent(entry.id) +
-                        "&q=" + maxresults +
                         "&action=search"
                 }).html(htmlify(attrs.album))));
                 tr.append($("<TD>").append(
@@ -334,21 +331,18 @@ var lists = {
                 td.html($("<A>", {
                     href: "?s=byAlbumKey&n=" +
                         encodeURIComponent(entry.id) +
-                        "&q=" + maxresults +
                         "&action=search"
                 }).html(getArtist(attrs)));
             } else {
                 td.html($("<A>", {
                     href: "?s=byArtist&n=" +
                         encodeURIComponent(attrs.artist) +
-                        "&q=" + maxresults +
                         "&action=search"
                 }).html(getArtist(attrs)));
             }
             tr.append(td);
             tr.append($("<TD>").html($("<A>", {
                 href: "?s=byAlbumKey&n=" + encodeURIComponent(entry.id) +
-                    "&q=" + maxresults +
                     "&action=search"
             }).html(htmlify(attrs.album))).append(showTag == 'true'?
                                          " <FONT CLASS='sub'>(Tag&nbsp;#" +
@@ -358,7 +352,6 @@ var lists = {
                 tr.append($("<TD>").html($("<A>", {
                     href: "?s=byLabelKey&n=" +
                         encodeURIComponent(label.data.id) +
-                        "&q=" + maxresults +
                         "&action=search"
                 }).html(htmlify(label.meta.name))));
             } else {
@@ -465,10 +458,14 @@ function search(size, offset) {
                 else
                     results.append("<p>Select 'All' in the Search bar to expand your search.</p>")
             }
-            var field = $("input.search-data");
-            var val = field.val();
-            field.get(0).setSelectionRange(val.length, val.length);
-            field.trigger('focus');
+
+            // set focus only for non-review, non-pubkey search
+            if(suffix) {
+                var field = $("input.search-data");
+                var val = field.val();
+                field.get(0).setSelectionRange(val.length, val.length);
+                field.trigger('focus');
+            }
         },
         error: function(jqXHR, textStatus, errorThrown) {
             var json = JSON.parse(jqXHR.responseText);

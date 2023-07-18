@@ -177,24 +177,7 @@ div.content input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
 div.content select[size='1'] {
     border: 1px solid #ccc;
     border-radius: 3px;
-}
-@media (max-width: 700px) {
-    div.content #playlist-date,
-    div.content table input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
-    div.content table select[size='1'] {
-        font-size: 14px;
-        height: 24px;
-    }
-    div.content div.pl-form-entry input,
-    div.content div.pl-form-entry button {
-	height: 30px;
-    }
-    div.content select[size='1'] {
-        height: 26px;
-    }
-    div.content .listbox {
-        font-size: 16px;
-    }
+    min-height: 22px;
 }
 
 /* afile activity page */
@@ -237,7 +220,7 @@ table.top30,
 table.top30 table {
     width: 100%;
 }
-@media (max-width: 700px) {
+@media (max-width: 800px) {
     td.top30:last-child:not(:only-child) table {
 	display: none;
     }
@@ -250,24 +233,30 @@ td.ind {
 
 /* recent reivews page */
 label.reviewLabel {
-       width: 80px;
+    display: inline-block;
+    width: 80px;
+    font-weight: 600;
 }
 
 #review-count {
-	color: #3e873b;
-}
-span.review-categories > span {
-        display: inline-block;
-        padding-right: 8px;
+    color: #3e873b;
 }
 
-span.review-count {
-	display:inline-block;
-	margin-left: 8px;
+span.review-categories > span {
+    display: inline-block;
+    padding-right: 8px;
+}
+
+span.review-categories input {
+    margin-right: 2px;
 }
 
 span.review-categories > span.zk-hidden {
-	display:none;
+    display:none;
+}
+
+table.recent-reviews {
+    width: calc(100% - 5px);
 }
 
 /* home page */
@@ -345,23 +334,59 @@ span.review-categories > span.zk-hidden {
 }
 
 /* album details */
-.currentsTop {
+.currents-details {
+    border-spacing: 2px;
+    border-collapse: separate;
+}
+.currents-details td {
+    padding: 2px;
+}
+.currents-details th {
+    text-align: right;
+    font-size: inherit;
+    font-weight: normal;
+    font-family: inherit;
+}
+.currents-details td {
+    padding-right: 24px;
+    font-family: inherit;
+}
+.currents-activity td,
+.currents-activity th {
+    padding: 4px;
+    text-align: center;
+}
+.currents-activity tr:first-child td {
     border-style: solid;
     border-width: 1px 1px 0 1px;
-    border-color: #cccccc;
+    border-color: #ccc;
     font-size: 80%;
-    background-color: #eeeeee;
-    color: #000000;
+    background-color: #eee;
+    color: #000;
 }
-.currentsBottom {
+.currents-activity tr:last-child td {
     border-style: solid;
     border-width: 0 1px 1px 1px;
-    border-color: #cccccc;
+    border-color: #ccc;
     font-size: 80%;
-    color: #000000;
+    color: #000;
 }
-td.review {
+.currents-activity th {
+    text-align: right;
+    font-weight: normal;
+    font-size: 8pt;
+    font-family: inherit;
+}
+
+div.reviews > div {
+    padding: 2px;
+}
+div.reviews > div.edit-mine,
+div.reviews > div.review-body {
     font-size: 10pt;
+}
+div.reviews > div.view-more {
+    padding-top: 8px;
 }
 
 /* DJ Zone! */
@@ -408,9 +433,6 @@ td.label-form {
     display: inline-block;
     margin: 0;
     box-shadow:5px 5px 8px #888888;
-}
-.share-link {
-    cursor: pointer;
 }
 .editorUp {
     top: 0;
@@ -469,6 +491,7 @@ div.playTrack a {
     filter: invert(59%) sepia(98%) saturate(1900%) hue-rotate(204deg) brightness(94%) contrast(88%); /* #828ae3 see https://codepen.io/sosuke/pen/Pjoqqp */
     padding-right: 2px;
     padding-bottom: 2px;
+    vertical-align: middle;
     display: inline-block;
     width: 18px;
     height: 18px;
@@ -479,6 +502,37 @@ div.playTrack a {
 
 div.playTrack:hover {
     filter: saturate(10);
+}
+
+/* review editor */
+form.review {
+    margin-top: 10px;
+}
+
+form.review > div {
+    margin-right: 25px;
+}
+
+form.review label {
+    margin-right: 5px;
+    font-weight: 600;
+}
+
+form.review .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+form.review textarea {
+    width: 100%;
+    resize: none;
+}
+
+form.review .action-area,
+form.review .action-area-new {
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 
 /* layout */
@@ -520,6 +574,10 @@ p.zktitle a {
     margin-top: 10px;
 }
 
+.share-link {
+    cursor: pointer;
+}
+
 ul.listbox.selector {
     height: 150px;
     min-width: 300px;
@@ -538,12 +596,12 @@ ul.listbox.selector:focus {
     outline-offset: -2px;
 }
 /* mobile */
-@media (max-width: 700px) {
+@media (max-width: 800px) {
     ul.listbox.selector {
         border-radius: 8px;
         font-size: 16px;
         padding: 0;
-	height: 200px;
+        height: 200px;
     }
     ul.listbox.selector li {
         padding: 8px;
@@ -551,7 +609,7 @@ ul.listbox.selector:focus {
     }
     form.selector input[type=button],
     form.selector input[type=submit] {
-	height: 30px;
+        height: 30px;
     }
 }
 
@@ -780,13 +838,23 @@ li.ui-menu-item .ui-state-active,
     background: #ccc;
     border-color: transparent;
 }
-@media (max-width: 700px) {
+@media (max-width: 800px) {
     .ui-selectmenu-button.ui-button {
         font-size: 14px;
         padding: 6px;
     }
+
     li.ui-menu-item {
-        font-size: 14px;
+        font-size: 16px;
+        border-top: 1px solid #c5c5c5;
+    }
+
+    li.ui-menu-item div.ui-menu-item-wrapper {
+        padding: 8px;
+    }
+
+    div.ui-datepicker {
+        font-size: 16px;
     }
 }
 
@@ -828,7 +896,15 @@ li.ui-menu-item .ui-state-active,
     margin-bottom: 4px;
 }
 
-.pl-form-entry button:not(.edit-mode) {
+.form-entry .action-area {
+    display: inline-flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 300px;
+}
+
+.form-entry button:not(.edit-mode) {
     width: 148px;
     height: 24px;
     padding-left: 0;
@@ -837,7 +913,7 @@ li.ui-menu-item .ui-state-active,
     white-space: nowrap;
 }
 
-.pl-form-entry button.edit-mode {
+.form-entry button.edit-mode {
     width: 97px;
     height: 24px;
     color: #000;
@@ -845,34 +921,34 @@ li.ui-menu-item .ui-state-active,
     border-radius: 4px;
     border: 1px solid #cdcdcd;
 }
-.pl-form-entry button.edit-mode:hover {
+.form-entry button.edit-mode:hover {
     background-color: #f8f8f8;
 }
-.pl-form-entry button.edit-mode:active {
+.form-entry button.edit-mode:active {
     background-color: #d6d6d6;
 }
-.pl-form-entry button#edit-save {
+.form-entry button.edit-mode.default {
     color: #fff;
     border: 1px solid #5796ed;
     background-color: #5897ee;
 }
-.pl-form-entry button#edit-save:disabled {
+.form-entry button.edit-mode.default:disabled {
     color: gray;
     border: 1px solid #ccc;
     background-color: #ccc;
 }
-.pl-form-entry button#edit-save:hover:not(:disabled) {
+.form-entry button.edit-mode.default:hover:not(:disabled) {
     background-color: #5ba4fc;
 }
-.pl-form-entry button#edit-save:active:not(:disabled) {
+.form-entry button.edit-mode.default:active:not(:disabled) {
     background-color: #5897ee;
 }
-.pl-form-entry button#edit-delete {
+.form-entry button#edit-delete {
     color: #e33437;
     border-color: #e33437;
 }
 
-.form-entry label, .pl-form-entry label {
+.form-entry label {
     display:inline-block;
     font-weight: bold;
 }
@@ -927,6 +1003,36 @@ li.ui-menu-item .ui-state-active,
     display: inherit;
     z-index: -1;
     transition: all 0.5s ease-out;
+}
+
+@media (max-width: 800px) {
+    div.content input:not([type=button],[type=radio],[type=checkbox],[type=submit]),
+    div.content select[size='1'] {
+        font-size: 14px;
+        height: 24px;
+    }
+    div.content input:not([type=radio],[type=checkbox],.editorUp,.editorDown),
+    div.content .form-entry button,
+    div.content button {
+        height: 30px;
+    }
+    div.content input:is(.editorUp,.editorDown) {
+        height: 24px;
+    }
+    div.content .editorChooser:focus-visible {
+        border-radius: 2px;
+        box-shadow: -1px -25px 0 1px #637789, 1px 25px 0 1px #637789, -1px 25px 0 1px #637789, 1px -25px 0 1px #637789;
+        outline: 0;
+    }
+    div.content select[size='1'] {
+        height: 26px;
+    }
+    div.content .listbox {
+        font-size: 16px;
+    }
+    div.content .import-form .group {
+        height: 30px;
+    }
 }
 
 .zk-popup {
@@ -1122,6 +1228,12 @@ input[type="checkbox"]:checked:active {
 
 .commentRowEdit td:nth-of-type(n+3) {
     /* comment details in playlist editor */
+}
+
+/* negate englobing paragraph in playlist editor comment row */
+/* see https://github.com/erusev/parsedown/issues/43 */
+.commentRowEdit > td > p {
+    margin: 0;
 }
 
 .markdown-help {
@@ -1343,6 +1455,7 @@ a:hover.copy {
 	position: absolute;
 	bottom: 0;
 	left: 126px;
+	width: 100%;
     }
 }
 
@@ -1357,6 +1470,9 @@ a:hover.copy {
     display: inline-block;
     vertical-align: top;
     padding-bottom: 10px;
+}
+.album-info.with-thumb {
+    max-width: calc(100% - 140px);
 }
 
 .album-thumb {
@@ -1764,14 +1880,14 @@ a.listEdit {
 
 /*@media (min-width: 9999px) {*/
 /* desktop */
-@media (min-width: 700px) {
+@media (min-width: 800px) {
     .playlist-grid tbody tr {
         line-height: 30px;
     }
 }
 /*@media (max-width: 9999px) {*/
 /* mobile */
-@media (max-width: 700px) {
+@media (max-width: 800px) {
     .playlist-grid tbody tr {
         line-height: 40px;
     }
@@ -1862,7 +1978,7 @@ ul.listbox .state-active,
     border-color: transparent;
 }
 /* make autocomplete mobile ui more consistent with mobile datalist */
-@media (max-width: 700px) {
+@media (max-width: 800px) {
     .ui-autocomplete {
         max-height: 500px;
         max-width: 100%;
@@ -1873,7 +1989,9 @@ ul.listbox .state-active,
         padding: 0;
     }
     .ui-autocomplete.ui-widget .ui-menu-item {
-        padding: 8px;
         border-top: 1px solid #c5c5c5;
+    }
+    .ui-autocomplete.ui-widget .ui-menu-item div.ui-menu-item-wrapper {
+        padding: 8px;
     }
 }

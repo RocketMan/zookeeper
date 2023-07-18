@@ -1,0 +1,27 @@
+<div class='secdiv'>Album Review{{ reviews | length > 1 ? "s" }}</div>
+<div class='reviews'>
+{% set space = false %}
+{% for review in reviews %}
+  {%~ if space %}
+  <div>&nbsp;</div>
+  {%~ endif %}
+  {%~ set space = true %}
+  <div><b>{{ review.airname ?? review.realname }}</b><br>
+    <span class='sub'>Reviewed {{ review.created | slice(0, 10) }}
+    {{- review.private ? ' <font color="#cc0000">(private)</font>' -}}
+    </span>
+  </div>
+  {%~ if app.session.isUser(review.user) %}
+  <div class='edit-mine'>
+    <a href='?action=searchReviewEdit&amp;tag={{ review.tag }}'>[This is my review and I want to edit it]</a>
+  </div>
+  {%~ endif %}
+  <div class='review-body'>
+    {{~ review.review | nl2br }}
+  </div>
+  <div class='view-more'>
+    <a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&amp;viewuser={{ review.aid ?? review.user }}'>View more reviews by {{ review.airname ?? review.realname }}</a>
+  </div>
+{% endfor %}
+</div>
+<br>

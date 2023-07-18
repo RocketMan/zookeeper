@@ -41,7 +41,6 @@ use GuzzleHttp\RequestOptions;
 class Editor extends MenuItem {
     const DISCOGS_BASE = "https://www.discogs.com";
     const DISCOGS_SEARCH = "https://api.discogs.com/database/search";
-    const UA = "Zookeeper/2.0; (+https://zookeeper.ibinx.com/)";
 
     private static $subactions = [
         [ "m", "", "Albums", "musicEditor" ],
@@ -224,7 +223,7 @@ class Editor extends MenuItem {
         if($config) {
             $discogs = new Client([
                 RequestOptions::HEADERS => [
-                    'User-Agent' => self::UA,
+                    'User-Agent' => Engine::UA,
                     'Authorization' => is_string($config) ?
                         "Discogs token=$config" :
                         "Discogs key=${config['client_id']}, secret=${config['client_secret']}"
@@ -921,6 +920,8 @@ class Editor extends MenuItem {
             $this->albumAdded = $_REQUEST["new"];
             $this->albumUpdated = !$_REQUEST["new"];
             $this->skipVar("name");
+            $this->skipVar("imageUrl");
+            $this->skipVar("infoUrl");
         }
 
         return $result;

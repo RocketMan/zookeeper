@@ -40,6 +40,7 @@ SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION;
 SET NAMES utf8mb4;
 
 ALTER TABLE `airnames` MODIFY `dj` varchar(8) NOT NULL;
+ALTER TABLE `albumvol` MODIFY `tag` int(11) NOT NULL;
 ALTER TABLE `lists` MODIFY `dj` varchar(8) NOT NULL;
 ALTER TABLE `reviews` MODIFY `user` varchar(8) NOT NULL;
 ALTER TABLE `sessions` MODIFY `user` varchar(8) NOT NULL;
@@ -51,6 +52,8 @@ ALTER TABLE `users` MODIFY `name` varchar(8) NOT NULL;
 ALTER TABLE `albumvol` ADD INDEX `location` (`location`);
 UPDATE albumvol SET location='L' WHERE location='C';
 UPDATE albumvol a INNER JOIN currents c ON a.tag = c.tag AND adddate <= CURDATE() AND pulldate > CURDATE() SET location='C';
+
+ALTER TABLE `reviews` ADD COLUMN `exportid` varchar(80) DEFAULT NULL;
 
 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT;
 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS;

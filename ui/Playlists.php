@@ -366,7 +366,7 @@ class Playlists extends MenuItem {
         }
 
     ?>
-        <div class='pl-form-entry'>
+        <div class='pl-form-entry form-entry'>
             <input id='show-time' type='hidden' value="<?php echo $playlist['showtime']; ?>" >
             <input id='timezone-offset' type='hidden' value="<?php echo round(date('Z')/-60, 2); /* server TZ equivalent of javascript Date.getTimezoneOffset() */ ?>" >
             <input id='track-playlist' type='hidden' value='<?php echo $playlistId; ?>'>
@@ -477,6 +477,7 @@ class Playlists extends MenuItem {
             ?>
             <div>
                 <label></label>
+                <div class='action-area'>
                 <?php if($editTrack) { ?>
                 <button type='button' id='edit-save' class='edit-mode default'>Save</button>
                 <button type='button' id='edit-delete' class='edit-mode'>Delete</button>
@@ -485,6 +486,7 @@ class Playlists extends MenuItem {
                 <button type='button' disabled id='track-play' class='track-submit default'>Add <?php echo $isLiveShow?"(Playing Now)<img src='img/play.svg' />":"Item";?></button>
                 <button type='button' disabled id='track-add' class='track-submit<?php if(!$isLiveShow) echo " zk-hidden"; ?>'>Add (Upcoming)<img src='img/play-pause.svg' /></button>
                 <?php } ?>
+                </div>
             </div>
             <div class='toggle-time-entry<?php if (!$isLiveShow) echo " zk-hidden"; ?>'><div><!--&#x1f551;--></div></div>
         </div> <!-- track-editor -->
@@ -893,7 +895,6 @@ class Playlists extends MenuItem {
             if($result[$i]["tag"])
                  echo "<A CLASS=\"nav\" HREF=\"".
                       "?s=byAlbumKey&amp;n=". UI::URLify($result[$i]["tag"]).
-                      "&amp;q=". $maxresults.
                       "&amp;action=search\">";
     
             echo UI::smartURL($result[$i]["album"], !$result[$i]["tag"]);
@@ -1086,52 +1087,6 @@ class Playlists extends MenuItem {
             $count = $count + 1;
         }
         echo json_encode(["count" => $count, "tbody" => $tbody]);
-    }
-
-    public function viewLastPlays($tag, $count=0) {
-        $plays = Engine::api(IPlaylist::class)->getLastPlays($tag, $count);
-        if($plays) {
-            echo "<DIV class='secdiv'>Recent Airplay</DIV>";
-    
-            echo "<TABLE class='recentAirplay' CELLPADDING=2 CELLSPACING=0 BORDER=0>\n";
-    
-            // Setup date format based on locale
-            $dateSpec = UI::isUsLocale() ? 'M d, Y' : 'd M Y';
-    
-            // Ensure we have an even number of plays
-            if(sizeof($plays)%2)
-                $plays[] = ["description" => ""];
-     
-            $mid = sizeof($plays)/2;
-            for($i=0; $i < sizeof($plays); $i++) {
-                if($i%2 == 0) {
-                    echo "<TR>";
-                    $idx = ($i+2)/2 - 1;
-                } else {
-                    $idx = $mid + ($i+1)/2 - 1;
-                }
-                $play = $plays[$idx];
-    
-                if($play["description"]) {
-                    $showDate = date($dateSpec, strtotime($play["showdate"]));
-                    $showLink = "<A HREF='".
-                         "?subaction=viewDJ&amp;playlist=".$play["id"].
-                         "&amp;seq=selList'>".$play["description"]."</A>";
-
-                    $trackList = implode(", ", $play["tracks"]);    
-                    $playNum = $idx + 1;
-                    echo "<TD>$playNum.</TD>";
-                    echo "<TD class='date' style='min-width:80px'>$showDate:</TD>";
-                    echo "<TD>$showLink  <BR> $trackList";
-                } else
-                    echo "<TD COLSPAN=3></TD>";
-                if($i%2)
-                    echo "</TR>\n";
-                else
-                    echo "<TD WIDTH=20></TD>\n";
-            }
-            echo "</TABLE><BR>\n";
-        }
     }
 }
 

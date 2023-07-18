@@ -403,7 +403,6 @@ class Charts extends MenuItem {
                 // Album & Label
                 echo "<A CLASS=\"calNav\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($chart[$i]["tag"]).
-                             "&amp;q=10".
                              "&amp;action=search\">". UI::HTMLify($album, 20) . "</A></I>$medium (" .
                      UI::HTMLify($label, 20) . ")\n";
             }
@@ -459,7 +458,6 @@ class Charts extends MenuItem {
                 // Album & Label
                 echo "<A CLASS=\"calNav\" HREF=\"".
                              "?s=byAlbumKey&amp;n=". UI::URLify($chart[$i]["tag"]).
-                             "&amp;q=10".
                              "&amp;action=search\">". UI::HTMLify($album, 20) . "</A></I>$medium (" .
                      UI::HTMLify($label, 20) . ")<BR>\n";
             }
