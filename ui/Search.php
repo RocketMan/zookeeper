@@ -128,9 +128,7 @@ class Search extends MenuItem {
         $this->addVar("reviews", $reviews);
 
         // tracks
-        $tracks = $libraryApi->search(ILibrary::COLL_KEY, 0, 200, $tag);
-        if(!count($tracks))
-            $tracks = $libraryApi->search(ILibrary::TRACK_KEY, 0, 200, $tag);
+        $tracks = $libraryApi->search($albums[0]['iscoll'] ? ILibrary::COLL_KEY : ILibrary::TRACK_KEY, 0, 200, $tag);
 
         $isAuth = $this->session->isAuth('u');
         $internalLinks = Engine::param('internal_links');
