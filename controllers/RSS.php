@@ -190,48 +190,34 @@ class RSS extends CommandTarget implements IController {
        echo "<ttl>20</ttl>\n";
        echo "<language>en-us</language>\n";
        $results = Engine::api(IReview::class)->getRecentReviews("", 0, $limit);
-       while($results && ($row = $results->fetch())) {
+       foreach($results as $row) {
           // Link to album
-          $link = Engine::getBaseUrl()."?action=viewRecentReview&amp;tag=$row[0]";
+          $link = Engine::getBaseUrl()."?action=viewRecentReview&amp;tag=".$row['album']['tag'];
     
           // DJ
-          if($row[1])
-              $djname = $row[1];
-          else {
-              $djs = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $row[2]);
-              $djname = $djs[0]["realname"];
-          }
+          $djname = $row['airname'] ?? $row['realname'];
     
           // Album / Artist
-          $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
-          if (preg_match("/^\[coll\]/i", $album[0]["artist"]))
+          if($row['album']['iscoll'])
               $name = "Various Artists";
           else
-              $name = self::xmlentities($album[0]["artist"]);
-          $name .= " / " . self::xmlentities($album[0]["album"]);
+              $name = self::xmlentities($row['album']['artist']);
+          $name .= " / " . self::xmlentities($row['album']['album']);
     
           // Review
-          $reviews = Engine::api(IReview::class)->getReviews($row[0]);
-          foreach($reviews as $review) {
-             if($review["user"] == $row[2]) {
-                $review = $review[2];
-                //if(strlen($review) > 500)
-                //   $review = substr($review, 0, 497) . "...";
-                $review = nl2br(self::xmlentities(trim($review), ENT_QUOTES));
-                break;
-             }
-          }
-    
+          $reviews = Engine::api(IReview::class)->getReviews($row['album']['tag'], false, $row['user']);
+          $review = count($reviews) ? nl2br(self::xmlentities(trim($reviews[0]['review']), ENT_QUOTES)) : '';
+
           $output = self::xmlcdata("<p>Review by ".self::xmlentities($djname)."</p><p>$review</p>");
           echo "<item>\n<description>$output</description>\n";
           echo "<title>$name</title>\n";
-          echo "<guid isPermaLink=\"false\">review-".$row[0]."-".substr($row[3],0,10)."</guid>\n";
-          echo "<category>".self::xmlentities(ILibrary::GENRES[$album[0]["category"]])."</category>\n";
+          echo "<guid isPermaLink=\"false\">review-".$row['rid']."</guid>\n";
+          echo "<category>".self::xmlentities(ILibrary::GENRES[$row['album']['category']])."</category>\n";
           echo "<link>$link</link>\n";
           //echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=reviews\">".self::xmlentities($djname)."</source>\n";
           echo "<dc:creator>".self::xmlentities($djname)."</dc:creator>\n";
           echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=reviews\">$title</source>\n";
-          $time = strtotime($row[3]);
+          $time = strtotime($row['reviewed']);
           echo "<pubDate>".date("r", $time)."</pubDate>\n";
           echo "<zk:subtitle>Reviewed ".date($dateSpec, $time)."</zk:subtitle>\n</item>\n";
        }
