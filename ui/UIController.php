@@ -30,6 +30,7 @@ use ZK\Engine\Config;
 use ZK\Engine\Engine;
 use ZK\Engine\IUser;
 use ZK\Engine\Session;
+use ZK\Engine\TemplateFactory;
 
 use ZK\UI\UICommon as UI;
 
@@ -50,50 +51,7 @@ class MenuEntry {
     }
 }
 
-class SafeSession {
-    public function getDN() { return Engine::session()->getDN(); }
-    public function getUser() { return Engine::session()->getUser(); }
-    public function isUser($user) { return !strcasecmp($this->getUser(), $user); }
-
-    public function isAuth($mode) {
-        return Engine::session()->isAuth($mode);
-    }
-}
-
-class LazyLoadParams {
-    /**
-     * list of Engine::params safe for templates
-     */
-    private const TEMPLATE_SAFE_PARAMS = [
-        'copyright',
-        'email',
-        'favicon',
-        'logo',
-        'station',
-        'station_full',
-        'station_slogan',
-        'station_title',
-        'stylesheet',
-        'urls',
-    ];
-
-    public function __isset($name) {
-        return in_array($name, self::TEMPLATE_SAFE_PARAMS);
-    }
-
-    public function __get($name) {
-        $this->$name = in_array($name, self::TEMPLATE_SAFE_PARAMS) ?
-                    Engine::param($name) : null;
-        return $this->$name;
-    }
-}
-
 class UIController implements IController {
-    /**
-     * parent directory for Twig templates
-     */
-    private const TEMPLATE_BASE = __DIR__ . '/templates';
-
     protected $ssoUser;
     protected $dn;
     protected $session;
@@ -193,51 +151,9 @@ class UIController implements IController {
             $data = ob_get_contents();
             ob_end_clean();
 
-            $app = new LazyLoadParams();
-            $app->content = new \stdClass();
-            $app->content->data = $data;
-            $app->content->template = $this->menuItem ? $this->menuItem->getTemplate() : null;
-            $app->content->title = $this->menuItem ? $this->menuItem->getTitle() : null;
-            $app->extra = $this->menuItem ? $this->menuItem->getExtra() : null;
-            $app->menu = $this->composeMenu($_REQUEST['action']);
-            $app->submenu = $this->menuItem ? $this->menuItem->composeSubmenu($_REQUEST['action'], $_REQUEST['subaction']) : [];
-            $app->tertiary = $this->menuItem ? $this->menuItem->getTertiary() : null;
-            $app->request = $_REQUEST;
-            $app->session = new SafeSession();
-            $app->sso = !empty(Engine::param('sso')['client_id']);
-            $app->version = Engine::VERSION;
-            // var_dump($app);
-
-            $path = [];
-            foreach([
-                Engine::param('custom_template_dir', 'custom'),
-                'default',
-                ''
-            ] as $dir) {
-                $rpath = realpath(self::TEMPLATE_BASE . '/' . $dir);
-                if($rpath)
-                    $path[] = $rpath;
-            }
-
-            $cacheDir = Engine::param('template_cache_enabled') ?
-                            self::TEMPLATE_BASE . '/.cache' : false;
-            if($cacheDir) {
-                if(!is_dir($cacheDir) && !mkdir($cacheDir)) {
-                    error_log("UIController: cannot create $cacheDir");
-                    $cacheDir = false; // disable cache
-                }
-            }
-
-            $loader = new \Twig\Loader\FilesystemLoader($path);
-            $twig = new \Twig\Environment($loader, [ 'cache' => $cacheDir ]);
-            $twig->addGlobal('app', $app);
-
-            $filter = new \Twig\TwigFilter('decorate', function($asset) {
-                return UI::decorate($asset);
-            });
-            $twig->addFilter($filter);
-
-            $template = $twig->load('index.html');
+            $templateFact = new TemplateFactory(__DIR__ . '/templates');
+            $templateFact->setContext($this->composeMenu($_REQUEST['action']), $this->menuItem, $data);
+            $template = $templateFact->load('index.html');
             echo $template->render($this->menuItem ? $this->menuItem->getTemplateVars() : []);
         }
     }
