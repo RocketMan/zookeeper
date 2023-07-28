@@ -66,7 +66,7 @@ class RSS extends CommandTarget implements IController {
         echo "<?xml-stylesheet type=\"text/xsl\" href=\"zk-feed-reader.xslt\"?>\n";
         echo "<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n";
         echo "    xmlns:zk=\"http://zookeeper.ibinx.com/zkns\"\n";
-        echo "    zk:stylesheet=\"".UI::decorate("css/zoostyle.css")."\"\n";
+        echo "    zk:stylesheet=\"".Engine::decorate("css/zoostyle.css")."\"\n";
         echo "    zk:favicon=\"".Engine::param("favicon")."\">\n";
         
         $feeds = explode(',', $_REQUEST["feed"]);

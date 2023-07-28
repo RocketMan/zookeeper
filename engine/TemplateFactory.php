@@ -24,8 +24,6 @@
 
 namespace ZK\Engine;
 
-use ZK\UI\UICommon;
-
 
 class SafeSession {
     public function getDN() { return Engine::session()->getDN(); }
@@ -104,7 +102,7 @@ class TemplateFactory {
         $this->twig->addGlobal('app', $this->app);
 
         $filter = new \Twig\TwigFilter('decorate', function($asset) {
-            return UICommon::decorate($asset);
+            return Engine::decorate($asset);
         });
         $this->twig->addFilter($filter);
     }

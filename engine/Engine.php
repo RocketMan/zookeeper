@@ -138,6 +138,20 @@ class Engine {
                $_SERVER['SERVER_NAME'] . $port .
                preg_replace("{/[^/]+$}", "/", $uri);
     }
+
+    /**
+     * decorate the specified asset for cache control
+     *
+     * @param asset path to target asset
+     * @return HTML-encoded URI of decorated asset
+     */
+    public static function decorate($asset) {
+        $mtime = filemtime(__DIR__.'/../'.$asset);
+        $ext = strrpos($asset, '.');
+        return htmlspecialchars($mtime && $ext !== FALSE?
+            substr($asset, 0, $ext).'-'.$mtime.
+            substr($asset, $ext):$asset, ENT_QUOTES, 'UTF-8');
+    }
 }
 
 // static initialization of the engine
