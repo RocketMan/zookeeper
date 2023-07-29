@@ -229,6 +229,7 @@ class Playlists extends MenuItem {
                 break;
             }
         }
+        header("Content-Type: application/json");
         echo $hint ? json_encode($hint) : "{}";
     }
 
@@ -1060,6 +1061,7 @@ class Playlists extends MenuItem {
         }
 
         $length = count($showdates);
+        header("Content-Type: application/json");
         echo json_encode($showdates);
     }
 
@@ -1086,6 +1088,7 @@ class Playlists extends MenuItem {
                  "</TR>\n";
             $count = $count + 1;
         }
+        header("Content-Type: application/json");
         echo json_encode(["count" => $count, "tbody" => $tbody]);
     }
 }

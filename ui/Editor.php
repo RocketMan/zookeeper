@@ -183,9 +183,11 @@ class Editor extends MenuItem {
         if($this->session->isAuth("m")) {
             switch($subaction) {
             case "prefill":
+                header("Content-Type: application/json");
                 echo $this->prefillTracks();
                 return;
             case "status":
+                header("Content-Type: application/json");
                 echo $this->getPrintStatus();
                 return;
             }
