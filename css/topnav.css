@@ -246,6 +246,9 @@ nav .search-icon {
 }
 
 @media (max-width: 1000px) {
+    html.no-scroll {
+        overflow: hidden;
+    }
     nav {
         padding: 0;
     }
