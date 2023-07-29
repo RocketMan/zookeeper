@@ -30,7 +30,6 @@ use ZK\Engine\Config;
 use ZK\Engine\Engine;
 use ZK\Engine\IUser;
 use ZK\Engine\Session;
-use ZK\Engine\TemplateFactory;
 
 use ZK\UI\UICommon as UI;
 
@@ -151,7 +150,7 @@ class UIController implements IController {
             $data = ob_get_contents();
             ob_end_clean();
 
-            $templateFact = new TemplateFactory(__DIR__ . '/templates');
+            $templateFact = new TemplateFactoryUI();
             $templateFact->setContext($this->composeMenu($_REQUEST['action']), $this->menuItem, $data);
             $template = $templateFact->load('index.html');
             echo $template->render($this->menuItem ? $this->menuItem->getTemplateVars() : []);

@@ -107,14 +107,10 @@ class TemplateFactory {
         $this->twig->addFilter($filter);
     }
 
-    public function setContext($menu = null, $menuItem = null, $html = null) {
+    public function setContent($html = null, $template = null, $title = null) {
         $this->app->content->data = $html;
-        $this->app->content->template = $menuItem ? $menuItem->getTemplate() : null;
-        $this->app->content->title = $menuItem ? $menuItem->getTitle() : null;
-        $this->app->menu = $menu ?? [];
-        $this->app->submenu = $menuItem ? $menuItem->composeSubmenu($_REQUEST['action'], $_REQUEST['subaction']) : [];
-        $this->app->tertiary = $menuItem ? $menuItem->getTertiary() : null;
-        $this->app->extra = $menuItem ? $menuItem->getExtra() : null;
+        $this->app->content->template = $template;
+        $this->app->content->title = $title;
     }
 
     public function load($template) {
