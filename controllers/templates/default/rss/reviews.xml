@@ -1,0 +1,29 @@
+{% autoescape 'xml' %}
+<channel>
+  <title>{{ app.station_title }} Album Reviews</title>
+  <link>{{ baseUrl }}?action=viewRecent</link>
+  <description>Recent album reviews by {{ app.station }} DJs</description>
+  <managingEditor>{{ app.email.md }}</managingEditor>
+  <ttl>20</ttl>
+  <language>en-us</language>
+{% for review in reviews %}
+  <item>
+    <description><![CDATA[
+{% autoescape 'html' %}
+      <p>Review by {{ review.airname ?? review.realname }}</p>
+      <p>{{ review.review | nl2br }}</p>
+{% endautoescape %}
+    ]]></description>
+{% set artist = review.album.iscoll ? 'Various Artists' : review.album.artist %}
+    <title>{{ artist ~ ' / ' ~ review.album.album }}</title>
+    <guid isPermaLink="false">review-{{ review.rid }}</guid>
+    <category>{{ GENRES[review.album.category] }}</category>
+    <link>{{ baseUrl }}?action=viewRecentReview&amp;tag={{ review.album.tag }}</link>
+    <dc:creator>{{ review.airname ?? review.realname }}</dc:creator>
+    <source url="{{ baseUrl }}zkrss.php?feed=reviews\">{{ app.station_title }} Album Reviews</source>
+    <pubDate>{{ review.reviewed | date("r") }}</pubDate>
+    <zk:subtitle>Reviewed {{ review.reviewed | date(dateSpec) }}</zk:subtitle>
+  </item>
+{% endfor %}
+</channel>
+{% endautoescape %}

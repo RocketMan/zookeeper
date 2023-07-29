@@ -107,7 +107,7 @@ class TemplateFactory {
         $this->twig->addFilter($filter);
     }
 
-    public function setContent($html = null, $template = null, $title = null) {
+    public function setContent($template = null, $title = null, $html = null) {
         $this->app->content->data = $html;
         $this->app->content->template = $template;
         $this->app->content->title = $title;

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="zk-feed-reader.xslt"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:zk="http://zookeeper.ibinx.com/zkns"
+    zk:stylesheet="{{ 'css/zoostyle.css' | decorate }}"
+    zk:favicon="{{ app.favicon }}">
+{% for feed in feeds %}
+{% include('rss/' ~ feed ~ '.xml') %}
+{% endfor %}
+</rss>

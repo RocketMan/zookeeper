@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -28,8 +28,20 @@ use ZK\Engine\Engine;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
+use ZK\Engine\TemplateFactory;
 
 use ZK\UI\UICommon as UI;
+
+class TemplateFactoryRSS extends TemplateFactory {
+    public function __construct() {
+        parent::__construct(__DIR__ . '/templates');
+
+        $this->twig->getExtension(\Twig\Extension\EscaperExtension::class)->setEscaper('xml', function($env, $str) {
+            return str_replace(['&', '"', "'", '<', '>', '`'],
+                ['&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'], $str);
+        });
+    }
+}
 
 class RSS extends CommandTarget implements IController {
     private static $actions = [
@@ -38,6 +50,8 @@ class RSS extends CommandTarget implements IController {
         [ "charts", "recentCharts" ],
         [ "adds", "recentAdds" ],
     ];
+
+    private $params = [];
 
     private static function xmlentities($str) {
        return str_replace(['&', '"', "'", '<', '>', '`'],
@@ -62,18 +76,16 @@ class RSS extends CommandTarget implements IController {
 
         header("Content-type: text/xml");
         ob_start("ob_gzhandler");
-        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        echo "<?xml-stylesheet type=\"text/xsl\" href=\"zk-feed-reader.xslt\"?>\n";
-        echo "<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n";
-        echo "    xmlns:zk=\"http://zookeeper.ibinx.com/zkns\"\n";
-        echo "    zk:stylesheet=\"".Engine::decorate("css/zoostyle.css")."\"\n";
-        echo "    zk:favicon=\"".Engine::param("favicon")."\">\n";
-        
-        $feeds = explode(',', $_REQUEST["feed"]);
+        $templateFactory = new TemplateFactoryRSS();
+        $template = $templateFactory->load('rss.xml');
+        $this->params['baseUrl'] = Engine::getBaseUrl();
+        $this->params['feeds'] = [];
+
+        $feeds = explode(',', $_REQUEST['feed']);
         foreach($feeds as $feed)
             $this->processLocal($feed, null);
 
-        echo "</rss>\n";
+        echo $template->render($this->params);
         ob_end_flush(); // ob_gzhandler
     }
 
@@ -176,66 +188,20 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function recentReviews() {
-       $station = self::xmlentities(Engine::param('station_title', Engine::param('station')));
-       $limit = isset($_REQUEST["limit"])?$_REQUEST["limit"]:50;
+        $dateSpec = UI::isUsLocale() ? 'F j, Y' : 'j F Y';
+        $this->params['dateSpec'] = $dateSpec;
+        $this->params['GENRES'] = ILibrary::GENRES;
+        $this->params['feeds'][] = 'reviews';
 
-       $title = "$station Album Reviews";
-    
-       $dateSpec = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
+        $limit = $_REQUEST['limit'] ?? 50;
+        $results = Engine::api(IReview::class)->getRecentReviews('', 0, $limit);
+        foreach($results as &$row) {
+            $reviews = Engine::api(IReview::class)->getReviews($row['album']['tag'], 0, $row['user']);
+            if(count($reviews))
+                $row['review'] = $reviews[0]['review'];
+        }
 
-       echo "<channel>\n<title>$title</title>\n";
-       echo "<link>".Engine::getBaseUrl()."?action=viewRecent</link>\n";
-       echo "<description>Recent album reviews by $station DJs</description>\n";
-       echo "<managingEditor>".Engine::param('email')['md']."</managingEditor>\n";
-       echo "<ttl>20</ttl>\n";
-       echo "<language>en-us</language>\n";
-       $results = Engine::api(IReview::class)->getRecentReviews("", 0, $limit);
-       while($results && ($row = $results->fetch())) {
-          // Link to album
-          $link = Engine::getBaseUrl()."?action=viewRecentReview&amp;tag=$row[0]";
-    
-          // DJ
-          if($row[1])
-              $djname = $row[1];
-          else {
-              $djs = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $row[2]);
-              $djname = $djs[0]["realname"];
-          }
-    
-          // Album / Artist
-          $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
-          if (preg_match("/^\[coll\]/i", $album[0]["artist"]))
-              $name = "Various Artists";
-          else
-              $name = self::xmlentities($album[0]["artist"]);
-          $name .= " / " . self::xmlentities($album[0]["album"]);
-    
-          // Review
-          $reviews = Engine::api(IReview::class)->getReviews($row[0]);
-          foreach($reviews as $review) {
-             if($review["user"] == $row[2]) {
-                $review = $review[2];
-                //if(strlen($review) > 500)
-                //   $review = substr($review, 0, 497) . "...";
-                $review = nl2br(self::xmlentities(trim($review), ENT_QUOTES));
-                break;
-             }
-          }
-    
-          $output = self::xmlcdata("<p>Review by ".self::xmlentities($djname)."</p><p>$review</p>");
-          echo "<item>\n<description>$output</description>\n";
-          echo "<title>$name</title>\n";
-          echo "<guid isPermaLink=\"false\">review-".$row[0]."-".substr($row[3],0,10)."</guid>\n";
-          echo "<category>".self::xmlentities(ILibrary::GENRES[$album[0]["category"]])."</category>\n";
-          echo "<link>$link</link>\n";
-          //echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=reviews\">".self::xmlentities($djname)."</source>\n";
-          echo "<dc:creator>".self::xmlentities($djname)."</dc:creator>\n";
-          echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=reviews\">$title</source>\n";
-          $time = strtotime($row[3]);
-          echo "<pubDate>".date("r", $time)."</pubDate>\n";
-          echo "<zk:subtitle>Reviewed ".date($dateSpec, $time)."</zk:subtitle>\n</item>\n";
-       }
-       echo "</channel>\n";
+        $this->params['reviews'] = $results;
     }
     
     public function composeAddRSS($addDate, &$title) {
@@ -340,7 +306,6 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function emitError() {
-       $message = "Invalid feed: ".self::xmlentities($_REQUEST["feed"]);
-       echo "<channel>\n<title>$message</title>\n<link>".Engine::getBaseUrl()."</link>\n<description>$message</description>\n</channel>\n";
+       $this->params['feeds'][] = 'invalid';
     }
 }
