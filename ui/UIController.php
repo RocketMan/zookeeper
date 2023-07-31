@@ -181,15 +181,16 @@ class UIController implements IController {
 
         $this->preProcessRequest();
 
+        $action = $_REQUEST["action"] ?? '';
+        $subaction = $_REQUEST["subaction"] ?? '';
         $isJson = isset($_SERVER["HTTP_ACCEPT"]) &&
                 substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
         if ($isJson) {
-            $action =  $_REQUEST["action"];
-            $subaction =  $_REQUEST["subaction"];
+            header("Content-Type: application/json");
             $this->dispatch($action, $subaction);
         } else {
             ob_start();
-            $this->emitMain($_REQUEST["action"], $_REQUEST["subaction"]);
+            $this->emitMain($action, $subaction);
             $data = ob_get_contents();
             ob_end_clean();
 

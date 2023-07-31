@@ -43,7 +43,6 @@ class Home extends MenuItem {
 
     public function recentSpins() {
         $plays = Engine::api(IPlaylist::class)->getPlaysBefore($_REQUEST["before"] ?? null, $_REQUEST["count"] ?? 10);
-        header("Content-Type: application/json");
         echo json_encode($plays);
     }
 
@@ -87,7 +86,6 @@ class Home extends MenuItem {
     public function getTimes() {
         $retVal = [];
         $retVal['times'] = $this->makeTimePicker($_REQUEST["date"] ?? null);
-        header("Content-Type: application/json");
         echo json_encode($retVal);
     }
 
