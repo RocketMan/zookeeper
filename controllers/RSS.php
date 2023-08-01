@@ -95,96 +95,42 @@ class RSS extends CommandTarget implements IController {
 
     public function composeChartRSS($endDate, &$title, $limit="", $category="") {
         Engine::api(IChart::class)->getChart($chart, "", $endDate, $limit, $category);
+        $albums = [];
         if(sizeof($chart)) {
-            $title = Engine::param('station'). " ";
-            if($category) {
-                $cats = Engine::api(IChart::class)->getCategories();
-                $title .= strtoupper($cats[$category-1]["name"]) . " CHART ";
-            } else {
-                if($limit) $title .= " TOP $limit ";
-            }
-    
-            list($y, $m, $d) = explode("-", $endDate);
-            $dateSpec = UI::getClientLocale() == 'en_US' ? 'l, F j, Y' : 'l, j F Y';
-            $formatDate = date($dateSpec, mktime(0,0,0,$m,$d,$y));
-            $title .= "for the week ending $formatDate";
-    
-            $output = "<p>Rank. ARTIST <i>ALBUM</i> (LABEL)</p>\n";
-            $output .= "<p>";
-    
             for($i=0; $i < sizeof($chart); $i++) {
-                // Fixup the artist, album, and label names
-                $artist = $chart[$i]["artist"];
+                $album = $chart[$i];
                 $label = str_replace(" Records", "", $chart[$i]["label"]);
                 $label = str_replace(" Recordings", "", $label);
-    
-                // Setup medium
-                $album = $chart[$i]["album"];
-                switch($chart[$i]["medium"]) {
-                case "S":
-                    $medium = " 7\"";
-                    break;
-                case "T":
-                    $medium = " 10\"";
-                    break;
-                case "V":
-                    $medium = " 12\"";
-                    break;
-                default:
-                    $medium = "";
-                    break;
-                }
-    
-                $output .= (string)($i + 1).". ";
-                // Artist
-                $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " <i>";
-                // Album & Label
-                $output .= "<a href=\"".Engine::getBaseUrl().
-                             "?s=byAlbumKey&amp;n=".$chart[$i]["tag"].
-                             "&amp;q=10".
-                             "&amp;action=search".
-                             "\">". self::htmlnumericentities(self::xmlentities($album)) . "</a></i>$medium (" .
-                     self::htmlnumericentities(self::xmlentities($label)) . ")<br/>\n";
+                $album['label'] = $label;
+                $album['rank'] = $i + 1;
+                $albums[] = $album;
             }
-    
-            $output .= "</p>";
         }
-        return self::xmlcdata($output);
+        return $albums;
     }
     
     public function recentCharts() {
-       $station = self::xmlentities(Engine::param('station_title', Engine::param('station')));
-       $top = $_REQUEST["top"];
-       $weeks = $_REQUEST["weeks"];
+        $top = $_REQUEST["top"];
+        $weeks = $_REQUEST["weeks"];
 
-       if(!$top)
-          $top = 30;
-       if(!$weeks)
-          $weeks = 10;
-    
-       $title = "$station Airplay Charts";
-    
-       echo "<channel>\n<title>$title</title>\n";
-       echo "<link>".Engine::getBaseUrl()."?action=viewChart</link>\n";
-       echo "<description>$station Airplay Charts</description>\n";
-       echo "<managingEditor>".Engine::param('email')['md']."</managingEditor>\n";
-       echo "<language>en-us</language>\n";
-    
-       $weeks = Engine::api(IChart::class)->getChartDates($weeks);
-       while($weeks && ($week = $weeks->fetch())) {
-          $endDate = $week["week"];
-          $output = $this->composeChartRSS($endDate, $name, $top);
-          $link = Engine::getBaseUrl()."?action=viewChart&amp;subaction=weekly&amp;year=".substr($endDate,0,4)."&amp;month=".substr($endDate,5,2)."&amp;day=".substr($endDate,8,2);
-          echo "<item>\n<title>$name</title>\n";
-          echo "<guid>$link</guid>\n";
-          echo "<link>$link</link>\n";
-          echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=charts\">$title</source>\n";
-          echo "<pubDate>".date("r", strtotime($endDate))."</pubDate>\n";
-          // zk:subtitle is blank as title already contains the date
-          echo "<zk:subtitle></zk:subtitle>\n";
-          echo "<description>$output</description>\n</item>\n";
-       }
-       echo "</channel>\n";
+        if(!$top)
+            $top = 30;
+        if(!$weeks)
+            $weeks = 10;
+
+        $this->params['limit'] = $top;
+        $this->params['dateSpec'] = UI::isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
+        $this->params['MEDIA'] = ILibrary::MEDIA;
+        $weeks = Engine::api(IChart::class)->getChartDates($weeks);
+        $charts = [];
+        while($weeks && ($week = $weeks->fetch())) {
+            $chart = [];
+            $chart['endDate'] = $week['week'];
+            $chart['albums'] = $this->composeChartRSS($week['week'], $name, $top);
+            $charts[] = $chart;
+        }
+        $this->params['charts'] = $charts;
+        $this->params['feeds'][] = 'charts';
     }
     
     public function recentReviews() {
