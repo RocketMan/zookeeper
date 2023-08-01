@@ -185,6 +185,7 @@ class UIController implements IController {
         $subaction = $_REQUEST["subaction"] ?? '';
         $isJson = isset($_SERVER["HTTP_ACCEPT"]) &&
                 substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
+        ob_start("ob_gzhandler");
         if ($isJson) {
             header("Content-Type: application/json");
             $this->dispatch($action, $subaction);
@@ -241,6 +242,7 @@ class UIController implements IController {
             $template = $twig->load('index.html');
             echo $template->render($this->menuItem ? $this->menuItem->getTemplateVars() : []);
         }
+        ob_end_flush(); // ob_gzhandler
     }
 
     protected function preProcessRequest() {
