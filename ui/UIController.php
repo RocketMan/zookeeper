@@ -271,6 +271,11 @@ class UIController implements IController {
         case "logout":
             $this->doLogout();
             break;
+        case "find":
+            // redirect full-text search from v2.x
+            $qs = "?action=search&s=all&n=".urlencode($_REQUEST["search"]??'');
+            header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            exit;
         case "viewDJReviews";
             // redirect DJ review URLs from v2.x
             $qs = "?action=viewRecent&subaction=viewDJ&seq=selUser&viewuser=".urlencode($_REQUEST["n"]??'');

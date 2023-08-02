@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -43,7 +43,7 @@ class OpenSearch implements IController {
         echo "  <Image height=\"16\" width=\"16\"\n";
         echo "         type=\"image/vnd.microsoft.icon\">${baseURL}${favicon}</Image>\n";
         echo "  <Url type=\"text/html\"\n";
-        echo "       template=\"$baseURL?session=&amp;action=find&amp;search={searchTerms}&amp;src=opensearch\"/>\n";
+        echo "       template=\"$baseURL?action=search&amp;s=all&amp;n={searchTerms}&amp;src=opensearch\"/>\n";
         echo "  <Query role=\"example\" searchTerms=\"outer space\"/>\n";
         echo "  <moz:SearchForm>$baseURL</moz:SearchForm>\n";
         echo "</OpenSearchDescription>\n";
