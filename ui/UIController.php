@@ -30,10 +30,28 @@ use ZK\Engine\Config;
 use ZK\Engine\Engine;
 use ZK\Engine\IUser;
 use ZK\Engine\Session;
+use ZK\Engine\TemplateFactory;
 
 use ZK\UI\UICommon as UI;
 
 use JSMin\JSMin;
+
+class TemplateFactoryUI extends TemplateFactory {
+    public function __construct() {
+        parent::__construct(__DIR__ . '/templates');
+        $this->app->content = new \stdClass();
+    }
+
+    public function setContext($menu = null, $menuItem = null, $html = null) {
+        $this->app->content->data = $html;
+        $this->app->content->template = $menuItem ? $menuItem->getTemplate() : null;
+        $this->app->content->title = $menuItem ? $menuItem->getTitle() : null;
+        $this->app->menu = $menu ?? [];
+        $this->app->submenu = $menuItem ? $menuItem->composeSubmenu($_REQUEST['action'], $_REQUEST['subaction']) : [];
+        $this->app->tertiary = $menuItem ? $menuItem->getTertiary() : null;
+        $this->app->extra = $menuItem ? $menuItem->getExtra() : null;
+    }
+}
 
 class MenuEntry {
     private const FIELDS = [ 'access', 'action', 'label', 'implementation' ];
