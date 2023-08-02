@@ -71,7 +71,6 @@ class TemplateFactory {
 
     public function __construct(string $templateRoot) {
         $this->app = new LazyLoadParams();
-        $this->app->content = new \stdClass();
         $this->app->request = &$_REQUEST;
         $this->app->session = new SafeSession();
         $this->app->sso = !empty(Engine::param('sso')['client_id']);
@@ -105,12 +104,6 @@ class TemplateFactory {
             return Engine::decorate($asset);
         });
         $this->twig->addFilter($filter);
-    }
-
-    public function setContent($template = null, $title = null, $html = null) {
-        $this->app->content->data = $html;
-        $this->app->content->template = $template;
-        $this->app->content->title = $title;
     }
 
     public function load($template) {

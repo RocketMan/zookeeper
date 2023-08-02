@@ -30,6 +30,7 @@ use ZK\Engine\TemplateFactory;
 class TemplateFactoryUI extends TemplateFactory {
     public function __construct() {
         parent::__construct(__DIR__ . '/templates');
+        $this->app->content = new \stdClass();
     }
 
     public function setContext($menu = null, $menuItem = null, $html = null) {
