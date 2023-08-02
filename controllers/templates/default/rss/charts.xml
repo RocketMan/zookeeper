@@ -18,7 +18,7 @@
     <zk:subtitle></zk:subtitle>
     <description><![CDATA[
   {%~ autoescape 'html' %}
-      <p>Rank. ARTIST <i>ALBUM</i> (LABEL)</p>
+      <p>Rank. ARTIST <i>Album</i> (Label)</p>
       <p>
     {%~ for album in chart.albums %}
         {{ album.rank }}. {{ album.artist | upper }}

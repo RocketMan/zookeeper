@@ -93,7 +93,7 @@ class RSS extends CommandTarget implements IController {
         $this->dispatchAction($action, self::$actions);
     }
 
-    public function composeChartRSS($endDate, &$title, $limit="", $category="") {
+    public function composeChartRSS($endDate, $limit="", $category="") {
         Engine::api(IChart::class)->getChart($chart, "", $endDate, $limit, $category);
         $albums = [];
         if(sizeof($chart)) {
@@ -126,7 +126,7 @@ class RSS extends CommandTarget implements IController {
         while($weeks && ($week = $weeks->fetch())) {
             $chart = [];
             $chart['endDate'] = $week['week'];
-            $chart['albums'] = $this->composeChartRSS($week['week'], $name, $top);
+            $chart['albums'] = $this->composeChartRSS($week['week'], $top);
             $charts[] = $chart;
         }
         $this->params['charts'] = $charts;
@@ -150,47 +150,11 @@ class RSS extends CommandTarget implements IController {
         $this->params['reviews'] = $results;
     }
     
-    public function composeAddRSS($addDate, &$title) {
-        $station = self::xmlentities(Engine::param('station'));
+    public function composeAddRSS($addDate, $cats) {
+        $albums = [];
         $results = Engine::api(IChart::class)->getAdd($addDate);
         if($results) {
-            $title = "$station Adds ";
-    
-            list($y, $m, $d) = explode("-", $addDate);
-            $dateSpec = UI::getClientLocale() == 'en_US' ? 'l, F j, Y' : 'l, j F Y';
-            $formatDate = date($dateSpec, mktime(0,0,0,$m,$d,$y));
-            $title .= "for $formatDate";
-    
-            $output = "<p>Num (Charts) ARTIST <i>Album</i> (Label)</p>\n";
-            $output .= "<p>";
-    
-            // Get the chart categories
-            $cats = Engine::api(IChart::class)->getCategories();
-    
             while($row = $results->fetch()) {
-                // Fixup the artist, album, and label names
-                $artist = $row["artist"];
-                $label = $row["label"];
-    
-                // Setup medium
-                $album = $row["album"];
-                switch($row["medium"]) {
-                case "S":
-                    $medium = " 7\"";
-                    break;
-                case "T":
-                    $medium = " 10\"";
-                    break;
-                case "V":
-                    $medium = " 12\"";
-                    break;
-                default:
-                    $medium = "";
-                    break;
-                }
-    
-                $output .= $row["afile_number"]." ";
-    
                 // Categories
                 $codes = "";
                 $acats = explode(",", $row["afile_category"]);
@@ -200,55 +164,30 @@ class RSS extends CommandTarget implements IController {
     
                 if($codes == "")
                     $codes = "G";
-    
-                $output .= "(".$codes.") ";
-    
-                // Artist
-                $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " <i>";
-                // Album & Label
-                $output .= "<a href=\"".Engine::getBaseUrl().
-                             "?s=byAlbumKey&amp;n=".$row["tag"].
-                             "&amp;q=10".
-                             "&amp;action=search".
-                             "\">". self::htmlnumericentities(self::xmlentities($album)) . "</a></i>$medium (" .
-                     self::htmlnumericentities(self::xmlentities($label)) . ")<br/>\n";
+
+                $row['codes'] = $codes;
+                $albums[] = $row;
             }
-    
-            $output .= "</p>";
         }
-        return self::xmlcdata($output);
+        return $albums;
     }
     
     public function recentAdds() {
-       $station = self::xmlentities(Engine::param('station_title', Engine::param('station')));
-       $weeks = $_REQUEST["weeks"];
+        $weeks = $_REQUEST["weeks"] ?? 4;
 
-       if(!$weeks)
-          $weeks = 4;
-    
-       $title = "$station A-File Adds";
-    
-       echo "<channel>\n<title>$title</title>\n";
-       echo "<link>".Engine::getBaseUrl()."?action=addmgr</link>\n";
-       echo "<description>$station A-File Adds</description>\n";
-       echo "<managingEditor>".Engine::param('email')['md']."</managingEditor>\n";
-       echo "<language>en-us</language>\n";
-    
-       $weeks = Engine::api(IChart::class)->getAddDates($weeks);
-       while($weeks && ($week = $weeks->fetch())) {
-          $addDate = $week["adddate"];
-          $output = $this->composeAddRSS($addDate, $name);
-          $link = Engine::getBaseUrl()."?action=addmgr&amp;subaction=adds&amp;date=$addDate";
-          echo "<item>\n<title>$name</title>\n";
-          echo "<guid>$link</guid>\n";
-          echo "<link>$link</link>\n";
-          echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=adds\">$title</source>\n";
-          echo "<pubDate>".date("r", strtotime($addDate))."</pubDate>\n";
-          // zk:subtitle is blank as title already contains the date
-          echo "<zk:subtitle></zk:subtitle>\n";
-          echo "<description>$output</description>\n</item>\n";
-       }
-       echo "</channel>\n";
+        $this->params['dateSpec'] = UI::isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
+        $this->params['MEDIA'] = ILibrary::MEDIA;
+        $weeks = Engine::api(IChart::class)->getAddDates($weeks);
+        $cats = Engine::api(IChart::class)->getCategories();
+        $adds = [];
+        while($weeks && ($week = $weeks->fetch())) {
+            $add = [];
+            $add['addDate'] = $week["adddate"];
+            $add['albums'] = $this->composeAddRSS($week["adddate"], $cats);
+            $adds[] = $add;
+        }
+        $this->params['adds'] = $adds;
+        $this->params['feeds'][] = 'adds';
     }
     
     public function emitError() {
