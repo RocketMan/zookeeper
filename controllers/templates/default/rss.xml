@@ -5,6 +5,6 @@
     zk:stylesheet="{{ 'css/zoostyle.css' | decorate }}"
     zk:favicon="{{ app.favicon }}">
 {% for feed in feeds %}
-{% include('rss/' ~ feed ~ '.xml') %}
+  {%~ include('rss/' ~ feed ~ '.xml') %}
 {% endfor %}
 </rss>
