@@ -1,18 +1,18 @@
 {% autoescape 'xml' %}
 <channel>
   <title>{{ app.station_title }} Airplay Charts</title>
-  <link>{{ baseUrl }}?action=viewChart</link>
+  <link>{{ app.baseUrl }}?action=viewChart</link>
   <description>{{ app.station_title }} Airplay Charts</description>
   <managingEditor>{{ app.email.md }}</managingEditor>
   <language>en-us</language>
 {% for chart in charts %}
   {%~ set title = app.station ~ " TOP " ~ limit ~ " for the week ending " ~ chart.endDate | date(dateSpec) %}
-  {%~ set link = baseUrl ~ "?action=viewChart&amp;subaction=weekly&amp;year=" ~ chart.endDate | slice(0, 4) ~ "&amp;month=" ~ chart.endDate | slice(5, 2) ~ "&amp;day=" ~ chart.endDate | slice(8, 2) %}
+  {%~ set link = app.baseUrl ~ "?action=viewChart&amp;subaction=weekly&amp;year=" ~ chart.endDate | slice(0, 4) ~ "&amp;month=" ~ chart.endDate | slice(5, 2) ~ "&amp;day=" ~ chart.endDate | slice(8, 2) %}
   <item>
     <title>{{ title }}</title>
     <guid>{{ link | raw }}</guid>
     <link>{{ link | raw }}</link>
-    <source url="{{ baseUrl }}zkrss.php?feed=charts">{{ title }}</source>
+    <source url="{{ app.baseUrl }}zkrss.php?feed=charts">{{ title }}</source>
     <pubDate>{{ chart.endDate | date("r") }}</pubDate>
     {#~ zk:subtitle is blank as title already contains the date #}
     <zk:subtitle></zk:subtitle>
@@ -22,7 +22,7 @@
       <p>
     {%~ for album in chart.albums %}
         {{ album.rank }}. {{ album.artist | upper }}
-        <i><a href="{{ baseUrl }}?s=byAlbumKey&amp;n={{ album.tag }}&amp;action=search">{{ album.album }}</a></i> {{ album.medium != 'C' ? MEDIA[album.medium] }}
+        <i><a href="{{ app.baseUrl }}?s=byAlbumKey&amp;n={{ album.tag }}&amp;action=search">{{ album.album }}</a></i> {{ album.medium != 'C' ? MEDIA[album.medium] }}
         ({{ album.label }})
         <br />
     {%~ endfor %}

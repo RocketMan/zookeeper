@@ -28,20 +28,8 @@ use ZK\Engine\Engine;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
-use ZK\Engine\TemplateFactory;
 
 use ZK\UI\UICommon as UI;
-
-class TemplateFactoryRSS extends TemplateFactory {
-    public function __construct() {
-        parent::__construct(__DIR__ . '/templates');
-
-        $this->twig->getExtension(\Twig\Extension\EscaperExtension::class)->setEscaper('xml', function($env, $str) {
-            return str_replace(['&', '"', "'", '<', '>', '`'],
-                ['&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'], $str);
-        });
-    }
-}
 
 class RSS extends CommandTarget implements IController {
     private static $actions = [
@@ -76,9 +64,8 @@ class RSS extends CommandTarget implements IController {
 
         header("Content-type: text/xml");
         ob_start("ob_gzhandler");
-        $templateFactory = new TemplateFactoryRSS();
+        $templateFactory = new TemplateFactoryXML();
         $template = $templateFactory->load('rss.xml');
-        $this->params['baseUrl'] = Engine::getBaseUrl();
         $this->params['feeds'] = [];
 
         $feeds = explode(',', $_REQUEST['feed']);

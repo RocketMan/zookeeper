@@ -1,7 +1,7 @@
 {% autoescape 'xml' %}
 <channel>
   <title>{{ app.station_title }} Album Reviews</title>
-  <link>{{ baseUrl }}?action=viewRecent</link>
+  <link>{{ app.baseUrl }}?action=viewRecent</link>
   <description>Recent album reviews by {{ app.station }} DJs</description>
   <managingEditor>{{ app.email.md }}</managingEditor>
   <ttl>20</ttl>
@@ -18,9 +18,9 @@
     <title>{{ artist ~ ' / ' ~ review.album.album }}</title>
     <guid isPermaLink="false">review-{{ review.rid }}</guid>
     <category>{{ GENRES[review.album.category] }}</category>
-    <link>{{ baseUrl }}?action=viewRecentReview&amp;tag={{ review.album.tag }}</link>
+    <link>{{ app.baseUrl }}?action=viewRecentReview&amp;tag={{ review.album.tag }}</link>
     <dc:creator>{{ review.airname ?? review.realname }}</dc:creator>
-    <source url="{{ baseUrl }}zkrss.php?feed=reviews\">{{ app.station_title }} Album Reviews</source>
+    <source url="{{ app.baseUrl }}zkrss.php?feed=reviews\">{{ app.station_title }} Album Reviews</source>
     <pubDate>{{ review.reviewed | date("r") }}</pubDate>
     <zk:subtitle>Reviewed {{ review.reviewed | date(dateSpec) }}</zk:subtitle>
   </item>
