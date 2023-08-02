@@ -31,10 +31,13 @@ class TemplateFactoryXML extends TemplateFactory {
     public function __construct() {
         parent::__construct(__DIR__ . '/templates');
 
-        $this->twig->getExtension(\Twig\Extension\EscaperExtension::class)->setEscaper('xml', function($env, $str) {
+        // setup an xml escaper and make it the default strategy
+        $escaper = $this->twig->getExtension(\Twig\Extension\EscaperExtension::class);
+        $escaper->setEscaper('xml', function($env, $str) {
             return str_replace(['&', '"', "'", '<', '>', '`'],
                 ['&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'], $str);
         });
+        $escaper->setDefaultStrategy('xml');
 
         $this->app->baseUrl = Engine::getBaseUrl();
     }
