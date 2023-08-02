@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -24,28 +24,12 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\Engine;
 
 class OpenSearch implements IController {
     public function processRequest() {
-        $baseURL = Engine::getBaseUrl();
-        $favicon = Engine::param('favicon', 'favicon.ico');
-        $banner = Engine::param("station")." ".Engine::param("application");
-        
+        $templateFactory = new TemplateFactoryXML();
+        $template = $templateFactory->load('opensearch.xml');
         header("Content-type: text/xml; charset=UTF-8");
-
-        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        echo "<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\"\n";
-        echo "                       xmlns:moz=\"http://www.mozilla.org/2006/browser/search/\">\n";
-        echo "  <ShortName>$banner</ShortName>\n";
-        echo "  <Description>Search the $banner music database</Description>\n";
-        echo "  <Tags>$banner</Tags>\n";
-        echo "  <Image height=\"16\" width=\"16\"\n";
-        echo "         type=\"image/vnd.microsoft.icon\">${baseURL}${favicon}</Image>\n";
-        echo "  <Url type=\"text/html\"\n";
-        echo "       template=\"$baseURL?session=&amp;action=find&amp;search={searchTerms}&amp;src=opensearch\"/>\n";
-        echo "  <Query role=\"example\" searchTerms=\"outer space\"/>\n";
-        echo "  <moz:SearchForm>$baseURL</moz:SearchForm>\n";
-        echo "</OpenSearchDescription>\n";
+        echo $template->render();
     }
 }
