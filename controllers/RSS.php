@@ -41,28 +41,8 @@ class RSS extends CommandTarget implements IController {
 
     private $params = [];
 
-    private static function xmlentities($str) {
-       return str_replace(['&', '"', "'", '<', '>', '`'],
-           ['&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'], $str);
-    }
-
-    private static function xmlcdata($str) {
-       return "<![CDATA[${str}]]>";
-    }
-    
-    private static function htmlnumericentities($str) {
-       // for UTF-8, this is a no-op.  xmlentities has already taken
-       // care of the xml entities.
-       return $str;
-       //return preg_replace_callback('/[^!-%\x27-;=?-~ ]/',
-       //   function($m) { return "&#".ord($m[0]).";"; },
-       //   $str);
-    }
-
     public function processRequest() {
-        $this->session = Engine::session();
-
-        header("Content-type: text/xml");
+        header("Content-type: text/xml; charset=UTF-8");
         ob_start("ob_gzhandler");
         $templateFactory = new TemplateFactoryXML();
         $template = $templateFactory->load('rss.xml');
