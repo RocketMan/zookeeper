@@ -1,0 +1,62 @@
+<table cellpadding=2 cellspacing=0 width="100%" border=0 style='display: none'>
+  <tr>
+    <th align=left>
+      <form id='add-manager' action="" method=POST>
+        Adds for:
+        <select name=date style='display: none'>
+{% for date in adddates %}
+  {%~ set selected = app.request.date == date.adddate %}
+          <option value='{{ date.adddate }}' {{ selected ? 'selected' }}>{{ date.adddate }}
+{% endfor %}
+        </select>
+        <input type=hidden name=action value="addmgr">
+        <input type=hidden name=subaction value="adds">
+        <input type=hidden name=seq value="update">
+      </form>
+    </th>
+{% if app.session.isAuth('n') %}
+    <td align=right>
+      <form id='export-target' class='selector' action="?" method=POST>
+        <select name=os style='display: none'>
+          <option value="win">Windows
+          <option value="unix">Unix/OS X
+          <option value="email">E-Mail
+        </select>
+        <input type=button name=button onClick="onExport();" value=" Export " style='vertical-align: middle'>
+        <input type=hidden name=date value="">
+        <input type=hidden name=target value="addexp">
+      </form>
+    </td>
+{% endif %}
+  </tr>
+</table>
+{% if app.session.isAuth('n') %}
+<script><!--
+function onExport() {
+    if(document.getElementById('export-target').os.value == "email") {
+        document.getElementById('add-manager').subaction.value = "addsemail";
+        document.getElementById('add-manager').submit();
+    } else {
+        document.getElementById('export-target').date.value = document.getElementById('add-manager').date.value;
+        document.getElementById('export-target').submit();
+    }
+}
+// -->
+</script>
+{% endif %}
+<script><!--
+$().ready(function() {
+    $("select[name=date]").selectmenu({width: 'auto'})
+        .on('change selectmenuchange', function() {
+            // fixup subaction possibly changed by e-mail export
+            this.form.subaction.value = 'adds';
+            this.form.submit();
+        })
+        .closest("table").css('display', 'table');
+    $("select[name=date]").selectmenu('widget').trigger('focus');
+    $("select[name=os]").selectmenu({width: 100});
+    $("select[name=date]").selectmenu("menuWidget").css("max-height", "300px");
+});
+// -->
+</script>
+{% include 'currents/albums.html' %}

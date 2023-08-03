@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>{{ app.station_title }} Zookeeper Online</title>
+  <link rel="stylesheet" type="text/css" href="{{ "css/zoostyle.css" | decorate }}" />
+</head>
+<body>
+<div class="box">
+<h3 class="header" style="margin-bottom: 15px">{{ app.station_title | upper }} A-FILE AS OF {{ 'now' | date('Y-m-d') }}</h3>
+{% include 'currents/albums.html' %}
+</div>
+</body>
+</html>
+

@@ -1,0 +1,97 @@
+{%- macro catcodes(catmap, categories) %}
+    {%~ set cats = categories | split(',') %}
+    {%~ for cat in cats -%}
+        {{ catmap[cat - 1].code }}
+    {%- endfor %}
+{% endmacro -%}
+
+{%- macro medium(type) %}
+    {%~ if type == 'S' -%}
+        &nbsp;(7")
+    {%- elseif type == 'T' -%}
+        &nbsp;(10")
+    {%- elseif type == 'V' -%}
+        &nbsp;(12")
+    {%- endif %}
+{% endmacro -%}
+
+{% set isAuth = app.session.isAuth('u') %}
+{% set showAvg = isAuth and not static and app.request.subaction != 'adds' %}
+{% set labelCell = static ? '' : '<th>Label</th>' %}
+{% set avgCell = showAvg ? '<th>*Sizzle</th>' : '' %}
+{% set editCell = showEdit ? "<th style='width:30px' class='sorter-false'></th>" : "" %}
+{% set reviewCell = showReview ? "<th style='width:120px'>Reviewer</th>" : "" %}
+{% set playableCell = showReview and isAuth ? "<th class='sorter-false'></th>" : "" -%}
+
+<table class='sortable-table' {{ not static ? "style='display: none'" }} cellpadding=2 cellspacing=0 border=0>
+  <thead>
+    <tr class='sorter-header' align='left'>{{ editCell | raw }}
+      <th class='initial-sort-col'>Cat</th>{{ reviewCell | raw }}
+      <th>ID</th>
+      <th>Artist</th>{{ playableCell | raw }}
+      <th>Title</th>{{ labelCell | raw }}{{ avgCell | raw }}
+    </tr>
+  </thead>
+  <tbody>
+{% for album in albums %}
+    <tr class='hborder'>
+  {%~ if showEdit %}
+      <td><a class='nav' href='?action=addmgr&amp;subaction=adds&amp;date={{ app.request.date }}' onClick='confirmDelete({{ album.id }}); return false;'><span class='fas fa-trash'></span></a>&nbsp;<a class='currentsEdit' href='?action=addmgr&amp;subaction=addsedit&amp;id={{ album.id }}'><span class='fas fa-edit'></span></a></td>
+  {%~ endif %}
+      <td align='center'>{{ _self.catcodes(catmap, album.afile_category) }}</td>
+  {%~ if reviewCell | length %}
+      <td>{{ album.reviewer }}</td>
+  {%~ endif %}
+      <td>{{ album.afile_number }}</td>
+      <td>{{ static and album.artist | length > 50 ? album.artist[:50] ~ '...' : album.artist }}&nbsp;&nbsp;</td>
+  {%~ if playableCell | length %}
+      <td>
+    {%~ if album.playable %}
+        <div style='margin-right: 4px' class='albumPlayable'></div>
+    {%~ endif %}
+      </td>
+  {%~ endif %}
+  {%~ if static %}
+      <td>{{ album.album | length > 50 ? album.album[:50] ~ '...' : album.album }}{{ _self.medium(album.medium) }}&nbsp;&nbsp;</td>
+  {%~ else %}
+      <td><a class='nav' href='?s=byAlbumKey&amp;n={{ album.tag }}&amp;action=search'>{{ album.album }}</a>{{ _self.medium(album.medium) }}&nbsp;&nbsp;</td>
+      <td>{{ album.label }}</td>
+  {%~ endif %}
+  {%~ if showAvg %}
+      <td align=center>{{ album.sizzle }}</td>
+  {%~ endif %}
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
+{% if showAvg %}
+<p><b>*Sizzle</b>: Measure of an album's average daily airplay,
+available for albums which have been in the A-File for a
+minimum of 7 days.  Sizzle = (raw spin count while in the
+A-File / days in A-File) * 100, where days in A-File &gt; 7.</p>
+{% endif %}
+{% if showEdit %}
+<form id='add-delete' action="?action=addmgr&subaction=addsdel" method=POST>
+  <input type='hidden' name='id' value='' />
+</form>
+<script><!--
+function confirmDelete(id) {
+    if(confirm("Delete this album from the add?")) {
+        $('#add-delete input[name=id]').val(id);
+        $('#add-delete').submit();
+    }
+}
+// -->
+</script>
+{% endif %}
+{% if not static %}
+<script><!--
+$().ready(function(){
+    var INITIAL_SORT_COL = 1; // cat
+    $('.sortable-table').tablesorter({
+        sortList: [[INITIAL_SORT_COL, 0]],
+    }).css('display','table');
+});
+// -->
+</script>
+{% endif %}
