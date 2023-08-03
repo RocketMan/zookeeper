@@ -38,7 +38,7 @@
   {%~ if showEdit %}
       <td><a class='nav del' href='#' data-id='{{ album.id }}'><span class='fas fa-trash'></span></a>&nbsp;<a class='currentsEdit' href='?action=addmgr&amp;subaction=addsedit&amp;id={{ album.id }}'><span class='fas fa-edit'></span></a></td>
   {%~ endif %}
-      <td align='center'>{{ _self.catcodes(catmap, album.afile_category) }}</td>
+      <td align='center'>{{ _self.catcodes(catmap, album.afile_category) ?? '-' }}</td>
   {%~ if reviewCell | length %}
       <td>{{ album.reviewer }}</td>
   {%~ endif %}
