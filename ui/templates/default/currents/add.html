@@ -18,11 +18,11 @@
     <td align=right>
       <form id='export-target' class='selector' action="?" method=POST>
         <select name=os style='display: none'>
-          <option value="win">Windows
-          <option value="unix">Unix/OS X
           <option value="email">E-Mail
+          <option value="unix">Unix/OS X
+          <option value="win">Windows
         </select>
-        <input type=button name=button onClick="onExport();" value=" Export " style='vertical-align: middle'>
+        <input type=button name=button id='export' value=" Export " style='vertical-align: middle'>
         <input type=hidden name=date value="">
         <input type=hidden name=target value="addexp">
       </form>
@@ -32,15 +32,17 @@
 </table>
 {% if app.session.isAuth('n') %}
 <script><!--
-function onExport() {
-    if(document.getElementById('export-target').os.value == "email") {
-        document.getElementById('add-manager').subaction.value = "addsemail";
-        document.getElementById('add-manager').submit();
-    } else {
-        document.getElementById('export-target').date.value = document.getElementById('add-manager').date.value;
-        document.getElementById('export-target').submit();
-    }
-}
+$().ready(function() {
+    $("#export").on('click', function() {
+        var form = $("#export-target");
+        if(form.find("select[name=os]").val() == "email") {
+            form = $("#add-manager");
+            form.find("input[name=subaction]").val("addsemail");
+        } else
+            form.find("input[name=date]").val($("#add-manager select[name=date]").val());
+        form.submit();
+    });
+});
 // -->
 </script>
 {% endif %}

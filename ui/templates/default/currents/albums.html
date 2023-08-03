@@ -36,7 +36,7 @@
 {% for album in albums %}
     <tr class='hborder'>
   {%~ if showEdit %}
-      <td><a class='nav' href='?action=addmgr&amp;subaction=adds&amp;date={{ app.request.date }}' onClick='confirmDelete({{ album.id }}); return false;'><span class='fas fa-trash'></span></a>&nbsp;<a class='currentsEdit' href='?action=addmgr&amp;subaction=addsedit&amp;id={{ album.id }}'><span class='fas fa-edit'></span></a></td>
+      <td><a class='nav del' href='#' data-id='{{ album.id }}'><span class='fas fa-trash'></span></a>&nbsp;<a class='currentsEdit' href='?action=addmgr&amp;subaction=addsedit&amp;id={{ album.id }}'><span class='fas fa-edit'></span></a></td>
   {%~ endif %}
       <td align='center'>{{ _self.catcodes(catmap, album.afile_category) }}</td>
   {%~ if reviewCell | length %}
@@ -75,12 +75,15 @@ A-File / days in A-File) * 100, where days in A-File &gt; 7.</p>
   <input type='hidden' name='id' value='' />
 </form>
 <script><!--
-function confirmDelete(id) {
-    if(confirm("Delete this album from the add?")) {
-        $('#add-delete input[name=id]').val(id);
-        $('#add-delete').submit();
-    }
-}
+$().ready(function() {
+    $(".nav.del").on('click', function() {
+        if(confirm("Delete this album from the add?")) {
+            $('#add-delete input[name=id]').val($(this).data('id'));
+            $('#add-delete').submit();
+        }
+        return false;
+    });
+});
 // -->
 </script>
 {% endif %}

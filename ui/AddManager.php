@@ -714,7 +714,7 @@ class AddManager extends MenuItem {
                 $albums = Engine::api(IChart::class)->getAdd($date)->asArray();
     
                 $from = Engine::param('application')." <$instance_chartman>";
-                $subject = Engine::param('station').": Adds for $date";
+                $subject = Engine::param('station_title').": Adds for $date";
                 $body = "";
     
                 if($format == "tab") {
@@ -778,7 +778,7 @@ class AddManager extends MenuItem {
                 else {
                     // Emit the postamble
                     $body .= "\n--\nPost your music reviews online!\r\n";
-                    $body .= Engine::param('station')." ".
+                    $body .= Engine::param('station_title')." ".
                              Engine::param('application').":  ".
                              UI::getBaseUrl()."\r\n";
                 }
