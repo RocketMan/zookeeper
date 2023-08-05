@@ -156,47 +156,11 @@ class AddManager extends MenuItem {
         }, false))
             $_REQUEST['date'] = $date = $records[0]['adddate'];
 
-        if(!$datevalid && $first) $date = $first;
         if($date) {
             $records = Engine::api(IChart::class)->getAdd($date);
             $this->addManagerEmitAlbums($records, "adds", $this->session->isAuth("n"), true);
             $this->setTemplate('currents/add.html');
         }
-    }
-    
-    private function getMediumFormat($mediumType) {
-        $medium = "";
-
-        // Setup medium
-        switch($mediumType) {
-                case "S":
-                    $medium = "&nbsp;(7\")";
-                    break;
-                case "T":
-                    $medium = "&nbsp;(10\")";
-                    break;
-                case "V":
-                    $medium = "&nbsp;(12\")";
-                    break;
-        }
-        return $medium;
-    }
-
-    private function emitConfirmDelete() {
-    ?>
-    <FORM id='add-delete' ACTION="?action=addmgr&subaction=addsdel" METHOD=POST>
-        <INPUT TYPE='hidden' NAME='id' VALUE='' />
-    </FORM>
-    <SCRIPT><!--
-    function ConfirmDelete(id) {
-      if(confirm("Delete this album from the add?")) {
-        $('#add-delete input[name=id]').val(id);
-        $('#add-delete').submit();
-      }
-    }
-    // -->
-    </SCRIPT>
-    <?php 
     }
     
     public function panelInfo($validate) {
