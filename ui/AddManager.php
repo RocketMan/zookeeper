@@ -817,7 +817,7 @@ class AddManager extends MenuItem {
         $DAY_END_TIME = "0000";
         $total = 0;
         $afile = 0;
-        $lastShowEnd = null;
+        $lastShowEnd = $DAY_START_TIME;
         $lastDate = null;
         $lastDateRaw = null;
 
@@ -833,24 +833,23 @@ class AddManager extends MenuItem {
             list($y, $m, $d) = explode("-", $show["showdate"]);
             $showDate = date("D", mktime(0,0,0,$m,$d,$y));
 
-            if ($showDate != $lastDate && $showStart != $DAY_END_TIME) {
-                if ($lastShowEnd && $lastShowEnd != $DAY_END_TIME) {
+            if ($showDate != $lastDate ) {
+                if ($showStart != $DAY_END_TIME &&
+                        $lastDate && $lastShowEnd != $DAY_END_TIME) {
                     $result[] = [
                         'noplaylist' => true,
                         'date' => $lastDateRaw . " " . $lastDate,
                         'time' => $lastShowEnd . "-" . $DAY_END_TIME
                     ];
                 }
-                $lastShowEnd = $DAY_START_TIME;
-            }
-
-            // insert no playlist row if there is a gap in the regular 
-            // program day, eg 6am - 11:59:59pm.
-            if($lastShowEnd != $showStart && $showStart != $DAY_START_TIME) {
+            } else if($lastShowEnd != $showStart &&
+                        $showStart != $DAY_START_TIME) {
+                // insert no playlist row if there is a gap in the regular 
+                // program day, eg 6am - 11:59:59pm.
                 $result[] = [
                     'noplaylist' => true,
                     'date' => $show['showdate'] . " " . $showDate,
-                    'time' => $lastShowEnd . "-" . $showStart
+                    'time' => $lastShowEnd . "-" . $showStart . "x"
                 ];
             }
 

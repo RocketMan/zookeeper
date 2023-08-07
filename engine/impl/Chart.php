@@ -568,7 +568,8 @@ class ChartImpl extends DBO implements IChart {
                  "WHERE l.showdate between ? AND ? " .
                          "AND t.artist NOT LIKE '" .
                          IPlaylist::SPECIAL_TRACK . "%' " .
-                 "GROUP BY l.id;";
+                 "GROUP BY l.id " .
+                 "ORDER BY l.showdate, l.showtime";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $startDate);
         $stmt->bindValue(2, $endDate);
