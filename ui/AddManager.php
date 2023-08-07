@@ -36,6 +36,9 @@ use JSMin\JSMin;
 class AddManager extends MenuItem {
     const MIN_REQUIRED = 4;        // minimum required A-File tracks/hour
 
+    const DAY_START_TIME = "0600";
+    const DAY_END_TIME = "0000";
+
     private static $subactions = [
         [ "a", "", "Current File", "addManagerMain" ],
         [ "a", "adds", "Adds", "addManagerShowAdd" ],
@@ -798,8 +801,6 @@ class AddManager extends MenuItem {
     
             $start = substr($row["showtime"], 0, 2);
             $end = substr($row["showtime"], 5, 2);
-            $row["start"] = $start;
-            $row["end"] = $end;
     
             if($end < $start)
                 $end += 24;
@@ -813,11 +814,9 @@ class AddManager extends MenuItem {
     }
     
     private function aFileActivityEmitReport(&$records, $subaction, $static=0) {
-        $DAY_START_TIME = "0600";
-        $DAY_END_TIME = "0000";
         $total = 0;
         $afile = 0;
-        $lastShowEnd = $DAY_START_TIME;
+        $lastShowEnd = self::DAY_START_TIME;
         $lastDate = null;
         $lastDateRaw = null;
 
@@ -833,18 +832,17 @@ class AddManager extends MenuItem {
             list($y, $m, $d) = explode("-", $show["showdate"]);
             $showDate = date("D", mktime(0,0,0,$m,$d,$y));
 
-            if ($showDate != $lastDate ) {
-                if ($showStart != $DAY_END_TIME &&
-                        $lastDate && $lastShowEnd != $DAY_END_TIME) {
+            if($showDate != $lastDate ) {
+                if($showStart != self::DAY_END_TIME &&
+                        $lastDate && $lastShowEnd != self::DAY_END_TIME) {
                     $result[] = [
                         'noplaylist' => true,
                         'date' => $lastDateRaw . " " . $lastDate,
-                        'time' => $lastShowEnd . "-" . $DAY_END_TIME
+                        'time' => $lastShowEnd . "-" . self::DAY_END_TIME
                     ];
                 }
-            } else if($lastShowEnd != $showStart &&
-                        $showStart != $DAY_START_TIME &&
-                        $showStart > $lastShowEnd) {
+            } else if($showStart > $lastShowEnd &&
+                        $showStart != self::DAY_START_TIME) {
                 // insert no playlist row if there is a gap in the regular 
                 // program day, eg 6am - 11:59:59pm.
                 $result[] = [
@@ -860,7 +858,7 @@ class AddManager extends MenuItem {
 
             $show["date"] = $show['showdate'] . ' ' . $showDate;
             $show["time"] = $showTime;
-            $show["noquota"] = $show["afile"] < $show["duration"] * AddManager::MIN_REQUIRED;
+            $show["noquota"] = $show["afile"] < $show["duration"] * self::MIN_REQUIRED;
             $result[] = $show;
             $total += $show["total"];
             $afile += $show["afile"];
