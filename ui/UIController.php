@@ -285,10 +285,10 @@ class UIController implements IController {
         case "viewListById":
         case "viewDJ":
             // redirect playlist URLs from v2.x
-            $_REQUEST["subaction"] = $_REQUEST["action"];
-            $_REQUEST["action"] = "";
-            unset($_REQUEST["session"]);
-            $qs = "?" . http_build_query($_REQUEST);
+            $params = array_merge($_GET, $_POST); // avoid _REQUEST to exclude cookies
+            $params["subaction"] = $params["action"];
+            $params["action"] = "";
+            $qs = "?" . http_build_query($params);
             header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
         case "viewDate":
