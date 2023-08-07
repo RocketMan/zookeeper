@@ -272,7 +272,7 @@ class UIController implements IController {
             $this->doLogout();
             break;
         case "find":
-            // redirect full-text search from v2.x
+            // redirect full-text search URLs from v2.x
             $qs = "?action=search&s=all&n=".urlencode($_REQUEST["search"]??'');
             header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
@@ -287,6 +287,7 @@ class UIController implements IController {
             // redirect playlist URLs from v2.x
             $_REQUEST["subaction"] = $_REQUEST["action"];
             $_REQUEST["action"] = "";
+            unset($_REQUEST["session"]);
             $qs = "?" . http_build_query($_REQUEST);
             header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
