@@ -162,7 +162,7 @@ class AddManager extends MenuItem {
         if($date) {
             $records = Engine::api(IChart::class)->getAdd($date);
             $this->addManagerEmitAlbums($records, "adds", $this->session->isAuth("n"), true);
-            $this->setTemplate('currents/add.html');
+            $this->setTemplate('currents/adds.html');
         }
     }
     
