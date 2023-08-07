@@ -843,13 +843,14 @@ class AddManager extends MenuItem {
                     ];
                 }
             } else if($lastShowEnd != $showStart &&
-                        $showStart != $DAY_START_TIME) {
+                        $showStart != $DAY_START_TIME &&
+                        $showStart > $lastShowEnd) {
                 // insert no playlist row if there is a gap in the regular 
                 // program day, eg 6am - 11:59:59pm.
                 $result[] = [
                     'noplaylist' => true,
                     'date' => $show['showdate'] . " " . $showDate,
-                    'time' => $lastShowEnd . "-" . $showStart . "x"
+                    'time' => $lastShowEnd . "-" . $showStart
                 ];
             }
 
