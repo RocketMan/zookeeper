@@ -1,0 +1,79 @@
+<table cellpadding=2 cellspacing=0 width="100%" border=0>
+  <tr>
+    <th align=left>
+      <form action="" method=POST>
+        Activity for week ending:
+        <select name=date>
+{% for date in dates %}
+          <option value="{{ date.week }}" {{ date.week == seldate ? "selected" }}>{{ date.week }}
+{% endfor %}
+        </select>
+        <input type=hidden name=action value="addmgr">
+        <input type=hidden name=subaction value="activity">
+        <input type=hidden name=seq value="update">
+      </form>
+    </th>
+  </tr>
+</table>
+<script><!--
+$().ready(function() {
+    $("select[name=date]").selectmenu({width: 'auto'})
+        .on('change selectmenuchange', function() {
+            this.form.submit();
+        })
+        .selectmenu('widget').trigger('focus');
+    $("select[name=date]").selectmenu("menuWidget").css("max-height", "300px");
+});
+// -->
+</script>
+<table class='sortable-table afileactivity' style='display: none'>
+  <thead>
+    <tr>
+      <th style='width:90px'>Date</th>
+      <th>DJ</th>
+      <th>Air Name</th>
+      <th>Show</th>
+      <th>Tracks</th>
+      <th>AFile</th>
+      <th>%</th>
+    </tr>
+  </thead>
+  <tbody>
+{% for show in shows %}
+  {%~ if show.noplaylist | default %}
+    <tr class='noPlaylist'>
+      <td class='date'>{{ show.date }} <span class='sub2'>{{ show.time }}</span></td>
+      <td colspan=6>No playlist</td>
+    </tr>
+  {%~ else %}
+    <tr class='{{ show.noquota ? 'noQuota' : 'hborder' }}'>
+      <td class='date'>{{ show.date }} <span class='sub time'>{{ show.time }}</span></td>
+      <td>{{ show.name }}</td>
+      <td>{{ show.airname }}</td>
+      <td><a class="nav" href="?action=viewDJ&amp;playlist={{ show.id }}&amp;seq=selList">{{ show.description }}</a></td>
+      <td>{{ show.total }}</td>
+      <td>{{ show.afile }}</td>
+      <td>{{ show.percent }}</td>
+    </tr>
+  {%~ endif %}
+{% endfor %}
+  </tbody>
+  <tfooter>
+    <tr style='border-top: 2px solid gray'>
+      <th colspan=4 align=right>Total:</th>
+      <th>{{ total }}</th>
+      <th>{{ afile }}</th>
+      <th>{{ percent }}</th>
+    </tr>
+  </tfooter>
+</table>
+<script><!--
+$().ready(function() {
+    var INITIAL_SORT_COL = 0; // date
+    $('.sortable-table').tablesorter({
+        headers: { 0 : { sorter: 'text' } },
+        sortList: [[INITIAL_SORT_COL, 0]],
+    }).css('display', 'table');
+});
+// -->
+</script>

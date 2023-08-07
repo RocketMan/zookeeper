@@ -819,33 +819,27 @@ class AddManager extends MenuItem {
         $afile = 0;
         $lastShowEnd = null;
         $lastDate = null;
-    
-        echo "<TABLE class='sortable-table afileactivity' style='display: none'>";
-        echo "<THEAD><TR>";
-        echo "<TH style='width:90px'>Date</TH>";
-        echo "<TH>DJ</TH>";
-        echo "<TH>Air Name</TH>";
-        echo "<TH>Show</TH>";
-        echo "<TH>Tracks</TH>";
-        echo "<TH>AFile</TH>";
-        echo "<TH>%</TH>";
-        echo "</TR></THEAD>";
- 
+        $lastDateRaw = null;
+
         // Get albums into array
-        $this->aFileActivityGetReport($records, $albums);
-    
-        echo "<TBODY>";
-        foreach($albums as $index => $row) {
-            $showTime = $row["showtime"];
+        $this->aFileActivityGetReport($records, $shows);
+
+        $result = [];
+        foreach($shows as $show) {
+            $showTime = $show["showtime"];
             $startStopAr = explode("-", $showTime);
             $showStart = $startStopAr[0];
             $showEnd = $startStopAr[1];
-            list($y, $m, $d) = explode("-", $row["showdate"]);
-            $showDate = date("d D", mktime(0,0,0,$m,$d,$y));
+            list($y, $m, $d) = explode("-", $show["showdate"]);
+            $showDate = date("D", mktime(0,0,0,$m,$d,$y));
 
             if ($showDate != $lastDate && $showStart != $DAY_END_TIME) {
                 if ($lastShowEnd && $lastShowEnd != $DAY_END_TIME) {
-                    echo "<TR CLASS='noPlaylist'><TD class='date'>" . $lastDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $DAY_END_TIME . "</span></TD><TD COLSPAN=6>No playlist</TD></TR>";
+                    $result[] = [
+                        'noplaylist' => true,
+                        'date' => $lastDateRaw . " " . $lastDate,
+                        'time' => $lastShowEnd . "-" . $DAY_END_TIME
+                    ];
                 }
                 $lastShowEnd = $DAY_START_TIME;
             }
@@ -853,113 +847,46 @@ class AddManager extends MenuItem {
             // insert no playlist row if there is a gap in the regular 
             // program day, eg 6am - 11:59:59pm.
             if($lastShowEnd != $showStart && $showStart != $DAY_START_TIME) {
-                echo "<TR CLASS='noPlaylist'><TD class='date'>" . $showDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $showStart . "</span></TD><TD COLSPAN=6>No playlist</TD></TR>";
+                $result[] = [
+                    'noplaylist' => true,
+                    'date' => $show['showdate'] . " " . $showDate,
+                    'time' => $lastShowEnd . "-" . $showStart
+                ];
             }
 
             $lastShowEnd = $showEnd;
             $lastDate = $showDate;
+            $lastDateRaw = $show['showdate'];
 
-            if($row["afile"] < $row["duration"] * AddManager::MIN_REQUIRED)
-                echo "    <TR CLASS=\"noQuota\">\n";
-            else
-                echo "    <TR CLASS=\"hborder\">\n";
-    
-            echo "<TD class='date'>".$showDate." <span class='sub time'>".$showTime . "</span></TD>";
-    
-            // User/Airname/Show names
-            $name = htmlentities($row["name"]);
-            echo "<TD>" . $name . "</TD>\n";
-            $name = htmlentities($row["airname"]);
-            echo "<TD>" . $name . "</TD>\n";
-    
-            echo "<TD><A CLASS=\"nav\" HREF=\"".
-                  "?action=viewDJ&amp;playlist=".$row["id"].
-                  "&amp;seq=selList\">".
-                  htmlentities($row["description"]) . "</A></TD>\n";
-    
-            // Totals
-            echo "<TD>" . $row["total"] . "</TD>\n";
-            echo "<TD>" . $row["afile"] . "</TD>\n";
-            echo "<TD>" . $row["percent"] . "</TD>\n";
-    
-            $total += $row["total"];
-            $afile += $row["afile"];
-    
-            echo "    </TR>\n";
+            $show["date"] = $show['showdate'] . ' ' . $showDate;
+            $show["time"] = $showTime;
+            $show["noquota"] = $show["afile"] < $show["duration"] * AddManager::MIN_REQUIRED;
+            $result[] = $show;
+            $total += $show["total"];
+            $afile += $show["afile"];
         }
     
-        echo "</TBODY>";
         $percent = 0;
         if($total > 0)
             $percent = round($afile / $total * 100);
 
-        echo "<TR style='border-top: 2px solid gray'>";
-        echo "<TH COLSPAN=4 ALIGN=RIGHT>Total:</TH>";
-        echo "<TH>" . $total . "</TH>";
-        echo "<TH>" . $afile . "</TH>";
-        echo "<TH>" . $percent . "</TH>";
-        echo "</TR></TFOOTER>";
-        echo "  </TABLE>";
+        $this->addVar('shows', $result);
+        $this->addVar('total', $total);
+        $this->addVar('afile', $afile);
+        $this->addVar('percent', $percent);
     }
     
     public function aFileActivityShowWeekly() {
-        $date = $_REQUEST["date"];
-    ?>
-      <TABLE CELLPADDING=2 CELLSPACING=0 WIDTH="100%" BORDER=0>
-        <TR>
-          <TH ALIGN=LEFT>
-            <FORM ACTION="" METHOD=POST>
-              Activity for week ending:
-              <SELECT NAME=date>
-    <?php 
-        $records = Engine::api(IChart::class)->getChartDates(52);
-        $datevalid = false;
-        while($row = $records->fetch()) {
-            if(!$first) $first = $row[0];
-            $selected = ($row[0] == $date)?" SELECTED":"";
-            $datevalid |= $selected != "";
-            echo "            <OPTION VALUE=\"$row[0]\"$selected>$row[0]\n";
-        }
-    ?>          </SELECT>
-              <INPUT TYPE=HIDDEN NAME=action VALUE="addmgr">
-              <INPUT TYPE=HIDDEN NAME=subaction VALUE="activity">
-              <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
-            </FORM>
-          </TH>
-        </TR>
-      </TABLE>
-      <SCRIPT><!--
-      $().ready(function() {
-          $("select[name=date]").selectmenu({width: 'auto'})
-              .on('change selectmenuchange', function() {
-                  this.form.submit();
-              })
-              .selectmenu('widget').trigger('focus');
-          $("select[name=date]").selectmenu("menuWidget").css("max-height", "300px");
-      });
-      // -->
-      </SCRIPT>
-    <?php 
-        if(!$datevalid && $first) $date = $first;
+        $dates = Engine::api(IChart::class)->getChartDates(52)->asArray();
+        $this->addVar('dates', $dates);
+        $first = count($dates) ? $dates[0]['week'] : null;
+        $date = $_REQUEST["date"] ?? $first;
+        $this->addVar('seldate', $date);
+        $this->setTemplate('currents/activity.html');
+
         if($date) {
             $records = Engine::api(IChart::class)->getWeeklyActivity($date);
             $this->aFileActivityEmitReport($records, "activity");
         }
-        UI::setFocus();
-    ?>
-    <SCRIPT><!--
-    <?php ob_start([JSMin::class, 'minify']); ?>
-    $().ready(function(){
-        var INITIAL_SORT_COL = 0; //date
-        $('.sortable-table').tablesorter({
-            sortList: [[INITIAL_SORT_COL, 0]],
-        }).css('display','table');
-    });
-    <?php ob_end_flush(); ?>
-    // -->
-    </SCRIPT>
-
-    <?php 
     }
-
 }
