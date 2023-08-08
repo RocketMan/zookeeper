@@ -7,13 +7,13 @@ Options -Indexes
 <IfModule mod_php7.c>
     php_value error_reporting 32759
     php_value default_charset UTF-8
-    php_value request_order GPC
+    php_value request_order GP
 </IfModule>
 # for PHP 8 and later:
 <IfModule mod_php.c>
     php_value error_reporting 32759
     php_value default_charset UTF-8
-    php_value request_order GPC
+    php_value request_order GP
 </IfModule>
 
 <IfModule mod_rewrite.c>
