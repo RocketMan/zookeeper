@@ -36,6 +36,8 @@ use JSMin\JSMin;
 class AddManager extends MenuItem {
     const MIN_REQUIRED = 4;        // minimum required A-File tracks/hour
 
+    const MAX_CAT_COUNT = 16;      // requires DB schema change if > 16
+
     const DAY_START_TIME = "0600";
     const DAY_END_TIME = "0000";
 
@@ -78,7 +80,7 @@ class AddManager extends MenuItem {
         // lazy load the chart categoryMap
         if($var == 'categoryMap') {
             if(!isset($this->categoryMapCache))
-                $this->categoryMapCache = Engine::api(IChart::class)->getCategories();
+                $this->categoryMapCache = Engine::api(IChart::class)->getCategories(self::MAX_CAT_COUNT);
             return $this->categoryMapCache;
         }
     }
@@ -332,7 +334,7 @@ class AddManager extends MenuItem {
             // Add the album
             $emitted = false;
             $catstr = "";
-            for($i=0; $i<16; $i++)
+            for($i=0; $i<self::MAX_CAT_COUNT; $i++)
                 if($_POST["cat".$i]) {
                     if($emitted) $catstr .= ",";
                     $catstr .= (string)($i+1);
@@ -342,7 +344,7 @@ class AddManager extends MenuItem {
                 // Clear the form data
                 $this->skipVar("aid");
                 $this->skipVar("tag");
-                for($i=0; $i<16; $i++)
+                for($i=0; $i<self::MAX_CAT_COUNT; $i++)
                     $this->skipVar("cat".$i);
                 $this->emitHidden("catlist", $catstr);
                 $_REQUEST["aid"] = "";
@@ -362,7 +364,7 @@ class AddManager extends MenuItem {
             <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT class='date'><?php echo $pulldate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
         $emitted = false;
-        for($i=0; $i<16; $i++)
+        for($i=0; $i<self::MAX_CAT_COUNT; $i++)
             if($_POST["cat".$i]) {
                 if($emitted) echo ", ";
                 echo htmlentities(stripslashes($this->categoryMap[$i]["name"]));
@@ -488,7 +490,7 @@ class AddManager extends MenuItem {
             // Add the album
             $emitted = false;
             $catstr = "";
-            for($i=0; $i<16; $i++)
+            for($i=0; $i<self::MAX_CAT_COUNT; $i++)
                 if($_POST["cat".$i]) {
                     if($emitted) $catstr .= ",";
                     $catstr .= (string)($i+1);
@@ -510,7 +512,7 @@ class AddManager extends MenuItem {
             <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT class='date'><?php echo $pulldate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
         $emitted = false;
-        for($i=0; $i<16; $i++)
+        for($i=0; $i<self::MAX_CAT_COUNT; $i++)
             if($_POST["cat".$i]) {
                 if($emitted) echo ", ";
                 echo htmlentities(stripslashes($this->categoryMap[$i]["name"]));
@@ -610,49 +612,23 @@ class AddManager extends MenuItem {
     }
     
     public function addManagerCats() {
-        $seq = $_REQUEST["seq"];
-    
+        $seq = $_REQUEST["seq"] ?? '';
+        $this->addVar('seq', $seq);
+
         if($seq == "update" && $_SERVER['REQUEST_METHOD'] == 'POST') {
             $success = true;
-            for($i=1; $success && $i<=16; $i++) {
+            for($i=1; $success && $i<=self::MAX_CAT_COUNT; $i++) {
                 $name = $_POST["name".$i];
                 $code = $_POST["code".$i];
                 $dir = $_POST["dir".$i];
                 $email = $_POST["email".$i];
                 $success &= Engine::api(IChart::class)->updateCategory($i, $name, $code, $dir, $email);
             }
+            $this->addVar('success', $success);
         }
-    ?>
-      <FORM id='add-manager' ACTION="" METHOD=POST>
-        <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
-          <TR><TH>&nbsp;</TH><TH>Category</TH><TH>Code&nbsp;</TH><TH>Director</TH><TH>E-Mail Address</TH></TR>
-    <?php 
-        foreach($this->categoryMap as $index => $cat) {
-            $i = $cat["id"];
-            echo "      <TR><TD ALIGN=RIGHT>$i.</TD>\n";
-            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=name$i VALUE=\"".htmlentities(stripslashes($cat["name"]))."\" CLASS=input SIZE=20 MAXLENGTH=80></TD>\n";
-            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=code$i VALUE=\"".htmlentities(stripslashes($cat["code"]))."\" CLASS=input SIZE=4 MAXLENGTH=1></TD>\n";
-            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=dir$i VALUE=\"".htmlentities(stripslashes($cat["director"]))."\" CLASS=input SIZE=20 MAXLENGTH=80></TD>\n";
-            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=email$i VALUE=\"".htmlentities(stripslashes($cat["email"]))."\" CLASS=input SIZE=20 MAXLENGTH=80></TD></TR>\n";
-        }
-    ?>
-          <TR><TD>&nbsp;</TD>
-              <TD COLSPAN=4 ALIGN=LEFT><INPUT TYPE=SUBMIT class="submit" VALUE=" Update Categories "></TD></TR>
-    <?php 
-        if($seq == "update") {
-            if($success)
-                echo "      <TR><TD>&nbsp;</TD><TD CLASS=\"success\" ALIGN=LEFT COLSPAN=3>Categories updated.</TD></TR>\n";
-            else
-                echo "      <TR><TD>&nbsp;</TD><TD CLASS=\"error\" ALIGN=LEFT COLSPAN=3>Updated failed.</TD></TR>\n";
-        }
-    ?>
-        </TABLE>
-        <INPUT TYPE=HIDDEN NAME=action VALUE="addmgr">
-        <INPUT TYPE=HIDDEN NAME=subaction VALUE="categories">
-        <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
-      </FORM>
-    <?php 
-        UI::setFocus("name1");
+
+        $this->addVar('cats', $this->categoryMap);
+        $this->setTemplate('currents/cats.html');
     }
     
     public function addManagerEMail() {

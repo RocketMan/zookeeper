@@ -29,10 +29,14 @@ namespace ZK\Engine;
  * Chart operations
  */
 class ChartImpl extends DBO implements IChart {
-    public function getCategories() {
+    public function getCategories($limit = false) {
         $query = "SELECT id, name, code, director, email " .
                  "FROM categories ORDER BY id";
+        if($limit)
+            $query .= " LIMIT ?";
         $stmt = $this->prepare($query);
+        if($limit)
+            $stmt->bindValue(1, (int)$limit, \PDO::PARAM_INT);
         return $stmt->executeAndFetchAll();
     }
     
