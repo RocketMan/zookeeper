@@ -90,7 +90,7 @@ $().ready(function() {
 {% if not static %}
 <script><!--
 $().ready(function(){
-    var INITIAL_SORT_COL = 1; // reviewer
+    var INITIAL_SORT_COL = {{ app.request.subaction == 'adds' ? 2 : 0 }}; // id for adds, cat for current file
     $('.sortable-table').tablesorter({
         sortList: [[INITIAL_SORT_COL, 0]],
     }).css('display','table');
