@@ -268,6 +268,10 @@ table.recent-reviews {
     width: calc(100% - 5px);
 }
 
+table.recent-reviews th {
+    text-align: left;
+}
+
 /* home page */
 .top-albums {
     margin-top: 4px;
