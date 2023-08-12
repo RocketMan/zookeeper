@@ -90,7 +90,13 @@ $().ready(function() {
 {% if not static %}
 <script><!--
 $().ready(function(){
-    var INITIAL_SORT_COL = {{ app.request.subaction == 'adds' ? 2 : 0 }}; // id for adds, cat for current file
+{# initial sort col is cat (0) for current file, id (2) for adds #}
+{% set col = app.request.subaction == 'adds' ? 2 : 0 %}
+{# when edit controls are in place, bump column number by 1 #}
+{% if showEdit %}
+{% set col = col + 1 %}
+{% endif %}
+    var INITIAL_SORT_COL = {{ col }};
     $('.sortable-table').tablesorter({
         sortList: [[INITIAL_SORT_COL, 0]],
     }).css('display','table');
