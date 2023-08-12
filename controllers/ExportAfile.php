@@ -34,7 +34,7 @@ class ExportAfile implements IController {
         $results = Engine::api(IChart::class)->getCurrents(date("Y-m-d"));
         $addmgr = new AddManager();
         $addmgr->session = Engine::session();
-        $addmgr->addManagerEmitAlbums($results, "", false, true, true, true);
+        $addmgr->addManagerEmitAlbums($results, "", true, true);
 
         $templateFact = new TemplateFactory(dirname(__DIR__).'/ui/templates');
         $template = $templateFact->load('currents/export.html');

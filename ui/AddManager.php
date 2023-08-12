@@ -99,7 +99,7 @@ class AddManager extends MenuItem {
         return $this->dispatchSubaction($action, $subaction, $extra);
     }
 
-    public function addManagerEmitAlbums(&$records, $subaction, $showEdit, $showReview, $static=0, $sort=0) {
+    public function addManagerEmitAlbums(&$records, $subaction, $static=0, $sort=0) {
         $this->addVar('catmap', Engine::api(IChart::class)->getCategories());
 
         // Get albums into an array
@@ -121,15 +121,12 @@ class AddManager extends MenuItem {
 
         // Mark reviewed albums
         $libraryAPI = Engine::api(ILibrary::class);
-        if($showReview)
-            $libraryAPI->markAlbumsReviewed($albums);
-        if($showReview && $this->session->isAuth("u"))
+        $libraryAPI->markAlbumsReviewed($albums);
+        if($this->session->isAuth("u"))
             $libraryAPI->markAlbumsPlayable($albums);
 
         $this->setTemplate('currents/albums.html');
         $this->addVar('albums', $albums);
-        $this->addVar('showEdit', $showEdit);
-        $this->addVar('showReview', $showReview);
         $this->addVar('static', $static);
     }
     
@@ -147,7 +144,7 @@ class AddManager extends MenuItem {
             else
                 $results = Engine::api(IChart::class)->getCurrents(date("Y-m-d"));
 
-            $this->addManagerEmitAlbums($results, "", $this->session->isAuth("n"), true, false, true);
+            $this->addManagerEmitAlbums($results, "", false, true);
         }
     }
     
@@ -163,7 +160,7 @@ class AddManager extends MenuItem {
 
         if($date) {
             $records = Engine::api(IChart::class)->getAdd($date);
-            $this->addManagerEmitAlbums($records, "adds", $this->session->isAuth("n"), true);
+            $this->addManagerEmitAlbums($records, "adds");
             $this->setTemplate('currents/adds.html');
         }
     }

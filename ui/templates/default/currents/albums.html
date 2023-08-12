@@ -17,16 +17,17 @@
 
 {% set isAuth = app.session.isAuth('u') %}
 {% set showAvg = isAuth and not static and app.request.subaction != 'adds' %}
+{% set showEdit = app.session.isAuth('n') and not static %}
 {% set labelCell = static ? '' : '<th>Label</th>' %}
 {% set avgCell = showAvg ? '<th>*Sizzle</th>' : '' %}
 {% set editCell = showEdit ? "<th style='width:30px' class='sorter-false'></th>" : "" %}
-{% set reviewCell = showReview ? "<th style='width:120px'>Reviewer</th>" : "" %}
-{% set playableCell = showReview and isAuth ? "<th class='sorter-false'></th>" : "" -%}
+{% set playableCell = isAuth ? "<th class='sorter-false'></th>" : "" -%}
 
 <table class='sortable-table' {{ not static ? "style='display: none'" }} cellpadding=2 cellspacing=0 border=0>
   <thead>
     <tr class='sorter-header' align='left'>{{ editCell | raw }}
-      <th class='initial-sort-col'>Cat</th>{{ reviewCell | raw }}
+      <th class='initial-sort-col'>Cat</th>
+      <th style='width:120px'>Reviewer</th>
       <th>ID</th>
       <th>Artist</th>{{ playableCell | raw }}
       <th>Title</th>{{ labelCell | raw }}{{ avgCell | raw }}
@@ -39,9 +40,7 @@
       <td><a class='nav del' href='#' data-id='{{ album.id }}'><span class='fas fa-trash'></span></a>&nbsp;<a class='currentsEdit' href='?action=addmgr&amp;subaction=addsedit&amp;id={{ album.id }}'><span class='fas fa-edit'></span></a></td>
   {%~ endif %}
       <td align='center'>{{ _self.catcodes(catmap, album.afile_category) ?? '-' }}</td>
-  {%~ if reviewCell | length %}
       <td>{{ album.reviewer }}</td>
-  {%~ endif %}
       <td>{{ album.afile_number }}</td>
       <td>{{ static and album.artist | length > 50 ? album.artist[:50] ~ '...' : album.artist }}&nbsp;&nbsp;</td>
   {%~ if playableCell | length %}
