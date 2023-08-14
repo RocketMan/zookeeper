@@ -1,6 +1,7 @@
 .idea/
 .DS_Store
 config/config.php
+controllers/templates/.cache
 img/.cache
 ui/templates/.cache
 vendor
