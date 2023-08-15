@@ -109,4 +109,17 @@ class TemplateFactory {
     public function load($template) {
         return $this->twig->load($template);
     }
+
+    /**
+     * check whether the cache is stale for the specified template
+     *
+     * @param $template target template
+     * @return true if stale, false if fresh, null if not cached
+     */
+    public function isCacheStale(string $template): ?bool {
+        $cache = $this->twig->getCache(false);
+        $key = $cache->generateKey($template, $this->twig->getTemplateClass($template));
+        $ts = $cache->getTimestamp($key); // 0 if cache file does not exist
+        return $ts === 0 ? null : !$this->twig->isTemplateFresh($template, $ts);
+    }
 }

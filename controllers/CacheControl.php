@@ -27,7 +27,7 @@ namespace ZK\Controllers;
 use ZK\Engine\Engine;
 use ZK\Engine\TemplateFactory;
 
-class AdminCache implements IController {
+class CacheControl implements IController {
     protected const VALID_EXTENSIONS = ['html', 'xml'];
 
     protected $dirs = 0;
@@ -61,45 +61,66 @@ class AdminCache implements IController {
     }
 
     /**
-     * recursively warm up the template cache for the specified directory
+     * recursively visit templates in the specified directory
      *
-     * @param $factory template factory
      * @param $dir path to target template directory
-     * @param $offset start of template name in file path
+     * @param $visitor function to invoke for each visitied template
+     * @param $offset start of template name in file path (optional)
      */
-    protected function warmCacheDir($factory, $dir, $offset) {
-        if(!is_dir($dir))
+    protected function visitTemplateDir($dir, $visitor, $offset = null) {
+        if(!is_dir($dir) || !($visitor instanceof \Closure))
             return;
 
+        $offset ??= strlen($dir) + 1;
+
         foreach(new \DirectoryIterator($dir) as $file) {
-            if($file->isDot())
-                continue;
             if($file->isFile() &&
                     in_array($file->getExtension(), self::VALID_EXTENSIONS)) {
                 $template = substr($file->getPathname(), $offset);
-                if($this->verbose)
-                    echo "    loading $template\n";
-                $factory->load($template);
-                $this->files++;
-            } else if($file->isDir())
-                $this->warmCacheDir($factory, $file->getPathname(), $offset);
+                $visitor($template);
+            } else if($file->isDir() && !$file->isDot())
+                $this->visitTemplateDir($file->getPathname(), $visitor, $offset);
         }
     }
 
     /**
-     * recursively warm up the template cache for the specified directory
+     * warm up the cache for the specified template directory
      *
      * @param $dir path to target template directory
      */
     protected function warmCache($dir) {
-        $this->dirs = $this->files = 0;
-        echo "warming cache for $dir:\n";
+        echo "warming cache $dir:\n";
         $this->rmdir($dir . "/.cache");
-        echo "  {$this->files} cache files deleted\n";
         $this->dirs = $this->files = 0;
         $factory = new TemplateFactory($dir);
-        $this->warmCacheDir($factory, $dir . "/default", strlen($dir) + 9);
+        $this->visitTemplateDir($dir . "/default", function($template) use($factory) {
+            if($this->verbose)
+                echo "  INFO loading $template\n";
+            $factory->load($template);
+            $this->files++;
+        });
         echo "  {$this->files} templates loaded\n";
+    }
+
+    /**
+     * check the cache for the specified template directory
+     *
+     * @param $dir path to target template directory
+     */
+    protected function checkCache($dir) {
+        $this->stale = $this->fresh = $this->uncached = 0;
+        echo "checking $dir:\n";
+        $factory = new TemplateFactory($dir);
+        $this->visitTemplateDir($dir . "/default", function($template) use ($factory) {
+            $stale = $factory->isCacheStale($template);
+            if($stale) {
+                $this->stale++;
+                if($this->verbose)
+                    echo "  STALE $template\n";
+            } else
+                $stale === null ? $this->uncached++ : $this->fresh++;
+        });
+        echo "  {$this->stale} stale, {$this->fresh} fresh, {$this->uncached} uncached templates\n";
     }
 
     public function processRequest() {
@@ -112,18 +133,22 @@ class AdminCache implements IController {
             $this->verbose = $_REQUEST["verbose"] ?? false;
 
             switch($_REQUEST["action"] ?? "") {
-            case "warmup":
-                $this->warmCache(__DIR__ . "/templates");
-                $this->warmCache(dirname(__DIR__) . "/ui/templates");
-                break;
             case "clean":
             case "clear":
                 $this->rmdir(__DIR__ . "/templates/.cache");
                 $this->rmdir(dirname(__DIR__) . "/ui/templates/.cache");
                 echo "removed {$this->files} files in {$this->dirs} directories\n";
                 break;
+            case "check":
+                $this->checkCache(__DIR__ . "/templates");
+                $this->checkCache(dirname(__DIR__) . "/ui/templates");
+                break;
+            case "warmup":
+                $this->warmCache(__DIR__ . "/templates");
+                $this->warmCache(dirname(__DIR__) . "/ui/templates");
+                break;
             default:
-                echo "Usage: zk cache:{clear|warmup} [verbose=1]\n";
+                echo "Usage: zk cache:{check|clear|warmup} [verbose=1]\n";
                 break;
             }
         } else
