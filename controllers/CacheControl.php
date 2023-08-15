@@ -28,6 +28,10 @@ use ZK\Engine\Engine;
 use ZK\Engine\TemplateFactory;
 
 class CacheControl implements IController {
+    protected const TEMPLATE_ROOTS = [
+        'ui/templates',
+        'controllers/templates',
+    ];
     protected const VALID_EXTENSIONS = ['html', 'xml'];
 
     protected $dirs = 0;
@@ -48,11 +52,9 @@ class CacheControl implements IController {
             return;
 
         foreach(new \DirectoryIterator($dir) as $file) {
-            if($file->isDot())
-                continue;
             if($file->isFile() && unlink($file->getPathname()))
                 $this->files++;
-            else if($file->isDir())
+            else if($file->isDir() && !$file->isDot())
                 $this->rmdir($file->getPathname(), true);
         }
 
@@ -86,14 +88,15 @@ class CacheControl implements IController {
     /**
      * warm up the cache for the specified template directory
      *
-     * @param $dir path to target template directory
+     * @param $dir target template directory
      */
     protected function warmCache($dir) {
-        echo "warming cache $dir:\n";
-        $this->rmdir($dir . "/.cache");
+        echo "warming $dir:\n";
+        $path = $this->base . $dir;
+        $this->rmdir($path . "/.cache");
         $this->dirs = $this->files = 0;
-        $factory = new TemplateFactory($dir);
-        $this->visitTemplateDir($dir . "/default", function($template) use($factory) {
+        $factory = new TemplateFactory($path);
+        $this->visitTemplateDir($path . "/default", function($template) use($factory) {
             if($this->verbose)
                 echo "  INFO loading $template\n";
             $factory->load($template);
@@ -105,13 +108,14 @@ class CacheControl implements IController {
     /**
      * check the cache for the specified template directory
      *
-     * @param $dir path to target template directory
+     * @param $dir target template directory
      */
     protected function checkCache($dir) {
-        $this->stale = $this->fresh = $this->uncached = 0;
         echo "checking $dir:\n";
-        $factory = new TemplateFactory($dir);
-        $this->visitTemplateDir($dir . "/default", function($template) use ($factory) {
+        $this->stale = $this->fresh = $this->uncached = 0;
+        $path = $this->base . $dir;
+        $factory = new TemplateFactory($path);
+        $this->visitTemplateDir($path . "/default", function($template) use ($factory) {
             $stale = $factory->isCacheStale($template);
             if($stale) {
                 $this->stale++;
@@ -132,20 +136,21 @@ class CacheControl implements IController {
         if(Engine::param('template_cache_enabled')) {
             $this->verbose = $_REQUEST["verbose"] ?? false;
 
+            $this->base = dirname(__DIR__) . '/';
             switch($_REQUEST["action"] ?? "") {
             case "clean":
             case "clear":
-                $this->rmdir(__DIR__ . "/templates/.cache");
-                $this->rmdir(dirname(__DIR__) . "/ui/templates/.cache");
+                foreach(self::TEMPLATE_ROOTS as $root)
+                    $this->rmdir($this->base . $root . "/.cache");
                 echo "removed {$this->files} files in {$this->dirs} directories\n";
                 break;
             case "check":
-                $this->checkCache(__DIR__ . "/templates");
-                $this->checkCache(dirname(__DIR__) . "/ui/templates");
+                foreach(self::TEMPLATE_ROOTS as $root)
+                    $this->checkCache($root);
                 break;
             case "warmup":
-                $this->warmCache(__DIR__ . "/templates");
-                $this->warmCache(dirname(__DIR__) . "/ui/templates");
+                foreach(self::TEMPLATE_ROOTS as $root)
+                    $this->warmCache($root);
                 break;
             default:
                 echo "Usage: zk cache:{check|clear|warmup} [verbose=1]\n";
