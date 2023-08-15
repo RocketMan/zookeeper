@@ -63,7 +63,7 @@ class AdminCache implements IController {
     /**
      * recursively warm up the template cache for the specified directory
      *
-     * @param $factory Twig template factory
+     * @param $factory template factory
      * @param $dir path to target template directory
      * @param $offset start of template name in file path
      */
@@ -123,7 +123,7 @@ class AdminCache implements IController {
                 echo "removed {$this->files} files in {$this->dirs} directories\n";
                 break;
             default:
-                echo "Usage: zk cache action=[clear|warmup] [verbose=1]\n";
+                echo "Usage: zk cache:{clear|warmup} [verbose=1]\n";
                 break;
             }
         } else

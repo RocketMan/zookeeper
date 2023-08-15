@@ -252,7 +252,7 @@ around, as you will need it for each new release.
 Upon deployment of each new Zookeeper Online release, run the
 following command to clear the Twig template cache:
 
-       sudo -u www-data /example/path/to/zookeeper/zk clear-cache
+       sudo -u www-data /example/path/to/zookeeper/zk cache:clear
 
 where *www-data* is your Apache user and */example/path...* is the
 path to your zookeeper installation.  If successful, the above

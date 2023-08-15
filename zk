@@ -4,7 +4,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2018 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -43,7 +43,11 @@ foreach($argv as $arg) {
 /**
  * by default, TARGET is the first argument, unless explicitly specified
  */
-if(!array_key_exists('target', $_REQUEST))
-    $_REQUEST['target'] = $argv[1];
+if(!array_key_exists('target', $_REQUEST)) {
+    $tuple = explode(':', $argv[1]);
+    $_REQUEST['target'] = $tuple[0];
+    if(count($tuple) > 1 && !array_key_exists('action', $_REQUEST))
+        $_REQUEST['action'] = $tuple[1];
+}
 
 require('index.php');
