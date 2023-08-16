@@ -66,7 +66,7 @@ class CacheControl implements IController {
      * recursively visit templates in the specified directory
      *
      * @param $dir path to target template directory
-     * @param $visitor function to invoke for each visitied template
+     * @param $visitor function to invoke for each visited template
      * @param $offset start of template name in file path (optional)
      */
     protected function visitTemplateDir($dir, $visitor, $offset = null) {
@@ -133,30 +133,32 @@ class CacheControl implements IController {
             return;
         }
 
-        if(Engine::param('template_cache_enabled')) {
-            $this->verbose = $_REQUEST["verbose"] ?? false;
-
-            $this->base = dirname(__DIR__) . '/';
-            switch($_REQUEST["action"] ?? "") {
-            case "clean":
-            case "clear":
-                foreach(self::TEMPLATE_ROOTS as $root)
-                    $this->rmdir($this->base . $root . "/.cache");
-                echo "removed {$this->files} files in {$this->dirs} directories\n";
-                break;
-            case "check":
-                foreach(self::TEMPLATE_ROOTS as $root)
-                    $this->checkCache($root);
-                break;
-            case "warmup":
-                foreach(self::TEMPLATE_ROOTS as $root)
-                    $this->warmCache($root);
-                break;
-            default:
-                echo "Usage: zk cache:{check|clear|warmup} [verbose=1]\n";
-                break;
-            }
-        } else
+        if(!Engine::param('template_cache_enabled')) {
             echo "Template cache is disabled.  No change.\n";
+            return;
+        }
+
+        $this->verbose = $_REQUEST["verbose"] ?? false;
+        $this->base = dirname(__DIR__) . '/';
+
+        switch($_REQUEST["action"] ?? "") {
+        case "clean":
+        case "clear":
+            foreach(self::TEMPLATE_ROOTS as $root)
+                $this->rmdir($this->base . $root . "/.cache");
+            echo "removed {$this->files} files in {$this->dirs} directories\n";
+            break;
+        case "check":
+            foreach(self::TEMPLATE_ROOTS as $root)
+                $this->checkCache($root);
+            break;
+        case "warmup":
+            foreach(self::TEMPLATE_ROOTS as $root)
+                $this->warmCache($root);
+            break;
+        default:
+            echo "Usage: zk cache:{check|clear|warmup} [verbose=1]\n";
+            break;
+        }
     }
 }

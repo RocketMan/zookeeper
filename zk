@@ -26,7 +26,7 @@
 chdir(__DIR__);
 
 if($argc == 1) {
-    echo "Usage: zk TARGET [NAME=VALUE...]\n";
+    echo "Usage: zk TARGET[:ACTION] [NAME=VALUE...]\n";
     exit -1;
 }
 
@@ -36,7 +36,7 @@ if($argc == 1) {
 $_REQUEST = [];
 foreach($argv as $arg) {
     $tuple = explode('=', $arg);
-    if(sizeof($tuple) == 2)
+    if(count($tuple) == 2)
         $_REQUEST[$tuple[0]] = $tuple[1];
 }
 
