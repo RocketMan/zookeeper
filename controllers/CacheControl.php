@@ -115,7 +115,7 @@ class CacheControl implements IController {
         $this->stale = $this->fresh = $this->uncached = 0;
         $path = $this->base . $dir;
         $factory = new TemplateFactory($path);
-        $this->visitTemplateDir($path . "/default", function($template) use ($factory) {
+        $this->visitTemplateDir($path . "/default", function($template) use($factory) {
             $stale = $factory->isCacheStale($template);
             if($stale) {
                 $this->stale++;

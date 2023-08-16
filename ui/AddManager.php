@@ -860,4 +860,10 @@ class AddManager extends MenuItem {
             $this->aFileActivityEmitReport($records, "activity");
         }
     }
+
+    public function emitPrintableCurrentFile() {
+        $results = Engine::api(IChart::class)->getCurrents(date("Y-m-d"));
+        $this->addManagerEmitAlbums($results, "", true, true);
+        $this->setTemplate('currents/export.html');
+    }
 }

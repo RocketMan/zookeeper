@@ -25,19 +25,13 @@
 namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
-use ZK\Engine\IChart;
-use ZK\Engine\TemplateFactory;
 use ZK\UI\AddManager;
 
 class ExportAfile implements IController {
     public function processRequest() {
-        $results = Engine::api(IChart::class)->getCurrents(date("Y-m-d"));
         $addmgr = new AddManager();
         $addmgr->session = Engine::session();
-        $addmgr->addManagerEmitAlbums($results, "", true, true);
-
-        $templateFact = new TemplateFactory(dirname(__DIR__).'/ui/templates');
-        $template = $templateFact->load('currents/export.html');
-        echo $template->render($addmgr->getTemplateVars());
+        $addmgr->emitPrintableCurrentFile();
+        echo $addmgr->render();
     }
 }

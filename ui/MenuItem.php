@@ -25,6 +25,7 @@
 namespace ZK\UI;
 
 use ZK\Controllers\CommandTarget;
+use ZK\Engine\TemplateFactory;
 
 abstract class MenuItem extends CommandTarget {
     protected $title;
@@ -121,5 +122,11 @@ abstract class MenuItem extends CommandTarget {
             $entry = $deferred ?? new MenuEntry($subactions[0]);
             $this->{$entry->implementation}();
         }
+    }
+
+    public function render() {
+        $templateFact = new TemplateFactory(__DIR__ . '/templates');
+        $template = $templateFact->load($this->getTemplate());
+        return $template->render($this->getTemplateVars());
     }
 }
