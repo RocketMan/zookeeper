@@ -122,7 +122,7 @@ class AddManager extends MenuItem {
         // Mark reviewed albums
         $libraryAPI = Engine::api(ILibrary::class);
         $libraryAPI->markAlbumsReviewed($albums);
-        if($this->session->isAuth("u"))
+        if(!$static && $this->session->isAuth("u"))
             $libraryAPI->markAlbumsPlayable($albums);
 
         $this->setTemplate('currents/albums.html');

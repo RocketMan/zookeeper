@@ -21,13 +21,13 @@
 {% set labelCell = static ? '' : '<th>Label</th>' %}
 {% set avgCell = showAvg ? '<th>*Sizzle</th>' : '' %}
 {% set editCell = showEdit ? "<th style='width:30px' class='sorter-false'></th>" : "" %}
-{% set playableCell = isAuth ? "<th class='sorter-false'></th>" : "" -%}
+{% set playableCell = isAuth and not static ? "<th class='sorter-false'></th>" : "" -%}
 
 <table class='sortable-table' {{ not static ? "style='display: none'" }} cellpadding=2 cellspacing=0 border=0>
   <thead>
     <tr class='sorter-header' align='left'>{{ editCell | raw }}
       <th class='initial-sort-col'>Cat</th>
-      <th style='width:120px'>Reviewer</th>
+      <th {{ not static ? "style='width:120px'" }}>Reviewer</th>
       <th>ID</th>
       <th>Artist</th>{{ playableCell | raw }}
       <th>Title</th>{{ labelCell | raw }}{{ avgCell | raw }}
