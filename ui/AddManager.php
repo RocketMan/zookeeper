@@ -36,6 +36,11 @@ use JSMin\JSMin;
 class AddManager extends MenuItem {
     const MIN_REQUIRED = 4;        // minimum required A-File tracks/hour
 
+    const MAX_CAT_COUNT = 16;      // requires DB schema change if > 16
+
+    const DAY_START_TIME = "0600";
+    const DAY_END_TIME = "0000";
+
     private static $subactions = [
         [ "a", "", "Current File", "addManagerMain" ],
         [ "a", "adds", "Adds", "addManagerShowAdd" ],
@@ -75,7 +80,7 @@ class AddManager extends MenuItem {
         // lazy load the chart categoryMap
         if($var == 'categoryMap') {
             if(!isset($this->categoryMapCache))
-                $this->categoryMapCache = Engine::api(IChart::class)->getCategories();
+                $this->categoryMapCache = Engine::api(IChart::class)->getCategories(self::MAX_CAT_COUNT);
             return $this->categoryMapCache;
         }
     }
@@ -94,169 +99,35 @@ class AddManager extends MenuItem {
         return $this->dispatchSubaction($action, $subaction, $extra);
     }
 
-    private static function afileDefaultSort($a, $b) {
-        // primary sort by artist name
-        $cmp = strcmp($a["artist"], $b["artist"]);
-        switch($cmp) {
-        case 0:
-            // secondary sort by album title
-            $cmp = strcmp($a["album"], $b["album"]);
-            break;
-        default:
-            break;
-        }
-        return $cmp;
-    }
+    public function addManagerEmitAlbums(&$records, $subaction, $static=0, $sort=0) {
+        $this->addVar('catmap', Engine::api(IChart::class)->getCategories());
 
-    private function makeCategoryString($categories) {
-       $category = '';
-       $acats = explode(",", $categories);
-       foreach($acats as $index => $cat) {
-           if($cat) {
-               $category = $category . $this->categoryMap[$cat-1]["code"];
-           }
-       }
-
-       $category = $category == '' ? "-" : $category;
-       return $category;
-    }
-
-    private function getEditCell($row) {
-       $requestId = $_REQUEST["id"];
-       $albumId = $row["id"];
-
-       $hrefDate= "?action=addmgr&amp;subaction=adds&amp;date=$date ";
-       $class = ($requestId && $requestId == $albumId) ? "sel" : "nav";
-       $cellDate = "<A CLASS='nav' HREF='" . $hrefDate .
-          "' onClick='ConfirmDelete(" . $albumId . "); return false;'><span class='fas fa-trash'></span></A>&nbsp;";
-
-       $hrefId = "?action=addmgr&amp;subaction=addsedit&amp;id=" . $albumId;
-       $cellId = "<A CLASS='currentsEdit' HREF='" . $hrefId . "'><span class='fas fa-edit'></span></A>";
-
-       return "<TD>" . $cellDate . $cellId . "</TD>";
-    }
-
-    public function addManagerEmitAlbums(&$records, $subaction, $showEdit, $showReview, $static=0, $sort=0) {
-        $isAuthenticated = $this->session->isAuth("u");
-        $showAvg = $isAuthenticated && !$static && $subaction != "adds";
-    
-        $labelCell = $static ? "" : "<TH>Label</TH>";
-        $avgCell = $showAvg ?  "<TH>*Sizzle</TH>" : "";
-        $editCell = $showEdit ? "<TH style='width:30px' class='sorter-false'></TH>" : "";
-        $reviewCell = $showReview /* && $isAuthenticated */ ? "<TH style='width:120px'>Reviewer</TH>" : "";
-        $legacyReviewCell = /* $showReview && !$isAuthenticated && !$static ?
-                               "<TH class='sorter-false'></TH>" : */ "";
-        $playableCell = $showReview && $isAuthenticated ? "<TH class='sorter-false'></TH>" : "";
-        $display = $static ? "" : " style='display: none'";
-
-        echo "<TABLE class='sortable-table'$display CELLPADDING=2 CELLSPACING=0 BORDER=0><THEAD><TR class='sorter-header' align='left'>" .  $editCell .
-             "<TH class='initial-sort-col'>Cat</TH>" .  $reviewCell .
-             "<TH>ID</TH>" .
-             "<TH>Artist</TH>" . $legacyReviewCell . $playableCell .
-             "<TH>Title</TH>" . $labelCell . $avgCell .
-             "</TR></THEAD>\n";
-    
         // Get albums into an array
         $albums = $records->asArray();
         if($sort)
-            usort($albums, [AddManager::class, 'afileDefaultSort']);
+            usort($albums, function($a, $b) {
+                // primary sort by artist name
+                $cmp = $a["artist"] <=> $b["artist"];
+                switch($cmp) {
+                case 0:
+                    // secondary sort by album title
+                    $cmp = $a["album"] <=> $b["album"];
+                    break;
+                default:
+                    break;
+                }
+                return $cmp;
+            });
 
         // Mark reviewed albums
         $libraryAPI = Engine::api(ILibrary::class);
-        if($showReview)
-            $libraryAPI->markAlbumsReviewed($albums);
-        if($playableCell)
+        $libraryAPI->markAlbumsReviewed($albums);
+        if(!$static && $this->session->isAuth("u"))
             $libraryAPI->markAlbumsPlayable($albums);
-    
-        echo "<TBODY>";
-        if($albums) {
-            foreach($albums as $index => $row) {
-                echo "<TR CLASS='hborder'>";
-        
-                if($showEdit) {
-                    $editCell = $this->getEditCell($row);
-                    echo $editCell;
-                }
-        
-                $category = $this->makeCategoryString($row['afile_category']);
-                echo "<TD align='center'>" . $category . "</TD>";
 
-                if ($reviewCell)
-                    echo "<TD>" . htmlentities($row["reviewer"]) . "</TD>";
-    
-                // A-File Numbers
-                echo "<TD>".$row["afile_number"]."</TD>";
-        
-                $artistName = $row["artist"];
-                if($static && mb_strlen($artistName) > 50)
-                    $artistName = mb_substr($artistName, 0, 50) . "...";
-                $artistName = htmlentities($artistName) ;
-        
-                // Artist/Album/Label names
-                echo "<TD>" . $artistName . "&nbsp;&nbsp;</TD>";
-                
-                if($legacyReviewCell) {
-                    echo "<TD VALIGN=TOP>";
-                    if($row["reviewed"]) {
-                        echo "<A CLASS=\"albumReview\" HREF=\"".
-                             "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
-                             "&amp;action=search\"><IMG SRC=\"img/blank.gif\" WIDTH=12 HEIGHT=11 ALT=\"[i]\"></A>";
-                    }
-                    echo "</TD>";
-                }
-
-                if($playableCell) {
-                    echo "<TD>";
-                    if($row["playable"])
-                        echo "<DIV style='margin-right: 4px' class='albumPlayable'></DIV>";
-                    echo "</TD>";
-                }
-        
-                $albumName = $row["album"];
-                if($static && mb_strlen($albumName) > 50)
-                    $albumName = mb_substr($albumName, 0, 50) . "...";
-                $albumName = htmlentities($albumName);
-
-                $albumName .= $this->getMediumFormat($row["medium"]);
-        
-                if($static)
-                    echo "<TD>" . $albumName . $tagNum . "&nbsp;&nbsp;</TD>";
-                else
-                    echo "<TD><A CLASS='nav' HREF='".
-                         "?s=byAlbumKey&amp;n=". UI::URLify($row["tag"]).
-                         "&amp;action=search'>" . $albumName . "</A>$tagNum&nbsp;&nbsp;</TD>";
-    
-                if(!$static)
-                    echo "<TD>" . htmlentities($row["label"]) . "</TD>";
-    
-                if($showAvg)
-                    echo "<TD ALIGN=CENTER>".$row["sizzle"]."</TD>";
-
-                echo "</TR>\n";
-            }
-            echo "</TBODY>";
-        }
-        echo " </TABLE>\n";
-
-        if($showAvg)
-            echo "  <P><B>*Sizzle</B>: Measure of an album's average daily airplay, ".
-                 "available for albums which have been in the A-File for a ".
-                 "minimum of 7 days.  Sizzle = (raw spin count while in the ".
-                 "A-File / days in A-File) * 100, where days in A-File &gt; 7.</P>\n";
-    
-        if($showEdit)
-            $this->emitConfirmDelete();
-    ?>
-    <SCRIPT><!--
-    $().ready(function(){
-        var INITIAL_SORT_COL = 1; // cat
-        $('.sortable-table').tablesorter({
-            sortList: [[INITIAL_SORT_COL, 0]],
-        }).css('display','table');
-    });
-    // -->
-    </SCRIPT>
-    <?php 
+        $this->setTemplate('currents/albums.html');
+        $this->addVar('albums', $albums);
+        $this->addVar('static', $static);
     }
     
     public function addManagerMain() {
@@ -273,126 +144,25 @@ class AddManager extends MenuItem {
             else
                 $results = Engine::api(IChart::class)->getCurrents(date("Y-m-d"));
 
-            $this->addManagerEmitAlbums($results, "", $this->session->isAuth("n"), true, false, true);
+            $this->addManagerEmitAlbums($results, "", false, true);
         }
     }
     
     public function addManagerShowAdd() {
         $date = $_REQUEST["date"] ?? "";
-    ?>
-      <TABLE CELLPADDING=2 CELLSPACING=0 WIDTH="100%" BORDER=0 style='display: none'>
-        <TR>
-          <TH ALIGN=LEFT>
-            <FORM id='add-manager' ACTION="" METHOD=POST>
-              Adds for:
-              <SELECT NAME=date style='display: none'>
-    <?php 
-        $records = Engine::api(IChart::class)->getAddDates(52);
-        $datevalid = false;
-        while($records && ($row = $records->fetch())) {
-            if(!$first) $first = $row[0];
-            $selected = ($row[0] == $date)?" SELECTED":"";
-            $datevalid |= $selected != "";
-            echo "            <OPTION VALUE=\"$row[0]\"$selected>$row[0]\n";
-        }
-    ?>          </SELECT>
-              <INPUT TYPE=HIDDEN NAME=action VALUE="addmgr">
-              <INPUT TYPE=HIDDEN NAME=subaction VALUE="adds">
-              <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
-            </FORM>
-          </TH>
-    <?php if($this->session->isAuth("n")) { ?>
-          <TD ALIGN=RIGHT>
-            <FORM id='export-target' class='selector' ACTION="?" METHOD=POST>
-              <SELECT NAME=os style='display: none'>
-                  <OPTION VALUE="win">Windows
-                  <OPTION VALUE="unix">Unix/OS X
-                  <OPTION VALUE="email">E-Mail
-              </SELECT>
-              <INPUT TYPE=BUTTON NAME=button onClick="onExport();" VALUE=" Export " style='vertical-align: middle'>
-              <INPUT TYPE=HIDDEN NAME=date VALUE="">
-              <INPUT TYPE=HIDDEN NAME=target VALUE="addexp">
-            </FORM>
-          </TD>
-    <?php  } ?>
-        </TR>
-      </TABLE>
-    <SCRIPT><!--
-    $().ready(function() {
-        $("select[name=date]").selectmenu({width: 'auto'})
-            .on('change selectmenuchange', function() {
-                // fixup subaction possibly changed by e-mail export
-                this.form.subaction.value = 'adds';
-                this.form.submit();
-            })
-            .closest("table").css('display', 'table');
-        $("select[name=date]").selectmenu('widget').trigger('focus');
-        $("select[name=os]").selectmenu({width: 100});
-        $("select[name=date]").selectmenu("menuWidget").css("max-height", "300px");
-    });
-    // -->
-    </SCRIPT>
-    <?php 
-        if(!$datevalid && $first) $date = $first;
+        $records = Engine::api(IChart::class)->getAddDates(52)->asArray();
+        $this->addVar('adddates', $records);
+
+        if(count($records) && !array_reduce($records, function($carry, $item) use($date) {
+            return $carry |= $item['adddate'] == $date;
+        }, false))
+            $_REQUEST['date'] = $date = $records[0]['adddate'];
+
         if($date) {
             $records = Engine::api(IChart::class)->getAdd($date);
-            $this->addManagerEmitAlbums($records, "adds", $this->session->isAuth("n"), true);
+            $this->addManagerEmitAlbums($records, "adds");
+            $this->setTemplate('currents/adds.html');
         }
-        if($this->session->isAuth("n")) {
-    ?>
-
-    <SCRIPT><!--
-    <?php ob_start([JSMin::class, 'minify']); ?>
-
-    function onExport() {
-      if(document.getElementById('export-target').os.value == "email") {
-        document.getElementById('add-manager').subaction.value = "addsemail";
-        document.getElementById('add-manager').submit();
-      } else {
-        document.getElementById('export-target').date.value = document.getElementById('add-manager').date.value;
-        document.getElementById('export-target').submit();
-      }
-    }
-    <?php ob_end_flush(); ?>
-    // -->
-    </SCRIPT>
-    <?php 
-        }
-    }
-    
-    private function getMediumFormat($mediumType) {
-        $medium = "";
-
-        // Setup medium
-        switch($mediumType) {
-                case "S":
-                    $medium = "&nbsp;(7\")";
-                    break;
-                case "T":
-                    $medium = "&nbsp;(10\")";
-                    break;
-                case "V":
-                    $medium = "&nbsp;(12\")";
-                    break;
-        }
-        return $medium;
-    }
-
-    private function emitConfirmDelete() {
-    ?>
-    <FORM id='add-delete' ACTION="?action=addmgr&subaction=addsdel" METHOD=POST>
-        <INPUT TYPE='hidden' NAME='id' VALUE='' />
-    </FORM>
-    <SCRIPT><!--
-    function ConfirmDelete(id) {
-      if(confirm("Delete this album from the add?")) {
-        $('#add-delete input[name=id]').val(id);
-        $('#add-delete').submit();
-      }
-    }
-    // -->
-    </SCRIPT>
-    <?php 
     }
     
     public function panelInfo($validate) {
@@ -561,7 +331,7 @@ class AddManager extends MenuItem {
             // Add the album
             $emitted = false;
             $catstr = "";
-            for($i=0; $i<16; $i++)
+            for($i=0; $i<self::MAX_CAT_COUNT; $i++)
                 if($_POST["cat".$i]) {
                     if($emitted) $catstr .= ",";
                     $catstr .= (string)($i+1);
@@ -571,7 +341,7 @@ class AddManager extends MenuItem {
                 // Clear the form data
                 $this->skipVar("aid");
                 $this->skipVar("tag");
-                for($i=0; $i<16; $i++)
+                for($i=0; $i<self::MAX_CAT_COUNT; $i++)
                     $this->skipVar("cat".$i);
                 $this->emitHidden("catlist", $catstr);
                 $_REQUEST["aid"] = "";
@@ -591,7 +361,7 @@ class AddManager extends MenuItem {
             <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT class='date'><?php echo $pulldate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
         $emitted = false;
-        for($i=0; $i<16; $i++)
+        for($i=0; $i<self::MAX_CAT_COUNT; $i++)
             if($_POST["cat".$i]) {
                 if($emitted) echo ", ";
                 echo htmlentities(stripslashes($this->categoryMap[$i]["name"]));
@@ -717,7 +487,7 @@ class AddManager extends MenuItem {
             // Add the album
             $emitted = false;
             $catstr = "";
-            for($i=0; $i<16; $i++)
+            for($i=0; $i<self::MAX_CAT_COUNT; $i++)
                 if($_POST["cat".$i]) {
                     if($emitted) $catstr .= ",";
                     $catstr .= (string)($i+1);
@@ -739,7 +509,7 @@ class AddManager extends MenuItem {
             <TR><TD ALIGN=RIGHT>Pull Date:</TD><TD ALIGN=LEFT class='date'><?php echo $pulldate;?></TD></TR>
             <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
         $emitted = false;
-        for($i=0; $i<16; $i++)
+        for($i=0; $i<self::MAX_CAT_COUNT; $i++)
             if($_POST["cat".$i]) {
                 if($emitted) echo ", ";
                 echo htmlentities(stripslashes($this->categoryMap[$i]["name"]));
@@ -839,49 +609,23 @@ class AddManager extends MenuItem {
     }
     
     public function addManagerCats() {
-        $seq = $_REQUEST["seq"];
-    
+        $seq = $_REQUEST["seq"] ?? '';
+        $this->addVar('seq', $seq);
+
         if($seq == "update" && $_SERVER['REQUEST_METHOD'] == 'POST') {
             $success = true;
-            for($i=1; $success && $i<=16; $i++) {
+            for($i=1; $success && $i<=self::MAX_CAT_COUNT; $i++) {
                 $name = $_POST["name".$i];
                 $code = $_POST["code".$i];
                 $dir = $_POST["dir".$i];
                 $email = $_POST["email".$i];
                 $success &= Engine::api(IChart::class)->updateCategory($i, $name, $code, $dir, $email);
             }
+            $this->addVar('success', $success);
         }
-    ?>
-      <FORM id='add-manager' ACTION="" METHOD=POST>
-        <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
-          <TR><TH>&nbsp;</TH><TH>Category</TH><TH>Code&nbsp;</TH><TH>Director</TH><TH>E-Mail Address</TH></TR>
-    <?php 
-        foreach($this->categoryMap as $index => $cat) {
-            $i = $cat["id"];
-            echo "      <TR><TD ALIGN=RIGHT>$i.</TD>\n";
-            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=name$i VALUE=\"".htmlentities(stripslashes($cat["name"]))."\" CLASS=input SIZE=20 MAXLENGTH=80></TD>\n";
-            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=code$i VALUE=\"".htmlentities(stripslashes($cat["code"]))."\" CLASS=input SIZE=4 MAXLENGTH=1></TD>\n";
-            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=dir$i VALUE=\"".htmlentities(stripslashes($cat["director"]))."\" CLASS=input SIZE=20 MAXLENGTH=80></TD>\n";
-            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=email$i VALUE=\"".htmlentities(stripslashes($cat["email"]))."\" CLASS=input SIZE=20 MAXLENGTH=80></TD></TR>\n";
-        }
-    ?>
-          <TR><TD>&nbsp;</TD>
-              <TD COLSPAN=4 ALIGN=LEFT><INPUT TYPE=SUBMIT class="submit" VALUE=" Update Categories "></TD></TR>
-    <?php 
-        if($seq == "update") {
-            if($success)
-                echo "      <TR><TD>&nbsp;</TD><TD CLASS=\"success\" ALIGN=LEFT COLSPAN=3>Categories updated.</TD></TR>\n";
-            else
-                echo "      <TR><TD>&nbsp;</TD><TD CLASS=\"error\" ALIGN=LEFT COLSPAN=3>Updated failed.</TD></TR>\n";
-        }
-    ?>
-        </TABLE>
-        <INPUT TYPE=HIDDEN NAME=action VALUE="addmgr">
-        <INPUT TYPE=HIDDEN NAME=subaction VALUE="categories">
-        <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
-      </FORM>
-    <?php 
-        UI::setFocus("name1");
+
+        $this->addVar('cats', $this->categoryMap);
+        $this->setTemplate('currents/cats.html');
     }
     
     public function addManagerEMail() {
@@ -910,7 +654,7 @@ class AddManager extends MenuItem {
                 $albums = Engine::api(IChart::class)->getAdd($date)->asArray();
     
                 $from = Engine::param('application')." <$instance_chartman>";
-                $subject = Engine::param('station').": Adds for $date";
+                $subject = Engine::param('station_title').": Adds for $date";
                 $body = "";
     
                 if($format == "tab") {
@@ -974,7 +718,7 @@ class AddManager extends MenuItem {
                 else {
                     // Emit the postamble
                     $body .= "\n--\nPost your music reviews online!\r\n";
-                    $body .= Engine::param('station')." ".
+                    $body .= Engine::param('station_title')." ".
                              Engine::param('application').":  ".
                              UI::getBaseUrl()."\r\n";
                 }
@@ -1030,8 +774,6 @@ class AddManager extends MenuItem {
     
             $start = substr($row["showtime"], 0, 2);
             $end = substr($row["showtime"], 5, 2);
-            $row["start"] = $start;
-            $row["end"] = $end;
     
             if($end < $start)
                 $end += 24;
@@ -1045,153 +787,83 @@ class AddManager extends MenuItem {
     }
     
     private function aFileActivityEmitReport(&$records, $subaction, $static=0) {
-        $DAY_START_TIME = "0600";
-        $DAY_END_TIME = "0000";
         $total = 0;
         $afile = 0;
-        $lastShowEnd = null;
+        $lastShowEnd = self::DAY_START_TIME;
         $lastDate = null;
-    
-        echo "<TABLE class='sortable-table afileactivity' style='display: none'>";
-        echo "<THEAD><TR>";
-        echo "<TH style='width:90px'>Date</TH>";
-        echo "<TH>DJ</TH>";
-        echo "<TH>Air Name</TH>";
-        echo "<TH>Show</TH>";
-        echo "<TH>Tracks</TH>";
-        echo "<TH>AFile</TH>";
-        echo "<TH>%</TH>";
-        echo "</TR></THEAD>";
- 
+        $lastDateRaw = null;
+
         // Get albums into array
-        $this->aFileActivityGetReport($records, $albums);
-    
-        echo "<TBODY>";
-        foreach($albums as $index => $row) {
-            $showTime = $row["showtime"];
+        $this->aFileActivityGetReport($records, $shows);
+
+        $result = [];
+        foreach($shows as $show) {
+            $showTime = $show["showtime"];
             $startStopAr = explode("-", $showTime);
             $showStart = $startStopAr[0];
             $showEnd = $startStopAr[1];
-            list($y, $m, $d) = explode("-", $row["showdate"]);
-            $showDate = date("d D", mktime(0,0,0,$m,$d,$y));
+            list($y, $m, $d) = explode("-", $show["showdate"]);
+            $showDate = date("D", mktime(0,0,0,$m,$d,$y));
 
-            if ($showDate != $lastDate && $showStart != $DAY_END_TIME) {
-                if ($lastShowEnd && $lastShowEnd != $DAY_END_TIME) {
-                    echo "<TR CLASS='noPlaylist'><TD class='date'>" . $lastDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $DAY_END_TIME . "</span></TD><TD COLSPAN=6>No playlist</TD></TR>";
+            if($showDate != $lastDate ) {
+                if($showStart != self::DAY_END_TIME &&
+                        $lastDate && $lastShowEnd != self::DAY_END_TIME) {
+                    $result[] = [
+                        'noplaylist' => true,
+                        'date' => $lastDateRaw . " " . $lastDate,
+                        'time' => $lastShowEnd . "-" . self::DAY_END_TIME
+                    ];
                 }
-                $lastShowEnd = $DAY_START_TIME;
-            }
-
-            // insert no playlist row if there is a gap in the regular 
-            // program day, eg 6am - 11:59:59pm.
-            if($lastShowEnd != $showStart && $showStart != $DAY_START_TIME) {
-                echo "<TR CLASS='noPlaylist'><TD class='date'>" . $showDate . " <span class='sub2'>" . $lastShowEnd .  "-" . $showStart . "</span></TD><TD COLSPAN=6>No playlist</TD></TR>";
+            } else if($showStart > $lastShowEnd &&
+                        $showStart != self::DAY_START_TIME) {
+                // insert no playlist row if there is a gap in the regular 
+                // program day, eg 6am - 11:59:59pm.
+                $result[] = [
+                    'noplaylist' => true,
+                    'date' => $show['showdate'] . " " . $showDate,
+                    'time' => $lastShowEnd . "-" . $showStart
+                ];
             }
 
             $lastShowEnd = $showEnd;
             $lastDate = $showDate;
+            $lastDateRaw = $show['showdate'];
 
-            if($row["afile"] < $row["duration"] * AddManager::MIN_REQUIRED)
-                echo "    <TR CLASS=\"noQuota\">\n";
-            else
-                echo "    <TR CLASS=\"hborder\">\n";
-    
-            echo "<TD class='date'>".$showDate." <span class='sub time'>".$showTime . "</span></TD>";
-    
-            // User/Airname/Show names
-            $name = htmlentities($row["name"]);
-            echo "<TD>" . $name . "</TD>\n";
-            $name = htmlentities($row["airname"]);
-            echo "<TD>" . $name . "</TD>\n";
-    
-            echo "<TD><A CLASS=\"nav\" HREF=\"".
-                  "?action=viewDJ&amp;playlist=".$row["id"].
-                  "&amp;seq=selList\">".
-                  htmlentities($row["description"]) . "</A></TD>\n";
-    
-            // Totals
-            echo "<TD>" . $row["total"] . "</TD>\n";
-            echo "<TD>" . $row["afile"] . "</TD>\n";
-            echo "<TD>" . $row["percent"] . "</TD>\n";
-    
-            $total += $row["total"];
-            $afile += $row["afile"];
-    
-            echo "    </TR>\n";
+            $show["date"] = $show['showdate'] . ' ' . $showDate;
+            $show["time"] = $showTime;
+            $show["noquota"] = $show["afile"] < $show["duration"] * self::MIN_REQUIRED;
+            $result[] = $show;
+            $total += $show["total"];
+            $afile += $show["afile"];
         }
     
-        echo "</TBODY>";
         $percent = 0;
         if($total > 0)
             $percent = round($afile / $total * 100);
 
-        echo "<TR style='border-top: 2px solid gray'>";
-        echo "<TH COLSPAN=4 ALIGN=RIGHT>Total:</TH>";
-        echo "<TH>" . $total . "</TH>";
-        echo "<TH>" . $afile . "</TH>";
-        echo "<TH>" . $percent . "</TH>";
-        echo "</TR></TFOOTER>";
-        echo "  </TABLE>";
+        $this->addVar('shows', $result);
+        $this->addVar('total', $total);
+        $this->addVar('afile', $afile);
+        $this->addVar('percent', $percent);
     }
     
     public function aFileActivityShowWeekly() {
-        $date = $_REQUEST["date"];
-    ?>
-      <TABLE CELLPADDING=2 CELLSPACING=0 WIDTH="100%" BORDER=0>
-        <TR>
-          <TH ALIGN=LEFT>
-            <FORM ACTION="" METHOD=POST>
-              Activity for week ending:
-              <SELECT NAME=date>
-    <?php 
-        $records = Engine::api(IChart::class)->getChartDates(52);
-        $datevalid = false;
-        while($row = $records->fetch()) {
-            if(!$first) $first = $row[0];
-            $selected = ($row[0] == $date)?" SELECTED":"";
-            $datevalid |= $selected != "";
-            echo "            <OPTION VALUE=\"$row[0]\"$selected>$row[0]\n";
-        }
-    ?>          </SELECT>
-              <INPUT TYPE=HIDDEN NAME=action VALUE="addmgr">
-              <INPUT TYPE=HIDDEN NAME=subaction VALUE="activity">
-              <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
-            </FORM>
-          </TH>
-        </TR>
-      </TABLE>
-      <SCRIPT><!--
-      $().ready(function() {
-          $("select[name=date]").selectmenu({width: 'auto'})
-              .on('change selectmenuchange', function() {
-                  this.form.submit();
-              })
-              .selectmenu('widget').trigger('focus');
-          $("select[name=date]").selectmenu("menuWidget").css("max-height", "300px");
-      });
-      // -->
-      </SCRIPT>
-    <?php 
-        if(!$datevalid && $first) $date = $first;
+        $dates = Engine::api(IChart::class)->getChartDates(52)->asArray();
+        $this->addVar('dates', $dates);
+        $first = count($dates) ? $dates[0]['week'] : null;
+        $date = $_REQUEST["date"] ?? $first;
+        $this->addVar('seldate', $date);
+        $this->setTemplate('currents/activity.html');
+
         if($date) {
             $records = Engine::api(IChart::class)->getWeeklyActivity($date);
             $this->aFileActivityEmitReport($records, "activity");
         }
-        UI::setFocus();
-    ?>
-    <SCRIPT><!--
-    <?php ob_start([JSMin::class, 'minify']); ?>
-    $().ready(function(){
-        var INITIAL_SORT_COL = 0; //date
-        $('.sortable-table').tablesorter({
-            sortList: [[INITIAL_SORT_COL, 0]],
-        }).css('display','table');
-    });
-    <?php ob_end_flush(); ?>
-    // -->
-    </SCRIPT>
-
-    <?php 
     }
 
+    public function emitPrintableCurrentFile() {
+        $results = Engine::api(IChart::class)->getCurrents(date("Y-m-d"));
+        $this->addManagerEmitAlbums($results, "", true, true);
+        $this->setTemplate('currents/export.html');
+    }
 }

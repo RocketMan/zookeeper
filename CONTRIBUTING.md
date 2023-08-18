@@ -63,6 +63,21 @@ The following is an overview of the source code directory structure:
             operation is specified via metadata in
             config/controller_config.php.
 
+        controllers/templates/default/
+            Twig templates directory for non-UI controllers.  These
+            can be replaced or extended via custom templates.
+
+            The UI templates are NOT in this directory; they are
+            in ui/templates/... (see below).
+
+        controllers/templates/_custom dir_/
+            Custom Twig templates.  _custom dir_ is specified in
+            config/config.php; by default, 'custom' is used.
+
+            To extend or reference a default template, you may use
+            path expressions of the form 'default/_template_',
+            where _template_ is the default template file name.
+
         css/
             CSS assets.  These files are automatically whitespace
             compressed upon delivery.

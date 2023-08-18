@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/"
+                       xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>{{ app.station_title }} Zookeeper Online</ShortName>
+  <Description>Search {{ app.station_title }}</Description>
+  <Tags>{{ app.station_title }} Zookeeper Online</Tags>
+  <Image height="16" width="16"
+         type="image/vnd.microsoft.icon">{{ app.baseUrl ~ app.favicon }}</Image>
+  <Url type="text/html"
+       template="{{ app.baseUrl }}?action=search&amp;s=all&amp;n={searchTerms}&amp;src=opensearch" />
+  <Query role="example" searchTerms="outer space" />
+  <moz:SearchForm>{{ app.baseUrl }}</moz:SearchForm>
+</OpenSearchDescription>

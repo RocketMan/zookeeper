@@ -29,10 +29,14 @@ namespace ZK\Engine;
  * Chart operations
  */
 class ChartImpl extends DBO implements IChart {
-    public function getCategories() {
+    public function getCategories($limit = false) {
         $query = "SELECT id, name, code, director, email " .
                  "FROM categories ORDER BY id";
+        if($limit)
+            $query .= " LIMIT ?";
         $stmt = $this->prepare($query);
+        if($limit)
+            $stmt->bindValue(1, (int)$limit, \PDO::PARAM_INT);
         return $stmt->executeAndFetchAll();
     }
     
@@ -568,7 +572,8 @@ class ChartImpl extends DBO implements IChart {
                  "WHERE l.showdate between ? AND ? " .
                          "AND t.artist NOT LIKE '" .
                          IPlaylist::SPECIAL_TRACK . "%' " .
-                 "GROUP BY l.id;";
+                 "GROUP BY l.id " .
+                 "ORDER BY l.showdate, l.showtime";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $startDate);
         $stmt->bindValue(2, $endDate);

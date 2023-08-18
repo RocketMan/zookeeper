@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -39,41 +39,20 @@ class RSS extends CommandTarget implements IController {
         [ "adds", "recentAdds" ],
     ];
 
-    private static function xmlentities($str) {
-       return str_replace(['&', '"', "'", '<', '>', '`'],
-           ['&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'], $str);
-    }
-
-    private static function xmlcdata($str) {
-       return "<![CDATA[${str}]]>";
-    }
-    
-    private static function htmlnumericentities($str) {
-       // for UTF-8, this is a no-op.  xmlentities has already taken
-       // care of the xml entities.
-       return $str;
-       //return preg_replace_callback('/[^!-%\x27-;=?-~ ]/',
-       //   function($m) { return "&#".ord($m[0]).";"; },
-       //   $str);
-    }
+    private $params = [];
 
     public function processRequest() {
-        $this->session = Engine::session();
-
-        header("Content-type: text/xml");
+        header("Content-type: text/xml; charset=UTF-8");
         ob_start("ob_gzhandler");
-        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        echo "<?xml-stylesheet type=\"text/xsl\" href=\"zk-feed-reader.xslt\"?>\n";
-        echo "<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n";
-        echo "    xmlns:zk=\"http://zookeeper.ibinx.com/zkns\"\n";
-        echo "    zk:stylesheet=\"".UI::decorate("css/zoostyle.css")."\"\n";
-        echo "    zk:favicon=\"".Engine::param("favicon")."\">\n";
-        
-        $feeds = explode(',', $_REQUEST["feed"]);
+        $templateFactory = new TemplateFactoryXML();
+        $template = $templateFactory->load('rss.xml');
+        $this->params['feeds'] = [];
+
+        $feeds = explode(',', $_REQUEST['feed']);
         foreach($feeds as $feed)
             $this->processLocal($feed, null);
 
-        echo "</rss>\n";
+        echo $template->render($this->params);
         ob_end_flush(); // ob_gzhandler
     }
 
@@ -81,204 +60,68 @@ class RSS extends CommandTarget implements IController {
         $this->dispatchAction($action, self::$actions);
     }
 
-    public function composeChartRSS($endDate, &$title, $limit="", $category="") {
+    public function composeChartRSS($endDate, $limit="", $category="") {
         Engine::api(IChart::class)->getChart($chart, "", $endDate, $limit, $category);
+        $albums = [];
         if(sizeof($chart)) {
-            $title = Engine::param('station'). " ";
-            if($category) {
-                $cats = Engine::api(IChart::class)->getCategories();
-                $title .= strtoupper($cats[$category-1]["name"]) . " CHART ";
-            } else {
-                if($limit) $title .= " TOP $limit ";
-            }
-    
-            list($y, $m, $d) = explode("-", $endDate);
-            $dateSpec = UI::getClientLocale() == 'en_US' ? 'l, F j, Y' : 'l, j F Y';
-            $formatDate = date($dateSpec, mktime(0,0,0,$m,$d,$y));
-            $title .= "for the week ending $formatDate";
-    
-            $output = "<p>Rank. ARTIST <i>ALBUM</i> (LABEL)</p>\n";
-            $output .= "<p>";
-    
             for($i=0; $i < sizeof($chart); $i++) {
-                // Fixup the artist, album, and label names
-                $artist = $chart[$i]["artist"];
+                $album = $chart[$i];
                 $label = str_replace(" Records", "", $chart[$i]["label"]);
                 $label = str_replace(" Recordings", "", $label);
-    
-                // Setup medium
-                $album = $chart[$i]["album"];
-                switch($chart[$i]["medium"]) {
-                case "S":
-                    $medium = " 7\"";
-                    break;
-                case "T":
-                    $medium = " 10\"";
-                    break;
-                case "V":
-                    $medium = " 12\"";
-                    break;
-                default:
-                    $medium = "";
-                    break;
-                }
-    
-                $output .= (string)($i + 1).". ";
-                // Artist
-                $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " <i>";
-                // Album & Label
-                $output .= "<a href=\"".Engine::getBaseUrl().
-                             "?s=byAlbumKey&amp;n=".$chart[$i]["tag"].
-                             "&amp;q=10".
-                             "&amp;action=search".
-                             "\">". self::htmlnumericentities(self::xmlentities($album)) . "</a></i>$medium (" .
-                     self::htmlnumericentities(self::xmlentities($label)) . ")<br/>\n";
+                $album['label'] = $label;
+                $album['rank'] = $i + 1;
+                $albums[] = $album;
             }
-    
-            $output .= "</p>";
         }
-        return self::xmlcdata($output);
+        return $albums;
     }
     
     public function recentCharts() {
-       $station = self::xmlentities(Engine::param('station_title', Engine::param('station')));
-       $top = $_REQUEST["top"];
-       $weeks = $_REQUEST["weeks"];
+        $top = $_REQUEST["top"];
+        $weeks = $_REQUEST["weeks"];
 
-       if(!$top)
-          $top = 30;
-       if(!$weeks)
-          $weeks = 10;
-    
-       $title = "$station Airplay Charts";
-    
-       echo "<channel>\n<title>$title</title>\n";
-       echo "<link>".Engine::getBaseUrl()."?action=viewChart</link>\n";
-       echo "<description>$station Airplay Charts</description>\n";
-       echo "<managingEditor>".Engine::param('email')['md']."</managingEditor>\n";
-       echo "<language>en-us</language>\n";
-    
-       $weeks = Engine::api(IChart::class)->getChartDates($weeks);
-       while($weeks && ($week = $weeks->fetch())) {
-          $endDate = $week["week"];
-          $output = $this->composeChartRSS($endDate, $name, $top);
-          $link = Engine::getBaseUrl()."?action=viewChart&amp;subaction=weekly&amp;year=".substr($endDate,0,4)."&amp;month=".substr($endDate,5,2)."&amp;day=".substr($endDate,8,2);
-          echo "<item>\n<title>$name</title>\n";
-          echo "<guid>$link</guid>\n";
-          echo "<link>$link</link>\n";
-          echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=charts\">$title</source>\n";
-          echo "<pubDate>".date("r", strtotime($endDate))."</pubDate>\n";
-          // zk:subtitle is blank as title already contains the date
-          echo "<zk:subtitle></zk:subtitle>\n";
-          echo "<description>$output</description>\n</item>\n";
-       }
-       echo "</channel>\n";
+        if(!$top)
+            $top = 30;
+        if(!$weeks)
+            $weeks = 10;
+
+        $this->params['limit'] = $top;
+        $this->params['dateSpec'] = UI::isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
+        $this->params['MEDIA'] = ILibrary::MEDIA;
+        $weeks = Engine::api(IChart::class)->getChartDates($weeks);
+        $charts = [];
+        while($weeks && ($week = $weeks->fetch())) {
+            $chart = [];
+            $chart['endDate'] = $week['week'];
+            $chart['albums'] = $this->composeChartRSS($week['week'], $top);
+            $charts[] = $chart;
+        }
+        $this->params['charts'] = $charts;
+        $this->params['feeds'][] = 'charts';
     }
     
     public function recentReviews() {
-       $station = self::xmlentities(Engine::param('station_title', Engine::param('station')));
-       $limit = isset($_REQUEST["limit"])?$_REQUEST["limit"]:50;
+        $dateSpec = UI::isUsLocale() ? 'F j, Y' : 'j F Y';
+        $this->params['dateSpec'] = $dateSpec;
+        $this->params['GENRES'] = ILibrary::GENRES;
+        $this->params['feeds'][] = 'reviews';
 
-       $title = "$station Album Reviews";
-    
-       $dateSpec = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
+        $limit = $_REQUEST['limit'] ?? 50;
+        $results = Engine::api(IReview::class)->getRecentReviews('', 0, $limit);
+        foreach($results as &$row) {
+            $reviews = Engine::api(IReview::class)->getReviews($row['album']['tag'], 0, $row['user']);
+            if(count($reviews))
+                $row['review'] = $reviews[0]['review'];
+        }
 
-       echo "<channel>\n<title>$title</title>\n";
-       echo "<link>".Engine::getBaseUrl()."?action=viewRecent</link>\n";
-       echo "<description>Recent album reviews by $station DJs</description>\n";
-       echo "<managingEditor>".Engine::param('email')['md']."</managingEditor>\n";
-       echo "<ttl>20</ttl>\n";
-       echo "<language>en-us</language>\n";
-       $results = Engine::api(IReview::class)->getRecentReviews("", 0, $limit);
-       while($results && ($row = $results->fetch())) {
-          // Link to album
-          $link = Engine::getBaseUrl()."?action=viewRecentReview&amp;tag=$row[0]";
-    
-          // DJ
-          if($row[1])
-              $djname = $row[1];
-          else {
-              $djs = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $row[2]);
-              $djname = $djs[0]["realname"];
-          }
-    
-          // Album / Artist
-          $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $row[0]);
-          if (preg_match("/^\[coll\]/i", $album[0]["artist"]))
-              $name = "Various Artists";
-          else
-              $name = self::xmlentities($album[0]["artist"]);
-          $name .= " / " . self::xmlentities($album[0]["album"]);
-    
-          // Review
-          $reviews = Engine::api(IReview::class)->getReviews($row[0]);
-          foreach($reviews as $review) {
-             if($review["user"] == $row[2]) {
-                $review = $review[2];
-                //if(strlen($review) > 500)
-                //   $review = substr($review, 0, 497) . "...";
-                $review = nl2br(self::xmlentities(trim($review), ENT_QUOTES));
-                break;
-             }
-          }
-    
-          $output = self::xmlcdata("<p>Review by ".self::xmlentities($djname)."</p><p>$review</p>");
-          echo "<item>\n<description>$output</description>\n";
-          echo "<title>$name</title>\n";
-          echo "<guid isPermaLink=\"false\">review-".$row[0]."-".substr($row[3],0,10)."</guid>\n";
-          echo "<category>".self::xmlentities(ILibrary::GENRES[$album[0]["category"]])."</category>\n";
-          echo "<link>$link</link>\n";
-          //echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=reviews\">".self::xmlentities($djname)."</source>\n";
-          echo "<dc:creator>".self::xmlentities($djname)."</dc:creator>\n";
-          echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=reviews\">$title</source>\n";
-          $time = strtotime($row[3]);
-          echo "<pubDate>".date("r", $time)."</pubDate>\n";
-          echo "<zk:subtitle>Reviewed ".date($dateSpec, $time)."</zk:subtitle>\n</item>\n";
-       }
-       echo "</channel>\n";
+        $this->params['reviews'] = $results;
     }
     
-    public function composeAddRSS($addDate, &$title) {
-        $station = self::xmlentities(Engine::param('station'));
+    public function composeAddRSS($addDate, $cats) {
+        $albums = [];
         $results = Engine::api(IChart::class)->getAdd($addDate);
         if($results) {
-            $title = "$station Adds ";
-    
-            list($y, $m, $d) = explode("-", $addDate);
-            $dateSpec = UI::getClientLocale() == 'en_US' ? 'l, F j, Y' : 'l, j F Y';
-            $formatDate = date($dateSpec, mktime(0,0,0,$m,$d,$y));
-            $title .= "for $formatDate";
-    
-            $output = "<p>Num (Charts) ARTIST <i>Album</i> (Label)</p>\n";
-            $output .= "<p>";
-    
-            // Get the chart categories
-            $cats = Engine::api(IChart::class)->getCategories();
-    
             while($row = $results->fetch()) {
-                // Fixup the artist, album, and label names
-                $artist = $row["artist"];
-                $label = $row["label"];
-    
-                // Setup medium
-                $album = $row["album"];
-                switch($row["medium"]) {
-                case "S":
-                    $medium = " 7\"";
-                    break;
-                case "T":
-                    $medium = " 10\"";
-                    break;
-                case "V":
-                    $medium = " 12\"";
-                    break;
-                default:
-                    $medium = "";
-                    break;
-                }
-    
-                $output .= $row["afile_number"]." ";
-    
                 // Categories
                 $codes = "";
                 $acats = explode(",", $row["afile_category"]);
@@ -288,59 +131,33 @@ class RSS extends CommandTarget implements IController {
     
                 if($codes == "")
                     $codes = "G";
-    
-                $output .= "(".$codes.") ";
-    
-                // Artist
-                $output .= self::htmlnumericentities(self::xmlentities(strtoupper($artist))) . " <i>";
-                // Album & Label
-                $output .= "<a href=\"".Engine::getBaseUrl().
-                             "?s=byAlbumKey&amp;n=".$row["tag"].
-                             "&amp;q=10".
-                             "&amp;action=search".
-                             "\">". self::htmlnumericentities(self::xmlentities($album)) . "</a></i>$medium (" .
-                     self::htmlnumericentities(self::xmlentities($label)) . ")<br/>\n";
+
+                $row['codes'] = $codes;
+                $albums[] = $row;
             }
-    
-            $output .= "</p>";
         }
-        return self::xmlcdata($output);
+        return $albums;
     }
     
     public function recentAdds() {
-       $station = self::xmlentities(Engine::param('station_title', Engine::param('station')));
-       $weeks = $_REQUEST["weeks"];
+        $weeks = $_REQUEST["weeks"] ?? 4;
 
-       if(!$weeks)
-          $weeks = 4;
-    
-       $title = "$station A-File Adds";
-    
-       echo "<channel>\n<title>$title</title>\n";
-       echo "<link>".Engine::getBaseUrl()."?action=addmgr</link>\n";
-       echo "<description>$station A-File Adds</description>\n";
-       echo "<managingEditor>".Engine::param('email')['md']."</managingEditor>\n";
-       echo "<language>en-us</language>\n";
-    
-       $weeks = Engine::api(IChart::class)->getAddDates($weeks);
-       while($weeks && ($week = $weeks->fetch())) {
-          $addDate = $week["adddate"];
-          $output = $this->composeAddRSS($addDate, $name);
-          $link = Engine::getBaseUrl()."?action=addmgr&amp;subaction=adds&amp;date=$addDate";
-          echo "<item>\n<title>$name</title>\n";
-          echo "<guid>$link</guid>\n";
-          echo "<link>$link</link>\n";
-          echo "<source url=\"".Engine::getBaseUrl()."zkrss.php?feed=adds\">$title</source>\n";
-          echo "<pubDate>".date("r", strtotime($addDate))."</pubDate>\n";
-          // zk:subtitle is blank as title already contains the date
-          echo "<zk:subtitle></zk:subtitle>\n";
-          echo "<description>$output</description>\n</item>\n";
-       }
-       echo "</channel>\n";
+        $this->params['dateSpec'] = UI::isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
+        $this->params['MEDIA'] = ILibrary::MEDIA;
+        $weeks = Engine::api(IChart::class)->getAddDates($weeks);
+        $cats = Engine::api(IChart::class)->getCategories();
+        $adds = [];
+        while($weeks && ($week = $weeks->fetch())) {
+            $add = [];
+            $add['addDate'] = $week["adddate"];
+            $add['albums'] = $this->composeAddRSS($week["adddate"], $cats);
+            $adds[] = $add;
+        }
+        $this->params['adds'] = $adds;
+        $this->params['feeds'][] = 'adds';
     }
     
     public function emitError() {
-       $message = "Invalid feed: ".self::xmlentities($_REQUEST["feed"]);
-       echo "<channel>\n<title>$message</title>\n<link>".Engine::getBaseUrl()."</link>\n<description>$message</description>\n</channel>\n";
+       $this->params['feeds'][] = 'invalid';
     }
 }

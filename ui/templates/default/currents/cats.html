@@ -1,0 +1,30 @@
+<form id='add-manager' action="" method=POST>
+  <table cellpadding=2 cellspacing=0 border=0>
+    <tr><th>&nbsp;</th><th>Category</th><th>Code&nbsp;</th><th>Director</th><th>E-Mail Address</th></tr>
+{% for cat in cats %}
+    <tr>
+      <td>{{ cat.id }}.</td>
+      <td><input type=text name=name{{ cat.id }} value="{{ cat.name }}" class=input size=20 maxlength=80></td>
+      <td><input type=text name=code{{ cat.id }} value="{{ cat.code }}" class=input size=4 maxlength=1></td>
+      <td><input type=text name=dir{{ cat.id }} value="{{ cat.director }}" class=input size=40 maxlength=80></td>
+      <td><input type=text name=email{{ cat.id }} value="{{ cat.email }}" class=input size=30 maxlength=80></td></tr>
+{% endfor %}
+    <tr>
+      <td>&nbsp;</td>
+      <td colspan=4><input type=submit class="submit" value=" Update Categories "></td>
+    </tr>
+{% if seq == 'update' %}
+    <tr>
+      <td>&nbsp;</td>
+   {%~ if success | default %}
+      <td class="success" colspan=3>Categories updated.</td>
+   {% else %}
+      <td class="error" colspan=3>Updated failed.</td>
+   {% endif %}
+    </tr>
+{% endif %}
+  </table>
+  <input type=hidden name=action value="addmgr">
+  <input type=hidden name=subaction value="categories">
+  <input type=hidden name=seq value="update">
+</form>
