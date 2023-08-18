@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -25,7 +25,7 @@
 namespace ZK\Engine;
 
 class Engine {
-    const VERSION = "3.0.0-rc.3";
+    const VERSION = "3.0.0-rc.4";
 
     const UA = "Zookeeper/2.0; (+https://zookeeper.ibinx.com/)";
 
