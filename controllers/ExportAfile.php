@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -25,40 +25,13 @@
 namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
-use ZK\Engine\IChart;
 use ZK\UI\AddManager;
 
 class ExportAfile implements IController {
     public function processRequest() {
-        $userAgent = $_SERVER["HTTP_USER_AGENT"];
-        ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML>
-<HEAD>
-  <TITLE>KZSU Zookeeper Online</TITLE>
-  <STYLE TYPE="text/css"><!--
-      BODY, P, TD { font-family: verdana, arial, helvetica, sans-serif;
-           color: #000000;
-           font-size: 80% }
-      TH, .header { font-family: verdana, arial, helvetica, sans-serif;
-           font-size: 100%;
-           font-weight: bold;
-           color: #000000; }
-      H2 { font-family: verdana, arial, helvetica, sans-serif;
-           font-size: 100%;
-           color: #000000; }
--->
-  </STYLE>
-</HEAD>
-<BODY>
-<?php 
-        $displayDate = date("l, j F Y");
-        $station = Engine::param("station");
-        echo "  <H2 CLASS=\"header\">$station A-FILE AS OF " . strtoupper($displayDate) . "</H2>\n";
-        $results = Engine::api(IChart::class)->getCurrents(date("Y-m-d"));
         $addmgr = new AddManager();
         $addmgr->session = Engine::session();
-        $addmgr->addManagerEmitAlbums($results, "", false, true, true, true);
-        echo "</BODY>\n</HTML>\n";
+        $addmgr->emitPrintableCurrentFile();
+        echo $addmgr->render();
     }
 }

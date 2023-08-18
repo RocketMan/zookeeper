@@ -26,7 +26,7 @@ require_once __DIR__."/vendor/autoload.php";
 
 use Erusev\Parsedown\Parsedown;
 
-use ZK\UI\UICommon as UI;
+use ZK\Engine\Engine;
 
 $stylesheet = "css/zoostyle.css";
 
@@ -55,7 +55,7 @@ if($_SERVER['REQUEST_METHOD'] == "HEAD")
     return;
 
 $depth = substr_count($_GET['asset'], '/', 1);
-$stylesheet = str_repeat("../", $depth) . UI::decorate($stylesheet);
+$stylesheet = str_repeat("../", $depth) . Engine::decorate($stylesheet);
 
 ob_start("ob_gzhandler");
 

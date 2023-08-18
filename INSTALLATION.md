@@ -247,6 +247,18 @@ the composer.phar that you downloaded, though you may want to keep it
 around, as you will need it for each new release.
 
 
+### Clear the Template Cache [every release]
+
+Upon deployment of each new Zookeeper Online release, run the
+following command to clear the Twig template cache:
+
+       sudo -u www-data /example/path/to/zookeeper/zk cache:clear
+
+where *www-data* is your Apache user and */example/path...* is the
+path to your zookeeper installation.  If successful, the above
+command will display a summary of the number of cache files deleted.
+
+
 ### Discogs Integration (optional)
 
 Zookeeper can integrate with [Discogs](https://www.discogs.com/) to

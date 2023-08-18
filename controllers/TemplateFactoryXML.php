@@ -24,12 +24,21 @@
 
 namespace ZK\Controllers;
 
+use ZK\Engine\Engine;
+use ZK\Engine\TemplateFactory;
 
-class OpenSearch implements IController {
-    public function processRequest() {
-        $templateFactory = new TemplateFactoryXML();
-        $template = $templateFactory->load('opensearch.xml');
-        header("Content-type: text/xml; charset=UTF-8");
-        echo $template->render();
+class TemplateFactoryXML extends TemplateFactory {
+    public function __construct() {
+        parent::__construct(__DIR__ . '/templates');
+
+        // setup an xml escaper and make it the default strategy
+        $escaper = $this->twig->getExtension(\Twig\Extension\EscaperExtension::class);
+        $escaper->setEscaper('xml', function($env, $str) {
+            return str_replace(['&', '"', "'", '<', '>', '`'],
+                ['&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'], $str);
+        });
+        $escaper->setDefaultStrategy('xml');
+
+        $this->app->baseUrl = Engine::getBaseUrl();
     }
 }

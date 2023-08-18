@@ -1,0 +1,35 @@
+{% autoescape 'xml' %}
+<channel>
+  <title>{{ app.station_title }} A-File Adds</title>
+  <link>{{ app.baseUrl }}?action=addmgr</link>
+  <description>{{ app.station_title }} A-File Adds</description>
+  <managingEditor>{{ app.email.md }}</managingEditor>
+  <language>en-us</language>
+{% for add in adds %}
+  {%~ set title = app.station ~ " Adds for " ~ add.addDate | date(dateSpec) %}
+  {%~ set link = app.baseUrl ~ "?action=addmgr&amp;date=" ~ add.addDate %}
+  <item>
+    <title>{{ title }}</title>
+    <guid>{{ link | raw }}</guid>
+    <link>{{ link | raw }}</link>
+    <source url="{{ app.baseUrl }}zkrss.php?feed=adds">{{ title }}</source>
+    <pubDate>{{ add.addDate | date("r") }}</pubDate>
+    {#~ zk:subtitle is blank as title already contains the date #}
+    <zk:subtitle></zk:subtitle>
+    <description><![CDATA[
+  {%~ autoescape 'html' %}
+      <p>Num (Charts) ARTIST <i>Album</i> (Label)</p>
+      <p>
+    {%~ for album in add.albums %}
+        {{ album.afile_number }} ({{ album.codes }}) {{ album.artist | upper }}
+        <i><a href="{{ app.baseUrl }}?s=byAlbumKey&amp;n={{ album.tag }}&amp;action=search">{{ album.album }}</a></i> {{ album.medium != 'C' ? MEDIA[album.medium] }}
+        ({{ album.label }})
+        <br />
+    {%~ endfor %}
+      </p>
+  {%~ endautoescape %}
+    ]]></description>
+  </item>
+{% endfor %}
+</channel>
+{% endautoescape %}

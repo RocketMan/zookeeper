@@ -255,27 +255,13 @@ class UICommon {
     }
 
     /**
-     * decorate the specified asset for cache control
-     *
-     * @param asset path to target asset
-     * @return HTML-encoded URI of decorated asset
-     */
-    public static function decorate($asset) {
-        $mtime = filemtime(__DIR__.'/../'.$asset);
-        $ext = strrpos($asset, '.');
-        return htmlspecialchars($mtime && $ext !== FALSE?
-            substr($asset, 0, $ext).'-'.$mtime.
-            substr($asset, $ext):$asset, ENT_QUOTES, 'UTF-8');
-    }
-
-    /**
      * emit a decorated LINK to the specified stylesheet
      *
      * @param asset path to target stylesheet
      */
     public static function emitCSS($asset) {
         echo "<link rel=\"stylesheet\" href=\"" .
-             self::decorate($asset) . "\">\n";
+             Engine::decorate($asset) . "\">\n";
     }
 
     /**
@@ -285,7 +271,7 @@ class UICommon {
      */
     public static function emitJS($asset) {
         echo "<script src=\"" .
-             self::decorate($asset) . "\"></script>\n";
+             Engine::decorate($asset) . "\"></script>\n";
     }
 
     /**

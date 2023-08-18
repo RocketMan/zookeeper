@@ -180,6 +180,15 @@ div.content select[size='1'] {
     min-height: 22px;
 }
 
+/* currents categories */
+#add-manager th,
+#add-manager td {
+    text-align: left;
+}
+#add-manager td:first-of-type {
+    text-align: right;
+}
+
 /* afile activity page */
 table.afileactivity {
     font-size: 10pt;
@@ -257,6 +266,10 @@ span.review-categories > span.zk-hidden {
 
 table.recent-reviews {
     width: calc(100% - 5px);
+}
+
+table.recent-reviews th {
+    text-align: left;
 }
 
 /* home page */
