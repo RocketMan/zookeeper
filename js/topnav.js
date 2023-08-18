@@ -63,6 +63,8 @@ $().ready(function() {
         $(".nav-items").addClass("active");
         $(".search-icon").addClass("hide");
         $(".cancel-icon").addClass("show");
+        window.scrollTo(0, 0);
+        $("html").addClass("no-scroll");
         $(".nav-items > li.selected a").trigger('click');
     });
     
@@ -71,6 +73,7 @@ $().ready(function() {
         $(".nav-items").removeClass("active");
         $(".menu-icon span").removeClass("hide");
         $(".search-icon").removeClass("hide");
+        $("html").removeClass("no-scroll");
         $("nav form").removeClass("active");
         $(".nav-items > li").removeClass("open");
         $(".nav-items ul").css("display", "");

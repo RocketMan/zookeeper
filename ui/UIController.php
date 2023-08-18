@@ -156,15 +156,17 @@ class UIController implements IController {
 
         $this->preProcessRequest();
 
+        $action = $_REQUEST["action"] ?? '';
+        $subaction = $_REQUEST["subaction"] ?? '';
         $isJson = isset($_SERVER["HTTP_ACCEPT"]) &&
                 substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
+        ob_start("ob_gzhandler");
         if ($isJson) {
-            $action =  $_REQUEST["action"];
-            $subaction =  $_REQUEST["subaction"];
+            header("Content-Type: application/json");
             $this->dispatch($action, $subaction);
         } else {
             ob_start();
-            $this->emitMain($_REQUEST["action"], $_REQUEST["subaction"]);
+            $this->emitMain($action, $subaction);
             $data = ob_get_contents();
             ob_end_clean();
 
@@ -173,6 +175,7 @@ class UIController implements IController {
             $template = $templateFact->load('index.html');
             echo $template->render($this->menuItem ? $this->menuItem->getTemplateVars() : []);
         }
+        ob_end_flush(); // ob_gzhandler
     }
 
     protected function preProcessRequest() {
@@ -201,6 +204,11 @@ class UIController implements IController {
         case "logout":
             $this->doLogout();
             break;
+        case "find":
+            // redirect full-text search URLs from v2.x
+            $qs = "?action=search&s=all&n=".urlencode($_REQUEST["search"]??'');
+            header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            exit;
         case "viewDJReviews";
             // redirect DJ review URLs from v2.x
             $qs = "?action=viewRecent&subaction=viewDJ&seq=selUser&viewuser=".urlencode($_REQUEST["n"]??'');
@@ -210,9 +218,10 @@ class UIController implements IController {
         case "viewListById":
         case "viewDJ":
             // redirect playlist URLs from v2.x
-            $_REQUEST["subaction"] = $_REQUEST["action"];
-            $_REQUEST["action"] = "";
-            $qs = "?" . http_build_query($_REQUEST);
+            $params = array_merge($_GET, $_POST); // avoid _REQUEST to exclude cookies
+            $params["subaction"] = $params["action"];
+            $params["action"] = "";
+            $qs = "?" . http_build_query($params);
             header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
         case "viewDate":
