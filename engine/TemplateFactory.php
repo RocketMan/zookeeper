@@ -24,7 +24,6 @@
 
 namespace ZK\Engine;
 
-
 class SafeSession {
     public function getDN() { return Engine::session()->getDN(); }
     public function getUser() { return Engine::session()->getUser(); }
@@ -89,11 +88,9 @@ class TemplateFactory {
 
         $cacheDir = Engine::param('template_cache_enabled') ?
                         $templateRoot . '/.cache' : false;
-        if($cacheDir) {
-            if(!is_dir($cacheDir) && !mkdir($cacheDir)) {
-                error_log("TemplateFactory: cannot create $cacheDir");
-                $cacheDir = false; // disable cache
-            }
+        if($cacheDir && !is_dir($cacheDir) && !mkdir($cacheDir)) {
+            error_log("TemplateFactory: cannot create $cacheDir");
+            $cacheDir = false; // disable cache
         }
 
         $loader = new \Twig\Loader\FilesystemLoader($path);
