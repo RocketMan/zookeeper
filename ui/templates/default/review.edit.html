@@ -23,13 +23,13 @@
   </div>
 {% if id %}
   <div class='action-area'>
-    <button type=submit class='edit-mode default' id='edit-save'>Save</button>
-    <button type=submit class='edit-mode' id='edit-delete'>Delete</button>
+    <button type=button class='edit-mode edit-submit default' id='edit-save'>Save</button>
+    <button type=button class='edit-mode' id='edit-delete'>Delete</button>
     <button type=button class='edit-mode' id='edit-cancel'>Cancel</button>
   </div>
 {% else %}
   <div class='action-area-new'>
-    <button type=submit class='edit-mode default' id='post-review'>Post Review!</button>
+    <button type=button class='edit-mode edit-submit default' id='post-review'>Post Review!</button>
     <button type=button class='edit-mode' id='edit-cancel'>Cancel</button>
   </div>
 {% endif %}
@@ -67,23 +67,23 @@ $().ready(function() {
         return String(s).replace(/\'/g, '\\\'');
     }
 
-    $("form.review").on('submit', function(e) {
-        var id = document.activeElement.id;
+    $(".edit-submit").on('click', function(e) {
+        var id = e.target.id;
         $("input[name=button]").val(id);
 
         var airname = $("#airname").val().trim();
         if(airname.length == 0 ||
                $("#airnames option[value='" + escQuote(airname) + "' i]").length == 0 && !confirm('Create new airname "' + airname + '"?')) {
             $("#airname").val('').trigger('focus');
-            e.preventDefault();
+            return;
         }
+
+        $("form.review").submit();
     });
 
     $("#edit-delete").on('click', function(e) {
-        if(!confirm("Delete the review?"))
-            e.preventDefault();
-        else if(!$("#airname").val().trim().length)
-            $("#airname").val('{{ airname ?: self | e("js") }}');
+        if(confirm("Delete the review?"))
+            $("input[name=button]").val('edit-delete').closest('form').submit();
     });
 
     $("#edit-cancel").on('click', function() {
