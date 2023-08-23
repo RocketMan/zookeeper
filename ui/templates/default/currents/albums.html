@@ -1,8 +1,10 @@
 {%- macro catcodes(catmap, categories) %}
-    {%~ set cats = categories | split(',') %}
-    {%~ for cat in cats -%}
-        {{ catmap[cat - 1].code }}
-    {%- endfor %}
+    {%~ if categories | length %}
+        {%~ set cats = categories | split(',') %}
+        {%~ for cat in cats -%}
+            {{ catmap[cat - 1].code }}
+        {%- endfor %}
+    {%~ endif %}
 {% endmacro -%}
 
 {%- macro medium(type) %}
