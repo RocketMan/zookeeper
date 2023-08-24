@@ -80,7 +80,7 @@ $().ready(function() {
     $(".nav.del").on('click', function() {
         if(confirm("Delete this album from the add?")) {
             $('#add-delete input[name=id]').val($(this).data('id'));
-            $('#add-delete').submit();
+            $('#add-delete').trigger('submit');
         }
         return false;
     });

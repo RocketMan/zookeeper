@@ -295,7 +295,7 @@ class UICommon {
         if($control) {
             echo "<SCRIPT><!--\n".
                  "$().ready(function(){".
-                 "$('*[name=$control]').focus();".
+                 "$('*[name=$control]').trigger('focus');".
                  "}); // -->\n</SCRIPT>\n";
         }
     }

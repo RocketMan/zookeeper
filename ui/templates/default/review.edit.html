@@ -68,9 +68,6 @@ $().ready(function() {
     }
 
     $(".edit-submit").on('click', function(e) {
-        var id = e.target.id;
-        $("input[name=button]").val(id);
-
         var airname = $("#airname").val().trim();
         if(airname.length == 0 ||
                $("#airnames option[value='" + escQuote(airname) + "' i]").length == 0 && !confirm('Create new airname "' + airname + '"?')) {
@@ -78,19 +75,20 @@ $().ready(function() {
             return;
         }
 
-        $("form.review").submit();
+        var id = e.target.id;
+        $("input[name=button]").val(id).closest('form').trigger('submit');
     });
 
     $("#edit-delete").on('click', function(e) {
         if(confirm("Delete the review?"))
-            $("input[name=button]").val('edit-delete').closest('form').submit();
+            $("input[name=button]").val('edit-delete').closest('form').trigger('submit');
     });
 
     $("#edit-cancel").on('click', function() {
         location.href = "?action=search&s=byAlbumKey&n=" + $("input[name=tag]").val();
     });
 
-    $("*[name=review]").focus();
+    $("*[name=review]").trigger('focus');
 });
 // -->
 </script>

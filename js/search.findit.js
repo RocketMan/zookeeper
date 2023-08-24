@@ -494,7 +494,7 @@ function search(type, url, size, offset) {
             sync.Timer = null;
         }
         sync.Timer = setTimeout(onSearchNow, 500);
-    }).keypress(function(e) {
+    }).on('keypress', function(e) {
         return e.keyCode != 13;
     }).on('cut paste', function() {
         // run on next tick, as pasted data is not yet in the field

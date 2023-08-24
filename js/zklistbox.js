@@ -60,7 +60,7 @@
             var up = false;
             switch(e.originalEvent.keyCode) {
             case 13: // enter
-                $(this).closest("form").submit();
+                $(this).closest('form').trigger('submit');
                 e.preventDefault();
                 return;
             case 38: // up
@@ -104,7 +104,7 @@
             if(name)
                 $('input[name=' + name + ']').val(jqthis.data('value'));
         }).on('dblclick', function() {
-            $(this).closest('form').submit();
+            $(this).closest('form').trigger('submit');
         }).first().trigger('mousedown');
 
         return this;
