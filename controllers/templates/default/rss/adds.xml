@@ -7,7 +7,7 @@
   <language>en-us</language>
 {% for add in adds %}
   {%~ set title = app.station ~ " Adds for " ~ add.addDate | date(dateSpec) %}
-  {%~ set link = app.baseUrl ~ "?action=addmgr&amp;date=" ~ add.addDate %}
+  {%~ set link = app.baseUrl ~ "?action=addmgr&amp;subaction=adds&amp;date=" ~ add.addDate %}
   <item>
     <title>{{ title }}</title>
     <guid>{{ link | raw }}</guid>
