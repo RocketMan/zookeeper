@@ -197,7 +197,23 @@ class ArtworkImpl extends DBO implements IArtwork {
                      "WHERE image_id = ?";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $image['image_id']);
-            if($stmt->execute()) {
+            if($stmt->execute() && $image['image_uuid']) {
+                $cacheDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
+                $path = $cacheDir . $this->getCachePath($image['image_uuid']);
+                unlink(realpath($path));
+            }
+        }
+    }
+
+    public function deleteArtistArt($artist) {
+        $image = $this->getArtistArt($artist);
+        if($image) {
+            $query = "DELETE FROM artistmap, artwork USING artistmap " .
+                     "LEFT JOIN artwork ON artistmap.image_id = artwork.id " .
+                     "WHERE image_id = ?";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $image['image_id']);
+            if($stmt->execute() && $image['image_uuid']) {
                 $cacheDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
                 $path = $cacheDir . $this->getCachePath($image['image_uuid']);
                 unlink(realpath($path));
