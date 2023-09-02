@@ -78,7 +78,7 @@ class ArtworkControl implements IController {
         case "reload":
             if($tag = $_REQUEST["tag"] ?? null) {
                 echo "Album queued for reload (please wait)\n";
-                PushServer::lazyReloadAlbum($tag, $_REQUEST["master"] ?? 1);
+                PushServer::lazyReloadAlbum($tag, $_REQUEST["master"] ?? 1, $_REQUEST["skip"] ?? 0);
                 break;
             } else if($list = $_REQUEST["list"] ?? null) {
                 $this->refreshList($list);
@@ -86,7 +86,7 @@ class ArtworkControl implements IController {
             }
             // fall through...
         default:
-            echo "Usage: zk artwork:reload {tag|list}=id [master=0]\n";
+            echo "Usage: zk artwork:reload {tag|list}=id [master=0] [skip=0]\n";
             break;
         }
     }

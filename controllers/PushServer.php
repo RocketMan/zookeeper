@@ -507,7 +507,7 @@ class NowAiringServer implements MessageComponentInterface {
         }
     }
 
-    public function reloadAlbum($tag, $master) {
+    public function reloadAlbum($tag, $param) {
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
         if(!count($albums)) {
             echo "reloadAlbum($tag): tag not found\n";
@@ -540,6 +540,9 @@ class NowAiringServer implements MessageComponentInterface {
                 "per_page" => 20
             ];
 
+            $master = $param & 0x1;
+            $skip = ($param & ~0xff) >> 8;
+
             if($master)
                 $params["type"] = "master";
             else
@@ -553,7 +556,7 @@ class NowAiringServer implements MessageComponentInterface {
             $json = json_decode($page);
             if($json->results && ($result2 = $json->results[0])) {
                 foreach($json->results as $r) {
-                    if($r->master_id != $result2->master_id)
+                    if($skip-- > 0)
                         continue;
 
                     // master releases are definitive
@@ -671,13 +674,14 @@ class PushServer implements IController {
         socket_close($socket);
     }
 
-    public static function lazyReloadAlbum($tag, $master = 1) {
+    public static function lazyReloadAlbum($tag, $master = 1, $skip = 0) {
         if(!Engine::param('push_enabled', true) ||
                 !($config = Engine::param('discogs')) ||
                 !$config['apikey'] && !$config['client_id'])
             return;
 
-        $data = "reloadAlbum($tag, $master)";
+        $param = $master & 0xff | $skip << 8;
+        $data = "reloadAlbum($tag, $param)";
 
         $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
         socket_sendto($socket, $data, strlen($data), 0,
