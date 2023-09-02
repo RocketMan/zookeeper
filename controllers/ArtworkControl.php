@@ -26,13 +26,9 @@ namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
 use ZK\Engine\IArtwork;
-use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
-
-use GuzzleHttp\Client;
-use GuzzleHttp\RequestOptions;
 
 class ArtworkControl implements IController {
     protected $verbose = false;
