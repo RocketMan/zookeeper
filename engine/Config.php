@@ -37,8 +37,12 @@ class Config {
      * @param variable variable name in config file (default 'config')
      */
     public function __construct($file, $variable = 'config') {
+        $path = dirname(__DIR__) . "/config/${file}.php";
+        if(!is_file($path))
+            throw new \Exception("Config file not found: $file");
+
         // populate the configuration from the given file and variable
-        include __DIR__."/../config/${file}.php";
+        include $path;
         if(isset($$variable) && is_array($$variable))
             $this->config = $$variable;
         else

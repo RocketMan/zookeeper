@@ -146,10 +146,10 @@ class Engine {
      * @return HTML-encoded URI of decorated asset
      */
     public static function decorate($asset) {
-        $mtime = filemtime(__DIR__.'/../'.$asset);
+        $mtime = filemtime(dirname(__DIR__) . '/' . $asset);
         $ext = strrpos($asset, '.');
         return htmlspecialchars($mtime && $ext !== FALSE?
-            substr($asset, 0, $ext).'-'.$mtime.
+            substr($asset, 0, $ext) . '-' . $mtime .
             substr($asset, $ext):$asset, ENT_QUOTES, 'UTF-8');
     }
 }
