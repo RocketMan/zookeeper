@@ -42,7 +42,7 @@
 	"react/datagram": "^1.5",
 	"react/http": "^1.2",
 	"ratchet/pawl": "^0.4.1",
-	"rocketman/pdf-label": "^1.6+rocketman.1",
+	"rocketman/pdf-label": "^1.6+rocketman.2",
 	"twig/twig": "^3.5.1",
 	"vstelmakh/url-highlight": "^3.0"
     }

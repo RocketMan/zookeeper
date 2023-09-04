@@ -1458,8 +1458,9 @@ class Editor extends MenuItem {
 
         $template = $info('use_template');
         if($template) {
+            $inst = urlencode(Engine::getBaseUrl());
             $pdf = popen(dirname(__DIR__) .
-                                  "/zk print form=$template tags=$tag", "r");
+                                  "/zk print form=$template tags=$tag inst=$inst", "r");
             $output = stream_get_contents($pdf);
             pclose($pdf);
         } else
