@@ -32,6 +32,8 @@ define("_SYSTEM_TTFONTS", dirname(__DIR__)."/fonts/");
 class PrintTags implements IController {
     const FONT_FACE="Montserrat-Bold";
     const FONT_FILE="Montserrat-Bold.ttf";
+    const FONT_FACE_Z="MontserratZ-Bold";
+    const FONT_FILE_Z="MontserratZ-Bold.ttf";
     const FONT_SIZE=13;
     const FONT_SIZE_SUB=11;
     const LINE_SIZE=9;
@@ -56,27 +58,51 @@ class PrintTags implements IController {
         ],
     ];
 
-    public static function makeLabel($tag, &$sub, &$category) {
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
-        if(count($albums) == 0)
-            return "";
+    protected $albums = [];
 
-        $output = "\n\n\n";
+    protected function loadTags($tags) {
+        $special = false;
+        foreach($tags as $tag) {
+            if(!$tag)
+                continue;
 
-        $album = $albums[0];
-        $artist = $album["artist"];
-        if(mb_strlen($artist) > 30)
-            $artist = mb_substr($artist, 0, 30);
-        $output .= $artist;
+            $result = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+            if(count($result) == 0)
+                continue;
 
-        $title = $album["album"];
-        $category = "(" . ILibrary::GENRES[$album["category"]] . ")";
-        $maxAlbumLen = 33 - mb_strlen($category);
-        if(mb_strlen($title) > $maxAlbumLen + 3)
-            $title = mb_substr($title, 0, $maxAlbumLen) . "...";
-        $sub = "  " . $title;
+            $album = $result[0];
+            $artist = $album["artist"];
+            if(mb_strlen($artist) > 30)
+                $artist = mb_substr($artist, 0, 30);
 
-        return $output;
+            $title = $album["album"];
+            $category = "(" . ILibrary::GENRES[$album["category"]] . ")";
+            $maxAlbumLen = 33 - mb_strlen($category);
+            if(mb_strlen($title) > $maxAlbumLen + 3)
+                $title = mb_substr($title, 0, $maxAlbumLen) . "...";
+
+            // Montserrat does not include Greek codepoints;
+            // for now, we will substitute MontserratZ in this case.
+            //
+            // MontserratZ has a wonky Latin and Cyrillic 'a', and as
+            // well, the TTF is twice the size of Montserrat.  Thus, we
+            // include it in the PDF only if necessary, and use it only
+            // for labels that contain Greek text.
+            //
+            // U+0370 - U+03ff   Greek and Coptic
+            // U+1f00 - U+1fff   Greek Extended
+            $greek = preg_match("/[\u{0370}-\u{03ff}\u{1f00}-\u{1fff}]/u", $artist.$title);
+            $special |= $greek;
+
+            $this->albums[$tag] = [
+                'artist' => "\n\n\n" . $artist,
+                'title' => "\n\n\n\n  " . $title,
+                'category' => "\n\n\n\n" . $category,
+                'special' => $greek
+            ];
+        }
+
+        return $special;
     }
 
     public function processRequest() {
@@ -90,20 +116,32 @@ class PrintTags implements IController {
         $url = $inst . self::LINK;
 
         $pdf = new \PDF_Label($form);
-        $pdf->AddFont(self::FONT_FACE, '', self::FONT_FILE, true);
         $pdf->AddFont(self::FONT_FACE_TAG, '', self::FONT_FILE_TAG, true);
-        $pdf->SetFont(self::FONT_FACE, '', self::FONT_SIZE);
-        $pdf->SetLineHeight(self::LINE_SIZE);
+        $pdf->AddFont(self::FONT_FACE, '', self::FONT_FILE, true);
+        $tags = explode(",", $_REQUEST["tags"] ?? '');
+        if($this->loadTags($tags))
+            $pdf->AddFont(self::FONT_FACE_Z, '', self::FONT_FILE_Z, true);
         $pdf->SetCreator("Zookeeper Online");
         $pdf->AddPage();
 
-        $sub = $category = "";
-        $tags = explode(",", $_REQUEST["tags"]);
-        foreach($tags as $tag) {
-            $output = $tag?self::makeLabel($tag, $sub, $category):"";
-            $pdf->Add_Label($output);
+        $empty = [
+            'artist' => '',
+            'special' => false
+        ];
 
-            if($tag && $output) {
+        foreach($tags as $tag) {
+            $album = $this->albums[$tag] ?? $empty;
+            $face = $album['special'] ? self::FONT_FACE_Z : self::FONT_FACE;
+            $pdf->SetFont($face, '', self::FONT_SIZE);
+            $pdf->SetLineHeight(self::LINE_SIZE);
+            $artist = $album['artist'];
+            $pdf->Add_Label($artist);
+
+            if($tag && $artist) {
+                $pdf->SetFontSize(self::FONT_SIZE_SUB);
+                $pdf->currentLabel($album['title']);
+                $pdf->currentLabel($album['category'], 'R');
+
                 // insert half-space separator every three digits
                 $tagNum = strrev(implode(" ", str_split(strrev($tag), 3)));
                 $tagNum = str_replace(" ", "\u{2009}", $tagNum);
@@ -114,12 +152,6 @@ class PrintTags implements IController {
 
                 if($inst)
                     $pdf->writeQRCode(sprintf($url, $tag), 'R');
-
-                $pdf->SetFont(self::FONT_FACE, '', self::FONT_SIZE_SUB);
-                $pdf->SetLineHeight(self::LINE_SIZE);
-                $pdf->currentLabel("\n\n\n\n" . $sub);
-                $pdf->currentLabel("\n\n\n\n" . $category, 'R');
-                $pdf->SetFontSize(self::FONT_SIZE);
             }
         }
 
