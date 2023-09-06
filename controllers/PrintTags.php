@@ -36,6 +36,7 @@ class PrintTags implements IController {
     const FONT_FILE_Z="MontserratZ-Bold.ttf";
     const FONT_SIZE=13;
     const FONT_SIZE_SUB=11;
+    const FONT_SIZE_DATE=7;
     const LINE_SIZE=9;
 
     const FONT_FACE_TAG="Roboto-Bold";
@@ -98,6 +99,7 @@ class PrintTags implements IController {
                 'artist' => "\n\n\n" . $artist,
                 'title' => "\n\n\n\n  " . $title,
                 'category' => "\n\n\n\n" . $category,
+                'date' => date_format(date_create($album['created']), " m-Y"),
                 'special' => $greek
             ];
         }
@@ -141,6 +143,8 @@ class PrintTags implements IController {
                 $pdf->SetFontSize(self::FONT_SIZE_SUB);
                 $pdf->currentLabel($album['title']);
                 $pdf->currentLabel($album['category'], 'R');
+                $pdf->SetFontSize(self::FONT_SIZE_DATE);
+                $pdf->verticalText($album['date'], $inst ? -14 : -1, 0);
 
                 // insert half-space separator every three digits
                 $tagNum = strrev(implode(" ", str_split(strrev($tag), 3)));
