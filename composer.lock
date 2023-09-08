@@ -2193,12 +2193,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/RocketMan/pdf-label.git",
-                "reference": "5626ee0eefbc582abf4f5caac6d6be4efde70ba8"
+                "reference": "a82fe45703ffa9d68c04538dee57e7fa85cf3b4e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/RocketMan/pdf-label/zipball/5626ee0eefbc582abf4f5caac6d6be4efde70ba8",
-                "reference": "5626ee0eefbc582abf4f5caac6d6be4efde70ba8",
+                "url": "https://api.github.com/repos/RocketMan/pdf-label/zipball/a82fe45703ffa9d68c04538dee57e7fa85cf3b4e",
+                "reference": "a82fe45703ffa9d68c04538dee57e7fa85cf3b4e",
                 "shasum": ""
             },
             "require": {
@@ -2236,7 +2236,7 @@
                 "issues": "https://github.com/RocketMan/pdf-label/issues",
                 "source": "https://github.com/RocketMan/pdf-label/tree/v1.6+rocketman.2"
             },
-            "time": "2023-09-08T11:46:30+00:00"
+            "time": "2023-09-08T17:26:06+00:00"
         },
         {
             "name": "setasign/tfpdf",
