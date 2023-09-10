@@ -46,7 +46,7 @@ class PrintTags implements IController {
 
     const LABEL_FORM="5161";
 
-    const LINK = "?action=search&s=byAlbumKey&n=%d";
+    const LINK = "tag/%d";
 
     const ADDITIONAL_FORMS = [
         'DK-1201' => [
@@ -144,7 +144,7 @@ class PrintTags implements IController {
                 $pdf->currentLabel($album['title']);
                 $pdf->currentLabel($album['category'], 'R');
                 $pdf->SetFontSize(self::FONT_SIZE_DATE);
-                $pdf->verticalText($album['date'], $inst ? -14 : -1, 0);
+                $pdf->verticalText($album['date'], $inst ? -15 : -1, 0);
 
                 // insert half-space separator every three digits
                 $tagNum = strrev(implode(" ", str_split(strrev($tag), 3)));
@@ -155,7 +155,7 @@ class PrintTags implements IController {
                 $pdf->currentLabel($tagNum);
 
                 if($inst)
-                    $pdf->writeQRCode(sprintf($url, $tag), 'R');
+                    $pdf->writeQRCode(sprintf($url, $tag), 'R', 1.2);
             }
         }
 

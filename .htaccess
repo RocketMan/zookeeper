@@ -21,6 +21,8 @@ RewriteEngine on
 RewriteRule ^zkrss\.php$ index.php?target=rss [QSA,L]
 RewriteRule ^zk-feed-reader\.xslt$ controllers/RSS.xslt [QSA,L]
 RewriteRule ^ssoLogin\.php$ index.php?target=sso [QSA,L]
+RewriteCond %{REQUEST_URI} ^(.*)/tag/([0-9]+)$
+RewriteRule .* %1/?action=search&s=byAlbumKey&n=%2 [R=302]
 RewriteCond $0 !^\.mdhandler.php/.*$
 RewriteRule ^(.+)\.md$ .mdhandler.php?asset=/$1.md [L]
 RewriteRule ^zk$ - [R=404,L]
