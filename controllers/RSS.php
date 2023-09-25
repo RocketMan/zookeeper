@@ -153,6 +153,6 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function emitError() {
-       $this->params['feeds'][] = 'invalid';
+        $this->params['feeds'][] = 'invalid';
     }
 }

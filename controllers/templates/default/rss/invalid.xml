@@ -1,7 +1,7 @@
 {% autoescape 'xml' %}
 <channel>
   <title>Invalid feed: {{ app.request.feed }}</title>
-  <link>{{ baseUrl }}</link>
+  <link>{{ app.baseUrl }}</link>
   <description>Invalid feed: {{ app.request.feed }}</description>
 </channel>
 {% endautoescape %}
