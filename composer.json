@@ -45,5 +45,8 @@
 	"rocketman/pdf-label": "^1.6+rocketman.2",
 	"twig/twig": "^3.5.1",
 	"vstelmakh/url-highlight": "^3.0"
+    },
+    "suggest": {
+	"ext-intl": "Allows transliteration of Cyrillic and Greek to Latin"
     }
 }
