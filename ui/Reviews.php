@@ -72,9 +72,10 @@ class Reviews extends MenuItem {
 
     public function emitViewDJMain() {
         $viewAll = $this->subaction == "viewDJAll";
+        $isAuthorized = $this->session->isAuth('u');
 
         // Run the query
-        $records = Engine::api(IReview::class)->getActiveReviewers($viewAll);
+        $records = Engine::api(IReview::class)->getActiveReviewers($viewAll, $isAuthorized);
         $dj = [];
         while($records && ($row = $records->fetch())) {
             $row["sort"] = preg_match("/^the /i", $row[1])?substr($row[1], 4):$row[1];
