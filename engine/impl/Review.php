@@ -123,6 +123,8 @@ class ReviewImpl extends DBO implements IReview {
         $query .= "WHERE u.name = r.user AND r.airname IS NULL ";
         if(!$viewAll)
             $query .= "AND ADDDATE(r.created, 12*7) > NOW() ";
+        if(!$loggedIn)
+            $query .= "AND r.private = 0 ";
         $query .= "GROUP BY u.name";
 
         $stmt = $this->prepare($query);
