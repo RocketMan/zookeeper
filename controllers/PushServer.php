@@ -154,7 +154,8 @@ class NowAiringServer implements MessageComponentInterface {
             $filter = Engine::api(IPlaylist::class)->getTracksWithObserver($show['id'],
                 (new PlaylistObserver())->onSpin(function($entry) use(&$event) {
                     $spin = $entry->asArray();
-                    $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
+                    if($spin['tag'])
+                        $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
                     $event = $spin;
                 })->on('comment logEvent setSeparator', function($entry) use(&$event) {
                     $event = null;
@@ -460,7 +461,8 @@ class NowAiringServer implements MessageComponentInterface {
         }
 
         // fixup artist name
-        $entry->setArtist(PlaylistEntry::swapNames($entry->getArtist()));
+        if($entry->getTag())
+            $entry->setArtist(PlaylistEntry::swapNames($entry->getArtist()));
 
         if($entry->getTag() &&
                 $imageApi->getAlbumArt($entry->getTag(), true) ||

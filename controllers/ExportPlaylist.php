@@ -177,7 +177,7 @@ class ExportPlaylist extends CommandTarget implements IController {
         // emit the tracks
         echo "Artist\tTrack\tAlbum\tTag\tLabel\tTimestamp\n";
         $observer = (new PlaylistObserver())->onSpin(function($entry) {
-            echo $entry->getArtist()."\t".
+            echo ($entry->getTag() ? PlaylistEntry::swapNames($entry->getArtist()) : $entry->getArtist())."\t".
                  $entry->getTrack()."\t".
                  $entry->getAlbum()."\t".
                  $entry->getTag()."\t".
@@ -249,7 +249,7 @@ class ExportPlaylist extends CommandTarget implements IController {
                 $break = true;
             }
         })->onSpin(function($entry) use(&$break) {
-            echo "    <TR><TD ALIGN=LEFT VALIGN=TOP>".htmlentities(PlaylistEntry::swapNames($entry->getArtist())) . "</TD><TD ALIGN=LEFT VALIGN=TOP>" .
+            echo "    <TR><TD ALIGN=LEFT VALIGN=TOP>".htmlentities($entry->getTag() ? PlaylistEntry::swapNames($entry->getArtist()) : $entry->getArtist()) . "</TD><TD ALIGN=LEFT VALIGN=TOP>" .
                  htmlentities($entry->getTrack()). "</TD><TD ALIGN=LEFT>" .
                  htmlentities($entry->getAlbum()). "<BR><FONT CLASS=\"sub\">" .
                  htmlentities($entry->getLabel()). "</FONT></TD><TD ALIGN=RIGHT VALIGN=TOP>";

@@ -39,7 +39,7 @@ class ArtworkControl implements IController {
         Engine::api(IPlaylist::class)->getTracksWithObserver($playlist,
             (new PlaylistObserver())->on('spin', function($entry) use($imageApi, &$count) {
                 if(!$entry->getTag() && $entry->getCreated()) {
-                    $artist = PlaylistEntry::swapNames($entry->getArtist());
+                    $artist = $entry->getArtist();
                     if($this->verbose)
                         echo "    deleting $artist\n";
                     $imageApi->deleteArtistArt($artist);

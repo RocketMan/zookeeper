@@ -168,7 +168,8 @@ class Playlists implements RequestHandlerInterface {
                 })->onSpin(function($entry) use(&$events, $relations, $flags) {
                     $spin = $entry->asArray();
                     $spin["type"] = "spin";
-                    $spin["artist"] = PlaylistEntry::swapNames($spin["artist"]);
+                    if($spin["tag"])
+                        $spin["artist"] = PlaylistEntry::swapNames($spin["artist"]);
                     $spin["created"] = $entry->getCreatedTime();
                     if($spin["tag"] && $flags & self::LINKS_ALBUMS) {
                         $tag = $spin["tag"];
@@ -317,11 +318,11 @@ class Playlists implements RequestHandlerInterface {
                 unset($attrs["tag"]);
                 unset($attrs["id"]);
                 $a->merge($attrs);
-                $a->set("artist", PlaylistEntry::swapNames($entry->getArtist()));
                 $a->set("created", $entry->getCreatedTime());
 
                 $tag = $entry->getTag();
                 if($tag) {
+                    $a->set("artist", PlaylistEntry::swapNames($entry->getArtist()));
                     if($flags && sizeof($albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
                         $res = Albums::fromArray($albums, $flags)[0];
                     else
@@ -665,7 +666,7 @@ class Playlists implements RequestHandlerInterface {
                 // don't allow modification of album info if tag is set
                 $entry->setTag($album->id());
                 if(!$albumrec[0]["iscoll"])
-                    $entry->setArtist(PlaylistEntry::swapNames($albumrec[0]["artist"]));
+                    $entry->setArtist($albumrec[0]["artist"]);
                 $entry->setAlbum($albumrec[0]["album"]);
                 $entry->setLabel($albumrec[0]["name"]);
             }
@@ -717,7 +718,8 @@ class Playlists implements RequestHandlerInterface {
                 $list['id'] = $key;
                 if($entry->isType(PlaylistEntry::TYPE_SPIN)) {
                     $spin = $entry->asArray();
-                    $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
+                    if($spin['tag'])
+                        $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
                 } else
                     $spin = null;
 
@@ -790,7 +792,7 @@ class Playlists implements RequestHandlerInterface {
                 // don't allow modification of album info if tag is set
                 $entry->setTag($album->id());
                 if(!$albumrec[0]["iscoll"])
-                    $entry->setArtist(PlaylistEntry::swapNames($albumrec[0]["artist"]));
+                    $entry->setArtist($albumrec[0]["artist"]);
                 $entry->setAlbum($albumrec[0]["album"]);
                 $entry->setLabel($albumrec[0]["name"]);
             }

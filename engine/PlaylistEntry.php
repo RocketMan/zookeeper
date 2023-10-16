@@ -186,7 +186,7 @@ class PlaylistEntry {
                     // don't allow modification of album info if tag is set
                     $entry->setTag($a);
                     if(!$albumrec[0]["iscoll"])
-                        $entry->setArtist(self::swapNames($albumrec[0]["artist"]));
+                        $entry->setArtist($albumrec[0]["artist"]);
                     $entry->setAlbum($albumrec[0]["album"]);
                     $entry->setLabel($albumrec[0]["name"]);
                 }
@@ -221,7 +221,8 @@ class PlaylistEntry {
                     if(sizeof($albumrec)) {
                         // don't allow modification of album info if tag is set
                         $entry->setTag($album->id());
-                        $entry->setArtist(self::swapNames($albumrec[0]["artist"]));
+                        if(!$albumrec[0]["iscoll"])
+                            $entry->setArtist($albumrec[0]["artist"]);
                         $entry->setAlbum($albumrec[0]["album"]);
                         $entry->setLabel($albumrec[0]["name"]);
                     }
