@@ -185,7 +185,7 @@ div.content select[size='1'] {
 #add-manager td {
     text-align: left;
 }
-#add-manager td:first-of-type {
+#add-manager table:not(.cats) > tbody > tr > td:first-of-type {
     text-align: right;
 }
 
