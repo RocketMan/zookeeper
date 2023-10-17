@@ -127,6 +127,17 @@ class Search extends MenuItem {
         $reviews = Engine::api(IReview::class)->getReviews($tag, 1, "", $loggedIn);
         $this->addVar("reviews", $reviews);
 
+        // hashtags
+        $hashtags = array_reduce($reviews, function($carry, $review) {
+            return preg_match_all('/#[\pL_]+/', $review['review'], $matches) ?
+                array_merge($carry, $matches[0]) : $carry;
+        }, []);
+        $hashtags = array_unique(array_map('strtolower', $hashtags));
+        $index = array_map(function($tag) {
+            return hexdec(hash('crc32', $tag)) % 5;
+        }, $hashtags);
+        $this->addVar("hashtags", array_combine($hashtags, $index));
+
         // tracks
         $tracks = $libraryApi->search($albums[0]['iscoll'] ? ILibrary::COLL_KEY : ILibrary::TRACK_KEY, 0, 200, $tag);
 

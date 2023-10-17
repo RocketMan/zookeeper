@@ -91,7 +91,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "FROM reviews r " .
                   "LEFT JOIN albumvol av ON r.tag = av.tag " .
                   "LEFT JOIN airnames an ON r.airname = an.id " .
-                  "WHERE private = 0 AND r.airname IS NOT NULL AND " .
+                  "WHERE private = 0 AND " .
                   "MATCH (review) AGAINST(? IN BOOLEAN MODE) " .
                   "ORDER BY r.created DESC" ],
          [ "tracks", "albumrec", "tracknames", "track",

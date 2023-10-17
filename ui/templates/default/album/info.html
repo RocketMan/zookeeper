@@ -67,5 +67,12 @@
 <a href="?action=searchReviewEdit&amp;tag={{ album.tag }}" class="nav"><b>Write a review of this album</b></a>
 {% endif ~%}
 </td></tr>
+{% if hashtags | length %}
+<tr><td colspan='5' class='album-hashtag-area'>
+{% for tag, index in hashtags %}
+  <span class='album-hashtag palette-{{ index }}'>{{ tag }}</span>
+{% endfor %}
+</td></tr>
+{% endif %}
 </table>
 <br>

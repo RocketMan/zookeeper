@@ -1486,6 +1486,7 @@ a:hover.copy {
 }
 .album-info.with-thumb {
     max-width: calc(100% - 140px);
+    padding-bottom: 0;
 }
 
 .album-thumb {
@@ -1499,6 +1500,39 @@ a:hover.copy {
     width: 126px;
     object-fit: cover;
     object-position: center 10%;
+}
+
+.album-hashtag-area {
+    padding-top: 15px;
+    max-width: 400px;
+}
+
+.with-thumb .album-hashtag-area {
+    height: 60px;
+    vertical-align: bottom;
+}
+
+.album-hashtag {
+    border-radius: 6px;
+    border: 1px solid #333;
+    padding: 2px 8px;
+    margin-right: 2px;
+    line-height: 2;
+}
+.album-hashtag.palette-0 {
+    background-color: #bdd0c4;
+}
+.album-hashtag.palette-1 {
+    background-color: #bad7f3;
+}
+.album-hashtag.palette-2 {
+    background-color: #ffd6a5;
+}
+.album-hashtag.palette-3 {
+    background-color: #f7e1d3;
+}
+.album-hashtag.palette-4 {
+    background-color: #dfccf1;
 }
 
 div.toggle-time-entry {
