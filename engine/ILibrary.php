@@ -32,6 +32,8 @@ interface ILibrary {
         "B"=>"Blues",
         "C"=>"Country",
         "G"=>"General",
+        "1"=>"General - Electronic",
+        "2"=>"General - Loud",
         "H"=>"Hip-hop",
         "J"=>"Jazz",
         "K"=>"Childrens",

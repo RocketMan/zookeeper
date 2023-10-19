@@ -77,7 +77,8 @@ class PrintTags implements IController {
                 $artist = mb_substr($artist, 0, 30);
 
             $title = $album["album"];
-            $category = "(" . ILibrary::GENRES[$album["category"]] . ")";
+            $cat = explode(" - ", ILibrary::GENRES[$album["category"]]);
+            $category = "(" . $cat[0] . ")";
             $maxAlbumLen = 33 - mb_strlen($category);
             if(mb_strlen($title) > $maxAlbumLen + 3)
                 $title = mb_substr($title, 0, $maxAlbumLen) . "...";
@@ -99,6 +100,7 @@ class PrintTags implements IController {
                 'artist' => "\n\n\n" . $artist,
                 'title' => "\n\n\n\n  " . $title,
                 'category' => "\n\n\n\n" . $category,
+                'subcat' => count($cat) > 1 ? "\n\n\n\n\n" . strtoupper($cat[1]) : false,
                 'date' => date_format(date_create($album['created']), " m-Y"),
                 'special' => $greek
             ];
@@ -145,6 +147,8 @@ class PrintTags implements IController {
                 $pdf->currentLabel($album['category'], 'R');
                 $pdf->SetFontSize(self::FONT_SIZE_DATE);
                 $pdf->verticalText($album['date'], $inst ? -15 : -1, 0);
+                if($album['subcat'])
+                    $pdf->currentLabel($album['subcat'], 'R');
 
                 // insert half-space separator every three digits
                 $tagNum = strrev(implode(" ", str_split(strrev($tag), 3)));
