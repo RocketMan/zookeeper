@@ -15,7 +15,8 @@
 </div>
 {% endif %}
 
-<table class='album-info {{~ image_url ? " with-thumb" }}'>
+<div class='album-info {{~ image_url ? " with-thumb" }}'>
+<table>
   <tr>
     <td align=right>Album:</td>
     <td><b><a href="?s=byAlbum&amp;n={{ album.album | e('url') }}&amp;action=search" class="nav">{{ album.album }}</a></b></td>
@@ -67,12 +68,13 @@
 <a href="?action=searchReviewEdit&amp;tag={{ album.tag }}" class="nav"><b>Write a review of this album</b></a>
 {% endif ~%}
 </td></tr>
+</table>
 {% if hashtags | length %}
-<tr><td colspan='5' class='album-hashtag-area'>
+<div class='album-hashtag-area'>
 {% for tag, index in hashtags %}
   <span class='album-hashtag palette-{{ index }}'>{{ tag }}</span>
 {% endfor %}
-</td></tr>
+</div>
 {% endif %}
-</table>
+</div>
 <br>

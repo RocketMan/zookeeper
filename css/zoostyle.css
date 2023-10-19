@@ -1480,12 +1480,16 @@ a:hover.copy {
 
 /* artwork on album details page */
 .album-info {
-    display: inline-block;
+    display: inline-flex;
+    flex-flow: column nowrap;
+    justify-content: space-between;
+    align-items: flex-start;
     vertical-align: top;
     padding-bottom: 10px;
 }
 .album-info.with-thumb {
     max-width: calc(100% - 140px);
+    min-height: 126px;
     padding-bottom: 0;
 }
 
@@ -1504,12 +1508,6 @@ a:hover.copy {
 
 .album-hashtag-area {
     padding-top: 15px;
-    max-width: 400px;
-}
-
-.with-thumb .album-hashtag-area {
-    height: 60px;
-    vertical-align: bottom;
 }
 
 .album-hashtag {
