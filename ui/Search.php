@@ -131,7 +131,7 @@ class Search extends MenuItem {
 
         // hashtags
         $hashtags = array_reduce(array_reverse($reviews), function($carry, $review) {
-            return preg_match_all('/#[\pL_]+/', $review['review'], $matches) ?
+            return preg_match_all('/#\pL\w*/', $review['review'], $matches) ?
                 array_merge($carry, $matches[0]) : $carry;
         }, []);
         $normalized = array_unique(array_map('strtolower', $hashtags));
