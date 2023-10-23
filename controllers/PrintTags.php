@@ -100,7 +100,7 @@ class PrintTags implements IController {
                 'artist' => "\n\n\n" . $artist,
                 'title' => "\n\n\n\n  " . $title,
                 'category' => "\n\n\n\n" . $category,
-                'subcat' => count($cat) > 1 ? "\n\n\n\n\n" . strtoupper($cat[1]) : false,
+                'subcat' => count($cat) > 1 ? str_repeat("\n", 8) . strtoupper($cat[1]) : false,
                 'date' => date_format(date_create($album['created']), " m-Y"),
                 'special' => $greek
             ];
@@ -145,7 +145,7 @@ class PrintTags implements IController {
                 $pdf->SetFontSize(self::FONT_SIZE_SUB);
                 $pdf->currentLabel($album['title']);
                 $pdf->currentLabel($album['category'], 'R');
-                $pdf->SetFontSize(self::FONT_SIZE_DATE);
+                $pdf->Set_Font_Size(self::FONT_SIZE_DATE);
                 $pdf->verticalText($album['date'], $inst ? -15 : -1, 0);
                 if($album['subcat'])
                     $pdf->currentLabel($album['subcat'], 'R');
