@@ -50,30 +50,35 @@ $().ready(function(){
 
     var palette = [ '#bdd0c4', '#9ab7d3', '#f5d2d3', '#f7e1d3', '#dfccf1' ];
 
+    var station_title = $("#station-title").val();
+
     function makeCard(spin) {
-        var img = $("<DIV>").append($("<A>", {
+        var img = $("<div>").css('background-color', palette[Math.floor((Math.random() * palette.length))]
+        ).append($("<a>", {
             href: spin.track_tag ?
                 "?s=byAlbumKey&n=" +
                 encodeURIComponent(spin.track_tag) +
                 "&action=search" :
                 spin.info_url,
             target: spin.track_tag ? "_self" : "_blank"
-        }).append($("<IMG>", {
+        }).append($("<img>", {
             class: "artwork",
             src: spin.image_url
-        }).css('background-color', palette[Math.floor((Math.random() * palette.length))])));
+        }).on('load', function() {
+            this.style.opacity = 1;
+        })));
 
         if(spin.track_tag || spin.info_url)
             img.find("A").attr('title', spin.track_tag ?
-                               "View album in Zookeeper" :
+                               "View album in " + station_title :
                                "View artist in Discogs");
 
-        var info = $("<DIV>", {
+        var info = $("<div>", {
             class: "info"
-        }).append($("<P>", {
+        }).append($("<p>", {
             class: "track details"
         }).html(spin.track_title));
-        info.append($("<P>", {
+        info.append($("<p>", {
             class: "artist details"
         }).html(spin.track_artist));
 
@@ -81,13 +86,13 @@ $().ready(function(){
         var spinTime = new Date(spin.track_time.replace(' ','T') + 'Z');
         spinTime.setMinutes(spinTime.getMinutes() + spinTime.getTimezoneOffset());
 
-        var card = $("<DIV>", {
+        var card = $("<div>", {
             class: "card"
         }).append(img);
         card.attr("data-id", spin.id);
         card.attr("data-time", spin.track_time);
         card.append(info);
-        card.append($("<SPAN>", {
+        card.append($("<span>", {
             class: "time"
         }).html(localTime(spinTime)));
 
@@ -96,7 +101,7 @@ $().ready(function(){
 
     function populateCards(replace, before) {
         var target = replace ?
-            $("<DIV>", {
+            $("<div>", {
                 class: "recently-played"
             }).css("display", "none") :
             $(".recently-played");
@@ -163,12 +168,12 @@ $().ready(function(){
             } else {
                 var start = serverDate(onnow.show_start);
                 var end = serverDate(onnow.show_end);
-                $(".home-show").html("<A HREF='?subaction=viewListById&amp;playlist=" + onnow.show_id + "' CLASS='nav'>" + onnow.name + "</A>&nbsp;with&nbsp;" + onnow.airname);
+                $(".home-show").html("<a href='?subaction=viewListById&amp;playlist=" + onnow.show_id + "' class='nav'>" + onnow.name + "</a>&nbsp;with&nbsp;" + onnow.airname);
                 $(".home-title").html("On Now: <span class='show-time'>" + localTime(start) + " - " + localTime(end) + " " + $("#tz").val() + "</span>");
                 if(onnow.id == 0) {
                     $(".home-currenttrack").html("&nbsp;");
                 } else {
-                    $(".home-currenttrack").html(onnow.track_artist + " &#8211; <I>" + onnow.track_title + "</I> (" + onnow.track_album + ")");
+                    $(".home-currenttrack").html(onnow.track_artist + " &#8211; <i>" + onnow.track_title + "</i> (" + onnow.track_album + ")");
 
                     var time = $("#time").val();
                     var nowPlaying = $(".recently-played");
