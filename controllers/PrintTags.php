@@ -79,7 +79,7 @@ class PrintTags implements IController {
             $title = $album["album"];
             $cat = explode(" - ", ILibrary::GENRES[$album["category"]]);
             $category = "(" . $cat[0] . ")";
-            $maxAlbumLen = 33 - mb_strlen($category);
+            $maxAlbumLen = 32 - mb_strlen($category);
             if(mb_strlen($title) > $maxAlbumLen + 3)
                 $title = mb_substr($title, 0, $maxAlbumLen) . "...";
 
