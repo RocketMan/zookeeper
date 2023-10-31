@@ -53,6 +53,10 @@ For a self-administed server, you will need the following:
    this](#user-content-example-apache-configuration-file-for-debian)
    in the `/etc/apache/sites-available` directory and then
    creating a symbolic link to it from `/etc/apache/sites-enabled`.
+   Note the `AllowOverride All` setting, which must be included.
+   In addition, you will need to ensure the Apache 'rewrite' module
+   is enabled.  If necessary, run the command `sudo a2enmod rewrite`
+   and restart Apache after your configuration file is in place.
    (For shared hosting, follow the instructions of your hosting
    provider.)
 
