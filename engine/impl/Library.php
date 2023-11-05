@@ -87,11 +87,12 @@ class LibraryImpl extends DBO implements ILibrary {
                   "ORDER BY showdate DESC, list DESC, t.id" ],
          [ "reviews", "reviewrec", "reviews", "review",
                   "SELECT r.tag, av.artist, av.album, an.airname, " .
-                  "DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id " .
+                  "DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id, u.realname " .
                   "FROM reviews r " .
                   "LEFT JOIN albumvol av ON r.tag = av.tag " .
                   "LEFT JOIN airnames an ON r.airname = an.id " .
-                  "WHERE private = 0 AND r.airname IS NOT NULL AND " .
+                  "LEFT JOIN users u ON r.user = u.name " .
+                  "WHERE private = 0 AND " .
                   "MATCH (review) AGAINST(? IN BOOLEAN MODE) " .
                   "ORDER BY r.created DESC" ],
          [ "tracks", "albumrec", "tracknames", "track",

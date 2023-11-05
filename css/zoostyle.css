@@ -185,7 +185,7 @@ div.content select[size='1'] {
 #add-manager td {
     text-align: left;
 }
-#add-manager td:first-of-type {
+#add-manager table:not(.cats) > tbody > tr > td:first-of-type {
     text-align: right;
 }
 
@@ -1359,7 +1359,7 @@ a:hover.copy {
     top: 0;
     left: 0;
     transition: all 400ms ease 0s;
-    opacity: 1;
+    opacity: 0;
     border: 0;
     object-fit: cover;
     object-position: center 10%;
@@ -1480,12 +1480,17 @@ a:hover.copy {
 
 /* artwork on album details page */
 .album-info {
-    display: inline-block;
+    display: inline-flex;
+    flex-flow: column nowrap;
+    justify-content: space-between;
+    align-items: flex-start;
     vertical-align: top;
     padding-bottom: 10px;
 }
 .album-info.with-thumb {
     max-width: calc(100% - 140px);
+    min-height: 126px;
+    padding-bottom: 0;
 }
 
 .album-thumb {
@@ -1499,6 +1504,33 @@ a:hover.copy {
     width: 126px;
     object-fit: cover;
     object-position: center 10%;
+}
+
+.album-hashtag-area {
+    padding-top: 15px;
+}
+
+.album-hashtag {
+    border-radius: 6px;
+    border: 1px solid #666;
+    padding: 2px 8px;
+    margin-right: 2px;
+    line-height: 2;
+}
+.album-hashtag.palette-0 {
+    background-color: #bdd0c4;
+}
+.album-hashtag.palette-1 {
+    background-color: #bad7f3;
+}
+.album-hashtag.palette-2 {
+    background-color: #ffd6a5;
+}
+.album-hashtag.palette-3 {
+    background-color: #f7e1d3;
+}
+.album-hashtag.palette-4 {
+    background-color: #dfccf1;
 }
 
 div.toggle-time-entry {

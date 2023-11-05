@@ -10,6 +10,7 @@ $controllers = [
     'export' =>       ZK\Controllers\ExportPlaylist::class,
     'afile' =>        ZK\Controllers\ExportAfile::class,
     'opensearch' =>   ZK\Controllers\OpenSearch::class,
+    'artwork' =>      ZK\Controllers\ArtworkControl::class,
     'cache' =>        ZK\Controllers\CacheControl::class,
     'daily' =>        ZK\Controllers\RunDaily::class,
     'print' =>        ZK\Controllers\PrintTags::class,

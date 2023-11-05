@@ -125,7 +125,7 @@ class PlaylistBuilder extends PlaylistObserver {
             $created = $entry->getCreatedTimestamp();
             $timeplayed = self::timestampToLocale($created);
             $reviewCell = $entry->getReviewed() ? "<div class='albumReview'></div>" : "";
-            $artistName = PlaylistEntry::swapNames($entry->getArtist());
+            $artistName = $entry->getTag() ? PlaylistEntry::swapNames($entry->getArtist()) : $entry->getArtist();
 
             $albumLink = $this->makeAlbumLink($entry, true);
             echo "<tr class='songRow'>" . $editCell .

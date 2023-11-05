@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "148bc206dc5d0e2fbebd0ef40424a7a9",
+    "content-hash": "f1cedcd4d8c8d3b390d327e6ef53c23a",
     "packages": [
         {
             "name": "axy/backtrace",
@@ -2189,16 +2189,16 @@
         },
         {
             "name": "rocketman/pdf-label",
-            "version": "v1.6+rocketman.1",
+            "version": "v1.6+rocketman.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/RocketMan/pdf-label.git",
-                "reference": "46fc80242ff10e121fbe327d1741dc745e8c6ffd"
+                "reference": "b794822ca8ea7e9b665468a5f94766e3bdc8782c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/RocketMan/pdf-label/zipball/46fc80242ff10e121fbe327d1741dc745e8c6ffd",
-                "reference": "46fc80242ff10e121fbe327d1741dc745e8c6ffd",
+                "url": "https://api.github.com/repos/RocketMan/pdf-label/zipball/b794822ca8ea7e9b665468a5f94766e3bdc8782c",
+                "reference": "b794822ca8ea7e9b665468a5f94766e3bdc8782c",
                 "shasum": ""
             },
             "require": {
@@ -2207,7 +2207,8 @@
             "type": "library",
             "autoload": {
                 "classmap": [
-                    "src/PDF_Label.php"
+                    "src/PDF_Label.php",
+                    "src/qrcode.php"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -2224,14 +2225,18 @@
                 },
                 {
                     "name": "Steve Dillon"
+                },
+                {
+                    "name": "Nicola Asuni",
+                    "email": "info@tecnick.com"
                 }
             ],
             "description": "This class is a modified version of PDF_Label that adds support for unicode and ttf.",
             "support": {
                 "issues": "https://github.com/RocketMan/pdf-label/issues",
-                "source": "https://github.com/RocketMan/pdf-label/tree/v1.6+rocketman.1"
+                "source": "https://github.com/RocketMan/pdf-label/tree/v1.6+rocketman.2"
             },
-            "time": "2021-08-24T14:45:11+00:00"
+            "time": "2023-09-10T17:40:30+00:00"
         },
         {
             "name": "setasign/tfpdf",
@@ -2992,5 +2997,5 @@
         "ext-pdo_mysql": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.1.0"
 }

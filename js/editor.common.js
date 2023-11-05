@@ -62,8 +62,8 @@ function changeList(list) {
                 var html = '<A HREF="';
                 if(key == 'email' && val.indexOf('mailto:') != 0)
                     html += 'mailto:';
-                else if(key == 'url' && val.indexOf('http://') != 0)
-                    html += 'http://';
+                else if(key == 'url' && val.indexOf('http') != 0)
+                    html += 'https://';
                 html += val + '"';
                 if(key == 'url')
                     html += ' TARGET="_blank"';

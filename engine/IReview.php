@@ -45,7 +45,7 @@ interface IReview {
     const MAX_REVIEW_LENGTH = 64000;
 
     function getRecentReviews($user = "", $weeks = 0, $limit = 0, $loggedIn = 0);
-    function getActiveReviewers($viewAll=0);
+    function getActiveReviewers($viewAll=0, $loggedIn=0);
     function getReviews($tag, $byName=1, $user = "", $loggedIn = 0, $byId = 0);
     function insertReview($tag, $private, $airname, $review, $user);
     function updateReview($tag, $private, $airname, $review, $user);

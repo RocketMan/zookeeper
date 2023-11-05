@@ -34,6 +34,8 @@ use ZK\Engine\IReview;
 use ZK\UI\UICommon as UI;
 
 class Search extends MenuItem {
+    const HASHTAG_PALETTE_SIZE = 5;  // css colours palette-0..palette-(n-1)
+
     private static $legacySearchActions = [
         [ "", "searchForm" ],
         [ "byAlbumKey", "searchByAlbumKey" ],
@@ -126,6 +128,18 @@ class Search extends MenuItem {
         // reviews
         $reviews = Engine::api(IReview::class)->getReviews($tag, 1, "", $loggedIn);
         $this->addVar("reviews", $reviews);
+
+        // hashtags
+        $hashtags = array_reduce(array_reverse($reviews), function($carry, $review) {
+            return preg_match_all('/#\pL\w*/u', $review['review'], $matches) ?
+                array_merge($carry, $matches[0]) : $carry;
+        }, []);
+        $normalized = array_unique(array_map('strtolower', $hashtags));
+        $hashtags = array_intersect_key($hashtags, $normalized);
+        $index = array_map(function($tag) {
+            return hexdec(hash('crc32', $tag)) % self::HASHTAG_PALETTE_SIZE;
+        }, $normalized);
+        $this->addVar("hashtags", array_combine($hashtags, $index));
 
         // tracks
         $tracks = $libraryApi->search($albums[0]['iscoll'] ? ILibrary::COLL_KEY : ILibrary::TRACK_KEY, 0, 200, $tag);

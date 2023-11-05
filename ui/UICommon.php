@@ -107,6 +107,42 @@ class UICommon {
         /*"\u{201c}"*/ "\xe2\x80\x9c"=>'"', /*"\u{201d}"*/ "\xe2\x80\x9d"=>'"',
     ];
 
+    private static $cyrillicToLatin = [
+        "А" => "A", "а" => "a", "Б" => "B", "б" => "b",
+        "В" => "V", "в" => "v", "Г" => "G", "г" => "g",
+        "Д" => "D", "д" => "d", "Е" => "E", "е" => "e",
+        "Ё" => "Ë", "ё" => "ë", "Ж" => "Zh", "ж" => "zh",
+        "З" => "Z", "з" => "z", "И" => "I", "и" => "i",
+        "Й" => "J", "й" => "j", "К" => "K", "к" => "k",
+        "Л" => "L", "л" => "l", "М" => "M", "м" => "m",
+        "Н" => "N", "н" => "n", "О" => "O", "о" => "o",
+        "П" => "P", "п" => "p", "Р" => "R", "р" => "r",
+        "С" => "S", "с" => "s", "Т" => "T","т" => "t",
+        "У" => "U", "у" => "u", "Ф" => "F", "ф" => "f",
+        "Х" => "Kh", "х" => "kh", "Ц" => "Ts", "ц" => "ts",
+        "Ч" => "Ch", "ч" => "ch", "Ш" => "Sh","ш" => "sh",
+        "Щ" => "Shch", "щ" => "shch", "Ъ" => "\"\"", "ъ" => "\"",
+        "Ы" => "Y", "ы" => "y", "Ь" => "''", "ь" => "'",
+        "Э" => "È", "э" => "è", "Ю" => "Yu", "ю" => "yu",
+        "Я" => "Ya", "я" => "ya"
+    ];
+
+    private static $greekToLatin = [
+        "Α" => "A", "α" => "a", "Β" => "V", "β" => "v",
+        "Γ" => "G", "γ" => "g", "γγ" => "ng", "γκ" => "ng",
+        "γξ" => "nx", "γχ" => "nch", "Δ" => "D", "δ" => "d",
+        "Ε" => "E", "ε" => "e", "Ζ" => "Z", "ζ" => "z",
+        "Η" => "H", "η" => "h", "Θ" => "Th", "θ" => "th",
+        "Ι" => "I", "ι" => "i", "Κ" => "K", "κ" => "k",
+        "Λ" => "L", "λ" => "l", "Μ" => "M", "μ" => "m",
+        "Ν" => "N", "ν" => "n", "Ξ" => "X", "ξ" => "x",
+        "Ο" => "O", "ο" => "o", "Π" => "P", "π" => "p",
+        "Ρ" => "R", "ρ" => "r", "Σ" => "S", "σ" => "s", "ς" => "s",
+        "Τ" => "T", "τ" => "t", "Υ" => "Y", "υ" => "y",
+        "Φ" => "F", "φ" => "f", "Χ" => "Ch", "χ" => "ch",
+        "Ψ" => "Ps", "ψ" => "ps", "Ω" => "w", "ω" => "w"
+    ];
+
     private static $singletons = [];
 
     protected static function getSingleton(string $name, \Closure $factory) {
@@ -191,11 +227,38 @@ class UICommon {
         return htmlentities($arg, ENT_QUOTES, 'UTF-8');
     }
 
+    private static function transliterate($pair, $string) {
+        if(extension_loaded('intl'))
+            return transliterator_transliterate($pair, $string);
+
+        switch($pair) {
+        case "Greek-Latin/BGN":
+            $matrix = self::$greekToLatin;
+            break;
+        case "Russian-Latin/BGN":
+            $matrix = self::$cyrillicToLatin;
+            break;
+        default:
+            error_log("unknown transliteration: $pair");
+            $matrix = null;
+            break;
+        }
+
+        return $matrix ? strtr($string, $matrix) : $string;
+    }
+
     public static function deLatin1ify($string,
                                     $charset=UICommon::CHARSET_ASCII) {
         // input is already UTF-8
         if($charset == UICommon::CHARSET_UTF8)
             return $string;
+
+        // cyrillic and greek to latin1
+        if(preg_match("/[\u{0370}-\u{03ff}]/u", $string))
+            $string = self::transliterate('Greek-Latin/BGN', $string);
+
+        if(preg_match("/[\u{0400}-\u{045f}]/u", $string))
+            $string = self::transliterate('Russian-Latin/BGN', $string);
 
         // flatten latin extended to latin1
         $string = strtr($string, self::$latinExtendedA);
@@ -295,7 +358,7 @@ class UICommon {
         if($control) {
             echo "<SCRIPT><!--\n".
                  "$().ready(function(){".
-                 "$('*[name=$control]').focus();".
+                 "$('*[name=$control]').trigger('focus');".
                  "}); // -->\n</SCRIPT>\n";
         }
     }

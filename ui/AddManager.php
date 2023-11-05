@@ -285,7 +285,7 @@ class AddManager extends MenuItem {
         if($validate)
             return true;
     ?>
-          <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
+          <TABLE class="cats" CELLPADDING=2 CELLSPACING=0 BORDER=0>
     <?php 
         // Setup selected categories
         $cl = explode(",", $catlist);

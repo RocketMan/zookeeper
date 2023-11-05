@@ -20,6 +20,7 @@
 <form>
   <input type=hidden id='tz' value='{{ tz }}'>
   <input type=hidden id='push-subscribe' value='{{ push }}'>
+  <input type=hidden id='station-title' value='{{ app.station_title }}'>
 </form>
 <script src="{{ "js/home.js" | decorate }}"></script>
 {% else %}

@@ -985,7 +985,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
                     continue;
                 }
 
-                $track['track_artist'] = PlaylistEntry::swapNames($track['track_artist']);
+                if($track['track_tag'])
+                    $track['track_artist'] = PlaylistEntry::swapNames($track['track_artist']);
                 $this->injectImageData($track);
                 $res[] = $track;
             }

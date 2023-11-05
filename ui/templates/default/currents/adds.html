@@ -40,7 +40,7 @@ $().ready(function() {
             form.find("input[name=subaction]").val("addsemail");
         } else
             form.find("input[name=date]").val($("#add-manager select[name=date]").val());
-        form.submit();
+        form.trigger('submit');
     });
 });
 // -->

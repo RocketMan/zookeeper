@@ -804,7 +804,8 @@ class Playlists extends MenuItem {
                             $line[3] = "";
                         } else {
                             // update artist and album from tag
-                            $line[0] = $albumrec[0]["artist"];
+                            if(!$albumrec[0]["iscoll"])
+                                $line[0] = $albumrec[0]["artist"];
                             $line[2] = $albumrec[0]["album"];
     
                             // update label name

@@ -27,6 +27,7 @@ namespace ZK\Controllers;
 use ZK\Engine\DBO;
 use ZK\Engine\Engine;
 use ZK\Engine\IArtwork;
+use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\OnNowFilter;
 use ZK\Engine\PlaylistEntry;
@@ -96,6 +97,25 @@ class NowAiringServer implements MessageComponentInterface {
         return json_encode($val);
     }
 
+    /**
+     * perform artist name comparison, accounting for use of ampersand
+     *
+     * adapted from ZootopiaListener::testArtist
+     *
+     * @param $albumArtist haystack
+     * @param $trackArtist needle
+     * @returns true iff needle appears somewhere in haystack
+     */
+    protected static function testArtist($albumArtist, $trackArtist) {
+        if(strpos($trackArtist, '&') !== false &&
+                ($i = stripos($albumArtist, ' and ')) !== false)
+            $albumArtist = substr_replace($albumArtist, '&', $i + 1, 3);
+        else if(strpos($albumArtist, '&') !== false &&
+                ($i = stripos($trackArtist, ' and ')) !== false)
+            $trackArtist = substr_replace($trackArtist, '&', $i + 1, 3);
+        return stripos($albumArtist, $trackArtist) !== false;
+    }
+
     public function __construct($loop) {
         $this->clients = new \SplObjectStorage;
         $this->imageQ = new \SplQueue;
@@ -134,7 +154,8 @@ class NowAiringServer implements MessageComponentInterface {
             $filter = Engine::api(IPlaylist::class)->getTracksWithObserver($show['id'],
                 (new PlaylistObserver())->onSpin(function($entry) use(&$event) {
                     $spin = $entry->asArray();
-                    $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
+                    if($spin['tag'])
+                        $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
                     $event = $spin;
                 })->on('comment logEvent setSeparator', function($entry) use(&$event) {
                     $event = null;
@@ -194,18 +215,32 @@ class NowAiringServer implements MessageComponentInterface {
         // echo "New connection {$conn->resourceId}\n";
     }
 
+    /**
+     * query discogs for album or artist
+     *
+     * To search for an album, supply both artist and album;
+     * to search for an artist, supply only the artist name.
+     * (To search for an artist by name and album, use the method
+     * `queryDiscogsArtistByAlbum`.)
+     *
+     * @param $artist artist name
+     * @param $album album name (optional; if supplied, does album search)
+     * @returns false iff communications error, result otherwise (can be empty)
+     */
     protected function queryDiscogs($artist, $album = null) {
         $success = true;
+        $retval = new \stdClass();
+        $retval->imageUrl = $retval->infoUrl = $retval->resourceUrl = null;
 
         try {
             $query = $album ? [
                 "artist" => $artist,
-                "release_title" => $album,
+                "release_title" => preg_replace('/\(.*$/', '', $album),
                 "per_page" => 40
             ] : [
-                "query" => $artist,
+                "title" => $artist,
                 "type" => "artist",
-                "per_page" => 1
+                "per_page" => 40
             ];
 
             $response = $this->discogs->get('', [
@@ -242,19 +277,88 @@ class NowAiringServer implements MessageComponentInterface {
                         $result = $r;
                         break;
                     }
+                } else {
+                    // advance to the first artist with artwork
+                    foreach($json->results as $r) {
+                        if($r->cover_image &&
+                                !preg_match('|/spacer.gif$|', $r->cover_image)) {
+                            $result = $r;
+                            break;
+                        }
+                    }
                 }
 
                 if($result->cover_image &&
                         !preg_match('|/spacer.gif$|', $result->cover_image))
-                    $imageUrl = $result->cover_image;
-                $infoUrl = self::DISCOGS_BASE . $result->uri;
+                    $retval->imageUrl = $result->cover_image;
+                $retval->infoUrl = self::DISCOGS_BASE . $result->uri;
+                $retval->resourceUrl = $result->resource_url;
             }
         } catch(\Exception $e) {
             $success = false;
-            error_log("getImageData: ".$e->getMessage());
+            error_log("queryDiscogs: ".$e->getMessage());
         }
 
-        return [ $imageUrl ?? null, $infoUrl ?? null, $success ];
+        return $success ? $retval : false;
+    }
+
+    /**
+     * query discogs for artist by {album, artist} tuple
+     *
+     * @param $artist artist name
+     * @param $album album name
+     * @returns result if found, false if no match or error
+     */
+    protected function queryDiscogsArtistByAlbum($artist, $album) {
+        $success = false;
+        $retval = new \stdClass();
+        $retval->imageUrl = null;
+
+        $albumRec = $this->queryDiscogs($artist, $album);
+
+        if($albumRec && $albumRec->resourceUrl) {
+            try {
+                $response = $this->discogs->get($albumRec->resourceUrl);
+
+                $page = $response->getBody()->getContents();
+                $json = json_decode($page);
+
+                if($json) {
+                    $artists = $json->artists ?? null;
+                    if($artists && count($artists)) {
+                        foreach($artists as $candidate) {
+                            if(self::testArtist($candidate->name, $artist)) {
+                                $response = $this->discogs->get($candidate->resource_url);
+
+                                $page = $response->getBody()->getContents();
+                                $json = json_decode($page);
+
+                                if($json) {
+                                    $images = $json->images ?? null;
+                                    if($images && count($images)) {
+                                        $retval->imageUrl = $images[0]->uri;
+                                        foreach($images as $image) {
+                                            if($image->type == "primary") {
+                                                $retval->imageUrl = $image->uri;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    $retval->infoUrl = $json->uri;
+                                    $retval->resourceUrl = $json->resource_url;
+                                    $retval->album = $albumRec;
+                                    $success = true;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch(\Exception $e) {
+                error_log("queryDiscogsArtistByAlbum: ".$e->getMessage());
+            }
+        }
+        return $success ? $retval : false;
     }
 
     protected function injectImageData($msg) {
@@ -272,10 +376,12 @@ class NowAiringServer implements MessageComponentInterface {
                         $infoUrl = $image['info_url'];
                     } else {
                         // otherwise, query Discogs
-                        [ $imageUrl, $infoUrl, $success ] = $this->queryDiscogs($entry['track_artist'], $entry['track_album']);
+                        $result = $this->queryDiscogs($entry['track_artist'], $entry['track_album']);
 
-                        if($success)
-                            $imageUuid = $imageApi->insertAlbumArt($entry['track_tag'], $imageUrl, $infoUrl);
+                        if($result) {
+                            $imageUuid = $imageApi->insertAlbumArt($entry['track_tag'], $result->imageUrl, $result->infoUrl);
+                            $infoUrl = $result->infoUrl;
+                        }
                     }
                 }
 
@@ -289,10 +395,15 @@ class NowAiringServer implements MessageComponentInterface {
                         $infoUrl = $image['info_url'];
                     } else {
                         // otherwise, query Discogs
-                        [ $imageUrl, $infoUrl, $success ] = $this->queryDiscogs($entry['track_artist']);
+                        $result = strlen(trim($entry['track_album'])) ?
+                            $this->queryDiscogsArtistByAlbum($entry['track_artist'], $entry['track_album']) : null;
+                        if(!$result)
+                            $result = $this->queryDiscogs($entry['track_artist']);
 
-                        if($success)
-                            $imageUuid = $imageApi->insertArtistArt($entry['track_artist'], $imageUrl, $infoUrl);
+                        if($result) {
+                            $imageUuid = $imageApi->insertArtistArt($entry['track_artist'], $result->imageUrl, $result->infoUrl);
+                            $infoUrl = $result->infoUrl;
+                        }
                     }
                 }
 
@@ -313,17 +424,21 @@ class NowAiringServer implements MessageComponentInterface {
             $artist = $entry->getArtist();
 
             if($entry->getTag()) {
-                [ $imageUrl, $infoUrl, $success ] = $this->queryDiscogs($artist, $entry->getAlbum());
+                $result = $this->queryDiscogs($artist, $entry->getAlbum());
 
-                if($success)
-                    $imageUuid = $imageApi->insertAlbumArt($entry->getTag(), $imageUrl, $infoUrl);
+                if($result)
+                    $imageUuid = $imageApi->insertAlbumArt($entry->getTag(), $result->imageUrl, $result->infoUrl);
             }
 
             if(!isset($imageUuid)) {
-                [ $imageUrl, $infoUrl, $success ] = $this->queryDiscogs($artist);
+                $album = $entry->getAlbum();
+                $result = strlen(trim($album)) ?
+                    $this->queryDiscogsArtistByAlbum($artist, $album) : null;
+                if(!$result)
+                    $result = $this->queryDiscogs($artist);
 
-                 if($success)
-                     $imageUuid = $imageApi->insertArtistArt($artist, $imageUrl, $infoUrl);
+                if($result)
+                    $imageUuid = $imageApi->insertArtistArt($artist, $result->imageUrl, $result->infoUrl);
             }
 
             if(!$this->imageQ->isEmpty()) {
@@ -340,13 +455,14 @@ class NowAiringServer implements MessageComponentInterface {
             return;
         }
 
-        if(preg_match('/(\.gov|\.org|GED|Literacy|NIH|Ad\ Council)/', implode(' ', $entry->asArray())) || empty(trim($entry->getArtist()))) {
+        if(preg_match('/(\.gov|\.org|GED|Literacy|NIH|Ad\ Council|Lift\ Jesus)/', implode(' ', $entry->asArray())) || empty(trim($entry->getArtist()))) {
             // it's probably a PSA coded as a spin; let's skip it
             return;
         }
 
         // fixup artist name
-        $entry->setArtist(PlaylistEntry::swapNames($entry->getArtist()));
+        if($entry->getTag())
+            $entry->setArtist(PlaylistEntry::swapNames($entry->getArtist()));
 
         if($entry->getTag() &&
                 $imageApi->getAlbumArt($entry->getTag(), true) ||
@@ -366,7 +482,8 @@ class NowAiringServer implements MessageComponentInterface {
 
         if($track) {
             $entry = new PlaylistEntry($listApi->getTrack($track));
-            $this->enqueueEntry($entry, $imageApi);
+            if($entry->isType(PlaylistEntry::TYPE_SPIN))
+                $this->enqueueEntry($entry, $imageApi);
         } else {
             $visited = [];
             $listApi->getTracksWithObserver($playlist,
@@ -389,6 +506,100 @@ class NowAiringServer implements MessageComponentInterface {
                     $this->processImageQueue();
                 });
             }
+        }
+    }
+
+    public function reloadAlbum($tag, $param) {
+        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        if(!count($albums)) {
+            echo "reloadAlbum($tag): tag not found\n";
+            return;
+        }
+
+        $album = $albums[0];
+
+        try {
+            switch($album["medium"] ?? null) {
+            case 'S':
+                $format = "Vinyl, 7\"";
+                break;
+            case 'T':
+            case 'V':
+                $format = "Vinyl";
+                break;
+            case 'M':
+                $format = "Cassette";
+                break;
+            default:
+                $format = "CD";
+                break;
+            }
+
+            $params = [
+                "artist" => $album["iscoll"] ?
+                    "Various" : PlaylistEntry::swapNames($album["artist"]),
+                "release_title" => $album["album"],
+                "per_page" => 20
+            ];
+
+            $master = $param & 0x1;
+            $skip = ($param & ~0xff) >> 8;
+
+            if($master)
+                $params["type"] = "master";
+            else
+                $params["format"] = $format;
+
+            $response = $this->discogs->get('', [
+                RequestOptions::QUERY => $params
+            ]);
+
+            $page = $response->getBody()->getContents();
+            $json = json_decode($page);
+            if($json->results && ($result2 = $json->results[0])) {
+                foreach($json->results as $r) {
+                    if($skip-- > 0)
+                        continue;
+
+                    // master releases are definitive
+                    if($r->type == "master") {
+                        $result2 = $r;
+                        break;
+                    }
+
+                    // ignore promos and limited/special editions
+                    if(array_reduce($r->format,
+                            function($carry, $item) {
+                                return $carry ||
+                                    $item == "Promo" ||
+                                    strpos($item, "Edition") !== false;
+                            }))
+                        continue;
+
+                    // prefer CD or vinyl
+                    switch($r->format[0]) {
+                    case "CD":
+                    case "Vinyl":
+                        $result2 = $r;
+                        break;
+                    }
+                }
+
+                $imageUrl = $result2->cover_image &&
+                        !preg_match('|/spacer.gif$|', $result2->cover_image) ?
+                    $result2->cover_image : null;
+                $infoUrl = self::DISCOGS_BASE . $result2->uri;
+            }
+
+            if($imageUrl) {
+                $imageApi = Engine::api(IArtwork::class);
+                $imageApi->deleteAlbumArt($tag);
+                $uuid = $imageApi->insertAlbumArt($tag, $imageUrl, $infoUrl);
+                echo "reloadAlbum($tag): ".($master?'master':$format)." loaded $uuid\n";
+            } else
+                echo "reloadAlbum($tag): no image found\n";
+        } catch(\Exception $e) {
+            echo $e->getMessage() . "\n";
         }
     }
 
@@ -465,6 +676,21 @@ class PushServer implements IController {
         socket_close($socket);
     }
 
+    public static function lazyReloadAlbum($tag, $master = 1, $skip = 0) {
+        if(!Engine::param('push_enabled', true) ||
+                !($config = Engine::param('discogs')) ||
+                !$config['apikey'] && !$config['client_id'])
+            return;
+
+        $param = $master & 0xff | $skip << 8;
+        $data = "reloadAlbum($tag, $param)";
+
+        $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+        socket_sendto($socket, $data, strlen($data), 0,
+                        PushServer::WSSERVER_HOST, PushServer::WSSERVER_PORT);
+        socket_close($socket);
+    }
+
     public function processRequest() {
         if(php_sapi_name() != "cli") {
             http_response_code(400);
@@ -503,6 +729,8 @@ class PushServer implements IController {
 
                         if(preg_match("/^loadImages\((\d+)(,\s*(\d+))?\)$/", $message, $matches))
                             $nas->loadImages($matches[1], $matches[3] ?? 0);
+                        else if(preg_match("/^reloadAlbum\((\d+)(,\s*(\d+))?\)$/", $message, $matches))
+                            $nas->reloadAlbum($matches[1], $matches[3] ?? 1);
                         else if($message && $message[0] == '{')
                             $nas->sendNotification($message);
                         else // empty message means poll database

@@ -37,7 +37,7 @@ $_REQUEST = [];
 foreach($argv as $arg) {
     $tuple = explode('=', $arg);
     if(count($tuple) == 2)
-        $_REQUEST[$tuple[0]] = $tuple[1];
+        $_REQUEST[$tuple[0]] = urldecode($tuple[1]);
 }
 
 /**

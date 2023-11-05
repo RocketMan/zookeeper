@@ -48,7 +48,7 @@ class RSS extends CommandTarget implements IController {
         $template = $templateFactory->load('rss.xml');
         $this->params['feeds'] = [];
 
-        $feeds = explode(',', $_REQUEST['feed']);
+        $feeds = explode(',', $_REQUEST['feed'] ?? '');
         foreach($feeds as $feed)
             $this->processLocal($feed, null);
 
@@ -77,13 +77,8 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function recentCharts() {
-        $top = $_REQUEST["top"];
-        $weeks = $_REQUEST["weeks"];
-
-        if(!$top)
-            $top = 30;
-        if(!$weeks)
-            $weeks = 10;
+        $top = $_REQUEST["top"] ?? 30;
+        $weeks = $_REQUEST["weeks"] ?? 10;
 
         $this->params['limit'] = $top;
         $this->params['dateSpec'] = UI::isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
@@ -158,6 +153,6 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function emitError() {
-       $this->params['feeds'][] = 'invalid';
+        $this->params['feeds'][] = 'invalid';
     }
 }
