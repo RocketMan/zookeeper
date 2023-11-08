@@ -76,21 +76,21 @@ $().ready(function(){
     }
 
     /**
-     * return duration in minutes between two specified times
+     * return duration in minutes for a specified interval
      *
-     * if end is less than start, it is assumed to be the next day
+     * if the end time preceeds the start, it is assumed to be the next day
      *
-     * @param start string formatted 'hhmm'
-     * @param end string formatted 'hhmm'
+     * @param interval string formatted 'hhmm-hhmm'
      * @returns duration in minutes
      */
-    function duration(start, end) {
-        var startTime = new Date('2020-01-01T' + localTimeIntl(start) + ':00Z');
-        var endTime = new Date('2020-01-01T' + localTimeIntl(end) + ':00Z');
-        if(endTime < startTime)
-            endTime.setDate(endTime.getDate() + 1);
-
-        return (endTime.getTime() - startTime.getTime()) / 60000;
+    function duration(interval) {
+        return interval.split('-').map(function(time) {
+            return new Date('1970-01-01T' + localTimeIntl(time) + ':00Z');
+        }).reduce(function(start, end) {
+            if(end < start)
+                end.setDate(end.getDate() + 1);
+            return (end.getTime() - start.getTime()) / 60000;
+        });
     }
 
     function isEditing(cancel = false) {
@@ -594,10 +594,10 @@ $().ready(function(){
 
         var list = getEditRow(row);
 
-        var newTime = list.attributes.time.split('-');
-        var oldTime = row.data('orig').attributes.time.split('-');
+        var newTime = list.attributes.time;
+        var oldTime = row.data('orig').attributes.time;
 
-        if(duration(newTime[0], newTime[1]) < duration(oldTime[0], oldTime[1])
+        if(duration(newTime) < duration(oldTime)
                && !confirm("Show has been shortened.  Tracks past the end will be deleted.\n\nAre you sure you want to do this?"))
             return;
 
