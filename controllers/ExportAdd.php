@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -59,17 +59,16 @@ class ExportAdd implements IController {
         $albums = Engine::api(IChart::class)->getAdd($date)->asArray();
         
         // Emit the albums
-        foreach($albums as $index => $row) {
+        foreach($albums as $row) {
             // Add & pull dates
             echo $row["adddate"] . "\t" .
                  $row["pulldate"] . "\t";
         
             // Categories
             $acats = explode(",", $row["afile_category"]);
-            foreach($acats as $index => $cat)
-                if($cat)
-                    echo $cats[$cat-1]["code"];
-            echo "\t";
+            echo implode("", array_map(function($cat) use ($cats) {
+                return $cat ? $cats[$cat - 1]["code"] : "";
+            }, $acats)) . "\t";
         
             // A-File Number
             echo $row["afile_number"] . "\t";
@@ -96,7 +95,7 @@ class ExportAdd implements IController {
             echo $artist . "\t" .
                  $row["album"] . "\t" .
                  $label . "\t" .
-                 $row["tag" ] . $eol;
+                 $row["tag"] . $eol;
         }
     }
 }
