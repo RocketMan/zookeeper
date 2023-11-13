@@ -238,7 +238,7 @@ class NowAiringServer implements MessageComponentInterface {
                 "release_title" => preg_replace('/\(.*$/', '', $album),
                 "per_page" => 40
             ] : [
-                "title" => $artist,
+                "query" => $artist,
                 "type" => "artist",
                 "per_page" => 40
             ];
