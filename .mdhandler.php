@@ -59,10 +59,10 @@ $stylesheet = str_repeat("../", $depth) . Engine::decorate($stylesheet);
 
 ob_start("ob_gzhandler");
 
-echo "<!DOCTYPE html>\n<HTML lang=\"en\">\n<HEAD>\n";
-echo "<LINK REL=\"stylesheet\" HREF=\"$stylesheet\">\n";
-echo "<TITLE>".basename($_SERVER['REQUEST_URI'])."</TITLE>\n";
-echo "</HEAD>\n<BODY>\n<DIV class='box'>\n";
+echo "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n";
+echo "<link rel=\"stylesheet\" href=\"$stylesheet\">\n";
+echo "<title>".basename($_SERVER['REQUEST_URI'])."</title>\n";
+echo "</head>\n<body>\n<div class='box'>\n";
 
 ob_start(function($buffer) {
     return (new Parsedown())->toHtml($buffer);
@@ -72,6 +72,6 @@ require_once($target);
 
 ob_end_flush(); // markdown
 
-echo "\n</DIV>\n</BODY>\n</HTML>\n";
+echo "\n</div>\n</body>\n</html>\n";
 
 ob_end_flush(); // ob_gzhandler
