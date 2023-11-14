@@ -279,8 +279,14 @@ class NowAiringServer implements MessageComponentInterface {
                     }
                 } else {
                     // advance to the first artist with artwork
+                    //
+                    // now that the artist search is broader, ensure at
+                    // least a portion of the artist's name is present
+                    // to prevent spurious hits
+                    $afrag = substr($artist, 0, 4);
                     foreach($json->results as $r) {
                         if($r->cover_image &&
+                                strpos($r->title, $afrag) !== false &&
                                 !preg_match('|/spacer.gif$|', $r->cover_image)) {
                             $result = $r;
                             break;
