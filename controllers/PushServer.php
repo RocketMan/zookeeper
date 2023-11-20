@@ -597,7 +597,7 @@ class NowAiringServer implements MessageComponentInterface {
                 $infoUrl = self::DISCOGS_BASE . $result2->uri;
             }
 
-            if($imageUrl) {
+            if(!empty($imageUrl)) {
                 $imageApi = Engine::api(IArtwork::class);
                 $imageApi->deleteAlbumArt($tag);
                 $uuid = $imageApi->insertAlbumArt($tag, $imageUrl, $infoUrl);
