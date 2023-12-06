@@ -416,6 +416,8 @@ class NowAiringServer implements MessageComponentInterface {
                 $entry['info_url'] = $infoUrl ?? null;
                 $entry['image_url'] = isset($imageUuid) ? $imageApi->getCachePath($imageUuid) : ($entry['info_url'] || $entry['track_tag'] ? "img/discogs.svg" : "img/blank.gif");
                 $msg = json_encode($entry);
+
+                DBO::release();
             }
         }
 
@@ -446,6 +448,8 @@ class NowAiringServer implements MessageComponentInterface {
                 if($result)
                     $imageUuid = $imageApi->insertArtistArt($artist, $result->imageUrl, $result->infoUrl);
             }
+
+            DBO::release();
 
             if(!$this->imageQ->isEmpty()) {
                 $this->loop->addTimer(self::QUERY_DELAY, function() {
