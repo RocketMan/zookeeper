@@ -183,14 +183,14 @@ class BasePDO {
         // restore pre-PHP 8 semantics after implicit commit
         // see https://www.php.net/manual/en/migration80.incompatible.php#migration80.incompatible.pdo-mysql
         return $this->delegate->inTransaction() ?
-            $this->delegate->commit() : true;
+            $this->__call("commit", []) : true;
     }
 
     public function rollBack() {
         // restore pre-PHP 8 semantics after implicit commit
         // see https://www.php.net/manual/en/migration80.incompatible.php#migration80.incompatible.pdo-mysql
         return $this->delegate->inTransaction() ?
-            $this->delegate->rollBack() : true;
+            $this->__call("rollBack", []) : true;
     }
 
     public function prepare($stmt, $options = []) {
