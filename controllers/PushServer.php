@@ -228,6 +228,7 @@ class NowAiringServer implements MessageComponentInterface {
      * @returns false iff communications error, result otherwise (can be empty)
      */
     protected function queryDiscogs($artist, $album = null) {
+        $artist = preg_replace('/(^The\s)|(,\sThe$)/', '', $artist);
         $success = true;
         $retval = new \stdClass();
         $retval->imageUrl = $retval->infoUrl = $retval->resourceUrl = null;
@@ -331,6 +332,7 @@ class NowAiringServer implements MessageComponentInterface {
 
                 if($json) {
                     $artists = $json->artists ?? null;
+                    $artist = preg_replace('/(^The\s)|(,\sThe$)/', '', $artist);
                     if($artists && count($artists)) {
                         foreach($artists as $candidate) {
                             if(self::testArtist($candidate->name, $artist)) {
