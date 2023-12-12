@@ -52,15 +52,21 @@ class LazyLoadParams {
     ];
 
     public $request; // explicit, as we assign by reference later
+    private $params = [];
 
     public function __isset($name) {
-        return in_array($name, self::TEMPLATE_SAFE_PARAMS);
+        return key_exists($name, $this->params) ||
+            in_array($name, self::TEMPLATE_SAFE_PARAMS);
     }
 
     public function __get($name) {
-        $this->$name = in_array($name, self::TEMPLATE_SAFE_PARAMS) ?
-                    Engine::param($name) : null;
-        return $this->$name;
+        return $this->params[$name] ??=
+            in_array($name, self::TEMPLATE_SAFE_PARAMS) ?
+                Engine::param($name) : null;
+    }
+
+    public function __set($name, $value) {
+        $this->params[$name] = $value;
     }
 }
 
