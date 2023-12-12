@@ -47,7 +47,7 @@ class TemplateFactoryUI extends TemplateFactory {
         $this->app->content->template = $menuItem ? $menuItem->getTemplate() : null;
         $this->app->content->title = $menuItem ? $menuItem->getTitle() : null;
         $this->app->menu = $menu ?? [];
-        $this->app->submenu = $menuItem ? $menuItem->composeSubmenu($_REQUEST['action'], $_REQUEST['subaction']) : [];
+        $this->app->submenu = $menuItem ? $menuItem->composeSubmenu($_REQUEST['action'] ?? '', $_REQUEST['subaction'] ?? '') : [];
         $this->app->tertiary = $menuItem ? $menuItem->getTertiary() : null;
         $this->app->extra = $menuItem ? $menuItem->getExtra() : null;
     }
@@ -171,7 +171,7 @@ class UIController implements IController {
             ob_end_clean();
 
             $templateFact = new TemplateFactoryUI();
-            $templateFact->setContext($this->composeMenu($_REQUEST['action']), $this->menuItem, $data);
+            $templateFact->setContext($this->composeMenu($_REQUEST['action'] ?? ''), $this->menuItem, $data);
             $template = $templateFact->load('index.html');
             echo $template->render($this->menuItem ? $this->menuItem->getTemplateVars() : []);
         }
@@ -185,10 +185,10 @@ class UIController implements IController {
                 $_REQUEST["action"] != "loginValidate" &&
                 $_REQUEST["action"] != "logout") {
             $_REQUEST["action"] = "invalidAction";
-         }
+        }
         
         // Setup/teardown a session
-        switch($_REQUEST["action"]) {
+        switch($_REQUEST["action"] ?? '') {
         case "loginValidate":
             if(!$this->session->isAuth("u"))
                 $this->doLogin($_REQUEST["user"], $_REQUEST["password"]);
@@ -206,12 +206,12 @@ class UIController implements IController {
             break;
         case "find":
             // redirect full-text search URLs from v2.x
-            $qs = "?action=search&s=all&n=".urlencode($_REQUEST["search"]??'');
+            $qs = "?action=search&s=all&n=".urlencode($_REQUEST["search"] ?? '');
             header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
         case "viewDJReviews";
             // redirect DJ review URLs from v2.x
-            $qs = "?action=viewRecent&subaction=viewDJ&seq=selUser&viewuser=".urlencode($_REQUEST["n"]??'');
+            $qs = "?action=viewRecent&subaction=viewDJ&seq=selUser&viewuser=".urlencode($_REQUEST["n"] ?? '');
             header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
         case "viewList":
@@ -376,7 +376,7 @@ class UIController implements IController {
     }
 
     protected function checkCookiesEnabled() {
-        if($_REQUEST["checkCookie"]) {
+        if($_REQUEST["checkCookie"] ?? 0) {
             if(isset($_COOKIE["testcookie"])) {
                 // the cookie test was successful!
 

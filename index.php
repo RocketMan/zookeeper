@@ -35,4 +35,4 @@ require_once __DIR__."/vendor/autoload.php";
 use ZK\Controllers\Dispatcher;
 
 $dispatcher = new Dispatcher();
-$dispatcher->processRequest($_REQUEST["target"]);
+$dispatcher->processRequest($_REQUEST["target"] ?? '');
