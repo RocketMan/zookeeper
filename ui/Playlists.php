@@ -764,7 +764,7 @@ class Playlists extends MenuItem {
             $this->addVar('enclosure', $enclosure);
             $this->addVar('description', stripslashes($description));
             $this->addVar('MAX_DESCRIPTION_LENGTH', IPlaylist::MAX_DESCRIPTION_LENGTH);
-            $this->addVar('airname', $airname);
+            $this->addVar('airname', $airname ?? '');
             $this->addVar('MAX_AIRNAME_LENGTH', IDJ::MAX_AIRNAME_LENGTH);
         } else if($format == "csv"){
             // Create the playlist
@@ -911,9 +911,9 @@ class Playlists extends MenuItem {
     public function emitViewDJ() {
         UI::emitJS('js/zklistbox.js');
 
-        $seq = $_REQUEST["seq"];
-        $viewuser = $_REQUEST["viewuser"];
-        $playlist = $_REQUEST["playlist"];
+        $seq = $_REQUEST["seq"] ?? '';
+        $viewuser = $_REQUEST["viewuser"] ?? 0;
+        $playlist = $_REQUEST["playlist"] ?? 0;
     
         settype($playlist, "integer");
         settype($viewuser, "integer");

@@ -69,7 +69,7 @@ class AddManager extends MenuItem {
     ];
 
     private $focus;
-    private $emitted;
+    private $emitted = [];
     private $albumAdded;
     private $editingAlbum;
     private $errorMessage;
@@ -131,7 +131,7 @@ class AddManager extends MenuItem {
     }
     
     public function addManagerMain() {
-        switch($_REQUEST["op"]) {
+        switch($_REQUEST["op"] ?? '') {
         case "edit":
             $this->addManagerEdit();
             break;
@@ -223,7 +223,7 @@ class AddManager extends MenuItem {
     
     public function panelAID($validate) {
         // Check to ensure AID is numeric
-        $aid = $_REQUEST["aid"];
+        $aid = $_REQUEST["aid"] ?? '';
         $temp = (float)$aid;
         $temp = (string)$temp;
     
@@ -251,7 +251,7 @@ class AddManager extends MenuItem {
     
     public function panelTag($validate) {
         // Check to ensure tag is numeric
-        $tag = $_REQUEST["tag"];
+        $tag = $_REQUEST["tag"] ?? '';
         $temp = (float)$tag;
         $temp = (string)$temp;
     
@@ -394,7 +394,7 @@ class AddManager extends MenuItem {
         $post = $_SERVER["REQUEST_METHOD"] == "POST";
     
         foreach($post?$_POST:$_GET as $key => $value)
-            if(!$this->emitted[$key])
+            if(empty($this->emitted[$key]))
                  echo "    <INPUT TYPE=HIDDEN NAME=$key VALUE=\"" . htmlentities(stripslashes($value)) . "\">\n";
     }
     
@@ -437,7 +437,7 @@ class AddManager extends MenuItem {
     }
     
     public function addManagerAdd() {
-        $seq = $_REQUEST["seq"];
+        $seq = $_REQUEST["seq"] ?? '';
     
         // We're always going to make two passes:
         //    Pass 1:  Call step $seq to validate

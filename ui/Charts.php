@@ -121,9 +121,9 @@ class Charts extends MenuItem {
         $station = Engine::param('station', 'KZSU');
     
         $chartAPI = Engine::api(IChart::class);
-        $year = $_REQUEST["year"];
-        $month = $_REQUEST["month"];
-        $day = $_REQUEST["day"];
+        $year = $_REQUEST["year"] ?? 0;
+        $month = $_REQUEST["month"] ?? 0;
+        $day = $_REQUEST["day"] ?? 0;
 
         $dateSpec = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
 
@@ -210,11 +210,11 @@ class Charts extends MenuItem {
         $station = Engine::param('station', 'KZSU');
     
         $chartAPI = Engine::api(IChart::class);
-        $year = $_REQUEST["year"];
-        $month = $_REQUEST["month"];
-        $day = $_REQUEST["day"];
-        $cyear = $_REQUEST["cyear"];
-        $dnum = $_REQUEST["dnum"];
+        $year = $_REQUEST["year"] ?? 0;
+        $month = $_REQUEST["month"] ?? 0;
+        $day = $_REQUEST["day"] ?? 0;
+        $cyear = $_REQUEST["cyear"] ?? 0;
+        $dnum = $_REQUEST["dnum"] ?? 0;
 
         $config = Engine::param('chart');
         $earliestYear = array_key_exists('earliest_chart_year', $config)?

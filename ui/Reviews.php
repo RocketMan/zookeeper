@@ -99,7 +99,7 @@ class Reviews extends MenuItem {
     }
 
     public function reviewsByDJ() {
-        $seq = $_REQUEST["seq"];
+        $seq = $_REQUEST["seq"] ?? '';
         $viewuser = $_REQUEST["viewuser"] ?? null;
         if($seq == "selUser" && $viewuser) {
             $airname = null;
