@@ -194,9 +194,9 @@ class ArtworkImpl extends DBO implements IArtwork {
         if($image) {
             $query = "DELETE FROM albummap, artwork USING albummap " .
                      "LEFT JOIN artwork ON albummap.image_id = artwork.id " .
-                     "WHERE image_id = ?";
+                     "WHERE tag = ?";
             $stmt = $this->prepare($query);
-            $stmt->bindValue(1, $image['image_id']);
+            $stmt->bindValue(1, $tag);
             if($stmt->execute() && $image['image_uuid']) {
                 $cacheDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
                 $path = $cacheDir . $this->getCachePath($image['image_uuid']);
@@ -210,9 +210,9 @@ class ArtworkImpl extends DBO implements IArtwork {
         if($image) {
             $query = "DELETE FROM artistmap, artwork USING artistmap " .
                      "LEFT JOIN artwork ON artistmap.image_id = artwork.id " .
-                     "WHERE image_id = ?";
+                     "WHERE name = ?";
             $stmt = $this->prepare($query);
-            $stmt->bindValue(1, $image['image_id']);
+            $stmt->bindValue(1, $artist);
             if($stmt->execute() && $image['image_uuid']) {
                 $cacheDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
                 $path = $cacheDir . $this->getCachePath($image['image_uuid']);
