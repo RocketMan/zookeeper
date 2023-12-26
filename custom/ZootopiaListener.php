@@ -84,7 +84,7 @@ class ZootopiaListener {
     protected $lastPing;
     protected $onAir;
 
-    private const TIDY_START = 3; // number of minutes past top of hour to round start time
+    private const TIDY_START = 5; // number of minutes to round show start/end
 
     /**
      * test zootopia artist name against zookeeper artist
@@ -200,8 +200,8 @@ class ZootopiaListener {
 
                 // No show is currently on-air; create a new show
                 $date = $now->format("Y-m-d");
-                $min = intval($now->format("i"));
-                if($min && $min <= self::TIDY_START)
+                $min = intval($now->format("i")) % self::TIDY_START;
+                if($min)
                     $now->modify("-$min minutes");
                 $time = $now->format("Hi");
 
@@ -308,6 +308,9 @@ class ZootopiaListener {
                 }
 
                 // End our show now
+                $min = intval($now->format("i")) % self::TIDY_START;
+                if($min)
+                    $now->modify("-$min minutes");
                 $time = explode('-', $zootopia->attributes->time);
                 $end = $now->format("Hi");
                 // delete if new end time is at or before start time,
