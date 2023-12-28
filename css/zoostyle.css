@@ -277,22 +277,6 @@ table.recent-reviews th {
     margin-top: 4px;
 }
 
-.zk-fade-visible {
-    visibility: visible;
-    opacity: 1;
-    -webkit-transition: opacity 2s linear;
-    -moz-transition: opacity 2s linear;
-    -o-transition: opacity 2s linear;
-    transition: opacity 2s linear;
-}
-.zk-fade-hidden {
-    visibility: hidden;
-    opacity: 0;
-    -webkit-transition: visibility 0s 2s, opacity 2s linear;
-    -moz-transition: visibility 0s 2s, opacity 2s linear;
-    -o-transition: visibility 0s 2s, opacity 2s linear;
-    transition: visibility 0s 2s, opacity 2s linear;
-}
 .home-nowplaying {
     font-size: 12pt;
     line-height: 1.5;
