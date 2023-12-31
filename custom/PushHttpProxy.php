@@ -25,6 +25,7 @@
 namespace ZK\PushNotification;
 
 use ZK\Controllers\NowAiringServer;
+use ZK\Engine\DynamicPropertyTrait;
 
 use Ratchet\RFC6455\Messaging\Frame;
 
@@ -72,6 +73,12 @@ class PushHttpProxy {
     protected $wsEndpoint;
     protected $httpEndpoints;
     protected $current;
+
+    /**
+     * Support dynamic properties specifically for use by the 'filter'
+     * function (see above).
+     */
+    use DynamicPropertyTrait;
 
     public function __construct(\React\EventLoop\LoopInterface $loop) {
         $this->loop = $loop;
