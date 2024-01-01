@@ -78,7 +78,7 @@ class Reviews extends MenuItem {
         $records = Engine::api(IReview::class)->getActiveReviewers($viewAll, $isAuthorized);
         $dj = [];
         while($records && ($row = $records->fetch())) {
-            $row["sort"] = preg_match("/^the /i", $row[1])?substr($row[1], 4):$row[1];
+            $row["sort"] = preg_match("/^(the|dj)\s+(.+)/i", $row[1], $matches) ? $matches[2] : $row[1];
             // sort symbols beyond Z with the numerics and other special chars
             $row["cur"] = UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1)));
             if($row["cur"] > "Z") {
