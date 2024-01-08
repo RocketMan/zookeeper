@@ -206,7 +206,7 @@ class ZootopiaListener {
                 $time = $now->format("Hi");
 
                 $tz = $this->config["tz"];
-                if($event["show_end"]) {
+                if(!empty($event["show_end"])) {
                     $end = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT_SQL,
                             $event["show_end"], $tz ? new \DateTimeZone($tz) : null);
                     if($tz)
@@ -215,7 +215,7 @@ class ZootopiaListener {
                     $showLen = $end->getTimestamp() - $now->getTimestamp();
                 }
 
-                if(!$event["show_end"] || $showLen > IPlaylist::MAX_SHOW_LEN * 60 || $showLen < 0) {
+                if(empty($event["show_end"]) || $showLen > IPlaylist::MAX_SHOW_LEN * 60 || $showLen < 0) {
                     // generate synthetic show end time
                     $end = clone $now;
                     $end->modify("+" . floor(IPlaylist::MAX_SHOW_LEN / 2) . " minutes");
