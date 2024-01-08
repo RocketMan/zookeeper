@@ -861,7 +861,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
         if($proxies) {
             foreach($proxies as $proxy) {
                 if($proxy['proxy'] ==
-                        \ZK\PushNotification\ZootopiaListener::class)
+                        \ZK\PushNotification\ZootopiaListener::class &&
+                        !($proxy['http_endpoints']['recent'] ?? false))
                     return $proxy['http_endpoints']['airname'] ?? null;
             }
         }
@@ -870,6 +871,13 @@ class PlaylistImpl extends DBO implements IPlaylist {
     public function getLastPlays($tag, $count=0, $excludeAutomation=true, $excludeRebroadcasts=true) {
         settype($tag, "integer");
         $zootopia = $excludeAutomation ? $this->getZootopiaAirname() : null;
+        if($zootopia) {
+            if(!is_array($zootopia))
+                $zootopia = [ $zootopia ];
+
+            $zootopiaSet = str_repeat("?,", count($zootopia) - 1) . "?";
+        }
+
         $query = "SELECT l.id, l.showdate, l.description, a.airname," .
                  "  count(*) plays," .
                  "  group_concat(t.track ORDER BY t.seq DESC, t.id DESC SEPARATOR 0x1e) tracks" .
@@ -878,7 +886,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
                  " LEFT JOIN airnames a ON l.airname = a.id" .
                  " WHERE t.tag = ? AND l.airname IS NOT NULL" .
                  ($excludeRebroadcasts ? " AND origin IS NULL" : "") .
-                 ($zootopia ? " AND a.airname <> ?" : "") .
+                 ($zootopia ? " AND a.airname NOT IN ($zootopiaSet)" : "") .
                  " GROUP BY t.tag, l.id ORDER BY l.showdate DESC, l.showtime DESC";
         if($count)
             $query .= " LIMIT ?";
@@ -886,7 +894,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $stmt->bindValue(1, $tag);
         $param = 2;
         if($zootopia)
-            $stmt->bindValue($param++, $zootopia);
+            foreach($zootopia as $airname)
+                $stmt->bindValue($param++, $airname);
         if($count)
             $stmt->bindValue($param++, (int)$count, \PDO::PARAM_INT);
     

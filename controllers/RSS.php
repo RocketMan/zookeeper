@@ -83,14 +83,13 @@ class RSS extends CommandTarget implements IController {
         $this->params['limit'] = $top;
         $this->params['dateSpec'] = UI::isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
         $this->params['MEDIA'] = ILibrary::MEDIA;
-        $weeks = Engine::api(IChart::class)->getChartDates($weeks);
-        $charts = [];
-        while($weeks && ($week = $weeks->fetch())) {
-            $chart = [];
-            $chart['endDate'] = $week['week'];
-            $chart['albums'] = $this->composeChartRSS($week['week'], $top);
-            $charts[] = $chart;
-        }
+        $weeks = Engine::api(IChart::class)->getChartDates($weeks)->asArray();
+        $charts = array_map(function($week) use ($top) {
+            return [
+                'endDate' => $week['week'],
+                'albums' => $this->composeChartRSS($week['week'], $top)
+            ];
+        }, $weeks);
         $this->params['charts'] = $charts;
         $this->params['feeds'][] = 'charts';
     }
@@ -118,11 +117,10 @@ class RSS extends CommandTarget implements IController {
         if($results) {
             while($row = $results->fetch()) {
                 // Categories
-                $codes = "";
                 $acats = explode(",", $row["afile_category"]);
-                foreach($acats as $index => $cat)
-                    if($cat)
-                        $codes .= $cats[$cat-1]["code"];
+                $codes = implode("", array_map(function($cat) use ($cats) {
+                    return $cat ? $cats[$cat - 1]["code"] : "";
+                }, $acats));
     
                 if($codes == "")
                     $codes = "G";
@@ -139,15 +137,14 @@ class RSS extends CommandTarget implements IController {
 
         $this->params['dateSpec'] = UI::isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
         $this->params['MEDIA'] = ILibrary::MEDIA;
-        $weeks = Engine::api(IChart::class)->getAddDates($weeks);
+        $weeks = Engine::api(IChart::class)->getAddDates($weeks)->asArray();
         $cats = Engine::api(IChart::class)->getCategories();
-        $adds = [];
-        while($weeks && ($week = $weeks->fetch())) {
-            $add = [];
-            $add['addDate'] = $week["adddate"];
-            $add['albums'] = $this->composeAddRSS($week["adddate"], $cats);
-            $adds[] = $add;
-        }
+        $adds = array_map(function($week) use ($cats) {
+            return [
+                'addDate' => $week["adddate"],
+                'albums' => $this->composeAddRSS($week["adddate"], $cats)
+            ];
+        }, $weeks);
         $this->params['adds'] = $adds;
         $this->params['feeds'][] = 'adds';
     }

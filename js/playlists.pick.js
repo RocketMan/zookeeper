@@ -75,6 +75,24 @@ $().ready(function(){
         return roundedDate.toISOString().split('T');
     }
 
+    /**
+     * return duration in minutes for a specified interval
+     *
+     * if the end time preceeds the start, it is assumed to be the next day
+     *
+     * @param interval string formatted 'hhmm-hhmm'
+     * @returns duration in minutes
+     */
+    function duration(interval) {
+        return interval.split('-').map(function(time) {
+            return new Date('1970-01-01T' + localTimeIntl(time) + ':00Z');
+        }).reduce(function(start, end) {
+            if(end < start)
+                end.setDate(end.getDate() + 1);
+            return (end.getTime() - start.getTime()) / 60000;
+        });
+    }
+
     function isEditing(cancel = false) {
         if(editing && cancel)
             editing.find('#cancel').trigger('click');
@@ -575,6 +593,14 @@ $().ready(function(){
             return;
 
         var list = getEditRow(row);
+
+        var newTime = list.attributes.time;
+        var oldTime = row.data('orig').attributes.time;
+
+        if(duration(newTime) < duration(oldTime)
+               && !confirm("Show has been shortened.  Tracks past the end will be deleted.\n\nAre you sure you want to do this?"))
+            return;
+
         var postData = {
             data: {
                 type: 'show',

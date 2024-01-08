@@ -228,6 +228,7 @@ class NowAiringServer implements MessageComponentInterface {
      * @returns false iff communications error, result otherwise (can be empty)
      */
     protected function queryDiscogs($artist, $album = null) {
+        $artist = preg_replace('/(^The\s)|(,\sThe$)/', '', $artist);
         $success = true;
         $retval = new \stdClass();
         $retval->imageUrl = $retval->infoUrl = $retval->resourceUrl = null;
@@ -238,7 +239,7 @@ class NowAiringServer implements MessageComponentInterface {
                 "release_title" => preg_replace('/\(.*$/', '', $album),
                 "per_page" => 40
             ] : [
-                "title" => $artist,
+                "query" => $artist,
                 "type" => "artist",
                 "per_page" => 40
             ];
@@ -279,8 +280,14 @@ class NowAiringServer implements MessageComponentInterface {
                     }
                 } else {
                     // advance to the first artist with artwork
+                    //
+                    // now that the artist search is broader, ensure at
+                    // least a portion of the artist's name is present
+                    // to prevent spurious hits
+                    $afrag = mb_substr($artist, 0, 4);
                     foreach($json->results as $r) {
                         if($r->cover_image &&
+                                mb_strpos($r->title, $afrag) !== false &&
                                 !preg_match('|/spacer.gif$|', $r->cover_image)) {
                             $result = $r;
                             break;
@@ -325,6 +332,7 @@ class NowAiringServer implements MessageComponentInterface {
 
                 if($json) {
                     $artists = $json->artists ?? null;
+                    $artist = preg_replace('/(^The\s)|(,\sThe$)/', '', $artist);
                     if($artists && count($artists)) {
                         foreach($artists as $candidate) {
                             if(self::testArtist($candidate->name, $artist)) {
@@ -410,6 +418,8 @@ class NowAiringServer implements MessageComponentInterface {
                 $entry['info_url'] = $infoUrl ?? null;
                 $entry['image_url'] = isset($imageUuid) ? $imageApi->getCachePath($imageUuid) : ($entry['info_url'] || $entry['track_tag'] ? "img/discogs.svg" : "img/blank.gif");
                 $msg = json_encode($entry);
+
+                DBO::release();
             }
         }
 
@@ -440,6 +450,8 @@ class NowAiringServer implements MessageComponentInterface {
                 if($result)
                     $imageUuid = $imageApi->insertArtistArt($artist, $result->imageUrl, $result->infoUrl);
             }
+
+            DBO::release();
 
             if(!$this->imageQ->isEmpty()) {
                 $this->loop->addTimer(self::QUERY_DELAY, function() {
@@ -591,7 +603,7 @@ class NowAiringServer implements MessageComponentInterface {
                 $infoUrl = self::DISCOGS_BASE . $result2->uri;
             }
 
-            if($imageUrl) {
+            if(!empty($imageUrl)) {
                 $imageApi = Engine::api(IArtwork::class);
                 $imageApi->deleteAlbumArt($tag);
                 $uuid = $imageApi->insertAlbumArt($tag, $imageUrl, $infoUrl);

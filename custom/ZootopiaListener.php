@@ -46,8 +46,9 @@ use GuzzleHttp\RequestOptions;
  *            'http_endpoints' => [
  *                'apikey' => 'apikey',
  *                'base_url' => 'base url',
- *                'airname' => 'airname',
- *                'title' => 'show title',
+ *                'title' => 'show title',  // or array of show titles
+ *                'airname' => 'airname',   // or array of airnames
+ *                'recent' => true|false,   // include in recent airplay (optional; default false)
  *                'tz' => 'tzName',
  *                'caption' => 'caption',
  *            ]
@@ -66,6 +67,10 @@ use GuzzleHttp\RequestOptions;
  *         the Zookeeper server, or null if they are the same;
  *    'caption' comment to lead the playlist, or null if none.
  *
+ * If an array of titles and/or airnames are given, one will be selected
+ * at random for each new show that is created.  Airnames pair to titles
+ * one-to-one; if there are not enough airnames, they are recycled.
+ *
  * See INSTALLATION.md for details on installing and configuring push
  * notifications.
  */
@@ -79,7 +84,7 @@ class ZootopiaListener {
     protected $lastPing;
     protected $onAir;
 
-    private const TIDY_START = 3; // number of minutes past top of hour to round start time
+    private const TIDY_START = 5; // number of minutes to round show start/end
 
     /**
      * test zootopia artist name against zookeeper artist
@@ -98,6 +103,20 @@ class ZootopiaListener {
             strpos($trackArtist, '&') !== false &&
             ($i = stripos($swap, ' and ')) !== false &&
             !strcasecmp(substr_replace($swap, '&', $i + 1, 3), $trackArtist);
+    }
+
+    /**
+     * test candidate show title against zootopia show title(s)
+     *
+     * @param $title candidate to test
+     * @return true if match, false otherwise
+     */
+    protected function testTitle($title) {
+        return is_array($this->config["title"]) ?
+            ($matches = preg_grep("/" . preg_quote($title) . "/i",
+                    $this->config["title"])) && count($matches) :
+            preg_match("/" . preg_quote($this->config["title"]) . "/i",
+                    $title);
     }
 
     public function __construct(\React\EventLoop\LoopInterface $loop) {
@@ -150,7 +169,7 @@ class ZootopiaListener {
     }
 
     public function addTrack($event) {
-        $event["zootopia"] = ($event["type"] ?? null) == "schedule" &&
+        $event["zootopia"] = in_array($event["type"] ?? null, ["schedule", "zootopia"]) &&
                 preg_match("/zootopia/i", $event["name"]) &&
                 $event["track_title"];
 
@@ -181,19 +200,23 @@ class ZootopiaListener {
 
                 // No show is currently on-air; create a new show
                 $date = $now->format("Y-m-d");
-                $min = intval($now->format("i"));
-                if($min && $min <= self::TIDY_START)
+                $min = intval($now->format("i")) % self::TIDY_START;
+                if($min)
                     $now->modify("-$min minutes");
                 $time = $now->format("Hi");
 
                 $tz = $this->config["tz"];
-                $end = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT_SQL,
+                if(!empty($event["show_end"])) {
+                    $end = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT_SQL,
                             $event["show_end"], $tz ? new \DateTimeZone($tz) : null);
-                if($tz)
-                    $end->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+                    if($tz)
+                        $end->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 
-                $showLen = $end->getTimestamp() - $now->getTimestamp();
-                if($showLen > IPlaylist::MAX_SHOW_LEN * 60 || $showLen < 0) {
+                    $showLen = $end->getTimestamp() - $now->getTimestamp();
+                }
+
+                if(empty($event["show_end"]) || $showLen > IPlaylist::MAX_SHOW_LEN * 60 || $showLen < 0) {
+                    // generate synthetic show end time
                     $end = clone $now;
                     $end->modify("+" . floor(IPlaylist::MAX_SHOW_LEN / 2) . " minutes");
                     $min = intval($end->format("i"));
@@ -205,22 +228,31 @@ class ZootopiaListener {
                 $time .= "-" . $end->format("Hi");
 
                 // create new show
+                $title = $this->config["title"];
+                $airname = $this->config["airname"];
+                if(is_array($title)) {
+                    $index = rand(0, count($title) - 1);
+                    $title = $title[$index];
+                    if(is_array($airname))
+                        $airname = $airname[$index % count($airname)];
+                }
+                $show = "$title with $airname $date $time";
+
                 return $this->zk->postAsync('api/v1/playlist', [
                     RequestOptions::JSON => [
                         'data' => [
                             'type' => 'show',
                             'attributes' => [
-                                'name' => $this->config["title"],
+                                'name' => $title,
                                 'date' => $date,
                                 'time' => $time,
-                                'airname' => $this->config["airname"]
+                                'airname' => $airname,
                             ]
                         ]
                     ]
-                ])->then(function($response) use($date, $time, &$show) {
-                    $this->log("created " . $this->config["title"] .
-                                " with " . $this->config["airname"] .
-                                " $date $time");
+                ])->then(function($response) use($time, &$show) {
+                    $this->log("created $show");
+                    $lshow = $show;
                     $show = $response->getHeader('Location')[0];
                     $this->onAir = true;
 
@@ -237,34 +269,33 @@ class ZootopiaListener {
                                     ]
                                 ]
                             ]
-                        ])->then(null, function($e) use($date, $time) {
-                            $this->log("could not insert caption for show '" .
-                                            $this->config["title"] . "' " .
-                                            $date . " " . $time);
+                        ])->then(null, function($e) use($lshow) {
+                            $this->log("could not insert caption for $lshow");
                             // continue with remaining fulfilled callbacks
                         });
                     }
                 });
                 break;
             case 1:
-                if(!$event["zootopia"] || !preg_match("/" .
-                        preg_quote($this->config["title"]) . "/i",
-                        $json->data[0]->attributes->name)) {
+                if(!$this->testTitle($json->data[0]->attributes->name)) {
                     $this->onAir = false;
                     return new RejectedPromise("DJ On Air");
                 }
 
-                // We are already on-air; use the existing show.
-                $show = $json->data[0]->links->self;
-                $this->onAir = true;
-                break;
+                if($event["zootopia"]) {
+                    // We are already on-air; use the existing show.
+                    $show = $json->data[0]->links->self;
+                    $this->onAir = true;
+                    break;
+                }
+
+                // Automation has concluded; end our show now.
+                // fall through...
             default:
                 // Another show is also on-air
                 $zootopia = null;
                 foreach($json->data as $data) {
-                     if(preg_match("/" .
-                            preg_quote($this->config["title"]) . "/i",
-                            $data->attributes->name)) {
+                    if($this->testTitle($data->attributes->name)) {
                         $zootopia = $data;
                         break;
                     }
@@ -277,6 +308,9 @@ class ZootopiaListener {
                 }
 
                 // End our show now
+                $min = intval($now->format("i")) % self::TIDY_START;
+                if($min)
+                    $now->modify("-$min minutes");
                 $time = explode('-', $zootopia->attributes->time);
                 $end = $now->format("Hi");
                 // delete if new end time is at or before start time,

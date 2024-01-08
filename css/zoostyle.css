@@ -535,6 +535,7 @@ form.review .action-area-new {
 /* layout */
 div.box {
     width: 900px;
+    padding: 0 10px;
     margin-left: auto;
     margin-right: auto;
 }

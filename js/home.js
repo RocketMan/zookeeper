@@ -69,7 +69,7 @@ $().ready(function(){
         })));
 
         if(spin.track_tag || spin.info_url)
-            img.find("A").attr('title', spin.track_tag ?
+            img.find("a").attr('title', spin.track_tag ?
                                "View album in " + station_title :
                                "View artist in Discogs");
 
@@ -77,8 +77,8 @@ $().ready(function(){
             class: "info"
         }).append($("<p>", {
             class: "track details"
-        }).html(spin.track_title));
-        info.append($("<p>", {
+        }).html(spin.track_title)
+        ).append($("<p>", {
             class: "artist details"
         }).html(spin.track_artist));
 
@@ -87,12 +87,12 @@ $().ready(function(){
         spinTime.setMinutes(spinTime.getMinutes() + spinTime.getTimezoneOffset());
 
         var card = $("<div>", {
-            class: "card"
-        }).append(img);
-        card.attr("data-id", spin.id);
-        card.attr("data-time", spin.track_time);
-        card.append(info);
-        card.append($("<span>", {
+            class: "card",
+            "data-id": spin.id,
+            "data-time": spin.track_time
+        }).append(img)
+        .append(info)
+        .append($("<span>", {
             class: "time"
         }).html(localTime(spinTime)));
 

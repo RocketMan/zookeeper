@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -126,7 +126,8 @@ class BaseStatement {
 
 /**
  * PDO decorator that logs errors, as well as provides pre-MySQL 5.7.5
- * semantics for GROUP BY queries
+ * semantics for GROUP BY queries, and pre-PHP 8 semantics for commit/rollBack
+ * after implicit commit
  */
 class BasePDO {
     private const LIBRARY_TABLES = [
@@ -176,6 +177,20 @@ class BasePDO {
         }
 
         return $ret;
+    }
+
+    public function commit() {
+        // restore pre-PHP 8 semantics after implicit commit
+        // see https://www.php.net/manual/en/migration80.incompatible.php#migration80.incompatible.pdo-mysql
+        return $this->delegate->inTransaction() ?
+            $this->__call("commit", []) : true;
+    }
+
+    public function rollBack() {
+        // restore pre-PHP 8 semantics after implicit commit
+        // see https://www.php.net/manual/en/migration80.incompatible.php#migration80.incompatible.pdo-mysql
+        return $this->delegate->inTransaction() ?
+            $this->__call("rollBack", []) : true;
     }
 
     public function prepare($stmt, $options = []) {

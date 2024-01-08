@@ -270,6 +270,7 @@ class UIController implements IController {
     }
 
     protected function emitLogin($invalid="") {
+        $displayLoginForm = false;
 ?>
     <FORM ACTION="?" METHOD=POST>
     <TABLE CELLPADDING=2>
@@ -282,6 +283,7 @@ class UIController implements IController {
                 echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">This login is disabled.  Please contact the <A HREF=\"mailto:".Engine::param('email')['md']."\">Music Director</A>.</FONT></B></TD></TR>\n";
             else
                 echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Invalid User or Password</FONT></B></TD></TR>\n";
+            $displayLoginForm = true;
             break;
         case "invalidSession":
             echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Your session has expired.  You must login again.</FONT></B></TD></TR>\n";
@@ -301,11 +303,17 @@ class UIController implements IController {
             $_SERVER['REQUEST_SCHEME']."://".$_SERVER['SERVER_NAME'].
             "/' and try again.</P>".
             "<P>For information on how we use cookies, see the ".
-            "<A HREF='PRIVACY.md' TARGET='_blank'>Privacy Policy</A>.</TD></TR></TABLE>\n";
-            return;
+            "<A HREF='PRIVACY.md' TARGET='_blank'>Privacy Policy</A>.</TD></TR>\n";
+            break;
         case "":
             echo "  <TR><TD></TD><TD CLASS=\"sub\">AUTHORIZED USE ONLY!<BR>\n";
+            $displayLoginForm = true;
             break;
+        }
+
+        if(!$displayLoginForm) {
+            echo "</TABLE></FORM>\n";
+            return;
         }
 ?>
       <TR><TD COLSPAN=2>&nbsp;</TD></TR>

@@ -182,8 +182,15 @@ $config = [
              'ws_endpoint' => 'ws://127.0.0.1:32080/push/onair',
              'http_endpoints' => [
                  "filter" => function($msg) {
-                     // don't proxy Zootopia events
+                     // don't proxy initial (cached) event
                      $zootopia = preg_match('/zootopia/i', $msg);
+                     if($this->initial ?? true) {
+                         $this->initial = false;
+                         $this->zootopia = $zootopia;
+                         return;
+                     }
+
+                     // don't proxy Zootopia events
                      if($zootopia) {
                          if($this->zootopia ?? false)
                              return;

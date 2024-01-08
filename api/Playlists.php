@@ -575,7 +575,7 @@ class Playlists implements RequestHandlerInterface {
         }
 
         $success = $attrs->isEmpty() ? true :
-                        $api->updatePlaylist($key, $date, $time, $name, $aid);
+                        $api->updatePlaylist($key, $date, $time, $name, $aid, true);
 
         if($success) {
             PushServer::sendAsyncNotification();
