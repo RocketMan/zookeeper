@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -288,12 +288,12 @@ class UICommon {
      * @return best available locale from the header
      */
     public static function acceptFromHttp($header) {
-        $locales = [];
-        foreach(explode(',', $header) as $locale) {
-            $parts = explode(';', $locale);
-            $weight = count($parts) == 2 ? explode('=', $parts[1])[1] : 1;
-            $locales[] = [ $parts[0], $weight ];
-        }
+        $locales = array_map(function($locale) {
+            // parse /(.+)(;.+=(.+))?/
+            $lang = strtok($locale, ';');
+            $weight = strtok('=') ? (strtok('') ?: 1) : 1;
+            return [ $lang, $weight ];
+        }, explode(',', $header));
 
         usort($locales, function($a, $b) {
             return $b[1] <=> $a[1];
