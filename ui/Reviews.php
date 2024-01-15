@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -443,6 +443,9 @@ class Reviews extends MenuItem {
            $airnames[] = $row['airname'];
         $airnames[] = $self;
 
+        $slack = Engine::param('slack');
+        $export = $slack && $slack['token'] && $slack['review_channel'];
+
         $this->template = "review.edit.html";
         $this->addVar("id", $id ?? 0);
         $this->addVar("album", $albums[0]);
@@ -452,7 +455,7 @@ class Reviews extends MenuItem {
         $this->addVar("self", $self);
         $this->addVar("review", $review);
         $this->addVar("private", $_REQUEST["private"] ?? 0);
-        $this->addVar("exported", isset($exportid));
+        $this->addVar("exported", !$export || isset($exportid));
         $this->addVar("MAX_AIRNAME_LENGTH", IDJ::MAX_AIRNAME_LENGTH);
         $this->addVar("MAX_REVIEW_LENGTH", IReview::MAX_REVIEW_LENGTH);
     }
