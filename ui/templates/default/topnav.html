@@ -24,7 +24,9 @@ Credits:
     <span class="fas fa-bars"></span>
   </div>
   <div class="logo">
+{% block logo %}
     {{ app.station_title }}
+{% endblock %}
   </div>
   <menu class="nav-items">
 {% for item in app.menu %}
