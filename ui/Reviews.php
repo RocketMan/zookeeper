@@ -119,7 +119,7 @@ class Reviews extends MenuItem {
                 $this->addVar("airname", $airname);
                 $this->addVar("key", $viewuser);
                 $this->tertiary = $airname;
-                $this->template = "search.reviews.html";
+                $this->setTemplate("search.reviews.html");
                 return;
             }
         }
@@ -446,7 +446,7 @@ class Reviews extends MenuItem {
         $slack = Engine::param('slack');
         $export = $slack && $slack['token'] && $slack['review_channel'];
 
-        $this->template = "review.edit.html";
+        $this->setTemplate("review.edit.html");
         $this->addVar("id", $id ?? 0);
         $this->addVar("album", $albums[0]);
         $this->addVar("errorMessage", $errorMessage);
