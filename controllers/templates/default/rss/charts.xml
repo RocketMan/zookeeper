@@ -5,6 +5,7 @@
   <description>{{ app.station_title }} Airplay Charts</description>
   <managingEditor>{{ app.email.md }}</managingEditor>
   <language>en-us</language>
+  <generator>{{ app.UA }}</generator>
 {% for chart in charts %}
   {%~ set title = app.station ~ " TOP " ~ limit ~ " for the week ending " ~ chart.endDate | date(dateSpec) %}
   {%~ set link = app.baseUrl ~ "?action=viewChart&amp;subaction=weekly&amp;year=" ~ chart.endDate | slice(0, 4) ~ "&amp;month=" ~ chart.endDate | slice(5, 2) ~ "&amp;day=" ~ chart.endDate | slice(8, 2) %}

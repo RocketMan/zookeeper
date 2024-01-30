@@ -5,6 +5,7 @@
   <description>{{ app.station_title }} A-File Adds</description>
   <managingEditor>{{ app.email.md }}</managingEditor>
   <language>en-us</language>
+  <generator>{{ app.UA }}</generator>
 {% for add in adds %}
   {%~ set title = app.station ~ " Adds for " ~ add.addDate | date(dateSpec) %}
   {%~ set link = app.baseUrl ~ "?action=addmgr&amp;subaction=adds&amp;date=" ~ add.addDate %}
