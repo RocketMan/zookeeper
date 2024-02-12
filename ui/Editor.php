@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -218,6 +218,16 @@ class Editor extends MenuItem {
                 && $this->session->isAuth("p");
     }
 
+    private static function isSpecialEdition($formats) {
+        return array_reduce($formats,
+            function($carry, $item) {
+                return $carry ||
+                    $item == "Promo" ||
+                    strpos($item, "Edition") !== false ||
+                    strpos($item, "Test") !== false;
+            });
+    }
+
     private function prefillTracks() {
         $config = $this->getDiscogsConfig();
         if($config) {
@@ -232,7 +242,7 @@ class Editor extends MenuItem {
 
             switch($_GET["medium"] ?? null) {
             case 'S':
-                $format = "Vinyl, 7\"";
+                $format = "7\"";
                 break;
             case 'T':
             case 'V':
@@ -240,6 +250,9 @@ class Editor extends MenuItem {
                 break;
             case 'M':
                 $format = "Cassette";
+                break;
+            case 'D':
+                $format = "File";
                 break;
             default:
                 $format = "CD";
@@ -250,35 +263,35 @@ class Editor extends MenuItem {
                 RequestOptions::QUERY => [
                     "artist" => $_GET["artist"] ?? "Various",
                     "release_title" => $_GET["album"],
-                    "format" => $format,
-                    "per_page" => 20
+                    "per_page" => 40
                 ]
             ]);
 
             $page = $response->getBody()->getContents();
             $json = json_decode($page);
 
+            // precedence: preferred-medium > master > CD/Vinyl > other
             if($json->results && ($result = $json->results[0])) {
                 foreach($json->results as $r) {
-                    if($r->master_id != $result->master_id)
-                        continue;
-
-                    // master releases are definitive
-                    if($r->type == "master") {
+                    // exact medium match is definitive
+                    // use if current best is Promo or Limited/Special Edition
+                    if(in_array($format, $r->format) &&
+                            (!in_array($format, $result->format) ||
+                                self::isSpecialEdition($result->format))) {
                         $result = $r;
                         break;
                     }
 
-                    // ignore promos and limited/special editions
-                    if(array_reduce($r->format,
-                            function($carry, $item) {
-                                return $carry ||
-                                    $item == "Promo" ||
-                                    strpos($item, "Edition") !== false;
-                            }))
+                    // master releases take precedence...
+                    if($result->type == "master")
                         continue;
 
-                    $result = $r;
+                    // ...followed by CDs and Vinyl that are neither Promos nor Limited/Special Editions
+                    if($r->type == "master" ||
+                            count(array_intersect($r->format, ['CD', 'Vinyl'])) &&
+                            !self::isSpecialEdition($r->format)) {
+                        $result = $r;
+                    }
                 }
 
                 $imageUrl = $result->cover_image &&
@@ -1297,10 +1310,7 @@ class Editor extends MenuItem {
         if the tracks do not match the album.</p></div>
         <div class='user-tip discogs-no-match'>
         <p>No Discogs tracks for <span id='discogs-no-match-album'></span>
-        with media type <span id='discogs-no-match-media'></span>
-        found.</p>
-        <p>If you believe the album is in Discogs, please check that you
-        have specified the correct media type.</p></div>
+        found.</p></div>
         <table class='trackEditor'>
     <?php
         $artistHdr = $isCollection ? "<TH>Artist</TH>" : "";
