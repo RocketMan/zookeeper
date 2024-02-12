@@ -274,10 +274,9 @@ class Editor extends MenuItem {
             if($json->results && ($result = $json->results[0])) {
                 foreach($json->results as $r) {
                     // exact medium match is definitive
-                    // use if current best is Promo or Limited/Special Edition
+                    // if not Promo or Limited/Special Edition
                     if(in_array($format, $r->format) &&
-                            (!in_array($format, $result->format) ||
-                                self::isSpecialEdition($result->format))) {
+                            !self::isSpecialEdition($r->format)) {
                         $result = $r;
                         break;
                     }
