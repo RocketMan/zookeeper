@@ -27,6 +27,7 @@ An [example album document](Samples.md#album) is available here.
   * seq
   * track
   * artist (for compilations)
+  * duration (hh:mm:ss or null)
   * url
 
 ### Relations

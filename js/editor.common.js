@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -233,12 +233,14 @@ $().ready(function() {
         }
         for(var j=next; j>focus; j--) {
             $("INPUT[name='track" + j + "' i]").val($("INPUT[name='track" + (j-1) + "' i]").val());
+            $("INPUT[name='trackDuration" + j + "' i]").val($("INPUT[name='trackDuration" + (j-1) + "' i]").val());
             $("INPUT[name='trackUrl" + j + "' i]").val($("INPUT[name='trackUrl" + (j-1) + "' i]").val());
             if(coll) {
                 $("INPUT[name='artist" + j + "' i]").val($("INPUT[name='artist" + (j-1) + "' i]").val());
             }
         }
         $("INPUT[name='track" + focus + "' i]").val("");
+        $("INPUT[name='trackDuration" + focus + "' i]").val("");
         $("INPUT[name='trackUrl" + focus + "' i]").val("");
         if(coll) {
             $("INPUT[name='artist" + focus + "' i]").val("");
@@ -252,12 +254,14 @@ $().ready(function() {
             var last = nextTrack()-1;
             for(var j=focus; j<last; j++) {
                 $("INPUT[name='track" + j + "' i]").val($("INPUT[name='track" + (j+1) + "' i]").val());
+                $("INPUT[name='trackDuration" + j + "' i]").val($("INPUT[name='trackDuration" + (j+1) + "' i]").val());
                 $("INPUT[name='trackUrl" + j + "' i]").val($("INPUT[name='trackUrl" + (j+1) + "' i]").val());
                 if(coll) {
                     $("INPUT[name='artist" + j + "' i]").val($("INPUT[name='artist" + (j+1) + "' i]").val());
                 }
             }
             $("INPUT[name='track" + last + "' i]").val("");
+            $("INPUT[name='trackDuration" + last + "' i]").val("");
             $("INPUT[name='trackUrl" + last + "' i]").val("");
             if(coll) {
                 $("INPUT[name='artist" + last + "' i]").val("");
@@ -451,6 +455,7 @@ $().ready(function() {
                     var input = $("input[name=track" + track.seq + "]");
                     if(input.length) {
                         input.val(track.title.toLowerCase()).zkAlpha();
+                        $("input[name=trackDuration" + track.seq + "]").val(track.time ?? '');
                         $("input[name=trackUrl" + track.seq + "]").val(track.url ?? '');
                         if(track.artist)
                             $("input[name=artist" + track.seq + "]").val(track.artist);
@@ -462,6 +467,11 @@ $().ready(function() {
                             value: track.title.toLowerCase(),
                             'data-zkalpha': 'true'
                         }).zkAlpha()).append($("<input>", {
+                            type: 'hidden',
+                            name: 'trackDuration' + track.seq,
+                            class: 'prefill',
+                            value: track.time ?? ''
+                        })).append($("<input>", {
                             type: 'hidden',
                             name: 'trackUrl' + track.seq,
                             class: 'prefill',

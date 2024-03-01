@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -757,6 +757,7 @@ class Editor extends MenuItem {
         for($i=1; isset($_POST["track" . $i]); $i++) {
             $this->skipVar("track" . $i);
             $this->skipVar("artist" . $i);
+            $this->skipVar("trackDuration" . $i);
             $this->skipVar("trackUrl" . $i);
         }
     }
@@ -969,9 +970,10 @@ class Editor extends MenuItem {
              if ($track === '')
                  break;
 
+             $duration = trim($_POST["trackDuration". $i]);
              $url = $_POST["trackUrl". $i];
              $artist = $isColl ? $_POST["artist".$i] : "";
-             $tracks[$i] = ["track" => $track, "url" => $url, "artist" => $artist];
+             $tracks[$i] = ["track" => $track, "url" => $url, "artist" => $artist, "duration" => empty($duration) ? null : $duration];
          }
          return $tracks;
     }
@@ -1306,11 +1308,12 @@ class Editor extends MenuItem {
         $artistHdr = $isCollection ? "<TH>Artist</TH>" : "";
         $cellWidth = "width:" . ($isCollection ? "220px" : "330px");
 
-        echo "<TR><TH></TH><TH>Track Name</TH>${artistHdr}<TH>URL</TH><TD align=right>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='&minus;'></TD></TR>\n";
+        echo "<TR><TH></TH><TH>Track Name</TH>${artistHdr}<TH>Time</TH><TH>URL</TH><TD align=right>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='&minus;'></TD></TR>\n";
 
         for($i=0; $i<$this->tracksPerPage; $i++) {
             $trackNum = $_REQUEST["nextTrack"] + $i;
             $this->skipVar("track".$trackNum);
+            $this->skipVar("trackDuration".$trackNum);
             $this->skipVar("trackUrl".$trackNum);
             $title = htmlentities(stripslashes($_POST["track".$trackNum]));
             $focus = $focusTrack == $trackNum ? " data-focus" : "";
@@ -1324,6 +1327,9 @@ class Editor extends MenuItem {
                 echo "<TD style='$cellWidth'><INPUT NAME=artist$trackNum style='$cellWidth' VALUE=\"$artist\" TYPE=text CLASS=text maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum'></TD>";
                 $this->skipVar("artist".$trackNum);
             }
+
+            $duration = $_POST["trackDuration$trackNum"];
+            echo "<TD><INPUT NAME='trackDuration$trackNum' class='text duration' VALUE='$duration' style='width: 45px;text-align: right' maxlength='8' pattern='[0-9:]*'></TD>";
 
             $url = $_POST["trackUrl$trackNum"];
             echo "<TD COLSPAN=2><INPUT class='urlValue' style='$cellWidth' value='${url}' NAME='trackUrl$trackNum' TYPE='url' maxlength=" . IEditor::MAX_PLAYABLE_URL_LENGTH . " data-track='$trackNum' /></TD>";
@@ -1340,8 +1346,13 @@ class Editor extends MenuItem {
             $tracks = Engine::api(ILibrary::class)->search($isCollection?ILibrary::COLL_KEY:ILibrary::TRACK_KEY, 0, 2000, $_REQUEST["seltag"]);
             foreach($tracks as $row) {
                 $this->emitHidden("track".$row["seq"], $row["track"]);
+                $this->emitHidden("trackDuration".$row["seq"], $row["url"]);
                 $this->emitHidden("trackUrl".$row["seq"], $row["url"]);
                 $_POST["track".$row["seq"]] = $row["track"];
+                $duration = $row["duration"];
+                if($duration)
+                    $duration = preg_replace("/^0(0:0?)?/", "", $duration);
+                $_POST["trackDuration".$row["seq"]] = $duration;
                 $_POST["trackUrl".$row["seq"]] = $row["url"];
                 if($isCollection) {
                     $this->emitHidden("artist" . $row["seq"], $row["artist"]);

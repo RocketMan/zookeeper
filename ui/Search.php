@@ -148,6 +148,9 @@ class Search extends MenuItem {
         $internalLinks = Engine::param('internal_links');
         $enableExternalLinks = Engine::param('external_links_enabled');
         foreach($tracks as &$track) {
+            if($track["duration"])
+                $track["duration"] = preg_replace("/^0(0:0?)?/", "", $track["duration"]);
+
             $url = $track["url"];
 
             // if external links are enabled, suppress internal URLs for

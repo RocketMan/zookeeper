@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -195,20 +195,27 @@ class EditorImpl extends DBO implements IEditor {
             $stmt->execute();
 
             $query = $iscoll ?
-                "INSERT INTO colltracknames (tag, seq, track, url, artist) VALUES (?, ?, ?, ?, ?)" :
-                "INSERT INTO tracknames (tag, seq, track, url) VALUES (?, ?, ?, ?)";
+                "INSERT INTO colltracknames (tag, seq, track, url, duration, artist) VALUES (?, ?, ?, ?, ?, ?)" :
+                "INSERT INTO tracknames (tag, seq, track, url, duration) VALUES (?, ?, ?, ?, ?)";
             $stmt = $this->prepare($query);
             $stmt->bindValue(1, $album["tag"]);
 
             foreach($tracks as $seq => $trackRow) {
                 $trackName = mb_substr(trim($trackRow['track']), 0, PlaylistEntry::MAX_FIELD_LENGTH);
                 $trackUrl = trim($trackRow['url'] ?? "");
+                $duration = $trackRow['duration'] ?? null;
+                if($duration) {
+                    // If we give just m:s, MySQL assumes h:m
+                    while(substr_count($duration, ':') < 2)
+                        $duration = '0:' . $duration;
+                }
 
                 $stmt->bindValue(2, $seq);
                 $stmt->bindValue(3, $trackName);
                 $stmt->bindValue(4, $trackUrl);
+                $stmt->bindValue(5, $duration);
                 if ($iscoll)
-                    $stmt->bindValue(5, mb_substr(trim($trackRow["artist"]), 0, PlaylistEntry::MAX_FIELD_LENGTH));
+                    $stmt->bindValue(6, mb_substr(trim($trackRow["artist"]), 0, PlaylistEntry::MAX_FIELD_LENGTH));
 
                 $stmt->execute();
             }
