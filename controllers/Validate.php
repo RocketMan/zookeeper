@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -464,7 +464,8 @@ class Validate implements IController {
                             'coll' => false,
                             'tracks' => [
                                 [
-                                    'track' => 'TEST track 1'
+                                    'track' => 'TEST track 1',
+                                    'duration' => '00:01:23'
                                 ],[
                                     'track' => 'TEST track 2'
                                 ]
