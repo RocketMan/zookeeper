@@ -1346,13 +1346,13 @@ class Editor extends MenuItem {
             $tracks = Engine::api(ILibrary::class)->search($isCollection?ILibrary::COLL_KEY:ILibrary::TRACK_KEY, 0, 2000, $_REQUEST["seltag"]);
             foreach($tracks as $row) {
                 $this->emitHidden("track".$row["seq"], $row["track"]);
-                $this->emitHidden("trackDuration".$row["seq"], $row["url"]);
-                $this->emitHidden("trackUrl".$row["seq"], $row["url"]);
                 $_POST["track".$row["seq"]] = $row["track"];
                 $duration = $row["duration"];
                 if($duration)
                     $duration = preg_replace("/^0(0:0?)?/", "", $duration);
+                $this->emitHidden("trackDuration".$row["seq"], $duration);
                 $_POST["trackDuration".$row["seq"]] = $duration;
+                $this->emitHidden("trackUrl".$row["seq"], $row["url"]);
                 $_POST["trackUrl".$row["seq"]] = $row["url"];
                 if($isCollection) {
                     $this->emitHidden("artist" . $row["seq"], $row["artist"]);
