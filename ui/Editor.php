@@ -1306,7 +1306,7 @@ class Editor extends MenuItem {
         <table class='trackEditor'>
     <?php
         $artistHdr = $isCollection ? "<TH>Artist</TH>" : "";
-        $cellWidth = "width:" . ($isCollection ? "220px" : "330px");
+        $cellWidth = $isCollection ? "c3" : "c2";
 
         echo "<TR><TH></TH><TH>Track Name</TH>${artistHdr}<TH>Time</TH><TH>URL</TH><TD align=right>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='&minus;'></TD></TR>\n";
 
@@ -1320,19 +1320,19 @@ class Editor extends MenuItem {
 
             echo "<TR>";
             echo "<TD ALIGN='RIGHT' style='width:20px' ><b>$trackNum:</b></TD>";
-            echo "<TD><INPUT NAME='track$trackNum' style='$cellWidth' VALUE=\"$title\" TYPE=text CLASS=text maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
+            echo "<TD><INPUT NAME='track$trackNum' VALUE=\"$title\" TYPE=text CLASS='text $cellWidth' maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
 
             if($isCollection) {
                 $artist = htmlentities(stripslashes($_POST["artist".$trackNum]));
-                echo "<TD style='$cellWidth'><INPUT NAME=artist$trackNum style='$cellWidth' VALUE=\"$artist\" TYPE=text CLASS=text maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum'></TD>";
+                echo "<TD><INPUT NAME=artist$trackNum VALUE=\"$artist\" TYPE=text CLASS='text $cellWidth' maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum'></TD>";
                 $this->skipVar("artist".$trackNum);
             }
 
             $duration = $_POST["trackDuration$trackNum"];
-            echo "<TD><INPUT NAME='trackDuration$trackNum' class='text duration' VALUE='$duration' style='width: 45px;text-align: right' maxlength='8' pattern='[0-9:]*'></TD>";
+            echo "<TD><INPUT NAME='trackDuration$trackNum' class='text duration' VALUE='$duration' maxlength='8' pattern='[0-9:]*'></TD>";
 
             $url = $_POST["trackUrl$trackNum"];
-            echo "<TD COLSPAN=2><INPUT class='urlValue' style='$cellWidth' value='${url}' NAME='trackUrl$trackNum' TYPE='url' maxlength=" . IEditor::MAX_PLAYABLE_URL_LENGTH . " data-track='$trackNum' /></TD>";
+            echo "<TD COLSPAN=2><INPUT class='text $cellWidth' value='${url}' NAME='trackUrl$trackNum' TYPE='url' maxlength=" . IEditor::MAX_PLAYABLE_URL_LENGTH . " data-track='$trackNum' /></TD>";
 
             echo "</TR>\n";
         }

@@ -805,10 +805,20 @@ th.sec {
 .success {
     color: #006600;
 }
-.text, .urlValue {
+.text {
     padding: 2px;
     border: 1px solid #666;
     border-radius: 3px;
+}
+.text.c2 {
+    width: 330px;
+}
+.text.c3 {
+    width: 220px;
+}
+.text.duration {
+    width: 45px;
+    text-align: right;
 }
 .textsp {
     border: 1px solid #666;
