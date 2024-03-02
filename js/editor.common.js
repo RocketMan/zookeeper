@@ -521,7 +521,7 @@ $().ready(function() {
     $(".clear-prefill").on('click', function(e) {
         e.preventDefault();
         if(confirm("Clear all tracks?")) {
-            $("input[type=text], input[type=url]").val('');
+            $("input.text").val('');
             $("input.prefill").remove();
 
             $(".discogs-prefill-confirm").slideUp();
