@@ -4,7 +4,7 @@
 
 <table class='trackTable'>
   {%~ if album.iscoll %}
-  <tr><th>&nbsp;</th><th></th><th align=left style='min-width:200px'>Artist</th><th align=left>Track Name</th></tr>
+  <tr><th>&nbsp;</th><th></th><th align=left style='min-width:200px'>Artist</th><th align=left>Track Name</th><th></th></tr>
   {%~ for track in tracks %}
   <tr>
     <td>
@@ -15,6 +15,7 @@
     <td>{{ track.seq }}.</td>
     <td>{{ _self.tracklink('byArtist', track.artist) }}</td>
     <td>{{ _self.tracklink('byTrack', track.track) }}</td>
+    <td align=right>{{ track.duration }}</td>
   </tr>
   {%~ endfor %}
   {%~ else %}
@@ -26,24 +27,26 @@
     <td colspan=4>&nbsp;</td>
     {%~ else %}
       {%~ set track = tracks[i] %}
+      {%~ set duration = track.duration ? ' (' ~ track.duration ~ ') ' %}
     <td>
       {%~ if track.url %}
       <div class='playTrack'><a target='_blank' href='{{ track.url }}'></a></div>
       {%~ endif %}
     </td>
     <td>{{ track.seq }}.</td>
-    <td>{{ _self.tracklink('byTrack', track.track) }}</td>
+    <td>{{ _self.tracklink('byTrack', track.track) }}{{ duration }}</td>
     <td>&nbsp;</td>
     {%~ endif %}
     {#~ right side #}
     {%~ set track = tracks[mid + i] %}
+    {%~ set duration = track.duration ? ' (' ~ track.duration ~ ') ' %}
     <td>
       {%~ if track.url %}
       <div class='playTrack'><a target='_blank' href='{{ track.url }}'></a></div>
       {%~ endif %}
     </td>
     <td>{{ track.seq }}.</td>
-    <td>{{ _self.tracklink('byTrack', track.track) }}</td>
+    <td>{{ _self.tracklink('byTrack', track.track) }}{{ duration }}</td>
   </tr>
   {%~ endfor %}
   {%~ endif %}

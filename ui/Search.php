@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -148,6 +148,9 @@ class Search extends MenuItem {
         $internalLinks = Engine::param('internal_links');
         $enableExternalLinks = Engine::param('external_links_enabled');
         foreach($tracks as &$track) {
+            if($track["duration"])
+                $track["duration"] = preg_replace("/^0(0:0?)?/", "", $track["duration"]);
+
             $url = $track["url"];
 
             // if external links are enabled, suppress internal URLs for

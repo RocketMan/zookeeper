@@ -2,7 +2,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -192,6 +192,7 @@ CREATE TABLE IF NOT EXISTS `colltracknames` (
   `artist` varchar(80) DEFAULT NULL,
   `url` varchar(2083) NOT NULL DEFAULT '',
   `seq` smallint(6) DEFAULT NULL,
+  `duration` time DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `tag` (`tag`),
   KEY `track` (`track`),
@@ -412,6 +413,7 @@ CREATE TABLE IF NOT EXISTS `tracknames` (
   `track` varchar(80) DEFAULT NULL,
   `url` varchar(2083) NOT NULL DEFAULT '',
   `seq` smallint(6) DEFAULT NULL,
+  `duration` time DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `tag` (`tag`),
   KEY `track` (`track`),

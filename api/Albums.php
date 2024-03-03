@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -50,7 +50,7 @@ class Albums implements RequestHandlerInterface {
     const FIELDS = [ "artist", "album", "category", "medium", "size",
                      "created", "updated", "location", "bin", "coll" ];
 
-    const TRACK_FIELDS = [ "seq", "artist", "track", "url" ];
+    const TRACK_FIELDS = [ "seq", "artist", "track", "duration", "url" ];
 
     const LINKS_NONE = 0;
     const LINKS_LABEL = 1;

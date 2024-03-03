@@ -2,7 +2,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -54,6 +54,9 @@ UPDATE albumvol SET location='L' WHERE location='C';
 UPDATE albumvol a INNER JOIN currents c ON a.tag = c.tag AND adddate <= CURDATE() AND pulldate > CURDATE() SET location='C';
 
 ALTER TABLE `reviews` ADD COLUMN `exportid` varchar(80) DEFAULT NULL;
+
+ALTER TABLE `tracknames` ADD COLUMN `duration` time DEFAULT NULL;
+ALTER TABLE `colltracknames` ADD COLUMN `duration` time DEFAULT NULL;
 
 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT;
 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS;
