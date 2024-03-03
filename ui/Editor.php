@@ -1308,7 +1308,7 @@ class Editor extends MenuItem {
         $artistHdr = $isCollection ? "<TH>Artist</TH>" : "";
         $cellWidth = $isCollection ? "c3" : "c2";
 
-        echo "<TR><TH></TH><TH>Track Name</TH>${artistHdr}<TH>Time</TH><TH>URL</TH><TD align=right>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='&minus;'></TD></TR>\n";
+        echo "<TR><TH></TH><TH>Track Name</TH>${artistHdr}<TH class='duration'>Time</TH><TH>URL</TH><TD align=right>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='&minus;'></TD></TR>\n";
 
         for($i=0; $i<$this->tracksPerPage; $i++) {
             $trackNum = $_REQUEST["nextTrack"] + $i;

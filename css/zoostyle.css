@@ -471,6 +471,10 @@ td.label-form {
     vertical-align: bottom;
     line-height: 10px;
 }
+.trackEditor th.duration {
+    text-align: right;
+    padding-right: 4px;
+}
 
 .trackTable td {
     line-height: 18px;
