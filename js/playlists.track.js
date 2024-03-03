@@ -523,7 +523,8 @@ $().ready(function(){
             type: "POST",
             // use API v1.1 or later for correct auto timestamp semantics
             url: "api/v1.1/playlist/" + playlistId + "/events",
-            dataType : 'json',
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
             accept: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
             success: function(respObj) {
@@ -891,6 +892,7 @@ $().ready(function(){
         $.ajax({
             dataType : 'json',
             type: 'PATCH',
+            contentType: "application/json; charset=utf-8",
             accept: "application/json; charset=utf-8",
             url: "api/v1/playlist/" + playlistId + "/events",
             data: JSON.stringify(postData),

@@ -161,6 +161,7 @@ class UIController implements IController {
         $isJson = isset($_SERVER["HTTP_ACCEPT"]) &&
                 substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
         ob_start("ob_gzhandler");
+        header("X-Powered-By: " . Engine::UA);
         if ($isJson) {
             header("Content-Type: application/json");
             $this->dispatch($action, $subaction);

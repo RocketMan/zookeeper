@@ -40,5 +40,6 @@ class TemplateFactoryXML extends TemplateFactory {
         $escaper->setDefaultStrategy('xml');
 
         $this->app->baseUrl = Engine::getBaseUrl();
+        $this->app->UA = Engine::UA;
     }
 }

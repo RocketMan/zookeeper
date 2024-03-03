@@ -33,6 +33,7 @@ interface ILibrary {
         "C"=>"Country",
         "G"=>"General",
         "1"=>"General - Electronic",
+        "3"=>"General - Experimental",
         "2"=>"General - Loud",
         "H"=>"Hip-hop",
         "J"=>"Jazz",

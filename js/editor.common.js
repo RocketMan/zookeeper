@@ -512,7 +512,6 @@ $().ready(function() {
                 $(".clear-prefill").removeClass('zk-hidden');
             } else {
                 $("#discogs-no-match-album").text($("input[name=album]").val());
-                $("#discogs-no-match-media").text(mediaTypes[$("input[name=medium]").val()]);
                 $(".discogs-no-match").slideDown();
             }
         });

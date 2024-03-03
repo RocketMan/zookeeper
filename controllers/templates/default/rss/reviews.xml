@@ -6,6 +6,7 @@
   <managingEditor>{{ app.email.md }}</managingEditor>
   <ttl>20</ttl>
   <language>en-us</language>
+  <generator>{{ app.UA }}</generator>
 {% for review in reviews %}
   <item>
     <description><![CDATA[

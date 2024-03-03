@@ -173,7 +173,10 @@ $().ready(function(){
                 if(onnow.id == 0) {
                     $(".home-currenttrack").html("&nbsp;");
                 } else {
-                    $(".home-currenttrack").html(onnow.track_artist + " &#8211; <i>" + onnow.track_title + "</i> (" + onnow.track_album + ")");
+                    var track = onnow.track_artist + " &#8211; <i>" + onnow.track_title + "</i>";
+                    if(onnow.track_album)
+                        track += " (" + onnow.track_album + ")";
+                    $(".home-currenttrack").html(track);
 
                     var time = $("#time").val();
                     var nowPlaying = $(".recently-played");

@@ -89,6 +89,7 @@ function serveRequest() {
     }
 
     header("HTTP/1.1 ".$response->status());
+    header("X-Powered-By: " . Engine::UA);
     foreach($response->headers()->all() as $header => $value)
         header("$header: $value");
 

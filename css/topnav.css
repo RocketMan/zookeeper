@@ -27,7 +27,7 @@ div.box {
 nav {
     background: var(--theme-nav-background-colour);
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
     height: 70px;
@@ -171,7 +171,7 @@ ul#search-filter-menu li {
 nav .menu-icon,
 nav .cancel-icon,
 nav .search-icon {
-    width: 40px;
+    width: 18px;
     text-align: center;
     margin: 0 50px;
     font-size: 18px;
@@ -255,6 +255,7 @@ nav .search-icon {
     nav .logo {
         flex: 2;
         text-align: center;
+        margin-right: inherit;
     }
     nav .nav-items {
         position: fixed;
@@ -344,9 +345,7 @@ nav .search-icon {
     #search-submit {
         display: none;
     }
-    nav .menu-icon {
-        display: block;
-    }
+    nav .menu-icon,
     nav .search-icon,
     nav .menu-icon span {
         display: block;
@@ -359,7 +358,9 @@ nav .search-icon {
         display: block;
     }
     nav .login-search .login a {
-        padding-right: 20px;
+        margin-left: 10px;
+        margin-right: 20px;
+        font-size: 16px;
     }
     nav .login-search .login .whois {
         position: absolute;
@@ -379,16 +380,25 @@ nav .search-icon {
     nav .search-icon {
         margin: 0 20px;
     }
+    nav .menu-icon {
+        margin-left: 31px;
+    }
     nav form {
         right: 30px;
     }
 }
-@media (max-width: 350px) {
+@media (max-width: 400px) {
     nav .menu-icon,
     nav .cancel-icon,
     nav .search-icon {
         margin: 0 10px;
         font-size: 16px;
+    }
+    nav .menu-icon {
+        margin-left: 21px;
+    }
+    nav .login-search .login a {
+        font-size: 14px;
     }
 }
 
@@ -469,6 +479,11 @@ nav .search-icon {
 @media (min-width: 1000px) {
     .breadcrumbs {
         display: none;
+    }
+}
+@media (max-width: 400px) {
+    .breadcrumbs {
+        left: -20px;
     }
 }
 /* end breadcrumbs */
