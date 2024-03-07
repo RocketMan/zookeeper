@@ -425,7 +425,7 @@ $().ready(function(){
     function grabStart(e) {
         var tr = $(e.target).closest("TR"), si = tr.index(), sy = e.pageY, b = $(document.body), drag;
         window.getSelection().empty();
-        b.addClass("grabCursor").css("userSelect", "none");
+        b.addClass("grabCursor no-text-select");
         tr.addClass("grabbed");
         function move (e) {
             if (!drag && Math.abs(e.pageY - sy) < 10) return;
@@ -454,7 +454,7 @@ $().ready(function(){
                 moveTrack(listId, sourceId, targetId, tr, si, rows);
             }
             $(document).off("mousemove", move).off("mouseup", up);
-            b.removeClass("grabCursor").css("userSelect", "");
+            b.removeClass("grabCursor no-text-select");
             tr.removeClass("grabbed");
         }
         $(document).on('mousemove', move).on('mouseup', up);
