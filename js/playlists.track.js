@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -424,6 +424,7 @@ $().ready(function(){
     // Reference: https://stackoverflow.com/questions/2072848/reorder-html-table-rows-using-drag-and-drop/42720364
     function grabStart(e) {
         var tr = $(e.target).closest("TR"), si = tr.index(), sy = e.pageY, b = $(document.body), drag;
+        window.getSelection().empty();
         b.addClass("grabCursor").css("userSelect", "none");
         tr.addClass("grabbed");
         function move (e) {
@@ -453,7 +454,7 @@ $().ready(function(){
                 moveTrack(listId, sourceId, targetId, tr, si, rows);
             }
             $(document).off("mousemove", move).off("mouseup", up);
-            b.removeClass("grabCursor").css("userSelect", "none");
+            b.removeClass("grabCursor").css("userSelect", "");
             tr.removeClass("grabbed");
         }
         $(document).on('mousemove', move).on('mouseup', up);
