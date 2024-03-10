@@ -926,7 +926,7 @@ $().ready(function(){
                     else
                         rows.eq(rows.length - 1).after(meta.html);
 
-                    $(".playlistTable > tbody > tr").eq(index).find(".grab").on('mousedown', grabStart);
+                    $(".playlistTable > tbody > tr").eq(index).find(".grab").on('pointerdown', grabStart);
 
                     updatePlayable();
 
