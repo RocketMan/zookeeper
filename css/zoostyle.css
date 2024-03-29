@@ -1285,7 +1285,7 @@ input[type="checkbox"]:checked:active {
     color: #333;
     position: absolute;
     line-height: 1.4;
-    cursor: grab;
+    cursor: url("https://cdnjs.cloudflare.com/ajax/libs/slider-pro/1.5.0/css/images/openhand.cur") 7 5, grab;
     touch-action: none;
 }
 @media (max-width: 800px) {
@@ -1320,7 +1320,7 @@ input[type="checkbox"]:checked:active {
     box-shadow: 0 0 13px #000;
 }
 .grabCursor, .grabCursor * {
-    cursor: move !important;
+    cursor: url("https://cdnjs.cloudflare.com/ajax/libs/slider-pro/1.5.0/css/images/closedhand.cur") 7 5, move !important;
 }
 
 .invalid-input, .fxtime:invalid {
