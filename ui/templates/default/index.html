@@ -25,6 +25,10 @@
     <link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.css" onerror="this.onerror=null;this.href='vendor/components/jqueryui/themes/base/jquery-ui.css';" />
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
     <script>window.jQuery.ui || document.write('<script src="vendor/components/jqueryui/jquery-ui.min.js"><\/script>')</script>
+{% if app.session.isAuth('u') %}
+    <script src="https://cdn.jsdelivr.net/gh/RocketMan/jquery-fxtime/dist/jquery-fxtime.min.js"></script>
+    <script>window.jQuery.fn.fxtime || document.write('<script src="vendor/rocketman/jquery-fxtime/dist/jquery-fxtime.js"><\/script>')</script>
+{% endif %}
     <script src="vendor/mottie/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
 
     <link rel="alternate" type="application/rss+xml" title="{{ app.station_title }} Music Reviews" href="zkrss.php?feed=reviews" />
