@@ -13,7 +13,7 @@
 {% if app.favicon is not empty %}
     <link rel="icon" href="{{ app.favicon }}" />
 {% endif %}
-    <link rel="stylesheet" type="text/css" href="vendor/mottie/tablesorter/dist/css/theme.default.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/mottie/tablesorter@2.31.3/dist/css/theme.default.min.css" onerror="this.onerror=null;this.href='vendor/mottie/tablesorter/dist/css/theme.default.min.css';" />
     <link rel="stylesheet" type="text/css" href="{{ "css/zoostyle.css" | decorate }}" />
 {% if app.stylesheet is not empty %}
     <link rel="stylesheet" type="text/css" href="{{ app.stylesheet | decorate }}" />
@@ -25,11 +25,10 @@
     <link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.css" onerror="this.onerror=null;this.href='vendor/components/jqueryui/themes/base/jquery-ui.css';" />
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
     <script>window.jQuery.ui || document.write('<script src="vendor/components/jqueryui/jquery-ui.min.js"><\/script>')</script>
-{% if app.session.isAuth('u') %}
-    <script src="https://cdn.jsdelivr.net/gh/RocketMan/jquery-fxtime/dist/jquery-fxtime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/rocketman/jquery-fxtime@1.0.1/dist/jquery-fxtime.min.js"></script>
     <script>window.jQuery.fn.fxtime || document.write('<script src="vendor/rocketman/jquery-fxtime/dist/jquery-fxtime.js"><\/script>')</script>
-{% endif %}
-    <script src="vendor/mottie/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mottie/tablesorter@2.31.3/dist/js/jquery.tablesorter.min.js"></script>
+    <script>window.jQuery.fn.tablesorter || document.write('<script src="vendor/mottie/tablesorter/dist/js/jquery.tablesorter.min.js"><\/script>')</script>
 
     <link rel="alternate" type="application/rss+xml" title="{{ app.station_title }} Music Reviews" href="zkrss.php?feed=reviews" />
     <link rel="alternate" type="application/rss+xml" title="{{ app.station_title }} Airplay Charts" href="zkrss.php?feed=charts" />
