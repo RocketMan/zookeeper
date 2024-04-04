@@ -144,6 +144,7 @@ trait OffsetPaginationTrait {
             $resource->relationships()->set($relation);
             if($flags & Albums::LINKS_REVIEWS_WITH_BODY) {
                 $reviews = Engine::api(IReview::class)->getReviews($record["id"], 1, "", Engine::session()->isAuth("u"), 1);
+                $record["airname"] = $reviews[0]["airname"] ?? $reviews[0]["realname"];
                 $record["review"] = $reviews[0]["review"];
             }
             $res = Reviews::fromRecord($record);
