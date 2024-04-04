@@ -284,7 +284,7 @@ class LibraryImpl extends DBO implements ILibrary {
                      "FROM reviews r LEFT JOIN albumvol a ON a.tag = r.tag ".
                      "LEFT JOIN publist p ON p.pubkey = a.pubkey ";
             $query .= is_numeric($search) ?
-                     "WHERE r.airname = ? " :
+                     ($search ? "WHERE r.airname = ? " : "WHERE ? = 0 ") :
                      "WHERE r.user = ? AND r.airname IS NULL ";
             if(!Engine::session()->isAuth("u"))
                 $query .= "AND r.private = 0 ";
