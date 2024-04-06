@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -121,6 +121,60 @@ class Playlists implements RequestHandlerInterface {
         return [$size, $result];
     }
 
+    private static function fetchEvents($playlist, $aflags) {
+        $relations = new ResourceCollection();
+
+        Engine::api(IPlaylist::class)->getTracksWithObserver($playlist,
+        (new PlaylistObserver())->onComment(function($entry) use($relations) {
+            $e = new JsonResource("event", $entry->getId());
+            $a = $e->attributes();
+            $a->set("type", "comment");
+            $a->set("comment", $entry->getComment());
+            $a->set("created", $entry->getCreatedTime());
+            $relations->set($e);
+        })->onLogEvent(function($entry) use($relations) {
+            $e = new JsonResource("event", $entry->getId());
+            $a = $e->attributes();
+            $a->set("type", "logEvent");
+            $a->set("event", $entry->getLogEventType());
+            $a->set("code", $entry->getLogEventCode());
+            $a->set("created", $entry->getCreatedTime());
+            $relations->set($e);
+        })->onSetSeparator(function($entry) use($relations) {
+            $e = new JsonResource("event", $entry->getId());
+            $a = $e->attributes();
+            $a->set("type", "break");
+            $a->set("created", $entry->getCreatedTime());
+            $relations->set($e);
+        })->onSpin(function($entry) use($relations, $aflags) {
+            $e = new JsonResource("event", $entry->getId());
+            $a = $e->attributes();
+            $a->set("type", "spin");
+            $attrs = $entry->asArray();
+            unset($attrs["tag"]);
+            unset($attrs["id"]);
+            $a->merge($attrs);
+            $a->set("created", $entry->getCreatedTime());
+
+            $tag = $entry->getTag();
+            if($tag) {
+                $a->set("artist", PlaylistEntry::swapNames($entry->getArtist()));
+                if($aflags && sizeof($albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
+                    $res = Albums::fromArray($albums, $aflags)[0];
+                else
+                    $res = new JsonResource("album", $tag);
+
+                $relation = new Relationship("album", $res);
+                $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/$tag"));
+                $e->relationships()->set($relation);
+            }
+
+            $relations->set($e);
+        }));
+
+        return $relations;
+    }
+
     public static function fromRecord($rec, $flags) {
         $id = $rec["list"] ?? $rec["id"];
         $res = new JsonResource("show", $id);
@@ -149,6 +203,17 @@ class Playlists implements RequestHandlerInterface {
         }
 
         if($flags & self::LINKS_EVENTS) {
+            if(Engine::getApiVer() >= 2) {
+                $aflags = $flags & self::LINKS_ALBUMS_DETAILS ?
+                            Albums::LINKS_ALL : Albums::LINKS_NONE;
+
+                $relations = self::fetchEvents($id, $aflags);
+                $relation = new Relationship("events", $relations);
+                $relation->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/events"));
+                $res->relationships()->set($relation);
+                return $res;
+            }
+
             $relations = new ResourceCollection();
 
             $events = [];
@@ -223,9 +288,11 @@ class Playlists implements RequestHandlerInterface {
 
         $row["list"] = $key;
         $flags = self::LINKS_NONE;
-        if($request->requestsField("show", "events"))
+        $apiver = Engine::getApiVer();
+        if($apiver >= 2 || $request->requestsField("show", "events"))
             $flags |= self::LINKS_EVENTS | self::LINKS_ALBUMS;
-        if($request->requestsInclude("albums"))
+        if($request->requestsInclude("events.album") ||
+                $apiver < 2 && $request->requestsInclude("albums"))
             $flags |= self::LINKS_ALBUMS_DETAILS;
         if($request->requestsInclude("origin"))
             $flags |= self::LINKS_ORIGIN;
@@ -234,21 +301,25 @@ class Playlists implements RequestHandlerInterface {
 
         $document = new Document($resource);
         $response = new DocumentResponse($document);
-        $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
+        if(Engine::getApiVer() < 2)
+            $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
         return $response;
     }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
         $flags = self::LINKS_NONE;
-        if($request->requestsField("show", "events"))
+        $apiver = Engine::getApiVer();
+        if($apiver >= 2 || $request->requestsField("show", "events"))
             $flags |= self::LINKS_EVENTS | self::LINKS_ALBUMS;
-        if($request->requestsInclude("albums"))
+        if($request->requestsInclude("events.album") ||
+                $apiver < 2 && $request->requestsInclude("albums"))
             $flags |= self::LINKS_ALBUMS_DETAILS;
         if($request->requestsInclude("origin"))
             $flags |= self::LINKS_ORIGIN;
 
         $response = $this->paginateOffset($request, self::$paginateOps, $flags);
-        $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
+        if(Engine::getApiVer() < 2)
+            $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
         return $response;
     }
 
@@ -272,6 +343,9 @@ class Playlists implements RequestHandlerInterface {
 
         switch($request->relationship()) {
         case "albums":
+            if(Engine::getApiVer() >= 2)
+                throw new NotAllowedException('You are not allowed to fetch the  relationship ' . $request->relationship());
+
             $api->getTracksWithObserver($id,
             (new PlaylistObserver())->onSpin(function($entry) use($relations, $flags) {
                 $tag = $entry->getTag();
@@ -288,51 +362,8 @@ class Playlists implements RequestHandlerInterface {
         case "events":
             if(!$request->requestsInclude("album"))
                 $flags = Albums::LINKS_NONE;
-            $api->getTracksWithObserver($id,
-            (new PlaylistObserver())->onComment(function($entry) use($relations) {
-                $e = new JsonResource("event", $entry->getId());
-                $a = $e->attributes();
-                $a->set("type", "comment");
-                $a->set("comment", $entry->getComment());
-                $a->set("created", $entry->getCreatedTime());
-                $relations->set($e);
-            })->onLogEvent(function($entry) use($relations) {
-                $e = new JsonResource("event", $entry->getId());
-                $a = $e->attributes();
-                $a->set("type", "logEvent");
-                $a->set("event", $entry->getLogEventType());
-                $a->set("code", $entry->getLogEventCode());
-                $a->set("created", $entry->getCreatedTime());
-                $relations->set($e);
-            })->onSetSeparator(function($entry) use($relations) {
-                $e = new JsonResource("event", $entry->getId());
-                $a = $e->attributes();
-                $a->set("type", "break");
-                $a->set("created", $entry->getCreatedTime());
-                $relations->set($e);
-            })->onSpin(function($entry) use($relations, $flags) {
-                $e = new JsonResource("event", $entry->getId());
-                $a = $e->attributes();
-                $a->set("type", "spin");
-                $attrs = $entry->asArray();
-                unset($attrs["tag"]);
-                unset($attrs["id"]);
-                $a->merge($attrs);
-                $a->set("created", $entry->getCreatedTime());
 
-                $tag = $entry->getTag();
-                if($tag) {
-                    $a->set("artist", PlaylistEntry::swapNames($entry->getArtist()));
-                    if($flags && sizeof($albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
-                        $res = Albums::fromArray($albums, $flags)[0];
-                    else
-                        $res = new JsonResource("album", $tag);
-
-                    $e->relationships()->set(new Relationship("album", $res));
-                }
-
-                $relations->set($e);
-            }));
+            $relations = self::fetchEvents($id, $flags);
             break;
         case "origin":
             $origin = $list['origin'];
@@ -360,7 +391,8 @@ class Playlists implements RequestHandlerInterface {
         }
 
         $response = new DocumentResponse($document);
-        $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
+        if(Engine::getApiVer() < 2)
+            $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
         return $response;
     }
 
@@ -470,13 +502,40 @@ class Playlists implements RequestHandlerInterface {
 
         // insert the tracks
         $events = $attrs->getOptional("events");
-        if($events) {
+        if($events && Engine::getApiVer() < 2) {
             $status = '';
             $window = $papi->getTimestampWindow($playlist);
             foreach($events as $pentry) {
                 $entry = PlaylistEntry::fromArray($pentry);
                 $created = $entry->getCreated();
                 if($created) {
+                    try {
+                        $stamp = PlaylistEntry::scrubTimestamp(
+                                    new \DateTime($created), $window);
+                        $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
+                    } catch(\Exception $e) {
+                        error_log("failed to parse timestamp: $created");
+                        $entry->setCreated(null);
+                    }
+                }
+                $success = $papi->insertTrackEntry($playlist, $entry, $status);
+            }
+        }
+
+        if($show->relationships()->has("events")) {
+            $window = $papi->getTimestampWindow($playlist);
+            $included = $request->requestBody()->included();
+            foreach($show->relationships()->get("events")->related()->all() as $er) {
+                $event = $included->get("event", $er->id());
+                $pentry = $event->attributes()->all();
+                $entry = PlaylistEntry::fromArray($pentry);
+                $created = $entry->getCreated();
+                if($created == "auto") {
+                    $autoTimestamp = $papi->isNowWithinShow(
+                            ["showdate" => $date, "showtime" => $time]);
+                    $created = $autoTimestamp ? (new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL) : null;
+                    $entry->setCreated($created);
+                } else if($created) {
                     try {
                         $stamp = PlaylistEntry::scrubTimestamp(
                                     new \DateTime($created), $window);
