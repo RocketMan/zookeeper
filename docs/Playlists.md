@@ -3,10 +3,15 @@
 This is specific API information for the 'playlist' type.  For generic API
 information, see the [JSON:API main page](./API.md).
 
+The current playlist API is v2.  Full compatibility with previous API
+versions is provided at the legacy endpoints.  Legacy API behaviour
+is no longer documented nor encouraged for new development.
+
+
 ### Retrieval
 
-Retrieval is via GET request to `api/v1/playlist` (filter/pagination) or
-`api/v1/playlist/:id`, where :id is the id of a specific playlist.  See
+Retrieval is via GET request to `api/v2/playlist` (filter/pagination) or
+`api/v2/playlist/:id`, where :id is the id of a specific playlist.  See
 below for a list of possible filter options.  An [example playlist
 document](Samples.md#playlist) is available here.
 
@@ -21,30 +26,13 @@ be found here.
 * airname
 * expires (expiration date, present only for deleted playlists)
 * rebroadcast
-* events -- array of zero or more:
-  * type (one of `break`, `comment`, `logEvent`, `spin`)
-  * created
-  * artist
-  * album
-  * track
-  * xa:relationships**
-  * comment
-  * event
-  * code
-
-(** See https://github.com/RocketMan/zookeeper/pull/263 for a discussion
-of the 'xa:relationships' attribute.)
+* events (deprecated API version 2; use `events` relation)
 
 ### Relations
 
 * origin (to-one)
-* albums (to-many)
 * events (to-many)
-
-Events are included as attributes rather than relations in the
-playlist resource object.  To fetch events as relations, issue a GET
-request to `api/v1/playlist/:id/events`.  See the
-[Events Relationship](#events) section below for more information.
+* albums (deprecated API version 2)
 
 ### Filters
 
@@ -71,14 +59,28 @@ Pagination is supported only for match.  Sorting is not supported.
 
 ### <a name="insert"></a>Insert
 
-To insert a new playlist, issue a POST to `api/v1/playlist`.  Playlist
+To insert a new playlist, issue a POST to `api/v2/playlist`.  Playlist
 details are in the request body in the same format returned by GET.
 X-APIKEY authentication required.
+
+Once the playlist has been created, use of the `api/v2/playlist/:id/events`
+endpoint is the preferred way to add events to the playlist. See
+[Events Relationship](#events) below for details.
+
+Alternatively, you may specify optional events to insert into the
+playlist at creation time through a process known as 'sideloading':
+Include an `events` relationship in the playlist which references
+objects of type `event` in the `included` stanza.  Assign a locally
+generated ID for each event.  The locally generated ID is used only to
+match the included object to the relationship; on success, it will be
+discarded and replaced with a new, server-generated GUID.  See [this
+example](PlaylistImport.md).
 
 If you belong to 'v' group, you may insert playlists on behalf of
 other users: You will own the list in these cases (i.e., can update or
 delete them), but they will display publicly under the other user's
 airname.
+
 
 ### <a name="duplicate"></a>Duplicate
 
@@ -107,7 +109,7 @@ Example:
 To duplicate playlist 12345 for rebroadcast on 2022-01-01 from 1800-2000:
 
 ````
-POST /api/v1/playlist HTTP/1.1
+POST /api/v2/playlist HTTP/1.1
 X-APIKEY: eb5e0e0b42a84531af5f257ed61505050494788d
 Content-Type: application/vnd.api+json
 
@@ -138,7 +140,7 @@ this playlist, from 0100-0200, for rebroadcast on 2022-01-01 from
 1800-1900:
 
 ````
-POST /api/v1/playlist HTTP/1.1
+POST /api/v2/playlist HTTP/1.1
 X-APIKEY: eb5e0e0b42a84531af5f257ed61505050494788d
 Content-Type: application/vnd.api+json
 
@@ -173,7 +175,7 @@ them), but they will display publicly under the other user's airname.
 ### Update
 
 Update the playlist with id :id by issuing a PATCH request to
-`api/v1/playlist/:id`.  Playlist details are in the request body in same
+`api/v2/playlist/:id`.  Playlist details are in the request body in same
 format returned by GET.  Attributes not specified in the PATCH request
 remain unchanged.  X-APIKEY authentication required; update will fail
 if you do not own the playlist.
@@ -184,14 +186,14 @@ may be added, updated, or deleted via the [Events Relationship](#events) (see be
 ### Delete
 
 Delete playlist with :id by issuing a DELETE request to
-`api/v1/playlist/:id`.  X-APIKEY authentication required.
+`api/v2/playlist/:id`.  X-APIKEY authentication required.
 Delete will fail if you do not own the playlist.
 
 ### Restore
 
 DELETE soft-deletes a playlist for 30 days prior to its being deleted
 permanently.  During this period, a deleted playlist with id :id can
-be restored by sending a PATCH request to `api/v1/playlist/:id`.
+be restored by sending a PATCH request to `api/v2/playlist/:id`.
 
 The request body must include a single request object with at minimum
 `type` and `id` members, per [section
@@ -208,29 +210,34 @@ own the playlist.
 <a name="events"></a>
 ## Events Relationship
 
-Events appear as attributes of a playlist.  In addition, they are
-exposed via the 'events' relationship, where they may be individually
-added, updated, or deleted.
-
-When events are accessed as a relationship, each one has a unique 'id'.
-To get the list of events with id's, issue a GET request to the
-endpoint:
-
-        api/v1/playlist/:id/events
-
-where :id is the playlist id.  A [sample events
-document](Samples.md#events) returned by this endpoint is available
-here.
-
 You may add new events, update existing events, or delete events via
-this same endpoint:
+the endpoint:
+
+        api/v2/playlist/:id/events
+
+where :id is the playlist id.
 
 * To add a new event, issue a POST to the endpoint;
 * To modify an event, issue a PATCH to the endpoint;
 * To delete an event, issue a DELETE to the endpoint.
 
 In all cases, the request body contains a single event in the format
-returned by a GET request to the endpoint.
+returned by a GET request to the endpoint.  It may contain the following
+attributes:
+
+* type - one of `spin`, `break`, `comment`, `logEvent`
+* artist (for type `spin`)
+* track (for type `spin`)
+* album (for type `spin`)
+* label (for type `spin`)
+* comment (for type `comment`)
+* event (for type `logEvent`)
+* code (for type `logEvent`)
+* created (see [Automatic timestamping](#timestamping), below)
+
+In addition, it may contain the following relationship:
+
+* album (for type `spin`)
 
 For POST, upon success, you will receive an HTTP `200 OK` response;
 the response body will contain a resource object with the id of the
@@ -238,13 +245,14 @@ created event.  For PATCH and DELETE, upon success, you will receive
 an HTTP `204 No Content` response.
 
 If you wish, you may also use the endpoint
-`api/v1/playlist/:id/relationships/events` for event addition,
+`api/v2/playlist/:id/relationships/events` for event addition,
 modification, and deletion.  The request and response semantics, as
 well as the server action are the same.
 
 X-APIKEY authentication is required; the operation will fail if you do
 not own the playlist.
 
+<a name="timestamping"></a>
 ### Automatic timestamping
 
 Events added to, or updated in a 'live' (currently on-air) playlist,
@@ -255,11 +263,13 @@ attribute, or a `created` attribute whose value is 'auto' in a POST
 request to the `api/v1/playlist/:id/events` endpoint, Zookeeper Online will
 automatically apply a timestamp to the new event, if the playlist is
 currently on-air;
-* POST (API version 1.1 and later): If you supply a `created` attribute
-with value 'auto' in a POST request to the `api/v1.1/playlist/:id/events`
-endpoint, Zookeeper Online will automatically apply a timestamp to the new event,
-if the playlist is currently on-air.  Unlike API version 1, an empty
-or absent `created` attribute will **not** timestamp the event;
+* POST (API version 1.1 and later): If you supply a `created`
+attribute with value 'auto' in a POST request to the
+`api/v1.1/playlist/:id/events` or `api/v2/playlist/:id/events`
+endpoint, Zookeeper Online will automatically apply a timestamp to the
+new event, if the playlist is currently on-air.  Unlike API version 1,
+an empty or absent `created` attribute will **not** timestamp the
+event;
 * PATCH (all API versions): If you supply a `created` attribute with
 value 'auto' in a PATCH request to the events endpoint, Zookeeper Online will
 timestamp the existing event, if the playlist is currently on-air.
@@ -281,7 +291,7 @@ To move event with ID 12345 to the position currently occupied by
 the event with ID 67890 in playlist 98765:
 
 ````
-PATCH /api/v1/playlist/98765/events HTTP/1.1
+PATCH /api/v2/playlist/98765/events HTTP/1.1
 X-APIKEY: eb5e0e0b42a84531af5f257ed61505050494788d
 Content-Type: application/vnd.api+json
 

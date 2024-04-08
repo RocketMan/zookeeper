@@ -302,7 +302,7 @@ class Validate implements IController {
 
         $successd = false;
         if($this->doTest("duplicate playlist", $success4)) {
-            $response = $this->client->post('api/v1/playlist', [
+            $response = $this->client->post('api/v2/playlist', [
                 RequestOptions::JSON => [
                     'data' => [
                         'type' => 'show',
@@ -340,7 +340,7 @@ class Validate implements IController {
                 $json->data->relationships->origin->data->id == $pid &&
                 preg_match(IPlaylist::DUPLICATE_REGEX, $json->data->attributes->name) &&
                 $json->data->attributes->airname == $airname &&
-                sizeof($json->data->attributes->events) == 3;
+                sizeof($json->data->relationships->events->data) == 3;
             $this->showSuccess($successd1, $response);
         }
 

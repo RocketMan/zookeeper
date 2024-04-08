@@ -21,7 +21,7 @@ airname.
 
 ---
 ````
-POST /api/v1/playlist HTTP/1.1
+POST /api/v2/playlist HTTP/1.1
 X-APIKEY: eb5e0e0b42a84531af5f257ed61505050494788d
 Content-Type: application/vnd.api+json
 
@@ -29,45 +29,66 @@ Content-Type: application/vnd.api+json
   "data": {
     "type": "show",
     "attributes": {
-      "name": "example show",
-      "date": "2022-01-31",
-      "time": "1700-1900",
-      "airname": "Jim",
-      "events": [{
-        "type": "comment",
-        "comment": "welcome to the show",
-        "created": "17:00:00"
-      }, {
-        "type": "spin",
-        "artist": "Calla",
-        "track": "Elsewhere",
-        "album": "Calla",
-        "label": "Arena Rock Recording Co.",
-        "created": "17:01:00",
-        "xa:relationships": {
-          "album": {
-            "data": {
-              "type": "album",
-              "id": "1060007"
-            }
-          }
-        }
-      }]
+      "name": "Example Playlist",
+      "date": "2022-01-01",
+      "time": "1800-2000",
+      "airname": "Sample DJ"
+    },
+    "relationships": {
+      "events": {
+        "data": [{
+          "type": "event",
+          "id": "1"
+	}, {
+          "type": "event",
+          "id": "2"
+        }]
+      }
     }
-  }
+  },
+  "included": [{
+      "type": "event",
+      "id": "1",
+      "attributes": {
+          "type": "spin",
+	  "artist": "example artist",
+	  "track": "example track",
+	  "album": "example album",
+	  "label": "example label",
+	  "created": "2022-01-01 18:00:00"
+      }
+  }, {
+      "type": "event",
+      "id": "2",
+      "attributes": {
+          "type": "spin",
+	  "track": "another track",
+	  "created": "2022-01-01 18:02:30"
+      },
+      "relationships": {
+          "album": {
+	      "data": {
+	          "type": "album",
+		  "id": "1060007"
+	      }
+	  }
+      }
+  }]
 }
 ````
 ---
 
-The album tag, if any, is specified in the xa:relationships
-element.  For more information, see the [Complex Attribute
-Extension](xa.md).
+The album tag, if any, is specified in the relationships stanza of the
+included event.  If an album tag is supplied, it is unnecessary to
+specify the `album` or `label` attributes, or the `artist` attribute
+for non-compilations, as these will be populated automatically from
+the album record.
 
 ### The server responds:
 ---
 ````
 HTTP/1.1 201 Created
-Location: /api/v1/playlist/921
+Location: /api/v2/playlist/921
 Content-Length: 0
 ````
 ---
