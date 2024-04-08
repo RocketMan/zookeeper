@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c5456d4d9cf91b642fc681844af4e5ea",
+    "content-hash": "5af08fc5299074fa9f7d09e94918baea",
     "packages": [
         {
             "name": "axy/backtrace",
@@ -2186,6 +2186,49 @@
                 "source": "https://github.com/ringcentral/psr7/tree/master"
             },
             "time": "2018-05-29T20:21:04+00:00"
+        },
+        {
+            "name": "rocketman/jquery-fxtime",
+            "version": "v1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/RocketMan/jquery-fxtime.git",
+                "reference": "4a886289d298e15905b2aa6a16b581ce0ba2051b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/RocketMan/jquery-fxtime/zipball/4a886289d298e15905b2aa6a16b581ce0ba2051b",
+                "reference": "4a886289d298e15905b2aa6a16b581ce0ba2051b",
+                "shasum": ""
+            },
+            "require": {
+                "components/jquery": "^3.6.0"
+            },
+            "type": "library",
+            "extra": {
+                "component": {
+                    "scripts": [
+                        "dist/jquery-fxtime.js"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jim Mason",
+                    "email": "jmason@ibinx.com",
+                    "homepage": "https://www.ibinx.com/"
+                }
+            ],
+            "description": "Firefox-like time plugin for jQuery",
+            "support": {
+                "issues": "https://github.com/RocketMan/jquery-fxtime/issues",
+                "source": "https://github.com/RocketMan/jquery-fxtime/tree/v1.0.1"
+            },
+            "time": "2024-03-30T19:22:15+00:00"
         },
         {
             "name": "rocketman/pdf-label",
