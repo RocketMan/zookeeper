@@ -2642,16 +2642,16 @@
         },
         {
             "name": "symfony/polyfill-php72",
-            "version": "v1.24.0",
+            "version": "v1.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php72.git",
-                "reference": "9a142215a36a3888e30d0a9eeea9766764e96976"
+                "reference": "861391a8da9a04cbad2d232ddd9e4893220d6e25"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php72/zipball/9a142215a36a3888e30d0a9eeea9766764e96976",
-                "reference": "9a142215a36a3888e30d0a9eeea9766764e96976",
+                "url": "https://api.github.com/repos/symfony/polyfill-php72/zipball/861391a8da9a04cbad2d232ddd9e4893220d6e25",
+                "reference": "861391a8da9a04cbad2d232ddd9e4893220d6e25",
                 "shasum": ""
             },
             "require": {
@@ -2659,9 +2659,6 @@
             },
             "type": "library",
             "extra": {
-                "branch-alias": {
-                    "dev-main": "1.23-dev"
-                },
                 "thanks": {
                     "name": "symfony/polyfill",
                     "url": "https://github.com/symfony/polyfill"
@@ -2698,7 +2695,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php72/tree/v1.24.0"
+                "source": "https://github.com/symfony/polyfill-php72/tree/v1.29.0"
             },
             "funding": [
                 {
@@ -2714,7 +2711,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-05-27T09:17:38+00:00"
+            "time": "2024-01-29T20:11:03+00:00"
         },
         {
             "name": "symfony/polyfill-php80",
@@ -2967,16 +2964,16 @@
         },
         {
             "name": "vstelmakh/url-highlight",
-            "version": "v3.0.1",
+            "version": "v3.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/vstelmakh/url-highlight.git",
-                "reference": "7dffee7b2679d5d1ea98d0c3beaf316de3559e30"
+                "reference": "986c32c7f5b254c800472197fb31dd378c528a47"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vstelmakh/url-highlight/zipball/7dffee7b2679d5d1ea98d0c3beaf316de3559e30",
-                "reference": "7dffee7b2679d5d1ea98d0c3beaf316de3559e30",
+                "url": "https://api.github.com/repos/vstelmakh/url-highlight/zipball/986c32c7f5b254c800472197fb31dd378c528a47",
+                "reference": "986c32c7f5b254c800472197fb31dd378c528a47",
                 "shasum": ""
             },
             "require": {
@@ -2986,10 +2983,10 @@
                 "symfony/polyfill-php72": "^1.10"
             },
             "require-dev": {
-                "phpbench/phpbench": "^0.16 || ^1.0",
-                "phpstan/phpstan": "^0.12",
+                "phpbench/phpbench": "^0.16 || ^1.2.6",
+                "phpstan/phpstan": "^1.4",
                 "phpunit/phpunit": "^7.5.3 || ^8 || ^9.3",
-                "squizlabs/php_codesniffer": "^3.5",
+                "squizlabs/php_codesniffer": "^3.7.1",
                 "vstelmakh/covelyzer": "^0.2"
             },
             "type": "library",
@@ -3020,9 +3017,9 @@
             ],
             "support": {
                 "issues": "https://github.com/vstelmakh/url-highlight/issues",
-                "source": "https://github.com/vstelmakh/url-highlight/tree/v3.0.1"
+                "source": "https://github.com/vstelmakh/url-highlight/tree/v3.0.3"
             },
-            "time": "2021-11-14T16:21:31+00:00"
+            "time": "2023-11-04T19:15:03+00:00"
         }
     ],
     "packages-dev": [],
@@ -3040,5 +3037,5 @@
         "ext-pdo_mysql": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.6.0"
 }
