@@ -60,6 +60,7 @@ class Playlists implements RequestHandlerInterface {
     const LINKS_ALBUMS = 2;
     const LINKS_ALBUMS_DETAILS = 4;
     const LINKS_ORIGIN = 8;
+    const LINKS_REVIEWS_WITH_BODY = 16;
     const LINKS_ALL = ~0;
 
     private static $paginateOps = [
@@ -207,6 +208,9 @@ class Playlists implements RequestHandlerInterface {
                 $aflags = $flags & self::LINKS_ALBUMS_DETAILS ?
                             Albums::LINKS_ALL : Albums::LINKS_NONE;
 
+                if(!($flags & self::LINKS_REVIEWS_WITH_BODY))
+                    $aflags &= ~Albums::LINKS_REVIEWS_WITH_BODY;
+
                 $relations = self::fetchEvents($id, $aflags);
                 $relation = new Relationship("events", $relations);
                 $relation->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/events"));
@@ -296,6 +300,9 @@ class Playlists implements RequestHandlerInterface {
             $flags |= self::LINKS_ALBUMS_DETAILS;
         if($request->requestsInclude("origin"))
             $flags |= self::LINKS_ORIGIN;
+        if($request->requestsInclude("events.album.reviews") ||
+                $apiver < 2 && $request->requestsInclude("albums.reviews"))
+            $flags |= self::LINKS_REVIEWS_WITH_BODY;
 
         $resource = self::fromRecord($row, $flags);
 
@@ -327,6 +334,9 @@ class Playlists implements RequestHandlerInterface {
         $flags = Albums::LINKS_ALL;
         if(!$request->requestsField("album", "tracks"))
             $flags &= ~Albums::LINKS_TRACKS;
+        if(!$request->requestsInclude("events.album.reviews") &&
+                !$request->requestsInclude("albums.reviews"))
+            $flags &= ~Albums::LINKS_REVIEWS_WITH_BODY;
 
         $id = $request->id();
 
