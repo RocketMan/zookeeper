@@ -334,9 +334,6 @@ class Playlists implements RequestHandlerInterface {
         $flags = Albums::LINKS_ALL;
         if(!$request->requestsField("album", "tracks"))
             $flags &= ~Albums::LINKS_TRACKS;
-        if(!$request->requestsInclude("events.album.reviews") &&
-                !$request->requestsInclude("albums.reviews"))
-            $flags &= ~Albums::LINKS_REVIEWS_WITH_BODY;
 
         $id = $request->id();
 
@@ -356,6 +353,9 @@ class Playlists implements RequestHandlerInterface {
             if(Engine::getApiVer() >= 2)
                 throw new NotAllowedException('You are not allowed to fetch the  relationship ' . $request->relationship());
 
+            if(!$request->requestsInclude("reviews"))
+                $flags &= ~Albums::LINKS_REVIEWS_WITH_BODY;
+
             $api->getTracksWithObserver($id,
             (new PlaylistObserver())->onSpin(function($entry) use($relations, $flags) {
                 $tag = $entry->getTag();
@@ -372,6 +372,8 @@ class Playlists implements RequestHandlerInterface {
         case "events":
             if(!$request->requestsInclude("album"))
                 $flags = Albums::LINKS_NONE;
+            if(!$request->requestsInclude("album.reviews"))
+                $flags &= ~Albums::LINKS_REVIEWS_WITH_BODY;
 
             $relations = self::fetchEvents($id, $flags);
             break;
