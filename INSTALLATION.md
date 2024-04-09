@@ -173,6 +173,16 @@ a. If php.ini does not include date.timezone and you want to set it on
 
         date.timezone="Asia/Kolkata"
 
+   IMPORTANT: Some operating systems such as Debian have **two**
+   global php.ini files, one for Apache and the other for command
+   line.  If you are running Push Notification (below), you will need
+   to set it for both.  On Debian, the locations of the files are:
+
+        /etc/php/<version>/apache2/php.ini
+        /etc/php/<version>/cli/php.ini
+
+   where <version> is the PHP version number (e.g., 8.2).
+
 b. If you are using shared hosting and do not have permission to edit
    php.ini, or you want to set a different timezone value for
    Zookeeper Online, edit the `.htaccess` file in the `zookeeper`
