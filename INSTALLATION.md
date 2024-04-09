@@ -181,7 +181,7 @@ a. If php.ini does not include date.timezone and you want to set it on
         /etc/php/<version>/apache2/php.ini
         /etc/php/<version>/cli/php.ini
 
-   where <version> is the PHP version number (e.g., 8.2).
+   where &lt;version> is the PHP version number (e.g., 8.2).
 
 b. If you are using shared hosting and do not have permission to edit
    php.ini, or you want to set a different timezone value for
