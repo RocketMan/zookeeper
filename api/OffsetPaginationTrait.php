@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -26,6 +26,7 @@ namespace ZK\API;
 
 use ZK\Engine\Engine;
 use ZK\Engine\ILibrary;
+use ZK\Engine\IReview;
 
 use Enm\JsonApi\Exception\NotAllowedException;
 use Enm\JsonApi\Model\Document\Document;
@@ -141,6 +142,11 @@ trait OffsetPaginationTrait {
             $relation = new Relationship("reviews", $relations);
             $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/reviews"));
             $resource->relationships()->set($relation);
+            if($flags & Albums::LINKS_REVIEWS_WITH_BODY) {
+                $reviews = Engine::api(IReview::class)->getReviews($record["id"], 1, "", Engine::session()->isAuth("u"), 1);
+                $record["airname"] = $reviews[0]["airname"] ?? $reviews[0]["realname"];
+                $record["review"] = $reviews[0]["review"];
+            }
             $res = Reviews::fromRecord($record);
             $res->metaInformation()->set("date", $record["reviewed"]);
             $relations->set($res);

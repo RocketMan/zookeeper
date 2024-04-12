@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -71,6 +71,19 @@ class ArtworkControl implements IController {
         $this->verbose = $_REQUEST["verbose"] ?? false;
 
         switch($_REQUEST["action"] ?? "") {
+        case "delete":
+            $imageApi = Engine::api(IArtwork::class);
+            if($tag = $_REQUEST["tag"] ?? null) {
+                $success = $imageApi->deleteAlbumArt($tag);
+                echo $success ? "Deleted album art\n" : "Album not found\n";
+                break;
+            } else if($artist = $_REQUEST["artist"] ?? null) {
+                $success = $imageApi->deleteArtistArt($artist);
+                echo $success ? "Deleted artist art\n" : "Artist not found\n";
+                break;
+            }
+            echo "Usage: zk artwork:delete {tag|artist}=id|name\n";
+            break;
         case "reload":
             if($tag = $_REQUEST["tag"] ?? null) {
                 echo "Album queued for reload (please wait)\n";

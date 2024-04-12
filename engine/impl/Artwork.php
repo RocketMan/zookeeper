@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -203,6 +203,8 @@ class ArtworkImpl extends DBO implements IArtwork {
                 unlink(realpath($path));
             }
         }
+
+        return !empty($image);
     }
 
     public function deleteArtistArt($artist) {
@@ -219,6 +221,8 @@ class ArtworkImpl extends DBO implements IArtwork {
                 unlink(realpath($path));
             }
         }
+
+        return !empty($image);
     }
 
     public function expireCache($days=10, $expireAlbums=false) {

@@ -718,6 +718,9 @@ a:hover {
 .playlistHdr {
     border-bottom: 1px solid gray;
 }
+.playlistHdr td {
+    min-width: 30px;
+}
 .playlistTable {
     width: 100%;
 }
@@ -1282,7 +1285,33 @@ input[type="checkbox"]:checked:active {
     color: #333;
     position: absolute;
     line-height: 1.4;
-    cursor: grab;
+    cursor: url("https://cdnjs.cloudflare.com/ajax/libs/slider-pro/1.5.0/css/images/openhand.cur") 7 5, grab;
+    touch-action: none;
+}
+@media (max-width: 800px) {
+    .playlistHdr td {
+	min-width: 50px;
+    }
+    /* extended area for touch activation */
+    .grab:after {
+	content: '';
+	position: absolute;
+	top: -2px;
+	bottom: -2px;
+	left: -20px;
+	right: -10px;
+    }
+    /* allow touch area to overflow */
+    div.content:has(.grab) {
+	overflow: visible
+    }
+    .songEdit {
+	left: 25px;
+    }
+    .songManager .fas {
+	line-height: 1.2;
+	font-size: 18px;
+    }
 }
 .grabbed {
     border: 1px solid #888;
@@ -1291,7 +1320,7 @@ input[type="checkbox"]:checked:active {
     box-shadow: 0 0 13px #000;
 }
 .grabCursor, .grabCursor * {
-    cursor: move !important;
+    cursor: url("https://cdnjs.cloudflare.com/ajax/libs/slider-pro/1.5.0/css/images/closedhand.cur") 7 5, move !important;
 }
 
 .invalid-input, .fxtime:invalid {
