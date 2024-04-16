@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -115,7 +115,9 @@ class PushHttpProxy {
         foreach($this->httpEndpoints as $key => $endpoint)
             if(!is_string($key))
                 $this->httpClient->post($endpoint,
-                            ['Content-Type' => 'application/json'], (string)$msg);
+                            ['Content-Type' => 'application/json'], (string)$msg)->then(null, function($e) {
+                                echo "PushHttpProxy: " . $e->getMessage() . "\n";
+                            });
     }
 
     public function dispatch(\Ratchet\RFC6455\Messaging\Message $msg) {
