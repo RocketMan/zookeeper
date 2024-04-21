@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -312,12 +312,12 @@ class ZootopiaListener {
                 if($min)
                     $now->modify("-$min minutes");
                 $time = explode('-', $zootopia->attributes->time);
-                $end = $now->format("Hi");
-                // delete if new end time is at or before start time,
-                // if new end time rolled to previous day, or if the
-                // resulting truncated show is less than the minimum
-                $delete = $end > $time[1] ||
-                            $end - $time[0] < IPlaylist::MIN_SHOW_LEN;
+                $start = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT,
+                            $zootopia->attributes->date . " " . $time[0]);
+                $showLen = $now->getTimestamp() - $start->getTimestamp();
+                // delete if new end time is at or before the start time, or
+                // if the resulting truncated show is less than the minimum
+                $delete = $showLen < IPlaylist::MIN_SHOW_LEN * 60;
                 $id = $zootopia->id;
                 if($delete) {
                     return $this->zk->deleteAsync('api/v1/playlist/' . $id)->then(function() {
@@ -326,7 +326,7 @@ class ZootopiaListener {
                         return new RejectedPromise("DJ On Air");
                     });
                 } else {
-                    $time[1] = $end;
+                    $time[1] = $now->format("Hi");
                     return $this->zk->patchAsync('api/v1/playlist/' . $id, [
                         RequestOptions::JSON => [
                             'data' => [
