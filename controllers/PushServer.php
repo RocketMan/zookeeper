@@ -87,7 +87,7 @@ class NowAiringServer implements MessageComponentInterface {
         $val['track_title'] = $spin?$spin['track']:'';
         $val['track_artist'] = $spin?$spin['artist']:'';
         $val['track_album'] = $spin?$spin['album']:'';
-        $tag = $spin?$spin['tag']:'';
+        $tag = $spin?($spin['tag'] ?? ''):'';
         $val['track_tag'] = $tag?$tag:null; // null for empty/zero tag
         $created = $spin?$spin['created']:null;
         $val['track_time'] = $created?$created:'';
