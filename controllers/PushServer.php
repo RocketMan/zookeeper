@@ -192,7 +192,11 @@ class NowAiringServer implements MessageComponentInterface {
                                     (61 - (int)$now->format("s"));
 
             $this->timer = $this->loop->addTimer($delta, function() {
-                $this->worker();
+                try {
+                    $this->worker();
+                } catch(\Exception $e) {
+                    error_log("worker: " . $e->getMessage());
+                }
                 $this->scheduleWorker();
             });
         }
@@ -455,7 +459,12 @@ class NowAiringServer implements MessageComponentInterface {
 
             if(!$this->imageQ->isEmpty()) {
                 $this->loop->addTimer(self::QUERY_DELAY, function() {
-                    $this->processImageQueue();
+                    try {
+                        $this->processImageQueue();
+                    } catch(\Exception $e) {
+                        error_log("processImageQueue: " . $e->getMessage());
+                        // TBD delay and retry
+                    }
                 });
             }
         }
@@ -515,7 +524,12 @@ class NowAiringServer implements MessageComponentInterface {
 
             if(!$start) {
                 $this->loop->futureTick(function() {
-                    $this->processImageQueue();
+                    try {
+                        $this->processImageQueue();
+                    } catch(\Exception $e) {
+                        error_log("processImageQueue: " . $e->getMessage());
+                        // TBD delay and retry
+                    }
                 });
             }
         }

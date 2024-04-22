@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -224,6 +224,9 @@ abstract class DBO {
     const DATABASE_MAIN = 'database';
     const DATABASE_LIBRARY = 'library';
 
+    private const CONNECT_RETRY = 5; // number of times to try connecting
+    private const CONNECT_BACKOFF = 4; // delay retry up to CONNECT_BACKOFF seconds
+
     // we store these statically, as they are shared across all instances
     private static $dbConfig;
     private static $pdo;
@@ -262,7 +265,18 @@ abstract class DBO {
                 ':host=' . $this->dbConfig('host') .
                 ';dbname=' . $this->dbConfig($name) .
                 ';charset=utf8mb4';
-        return new BasePDO($dsn, $this->dbConfig('user'), $this->dbConfig('pass'));
+
+        $retry = self::CONNECT_RETRY;
+        while(true) {
+            try {
+                return new BasePDO($dsn, $this->dbConfig('user'), $this->dbConfig('pass'));
+            } catch(\PDOException $e) {
+                if(!$retry--)
+                    throw $e;
+
+                sleep(rand(1, self::CONNECT_BACKOFF));
+            }
+        }
     }
 
     /**
