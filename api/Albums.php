@@ -135,7 +135,7 @@ class Albums implements RequestHandlerInterface {
                 $value = $rec["iscoll"]?true:false;
                 break;
             default:
-                $value = $rec[$field];
+                $value = $rec[$field] ?? null;
                 break;
             }
             $res->attributes()->set($field, $value);
