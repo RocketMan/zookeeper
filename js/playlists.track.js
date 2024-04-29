@@ -721,6 +721,7 @@ $().ready(function(){
         $(this).autocomplete('search', this.value);
     }).autocomplete({
         minLength: 1,
+        delay: 400,
         source: function(rq, rs) {
             var artist = rq.term;
 
