@@ -109,6 +109,19 @@ $().ready(function(){
         return !isEmpty;
     }
 
+    function getErrorMessage(jqXHR, defaultValue) {
+        if(jqXHR.status == 403)
+            return 'Server busy, try again...';
+
+        try {
+            var json = JSON.parse(jqXHR.responseText);
+            if (json && json.errors)
+                return json.errors.map(error => error.title).join(', ');
+        } catch(e) {}
+
+        return defaultValue;
+    }
+
     function showUserError(msg) {
         $('#error-msg').text(msg);
     }
@@ -171,15 +184,11 @@ $().ready(function(){
             if(refTitle)
                 setAddButtonState(true);
         }).fail(function (jqXHR, textStatus, errorThrown) {
-            var json = JSON.parse(jqXHR.responseText);
-            if (json && json.errors) {
-                if (json.errors[0].status == 404)
-                    status = id + ' is not a valid tag.';
-                else
-                    status = json.errors[0].title;
-            } else
-                status = 'Error retrieving the data: ' + textStatus;
-            showUserError(status);
+            var message = jqXHR.status == 404 ?
+                id + ' is not a valid tag.' :
+                getErrorMessage(jqXHR,
+                        'Error retrieving the data: ' + errorThrown);
+            showUserError(message);
         });
     }
 
@@ -330,10 +339,9 @@ $().ready(function(){
                     "&playlist=" + playlistId;
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                var json = JSON.parse(jqXHR.responseText);
-                var status = (json && json.errors)?
-                    json.errors[0].title:('Error updating the item: ' + textStatus);
-                showUserError(status);
+                var message = getErrorMessage(jqXHR,
+                              'Error updating the item: ' + errorThrown);
+                showUserError(message);
             }
         });
     });
@@ -362,10 +370,9 @@ $().ready(function(){
                     "&playlist=" + playlistId;
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                var json = JSON.parse(jqXHR.responseText);
-                var status = (json && json.errors)?
-                    json.errors[0].title:('Error deleting the item: ' + textStatus);
-                showUserError(status);
+                var message = getErrorMessage(jqXHR,
+                              'Error deleting the item: ' + errorThrown);
+                showUserError(message);
             }
         });
     });
@@ -411,9 +418,7 @@ $().ready(function(){
                 else
                     rows.eq(si).after(tr);
 
-                var json = JSON.parse(jqXHR.responseText);
-                var status = (json && json.errors)?
-                        json.errors[0].title:textStatus;
+                var status = getErrorMessage(jqXHR, errorThrown);
                 $('#error-msg').text("Error moving track: " + status);
             }
         });
@@ -573,10 +578,9 @@ $().ready(function(){
                 }
             },
             error: function (jqXHR, textStatus, errorThrown) {
-                var json = JSON.parse(jqXHR.responseText);
-                var status = (json && json.errors)?
-                        json.errors[0].title:('Your track was not saved: ' + textStatus);
-                showUserError(status);
+                var message = getErrorMessage(jqXHR,
+                              'Your track was not saved: ' + errorThrown);
+                showUserError(message);
             }
         });
     }
@@ -651,10 +655,13 @@ $().ready(function(){
                                response.data : [], qlist);
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                var json = JSON.parse(jqXHR.responseText);
-                var status = (json && json.errors)?
-                        json.errors[0].title:('Error retrieving the data: ' + textStatus);
-                showUserError(status);
+                // if not last request or rate limited, silently ignore
+                if(this.seq != seq || jqXHR.status == 403)
+                    return;
+
+                var message = getErrorMessage(jqXHR,
+                              'Error retrieving the data: ' + errorThrown);
+                showUserError(message);
             }
         });
     }
@@ -675,15 +682,13 @@ $().ready(function(){
                     addArtists([ response.data ], qlist);
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                if(jqXHR.status == 404) {
-                    // tag does not exist; silently ignore
+                // if not last request, rate limited, or tag does not exist, silently ignore
+                if(this.seq != seq || [403,404].includes(jqXHR.status))
                     return;
-                }
 
-                var json = JSON.parse(jqXHR.responseText);
-                var status = (json && json.errors)?
-                        json.errors[0].title:('Error retrieving the data: ' + textStatus);
-                showUserError(status);
+                var message = getErrorMessage(jqXHR,
+                              'Error retrieving the data: ' + errorThrown);
+                showUserError(message);
             }
         });
     }
@@ -835,10 +840,9 @@ $().ready(function(){
                 banner.html(prefix + " - " + localTime(edate) + "&nbsp;");
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                var json = JSON.parse(jqXHR.responseText);
-                var status = (json && json.errors)?
-                        json.errors[0].title:('Error extending the show time: ' + textStatus);
-                showUserError(status);
+                var message = getErrorMessage(jqXHR,
+                              'Error extending the show time: ' + errorThrown);
+                showUserError(message);
             }
         });
     });
@@ -939,10 +943,9 @@ $().ready(function(){
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                var json = JSON.parse(jqXHR.responseText);
-                var status = (json && json.errors)?
-                        json.errors[0].title:('Error updating the track: ' + textStatus);
-                showUserError(status);
+                var message = getErrorMessage(jqXHR,
+                              'Error updating the track: ' + errorThrown);
+                showUserError(message);
             }
         });
     }

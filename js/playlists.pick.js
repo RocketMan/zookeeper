@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -98,6 +98,19 @@ $().ready(function(){
             editing.find('#cancel').trigger('click');
 
         return editing;
+    }
+
+    function getErrorMessage(jqXHR, defaultValue) {
+        if(jqXHR.status == 403)
+            return 'Server busy, try again...';
+
+        try {
+            var json = JSON.parse(jqXHR.responseText);
+            if (json && json.errors)
+                return json.errors.map(error => error.title).join(', ');
+        } catch(e) {}
+
+        return defaultValue;
     }
 
     function showUserError(msg) {
@@ -375,12 +388,9 @@ $().ready(function(){
 
             editing = null;
         }).fail(function (jqXHR, textStatus, errorThrown) {
-            var json = JSON.parse(jqXHR.responseText);
-            if (json && json.errors) {
-                status = json.errors[0].title;
-            } else
-                status = 'Error retrieving the data: ' + textStatus;
-            showUserError(status);
+            var message = getErrorMessage(jqXHR,
+                          'Error retrieving the data: ' + errorThrown);
+            showUserError(message);
         });
     }
 
@@ -402,7 +412,7 @@ $().ready(function(){
             loadLists(maxresults, 0, 0);
             loadLists(maxresults, 0, 1);
         }).fail(function (jqXHR, textStatus, errorThrown) {
-            var status = 'Error restoring the list: ' + textStatus;
+            var status = 'Error restoring the list: ' + errorThrown;
             showUserError(status);
         });
     }
@@ -568,12 +578,8 @@ $().ready(function(){
             var id = location.split('/').pop();
             window.open("?subaction=editListEditor&playlist=" + id, "_top");
         }).fail(function (jqXHR, textStatus, errorThrown) {
-            var json = JSON.parse(jqXHR.responseText);
-            if (json && json.errors) {
-                status = json.errors[0].title;
-            } else
-                status = 'Error: ' + textStatus;
-            showUserError(status);
+            var message = getErrorMessage(jqXHR, 'Error: ' + errorThrown);
+            showUserError(message);
         });
     }
 
@@ -628,12 +634,8 @@ $().ready(function(){
             row.replaceWith(nrow);
             editing = shownames = null;
         }).fail(function (jqXHR, textStatus, errorThrown) {
-            var json = JSON.parse(jqXHR.responseText);
-            if (json && json.errors) {
-                status = json.errors[0].title;
-            } else
-                status = 'Error: ' + textStatus;
-            showUserError(status);
+            var message = getErrorMessage(jqXHR, 'Error: ' + errorThrown);
+            showUserError(message);
         });
     }
 
@@ -732,12 +734,8 @@ $().ready(function(){
             row.remove();
             loadLists(maxresults, 0, 1);
         }).fail(function (jqXHR, textStatus, errorThrown) {
-            var json = JSON.parse(jqXHR.responseText);
-            if (json && json.errors) {
-                status = json.errors[0].title;
-            } else
-                status = 'Error: ' + textStatus;
-            showUserError(status);
+            var message = getErrorMessage(jqXHR, 'Error: ' + errorThrown);
+            showUserError(message);
         });
     }
 
@@ -779,12 +777,8 @@ $().ready(function(){
             });
             editing = edit;
         }).fail(function (jqXHR, textStatus, errorThrown) {
-            var json = JSON.parse(jqXHR.responseText);
-            if (json && json.errors) {
-                status = json.errors[0].title;
-            } else
-                status = 'Error: ' + textStatus;
-            showUserError(status);
+            var message = getErrorMessage(jqXHR, 'Error: ' + errorThrown);
+            showUserError(message);
         });
     }
 
