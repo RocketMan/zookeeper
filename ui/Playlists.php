@@ -1043,9 +1043,12 @@ class Playlists extends MenuItem {
 
         Engine::api(ILibrary::class)->markAlbumsReviewed($topPlays);
         $observer = (new PlaylistObserver())->on('spin', function($entry) {
+            $artist = $entry->getArtist();
             $artistName = $entry->getTag() ?
-                            PlaylistEntry::swapNames($entry->getArtist()) :
-                            $entry->getArtist();
+                            PlaylistEntry::swapNames(
+                                preg_match("/^\[coll\]:/i", $artist) ?
+                                    "Various Artists" : $artist) :
+                            $artist;
             $albumName = $entry->getAlbum();
             $labelName = $entry->getLabel();
 
