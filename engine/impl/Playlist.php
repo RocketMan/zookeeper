@@ -848,10 +848,11 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $over = $airname?"distinct t.list":"*";
         $query = "SELECT t.tag, count($over) plays, l.showdate, IFNULL(a.artist, t.artist) artist, t.album, t.label, count(*)" .
                  " FROM tracks t JOIN lists l ON t.list = l.id " .
+                 ($zootopia ? " LEFT JOIN airnames n ON l.airname = n.id " : "") .
                  " LEFT JOIN albumvol a ON a.tag = t.tag " .
                  " WHERE t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' AND".
                  " t.album <> '' AND t.label <> '' AND" .
-                 ($zootopia ? " l.airname NOT IN ($zootopiaSet) AND" : "") ;
+                 ($zootopia ? " n.airname NOT IN ($zootopiaSet) AND" : "") ;
         if($airname)
             $query .= "    l.airname = ? AND";
         if($days)
