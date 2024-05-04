@@ -1024,18 +1024,17 @@ class Playlists extends MenuItem {
     }
 
     public function emitTopPlays() {
-        $weeks = 6;
+        $days = 7;
         $limit = 30;
-        $formatEndDate = date("l, j F Y");
 
-        $topPlays = Engine::api(IPlaylist::class)->getTopPlays(0, $weeks * 7, $limit);
+        $topPlays = Engine::api(IPlaylist::class)->getTopPlays(0, $days, $limit);
 
         if(!sizeof($topPlays)) {
             echo "  <h2>No top airplay is available</h2>\n";
             return;
         }
 
-        echo "  <h2>Top airplay for the $weeks week period ending $formatEndDate</h2>\n";
+        echo "  <h2>Top airplay for the last $days days</h2>\n";
         echo "  <table class='playlistTable' cellpadding='1'>\n";
         echo "    <thead>\n";
         echo "      <tr class='playlistHdr' align=left><th></th><th>Artist</th><th></th><th>Album/Label</th></tr>";
