@@ -1031,7 +1031,7 @@ class Playlists extends MenuItem {
         Engine::api(ILibrary::class)->markAlbumsReviewed($topPlays);
 
         foreach($topPlays as &$entry) {
-            if($entry['tag'] && substr($entry['artist'], 0, 7) != "[coll]:")
+            if($entry['tag'] && !$entry['iscoll'])
                 $entry['artist'] = PlaylistEntry::swapNames($entry['artist']);
         }
 
