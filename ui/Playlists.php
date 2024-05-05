@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -55,7 +55,6 @@ class Playlists extends MenuItem {
         [ "u", "editListGetHint", 0, "listManagerGetHint" ],
         [ "u", "editListEditor", 0, "emitEditor" ],
         [ "a", "viewDJ", "By DJ", "emitViewDJ" ],
-        [ "a", "viewTop", "Top Plays", "emitTopPlays" ],
         [ "u", "import", "Import", "emitImportList" ],
     ];
 
@@ -1021,64 +1020,6 @@ class Playlists extends MenuItem {
         }
 
         $this->emitViewDJMain();
-    }
-
-    public function emitTopPlays() {
-        $days = 7;
-        $limit = 30;
-
-        $topPlays = Engine::api(IPlaylist::class)->getTopPlays(0, $days, $limit);
-
-        if(!sizeof($topPlays)) {
-            echo "  <h2>No top airplay is available</h2>\n";
-            return;
-        }
-
-        echo "  <h2>Top airplay for the last $days days</h2>\n";
-        echo "  <table class='playlistTable' cellpadding='1'>\n";
-        echo "    <thead>\n";
-        echo "      <tr class='playlistHdr' align=left><th></th><th>Artist</th><th></th><th>Album/Label</th></tr>";
-        echo "    </thead>\n";
-
-        Engine::api(ILibrary::class)->markAlbumsReviewed($topPlays);
-        $observer = (new PlaylistObserver())->on('spin', function($entry) {
-            $artist = $entry->getArtist();
-            $artistName = $entry->getTag() ?
-                            PlaylistEntry::swapNames(
-                                preg_match("/^\[coll\]:/i", $artist) ?
-                                    "Various Artists" : $artist) :
-                            $artist;
-            $albumName = $entry->getAlbum();
-            $labelName = $entry->getLabel();
-
-            $reviewCell = $entry->getReviewed() ? "<div class='albumReview'></div>" : "";
-
-            if(!empty($albumName)) {
-                $albumTitle = $entry->getTag() ?
-                    "<a class='nav' href='?action=search&amp;s=byAlbumKey&amp;n=" . htmlentities($entry->getTag()) . "'>" . htmlentities($albumName) . "</a>" :
-                    UI::smartURL($albumName);
-
-                if(!empty($labelName))
-                    $albumTitle .= "<span class='songLabel'> / " . UI::smartURL($labelName) . "</span>";
-            } else
-                $albumTitle = "";
-
-            echo "      <tr class='songRow'>" .
-                 "<td>" . htmlentities($entry->getRank()) . ".</td>" .
-                 "<td>" . UI::smartURL($artistName) . "</td>" .
-                 "<td style='width: 15px'>$reviewCell</td>" .
-                 "<td>$albumTitle</td>" .
-                 "</tr>\n";
-        });
-
-        echo "    <tbody>\n";
-        foreach($topPlays as $rank => $entry) {
-            $entry['rank'] = $rank + 1;
-            $observer->observe(new PlaylistEntry($entry));
-        }
-        echo "    </tbody>\n  </table>\n";
-
-        echo "  <h3>For complete album charting, see our <a href='?action=viewChart'><b>Airplay Charts</b></a></h3>";
     }
     
     public function emitViewDJMain() {
