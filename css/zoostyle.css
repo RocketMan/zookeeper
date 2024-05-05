@@ -718,6 +718,9 @@ a:hover {
 .playlistHdr {
     border-bottom: 1px solid gray;
 }
+.playlistHdr th {
+    text-align: left;
+}
 .playlistHdr td {
     min-width: 30px;
 }

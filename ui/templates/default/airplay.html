@@ -16,12 +16,12 @@
 {% if topPlays | length %}
 <table class='playlistTable'>
   <thead>
-    <tr class='playlistHdr' align=left><th></th><th>Artist</th><th></th><th>Album/Label</th></tr>
+    <tr class='playlistHdr'><th></th><th>Artist</th><th></th><th>Album/Label</th></tr>
   </thead>
   <tbody>
     {%~ for index, entry in topPlays %}
     <tr class='songRow'>
-      <td>{{ index + 1}}.</td>
+      <td>{{ index + 1 }}.</td>
       <td>{{ entry.iscoll ? "Various Artists" : entry.artist }}</td>
       <td style='width: 15px'>{{ entry.reviewed ? "<div class='albumReview'></div>" }}</td>
       <td>
