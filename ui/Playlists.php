@@ -1024,7 +1024,7 @@ class Playlists extends MenuItem {
     }
 
     public function emitTopPlays() {
-        $days = min($_REQUEST['days'] ?? 27, 42);
+        $days = min($_REQUEST['days'] ?? 7, 42);
         $limit = min($_REQUEST['limit'] ?? 30, 100);
 
         $topPlays = Engine::api(IPlaylist::class)->getTopPlays(0, $days, $limit);
