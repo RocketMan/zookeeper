@@ -1030,6 +1030,11 @@ class Playlists extends MenuItem {
         $topPlays = Engine::api(IPlaylist::class)->getTopPlays(0, $days, $limit);
         Engine::api(ILibrary::class)->markAlbumsReviewed($topPlays);
 
+        foreach($topPlays as &$entry) {
+            if($entry['tag'] && substr($entry['artist'], 0, 7) != "[coll]:")
+                $entry['artist'] = PlaylistEntry::swapNames($entry['artist']);
+        }
+
         $this->setTemplate('airplay.html');
         $this->addVar('days', $days);
         $this->addVar('limit', $limit);
