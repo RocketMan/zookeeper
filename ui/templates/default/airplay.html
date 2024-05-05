@@ -1,20 +1,20 @@
-{%~ set odays = [7, 14, 30] %}
+{% set odays = [7, 14, 30] %}
 <div class='top-airplay' style='display: none'>
 <form action="?" method="POST" autocomplete="off">
   <input type="hidden" name="action" value="">
   <input type="hidden" name="subaction" value="viewTop">
   <input type="hidden" name="limit" value="{{ limit }}">
   <h2>Top airplay for the last
-    <select name='days'>
-{%~ for oday in odays %}
+    <select name="days">
+{% for oday in odays %}
       <option value="{{ oday }}" {{~ oday == days ? " selected" }}>{{ oday }}</option>
-{%~ endfor %}
+{% endfor %}
     </select>
-  days
+    days
   </h2>
 </form>
 {% if topPlays | length %}
-<table class='playlistTable' cellpadding='1'>
+<table class='playlistTable'>
   <thead>
     <tr class='playlistHdr' align=left><th></th><th>Artist</th><th></th><th>Album/Label</th></tr>
   </thead>
