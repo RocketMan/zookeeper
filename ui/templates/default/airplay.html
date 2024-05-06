@@ -1,8 +1,8 @@
 {% set odays = [7, 14, 30] %}
 <div class='top-airplay' style='display: none'>
 <form action="?" method="POST" autocomplete="off">
-  <input type="hidden" name="action" value="">
-  <input type="hidden" name="subaction" value="viewTop">
+  <input type="hidden" name="action" value="{{ app.request.action }}">
+  <input type="hidden" name="subaction" value="{{ app.request.subaction }}">
   <input type="hidden" name="limit" value="{{ limit }}">
   <h2>Top airplay for the last
     <select name="days">
