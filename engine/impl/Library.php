@@ -426,6 +426,9 @@ class LibraryImpl extends DBO implements ILibrary {
             }
         }
 
+        if(count($tags) == 0)
+            return;
+
         $ib = $includeBody?"":"null";
         $query = "SELECT tag, a.airname, realname, r.id, r.created, r.private, " .
                  "$ib review FROM reviews r " .
@@ -468,6 +471,10 @@ class LibraryImpl extends DBO implements ILibrary {
                 $tags[$tag] = $i;
             }
         }
+
+        if(count($tags) == 0)
+            return;
+
         $query = "SELECT tag, a.airname, realname FROM reviews r " .
                  "LEFT JOIN users u ON r.user = u.name " .
                  "LEFT JOIN airnames a ON r.airname = a.id WHERE " .
@@ -514,6 +521,9 @@ class LibraryImpl extends DBO implements ILibrary {
                 $tags[$tag] = $i;
             }
         }
+
+        if(count($tags) == 0)
+            return;
 
         $urlFilter = $enableExternalLinks ? "url <> ''" : "url RLIKE ?";
 
