@@ -369,19 +369,18 @@ class UIController implements IController {
     }
     
     protected function emitLogout() {
-        $logoutURI = Engine::param('sso')['logout_uri'];
-        $logoutURI = str_replace("{base_url}", urlencode(Engine::getBaseUrl()."?action=logout"), $logoutURI);
+        $dn = $this->session->getDN() ?: $this->dn;
+        echo "<h2>$dn logged out</h2>\n";
 
-        $dn = $this->session->getDN()?$this->session->getDN():$this->dn;
-    
-        echo "<H2>$dn logged out</H2>\n";
         if($this->ssoUser) {
-            echo "<SCRIPT><!--\n";
+            $logoutURI = Engine::param('sso')['logout_uri'];
+            $logoutURI = str_replace("{base_url}", urlencode(Engine::getBaseUrl()."?action=logout"), $logoutURI);
+
+            echo "<script><!--\n";
             echo "\$().ready(function(){";
             echo "window.location.replace(\"$logoutURI\");";
-            echo "}); // -->\n</SCRIPT>\n";
-        } else
-            UI::setFocus();
+            echo "}); // -->\n</script>\n";
+        }
     }
 
     protected function checkCookiesEnabled() {
