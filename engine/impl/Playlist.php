@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -836,20 +836,36 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $success;
     }
     
-    public function getTopPlays($airname=0, $days=41, $count=10) {
+    public function getTopPlays($airname=0, $days=41, $count=10, $excludeAutomation=true, $excludeRebroadcasts=true) {
+        // if constraining by airname, no need to exclude automation
+        $excludeAutomation &= !$airname;
+        $zootopia = $excludeAutomation ? $this->getZootopiaAirname() : null;
+        if($zootopia) {
+            if(!is_array($zootopia))
+                $zootopia = [ $zootopia ];
+
+            $zootopiaSet = str_repeat("?,", count($zootopia) - 1) . "?";
+        }
+
         $over = $airname?"distinct t.list":"*";
-        $query = "SELECT t.tag, count($over) plays, l.showdate, IFNULL(a.artist, t.artist) artist, t.album, t.label, count(*)" .
-                 " FROM tracks t JOIN lists l ON t.list = l.id " .
-                 " LEFT JOIN albumvol a ON a.tag = t.tag " .
-                 " WHERE t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' AND".
-                 " t.album <> '' AND t.label <> '' AND";
+        $query = "SELECT max(t.tag) tag, count($over) plays, l.showdate, IFNULL(a.artist, t.artist) artist, t.album, t.label, count(*), a.iscoll " .
+                 "FROM tracks t JOIN lists l ON t.list = l.id " .
+                 ($zootopia ? "LEFT JOIN airnames n ON l.airname = n.id " : "") .
+                 "LEFT JOIN albumvol a ON a.tag = t.tag " .
+                 "WHERE t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' ".
+                 "AND t.album <> '' AND t.label <> '' " .
+                 ($excludeRebroadcasts ? "AND origin IS NULL " : "") .
+                 ($zootopia ? "AND n.airname NOT IN ($zootopiaSet) " : "") ;
         if($airname)
-            $query .= "    l.airname = ? AND";
+            $query .= "AND l.airname = ? ";
         if($days)
-            $query .= "    date_add(l.showdate, interval $days day) > now() ";
-        $query .= " GROUP BY t.album, t.label ORDER BY 2 DESC, 7 DESC, t.artist LIMIT ?";
+            $query .= "AND date_add(l.showdate, interval $days day) > now() ";
+        $query .= "GROUP BY t.album, t.label ORDER BY 2 DESC, 7 DESC, t.artist LIMIT ?";
         $stmt = $this->prepare($query);
         $p = 1;
+        if($zootopia)
+            foreach($zootopia as $zka)
+                $stmt->bindValue($p++, $zka);
         if($airname)
             $stmt->bindValue($p++, (int)$airname, \PDO::PARAM_INT);
         $stmt->bindValue($p++, (int)$count, \PDO::PARAM_INT);
@@ -878,16 +894,16 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $zootopiaSet = str_repeat("?,", count($zootopia) - 1) . "?";
         }
 
-        $query = "SELECT l.id, l.showdate, l.description, a.airname," .
-                 "  count(*) plays," .
-                 "  group_concat(t.track ORDER BY t.seq DESC, t.id DESC SEPARATOR 0x1e) tracks" .
-                 " FROM tracks t" .
-                 " JOIN lists l ON t.list = l.id " .
-                 " LEFT JOIN airnames a ON l.airname = a.id" .
-                 " WHERE t.tag = ? AND l.airname IS NOT NULL" .
-                 ($excludeRebroadcasts ? " AND origin IS NULL" : "") .
-                 ($zootopia ? " AND a.airname NOT IN ($zootopiaSet)" : "") .
-                 " GROUP BY t.tag, l.id ORDER BY l.showdate DESC, l.showtime DESC";
+        $query = "SELECT l.id, l.showdate, l.description, a.airname, " .
+                 "count(*) plays, " .
+                 "group_concat(t.track ORDER BY t.seq DESC, t.id DESC SEPARATOR 0x1e) tracks " .
+                 "FROM tracks t " .
+                 "JOIN lists l ON t.list = l.id " .
+                 "LEFT JOIN airnames a ON l.airname = a.id " .
+                 "WHERE t.tag = ? AND l.airname IS NOT NULL " .
+                 ($excludeRebroadcasts ? "AND origin IS NULL " : "") .
+                 ($zootopia ? "AND a.airname NOT IN ($zootopiaSet) " : "") .
+                 "GROUP BY t.tag, l.id ORDER BY l.showdate DESC, l.showtime DESC";
         if($count)
             $query .= " LIMIT ?";
         $stmt = $this->prepare($query);

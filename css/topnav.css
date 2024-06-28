@@ -196,7 +196,7 @@ nav .search-icon {
     position: absolute;
     display: block;
     left: 0;
-    margin-right: -150px;/* TBD fix me */
+    margin-right: -200px;/* TBD fix me */
 }
 .nav-items:not(.active) li.selected ul li {
     float: left;
