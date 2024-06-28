@@ -836,7 +836,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $success;
     }
     
-    public function getTopPlays($airname=0, $days=41, $count=10, $excludeAutomation=true) {
+    public function getTopPlays($airname=0, $days=41, $count=10, $excludeAutomation=true, $excludeRebroadcasts=true) {
         // if constraining by airname, no need to exclude automation
         $excludeAutomation &= !$airname;
         $zootopia = $excludeAutomation ? $this->getZootopiaAirname() : null;
@@ -854,6 +854,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
                  "LEFT JOIN albumvol a ON a.tag = t.tag " .
                  "WHERE t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' ".
                  "AND t.album <> '' AND t.label <> '' " .
+                 ($excludeRebroadcasts ? "AND origin IS NULL " : "") .
                  ($zootopia ? "AND n.airname NOT IN ($zootopiaSet) " : "") ;
         if($airname)
             $query .= "AND l.airname = ? ";
