@@ -2,7 +2,7 @@
 <table cellpadding=2 cellspacing=2 border=0 class="djzone">
   <tr><th colspan=2 align=left>
 {% for letter in 'A'..'Z' %}
-    <a href="#{{ letter }}">{{ letter }}</a>&nbsp;&nbsp;
+    <a href="#{{ letter }}">{{ letter }}</a>
 {% endfor %}
   </th></tr>
   <tr><td colspan=2>
@@ -14,12 +14,12 @@
     {%~ set last = cur %}
   </td></tr>
   <tr><td colspan=2>&nbsp;</td></tr>
-  <tr><th valign=top><a name="{{ last }}">{{ last }}</a>&nbsp;&nbsp;</th>
+  <tr><th valign=top><a name="{{ last }}">{{ last }}</a></th>
   <td valign=top>
     {%~ set dot = false %}
   {%~ endif %}
-  {#- must not have whitespace before first &nbsp; to prevent wrap -#}
-  {%~ if dot %}&nbsp;&nbsp;&#8226;&nbsp; {% else %}
+  {#- must not have whitespace before element to prevent wrap -#}
+  {%~ if dot %}<i>&#8226;</i>{% else %}
     {%~ set dot = true %}
   {%~ endif %}
     <a class="nav" href="?action={{ app.request.action }}&amp;subaction={{ app.request.subaction }}&amp;seq=selUser&amp;viewuser={{ dj.id }}">{{ dj.airname }}</a>

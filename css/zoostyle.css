@@ -393,8 +393,10 @@ div.reviews > div.view-more {
 table.djzone td:last-child {
     width: 100%;
 }
+table.djzone i,
 table.djzone a {
     white-space: nowrap;
+    padding-right: 1ch;
 }
 
 /* library editor */
