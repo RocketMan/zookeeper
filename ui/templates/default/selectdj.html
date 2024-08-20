@@ -19,11 +19,14 @@
     {%~ set dot = false %}
   {%~ endif %}
   {#- must not have whitespace before element to prevent wrap -#}
-  {%~ if dot %}<i>&#8226;</i>{% else %}
+  {%~ if dot -%}
+    <i>&#8226;</i>
+  {%~ else %}
     {%~ set dot = true %}
   {%~ endif %}
     <a class="nav" href="?action={{ app.request.action }}&amp;subaction={{ app.request.subaction }}&amp;seq=selUser&amp;viewuser={{ dj.id }}">{{ dj.airname }}</a>
-{%- endfor %}
+{#- must not have linebreak after element so eventual dot can follow in-line #}
+{% endfor %}
   </td></tr>
 </table>
 {% if app.request.subaction == "viewDJ" %}
