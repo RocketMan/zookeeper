@@ -393,9 +393,20 @@ div.reviews > div.view-more {
 table.djzone td:last-child {
     width: 100%;
 }
-table.djzone i,
 table.djzone a {
     white-space: nowrap;
+    padding-right: 1ch;
+}
+table.djzone ul {
+    list-style: none;
+    margin: 0;
+}
+table.djzone li {
+    display: inline;
+}
+table.djzone li:not(:last-of-type):after {
+    content: '\2022'; /* bullet &#8226; */
+    font-style: italic;
     padding-right: 1ch;
 }
 

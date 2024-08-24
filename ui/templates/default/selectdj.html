@@ -5,29 +5,21 @@
     <a href="#{{ letter }}">{{ letter }}</a>
 {% endfor %}
   </th></tr>
-  <tr><td colspan=2>
+  <tr><td colspan=2><ul>
 {% set last = '' %}
 {% set dot = false %}
 {% for dj in djs %}
   {%~ set cur = dj.cur < 'A' ? '#' : dj.cur %}
   {%~ if cur != last %}
     {%~ set last = cur %}
-  </td></tr>
+  </ul></td></tr>
   <tr><td colspan=2>&nbsp;</td></tr>
   <tr><th valign=top><a name="{{ last }}">{{ last }}</a></th>
-  <td valign=top>
-    {%~ set dot = false %}
+  <td valign=top><ul>
   {%~ endif %}
-  {#- must not have whitespace before element to prevent wrap -#}
-  {%~ if dot -%}
-    <i>&#8226;</i>
-  {%~ else %}
-    {%~ set dot = true %}
-  {%~ endif %}
-    <a class="nav" href="?action={{ app.request.action }}&amp;subaction={{ app.request.subaction }}&amp;seq=selUser&amp;viewuser={{ dj.id }}">{{ dj.airname }}</a>
-{#- must not have linebreak after element so eventual dot can follow in-line #}
+    <li><a class="nav" href="?action={{ app.request.action }}&amp;subaction={{ app.request.subaction }}&amp;seq=selUser&amp;viewuser={{ dj.id }}">{{ dj.airname }}</a></li>
 {% endfor %}
-  </td></tr>
+  </ul></td></tr>
 </table>
 {% if app.request.subaction == "viewDJ" %}
 <h4>Didn't find the DJ you were looking for?  Show <a href='?action={{ app.request.action }}&amp;subaction={{ app.request.subaction }}All'>All DJs</a>.</h4>
