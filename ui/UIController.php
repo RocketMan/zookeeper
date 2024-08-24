@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -35,28 +35,6 @@ use ZK\Engine\TemplateFactory;
 use ZK\UI\UICommon as UI;
 
 use JSMin\JSMin;
-
-class TemplateFactoryUI extends TemplateFactory {
-    public function __construct() {
-        parent::__construct(__DIR__ . '/templates');
-        $this->app->content = new \stdClass();
-
-        $filter = new \Twig\TwigFilter('smartURL', function($text) {
-            return UI::smartURL($text);
-        }, [ 'is_safe' => [ 'html' ] ]);
-        $this->twig->addFilter($filter);
-    }
-
-    public function setContext($menu = null, $menuItem = null, $html = null) {
-        $this->app->content->data = $html;
-        $this->app->content->template = $menuItem ? $menuItem->getTemplate() : null;
-        $this->app->content->title = $menuItem ? $menuItem->getTitle() : null;
-        $this->app->menu = $menu ?? [];
-        $this->app->submenu = $menuItem ? $menuItem->composeSubmenu($_REQUEST['action'] ?? '', $_REQUEST['subaction'] ?? '') : [];
-        $this->app->tertiary = $menuItem ? $menuItem->getTertiary() : null;
-        $this->app->extra = $menuItem ? $menuItem->getExtra() : null;
-    }
-}
 
 class MenuEntry {
     private const FIELDS = [ 'access', 'action', 'label', 'implementation' ];
