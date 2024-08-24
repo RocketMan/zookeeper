@@ -40,6 +40,11 @@ class TemplateFactoryUI extends TemplateFactory {
     public function __construct() {
         parent::__construct(__DIR__ . '/templates');
         $this->app->content = new \stdClass();
+
+        $filter = new \Twig\TwigFilter('smartURL', function($text) {
+            return UI::smartURL($text);
+        }, [ 'is_safe' => [ 'html' ] ]);
+        $this->twig->addFilter($filter);
     }
 
     public function setContext($menu = null, $menuItem = null, $html = null) {
