@@ -7,7 +7,6 @@
   </th></tr>
   <tr><td colspan=2><ul>
 {% set last = '' %}
-{% set dot = false %}
 {% for dj in djs %}
   {%~ set cur = dj.cur < 'A' ? '#' : dj.cur %}
   {%~ if cur != last %}
