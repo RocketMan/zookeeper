@@ -56,13 +56,13 @@
     <td class='recentReviews' valign=top>
       <table border=0 cellspacing=0>
         {%~ set block = topPlays | length or recentPlays | length %}
-        <tr><th colspan=2 align=left class='subhead'>&nbsp;{{ block ? '' : dj.airname ~ "'s "}}Recent reviews</th>
+        <tr><th align=left class='subhead'>&nbsp;{{ block ? '' : dj.airname ~ "'s "}}Recent reviews</th>
         </tr>
         <tr><td><ul style='margin-block-start: 0'>
         {{ _self.emitViewDJAlbum(recentReviews, block ? ' class="sub"' : '', "name") }}
         </ul></td></tr>
         {%~ if recentReviews | length == count - 1 %}
-        <tr><td></td><td align=left class='sub'><a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&viewuser={{ dj.id }}' class='nav'>More reviews...</a></td></tr>
+        <tr><td align=left class='sub'><a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&viewuser={{ dj.id }}' class='nav'>More reviews...</a></td></tr>
         {%~ endif %}
       </table>
     </td>
