@@ -386,10 +386,7 @@ div.reviews > div.view-more {
     padding-top: 8px;
 }
 
-/* DJ Zone! */
-.recentPlays, .recentReviews {
-    vertical-align: top;
-}
+/* DJ selector */
 table.djzone td:last-child {
     width: 100%;
 }
@@ -408,6 +405,20 @@ table.djzone li:not(:last-of-type):after {
     content: '\2022'; /* bullet &#8226; */
     font-style: italic;
     padding-right: 1ch;
+}
+
+/* Playlists > By DJ > DJ details */
+.recentPlays,
+.recentReviews {
+    vertical-align: top;
+}
+.djinfo ul,
+.djinfo ol {
+    margin-block-start: 0;
+    margin-left: 20px;
+}
+.djinfo .sub {
+    line-height: 1.3;
 }
 
 /* library editor */
@@ -773,9 +784,6 @@ th.sec {
     font-family: 'Roboto', Helvetica, sans-serif;
     font-size: 8pt;
     color: #ffffff;
-}
-.spread {
-    line-height: 1.3;
 }
 
 .tablesorter-default tr:hover .sub2 {
