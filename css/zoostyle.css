@@ -417,7 +417,7 @@ table.djzone li:not(:last-of-type):after {
     margin-block-start: 0;
     margin-left: 20px;
 }
-.djinfo .sub {
+.djinfo {
     line-height: 1.3;
 }
 
