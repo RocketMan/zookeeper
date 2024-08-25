@@ -911,6 +911,7 @@ class Playlists extends MenuItem {
             $this->addVar('dj', $dj);
             $this->addVar('weeks', $weeks);
             $this->addVar('limit', $limit);
+            $this->addVar('count', $count);
             $this->setTemplate('list/bydj.html');
 
             return;
