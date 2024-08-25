@@ -774,6 +774,10 @@ th.sec {
     font-size: 8pt;
     color: #ffffff;
 }
+.spread {
+    line-height: 1.3;
+}
+
 .tablesorter-default tr:hover .sub2 {
     color: #000000;
 }

@@ -1,8 +1,8 @@
-{%- macro emitViewDJAlbum(albums, class, labelField) -%}
+{%- macro emitViewDJAlbum(albums, labelField) -%}
   {%~ for album in albums %}
     {%~ set artist = album.iscoll ? 'Various Artists' : album.artist %}
     {%~ set label = album[labelField] | replace({' Records': '', ' Recordings': ''}) ~%}
-        <li {{~ class | raw }}>{{ artist }}&nbsp;&#8226;
+        <li>{{ artist }}&nbsp;&#8226;
           <i>
         {%- if album.tag -%}
               <a class='nav' href='?s=byAlbumKey&amp;n={{ album.tag }}&amp;action=search'>{{ album.album }}</a>
@@ -35,7 +35,7 @@
 {% if topPlays | length %}
   <tr><th colspan=2 align=left class='subhead'>&nbsp;{{ dj.airname }}'s top {{ limit }}<br>&nbsp;<font class='subhead2'>for the {{ weeks }} week period ending {{ "now" | date("l, j F Y") }}</font></th></tr>
   <tr><td><ol style='margin-block-start: 0'>
-  {{ _self.emitViewDJAlbum(topPlays, "", "label") }}
+  {{ _self.emitViewDJAlbum(topPlays, "label") }}
   </ol></td></tr>
 {% endif %}
 </table>
@@ -46,8 +46,8 @@
     <table cellspacing=0 border=0>
 {% if recentPlays | length %}
       <tr><th colspan=2 align=left class="subhead">&nbsp;{{ topPlays | length ? '' : dj.airname ~ "'s" }} Recent airplay</th></tr>
-      <tr><td><ul style='margin-block-start: 0'>
-      {{ _self.emitViewDJAlbum(recentPlays, recentReviews | length ? ' class="sub"':'', "label") }}
+      <tr><td><ul {{~ recentReviews | length ? ' class="sub spread"' }} style='margin-block-start: 0'>
+      {{ _self.emitViewDJAlbum(recentPlays, "label") }}
       </ul></td></tr>
 {% endif %}
     </table></td>
@@ -58,10 +58,10 @@
         {%~ set block = topPlays | length or recentPlays | length %}
         <tr><th align=left class='subhead'>&nbsp;{{ block ? '' : dj.airname ~ "'s "}}Recent reviews</th>
         </tr>
-        <tr><td><ul style='margin-block-start: 0'>
-        {{ _self.emitViewDJAlbum(recentReviews, block ? ' class="sub"' : '', "name") }}
+        <tr><td><ul style='margin-block-start: 0' {{~ block ? ' class="sub spread"' ~}}>
+        {{ _self.emitViewDJAlbum(recentReviews, "name") }}
         {%~ if recentReviews | length == count - 1 %}
-        <li {{~ block ? ' class="sub" ' ~}} style='list-style-type: none'><a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&viewuser={{ dj.id }}' class='nav'>More reviews...</a></li>
+        <li style='list-style-type: none'><a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&viewuser={{ dj.id }}' class='nav'>More reviews...</a></li>
         {%~ endif %}
         </ul></td></tr>
       </table>
