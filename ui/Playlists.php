@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -876,8 +876,6 @@ class Playlists extends MenuItem {
     }
     
     public function emitViewDJ() {
-        UI::emitJS('js/zklistbox.js');
-
         $seq = $_REQUEST["seq"] ?? '';
         $viewuser = $_REQUEST["viewuser"] ?? 0;
         $playlist = $_REQUEST["playlist"] ?? 0;
