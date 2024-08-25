@@ -416,8 +416,6 @@ table.djzone li:not(:last-of-type):after {
 .djinfo ol {
     margin-block-start: 0;
     margin-left: 20px;
-}
-.djinfo {
     line-height: 1.3;
 }
 
