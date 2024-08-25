@@ -60,10 +60,10 @@
         </tr>
         <tr><td><ul style='margin-block-start: 0'>
         {{ _self.emitViewDJAlbum(recentReviews, block ? ' class="sub"' : '', "name") }}
-        </ul></td></tr>
         {%~ if recentReviews | length == count - 1 %}
-        <tr><td align=left class='sub'><a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&viewuser={{ dj.id }}' class='nav'>More reviews...</a></td></tr>
+        <li {{~ block ? ' class="sub" ' ~}} style='list-style-type: none'><a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&viewuser={{ dj.id }}' class='nav'>More reviews...</a></li>
         {%~ endif %}
+        </ul></td></tr>
       </table>
     </td>
 {% endif %}
