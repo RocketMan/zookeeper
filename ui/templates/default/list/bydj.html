@@ -29,8 +29,8 @@
 
 <div>
 {% if recentPlays | length %}
-  <div class='djinfo spacer' {{~ recentReviews | length ? " style='max-width: 70%'"}}>
-    <div class="subhead nopadding"> {{~ topPlays | length ? '' : dj.airname ~ "'s " ~}} Recent airplay</div>
+  <div class='djinfo spacer'>
+    <div class="subhead nopadding">{{ topPlays | length ? '' : dj.airname ~ "'s " ~}} Recent airplay</div>
     <ul {{~ recentReviews | length ? ' class="sub"' }}>
     {{ _self.emitViewDJAlbum(recentPlays, "label") }}
     </ul>
