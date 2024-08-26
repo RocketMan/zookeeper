@@ -2,71 +2,63 @@
   {%~ for album in albums %}
     {%~ set artist = album.iscoll ? 'Various Artists' : album.artist %}
     {%~ set label = album[labelField] | replace({' Records': '', ' Recordings': ''}) ~%}
-        <li>{{ artist }}&nbsp;&#8226;
-          <i>
+      <li>{{ artist }}&nbsp;&#8226;
+        <i>
         {%- if album.tag -%}
-              <a class='nav' href='?s=byAlbumKey&amp;n={{ album.tag }}&amp;action=search'>{{ album.album }}</a>
+            <a class='nav' href='?s=byAlbumKey&amp;n={{ album.tag }}&amp;action=search'>{{ album.album }}</a>
         {%- else -%}
-              {{ album.album | smartURL }}
+            {{ album.album | smartURL }}
         {%- endif -%}
-          </i>
+        </i>
       {%- if label | length -%}
-          &nbsp;&#8226; ({{ label | smartURL }})
+        &nbsp;&#8226; ({{ label | smartURL }})
       {%~ endif %}
-        </li>
+      </li>
   {%~ endfor %}
 {%- endmacro -%}
 
-<table class='djinfo' cellspacing=0>
 {% if topPlays | length %}
-  <tr><th align=left class='subhead'>{{ dj.airname }}'s top {{ limit }}<br><font class='subhead2'>for the {{ weeks }} week period ending {{ "now" | date("l, j F Y") }}</font></th></tr>
-  <tr><td><ol>
+<div class='djinfo'>
+  <div class='subhead nopadding'>{{ dj.airname }}'s top {{ limit }}</div>
+  <div class='subhead nopadding smaller'>for the {{ weeks }} week period ending {{ "now" | date("l, j F Y") }}</div>
+  <ol>
   {{ _self.emitViewDJAlbum(topPlays, "label") }}
-  </ol></td></tr>
+  </ol>
+</div>
 {% endif %}
-</table>
-{{ topPlays | length ? "<br>" }}
 
-<table width='100%' cellpadding=0 cellspacing=0 border=0>
-  <tr><td class='recentPlays' valign=top>
-    <table class='djinfo' cellspacing=0 border=0>
+<div>
 {% if recentPlays | length %}
-      <tr><th align=left class="subhead">{{ topPlays | length ? '' : dj.airname ~ "'s" ~}} Recent airplay</th></tr>
-      <tr><td><ul {{~ recentReviews | length ? ' class="sub"' }}>
-      {{ _self.emitViewDJAlbum(recentPlays, "label") }}
-      </ul></td></tr>
+  <div class='djinfo spacer'>
+    <div class="subhead nopadding">{{ topPlays | length ? '' : dj.airname ~ "'s " ~}} Recent airplay</div>
+    <ul {{~ recentReviews | length ? ' class="sub"' }}>
+    {{ _self.emitViewDJAlbum(recentPlays, "label") }}
+    </ul>
+  </div>
 {% endif %}
-    </table></td>
+
 {% if recentReviews | length %}
-    <td {{ recentPlays | length ? "&nbsp;&nbsp;&nbsp;" }}></td>
-    <td class='recentReviews' valign=top>
-      <table class='djinfo' border=0 cellspacing=0>
-        {%~ set block = topPlays | length or recentPlays | length %}
-        <tr><th align=left class='subhead'>{{ block ? '' : dj.airname ~ "'s " ~}}Recent reviews</th>
-        </tr>
-        <tr><td><ul style='' {{~ block ? ' class="sub"' ~}}>
-        {{ _self.emitViewDJAlbum(recentReviews, "name") }}
-        {%~ if recentReviews | length == count - 1 %}
-        <li style='list-style-type: none'><a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&viewuser={{ dj.id }}' class='nav'>More reviews...</a></li>
-        {%~ endif %}
-        </ul></td></tr>
-      </table>
-    </td>
+  <div class='djinfo'>
+    {%~ set block = topPlays | length or recentPlays | length %}
+    <div class='subhead nopadding'>{{ block ? '' : dj.airname ~ "'s " ~}} Recent reviews</div>
+    <ul style='' {{~ block ? ' class="sub"' ~}}>
+      {{ _self.emitViewDJAlbum(recentReviews, "name") }}
+    {%~ if recentReviews | length == count - 1 %}
+      <li style='list-style-type: none'><a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&viewuser={{ dj.id }}' class='nav'>More reviews...</a></li>
+    {%~ endif %}
+    </ul>
+  </div>
 {% endif %}
-  </tr>
-</table>
-{{ topPlays | length or recentPlays | length or recentReviews | length ? "<br>" }}
+</div>
 
 <form action="?" class="selector" method=post>
-<table>
-  <tr><th align=left>{{ dj.airname }}'s playlists:</th></tr>
-  <tr><td>
-     <ul tabindex='0' class='selector listbox no-text-select' data-name='playlist'>
-     {%~ for playlist in playlists %}
-       <li data-value="{{ playlist.id }}">{{ playlist.showdate ~ ' -- ' ~ playlist.description }}</li>
-     {%~ endfor %}
-     </ul></td></tr>
-  <tr><td>
+<div class='djinfo'>
+  <div class='subhead nopadding small'>{{ dj.airname }}'s playlists:</div>
+  <ul tabindex='0' class='selector listbox no-text-select' data-name='playlist'>
+{% for playlist in playlists %}
+    <li data-value="{{ playlist.id }}">{{ playlist.showdate ~ ' -- ' ~ playlist.description }}</li>
+{% endfor %}
+  </ul>
   <script src="{{ 'js/zklistbox.js' | decorate }}"></script>
   <script><!--
      $().ready(function() {
@@ -74,11 +66,12 @@
      });
   // -->
   </script>
-  <input type=submit value=" View Playlist ">
-  <input type=hidden name=playlist value="">
-  <input type=hidden name=viewuser value="{{ dj.id }}">
-  <input type=hidden name=subaction value="viewDJ">
-  <input type=hidden name=seq value="selList">
-  </td></tr>
-</table>
+  <div>
+    <input type=submit value=" View Playlist ">
+    <input type=hidden name=playlist value="">
+    <input type=hidden name=viewuser value="{{ dj.id }}">
+    <input type=hidden name=subaction value="viewDJ">
+    <input type=hidden name=seq value="selList">
+  </div>
+</div>
 </form>

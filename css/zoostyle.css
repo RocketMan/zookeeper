@@ -125,6 +125,16 @@ div.subhead {
     margin-bottom: 0;
     border-bottom: 1px solid gray;
 }
+div.subhead.nopadding {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+div.subhead.small {
+    font-size: 11pt;
+}
+div.subhead.smaller {
+    font-size: 10pt;
+}
 
 .subhead2.coming-up {
     color: gray;
@@ -408,14 +418,17 @@ table.djzone li:not(:last-of-type):after {
 }
 
 /* Playlists > By DJ > DJ details */
-.recentPlays,
-.recentReviews {
+div.djinfo {
+    display: inline-block;
     vertical-align: top;
+}
+div.djinfo.spacer {
+    padding-right: 20px;
 }
 .djinfo ul,
 .djinfo ol {
     margin-block-start: 0;
-    margin-left: 20px;
+    margin-left: 24px;
     line-height: 1.3;
 }
 
