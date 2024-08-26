@@ -896,6 +896,19 @@ class Playlists extends MenuItem {
             }
 
             $this->tertiary = $dj['airname'];
+
+            if($dj['url'] || $dj['email']) {
+                $extra = "<span>";
+                if($dj['url']) {
+                    $extra .= "<a href='{$dj['url']}' class='nav' target='_blank'><b>Go to {$dj['airname']}'s website</b></a>";
+                    if($dj['email'])
+                        $extra .= " &nbsp; | &nbsp; ";
+                }
+                if($dj['email'])
+                    $extra .= "<a href='mailto:{$dj['email']}' class='nav'><b>e-mail {$dj['airname']}</b></a>";
+                $extra .= "</span>";
+                $this->extra = $extra;
+            }
     
             $topPlays = Engine::api(IPlaylist::class)->getTopPlays($viewuser, $weeks * 7, $limit);
             $recentPlays = Engine::api(IPlaylist::class)->getRecentPlays($viewuser, $count);

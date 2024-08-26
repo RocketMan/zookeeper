@@ -17,20 +17,6 @@
   {%~ endfor %}
 {%- endmacro -%}
 
-<table width="100%">
-  <tr><td align=right valign=top>
-  {%~ if dj.url | length %}
-    <a href='{{ dj.url }}' class='nav' target='_blank'><B>Go to {{ dj.airname }}'s website</b></a>
-    {%~ if dj.email | length %}
-      &nbsp; | &nbsp;
-    {%~ endif %}
-  {%~ endif %}
-  {%~ if dj.email | length %}
-    <a href='mailto:{{ dj.email }}' class='nav'><b>e-mail {{ dj.airname }}</b></a>
-  {%~ endif %}
-  </td></tr>
-</table>
-
 <table class='djinfo' cellspacing=0>
 {% if topPlays | length %}
   <tr><th align=left class='subhead'>{{ dj.airname }}'s top {{ limit }}<br><font class='subhead2'>for the {{ weeks }} week period ending {{ "now" | date("l, j F Y") }}</font></th></tr>
