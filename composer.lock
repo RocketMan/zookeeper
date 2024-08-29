@@ -972,16 +972,16 @@
         },
         {
             "name": "mottie/tablesorter",
-            "version": "v2.31.3",
+            "version": "v2.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Mottie/tablesorter.git",
-                "reference": "7202d5faf8105a5ecd1a2b7a653777618713ffe5"
+                "reference": "1423f5408982f58d5baa97648d2e5ee0b55fd3b6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Mottie/tablesorter/zipball/7202d5faf8105a5ecd1a2b7a653777618713ffe5",
-                "reference": "7202d5faf8105a5ecd1a2b7a653777618713ffe5",
+                "url": "https://api.github.com/repos/Mottie/tablesorter/zipball/1423f5408982f58d5baa97648d2e5ee0b55fd3b6",
+                "reference": "1423f5408982f58d5baa97648d2e5ee0b55fd3b6",
                 "shasum": ""
             },
             "require": {
@@ -1006,7 +1006,8 @@
                 },
                 {
                     "name": "Rob Garrison",
-                    "email": "wowmotty@gmail.com"
+                    "email": "wowmotty@gmail.com",
+                    "homepage": "https://github.com/Mottie"
                 }
             ],
             "description": "tablesorter (FORK) is a jQuery plugin for turning a standard HTML table with THEAD and TBODY tags into a sortable table without page refreshes. tablesorter can successfully parse and sort many types of data including linked data in a cell.",
@@ -1027,7 +1028,7 @@
                 "source": "https://github.com/Mottie/tablesorter",
                 "wiki": "https://github.com/Mottie/tablesorter/wiki"
             },
-            "time": "2020-03-03T13:46:03+00:00"
+            "time": "2024-08-14T01:23:57+00:00"
         },
         {
             "name": "mrclay/jsmin-php",
