@@ -2473,16 +2473,16 @@
         },
         {
             "name": "symfony/polyfill-php72",
-            "version": "v1.29.0",
+            "version": "v1.30.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php72.git",
-                "reference": "861391a8da9a04cbad2d232ddd9e4893220d6e25"
+                "reference": "10112722600777e02d2745716b70c5db4ca70442"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php72/zipball/861391a8da9a04cbad2d232ddd9e4893220d6e25",
-                "reference": "861391a8da9a04cbad2d232ddd9e4893220d6e25",
+                "url": "https://api.github.com/repos/symfony/polyfill-php72/zipball/10112722600777e02d2745716b70c5db4ca70442",
+                "reference": "10112722600777e02d2745716b70c5db4ca70442",
                 "shasum": ""
             },
             "require": {
@@ -2526,7 +2526,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php72/tree/v1.29.0"
+                "source": "https://github.com/symfony/polyfill-php72/tree/v1.30.0"
             },
             "funding": [
                 {
@@ -2542,7 +2542,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-01-29T20:11:03+00:00"
+            "time": "2024-06-19T12:30:46+00:00"
         },
         {
             "name": "symfony/polyfill-php80",
@@ -2872,16 +2872,16 @@
         },
         {
             "name": "vstelmakh/url-highlight",
-            "version": "v3.0.3",
+            "version": "v3.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/vstelmakh/url-highlight.git",
-                "reference": "986c32c7f5b254c800472197fb31dd378c528a47"
+                "reference": "354d04fe0239143cd3b64aa9131fc985f17460d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vstelmakh/url-highlight/zipball/986c32c7f5b254c800472197fb31dd378c528a47",
-                "reference": "986c32c7f5b254c800472197fb31dd378c528a47",
+                "url": "https://api.github.com/repos/vstelmakh/url-highlight/zipball/354d04fe0239143cd3b64aa9131fc985f17460d6",
+                "reference": "354d04fe0239143cd3b64aa9131fc985f17460d6",
                 "shasum": ""
             },
             "require": {
@@ -2925,9 +2925,9 @@
             ],
             "support": {
                 "issues": "https://github.com/vstelmakh/url-highlight/issues",
-                "source": "https://github.com/vstelmakh/url-highlight/tree/v3.0.3"
+                "source": "https://github.com/vstelmakh/url-highlight/tree/v3.1.0"
             },
-            "time": "2023-11-04T19:15:03+00:00"
+            "time": "2024-07-28T18:31:02+00:00"
         }
     ],
     "packages-dev": [],
