@@ -418,12 +418,14 @@ table.djzone li:not(:last-of-type):after {
 }
 
 /* Playlists > By DJ > DJ details */
-div.djinfo {
-    display: inline-block;
-    vertical-align: top;
+div.djinfo-group {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
 }
-div.djinfo.spacer {
-    padding-right: 20px;
+div.djinfo-group .grow {
+    flex-grow: 1;
 }
 .djinfo ul,
 .djinfo ol {

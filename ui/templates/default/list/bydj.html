@@ -27,9 +27,9 @@
 </div>
 {% endif %}
 
-<div>
+<div class='djinfo-group'>
 {% if recentPlays | length %}
-  <div class='djinfo spacer'>
+  <div class='djinfo grow'>
     <div class="subhead nopadding">{{ topPlays | length ? '' : dj.airname ~ "'s " ~}} Recent airplay</div>
     <ul {{~ recentReviews | length ? ' class="sub"' }}>
     {{ _self.emitViewDJAlbum(recentPlays, "label") }}
@@ -48,11 +48,16 @@
     {%~ endif %}
     </ul>
   </div>
+  {%~ if recentPlays | length %}
+  {#~ balance the two divs above to layout like table-row but with wrap #}
+  <div class='grow'></div>
+  <div class='grow'></div>
+  {%~ endif %}
 {% endif %}
 </div>
 
 <form action="?" class="selector" method=post>
-<div class='djinfo'>
+<div>
   <div class='subhead nopadding small'>{{ dj.airname }}'s playlists:</div>
   <ul tabindex='0' class='selector listbox no-text-select' data-name='playlist'>
 {% for playlist in playlists %}
