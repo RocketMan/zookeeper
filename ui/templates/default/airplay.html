@@ -1,0 +1,58 @@
+{% set odays = [7, 14, 30] %}
+<div class='top-airplay' style='display: none'>
+<form action="?" method="POST" autocomplete="off">
+  <input type="hidden" name="action" value="{{ app.request.action }}">
+  <input type="hidden" name="subaction" value="{{ app.request.subaction }}">
+  <input type="hidden" name="limit" value="{{ limit }}">
+  <h2>Top airplay for the last
+    <select name="days">
+{% for oday in odays %}
+      <option value="{{ oday }}" {{~ oday == days ? " selected" }}>{{ oday }}</option>
+{% endfor %}
+    </select>
+    days
+  </h2>
+</form>
+{% if topPlays | length %}
+<table class='playlistTable'>
+  <thead>
+    <tr class='playlistHdr'><th></th><th>Artist</th><th></th><th>Album/Label</th></tr>
+  </thead>
+  <tbody>
+    {%~ for index, entry in topPlays %}
+    <tr class='songRow'>
+      <td>{{ index + 1 }}.</td>
+      <td>{{ entry.iscoll ? "Various Artists" : entry.artist }}</td>
+      <td style='width: 15px'>{{ entry.reviewed ? "<div class='albumReview'></div>" }}</td>
+      <td>
+        {%~ if entry.album | length %}
+          {%~ if entry.tag %}
+        <a class='nav' href='?action=search&amp;s=byAlbumKey&amp;n={{ entry.tag }}'>{{ entry.album }}</a>
+          {%~ else %}
+        {{ entry.album }}
+          {%~ endif %}
+          {%~ if entry.label | length %}
+        <span class='songLabel'> / {{ entry.label }}</span>
+          {%~ endif %}
+        {%~ endif %}
+      </td>
+    </tr>
+    {%~ endfor %}
+  </tbody>
+</table>
+<h3>For complete album charting, see our <a href='?action=viewChart'><b>Airplay Charts</b></a></h3>
+{% else %}
+<h3>No top airplay is available</h3>
+{% endif %}
+</div>
+<script><!--
+$().ready(function() {
+    $("div.top-airplay select").selectmenu({width: 'auto'})
+        .on('change selectmenuchange', function() {
+            this.form.submit();
+        })
+        .closest('div').css('display', 'block')
+        .find('select').selectmenu('widget').trigger('focus');
+});
+// -->
+</script>

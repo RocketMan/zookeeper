@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -55,6 +55,7 @@ class Playlists extends MenuItem {
         [ "u", "editListGetHint", 0, "listManagerGetHint" ],
         [ "u", "editListEditor", 0, "emitEditor" ],
         [ "a", "viewDJ", "By DJ", "emitViewDJ" ],
+        [ "a", "viewTop", "Top Plays", "emitTopPlays" ],
         [ "u", "import", "Import", "emitImportList" ],
     ];
 
@@ -266,7 +267,7 @@ class Playlists extends MenuItem {
     // make header for edit & view playlist
     private function makePlaylistHeader($isEditMode) {
         $editCol = $isEditMode ? "<TD />" : "";
-        $header = "<TR class='playlistHdr' ALIGN=LEFT>" . $editCol . "<TH WIDTH='64px'>Time</TH><TH WIDTH='25%'>" .
+        $header = "<TR class='playlistHdr'>" . $editCol . "<TH WIDTH='64px'>Time</TH><TH WIDTH='25%'>" .
                   "Artist</TH><TH WIDTH='25%'>Track</TH><TH></TH><TH>Album/Label</TH></TR>";
         return $header;
     }
@@ -1020,6 +1021,24 @@ class Playlists extends MenuItem {
         }
 
         $this->emitViewDJMain();
+    }
+
+    public function emitTopPlays() {
+        $days = min($_REQUEST['days'] ?? 7, 42);
+        $limit = min($_REQUEST['limit'] ?? 30, 100);
+
+        $topPlays = Engine::api(IPlaylist::class)->getTopPlays(0, $days, $limit);
+        Engine::api(ILibrary::class)->markAlbumsReviewed($topPlays);
+
+        foreach($topPlays as &$entry) {
+            if($entry['tag'] && !$entry['iscoll'])
+                $entry['artist'] = PlaylistEntry::swapNames($entry['artist']);
+        }
+
+        $this->setTemplate('airplay.html');
+        $this->addVar('days', $days);
+        $this->addVar('limit', $limit);
+        $this->addVar('topPlays', $topPlays);
     }
     
     public function emitViewDJMain() {
