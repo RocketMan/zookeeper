@@ -898,14 +898,19 @@ class Playlists extends MenuItem {
             $this->tertiary = $dj['airname'];
 
             if($dj['url'] || $dj['email']) {
+                $airname = htmlentities($dj['airname'], ENT_QUOTES, 'UTF-8');
                 $extra = "<span>";
                 if($dj['url']) {
-                    $extra .= "<a href='{$dj['url']}' class='nav' target='_blank'><b>Go to {$dj['airname']}'s website</b></a>";
+                    $extra .= "<a href='" .
+                        htmlentities($dj['url'], ENT_QUOTES, 'UTF-8') .
+                        "' class='nav' target='_blank'><b>Go to {$airname}&#039;s website</b></a>";
                     if($dj['email'])
                         $extra .= " &nbsp; | &nbsp; ";
                 }
                 if($dj['email'])
-                    $extra .= "<a href='mailto:{$dj['email']}' class='nav'><b>e-mail {$dj['airname']}</b></a>";
+                    $extra .= "<a href='mailto:" .
+                        htmlentities($dj['email'], ENT_QUOTES, 'UTF-8') .
+                        "' class='nav'><b>e-mail {$airname}</b></a>";
                 $extra .= "</span>";
                 $this->extra = $extra;
             }
