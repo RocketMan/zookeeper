@@ -1,5 +1,6 @@
 {% macro makeTime(params, entry) %}
    {%~ set created = entry.getCreatedTimestamp() %}
+   {#~ colon is included in 24hr format for symmetry with fxtime #}
    {%~ set format = params.usLocale ? "h:i a" : "H:i" %}
       <td class='time' data-utc='{{ created }}'>{{ created ? created | date(format) }}</td>
 {%- endmacro %}
