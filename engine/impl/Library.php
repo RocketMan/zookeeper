@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -416,24 +416,25 @@ class LibraryImpl extends DBO implements ILibrary {
     public function linkReviews(&$albums, $loggedIn = false, $includeBody = false) {
         $chain = [];
         $tags = [];
-        $queryset = "";
         for($i = 0; $albums != null && $i < sizeof($albums); $i++) {
             $tag = array_key_exists("tag", $albums[$i])?$albums[$i]["tag"]:0;
-            if($tag) {
+            if($tag && is_numeric($tag)) {
                 if(array_key_exists($tag, $tags))
                     $chain[$i] = $tags[$tag];
-                else
-                    $queryset .= ", $tag";
+
                 $tags[$tag] = $i;
             }
         }
+
+        if(count($tags) == 0)
+            return;
 
         $ib = $includeBody?"":"null";
         $query = "SELECT tag, a.airname, realname, r.id, r.created, r.private, " .
                  "$ib review FROM reviews r " .
                  "LEFT JOIN users u ON r.user = u.name " .
                  "LEFT JOIN airnames a ON r.airname = a.id WHERE " .
-                 "tag IN (0" . $queryset . ")";
+                 "tag IN (" . implode(',', array_keys($tags)) . ")";
         if(!$loggedIn)
             $query .= " AND private = 0";
         $query .= " GROUP BY tag";
@@ -461,21 +462,23 @@ class LibraryImpl extends DBO implements ILibrary {
     public function markAlbumsReviewed(&$albums, $loggedIn = 0) {
         $chain = [];
         $tags = [];
-        $queryset = "";
         for($i = 0; $albums != null && $i < sizeof($albums); $i++) {
             $tag = array_key_exists("tag", $albums[$i])?$albums[$i]["tag"]:0;
-            if($tag) {
+            if($tag && is_numeric($tag)) {
                 if(array_key_exists($tag, $tags))
                     $chain[$i] = $tags[$tag];
-                else
-                    $queryset .= ", $tag";
+
                 $tags[$tag] = $i;
             }
         }
+
+        if(count($tags) == 0)
+            return;
+
         $query = "SELECT tag, a.airname, realname FROM reviews r " .
                  "LEFT JOIN users u ON r.user = u.name " .
                  "LEFT JOIN airnames a ON r.airname = a.id WHERE " .
-                 "tag IN (0" . $queryset . ")";
+                 "tag IN (" . implode(',', array_keys($tags)) . ")";
         if(!$loggedIn)
             $query .= " AND private = 0";
         $query .= " GROUP BY tag";
@@ -501,32 +504,35 @@ class LibraryImpl extends DBO implements ILibrary {
 
         $chain = [];
         $tags = [];
-        $queryset = "";
-        $querysetcoll = "";
+        $queryset = [];
+        $querysetcoll = [];
         for($i = 0; $albums != null && $i < sizeof($albums); $i++) {
             $tag = array_key_exists("tag", $albums[$i])?$albums[$i]["tag"]:0;
-            if($tag) {
+            if($tag && is_numeric($tag)) {
                 if(array_key_exists($tag, $tags))
                     $chain[$i] = $tags[$tag];
                 else {
                     if(array_key_exists("iscoll", $albums[$i]) &&
                             $albums[$i]["iscoll"])
-                        $querysetcoll .= ", $tag";
+                        $querysetcoll[] = $tag;
                     else
-                        $queryset .= ", $tag";
+                        $queryset[] = $tag;
                 }
                 $tags[$tag] = $i;
             }
         }
 
+        if(count($tags) == 0)
+            return;
+
         $urlFilter = $enableExternalLinks ? "url <> ''" : "url RLIKE ?";
 
         $query = "SELECT tag FROM tracknames ".
-                 "WHERE $urlFilter AND tag IN (0${queryset}) ".
+                 "WHERE $urlFilter AND tag IN (" . implode(',', $queryset) . ") ".
                  "GROUP BY tag ";
         if($querysetcoll)
             $query .= "UNION SELECT tag FROM colltracknames ".
-                      "WHERE $urlFilter AND tag IN (0${querysetcoll}) ".
+                      "WHERE $urlFilter AND tag IN (" . implode(',', $querysetcoll) . ") ".
                       "GROUP BY tag";
         $stmt = $this->prepare($query);
         if(!$enableExternalLinks) {

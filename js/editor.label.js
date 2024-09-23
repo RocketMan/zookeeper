@@ -75,9 +75,14 @@ function paginateLabels(op, url) {
             changeList(list);
         },
         error: function (jqXHR, textStatus, errorThrown) {
+            // rate limited; silently ignore
+            if(jqXHR.status == 403)
+                return;
+
             var json = JSON.parse(jqXHR.responseText);
-            var status = (json && json.errors)?
-                    json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
+            var status = json && json.errors ?
+                    json.errors.map(error => error.title).join(', ') :
+                    'There was a problem retrieving the data: ' + errorThrown;
             alert(status);
         }
     });

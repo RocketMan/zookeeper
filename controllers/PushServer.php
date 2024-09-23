@@ -87,7 +87,7 @@ class NowAiringServer implements MessageComponentInterface {
         $val['track_title'] = $spin?$spin['track']:'';
         $val['track_artist'] = $spin?$spin['artist']:'';
         $val['track_album'] = $spin?$spin['album']:'';
-        $tag = $spin?$spin['tag']:'';
+        $tag = $spin?($spin['tag'] ?? ''):'';
         $val['track_tag'] = $tag?$tag:null; // null for empty/zero tag
         $created = $spin?$spin['created']:null;
         $val['track_time'] = $created?$created:'';
@@ -192,7 +192,11 @@ class NowAiringServer implements MessageComponentInterface {
                                     (61 - (int)$now->format("s"));
 
             $this->timer = $this->loop->addTimer($delta, function() {
-                $this->worker();
+                try {
+                    $this->worker();
+                } catch(\Exception $e) {
+                    error_log("worker: " . $e->getMessage());
+                }
                 $this->scheduleWorker();
             });
         }
@@ -455,7 +459,12 @@ class NowAiringServer implements MessageComponentInterface {
 
             if(!$this->imageQ->isEmpty()) {
                 $this->loop->addTimer(self::QUERY_DELAY, function() {
-                    $this->processImageQueue();
+                    try {
+                        $this->processImageQueue();
+                    } catch(\Exception $e) {
+                        error_log("processImageQueue: " . $e->getMessage());
+                        // TBD delay and retry
+                    }
                 });
             }
         }
@@ -515,7 +524,12 @@ class NowAiringServer implements MessageComponentInterface {
 
             if(!$start) {
                 $this->loop->futureTick(function() {
-                    $this->processImageQueue();
+                    try {
+                        $this->processImageQueue();
+                    } catch(\Exception $e) {
+                        error_log("processImageQueue: " . $e->getMessage());
+                        // TBD delay and retry
+                    }
                 });
             }
         }

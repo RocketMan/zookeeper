@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -29,8 +29,8 @@ use ZK\Engine\TemplateFactory;
 
 class CacheControl implements IController {
     protected const TEMPLATE_ROOTS = [
-        'ui/templates',
-        'controllers/templates',
+        'ui/templates' => '\ZK\UI\TemplateFactoryUI',
+        'controllers/templates' => '\ZK\Controllers\TemplateFactoryXML',
     ];
     protected const VALID_EXTENSIONS = ['html', 'xml'];
 
@@ -89,13 +89,13 @@ class CacheControl implements IController {
      * warm up the cache for the specified template directory
      *
      * @param $dir target template directory
+     * @param $factory TemplateFactory for target templates
      */
-    protected function warmCache($dir) {
+    protected function warmCache($dir, $factory) {
         echo "warming $dir:\n";
         $path = $this->base . $dir;
         $this->rmdir($path . "/.cache");
         $this->dirs = $this->files = 0;
-        $factory = new TemplateFactory($path);
         $this->visitTemplateDir($path . "/default", function($template) use($factory) {
             if($this->verbose)
                 echo "  INFO loading $template\n";
@@ -144,17 +144,17 @@ class CacheControl implements IController {
         switch($_REQUEST["action"] ?? "") {
         case "clean":
         case "clear":
-            foreach(self::TEMPLATE_ROOTS as $root)
+            foreach(self::TEMPLATE_ROOTS as $root => $factory)
                 $this->rmdir($this->base . $root . "/.cache");
             echo "removed {$this->files} files in {$this->dirs} directories\n";
             break;
         case "check":
-            foreach(self::TEMPLATE_ROOTS as $root)
+            foreach(self::TEMPLATE_ROOTS as $root => $factory)
                 $this->checkCache($root);
             break;
         case "warmup":
-            foreach(self::TEMPLATE_ROOTS as $root)
-                $this->warmCache($root);
+            foreach(self::TEMPLATE_ROOTS as $root => $factory)
+                $this->warmCache($root, new $factory());
             break;
         default:
             echo "Usage: zk cache:{check|clear|warmup} [verbose=1]\n";

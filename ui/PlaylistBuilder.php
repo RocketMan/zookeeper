@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -63,7 +63,7 @@ class PlaylistBuilder extends PlaylistObserver {
 
         $albumTitle = $entry->getTag() ?
             "<a href='?s=byAlbumKey&amp;n=" . htmlentities($entry->getTag()) .
-            "&amp;action=search' class='nav'>$albumName</a>" :
+            "&amp;action=search' class='nav'>" . htmlentities($albumName) . "</a>" :
             UI::smartURL($albumName);
 
         if($includeLabel)

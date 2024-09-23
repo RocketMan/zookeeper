@@ -1,0 +1,82 @@
+{%- macro emitViewDJAlbum(albums, labelField) -%}
+  {%~ for album in albums %}
+    {%~ set artist = album.iscoll ? 'Various Artists' : album.artist %}
+    {%~ set label = album[labelField] | replace({' Records': '', ' Recordings': ''}) ~%}
+      <li>{{ artist }}&nbsp;&#8226;
+        <i>
+        {%- if album.tag -%}
+            <a class='nav' href='?s=byAlbumKey&amp;n={{ album.tag }}&amp;action=search'>{{ album.album }}</a>
+        {%- else -%}
+            {{ album.album | smartURL }}
+        {%- endif -%}
+        </i>
+      {%- if label | length -%}
+        &nbsp;&#8226; ({{ label | smartURL }})
+      {%~ endif %}
+      </li>
+  {%~ endfor %}
+{%- endmacro -%}
+
+{% if topPlays | length %}
+<div class='djinfo'>
+  <div class='subhead nopadding'>{{ dj.airname }}'s top {{ limit }}</div>
+  <div class='subhead nopadding smaller'>for the {{ weeks }} week period ending {{ "now" | date("l, j F Y") }}</div>
+  <ol>
+  {{ _self.emitViewDJAlbum(topPlays, "label") }}
+  </ol>
+</div>
+{% endif %}
+
+<div class='djinfo-group'>
+{% if recentPlays | length %}
+  <div class='djinfo grow'>
+    <div class="subhead nopadding">{{ topPlays | length ? '' : dj.airname ~ "'s " ~}} Recent airplay</div>
+    <ul {{~ recentReviews | length ? ' class="sub"' }}>
+    {{ _self.emitViewDJAlbum(recentPlays, "label") }}
+    </ul>
+  </div>
+{% endif %}
+
+{% if recentReviews | length %}
+  <div class='djinfo'>
+    {%~ set block = topPlays | length or recentPlays | length %}
+    <div class='subhead nopadding'>{{ block ? '' : dj.airname ~ "'s " ~}} Recent reviews</div>
+    <ul {{~ block ? ' class="sub"' ~}}>
+      {{ _self.emitViewDJAlbum(recentReviews, "name") }}
+    {%~ if recentReviews | length == count - 1 %}
+      <li style='list-style-type: none'><a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&amp;viewuser={{ dj.id }}' class='nav'>More reviews...</a></li>
+    {%~ endif %}
+    </ul>
+  </div>
+  {%~ if recentPlays | length %}
+  {#~ balance the two divs above to layout like table-row but with wrap #}
+  <div class='grow'></div>
+  <div class='grow'></div>
+  {%~ endif %}
+{% endif %}
+</div>
+
+<form action="?" class="selector" method=post>
+<div>
+  <div class='subhead nopadding small'>{{ dj.airname }}'s playlists:</div>
+  <ul tabindex='0' class='selector listbox no-text-select' data-name='playlist'>
+{% for playlist in playlists %}
+    <li data-value="{{ playlist.id }}">{{ playlist.showdate ~ ' -- ' ~ playlist.description }}</li>
+{% endfor %}
+  </ul>
+  <script src="{{ 'js/zklistbox.js' | decorate }}"></script>
+  <script><!--
+     $().ready(function() {
+         $("ul.selector").zklistbox().trigger('focus');
+     });
+  // -->
+  </script>
+  <div>
+    <input type=submit value=" View Playlist ">
+    <input type=hidden name=playlist value="">
+    <input type=hidden name=viewuser value="{{ dj.id }}">
+    <input type=hidden name=subaction value="viewDJ">
+    <input type=hidden name=seq value="selList">
+  </div>
+</div>
+</form>

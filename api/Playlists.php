@@ -789,7 +789,7 @@ class Playlists implements RequestHandlerInterface {
                 $list['id'] = $key;
                 if($entry->isType(PlaylistEntry::TYPE_SPIN)) {
                     $spin = $entry->asArray();
-                    if($spin['tag'])
+                    if(isset($spin['tag']))
                         $spin['artist'] = PlaylistEntry::swapNames($spin['artist']);
                 } else
                     $spin = null;

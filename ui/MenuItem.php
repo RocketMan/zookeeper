@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -25,7 +25,6 @@
 namespace ZK\UI;
 
 use ZK\Controllers\CommandTarget;
-use ZK\Engine\TemplateFactory;
 
 abstract class MenuItem extends CommandTarget {
     protected $title;
@@ -125,7 +124,7 @@ abstract class MenuItem extends CommandTarget {
     }
 
     public function render() {
-        $templateFact = new TemplateFactory(__DIR__ . '/templates');
+        $templateFact = new TemplateFactoryUI();
         $template = $templateFact->load($this->getTemplate());
         return $template->render($this->getTemplateVars());
     }

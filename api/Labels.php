@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -62,6 +62,9 @@ class Labels implements RequestHandlerInterface {
         $res = new JsonResource("label", $rec["pubkey"]);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."label/".$rec["pubkey"]));
         foreach(self::FIELDS as $field) {
+            if(!key_exists($field, $rec))
+                continue;
+
             switch($field) {
             case "international":
                 $value = $rec[$field] == 'T';

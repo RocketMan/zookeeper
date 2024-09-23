@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -103,9 +103,7 @@ class TemplateFactory {
         $this->twig = new \Twig\Environment($loader, [ 'cache' => $cacheDir ]);
         $this->twig->addGlobal('app', $this->app);
 
-        $filter = new \Twig\TwigFilter('decorate', function($asset) {
-            return Engine::decorate($asset);
-        });
+        $filter = new \Twig\TwigFilter('decorate', [ '\ZK\Engine\Engine', 'decorate' ]);
         $this->twig->addFilter($filter);
     }
 

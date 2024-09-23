@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -444,9 +444,17 @@ function search(type, url, size, offset) {
             });
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            var json = JSON.parse(jqXHR.responseText);
-            var status = (json && json.errors)?
-                    json.errors[0].title:('There was a problem retrieving the data: ' + textStatus);
+            // rate limited; silently ignore
+            if(jqXHR.status == 403)
+                return;
+
+            var json;
+            try {
+                json = JSON.parse(jqXHR.responseText);
+            } catch(e) {}
+            var status = json && json.errors ?
+                    json.errors.map(error => error.title).join(', ') :
+                    'There was a problem retrieving the data: ' + errorThrown;
             alert(status);
         }
     });

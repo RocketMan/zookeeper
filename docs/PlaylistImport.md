@@ -55,7 +55,7 @@ Content-Type: application/vnd.api+json
 	  "track": "example track",
 	  "album": "example album",
 	  "label": "example label",
-	  "created": "2022-01-01 18:00:00"
+	  "created": "18:00:00"
       }
   }, {
       "type": "event",
@@ -63,7 +63,7 @@ Content-Type: application/vnd.api+json
       "attributes": {
           "type": "spin",
 	  "track": "another track",
-	  "created": "2022-01-01 18:02:30"
+	  "created": "18:02:30"
       },
       "relationships": {
           "album": {

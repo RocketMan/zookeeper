@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -875,41 +875,7 @@ class Playlists extends MenuItem {
         $this->emitPlaylistBody($playlistId, false);
     }
     
-    private function emitViewDJAlbum(&$result, $class="", $count=0, $labelField="label") {
-        for($i=0; $i < sizeof($result); $i++) {
-            echo "  <TR><TD VALIGN=TOP ALIGN=\"right\"$class>";
-            if($count)
-                echo (string)($i + 1).".&nbsp;";
-            else
-                echo "&nbsp;&#8226;&nbsp;";
-            echo "</TD><TD$class>";
-    
-            // Setup artist and label
-            $artist = preg_match("/^(\[)?COLL(?(1)\]|$)/i", $result[$i]["artist"])?"Various Artists":$result[$i]["artist"];
-            $label = str_replace(" Records", "", $result[$i][$labelField]);
-            $label = str_replace(" Recordings", "", $label);
-    
-            echo UI::smartURL($artist) . "&nbsp;&#8226; <I>";
-    
-            // Album
-            if($result[$i]["tag"])
-                 echo "<A CLASS=\"nav\" HREF=\"".
-                      "?s=byAlbumKey&amp;n=". UI::URLify($result[$i]["tag"]).
-                      "&amp;action=search\">";
-    
-            echo UI::smartURL($result[$i]["album"], !$result[$i]["tag"]);
-            if($result[$i]["tag"])
-                echo "</A>";
-            echo "</I>";
-            if($label)
-                echo "&nbsp;&#8226; (".UI::smartURL($label) . ")";
-            echo "</TD></TR>\n";
-        }
-    }
-    
     public function emitViewDJ() {
-        UI::emitJS('js/zklistbox.js');
-
         $seq = $_REQUEST["seq"] ?? '';
         $viewuser = $_REQUEST["viewuser"] ?? 0;
         $playlist = $_REQUEST["playlist"] ?? 0;
@@ -919,100 +885,51 @@ class Playlists extends MenuItem {
     
         if(((($seq == "selUser") && $viewuser)) ||
                 (($seq == "selList") && !$playlist)) {
-            $results = Engine::api(IDJ::class)->getAirnames(0, $viewuser);
-            if($results) {
-                $row = $results->fetch();
-                $this->tertiary = $row['airname'];
-            }
-    ?>
-    <FORM ACTION="?" class="selector" METHOD=POST>
-    <TABLE WIDTH="100%"><TR><TD ALIGN=RIGHT VALIGN=TOP>
-    <?php 
-            // Emit optional URL and/or e-mail for DJ
-            if($row['url']) {
-                echo "      <A HREF=\"".$row['url']."\" CLASS=\"nav\" target='_blank'><B>Go to ".$row['airname']."'s website</B></A>\n";
-                if($row['email'])
-                    echo "      &nbsp; | &nbsp;\n";
-            }
-            if($row['email']) {
-                echo "      <A HREF=\"mailto:".$row['email']."\" CLASS=\"nav\"><B>e-mail ".$row['airname']."</B></A>\n";
-            }
-    ?>
-    </TD></TR></TABLE>
-    <TABLE CELLSPACING=0>
-      <?php 
             $weeks = 10;
             $limit = 10;
-            $formatEndDate = date("l, j F Y");
+            $count = 10;
+
+            $dj = Engine::api(IDJ::class)->getAirnames(0, $viewuser)->fetch();
+            if(!$dj) {
+                echo "<b>Sorry, the DJ you have requested does not exist.</b>";
+                return;
+            }
+
+            $this->tertiary = $dj['airname'];
+
+            if($dj['url'] || $dj['email']) {
+                $airname = htmlentities($dj['airname'], ENT_QUOTES, 'UTF-8');
+                $extra = "<span>";
+                if($dj['url']) {
+                    $extra .= "<a href='" .
+                        htmlentities($dj['url'], ENT_QUOTES, 'UTF-8') .
+                        "' class='nav' target='_blank'><b>Go to {$airname}&#039;s website</b></a>";
+                    if($dj['email'])
+                        $extra .= " &nbsp; | &nbsp; ";
+                }
+                if($dj['email'])
+                    $extra .= "<a href='mailto:" .
+                        htmlentities($dj['email'], ENT_QUOTES, 'UTF-8') .
+                        "' class='nav'><b>e-mail {$airname}</b></a>";
+                $extra .= "</span>";
+                $this->extra = $extra;
+            }
     
             $topPlays = Engine::api(IPlaylist::class)->getTopPlays($viewuser, $weeks * 7, $limit);
-            if(sizeof($topPlays)) {
-                echo "<TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;".$row['airname']."'s top $limit<BR>&nbsp;<FONT CLASS=\"subhead2\">for the $weeks week period ending $formatEndDate</FONT></TH></TR>\n";
-                $this->emitViewDJAlbum($topPlays, "", 1);
-            }
-    ?>
-    </TABLE>
-    <?php if (sizeof($topPlays)) echo "<BR>\n"; ?>
-    <TABLE WIDTH="100%" CELLPADDING=0 CELLSPACING=0 BORDER=0>
-      <TR><TD CLASS="recentPlays" VALIGN=TOP>
-    <?php 
-            $count = 10;
             $recentPlays = Engine::api(IPlaylist::class)->getRecentPlays($viewuser, $count);
             $recentReviews = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_AIRNAME, 0, $count - 1, $viewuser, "Date-");
+            $playlists = Engine::api(IPlaylist::class)->getPlaylists(0, 0, 0, $viewuser)->asArray();
 
-            $block = sizeof($recentReviews);
-            $blname = sizeof($topPlays)?"":$row['airname'] . "'s ";
-            echo "    <TABLE CELLSPACING=0 BORDER=0>\n";
-            if(sizeof($recentPlays)) {
-                echo "<TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;${blname}Recent airplay</TH></TR>";
-                $this->emitViewDJAlbum($recentPlays, $block?" CLASS=\"sub\"":"");
-            }
-    ?>
-        </TABLE>
-      </TD><?php 
-        if(sizeof($recentReviews)) {
-            $block = sizeof($recentPlays);
-            echo "<TD>".($block?"&nbsp;&nbsp;&nbsp;":"")."</TD><TD CLASS=\"recentReviews\"VALIGN=TOP>\n";
-            $blname = (sizeof($topPlays) || sizeof($recentPlays))?"":$row['airname'] . "'s ";
-            echo "    <TABLE BORDER=0 CELLSPACING=0>\n";
-    
-            echo "      <TR><TH COLSPAN=2 ALIGN=LEFT CLASS=\"subhead\">&nbsp;${blname}Recent reviews</TH></TR>\n";
-            $this->emitViewDJAlbum($recentReviews, $block?" CLASS=\"sub\"":"", 0, "name");
-            if(sizeof($recentReviews) == $count - 1)
-                echo "  <TR><TD></TD><TD ALIGN=LEFT CLASS=\"sub\"><A HREF=\"?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&viewuser=$viewuser\" CLASS=\"nav\">More reviews...</A></TD></TR>\n";
-            echo "    </TABLE></TD>\n";
-        }
-    
-    ?>
-      </TR></TABLE>
-    <?php if (sizeof($topPlays) || sizeof($recentPlays) || sizeof($recentReviews)) echo "<BR>\n"; ?>
-    <TABLE>
-      <TR><TH ALIGN=LEFT><?php echo $row['airname'];?>'s playlists:</TH></TR>
-      <TR><TD>
-         <ul tabindex='0' class='selector listbox no-text-select' data-name='playlist'>
-    <?php 
-            // Run the query
-            $records = Engine::api(IPlaylist::class)->getPlaylists(0, 0, 0, $viewuser);
-            while($row = $records->fetch())
-                echo "        <li data-value=\"$row[0]\">$row[1] -- ".htmlentities($row[3], ENT_QUOTES, 'UTF-8')."</li>\n";
-    ?>
-        </ul></TD></TR>
-      <TR><TD>
-        <SCRIPT><!--
-           $().ready(function() {
-               $("ul.selector").zklistbox().trigger('focus');
-           });
-        // -->
-        </SCRIPT>
-        <INPUT TYPE=SUBMIT VALUE=" View Playlist ">
-        <INPUT TYPE=HIDDEN NAME=playlist VALUE="">
-        <INPUT TYPE=HIDDEN NAME=viewuser VALUE="<?php echo $viewuser;?>">
-        <INPUT TYPE=HIDDEN NAME=subaction VALUE="viewDJ">
-        <INPUT TYPE=HIDDEN NAME=seq VALUE="selList">
-      </TD></TR>
-    </TABLE>
-    </FORM>
-    <?php 
+            $this->addVar('topPlays', $topPlays);
+            $this->addVar('recentPlays', $recentPlays);
+            $this->addVar('recentReviews', $recentReviews);
+            $this->addVar('playlists', $playlists);
+            $this->addVar('dj', $dj);
+            $this->addVar('weeks', $weeks);
+            $this->addVar('limit', $limit);
+            $this->addVar('count', $count);
+            $this->setTemplate('list/bydj.html');
+
             return;
         } else if(($seq == "selList") && $playlist) {
             $this->viewList($playlist);

@@ -7,8 +7,8 @@ The endpoints exposed by the API are:
 
 * [api/v1/album](Albums.md)
 * [api/v1/label](Labels.md)
-* [api/v1/playlist](Playlists.md)
 * [api/v1/review](Reviews.md)
+* [api/v2/playlist](Playlists.md)
 
 The endpoints are relative to the installation directory of Zookeeper Online.
 
@@ -35,12 +35,12 @@ information on the request format and document structure.
   all reviews associated with album tag 1001)
 
 * You can search albums, labels, and playlists.  For example,
-  `api/v1/playlist?filter[date]=2021-12-16` will give you all
+  `api/v2/playlist?filter[date]=2021-12-16` will give you all
   playlists on 2021-12-16.  See the links above for details of the
   filter options that are available for each type.
 
 * You can request specific attributes (e.g.,
-  `api/v1/playlist/1?fields[show]=name,airname,date`) This will
+  `api/v2/playlist/1?fields[show]=name,airname,date`) This will
   exclude all attributes not named.  You may also use negative
   attributes to exclude specific fields (e.g.,
   `api/v1/album/1001?fields[album]=-tracks` includes all fields except

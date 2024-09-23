@@ -126,7 +126,7 @@ class Albums implements RequestHandlerInterface {
                 $value = ILibrary::MEDIA[$rec[$field]];
                 break;
             case "size":
-                $value = ILibrary::LENGTHS[$rec[$field]];
+                $value = ILibrary::LENGTHS[$rec[$field] ?? 'F'];
                 break;
             case "location":
                 $value = ILibrary::LOCATIONS[$rec[$field]];
@@ -135,7 +135,7 @@ class Albums implements RequestHandlerInterface {
                 $value = $rec["iscoll"]?true:false;
                 break;
             default:
-                $value = $rec[$field];
+                $value = $rec[$field] ?? null;
                 break;
             }
             $res->attributes()->set($field, $value);

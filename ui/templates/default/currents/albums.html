@@ -44,7 +44,7 @@
       <td align='center'>{{ _self.catcodes(catmap, album.afile_category) ?? '-' }}</td>
       <td>{{ album.reviewer }}</td>
       <td>{{ album.afile_number }}</td>
-      <td>{{ static and album.artist | length > 50 ? album.artist[:50] ~ '...' : album.artist }}&nbsp;&nbsp;</td>
+      <td>{{ album.iscoll ? "Various Artists" : static and album.artist | length > 50 ? album.artist[:50] ~ '...' : album.artist }}&nbsp;&nbsp;</td>
   {%~ if playableCell | length %}
       <td>
     {%~ if album.playable %}

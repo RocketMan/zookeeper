@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -35,23 +35,6 @@ use ZK\Engine\TemplateFactory;
 use ZK\UI\UICommon as UI;
 
 use JSMin\JSMin;
-
-class TemplateFactoryUI extends TemplateFactory {
-    public function __construct() {
-        parent::__construct(__DIR__ . '/templates');
-        $this->app->content = new \stdClass();
-    }
-
-    public function setContext($menu = null, $menuItem = null, $html = null) {
-        $this->app->content->data = $html;
-        $this->app->content->template = $menuItem ? $menuItem->getTemplate() : null;
-        $this->app->content->title = $menuItem ? $menuItem->getTitle() : null;
-        $this->app->menu = $menu ?? [];
-        $this->app->submenu = $menuItem ? $menuItem->composeSubmenu($_REQUEST['action'] ?? '', $_REQUEST['subaction'] ?? '') : [];
-        $this->app->tertiary = $menuItem ? $menuItem->getTertiary() : null;
-        $this->app->extra = $menuItem ? $menuItem->getExtra() : null;
-    }
-}
 
 class MenuEntry {
     private const FIELDS = [ 'access', 'action', 'label', 'implementation' ];
@@ -369,19 +352,18 @@ class UIController implements IController {
     }
     
     protected function emitLogout() {
-        $logoutURI = Engine::param('sso')['logout_uri'];
-        $logoutURI = str_replace("{base_url}", urlencode(Engine::getBaseUrl()."?action=logout"), $logoutURI);
+        $dn = $this->session->getDN() ?: $this->dn;
+        echo "<h2>$dn logged out</h2>\n";
 
-        $dn = $this->session->getDN()?$this->session->getDN():$this->dn;
-    
-        echo "<H2>$dn logged out</H2>\n";
         if($this->ssoUser) {
-            echo "<SCRIPT><!--\n";
+            $logoutURI = Engine::param('sso')['logout_uri'];
+            $logoutURI = str_replace("{base_url}", urlencode(Engine::getBaseUrl()."?action=logout"), $logoutURI);
+
+            echo "<script><!--\n";
             echo "\$().ready(function(){";
             echo "window.location.replace(\"$logoutURI\");";
-            echo "}); // -->\n</SCRIPT>\n";
-        } else
-            UI::setFocus();
+            echo "}); // -->\n</script>\n";
+        }
     }
 
     protected function checkCookiesEnabled() {

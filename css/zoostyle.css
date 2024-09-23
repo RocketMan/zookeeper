@@ -125,6 +125,16 @@ div.subhead {
     margin-bottom: 0;
     border-bottom: 1px solid gray;
 }
+div.subhead.nopadding {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+div.subhead.small {
+    font-size: 11pt;
+}
+div.subhead.smaller {
+    font-size: 10pt;
+}
 
 .subhead2.coming-up {
     color: gray;
@@ -386,15 +396,42 @@ div.reviews > div.view-more {
     padding-top: 8px;
 }
 
-/* DJ Zone! */
-.recentPlays, .recentReviews {
-    vertical-align: top;
-}
+/* DJ selector */
 table.djzone td:last-child {
     width: 100%;
 }
 table.djzone a {
     white-space: nowrap;
+    padding-right: 1ch;
+}
+table.djzone ul {
+    list-style: none;
+    margin: 0;
+}
+table.djzone li {
+    display: inline;
+}
+table.djzone li:not(:last-of-type):after {
+    content: '\2022'; /* bullet &#8226; */
+    font-style: italic;
+    padding-right: 1ch;
+}
+
+/* Playlists > By DJ > DJ details */
+div.djinfo-group {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+div.djinfo-group .grow {
+    flex-grow: 1;
+}
+.djinfo ul,
+.djinfo ol {
+    margin-block-start: 0;
+    margin-left: 24px;
+    line-height: 1.3;
 }
 
 /* library editor */
@@ -761,6 +798,7 @@ th.sec {
     font-size: 8pt;
     color: #ffffff;
 }
+
 .tablesorter-default tr:hover .sub2 {
     color: #000000;
 }
