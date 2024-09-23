@@ -1,0 +1,72 @@
+{% macro makeTime(params, entry) %}
+   {%~ set created = entry.getCreatedTimestamp() %}
+   {%~ set format = params.usLocale ? "h:i a" : "H:i" %}
+      <td class='time' data-utc='{{ created }}'>{{ created ? created | date(format) }}</td>
+{%- endmacro %}
+
+{% macro makeEditDiv(params, entry) %}
+    {%~ if params.editMode %}
+        {%~ set href = "?id=" ~ entry.getId() | e('url') ~ "&amp;subaction=" ~  params.action | e('url') ~ "&amp;seq=editTrack" %}
+        {%~ set editLink = "<a class='songEdit nav' href='" ~ href ~ "'><span class='fas fa-edit'></span></a>" %}
+        {%~ set dnd = "<div class='grab fas fa-grip-vertical' data-id='" ~ entry.getId() | e ~ "'></div>" %}
+      <td>
+        <div class='songManager'>{{ dnd | raw }}{{ editLink | raw }}</div>
+      </td>
+    {%~ endif %}
+    {{~ _self.makeTime(params, entry) }}
+{%- endmacro %}
+
+{% macro makeAlbumLink(entry, includeLabel) %}
+    {%~ set albumName = entry.getAlbum() %}
+    {%~ set labelName = entry.getLabel() %}
+    {%~ if albumName | length or labelName | length %}
+        {%~ set albumTitle = entry.getTag() ? "<a href='?s=byAlbumKey&amp;n=" ~ entry.getTag() | e('url') ~ "&amp;action=search' class='nav'>" ~ albumName | e ~ "</a>" : albumName | e %}
+        {%~ if includeLabel %}
+            {%~ set albumTitle = albumTitle ~ "<span class='songLabel'> / " ~ labelName | e ~ "</span>" %}
+        {%~ endif %}
+        {{~ albumTitle | raw -}}
+    {%~ endif %}
+{% endmacro %}
+
+{% block comment %}
+    <tr class='commentRow {{~ params.editMode ? "Edit" }}'>
+      {{~ _self.makeEditDiv(params, entry) }}
+      <td colspan=4>{{ entry.getComment() | markdown }}</td>
+    </tr>
+{% endblock %}
+
+{% block logEvent %}
+    {%~ if params.authUser %}
+    <tr class='logEntry {{~ params.editMode ? "Edit" }}'>
+      {{~ _self.makeEditDiv(params, entry) }}
+      <td>{{ entry.getLogEventType() }}</td>
+      <td colspan=3>{{ entry.getLogEventCode() }}</td>
+    </tr>
+    {%~ elseif not params.break %}
+    <tr class='songDivider'>
+      {{~ _self.makeTime(params, entry) }}
+      <td colspan=4><hr></td>
+    </tr>
+    {%~ endif %}
+{% endblock %}
+
+{% block setSeparator %}
+    {%~ if params.editMode or not params.break %}
+    <tr class='songDivider'>
+      {{~ _self.makeEditDiv(params, entry) }}
+      <td colspan=4><hr></td>
+    </tr>
+    {%~ endif %}
+{% endblock %}
+
+{% block spin %}
+    {%~ set reviewCell = entry.getReviewed() ? "<div class='albumReview'></div>" %}
+    {%~ set artistName = entry.getTag() ? entry.swapNames(entry.getArtist()) : entry.getArtist() %}
+    <tr class='songRow'>
+      {{~ _self.makeEditDiv(params, entry) }}
+      <td>{{ artistName | smartURL }}</td>
+      <td>{{ entry.getTrack() | smartURL }}</td>
+      <td style='width: 15px'>{{ reviewCell | raw }}</td>
+      <td>{{ _self.makeAlbumLink(entry, true) }}</td>
+    </tr>
+{% endblock %}

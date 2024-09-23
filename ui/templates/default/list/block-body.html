@@ -1,0 +1,22 @@
+<table class='playlistTable' cellpadding=1>
+  <thead>
+    <tr class='playlistHdr' align=left>
+      {{ editMode ? "<td></td>" }}
+      <th width='64px'>Time</th>
+      <th width='25%'>Artist</th>
+      <th width='25%'>Track</th>
+      <th></th>
+      <th>Album/Label</th>
+    </tr>
+  </thead>
+  <tbody>
+    {%~ for entry in entries %}
+      {{~ observer.observe(entry) | raw }}
+    {%~ endfor %}
+  </tbody>
+</table>
+{% if editMode %}
+<script src="{{ 'js/playlists.track.js' | decorate }}"></script>
+{% elseif isLive %}
+<script src="{{ 'js/playlists.live.js' | decorate }}"></script>
+{% endif %}

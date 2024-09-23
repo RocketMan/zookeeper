@@ -1,0 +1,115 @@
+{% set isLiveShow = not editTrack and isLive %}
+<div class='pl-form-entry form-entry'>
+    <input id='show-time' type='hidden' value="{{ playlist.showtime }}" >
+    {#~ TZO is server equivalent of javascript Date.getTimezoneOffset() #}
+    <input id='timezone-offset' type='hidden' value="{{ TZO }}" >
+    <input id='track-playlist' type='hidden' value='{{ playlistId }}'>
+    <input id='track-action' type='hidden' value='{{ app.request.subaction }}'>
+    <input id='const-prefix' type='hidden' value='{{ NME_PREFIX }}'>
+    <label></label><span id='error-msg' class='error'></span>
+    <div>
+    {%~ if not editTrack %}
+        <div class='dot-menu pull-right' tabindex='-1'>
+          <div class='dot-menu-dots no-text-select'>&#x22ee;</div>
+          <div class='dot-menu-content'>
+            <ul>
+              <li><a href='#' class='nav share-link' data-link='{{ BASE_URL }}?subaction=viewListById&amp;playlist={{ playlistId }}' title='copy playlist URL to the clipboard'>Link to Playlist</a>
+              <li><a href='?target=export&amp;playlist={{ playlistId }}&amp;format=csv' class='nav' download='playlist.csv' title='export playlist as CSV'>Export CSV</a>
+              <li><a href='api/v1/playlist/{{ playlistId }}' class='nav' download='playlist.json' title='export playlist as JSON'>Export JSON</a>
+              <li><a href='?target=export&amp;playlist={{ playlistId }}&amp;format=html' class='nav' target='_blank' title='printable playlist (opens in new window)'>Print View</a>
+            </ul>
+          </div>
+        </div>
+    {% endif %}
+        <label>Type:</label>
+        <select id='track-type-pick'>
+           <option value='manual-entry'>Music</option>
+           <option value='comment-entry'>Comment</option>
+           <option value='set-separator'>Mic Break (separator)</option>
+           {%~ for nme in nmes %}
+           <option data-args='{{ nme.args }}' value='{{ NME_PREFIX ~ nme.name }}'>{{ nme.name }}</option>
+           {%~ endfor %}
+        </select>
+    </div>
+    <div id='track-entry'>
+        <div id='manual-entry'>
+            <div style='white-space: nowrap'>
+                <label>Artist / Tag:</label>
+                <input required id='track-artist' autocomplete='off' maxlength={{ MAX_FIELD_LENGTH }} data-focus />
+                <span class='track-info' id='tag-status'>Artist name or tag number</span>
+                <datalist id='track-artists'>
+                </datalist>
+            </div>
+            <div>
+                <label>Track:</label>
+                <input required id='track-title' maxlength={{ MAX_FIELD_LENGTH }} autocomplete='off'/>
+                <datalist id='track-titles'>
+                </datalist>
+            </div>
+            <div>
+                <label>Album:</label>
+                <input id='track-album' maxlength={{ MAX_FIELD_LENGTH }} />
+            </div>
+            <div>
+                <label>Label:</label>
+                <input id='track-label' maxlength={{ MAX_FIELD_LENGTH }} />
+            </div>
+        </div>
+        <div id='comment-entry' class='zk-hidden' >
+            <div>
+                <label style='vertical-align: top'>Comment:</label>
+                <textarea wrap=virtual id='comment-data' rows=4 maxlength={{ MAX_COMMENT_LENGTH }} required data-focus></textarea>
+                <div style='display: inline-block;'>
+                    <span class='remaining' id='remaining'>(0/{{ MAX_COMMENT_LENGTH }} characters)</span><br/>
+                    <a id='markdown-help-link' href='#'>formatting help</a>
+                </div>
+                <input id='comment-max' type='hidden' value='{{ MAX_COMMENT_LENGTH }}'>
+
+            </div>
+            {%~ include 'block-markdown-help.html' %}
+        </div>
+        <div id='nme-entry' class='zk-hidden' >
+            <div>
+                <label>Name/ID:</label>
+                <input id='nme-id' maxlength={{ MAX_FIELD_LENGTH }} data-focus/>
+            </div>
+        </div>
+    </div> <!-- track-entry -->
+    <div id='time-entry'{{ isLiveShow ? " class='zk-hidden'" }}>
+      <label>Time:</label>
+      <input id='{{ editTrack ? "edit" : "track" }}-time' class='fxtime' type='{{ ttype }}' step='1' min='{{ window.start.format('H:i') }}' max='{{ window.end.format('H:i') }}' data-live='{{ isLiveShow ? 1 : 0 }}' data-last-val='{{ time }}' />
+      <span class='track-info'>{{ timeMsg }}</span>
+    </div>
+    <div>
+        <label></label>
+        <div class='action-area'>
+        {% if editTrack %}
+        <button type='button' id='edit-save' class='edit-mode default'>Save</button>
+        <button type='button' id='edit-delete' class='edit-mode'>Delete</button>
+        <button type='button' id='edit-cancel' class='edit-mode'>Cancel</button>
+        {% else %}
+        <button type='button' disabled id='track-play' class='track-submit default'>Add {{ isLiveShow ? "(Playing Now)<img src='img/play.svg' />" : "Item" }}</button>
+        <button type='button' disabled id='track-add' class='track-submit {{~ not isLiveShow ? " zk-hidden" }}'>Add (Upcoming)<img src='img/play-pause.svg' /></button>
+        {% endif %}
+        </div>
+    </div>
+    <div class='toggle-time-entry {{~ not isLiveShow ? " zk-hidden" }}'><div><!--&#x1f551;--></div></div>
+</div> <!-- track-editor -->
+<hr>
+<div id="extend-show" class="zk-popup">
+    <div class="zk-popup-content">
+        <h4>You have reached the end time of your show.</h4>
+        <p>Extend by:
+        <select id="extend-time">
+            <option value="5">5 minutes</option>
+            <option value="10">10 minutes</option>
+            <option value="15">15 minutes</option>
+            <option value="30">30 minutes</option>
+            <option value="60">1 hour</option>
+        </select></p>
+        <div class="zk-popup-actionarea">
+            <button type="button">Cancel</button>
+            <button type="button" class="default" id="extend">Extend</button>
+        </div>
+    </div>
+</div> <!-- extend-show -->
