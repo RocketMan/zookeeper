@@ -801,20 +801,18 @@ class Playlists extends MenuItem {
 
     public function handlePlaylistsByDate() {
         $viewdate = $_REQUEST["viewdate"];
-        $records = Engine::api(IPlaylist::class)->getPlaylists(1, 1, $viewdate, 0, 0, 0, 20);
-        $tbody = '';
-        $count = 0;
-        $href = '?subaction=viewListById&playlist';
-        while($records && ($row = $records->fetch())) {
-            $timeRange = self::timeToLocale($row[2]);
-            $title = htmlentities($row[3]);
-            $djs = htmlentities($row[5]);
-            $tbody .= "<TR>" .
-                 "<TD ALIGN='RIGHT' CLASS='sub time range'>$timeRange&nbsp;</TD>" .
-                 "<TD><A CLASS='nav' HREF='$href=$row[0]'>$title</A>&nbsp;&nbsp;($djs)</TD>" .
-                 "</TR>\n";
-            $count = $count + 1;
-        }
+        $lists = Engine::api(IPlaylist::class)->getPlaylists(1, 1, $viewdate, 0, 0, 0, 20)->asArray();
+        $count = count($lists);
+
+        foreach($lists as &$list)
+            $list['timerange'] = self::timeToLocale($list['showtime']);
+
+        $factory = new TemplateFactoryUI();
+        $template = $factory->load('list/bydate.html');
+        $tbody = $template->renderBlock('list', [
+            "lists" => $lists
+        ]);
+
         echo json_encode(["count" => $count, "tbody" => $tbody]);
     }
 }
