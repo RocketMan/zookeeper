@@ -1,3 +1,6 @@
+{% extends 'list/editor.html' %}
+
+{% block banner %}
   <div class='playlistBanner'>&nbsp;Editing highlighted item</div>
   <input type='hidden' id='track-id' value='{{ entry.getId() }}' />
 {% if entry.getType() == constant('TYPE_SET_SEPARATOR', entry) %}
@@ -18,6 +21,4 @@
 
   <input type='hidden' id='old-created' value='{{ entry.getCreatedTime() }}' />
   <input type='hidden' id='edit-type' value='{{ type }}' />
-
-{% include 'list/block-entry.html' %}
-{% include 'list/block-body.html' %}
+{% endblock %}

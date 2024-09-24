@@ -57,7 +57,7 @@ class PlaylistBuilder extends PlaylistObserver {
 
     protected function __construct(array $params) {
         $templateFact = new TemplateFactoryUI();
-        $this->template = $templateFact->load('list/block-event.html');
+        $this->template = $templateFact->load('list/item.html');
         $this->params = $params;
         $this->params['break'] = false;
         $this->params['usLocale'] = UI::isUsLocale();

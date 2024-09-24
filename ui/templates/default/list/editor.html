@@ -1,3 +1,37 @@
+{% block banner %}
+{% set showName = playlist.description %}
+{% set djId = playlist.id %}
+{% set djName = playlist.airname ?? "None" %}
+{% set djLink = djId ? "<a href='?subaction=viewDJ&amp;seq=selUser&amp;viewuser=" ~ djId ~ "' class='nav2'>" ~ djName | e ~ "</a>" : djName | e %}
+
+<div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>{{ showName }}</span> <span id='banner-dj'>with {{ djLink | raw }}</span></span><div>{{ showDateTime }}
+{%- if editMode and app.session.isAuth('v') -%}
+&nbsp;<a href='javascript:document.duplist.submit();' title='Duplicate Playlist'><span class='fas fa-clone dup-playlist'></span></a><form name='duplist' action='?' method='POST'><input type='hidden' name='subaction' value='editList'><input type='hidden' name='duplicate' value='1'><input type='hidden' name='playlist' value='{{ playlistId }}'></form>"
+{%- endif -%}
+&nbsp;</div></div>
+
+<script><!--
+  // Truncate the show name (banner-description) so that the combined
+  // show name, DJ name, and date/time fit on one line.
+  $().ready(function() {
+      var maxWidth = $(".playlistBanner").outerWidth();
+      var dateWidth = $(".playlistBanner div").outerWidth();
+      if($("#banner-caption").outerWidth() + dateWidth > maxWidth) {
+          var width = maxWidth - $("#banner-dj").outerWidth() - dateWidth - 12;
+          $("#banner-description").outerWidth(width);
+      }
+
+      $(".share-link").on('click', function() {
+          navigator.clipboard.writeText($(this).data('link')).then(function() {
+              alert('Playlist URL copied to the clipboard!');
+          });
+      });
+  });
+  // -->
+</script>
+{% endblock %}
+{#--------------------------------------------------------------------------#}
+{% block entry %}
 {% set isLiveShow = not editTrack and isLive %}
 <div class='pl-form-entry form-entry'>
     <input id='show-time' type='hidden' value="{{ playlist.showtime }}" >
@@ -113,3 +147,29 @@
         </div>
     </div>
 </div> <!-- extend-show -->
+{% endblock %}
+{#--------------------------------------------------------------------------#}
+{% block body %}
+<table class='playlistTable' cellpadding=1>
+  <thead>
+    <tr class='playlistHdr' align=left>
+      {{ editMode ? "<td></td>" }}
+      <th width='64px'>Time</th>
+      <th width='25%'>Artist</th>
+      <th width='25%'>Track</th>
+      <th></th>
+      <th>Album/Label</th>
+    </tr>
+  </thead>
+  <tbody>
+    {%~ for entry in entries %}
+      {{~ observer.observe(entry) | raw }}
+    {%~ endfor %}
+  </tbody>
+</table>
+{% if editMode %}
+<script src="{{ 'js/playlists.track.js' | decorate }}"></script>
+{% elseif isLive %}
+<script src="{{ 'js/playlists.live.js' | decorate }}"></script>
+{% endif %}
+{% endblock %}
