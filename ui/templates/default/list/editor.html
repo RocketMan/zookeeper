@@ -60,7 +60,7 @@
            <option value='manual-entry'>Music</option>
            <option value='comment-entry'>Comment</option>
            <option value='set-separator'>Mic Break (separator)</option>
-           {%~ for nme in nmes %}
+           {%~ for nme in app.nme %}
            <option data-args='{{ nme.args }}' value='{{ NME_PREFIX ~ nme.name }}'>{{ nme.name }}</option>
            {%~ endfor %}
         </select>

@@ -317,7 +317,6 @@ class Playlists extends MenuItem {
 
         $this->addVar('MAX_FIELD_LENGTH', PlaylistEntry::MAX_FIELD_LENGTH);
         $this->addVar('MAX_COMMENT_LENGTH', PlaylistEntry::MAX_COMMENT_LENGTH);
-        $this->addVar('nmes', Engine::param('nme'));
 
         $window = $api->getTimestampWindow($playlistId);
         $time = null;
