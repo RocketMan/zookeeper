@@ -261,9 +261,9 @@ class Playlists extends MenuItem {
         return $airNames;
     }
 
-    private function emitPlaylistBody($playlist, $editMode) {
+    private function emitPlaylistBody($playlistId, $editMode) {
         $api = Engine::api(IPlaylist::class);
-        $tracks = $api->getTracks($playlist, $editMode)->asArray();
+        $tracks = $api->getTracks($playlistId, $editMode)->asArray();
         Engine::api(ILibrary::class)->markAlbumsReviewed($tracks);
 
         $observer = PlaylistBuilder::newInstance([
@@ -281,7 +281,8 @@ class Playlists extends MenuItem {
         $this->addVar("editMode", $editMode);
     }
 
-    private function emitPlaylistBanner($playlistId, $playlist, $editMode) {
+    private function emitPlaylistBanner($playlist, $editMode) {
+        $playlistId = $playlist['id'];
         $showName = $playlist['description'];
         $djName = $playlist['airname'] ?? "None";
         $showDateTime = self::makeShowDateAndTime($playlist);
@@ -293,22 +294,22 @@ class Playlists extends MenuItem {
         $this->addVar("showDateTime", $showDateTime);
     }
 
-    private function emitAddForm($playlistId) {
-        $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
-        $this->emitPlaylistBanner($playlistId, $playlist, true);
-        $this->emitTrackAdder($playlistId, $playlist);
+    private function emitAddForm($playlist) {
+        $this->emitPlaylistBanner($playlist, true);
+        $this->emitTrackAdder($playlist);
         $this->setTemplate('list/editor.html');
     }
     
-    private function emitTrackAdder($playlistId, $playlist, $editTrack = false) {
+    private function emitTrackAdder($playlist, $editTrack = false) {
         $api = Engine::api(IPlaylist::class);
+
+        $playlistId = $playlist['id'];
 
         $this->addVar('NME_PREFIX', self::NME_PREFIX);
         $this->addVar('BASE_URL', Engine::getBaseURL());
 
         /* TZO is server equivalent of javascript Date.getTimezoneOffset() */
         $this->addVar('TZO', round(date('Z')/-60, 2));
-        $this->addVar('playlistId', $playlistId);
         $this->addvar('playlist', $playlist);
         $this->addVar('editTrack', $editTrack);
         $this->addVar('isLive', $api->isNowWithinShow($playlist));
@@ -349,14 +350,13 @@ class Playlists extends MenuItem {
         $this->addVar("timeMsg", $timeMsg);
     }
 
-    private function emitEditForm($playlistId, $id, $album) {
+    private function emitEditForm($playlist, $id, $album) {
         $entry = new PlaylistEntry($album);
-        $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
         $showName = $playlist['description'];
         $djName = $playlist['airname'] ?? "None";
 
         $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
-        $this->emitTrackAdder($playlistId, $playlist, $id);
+        $this->emitTrackAdder($playlist, $id);
         $this->addVar("entry", $entry);
         $this->setTemplate('list/editItem.html');
     }
@@ -380,12 +380,14 @@ class Playlists extends MenuItem {
             return;
         }
 
+        $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
+
         switch ($seq) {
         case "editTrack":
-            $this->emitEditForm($playlistId, $id, $albuminfo);
+            $this->emitEditForm($playlist, $id, $albuminfo);
             break;
         default:
-            $this->emitAddForm($playlistId);
+            $this->emitAddForm($playlist);
             break;
         }
 
@@ -675,11 +677,10 @@ class Playlists extends MenuItem {
         if($this->subaction == "viewDJ" && $row['airname'])
             $this->tertiary = $row['airname'];
 
-        $this->emitPlaylistBanner($playlistId, $row, false);
+        $this->emitPlaylistBanner($row, false);
         $this->emitPlaylistBody($playlistId, false);
 
         $this->addVar("playlist", $row);
-        $this->addVar("playlistId", $playlistId);
         $this->setTemplate('list/view.html');
     }
     

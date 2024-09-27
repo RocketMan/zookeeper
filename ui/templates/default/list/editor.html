@@ -1,12 +1,12 @@
 {% block banner %}
 {% set showName = playlist.description %}
-{% set djId = playlist.id %}
+{% set djId = playlist.aid %}
 {% set djName = playlist.airname ?? "None" %}
 {% set djLink = djId ? "<a href='?subaction=viewDJ&amp;seq=selUser&amp;viewuser=" ~ djId ~ "' class='nav2'>" ~ djName | e ~ "</a>" : djName | e %}
 
 <div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>{{ showName }}</span> <span id='banner-dj'>with {{ djLink | raw }}</span></span><div>{{ showDateTime }}
 {%- if editMode and app.session.isAuth('v') -%}
-&nbsp;<a href='javascript:document.duplist.submit();' title='Duplicate Playlist'><span class='fas fa-clone dup-playlist'></span></a><form name='duplist' action='?' method='POST'><input type='hidden' name='subaction' value='editList'><input type='hidden' name='duplicate' value='1'><input type='hidden' name='playlist' value='{{ playlistId }}'></form>"
+&nbsp;<a href='javascript:document.duplist.submit();' title='Duplicate Playlist'><span class='fas fa-clone dup-playlist'></span></a><form name='duplist' action='?' method='POST'><input type='hidden' name='subaction' value='editList'><input type='hidden' name='duplicate' value='1'><input type='hidden' name='playlist' value='{{ playlist.id }}'></form>"
 {%- endif -%}
 &nbsp;</div></div>
 
@@ -37,7 +37,7 @@
     <input id='show-time' type='hidden' value="{{ playlist.showtime }}" >
     {#~ TZO is server equivalent of javascript Date.getTimezoneOffset() #}
     <input id='timezone-offset' type='hidden' value="{{ TZO }}" >
-    <input id='track-playlist' type='hidden' value='{{ playlistId }}'>
+    <input id='track-playlist' type='hidden' value='{{ playlist.id }}'>
     <input id='track-action' type='hidden' value='{{ app.request.subaction }}'>
     <input id='const-prefix' type='hidden' value='{{ NME_PREFIX }}'>
     <label></label><span id='error-msg' class='error'></span>
@@ -47,10 +47,10 @@
           <div class='dot-menu-dots no-text-select'>&#x22ee;</div>
           <div class='dot-menu-content'>
             <ul>
-              <li><a href='#' class='nav share-link' data-link='{{ BASE_URL }}?subaction=viewListById&amp;playlist={{ playlistId }}' title='copy playlist URL to the clipboard'>Link to Playlist</a>
-              <li><a href='?target=export&amp;playlist={{ playlistId }}&amp;format=csv' class='nav' download='playlist.csv' title='export playlist as CSV'>Export CSV</a>
-              <li><a href='api/v1/playlist/{{ playlistId }}' class='nav' download='playlist.json' title='export playlist as JSON'>Export JSON</a>
-              <li><a href='?target=export&amp;playlist={{ playlistId }}&amp;format=html' class='nav' target='_blank' title='printable playlist (opens in new window)'>Print View</a>
+              <li><a href='#' class='nav share-link' data-link='{{ BASE_URL }}?subaction=viewListById&amp;playlist={{ playlist.id }}' title='copy playlist URL to the clipboard'>Link to Playlist</a>
+              <li><a href='?target=export&amp;playlist={{ playlist.id }}&amp;format=csv' class='nav' download='playlist.csv' title='export playlist as CSV'>Export CSV</a>
+              <li><a href='api/v1/playlist/{{ playlist.id }}' class='nav' download='playlist.json' title='export playlist as JSON'>Export JSON</a>
+              <li><a href='?target=export&amp;playlist={{ playlist.id }}&amp;format=html' class='nav' target='_blank' title='printable playlist (opens in new window)'>Print View</a>
             </ul>
           </div>
         </div>
