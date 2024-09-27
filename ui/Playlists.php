@@ -36,8 +36,6 @@ use ZK\Engine\PlaylistObserver;
 
 use ZK\UI\UICommon as UI;
 
-use JSMin\JSMin;
-
 
 class Playlists extends MenuItem {
     private const NME_PREFIX = "nme-";
@@ -295,7 +293,7 @@ class Playlists extends MenuItem {
         $this->addVar("showDateTime", $showDateTime);
     }
 
-    private function emitTagForm($playlistId, $message) {
+    private function emitAddForm($playlistId) {
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
         $this->emitPlaylistBanner($playlistId, $playlist, true);
         $this->emitTrackAdder($playlistId, $playlist);
@@ -377,10 +375,9 @@ class Playlists extends MenuItem {
             }
         }
 
-        $message = "";
         if(is_null($playlistId) || !$this->isOwner($playlistId)) {
-            $seq = "error";
-            $message = "access error";
+            echo "<B>Sorry, the playlist you have requested does not exist.</B>";
+            return;
         }
 
         switch ($seq) {
@@ -388,7 +385,7 @@ class Playlists extends MenuItem {
             $this->emitEditForm($playlistId, $id, $albuminfo);
             break;
         default:
-            $this->emitTagForm($playlistId, $message);
+            $this->emitAddForm($playlistId);
             break;
         }
 
