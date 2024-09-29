@@ -261,9 +261,9 @@ class Playlists extends MenuItem {
         return $airNames;
     }
 
-    private function emitPlaylistBody($playlistId, $editMode) {
+    private function emitPlaylistBody($playlist, $editMode) {
         $api = Engine::api(IPlaylist::class);
-        $tracks = $api->getTracks($playlistId, $editMode)->asArray();
+        $tracks = $api->getTracks($playlist['id'], $editMode)->asArray();
         Engine::api(ILibrary::class)->markAlbumsReviewed($tracks);
 
         $observer = PlaylistBuilder::newInstance([
@@ -279,6 +279,7 @@ class Playlists extends MenuItem {
         $this->addVar("observer", $observer);
         $this->addVar("entries", $entries);
         $this->addVar("editMode", $editMode);
+        $this->addVar('isLive', $api->isNowWithinShow($playlist));
     }
 
     private function emitPlaylistBanner($playlist) {
@@ -312,7 +313,6 @@ class Playlists extends MenuItem {
         $this->addVar('TZO', round(date('Z')/-60, 2));
         $this->addvar('playlist', $playlist);
         $this->addVar('editTrack', $editTrack);
-        $this->addVar('isLive', $api->isNowWithinShow($playlist));
 
         $this->addVar('MAX_FIELD_LENGTH', PlaylistEntry::MAX_FIELD_LENGTH);
         $this->addVar('MAX_COMMENT_LENGTH', PlaylistEntry::MAX_COMMENT_LENGTH);
@@ -391,7 +391,7 @@ class Playlists extends MenuItem {
             break;
         }
 
-        $this->emitPlaylistBody($playlistId, true);
+        $this->emitPlaylistBody($playlist, true);
     }
 
     private function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTime) {
@@ -678,7 +678,7 @@ class Playlists extends MenuItem {
             $this->tertiary = $row['airname'];
 
         $this->emitPlaylistBanner($row);
-        $this->emitPlaylistBody($playlistId, false);
+        $this->emitPlaylistBody($row, false);
 
         $this->addVar("playlist", $row);
         $this->setTemplate('list/view.html');
