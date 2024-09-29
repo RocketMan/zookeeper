@@ -281,7 +281,7 @@ class Playlists extends MenuItem {
         $this->addVar("editMode", $editMode);
     }
 
-    private function emitPlaylistBanner($playlist, $editMode) {
+    private function emitPlaylistBanner($playlist) {
         $playlistId = $playlist['id'];
         $showName = $playlist['description'];
         $djName = $playlist['airname'] ?? "None";
@@ -295,7 +295,7 @@ class Playlists extends MenuItem {
     }
 
     private function emitAddForm($playlist) {
-        $this->emitPlaylistBanner($playlist, true);
+        $this->emitPlaylistBanner($playlist);
         $this->emitTrackAdder($playlist);
         $this->setTemplate('list/editor.html');
     }
@@ -677,7 +677,7 @@ class Playlists extends MenuItem {
         if($this->subaction == "viewDJ" && $row['airname'])
             $this->tertiary = $row['airname'];
 
-        $this->emitPlaylistBanner($row, false);
+        $this->emitPlaylistBanner($row);
         $this->emitPlaylistBody($playlistId, false);
 
         $this->addVar("playlist", $row);
