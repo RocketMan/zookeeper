@@ -9,8 +9,10 @@
     <tr><th textalign='left' colspan='2' class='subhead'></th></tr>
   </thead>
   <tbody>
-{# the following block is not used on the initial load,
-   only for block rendering in subsequent ajax callbacks #}
+{#
+   the following block is not used on the initial load,
+   only for block rendering in subsequent ajax callbacks
+ #}
 {% block list %}
 {% for list in lists %}
     <tr>

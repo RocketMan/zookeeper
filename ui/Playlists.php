@@ -279,7 +279,7 @@ class Playlists extends MenuItem {
         $this->addVar("observer", $observer);
         $this->addVar("entries", $entries);
         $this->addVar("editMode", $editMode);
-        $this->addVar('isLive', $api->isNowWithinShow($playlist));
+        $this->addVar("isLive", $api->isNowWithinShow($playlist));
     }
 
     private function emitPlaylistBanner($playlist) {
