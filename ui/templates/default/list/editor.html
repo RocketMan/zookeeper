@@ -164,9 +164,7 @@
     </tr>
   </thead>
   <tbody>
-    {%~ for entry in entries %}
-      {{~ observer.observe(entry) | raw }}
-    {%~ endfor %}
+    {%~ include 'list/body.html' %}
   </tbody>
 </table>
 {% if editMode %}

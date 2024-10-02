@@ -1,8 +1,3 @@
-{#
-   This template is rendered only by block.
-
-   See UI::PlaylistBuilder
- #}
 {% macro makeTime(params, entry) %}
    {%~ set created = entry.getCreatedTimestamp() %}
    {#~ colon is included in 24hr format for symmetry with fxtime #}
@@ -10,7 +5,7 @@
       <td class='time' data-utc='{{ created }}'>{{ created ? created | date(format) }}</td>
 {%- endmacro %}
 
-{% macro makeEditDiv(params, entry) %}
+{%- macro makeEditDiv(params, entry) %}
     {%~ if params.editMode %}
         {%~ set href = "?id=" ~ entry.getId() | e('url') ~ "&amp;subaction=" ~  params.action | e('url') ~ "&amp;seq=editTrack" %}
         {%~ set editLink = "<a class='songEdit nav' href='" ~ href ~ "'><span class='fas fa-edit'></span></a>" %}
@@ -22,7 +17,7 @@
     {{~ _self.makeTime(params, entry) }}
 {%- endmacro %}
 
-{% macro makeAlbumLink(entry, includeLabel) %}
+{%- macro makeAlbumLink(entry, includeLabel) %}
     {%~ set albumName = entry.getAlbum() %}
     {%~ set labelName = entry.getLabel() %}
     {%~ if albumName | length or labelName | length %}
@@ -34,38 +29,11 @@
     {%~ endif %}
 {% endmacro %}
 
-{% block comment %}
-    <tr class='commentRow {{~ params.editMode ? "Edit" }}'>
-      {{~ _self.makeEditDiv(params, entry) }}
-      <td colspan=4>{{ entry.getComment() | markdown }}</td>
-    </tr>
-{% endblock %}
-
-{% block logEvent %}
-    {%~ if params.authUser %}
-    <tr class='logEntry {{~ params.editMode ? "Edit" }}'>
-      {{~ _self.makeEditDiv(params, entry) }}
-      <td>{{ entry.getLogEventType() }}</td>
-      <td colspan=3>{{ entry.getLogEventCode() }}</td>
-    </tr>
-    {%~ elseif not params.break %}
-    <tr class='songDivider'>
-      {{~ _self.makeTime(params, entry) }}
-      <td colspan=4><hr></td>
-    </tr>
-    {%~ endif %}
-{% endblock %}
-
-{% block setSeparator %}
-    {%~ if params.editMode or not params.break %}
-    <tr class='songDivider'>
-      {{~ _self.makeEditDiv(params, entry) }}
-      <td colspan=4><hr></td>
-    </tr>
-    {%~ endif %}
-{% endblock %}
-
-{% block spin %}
+{%- set break = false %}
+{% for entry in entries %}
+  {%~ set type = entry.getType() %}
+  {%~ if type is constant('TYPE_SPIN', entry) %}
+    {%~ block spin %}
     {%~ set reviewCell = entry.getReviewed() ? "<div class='albumReview'></div>" %}
     {%~ set artistName = entry.getTag() ? entry.swapNames(entry.getArtist()) : entry.getArtist() %}
     <tr class='songRow'>
@@ -75,4 +43,41 @@
       <td style='width: 15px'>{{ reviewCell | raw }}</td>
       <td>{{ _self.makeAlbumLink(entry, true) }}</td>
     </tr>
-{% endblock %}
+    {%~ endblock %}
+    {%~ set break = false %}
+  {%~ elseif type is constant('TYPE_COMMENT', entry) %}
+    {%~ block comment %}
+    <tr class='commentRow {{~ params.editMode ? "Edit" }}'>
+      {{~ _self.makeEditDiv(params, entry) }}
+      <td colspan=4>{{ entry.getComment() | markdown }}</td>
+    </tr>
+    {%~ endblock %}
+    {%~ set break = false %}
+  {%~ elseif type is constant('TYPE_LOG_EVENT', entry) %}
+    {%~ block logEvent %}
+    {%~ if params.authUser %}
+    <tr class='logEntry {{~ params.editMode ? "Edit" }}'>
+      {{~ _self.makeEditDiv(params, entry) }}
+      <td>{{ entry.getLogEventType() }}</td>
+      <td colspan=3>{{ entry.getLogEventCode() }}</td>
+    </tr>
+    {%~ elseif not break %}
+    <tr class='songDivider'>
+      {{~ _self.makeTime(params, entry) }}
+      <td colspan=4><hr></td>
+    </tr>
+    {%~ endif %}
+    {%~ endblock %}
+    {%~ set break = not params.authUser %}
+  {%~ else %}
+    {%~ block setSeparator %}
+    {%~ if params.editMode or not break %}
+    <tr class='songDivider'>
+      {{~ _self.makeEditDiv(params, entry) }}
+      <td colspan=4><hr></td>
+    </tr>
+    {%~ endif %}
+    {%~ endblock %}
+    {%~ set break = true %}
+  {%~ endif %}
+{% endfor %}

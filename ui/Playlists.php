@@ -266,17 +266,18 @@ class Playlists extends MenuItem {
         $tracks = $api->getTracks($playlist['id'], $editMode)->asArray();
         Engine::api(ILibrary::class)->markAlbumsReviewed($tracks);
 
-        $observer = PlaylistBuilder::newInstance([
+        $params = [
             "action" => $this->subaction,
             "editMode" => $editMode,
-            "authUser" => $this->session->isAuth("u")
-        ]);
+            "authUser" => $this->session->isAuth("u"),
+            "usLocale" => UI::isUsLocale()
+        ];
 
         $entries = array_map(function($track) {
             return new PlaylistEntry($track);
         }, $tracks);
 
-        $this->addVar("observer", $observer);
+        $this->addVar("params", $params);
         $this->addVar("entries", $entries);
         $this->addVar("editMode", $editMode);
         $this->addVar("isLive", $api->isNowWithinShow($playlist));

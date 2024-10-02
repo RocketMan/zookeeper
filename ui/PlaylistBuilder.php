@@ -31,8 +31,9 @@ use ZK\UI\UICommon as UI;
 class PlaylistBuilder extends PlaylistObserver {
     private const PARAMS = [ "action", "editMode", "authUser" ];
 
-    protected $params;
     protected $template;
+    protected $params;
+    protected $break;
 
     public static function newInstance(array $params) {
         // validate all parameters are present
@@ -51,31 +52,32 @@ class PlaylistBuilder extends PlaylistObserver {
     protected function renderBlock($block, $entry) {
         return $this->template->renderBlock($block, [
             "params" => $this->params,
+            "break" => $this->break,
             "entry" => $entry
         ]);
     }
 
     protected function __construct(array $params) {
         $templateFact = new TemplateFactoryUI();
-        $this->template = $templateFact->load('list/item.html');
+        $this->template = $templateFact->load('list/body.html');
         $this->params = $params;
-        $this->params['break'] = false;
         $this->params['usLocale'] = UI::isUsLocale();
+        $this->break = false;
         $this->on('comment', function($entry) {
             $fragment = $this->renderBlock('comment', $entry);
-            $this->params['break'] = false;
+            $this->break = false;
             return $fragment;
         })->on('logEvent', function($entry) {
             $fragment = $this->renderBlock('logEvent', $entry);
-            $this->params['break'] = !$this->params['authUser'];
+            $this->break = !$this->params['authUser'];
             return $fragment;
         })->on('setSeparator', function($entry) {
             $fragment = $this->renderBlock('setSeparator', $entry);
-            $this->params['break'] = true;
+            $this->break = true;
             return $fragment;
         })->on('spin', function($entry) {
             $fragment = $this->renderBlock('spin', $entry);
-            $this->params['break'] = false;
+            $this->break = false;
             return $fragment;
         });
     }
