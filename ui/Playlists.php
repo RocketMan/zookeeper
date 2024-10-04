@@ -805,11 +805,9 @@ class Playlists extends MenuItem {
         foreach($lists as &$list)
             $list['timerange'] = self::timeToLocale($list['showtime']);
 
-        $factory = new TemplateFactoryUI();
-        $template = $factory->load('list/bydate.html');
-        $tbody = $template->renderBlock('list', [
-            "lists" => $lists
-        ]);
+        $this->setTemplate('list/bydate.html');
+        $this->addVar('lists', $lists);
+        $tbody = $this->render('list');
 
         echo json_encode(["count" => $count, "tbody" => $tbody]);
     }
