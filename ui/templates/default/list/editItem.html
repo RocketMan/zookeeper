@@ -3,22 +3,22 @@
 {% block banner %}
   <div class='playlistBanner'>&nbsp;Editing highlighted item</div>
   <input type='hidden' id='track-id' value='{{ entry.getId() }}' />
-{% if entry.getType() == constant('TYPE_SET_SEPARATOR', entry) %}
-{% set type='set-separator' %}
-{% elseif entry.getType() == constant('TYPE_COMMENT', entry) %}
-{% set type='comment-entry' %}
+{% set type = entry.getType() %}
+{% if type is constant('TYPE_SPIN', entry) %}
+  {%~ set etype = 'manual-entry' %}
+  {%~ set album = entry.asArray() %}
+  {%~ for field in ['tag', 'artist', 'album', 'label', 'title'] %}
+  <input type='hidden' id='old-track-{{ field }}' value='{{ album[field == 'title' ? 'track' : field ] }}' />
+  {%~ endfor %}
+{% elseif type is constant('TYPE_COMMENT', entry) %}
+  {%~ set etype = 'comment-entry' %}
   <input type='hidden' id='old-comment-data' value='{{ entry.getComment() }}' />
-{% elseif entry.getType() == constant('TYPE_LOG_EVENT', entry) %}
-{% set type=NME_PREFIX ~ entry.getLogEventType() %}
+{% elseif type is constant('TYPE_LOG_EVENT', entry) %}
+  {%~ set etype = NME_PREFIX ~ entry.getLogEventType() %}
   <input type='hidden' id='old-event-code' value='{{ entry.getLogEventCode() }}' />
 {% else %}
-{% set type='manual-entry' %}
-{% set album = entry.asArray() %}
-{% for field in ['tag', 'artist', 'album', 'label', 'title'] %}
-  <input type='hidden' id='old-track-{{ field }}' value='{{ album[field == 'title' ? 'track' : field ] }}' />
-{% endfor %}
+  {%~ set etype = 'set-separator' %}
 {% endif %}
-
   <input type='hidden' id='old-created' value='{{ entry.getCreatedTime() }}' />
-  <input type='hidden' id='edit-type' value='{{ type }}' />
+  <input type='hidden' id='edit-type' value='{{ etype }}' />
 {% endblock %}
