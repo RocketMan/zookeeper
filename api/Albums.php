@@ -62,6 +62,7 @@ class Albums implements RequestHandlerInterface {
     private static $paginateOps = [
         "artist" =>               [ ILibrary::ALBUM_ARTIST, null ],
         "album" =>                [ ILibrary::ALBUM_NAME, null ],
+        "location" =>             [ ILibrary::ALBUM_LOCATION, null ],
         "track" =>                [ ILibrary::TRACK_NAME, null ],
         "label.id" =>             [ ILibrary::ALBUM_PUBKEY, null ],
         "reviews.airname.id" =>   [ ILibrary::ALBUM_AIRNAME, null ],
