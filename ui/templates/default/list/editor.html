@@ -4,13 +4,13 @@
 {% set djName = playlist.airname ?? "None" %}
 {% set djLink = djId ? "<a href='?subaction=viewDJ&amp;seq=selUser&amp;viewuser=" ~ djId ~ "' class='nav2'>" ~ djName | e ~ "</a>" : djName | e %}
 
-  <div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>{{ showName }}</span> <span id='banner-dj'>with {{ djLink | raw }}</span></span><div>{{ showDateTime }}
+<div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>{{ showName }}</span> <span id='banner-dj'>with {{ djLink | raw }}</span></span><div>{{ showDateTime }}
 {%- if not editMode and app.session.isAuth('v') -%}
 &nbsp;<a href='javascript:document.duplist.submit();' title='Duplicate Playlist'><span class='fas fa-clone dup-playlist'></span></a><form name='duplist' action='?' method='POST'><input type='hidden' name='subaction' value='editList'><input type='hidden' name='duplicate' value='1'><input type='hidden' name='playlist' value='{{ playlist.id }}'></form>"
 {%- endif -%}
 &nbsp;</div></div>
 
-  <script><!--
+<script><!--
 {#
    Truncate the show name (banner-description) so that the combined
    show name, DJ name, and date/time fit on one line.
@@ -30,12 +30,12 @@
       });
   });
   // -->
-  </script>
+</script>
 {% endblock %}
 {#--------------------------------------------------------------------------#}
 {% block entry %}
 {% set isLiveShow = not editTrack and isLive %}
-  <div class='pl-form-entry form-entry'>
+<div class='pl-form-entry form-entry'>
     <input id='show-time' type='hidden' value="{{ playlist.showtime }}" >
     {#~ TZO is server equivalent of javascript Date.getTimezoneOffset() #}
     <input id='timezone-offset' type='hidden' value="{{ TZO }}" >
