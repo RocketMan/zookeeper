@@ -292,6 +292,18 @@ class LibraryImpl extends DBO implements ILibrary {
             $query .= "LIMIT ?, ?";
             $bindType = 3;
             break;
+        case ILibrary::ALBUM_LOCATION:
+            $query = "SELECT * FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey WHERE location=? ";
+            $bindType = 3;
+            $params = explode('|', $search);
+            if(count($params) > 1) {
+                $query .= "AND bin=? ";
+                [ $search, $search2 ] = array_slice($params, 0, 2);
+                $bindType++;
+            }
+            $query .= self::orderBy($sortBy);
+            $query .= "LIMIT ?, ?";
+            break;
         default:
             echo "DEBUG: ERROR! Unknown key '$tableIndex'<BR>\n";
             return;
@@ -344,7 +356,7 @@ class LibraryImpl extends DBO implements ILibrary {
                 break;
             case 4:
                 $stmt->bindValue(1, $search);
-                $stmt->bindValue(2, $search);
+                $stmt->bindValue(2, $search2 ?? $search);
                 $stmt->bindValue(3, (int)$pos, \PDO::PARAM_INT);
                 $stmt->bindValue(4, (int)$count, \PDO::PARAM_INT);
                 break;
@@ -396,7 +408,7 @@ class LibraryImpl extends DBO implements ILibrary {
                 break;
             case 4:
                 $stmt->bindValue(1, $search);
-                $stmt->bindValue(2, $search);
+                $stmt->bindValue(2, $search2 ?? $search);
                 break;
             }
 
