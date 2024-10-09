@@ -299,7 +299,7 @@ class Playlists extends MenuItem {
     private function emitAddForm($playlist) {
         $this->emitPlaylistBanner($playlist);
         $this->emitTrackAdder($playlist);
-        $this->setTemplate('list/editor.html');
+        $this->setTemplate('list/add.html');
     }
     
     private function emitTrackAdder($playlist, $editTrack = false) {
@@ -359,7 +359,7 @@ class Playlists extends MenuItem {
         $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
         $this->emitTrackAdder($playlist, $id);
         $this->addVar("entry", $entry);
-        $this->setTemplate('list/editItem.html');
+        $this->setTemplate('list/edit.html');
     }
 
     public function emitEditor() {
