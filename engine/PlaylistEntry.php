@@ -42,6 +42,9 @@ namespace ZK\Engine;
  * (Note that spin properties (e.g., getArtist, getTrack()) are implemented
  * via introspection, so you will not see them declared here, though they are
  * available for use.)
+ *
+ * In addition, the event may be inspected by means of read-only properties
+ * on the object; e.g., $entry->type, $entry->artist, $entry->comment.
  */
 class PlaylistEntry {
     const TYPE_SPIN = 0;
@@ -96,11 +99,7 @@ class PlaylistEntry {
     }
 
     public function __set($name, $value) {
-        // disallow setting of synthetic properties
-        if(method_exists($this, "get" . ucfirst($name)))
-            return;
-
-        $this->entry[$name] = $value;
+        throw new \Error("Property is immutable; use setter to modify event");
     }
 
     public static function scrubField($field, $length = PlaylistEntry::MAX_FIELD_LENGTH) {
