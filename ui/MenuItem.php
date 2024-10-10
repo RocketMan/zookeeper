@@ -123,9 +123,11 @@ abstract class MenuItem extends CommandTarget {
         }
     }
 
-    public function render() {
+    public function render($block = null) {
         $templateFact = new TemplateFactoryUI();
         $template = $templateFact->load($this->getTemplate());
-        return $template->render($this->getTemplateVars());
+        return $block ?
+            $template->renderBlock($block, $this->getTemplateVars()) :
+            $template->render($this->getTemplateVars());
     }
 }

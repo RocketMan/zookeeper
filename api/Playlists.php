@@ -680,15 +680,13 @@ class Playlists implements RequestHandlerInterface {
     }
 
     private function injectMetadata($api, $rqMeta, $rsMeta, $listId, $size, $entry) {
-        ob_start();
         $action = $rqMeta->getOptional("action", "");
-        PlaylistBuilder::newInstance([
+        $fragment = PlaylistBuilder::newInstance([
             "action" => $action,
             "editMode" => true,
             "authUser" => true
         ])->observe($entry);
-        $rsMeta->set("html", ob_get_contents());
-        ob_end_clean();
+        $rsMeta->set("html", $fragment);
 
         // seq is one of:
         //   -1     client playlist is out of sync with the service

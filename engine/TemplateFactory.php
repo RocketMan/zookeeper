@@ -43,6 +43,7 @@ class LazyLoadParams {
         'email',
         'favicon',
         'logo',
+        'nme',
         'station',
         'station_full',
         'station_slogan',
