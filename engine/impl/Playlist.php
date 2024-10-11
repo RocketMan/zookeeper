@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -47,12 +47,12 @@ class PlaylistImpl extends DBO implements IPlaylist {
     public function getPlaylist($playlist, $withAirname=0) {
         if($withAirname)
             $query = "SELECT l.description, l.showdate, l.showtime, " .
-                     "       a.id, a.airname, l.dj, l.origin " .
+                     "       a.id aid, a.airname, l.dj, l.origin, l.id " .
                      "FROM lists l LEFT JOIN airnames a " .
                      "ON l.airname = a.id " .
                      "WHERE l.id = ?";
         else
-            $query = "SELECT description, showdate, showtime, airname, dj, origin " .
+            $query = "SELECT description, showdate, showtime, airname, dj, origin, id " .
                      "FROM lists WHERE id=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);

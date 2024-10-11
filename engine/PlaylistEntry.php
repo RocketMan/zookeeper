@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -42,6 +42,9 @@ namespace ZK\Engine;
  * (Note that spin properties (e.g., getArtist, getTrack()) are implemented
  * via introspection, so you will not see them declared here, though they are
  * available for use.)
+ *
+ * In addition, the event may be inspected by means of read-only properties
+ * on the object; e.g., $entry->type, $entry->artist, $entry->comment.
  */
 class PlaylistEntry {
     const TYPE_SPIN = 0;
@@ -80,6 +83,23 @@ class PlaylistEntry {
             $this->entry[$property] = $args[0];
             return $this;
         }
+    }
+
+    public function __isset($name) {
+        return method_exists($this, "get" . ucfirst($name)) ||
+            array_key_exists($name, $this->entry);
+    }
+
+    public function __get($name) {
+        $getter = "get" . ucfirst($name);
+        if(method_exists($this, $getter))
+            return call_user_func([$this, $getter]);
+
+        return $this->entry[$name] ?? "";
+    }
+
+    public function __set($name, $value) {
+        throw new \Error("Property is immutable; use setter to modify event");
     }
 
     public static function scrubField($field, $length = PlaylistEntry::MAX_FIELD_LENGTH) {

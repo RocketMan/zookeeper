@@ -33,6 +33,9 @@ class TemplateFactoryUI extends TemplateFactory {
 
         $filter = new \Twig\TwigFilter('smartURL', [ '\ZK\UI\UICommon', 'smartURL' ], [ 'is_safe' => [ 'html' ] ]);
         $this->twig->addFilter($filter);
+
+        $filter = new \Twig\TwigFilter('markdown', [ '\ZK\UI\UICommon', 'markdown' ], [ 'is_safe' => [ 'html' ] ]);
+        $this->twig->addFilter($filter);
     }
 
     public function setContext($menu = null, $menuItem = null, $html = null) {
