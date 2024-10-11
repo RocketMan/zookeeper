@@ -21,9 +21,9 @@
     {%~ set albumName = entry.album %}
     {%~ set labelName = entry.label %}
     {%~ if albumName | length or labelName | length %}
-        {%~ set albumTitle = entry.tag ? "<a href='?s=byAlbumKey&amp;n=" ~ entry.tag | e('url') ~ "&amp;action=search' class='nav'>" ~ albumName | e ~ "</a>" : albumName | e %}
+        {%~ set albumTitle = entry.tag ? "<a href='?s=byAlbumKey&amp;n=" ~ entry.tag | e('url') ~ "&amp;action=search' class='nav'>" ~ albumName | e ~ "</a>" : albumName | smartURL %}
         {%~ if includeLabel %}
-            {%~ set albumTitle = albumTitle ~ "<span class='songLabel'> / " ~ labelName | e ~ "</span>" %}
+            {%~ set albumTitle = albumTitle ~ "<span class='songLabel'> / " ~ labelName | smartURL ~ "</span>" %}
         {%~ endif %}
         {{~ albumTitle | raw -}}
     {%~ endif %}
