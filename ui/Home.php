@@ -47,38 +47,29 @@ class Home extends MenuItem {
     }
 
     protected function makeDatePicker() {
-        $result = [];
-
-        $now = new \DateTime();
-        $result[] = clone $now;
-
-        for($i=0; $i<6; $i++) {
-            $now->modify("-1 days");
-            $result[] = clone $now;
-        }
+        $result = array_map(function($i) {
+            return (new \DateTime())->modify("-$i days");
+        }, range(0, 6));
 
         $this->addVar("dates", $result);
     }
 
     protected function makeTimePicker($date=null) {
-        $result = [];
-
         $now = new \DateTime();
         if(!$date || $now->format("Y-m-d") == $date) {
             // today
             $hour = (int)$now->format("H");
-            $result[] = -1;
-        } else {
-            $hour = 23;
-            $result[] = $hour;
-        }
+            $initial = -1;
+        } else
+            $initial = $hour = 23;
 
-        do {
-            if($hour % 3) continue;
-            $result[] = $hour;
-        } while(--$hour > 0);
+        $result = array_filter(range(1, $hour), function($i) {
+            return $i % 3 === 0;
+        });
 
-        $this->addVar("times", $result);
+        $result[] = $initial;
+
+        $this->addVar("times", array_reverse($result));
     }
 
     public function getTimes() {
