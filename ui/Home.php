@@ -84,7 +84,7 @@ class Home extends MenuItem {
     public function getTimes() {
         $this->setTemplate('onnow.html');
         $this->makeTimePicker($_REQUEST["date"] ?? null);
-        echo json_encode($this->render('time'));
+        echo json_encode([ "times" => $this->render('time') ]);
     }
 
     public function emitHome() {

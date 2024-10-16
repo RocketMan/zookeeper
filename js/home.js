@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -220,7 +220,7 @@ $().ready(function(){
             accept: 'application/json; charset=utf-8',
             url: url
         }).done(function (response) {
-            $("#time").empty().append(response).selectmenu('refresh');
+            $("#time").empty().append(response.times).selectmenu('refresh');
             var time = $("#time").val();
             populateCards(true, time == 'now' ? null : (date + " " + time));
         });
