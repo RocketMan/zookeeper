@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -47,46 +47,44 @@ class Home extends MenuItem {
     }
 
     protected function makeDatePicker() {
+        $result = [];
+
         $now = new \DateTime();
-        $result = "<option value='" . $now->format("Y-m-d") . "'>Today</option>";
-        $now->modify("-1 days");
-        $result .= "<option value='" . $now->format("Y-m-d") . "'>Yesterday</option>";
-        for($i=0; $i<5; $i++) {
+        $result[] = clone $now;
+
+        for($i=0; $i<6; $i++) {
             $now->modify("-1 days");
-            $result .= "<option value='" . $now->format("Y-m-d") . "'>" .
-                $now->format("D M j") . "</option>";
+            $result[] = clone $now;
         }
 
-        return $result;
+        $this->addVar("dates", $result);
     }
 
     protected function makeTimePicker($date=null) {
+        $result = [];
+
         $now = new \DateTime();
         if(!$date || $now->format("Y-m-d") == $date) {
             // today
-            $result = "<option value='now'>Recently Played</option>";
             $hour = (int)$now->format("H");
+            $result[] = -1;
         } else {
-            $result = "<option value='23:59:59'>Before midnight</option>";
             $hour = 23;
+            $result[] = $hour;
         }
 
         do {
             if($hour % 3) continue;
-            $h = sprintf("%02d", $hour);
-            $ampm = $h >= 12?"pm":"am";
-            $hx = $h > 12?$hour-12:$hour;
-            $dh = $h == 12?"noon":($hx.$ampm);
-            $result .= "<option value='$h:00:00'>Before $dh</option>";
+            $result[] = $hour;
         } while(--$hour > 0);
 
-        return $result;
+        $this->addVar("times", $result);
     }
 
     public function getTimes() {
-        $retVal = [];
-        $retVal['times'] = $this->makeTimePicker($_REQUEST["date"] ?? null);
-        echo json_encode($retVal);
+        $this->setTemplate('onnow.html');
+        $this->makeTimePicker($_REQUEST["date"] ?? null);
+        echo json_encode($this->render('time'));
     }
 
     public function emitHome() {
@@ -102,8 +100,8 @@ class Home extends MenuItem {
 
     private function emitRecentlyPlayed() {
         $this->addVar('discogs', true);
-        $this->addVar('datepicker', $this->makeDatePicker());
-        $this->addVar('timepicker', $this->makeTimePicker());
+        $this->makeDatePicker();
+        $this->makeTimePicker();
     }
 
     private function emitTopPlays($numweeks=1, $limit=10) {
