@@ -297,7 +297,7 @@ class UICommon {
     }
 
     public static function isUsLocale() : bool {
-        return self::getClientLocale() == 'en_US';
+        return !strcasecmp(self::getClientLocale(), 'en_US');
     }
 
     /**
