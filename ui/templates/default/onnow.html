@@ -36,8 +36,28 @@ $().ready(function() {
   <h3>Recently Played on {{ app.station }}</h3>
   <div>
     <form>
-      <select id='date'>{{ datepicker | raw }}</select>
-      <select id='time'>{{ timepicker | raw }}</select>
+      <select id='date'>
+        <option value="{{ dates[0] | date("Y-m-d") }}">Today</option>
+        <option value="{{ dates[1] | date("Y-m-d") }}">Yesterday</option>
+{% for day in dates[2:] %}
+        <option value="{{ day | date("Y-m-d") }}">{{ day | date("D M j") }}</option>
+{% endfor %}
+      </select>
+      <select id='time'>
+{% block time %}
+{% if times[0] == -1 %}
+        <option value='now'>Recently Played</option>
+{% else %}
+        <option value='23:59:59'>Before midnight</option>
+{% endif %}
+{% for hour in times[1:] %}
+  {%~ set ampm = hour >= 12 ? "pm" : "am" %}
+  {%~ set hx = hour > 12 ? hour - 12 : hour %}
+  {%~ set dh = hour == 12 ? "noon" : hx ~ ampm %}
+        <option value='{{ "%02d" | format(hour) }}:00:00'>Before {{ dh }}</option>
+{% endfor %}
+{% endblock %}
+      </select>
     </form>
   </div>
 </div>
