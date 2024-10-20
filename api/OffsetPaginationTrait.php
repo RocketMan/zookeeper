@@ -175,6 +175,26 @@ trait OffsetPaginationTrait {
         if(!$ops)
             throw new NotAllowedException("Must specify filter.  May be one of: ".implode(", ", array_keys($paginateOps)));
 
+        if($ops[0] == ILibrary::ALBUM_LOCATION) {
+            // require authentication to prevent database scraping
+            if(!Engine::session()->isAuth("u"))
+                throw new NotAllowedException("Operation requires authentication");
+            $locations = array_values(ILibrary::LOCATIONS);
+            $locationMap = array_combine(
+                array_map("strtolower", $locations),
+                array_keys(ILibrary::LOCATIONS));
+            $normalKey = strtolower($key);
+
+            if(!array_key_exists($normalKey, $locationMap))
+                throw new \InvalidArgumentException("Invalid location value.  Must be one of: " . implode(", ", $locations));
+
+            $key = $locationMap[$normalKey];
+
+            // allow optional bin constraint for storage
+            if($key == "G" && $request->hasFilter("bin"))
+                $key .= "|" . $request->filterValue("bin");
+        }
+
         $reqOffset = $offset = $request->hasPagination("offset")?
                 (int)$request->paginationValue("offset"):0;
 

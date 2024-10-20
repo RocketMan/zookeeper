@@ -44,6 +44,7 @@ form `filter[_field_]=_value_`.  Possible fields are listed below.
   * artist
   * album
   * track
+  * location (requires X-APIKEY authentication; see below)
   * label.id
   * reviews.airname.id
   * match(artist)
@@ -60,6 +61,12 @@ returned, not the number of albums.
 Fields match exactly, unless '*' is appended, in which case a stemming
 search is done.  The 'match' keyword indicates a full-text search against
 the indicated columns.
+
+X-APIKEY authentication is required for use of the location filter.
+Possible filter values are (case-insensitive): A-File, Deaccessioned,
+Library, Missing, Needs Repair, Out for Review, Pending Appr,
+Received, Review Shelf, Storage.  With Storage, you may supply an
+additional, optional filter `bin` to specify the storage location.
 
 ### Sorting
 
