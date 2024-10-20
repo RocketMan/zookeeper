@@ -180,7 +180,7 @@ class EditorImpl extends DBO implements IEditor {
                                      $album["tag"] != $this->getNextTag());
     
         // Tracks
-        if($tracks) {
+        if(!is_null($tracks)) {
             // We delete from both tracknames and colltracknames
             // because someone could have toggled the 'compilation'
             // checkbox; this ensures no stale track names remain

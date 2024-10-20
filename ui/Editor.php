@@ -168,7 +168,7 @@ class Editor extends MenuItem {
     }
 
     private static function isEmpty($var) {
-        return !isset($var) || empty($var) && $var !== 0 && $var !== "0";
+        return !isset($var) || strlen(trim($var)) === 0;
     }
 
     public function getSubactions($action) {
@@ -1285,6 +1285,8 @@ class Editor extends MenuItem {
     }
     
     private function validateTracks() {
+        $isCollection = $_REQUEST["coll"] ?? false;
+
         $lowestBlank = $highestTrack = 0;
         $trackPattern = "/track\d/";
         foreach($_POST as $key => $value) {
@@ -1294,9 +1296,18 @@ class Editor extends MenuItem {
                     $highestTrack = $i;
                 if(self::isEmpty($value) && (!$lowestBlank || $i < $lowestBlank))
                     $lowestBlank = $i;
+
+                if($isCollection) {
+                    $value = $_POST["artist" . $i];
+                    if(!self::isEmpty($value) && $i > $highestTrack)
+                        $highestTrack = $i;
+                    if(self::isEmpty($value) && (!$lowestBlank || $i < $lowestBlank))
+                        $lowestBlank = $i;
+                }
             }
         }
-        return !$lowestBlank || $lowestBlank >= $highestTrack;
+
+        return !$lowestBlank || $lowestBlank > $highestTrack;
     }
     
     private function emitTrackList($focusTrack, $isCollection) {
@@ -1325,7 +1336,7 @@ class Editor extends MenuItem {
             $this->skipVar("trackDuration".$trackNum);
             $this->skipVar("trackUrl".$trackNum);
             $title = htmlentities(stripslashes($_POST["track".$trackNum]));
-            $focus = $focusTrack == $trackNum ? " data-focus" : "";
+            $focus = $focusTrack == $trackNum && self::isEmpty($title)? " data-focus" : "";
 
             echo "<TR>";
             echo "<TD ALIGN='RIGHT' style='width:20px' ><b>$trackNum:</b></TD>";
@@ -1333,7 +1344,8 @@ class Editor extends MenuItem {
 
             if($isCollection) {
                 $artist = htmlentities(stripslashes($_POST["artist".$trackNum]));
-                echo "<TD><INPUT NAME=artist$trackNum VALUE=\"$artist\" TYPE=text CLASS='text $cellWidth' maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum'></TD>";
+                $focus = !$focus && $focusTrack == $trackNum && self::isEmpty($artist)? " data-focus" : "";
+                echo "<TD><INPUT NAME=artist$trackNum VALUE=\"$artist\" TYPE=text CLASS='text $cellWidth' maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
                 $this->skipVar("artist".$trackNum);
             }
 
@@ -1345,11 +1357,11 @@ class Editor extends MenuItem {
 
             echo "</TR>\n";
         }
-        echo "</table>";
+        echo "</table>\n";
     }
 
     private function trackForm() {
-        $isCollection = $_REQUEST["coll"];
+        $isCollection = $_REQUEST["coll"] ?? false;
 
         if($_REQUEST["seltag"] && !$_REQUEST["tdb"]) {
             $tracks = Engine::api(ILibrary::class)->search($isCollection?ILibrary::COLL_KEY:ILibrary::TRACK_KEY, 0, 2000, $_REQUEST["seltag"]);
@@ -1386,8 +1398,11 @@ class Editor extends MenuItem {
             $_REQUEST["nextTrack"] = 1;
         }
     
-        $focusTrack = $focusTrack ? $focusTrack : $_REQUEST["nextTrack"];
-        $this->emitTrackList($focusTrack, $isCollection);
+        $focusTrackList = $focusTrack ? $focusTrack : $_REQUEST["nextTrack"];
+        $this->emitTrackList($focusTrackList, $isCollection);
+
+        if($focusTrack)
+            echo "    <div class='error' style='padding-top: 8px; padding-left: 25px;'>Enter required field</div>";
     ?>
 
     <div style="padding-top:8px; padding-left:25px;">
