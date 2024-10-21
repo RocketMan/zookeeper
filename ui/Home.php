@@ -47,11 +47,11 @@ class Home extends MenuItem {
     }
 
     protected function makeDatePicker() {
-        $result = array_map(function($i) {
+        $dates = array_map(function($i) {
             return (new \DateTime())->modify("-$i days");
         }, range(0, 6));
 
-        $this->addVar("dates", $result);
+        $this->addVar("dates", $dates);
     }
 
     protected function makeTimePicker($date=null) {
@@ -63,13 +63,13 @@ class Home extends MenuItem {
         } else
             $initial = $hour = 23;
 
-        $result = array_filter(range(1, $hour), function($i) {
+        $hours = array_filter(range(1, $hour), function($i) {
             return $i % 3 === 0;
         });
 
-        $result[] = $initial;
+        $hours[] = $initial;
 
-        $this->addVar("times", array_reverse($result));
+        $this->addVar("times", array_reverse($hours));
     }
 
     public function getTimes() {
