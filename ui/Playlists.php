@@ -252,13 +252,14 @@ class Playlists extends MenuItem {
     }
 
     private function getDJAirNames() {
-        $airNames = [];
-        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, 1);
-        while ($records && ($row = $records->fetch()))
-           $airNames[] = $row['airname'];
+        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, 1)->asArray();
 
-        $airNames[] = 'None';
-        return $airNames;
+        $airnames = array_map(function($row) {
+            return $row['airname'];
+        }, $records);
+
+        $airnames[] = 'None';
+        return $airnames;
     }
 
     private function emitPlaylistBody($playlist, $editMode) {
