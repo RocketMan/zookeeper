@@ -15,14 +15,29 @@ __template__ is the filename of the default template; e.g.,
 
 ### Filters
 
+In addition to the usual Twig filters, the following
+application-specific filters are also available for use:
+
+#### decorate
 The 'decorate' filter decorates an asset URI in such a way that it
 will change when the referenced asset changes.  In this way, assets
-such as js and css files are guaranteed to load anew in the client
+such as .js and .css files are guaranteed to load anew in the client
 browser whenever they change in the service.
 
 Example:
 
     <link rel="stylesheet" type="text/css" href="{{ 'css/mystyle.css' | decorate }}" />
+
+where `css/mystyle.css` is the path to a real asset, relative to the
+project root.
+
+#### markdown
+The 'markdown' filter converts all markdown in the string to HTML.
+
+#### smartURL
+The 'smartURL' filter inserts HTML anchor tags for all URLs in the
+string, thereby rendering the URLs clickable.
+
 
 ### Template environment
 
@@ -54,6 +69,7 @@ The following values are available from `config/config.php`:
 * app.email.*
 * app.favicon
 * app.logo
+* app.nme
 * app.station
 * app.station_full
 * app.station_slogan
