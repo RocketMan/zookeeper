@@ -43,7 +43,7 @@ namespace ZK\Engine;
  * via introspection, so you will not see them declared here, though they are
  * available for use.)
  *
- * In addition, the event may be inspected by means of read-only properties
+ * In addition, the entry may be inspected by means of read-only properties
  * on the object; e.g., $entry->type, $entry->artist, $entry->comment.
  */
 class PlaylistEntry {
@@ -99,7 +99,7 @@ class PlaylistEntry {
     }
 
     public function __set($name, $value) {
-        throw new \Error("Property is immutable; use setter to modify event");
+        throw new \Error("Property is immutable; use setter to modify entry");
     }
 
     public static function scrubField($field, $length = PlaylistEntry::MAX_FIELD_LENGTH) {
