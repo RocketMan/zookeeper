@@ -19,8 +19,8 @@
   </tr>
   {%~ endfor %}
   {%~ else %}
-  {%~ set mid = tracks | length / 2 %}
-  {%~ for i in 0..(mid | round - 1) %}
+  {%~ set mid = (tracks | length / 2) | round %}
+  {%~ for i in 0..(mid - 1) %}
   <tr>
     {#~ left side #}
     {%~ if mid - i < 1 %}
