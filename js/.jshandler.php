@@ -51,7 +51,7 @@ if(substr_compare($target, ".min.js", -7)) {
     $uri = $_SERVER["REQUEST_URI"];
     $i = strrpos($uri, ".");
     $base = ($i !== false)?substr($uri, 0, $i):$uri;
-    header("SourceMap: ${base}.map");
+    header("SourceMap: {$base}.map");
 }
 
 // for HEAD requests, there is nothing more to do
