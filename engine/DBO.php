@@ -59,8 +59,8 @@ class RowIterator {
      * @return result set array or empty array if none or error
      */
     public function asArray() {
-        $result = $this->stmt?$this->stmt->fetchAll($this->style):false;
-        return $result?$result:[];
+        $result = $this->stmt ? $this->stmt->fetchAll($this->style) : false;
+        return $result ?: [];
     }
 }
 
@@ -99,7 +99,7 @@ class BaseStatement {
      * @return iterable result set (empty if none or error)
      */
     public function iterate($style=\PDO::FETCH_ASSOC) {
-        return new RowIterator($this->execute()?$this:null, $style);
+        return new RowIterator($this->execute() ? $this : null, $style);
     }
 
     /**
@@ -109,7 +109,7 @@ class BaseStatement {
      * @return single row result or false if none or error
      */
     public function executeAndFetch($style=\PDO::FETCH_ASSOC) {
-        return $this->execute()?$this->fetch($style):false;
+        return $this->execute() ? $this->fetch($style) : false;
     }
 
     /**
@@ -119,8 +119,8 @@ class BaseStatement {
      * @return result set array or empty array if none or error
      */
     public function executeAndFetchAll($style=\PDO::FETCH_ASSOC) {
-        $result = $this->execute()?$this->fetchAll($style):false;
-        return $result?$result:[];
+        $result = $this->execute() ? $this->fetchAll($style) : false;
+        return $result ?: [];
     }
 }
 
@@ -210,7 +210,7 @@ class BasePDO {
             $stmt = strtr($stmt, self::$replace);
 
         $ret = $this->__call("prepare", [$stmt, $options]);
-        return $ret?new BaseStatement($ret):false;
+        return $ret ? new BaseStatement($ret) : false;
     }
 }
 
@@ -248,8 +248,8 @@ abstract class DBO {
                 BasePDO::setLibrary($library);
         }
 
-        return array_key_exists($name, self::$dbConfig)?
-                self::$dbConfig[$name]:null;
+        return array_key_exists($name, self::$dbConfig) ?
+                self::$dbConfig[$name] : null;
     }
 
     /**

@@ -1398,7 +1398,7 @@ class Editor extends MenuItem {
             $_REQUEST["nextTrack"] = 1;
         }
     
-        $focusTrackList = $focusTrack ? $focusTrack : $_REQUEST["nextTrack"];
+        $focusTrackList = $focusTrack ?: $_REQUEST["nextTrack"];
         $this->emitTrackList($focusTrackList, $isCollection);
 
         if($focusTrack)

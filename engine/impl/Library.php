@@ -305,7 +305,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $query .= "LIMIT ?, ?";
             break;
         default:
-            echo "DEBUG: ERROR! Unknown key '$tableIndex'<BR>\n";
+            error_log("searchPos: unknown key '$tableIndex'");
             return;
         }
       
@@ -709,7 +709,7 @@ class LibraryImpl extends DBO implements ILibrary {
             }
             break;
         default:
-            echo "DEBUG: ERROR! Unknown operation '$op'<BR>\n";
+            error_log("listAlbums: unknown operation '$op'");
             return;
         }
         $stmt->execute();
@@ -851,7 +851,7 @@ class LibraryImpl extends DBO implements ILibrary {
             }
             break;
         default:
-            echo "DEBUG: ERROR! Unknown operation '$op'<BR>\n";
+            error_log("listLabels: unknown operation '$op'");
             return;
         }
         $stmt->execute();
