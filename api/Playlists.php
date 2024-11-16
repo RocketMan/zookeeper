@@ -727,6 +727,9 @@ class Playlists implements RequestHandlerInterface {
         $event = $request->requestBody()->data()->first("event");
         $entry = PlaylistEntry::fromArray($event->attributes()->all());
 
+        $api->lockPlaylist($key);
+        try {
+
         // set to 0 (in sync) else -1 (out of sync)
         $hashStatus = $event->metaInformation()->getOptional("hash");
         if(!is_null($hashStatus))
@@ -809,6 +812,10 @@ class Playlists implements RequestHandlerInterface {
             if($event->metaInformation()->getOptional("wantMeta"))
                 $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $hashStatus, $entry);
             return new DocumentResponse(new Document($res));
+        }
+
+        } finally {
+            $api->unlockPlaylist($key);
         }
 
         throw new BadRequestException($status ?? "DB update error");
@@ -895,6 +902,12 @@ class Playlists implements RequestHandlerInterface {
                 ($moveTo = $event->metaInformation()->getOptional("moveTo")))
             $success = $api->moveTrack($key, $id, $moveTo);
 
+        if($success && $list['airname'] && $api->isNowWithinShow($list))
+            PushServer::sendAsyncNotification();
+
+        if($success && isset($stamp))
+            PushServer::lazyLoadImages($key, $id);
+
         if($success && $event->metaInformation()->getOptional("wantMeta")) {
             $res = new JsonResource("event", $entry->getId());
             $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $hashStatus, $entry);
@@ -904,12 +917,6 @@ class Playlists implements RequestHandlerInterface {
         } finally {
             $api->unlockPlaylist($key);
         }
-
-        if($success && $list['airname'] && $api->isNowWithinShow($list))
-            PushServer::sendAsyncNotification();
-
-        if($success && isset($stamp))
-            PushServer::lazyLoadImages($key, $id);
 
         if($success)
             return new EmptyResponse();

@@ -712,8 +712,6 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $names = "(list, artist, track, album, label, seq, created {$tagName})";
         $values = "VALUES (?, ?, ?, ?, ?, ?, ? {$tagValue});";
 
-        $this->lockPlaylist($playlistId);
-
         $query = "INSERT INTO tracks {$names} {$values}";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$playlistId, \PDO::PARAM_INT); 
@@ -742,8 +740,6 @@ class PlaylistImpl extends DBO implements IPlaylist {
             } else
                 $updateStatus = 2;
         }
-
-        $this->unlockPlaylist($playlistId);
 
         return $updateStatus;
     }
