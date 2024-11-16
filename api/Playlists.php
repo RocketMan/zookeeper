@@ -679,7 +679,7 @@ class Playlists implements RequestHandlerInterface {
         return new EmptyResponse();
     }
 
-    private function injectMetadata($api, $rqMeta, $rsMeta, $listId, $size, $entry) {
+    private function injectMetadata($api, $rqMeta, $rsMeta, $listId, $hashStatus, $entry) {
         $action = $rqMeta->getOptional("action", "");
         $fragment = PlaylistBuilder::newInstance([
             "action" => $action,
@@ -692,7 +692,11 @@ class Playlists implements RequestHandlerInterface {
         //   -1     client playlist is out of sync with the service
         //   0      playlist is in natural order
         //   > 0    ordinal of inserted entry
-        $rsMeta->set("seq", $size ? $size : $api->getSeq(0, $entry->getId()));
+        $rsMeta->set("seq", $hashStatus ?: $api->getSeq(0, $entry->getId()));
+
+        // return hash code only if playlist is in sync
+        if(!$hashStatus)
+            $rsMeta->set("hash", $api->hashPlaylist($listId));
 
         // track is in the grace period?
         $window = $api->getTimestampWindow($listId, false);
@@ -723,10 +727,10 @@ class Playlists implements RequestHandlerInterface {
         $event = $request->requestBody()->data()->first("event");
         $entry = PlaylistEntry::fromArray($event->attributes()->all());
 
-        // if size matches count, set to 0 (in sync) else -1 (out of sync)
-        $size = $event->metaInformation()->getOptional("size");
-        if(!is_null($size))
-            $size = $size == $api->getTrackCount($key) ? 0 : -1;
+        // set to 0 (in sync) else -1 (out of sync)
+        $hashStatus = $event->metaInformation()->getOptional("hash");
+        if(!is_null($hashStatus))
+            $hashStatus = $hashStatus == $api->hashPlaylist($key) ? 0 : -1;
 
         try {
             $album = $event->relationships()->get("album")->related()->first("album");
@@ -803,7 +807,7 @@ class Playlists implements RequestHandlerInterface {
         if($success) {
             $res = new JsonResource("event", $entry->getId());
             if($event->metaInformation()->getOptional("wantMeta"))
-                $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $size, $entry);
+                $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $hashStatus, $entry);
             return new DocumentResponse(new Document($res));
         }
 
@@ -840,10 +844,10 @@ class Playlists implements RequestHandlerInterface {
         if(!$track || $track['list'] != $key)
             throw new NotAllowedException("event not in list");
 
-        // if size matches count, set to 0 (in sync) else -1 (out of sync)
-        $size = $event->metaInformation()->getOptional("size");
-        if(!is_null($size))
-            $size = $size == $api->getTrackCount($key) ? 0 : -1;
+        // set to 0 (in sync) else -1 (out of sync)
+        $hashStatus = $event->metaInformation()->getOptional("hash");
+        if(!is_null($hashStatus))
+            $hashStatus = $hashStatus == $api->hashPlaylist($key) ? 0 : -1;
 
         // TBD allow changes instead of complete relacement
         $entry = $event->attributes()->getOptional("type") ?
@@ -891,6 +895,12 @@ class Playlists implements RequestHandlerInterface {
                 ($moveTo = $event->metaInformation()->getOptional("moveTo")))
             $success = $api->moveTrack($key, $id, $moveTo);
 
+        if($success && $event->metaInformation()->getOptional("wantMeta")) {
+            $res = new JsonResource("event", $entry->getId());
+            $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $hashStatus, $entry);
+            return new DocumentResponse(new Document($res));
+        }
+
         } finally {
             $api->unlockPlaylist($key);
         }
@@ -900,12 +910,6 @@ class Playlists implements RequestHandlerInterface {
 
         if($success && isset($stamp))
             PushServer::lazyLoadImages($key, $id);
-
-        if($success && $event->metaInformation()->getOptional("wantMeta")) {
-            $res = new JsonResource("event", $entry->getId());
-            $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $size, $entry);
-            return new DocumentResponse(new Document($res));
-        }
 
         if($success)
             return new EmptyResponse();

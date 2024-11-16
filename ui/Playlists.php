@@ -307,6 +307,8 @@ class Playlists extends MenuItem {
 
         $playlistId = $playlist['id'];
 
+        $playlist['hash'] = $api->hashPlaylist($playlistId);
+
         $this->addVar('NME_PREFIX', self::NME_PREFIX);
         $this->addVar('BASE_URL', Engine::getBaseURL());
 
