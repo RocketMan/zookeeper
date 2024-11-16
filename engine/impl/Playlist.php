@@ -611,14 +611,6 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $tracks;
     }
 
-    public function getTrackCount($playlist) {
-        $query = "SELECT COUNT(*) AS count FROM tracks WHERE list = ?";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, (int)$playlist, \PDO::PARAM_INT);
-        $row = $stmt->executeAndFetch();
-        return $row?$row['count']:0;
-    }
-
     // NOTE: this routine must be tolerant of improperly formatted dates.
     public function getTimestampWindowInternal($playlist, $allowGrace = true) {
         $result = null;

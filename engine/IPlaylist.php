@@ -91,7 +91,6 @@ interface IPlaylist {
     function getTrack($id);
     function getTracks($playlist, $desc = 0);
     function getTracksWithObserver($playlist, PlaylistObserver $observer, $desc = 0, $filter = null);
-    function getTrackCount($playlist);
     function getTimestampWindow($playlistId, $allowGrace = true);
     function hashPlaylist($playlistId);
     function lockPlaylist($playlistId);
