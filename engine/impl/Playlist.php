@@ -682,6 +682,23 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $this->isWithinShow($dateTime, $listRow);
     }
 
+    public function hashPlaylist($playlistId) {
+        $query = "SELECT md5(group_concat(concat_ws('|', id, created) ORDER BY seq, id)) hash FROM tracks WHERE list = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, (int)$playlistId, \PDO::PARAM_INT);
+        $row = $stmt->executeAndFetch();
+        return $row['hash'];
+    }
+
+    public function lockPlaylist($playlistId) {
+        // MyISAM supports only table-level locking
+        $this->exec("LOCK TABLES tracks WRITE, t WRITE, lists READ, l READ");
+    }
+
+    public function unlockPlaylist($playlistId) {
+        $this->exec("UNLOCK TABLES");
+    }
+
     // insert playlist track. return following: 0 - fail, 1 - success no 
     // timestamp, 2 - sucess with timestamp.
     public function insertTrack($playlistId, $tag, $artist, $track, $album, $label,  $insertTime, &$id, &$status) {
@@ -702,6 +719,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
     
         $names = "(list, artist, track, album, label, seq, created {$tagName})";
         $values = "VALUES (?, ?, ?, ?, ?, ?, ? {$tagValue});";
+
+        $this->lockPlaylist($playlistId);
 
         $query = "INSERT INTO tracks {$names} {$values}";
         $stmt = $this->prepare($query);
@@ -731,6 +750,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
             } else
                 $updateStatus = 2;
         }
+
+        $this->unlockPlaylist($playlistId);
 
         return $updateStatus;
     }
@@ -819,6 +840,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
         $row = $stmt->executeAndFetch();
 
+        $this->lockPlaylist($row['list']);
+
         $query = "DELETE FROM tracks WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
@@ -832,6 +855,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue(2, $row['list']);
             $success = $stmt->execute();
         }
+
+        $this->unlockPlaylist($row['list']);
 
         return $success;
     }

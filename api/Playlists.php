@@ -832,6 +832,9 @@ class Playlists implements RequestHandlerInterface {
 
         $event = $request->requestBody()->data()->first("event");
 
+        $api->lockPlaylist($key);
+        try {
+
         $id = $event->id();
         $track = $api->getTrack($id);
         if(!$track || $track['list'] != $key)
@@ -887,6 +890,10 @@ class Playlists implements RequestHandlerInterface {
         if($success &&
                 ($moveTo = $event->metaInformation()->getOptional("moveTo")))
             $success = $api->moveTrack($key, $id, $moveTo);
+
+        } finally {
+            $api->unlockPlaylist($key);
+        }
 
         if($success && $list['airname'] && $api->isNowWithinShow($list))
             PushServer::sendAsyncNotification();

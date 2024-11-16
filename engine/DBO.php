@@ -322,6 +322,16 @@ abstract class DBO {
     }
 
     /**
+     * execute a statement
+     *
+     * @param stmt SQL statement
+     * @return number of rows affected
+     */
+    protected function exec(string $stmt) {
+        return $this->getPDO()->exec($stmt);
+    }
+
+    /**
      * return the ID of the last inserted row
      */
     public function lastInsertId() {
