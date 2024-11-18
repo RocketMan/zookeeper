@@ -951,7 +951,11 @@ class Playlists implements RequestHandlerInterface {
         if(!$track || $track['list'] != $key)
             throw new NotAllowedException("event not in list");
 
+        $api->lockPlaylist($key);
+
         $success = $api->deleteTrack($id);
+
+        $api->unlockPlaylist($key);
 
         if($success)
             return new EmptyResponse();

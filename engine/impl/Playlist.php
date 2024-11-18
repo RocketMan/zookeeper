@@ -674,21 +674,24 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $this->isWithinShow($dateTime, $listRow);
     }
 
-    public function hashPlaylist($playlistId) {
+    public function hashPlaylist(int $playlistId): string {
         $query = "SELECT md5(group_concat(concat_ws('|', id, created) ORDER BY seq, id)) hash FROM tracks WHERE list = ?";
         $stmt = $this->prepare($query);
-        $stmt->bindValue(1, (int)$playlistId, \PDO::PARAM_INT);
+        $stmt->bindValue(1, $playlistId);
         $row = $stmt->executeAndFetch();
         return $row['hash'];
     }
 
-    public function lockPlaylist($playlistId) {
-        // MyISAM supports only table-level locking
-        $this->exec("LOCK TABLES tracks WRITE, t WRITE, lists READ, l READ");
+    public function lockPlaylist(int $playlistId): void {
+        $stmt = $this->prepare("DO get_lock(concat('list-', ?), -1)");
+        $stmt->bindValue(1, $playlistId);
+        $stmt->execute();
     }
 
-    public function unlockPlaylist($playlistId) {
-        $this->exec("UNLOCK TABLES");
+    public function unlockPlaylist(int $playlistId): void {
+        $stmt = $this->prepare("DO release_lock(concat('list-', ?))");
+        $stmt->bindValue(1, $playlistId);
+        $stmt->execute();
     }
 
     // insert playlist track. return following: 0 - fail, 1 - success no 
@@ -828,8 +831,6 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
         $row = $stmt->executeAndFetch();
 
-        $this->lockPlaylist($row['list']);
-
         $query = "DELETE FROM tracks WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, (int)$id, \PDO::PARAM_INT);
@@ -843,8 +844,6 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue(2, $row['list']);
             $success = $stmt->execute();
         }
-
-        $this->unlockPlaylist($row['list']);
 
         return $success;
     }

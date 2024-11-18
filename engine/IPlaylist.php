@@ -92,9 +92,45 @@ interface IPlaylist {
     function getTracks($playlist, $desc = 0);
     function getTracksWithObserver($playlist, PlaylistObserver $observer, $desc = 0, $filter = null);
     function getTimestampWindow($playlistId, $allowGrace = true);
-    function hashPlaylist($playlistId);
-    function lockPlaylist($playlistId);
-    function unlockPlaylist($playlistId);
+
+    /**
+     * hash the tracks of the specified playlist
+     *
+     * hash will change if count, order, or timestamps of tracks change
+     *
+     * @param int $playlistId target playlist
+     * @return string hash value
+     */
+    function hashPlaylist(int $playlistId): string;
+
+    /**
+     * acquire an exclusive write lock for the specified playlist
+     *
+     * The contract is that any insertion, update, including track
+     * resequencing, and deletion of tracks will be performed only
+     * after this lock has been acquired, to ensure both protection
+     * from concurrent updates as well as transactional integrity.
+     *
+     * Note, this is an advisory lock and does not lock any tables.
+     *
+     * This method does not return until the lock has been acquired.
+     *
+     * The lock is automatically released upon close of the current
+     * PDO session, or by calling @see IPlaylist::unlockPlaylist()
+     *
+     * @param int $playlistId target playlist
+     */
+    function lockPlaylist(int $playlistId): void;
+
+    /**
+     * release playlist write lock
+     *
+     * @see IPlaylist::lockPlaylist()
+     *
+     * @param int $playlistId target playlist
+     */
+    function unlockPlaylist(int $playlistId): void;
+
     function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTimestamp, &$id, &$status);
     function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label, $dateTime);
     function insertTrackEntry($playlistId, PlaylistEntry $entry, &$status);
