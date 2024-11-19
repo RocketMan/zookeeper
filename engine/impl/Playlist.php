@@ -682,18 +682,6 @@ class PlaylistImpl extends DBO implements IPlaylist {
         return $row['hash'];
     }
 
-    public function lockPlaylist(int $playlistId): void {
-        $stmt = $this->prepare("DO get_lock(concat('list-', ?), -1)");
-        $stmt->bindValue(1, $playlistId);
-        $stmt->execute();
-    }
-
-    public function unlockPlaylist(int $playlistId): void {
-        $stmt = $this->prepare("DO release_lock(concat('list-', ?))");
-        $stmt->bindValue(1, $playlistId);
-        $stmt->execute();
-    }
-
     // insert playlist track. return following: 0 - fail, 1 - success no 
     // timestamp, 2 - sucess with timestamp.
     public function insertTrack($playlistId, $tag, $artist, $track, $album, $label,  $insertTime, &$id, &$status) {

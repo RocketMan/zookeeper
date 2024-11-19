@@ -727,7 +727,7 @@ class Playlists implements RequestHandlerInterface {
         $event = $request->requestBody()->data()->first("event");
         $entry = PlaylistEntry::fromArray($event->attributes()->all());
 
-        $api->lockPlaylist($key);
+        $api->adviseLock($key);
         try {
 
         // set to 0 (in sync) else -1 (out of sync)
@@ -815,7 +815,7 @@ class Playlists implements RequestHandlerInterface {
         }
 
         } finally {
-            $api->unlockPlaylist($key);
+            $api->adviseUnlock($key);
         }
 
         throw new BadRequestException($status ?? "DB update error");
@@ -843,7 +843,7 @@ class Playlists implements RequestHandlerInterface {
 
         $event = $request->requestBody()->data()->first("event");
 
-        $api->lockPlaylist($key);
+        $api->adviseLock($key);
         try {
 
         $id = $event->id();
@@ -915,7 +915,7 @@ class Playlists implements RequestHandlerInterface {
         }
 
         } finally {
-            $api->unlockPlaylist($key);
+            $api->adviseUnlock($key);
         }
 
         if($success)
@@ -951,11 +951,11 @@ class Playlists implements RequestHandlerInterface {
         if(!$track || $track['list'] != $key)
             throw new NotAllowedException("event not in list");
 
-        $api->lockPlaylist($key);
+        $api->adviseLock($key);
 
         $success = $api->deleteTrack($id);
 
-        $api->unlockPlaylist($key);
+        $api->adviseUnlock($key);
 
         if($success)
             return new EmptyResponse();
