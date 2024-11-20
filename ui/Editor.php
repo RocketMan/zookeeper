@@ -976,8 +976,10 @@ class Editor extends MenuItem {
     private function getTracks() {
          $tracks = array();
          $isColl = array_key_exists("coll", $_REQUEST) && $_REQUEST["coll"];
+         $postData = false;
 
          for($i=1; array_key_exists("track".$i, $_POST); $i++) {
+             $postData = true;
              $track = $_POST["track". $i];
              if ($track === '')
                  break;
@@ -987,7 +989,7 @@ class Editor extends MenuItem {
              $artist = $isColl ? $_POST["artist".$i] : "";
              $tracks[$i] = ["track" => $track, "url" => $url, "artist" => $artist, "duration" => empty($duration) ? null : $duration];
          }
-         return $tracks;
+         return $postData ? $tracks : null;
     }
     
     private function getPanelTitle($seq) {
