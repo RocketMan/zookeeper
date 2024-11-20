@@ -29,9 +29,11 @@ class Engine {
 
     const UA = "Zookeeper/2.0; (+https://zookeeper.ibinx.com/)";
 
-    private static $apis;
-    private static $config;
-    private static $session;
+    private static Config $apis;
+    private static Config $config;
+    private static Session $session;
+
+    private static array $apiCache = [];
 
     /*
      * install autoloader for the engine implementation classes
@@ -89,18 +91,18 @@ class Engine {
     }
 
     /**
-     * instantiate an API
-     * @param intf interface
-     * @return implementation
-     * @throws Exception if no implementation for specified interface
+     * return concrete API implementation
+     *
+     * @param string $intf interface name
+     * @return object API implementation
+     * @throws \Exception if no implementation for specified interface
      */
-    public static function api($intf) {
+    public static function api(string $intf): object {
         $impl = self::$apis->getParam($intf);
-        if($impl) {
-            $api = new $impl();
-            return $api;
-        } else
-            throw new \Exception("Unknown API '$intf'");
+        if($impl)
+            return self::$apiCache[$intf] ??= new $impl();
+
+        throw new \Exception("Unknown API '$intf'");
     }
 
     /**
