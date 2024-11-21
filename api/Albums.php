@@ -119,6 +119,9 @@ class Albums implements RequestHandlerInterface {
         $res = new JsonResource("album", $rec["tag"]);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."album/".$rec["tag"]));
         foreach(self::FIELDS as $field) {
+            if(!array_key_exists($field, $rec))
+                continue;
+
             switch($field) {
             case "category":
                 $value = ILibrary::GENRES[$rec[$field]];

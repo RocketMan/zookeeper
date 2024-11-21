@@ -79,7 +79,7 @@ trait OffsetPaginationTrait {
                     // full text label info is sometimes incomplete;
                     // optionally backfill the name for now; we may get rid
                     // of this if there is a perceptable performance hit
-                    if(!$record["name"]) {
+                    if(!isset($record["name"])) {
                         $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $record["pubkey"]);
                         if(sizeof($labels))
                             $record["name"] = $labels[0]["name"];

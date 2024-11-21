@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -66,6 +66,9 @@ class Reviews implements RequestHandlerInterface {
         $res = new JsonResource("review", $rec["id"]);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."review/".$rec["id"]));
         foreach(self::FIELDS as $field) {
+            if(!array_key_exists($field, $rec))
+                continue;
+
             switch($field) {
             case "date":
                 $value = substr($rec["reviewed"], 0, 10);

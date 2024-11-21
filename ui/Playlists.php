@@ -665,7 +665,7 @@ class Playlists extends MenuItem {
     }
     
     public function emitViewPlayList() {
-        $playlistId = $_REQUEST["playlist"];
+        $playlistId = $_REQUEST["playlist"] ?? 0;
         $this->viewList($playlistId);
     }
 
