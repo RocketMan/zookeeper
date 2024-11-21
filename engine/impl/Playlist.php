@@ -679,7 +679,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlistId);
         $row = $stmt->executeAndFetch();
-        return $row['hash'];
+        return $row['hash'] ?? '';
     }
 
     // insert playlist track. return following: 0 - fail, 1 - success no 
