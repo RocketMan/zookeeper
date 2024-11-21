@@ -91,8 +91,18 @@ interface IPlaylist {
     function getTrack($id);
     function getTracks($playlist, $desc = 0);
     function getTracksWithObserver($playlist, PlaylistObserver $observer, $desc = 0, $filter = null);
-    function getTrackCount($playlist);
     function getTimestampWindow($playlistId, $allowGrace = true);
+
+    /**
+     * hash the tracks of the specified playlist
+     *
+     * hash will change if count, order, or timestamps of tracks change
+     *
+     * @param int $playlistId target playlist
+     * @return string hash value
+     */
+    function hashPlaylist(int $playlistId): string;
+
     function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTimestamp, &$id, &$status);
     function updateTrack($playlistId, $id, $tag, $artist, $track, $album, $label, $dateTime);
     function insertTrackEntry($playlistId, PlaylistEntry $entry, &$status);

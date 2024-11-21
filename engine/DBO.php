@@ -231,6 +231,8 @@ abstract class DBO {
     private static $dbConfig;
     private static $pdo;
 
+    private $locks = [];
+
     /**
      * convenience method to retrieve a database configuration parameter
      *
@@ -319,6 +321,68 @@ abstract class DBO {
      */
     protected function prepare($stmt, $options = []) {
         return $this->getPDO()->prepare($stmt, $options);
+    }
+
+    /**
+     * execute a statement
+     *
+     * @param stmt SQL statement
+     * @return number of rows affected
+     */
+    protected function exec(string $stmt) {
+        return $this->getPDO()->exec($stmt);
+    }
+
+    private function getAdvisoryLockName(int $id): string {
+        // as advisory locks are global, we qualify with the db name
+        return implode('-', [
+            $this->dbConfig(DBO::DATABASE_MAIN),
+            (new \ReflectionClass($this))->getShortName(),
+            $id
+        ]);
+    }
+
+    /**
+     * acquire an advisory lock for the specified identifier
+     *
+     * The lock is specific to the {API, id} tuple.  Thus, there is
+     * no collision between locks made on different APIs.
+     *
+     * This method does not return until the lock has been acquired.
+     *
+     * The lock is automatically released upon close of the current
+     * session, or by calling @see DBO::adviseUnlock()
+     *
+     * @param int $id target identifier
+     */
+    public function adviseLock(int $id): void {
+        if(!array_key_exists($id, $this->locks)) {
+            $stmt = $this->prepare("DO get_lock(?, -1)");
+            $stmt->bindValue(1, $this->getAdvisoryLockName($id));
+            $stmt->execute();
+
+            $this->locks[$id] = 0;
+        }
+
+        $this->locks[$id]++;
+    }
+
+    /**
+     * release advisory lock
+     *
+     * @see DBO::adviseLock()
+     *
+     * @param int $id target identifier
+     */
+    public function adviseUnlock(int $id): void {
+        if(array_key_exists($id, $this->locks) &&
+                !--$this->locks[$id]) {
+            $stmt = $this->prepare("DO release_lock(?)");
+            $stmt->bindValue(1, $this->getAdvisoryLockName($id));
+            $stmt->execute();
+
+            unset($this->locks[$id]);
+        }
     }
 
     /**

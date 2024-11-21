@@ -394,6 +394,8 @@ $().ready(function(){
                 type: 'event',
                 id: fromId,
                 meta: {
+                    wantMeta: true,
+                    hash: $("#track-hash").val(),
                     moveTo: toId
                 }
             }
@@ -406,9 +408,17 @@ $().ready(function(){
             accept: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
             success: function(respObj) {
+                var meta = respObj.data.meta;
+                if(meta.seq == -1) {
+                    // playlist is out of sync with table; reload
+                    location.href = "?subaction=" + $("#track-action").val() +
+                        "&playlist=" + $("#track-playlist").val();
+                }
+
                 // move succeeded, clear timestamp
                 tr.find("td").eq(1).data('utc','').html('');
                 $("#error-msg").text("");
+                $("#track-hash").val(meta.hash);
                 updatePlayable();
             },
             error: function (jqXHR, textStatus, errorThrown) {
@@ -508,7 +518,7 @@ $().ready(function(){
                 meta: {
                     wantMeta: true,
                     action: $("#track-action").val(),
-                    size: $(".playlistTable > tbody > tr").length
+                    hash: $("#track-hash").val()
                 }
             }
         };
@@ -563,6 +573,8 @@ $().ready(function(){
                     $(".playlistTable > tbody > tr").eq(index).find(".grab").on('pointerdown', grabStart);
                     break;
                 }
+
+                $("#track-hash").val(meta.hash);
 
                 updatePlayable();
                 clearUserInput(true);
@@ -889,7 +901,7 @@ $().ready(function(){
                 meta: {
                     wantMeta: true,
                     action: $("#track-action").val(),
-                    size: $(".playlistTable > tbody > tr").length
+                    hash: $("#track-hash").val()
                 }
             }
         };
@@ -932,6 +944,8 @@ $().ready(function(){
                         rows.eq(rows.length - 1).after(meta.html);
 
                     $(".playlistTable > tbody > tr").eq(index).find(".grab").on('pointerdown', grabStart);
+
+                    $("#track-hash").val(meta.hash);
 
                     updatePlayable();
 
