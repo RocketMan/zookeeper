@@ -252,13 +252,14 @@ class Playlists extends MenuItem {
     }
 
     private function getDJAirNames() {
-        $airNames = [];
-        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, 1);
-        while ($records && ($row = $records->fetch()))
-           $airNames[] = $row['airname'];
+        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, 1)->asArray();
 
-        $airNames[] = 'None';
-        return $airNames;
+        $airnames = array_map(function($row) {
+            return $row['airname'];
+        }, $records);
+
+        $airnames[] = 'None';
+        return $airnames;
     }
 
     private function emitPlaylistBody($playlist, $editMode) {
@@ -755,9 +756,8 @@ class Playlists extends MenuItem {
         $viewAll = $this->subaction == "viewDJAll";
 
         // Run the query
-        $records = Engine::api(IDJ::class)->getActiveAirnames($viewAll);
-        $dj = [];
-        while($records && ($row = $records->fetch())) {
+        $records = Engine::api(IDJ::class)->getActiveAirnames($viewAll)->asArray();
+        $djs = array_map(function($row) {
             $row["sort"] = preg_match("/^(the|dj)\s+(.+)/i", $row[1], $matches) ? $matches[2] : $row[1];
             // sort symbols beyond Z with the numerics and other special chars
             $row["cur"] = UI::deLatin1ify(mb_strtoupper(mb_substr($row["sort"], 0, 1)));
@@ -766,29 +766,27 @@ class Playlists extends MenuItem {
                 $row["cur"] = "@";
             }
 
-            $dj[] = $row;
-        }
+            return $row;
+        }, $records);
     
-        if(count($dj))
-            usort($dj, function($a, $b) {
+        if(count($djs))
+            usort($djs, function($a, $b) {
                 return strcasecmp($a["sort"], $b["sort"]);
             });
     
         $this->setTemplate("selectdj.html");
-        $this->addVar("djs", $dj);
+        $this->addVar("djs", $djs);
     }
     
     // return list of days in month that have at least 1 playlist.
     public function handlePlaylistDaysByDate() {
         $date = $_REQUEST["viewdate"];
         $dateAr = explode('-', $date);
-        $records = Engine::api(IPlaylist::class)->getShowdates($dateAr[0], $dateAr[1]);
-        $showdates = array();
-        while ($records && ($row = $records->fetch())) {
-            $showdates[] = explode('-', $row['showdate'])[2];
-        }
+        $records = Engine::api(IPlaylist::class)->getShowdates($dateAr[0], $dateAr[1])->asArray();
+        $showdates = array_map(function($row) {
+            return explode('-', $row['showdate'])[2];
+        }, $records);
 
-        $length = count($showdates);
         echo json_encode($showdates);
     }
 

@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -192,10 +192,14 @@ class AddManager extends MenuItem {
         if($validate) {
             list($ay, $am, $ad) = explode("-", $adddate);
             list($py, $pm, $pd) = explode("-", $pulldate);
-            if(checkdate($am, $ad, $ay) && checkdate($pm, $pd, $py))
+
+            if(checkdate($am, $ad, $ay) && checkdate($pm, $pd, $py) &&
+                    $pulldate > $adddate)
                 return true;
             else {
-                $this->errorMessage = "Ensure dates are valid";
+                $this->errorMessage = $pulldate <= $adddate ?
+                    "Pull Date must follow Add Date" :
+                    "Ensure dates are valid";
                 return;
             }
         }
