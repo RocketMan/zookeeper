@@ -56,7 +56,7 @@ class Validate implements IController {
         if($runTest === null)
             $runTest = $this->success;
 
-        echo "\t${name}: ";
+        echo "\t{$name}: ";
         if(!$runTest)
             echo self::SKIP."SKIPPED".self::NORMAL."\n";
         return $runTest;

@@ -236,7 +236,7 @@ class Editor extends MenuItem {
                     'User-Agent' => Engine::UA,
                     'Authorization' => is_string($config) ?
                         "Discogs token=$config" :
-                        "Discogs key=${config['client_id']}, secret=${config['client_secret']}"
+                        "Discogs key={$config['client_id']}, secret={$config['client_secret']}"
                 ]
             ]);
 
@@ -1330,7 +1330,7 @@ class Editor extends MenuItem {
         $artistHdr = $isCollection ? "<TH>Artist</TH>" : "";
         $cellWidth = $isCollection ? "c3" : "c2";
 
-        echo "<TR><TH></TH><TH>Track Name</TH>${artistHdr}<TH class='duration'>Time</TH><TH>URL</TH><TD align=right>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='&minus;'></TD></TR>\n";
+        echo "<TR><TH></TH><TH>Track Name</TH>{$artistHdr}<TH class='duration'>Time</TH><TH>URL</TH><TD align=right>Insert/Delete&nbsp;Track:&nbsp;<INPUT TYPE=BUTTON NAME=insert id='insert' CLASS=submit VALUE='+'>&nbsp;<INPUT TYPE=BUTTON NAME=delete id='delete' CLASS=submit VALUE='&minus;'></TD></TR>\n";
 
         for($i=0; $i<$this->tracksPerPage; $i++) {
             $trackNum = $_REQUEST["nextTrack"] + $i;
@@ -1355,7 +1355,7 @@ class Editor extends MenuItem {
             echo "<TD><INPUT NAME='trackDuration$trackNum' class='text duration' VALUE='$duration' maxlength='8' pattern='[0-9:]*'></TD>";
 
             $url = $_POST["trackUrl$trackNum"];
-            echo "<TD COLSPAN=2><INPUT class='text $cellWidth' value='${url}' NAME='trackUrl$trackNum' TYPE='url' maxlength=" . IEditor::MAX_PLAYABLE_URL_LENGTH . " data-track='$trackNum' /></TD>";
+            echo "<TD COLSPAN=2><INPUT class='text $cellWidth' value='{$url}' NAME='trackUrl$trackNum' TYPE='url' maxlength=" . IEditor::MAX_PLAYABLE_URL_LENGTH . " data-track='$trackNum' /></TD>";
 
             echo "</TR>\n";
         }

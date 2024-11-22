@@ -37,7 +37,7 @@ class Config {
      * @param variable variable name in config file (default 'config')
      */
     public function __construct($file, $variable = 'config') {
-        $path = dirname(__DIR__) . "/config/${file}.php";
+        $path = dirname(__DIR__) . "/config/{$file}.php";
         if(!is_file($path))
             throw new \Exception("Config file not found: $file");
 
@@ -46,7 +46,7 @@ class Config {
         if(isset($$variable) && is_array($$variable))
             $this->config = $$variable;
         else
-            throw new \Exception("Error parsing configuration: file=${file}.php, variable=${variable}");
+            throw new \Exception("Error parsing configuration: file={$file}.php, variable={$variable}");
     }
 
     /**

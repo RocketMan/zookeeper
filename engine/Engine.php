@@ -42,8 +42,8 @@ class Engine {
         spl_autoload_register(function($class) {
             // search for file without Impl suffix in the 'impl' subdir
             $prefix = str_replace("\\", "\\x5c", __NAMESPACE__."\\");
-            if(preg_match("/${prefix}(.+)Impl$/", $class, $matches) &&
-                    is_file($path = __DIR__."/impl/${matches[1]}.php")) {
+            if(preg_match("/{$prefix}(.+)Impl$/", $class, $matches) &&
+                    is_file($path = __DIR__."/impl/{$matches[1]}.php")) {
                 include $path;
             }
         });
