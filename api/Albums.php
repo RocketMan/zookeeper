@@ -119,7 +119,8 @@ class Albums implements RequestHandlerInterface {
         $res = new JsonResource("album", $rec["tag"]);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."album/".$rec["tag"]));
         foreach(self::FIELDS as $field) {
-            if(!array_key_exists($field, $rec))
+            $tfield = $field == "coll" ? "iscoll" : $field;
+            if(!array_key_exists($tfield, $rec))
                 continue;
 
             switch($field) {
