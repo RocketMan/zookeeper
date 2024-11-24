@@ -31,6 +31,7 @@ use ZK\Engine\IReview;
 use Enm\JsonApi\Exception\NotAllowedException;
 use Enm\JsonApi\Model\Document\Document;
 use Enm\JsonApi\Model\Request\RequestInterface;
+use Enm\JsonApi\Model\Resource\JsonResource;
 use Enm\JsonApi\Model\Resource\Link\Link;
 use Enm\JsonApi\Model\Resource\Relationship\Relationship;
 use Enm\JsonApi\Model\Resource\ResourceCollection;
@@ -143,11 +144,10 @@ trait OffsetPaginationTrait {
             $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/reviews"));
             $resource->relationships()->set($relation);
             if($flags & Albums::LINKS_REVIEWS_WITH_BODY) {
-                $reviews = Engine::api(IReview::class)->getReviews($record["id"], 1, "", Engine::session()->isAuth("u"), 1);
-                $record["airname"] = $reviews[0]["airname"] ?? $reviews[0]["realname"];
-                $record["review"] = $reviews[0]["review"];
-            }
-            $res = Reviews::fromRecord($record);
+                $review = Engine::api(IReview::class)->getReviews($record["id"], 1, "", Engine::session()->isAuth("u"), 1)[0];
+                $res = Reviews::fromRecord($review);
+            } else
+                $res = new JsonResource("review", $record["id"]);
             $res->metaInformation()->set("date", $record["reviewed"]);
             $relations->set($res);
 
