@@ -297,7 +297,6 @@ class Editor extends MenuItem {
                     !preg_match('|/spacer.gif$|', $result->cover_image) ?
                     $result->cover_image : null;
                 $infoUrl = self::DISCOGS_BASE . $result->uri;
-
                 $response = $discogs->get($result->resource_url);
                 $page = $response->getBody()->getContents();
                 $json = json_decode($page);
@@ -305,16 +304,44 @@ class Editor extends MenuItem {
                 $tracks = [];
                 $addUrls = $this->getUrlAutofill();
                 foreach($json->tracklist as $track) {
+                    if($track->type_ == "index") {
+                        // The artist name is formatted like:
+                        //    Richard Wilson (22)
+                        // where (22) is an optional suffix.
+                        // We want only the last word, exclusive the suffix
+                        // (in this case, 'Wilson').
+                        $artist = isset($track->extraartists) &&
+                            preg_match('/(\w+)(?:\s\(\d+\))?$/', $track->extraartists[0]->name, $matches) ? $matches[1] . ': ' : '';
+
+                        foreach($track->sub_tracks as $track) {
+                            $entry = [];
+                            $entry["seq"] = ++$seq;
+                            $entry["oseq"] = trim($track->position);
+                            $entry["time"] = trim($track->duration);
+                            $entry["title"] = mb_substr($artist . trim($track->title), 0, PlaylistEntry::MAX_FIELD_LENGTH);
+
+                            $tracks[] = $entry;
+                        }
+                        continue;
+                    }
+
                     if($track->type_ != "track")
                         continue;
+
+                    // see comment above about the artist name format
+                    $artist = isset($track->extraartists) &&
+                        preg_match('/(\w+)(?:\s\(\d+\))?$/', $track->extraartists[0]->name, $matches) ? $matches[1] . ': ' : '';
 
                     $entry = [];
                     $entry["seq"] = ++$seq;
                     $entry["oseq"] = trim($track->position);
                     $entry["time"] = trim($track->duration);
-                    $entry["title"] = mb_substr(trim($track->title), 0, PlaylistEntry::MAX_FIELD_LENGTH);
-                    if($track->artists)
-                        $entry["artist"] = mb_substr(trim($track->artists[0]->name), 0, PlaylistEntry::MAX_FIELD_LENGTH);
+                    $entry["title"] = mb_substr($artist . trim($track->title), 0, PlaylistEntry::MAX_FIELD_LENGTH);
+                    // strip optional numeric suffix from artist name
+                    if($track->artists &&
+                            preg_match('/^(.+?)(?:\s\(\d+\))?$/', $track->artists[0]->name, $matches))
+                        $entry["artist"] = mb_substr(trim($matches[1]), 0, PlaylistEntry::MAX_FIELD_LENGTH);
+
                     if($addUrls && $json->videos) {
                         foreach($json->videos as $key => $video) {
                             if(mb_stripos($video->title, $entry['title']) !== false) {
