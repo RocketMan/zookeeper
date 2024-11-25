@@ -310,8 +310,8 @@ class Editor extends MenuItem {
                         // where (22) is an optional suffix.
                         // We want only the last word, exclusive the suffix
                         // (in this case, 'Wilson').
-                        $artist = isset($track->extraartists) &&
-                            preg_match('/(\w+)(?:\s\(\d+\))?$/', $track->extraartists[0]->name, $matches) ? $matches[1] . ': ' : '';
+                        $artist = isset($track->artists) &&
+                            preg_match('/(\w+)(?:\s\(\d+\))?$/', $track->artists[0]->name, $matches) ? $matches[1] . ': ' : '';
 
                         foreach($track->sub_tracks as $track) {
                             $entry = [];
@@ -329,8 +329,9 @@ class Editor extends MenuItem {
                         continue;
 
                     // see comment above about the artist name format
-                    $artist = isset($track->extraartists) &&
-                        preg_match('/(\w+)(?:\s\(\d+\))?$/', $track->extraartists[0]->name, $matches) ? $matches[1] . ': ' : '';
+                    $artist = isset($_GET["artist"]) &&
+                        isset($track->artists) &&
+                        preg_match('/(\w+)(?:\s\(\d+\))?$/', $track->artists[0]->name, $matches) ? $matches[1] . ': ' : '';
 
                     $entry = [];
                     $entry["seq"] = ++$seq;
