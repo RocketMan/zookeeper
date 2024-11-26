@@ -310,8 +310,8 @@ class Editor extends MenuItem {
                         // where (22) is an optional suffix.
                         // We want only the last word, exclusive the suffix
                         // (in this case, 'Wilson').
-                        $artist = isset($track->artists) &&
-                            preg_match('/(\w+)(?:\s\(\d+\))?$/', $track->artists[0]->name, $matches) ? $matches[1] . ': ' : '';
+                        $artist = !empty($track->artists) &&
+                            preg_match('/(\w+)(?:\s\(\d+\))?$/', $track->artists[0]->name, $matches) ? "{$matches[1]}: " : '';
 
                         foreach($track->sub_tracks as $track) {
                             $entry = [];
@@ -319,6 +319,11 @@ class Editor extends MenuItem {
                             $entry["oseq"] = trim($track->position);
                             $entry["time"] = trim($track->duration);
                             $entry["title"] = mb_substr($artist . trim($track->title), 0, PlaylistEntry::MAX_FIELD_LENGTH);
+
+                            // strip optional numeric suffix from artist name
+                            if(!empty($track->artists) &&
+                                    preg_match('/^(.+?)(?:\s\(\d+\))?$/', $track->artists[0]->name, $matches))
+                                $entry["artist"] = mb_substr(trim($matches[1]), 0, PlaylistEntry::MAX_FIELD_LENGTH);
 
                             $tracks[] = $entry;
                         }
@@ -339,7 +344,7 @@ class Editor extends MenuItem {
                     $entry["time"] = trim($track->duration);
                     $entry["title"] = mb_substr(trim($track->title) . $artist, 0, PlaylistEntry::MAX_FIELD_LENGTH);
                     // strip optional numeric suffix from artist name
-                    if($track->artists &&
+                    if(!empty($track->artists) &&
                             preg_match('/^(.+?)(?:\s\(\d+\))?$/', $track->artists[0]->name, $matches))
                         $entry["artist"] = mb_substr(trim($matches[1]), 0, PlaylistEntry::MAX_FIELD_LENGTH);
 
