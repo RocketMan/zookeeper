@@ -35,26 +35,10 @@ class Engine {
 
     private static array $apiCache = [];
 
-    /*
-     * install autoloader for the engine implementation classes
-     */
-    private static function customAutoloader() {
-        spl_autoload_register(function($class) {
-            // search for file without Impl suffix in the 'impl' subdir
-            $prefix = str_replace("\\", "\\x5c", __NAMESPACE__."\\");
-            if(preg_match("/{$prefix}(.+)Impl$/", $class, $matches) &&
-                    is_file($path = __DIR__."/impl/{$matches[1]}.php")) {
-                include $path;
-            }
-        });
-    }
-
     /**
      * start of day initialization
      */
     public static function init() {
-        self::customAutoloader();
-
         // application configuration file
         self::$config = new Config('config');
 
