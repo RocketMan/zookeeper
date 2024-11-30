@@ -335,7 +335,7 @@ class Editor extends MenuItem {
 
                     // see comment above about the artist name format
                     $artist = isset($_GET["artist"]) &&
-                        isset($track->extraartists) &&
+                        !empty($track->extraartists) &&
                         preg_match('/(\w+)(?:\s\(\d+\))?$/', $track->extraartists[0]->name, $matches) ? " ({$matches[1]})" : '';
 
                     $entry = [];
