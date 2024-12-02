@@ -305,20 +305,16 @@ class Editor extends MenuItem {
                 $addUrls = $this->getUrlAutofill();
                 foreach($json->tracklist as $track) {
                     if($track->type_ == "index") {
-                        // The artist name is formatted like:
-                        //    Richard Wilson (22)
-                        // where (22) is an optional suffix.
-                        // We want only the last word, exclusive the suffix
-                        // (in this case, 'Wilson').
-                        $artist = !empty($track->artists) &&
-                            preg_match('/(\w+)(?:\s\(\d+\))?$/', $track->artists[0]->name, $matches) ? "{$matches[1]}: " : '';
+                        $title = !empty($track->title) &&
+                                preg_match('/^(.+?)(?:\s\(.+\))?$/', $track->title, $matches) ?
+                                "{$matches[1]}: " : '';
 
                         foreach($track->sub_tracks as $track) {
                             $entry = [];
                             $entry["seq"] = ++$seq;
                             $entry["oseq"] = trim($track->position);
                             $entry["time"] = trim($track->duration);
-                            $entry["title"] = mb_substr($artist . trim($track->title), 0, PlaylistEntry::MAX_FIELD_LENGTH);
+                            $entry["title"] = mb_substr($title . trim($track->title), 0, PlaylistEntry::MAX_FIELD_LENGTH);
 
                             // strip optional numeric suffix from artist name
                             if(!empty($track->artists) &&
@@ -333,16 +329,11 @@ class Editor extends MenuItem {
                     if($track->type_ != "track")
                         continue;
 
-                    // see comment above about the artist name format
-                    $artist = isset($_GET["artist"]) &&
-                        !empty($track->extraartists) &&
-                        preg_match('/(\w+)(?:\s\(\d+\))?$/', $track->extraartists[0]->name, $matches) ? " ({$matches[1]})" : '';
-
                     $entry = [];
                     $entry["seq"] = ++$seq;
                     $entry["oseq"] = trim($track->position);
                     $entry["time"] = trim($track->duration);
-                    $entry["title"] = mb_substr(trim($track->title) . $artist, 0, PlaylistEntry::MAX_FIELD_LENGTH);
+                    $entry["title"] = mb_substr(trim($track->title), 0, PlaylistEntry::MAX_FIELD_LENGTH);
                     // strip optional numeric suffix from artist name
                     if(!empty($track->artists) &&
                             preg_match('/^(.+?)(?:\s\(\d+\))?$/', $track->artists[0]->name, $matches))
