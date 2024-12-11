@@ -66,12 +66,9 @@ class Reviews implements RequestHandlerInterface {
         $res = new JsonResource("review", $rec["id"]);
         $res->links()->set(new Link("self", Engine::getBaseUrl()."review/".$rec["id"]));
         foreach(self::FIELDS as $field) {
-            if(!array_key_exists($field, $rec))
-                continue;
-
             switch($field) {
             case "date":
-                $value = substr($rec["reviewed"], 0, 10);
+                $value = substr($rec["reviewed"] ?? $rec["created"], 0, 10);
                 break;
             case "airname":
                 $value = $rec["airname"] ?? $rec["realname"];

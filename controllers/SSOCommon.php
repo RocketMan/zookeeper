@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -141,14 +141,15 @@ class SSOCommon {
         }
         return $retval;
     }
-    
+
     public static function setupSSOByName($account, $name) {
-        $retval = false;
-        $row = Engine::api(IUser::class)->getUserByFullname($name);
-        if($row) {
-            Engine::api(IUser::class)->assignAccount($row["name"], $account);
-            $retval = self::setupSSOByAccount($account);
-        }
-        return $retval;
+        $api = Engine::api(IUser::class);
+        $row = $api->getUserByFullname($name);
+        if($row)
+            $api->assignAccount($row["name"], $account);
+        else
+            $api->createNewAccount($name, $account);
+
+        return self::setupSSOByAccount($account);
     }
 }

@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -50,7 +50,7 @@ class UserImpl extends DBO implements IUser {
     }
     
     public function getUserByFullname($fullname) {
-        $query = "SELECT * FROM users WHERE realname = ?";
+        $query = "SELECT * FROM users WHERE realname = ? AND ssoaccount IS NULL";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $fullname);
         return $stmt->executeAndFetch();
