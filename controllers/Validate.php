@@ -554,7 +554,7 @@ class Validate implements IController {
                         'attributes' => [
                             'airname' => $airname,
                             'date' => '2022-02-09',
-                            'review' => 'This is a review'
+                            'review' => 'This is a #review #test'
                         ],
                         'relationships' => [
                             'album' => [
@@ -575,7 +575,7 @@ class Validate implements IController {
         }
 
         if($this->doTest("validate review", $success9)) {
-            $success10 = $this->searchAlbum($albumname2, "review", "review", "This is a review");
+            $success10 = $this->searchAlbum($albumname2, "review", "review", "This is a #review #test");
             $this->showSuccess($success10);
         }
 

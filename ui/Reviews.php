@@ -53,6 +53,8 @@ class Reviews extends MenuItem {
     private static $subactions = [
         [ "a", "", "Recent Reviews", "viewRecentReviews" ],
         [ "a", "viewDJ", "By DJ", "reviewsByDJ" ],
+        [ "a", "viewHashtag", "Trending", "viewTrending" ],
+        [ "a", "trendingData", 0, "getTrendingData" ],
     ];
 
     private $subaction;
@@ -125,6 +127,25 @@ class Reviews extends MenuItem {
         }
 
         $this->emitViewDJMain();
+    }
+
+    public function viewTrending() {
+        $this->setTemplate("review.trending.html");
+    }
+
+    public function getTrendingData() {
+        $limit = 50;
+        $scale = $limit / 5;
+        $trending = Engine::api(IReview::class)->getTrending($limit);
+        $data = array_map(function($entry) use(&$limit, $scale) {
+            return [
+                'text' => $entry['hashtag'],
+                'weight' => $entry['freq'] * $scale + floor($limit-- / 10),
+                'link' => '?action=search&s=byHashtag&n=' . urlencode($entry['hashtag'])
+            ];
+        }, $trending);
+
+        echo json_encode($data);
     }
 
     public function viewRecentReviews() {

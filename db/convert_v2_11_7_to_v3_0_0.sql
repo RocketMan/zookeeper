@@ -58,6 +58,16 @@ ALTER TABLE `reviews` ADD COLUMN `exportid` varchar(80) DEFAULT NULL;
 ALTER TABLE `tracknames` ADD COLUMN `duration` time DEFAULT NULL;
 ALTER TABLE `colltracknames` ADD COLUMN `duration` time DEFAULT NULL;
 
+CREATE TABLE IF NOT EXISTS `reviews_hashtags` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `tag` int(11) NOT NULL,
+  `user` varchar(8) NOT NULL,
+  `hashtag` varchar(190) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tu` (`tag`,`user`),
+  KEY `hashtag` (`hashtag`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
+
 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT;
 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS;
 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION;

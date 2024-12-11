@@ -9,7 +9,7 @@ $().ready(function() {
 {% if type == "all" %}
     $(".search-data").val(text);
     $("#fkey").val(text);
-{% elseif type == "albumsByPubkey" %}
+{% elseif type == "albumsByPubkey" or type == "hashtags" %}
     $("#fkey").val(text);
 {% else %}
     $("#search-filter").val(type).selectmenu('refresh');
@@ -22,6 +22,7 @@ $().ready(function() {
     var sortBy;
     switch(type) {
     case "artists":
+    case "hashtags":
         sortBy = "Artist";
         break;
     case "albums":
