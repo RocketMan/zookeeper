@@ -37,7 +37,8 @@ function reposition() {
 
     $("#cloud").css('margin-left', -pos.left + 'px')
         .css('margin-top', -pos.top+20 + 'px')
-        .css('opacity', 1);
+        .css('opacity', 1)
+        .parent().css('overflow-x','clip');
 
     loading = false;
 }
