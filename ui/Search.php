@@ -46,7 +46,8 @@ class Search extends MenuItem {
         "byArtist" => "artists",
         "byTrack" => "tracks",
         "byLabel" => "labels",
-        "byLabelKey" => "albumsByPubkey"
+        "byLabelKey" => "albumsByPubkey",
+        "byHashtag" => "hashtags"
     ];
 
     public $searchText;
@@ -131,7 +132,7 @@ class Search extends MenuItem {
 
         // hashtags
         $hashtags = array_reduce(array_reverse($reviews), function($carry, $review) {
-            return preg_match_all('/#\pL\w*/u', $review['review'], $matches) ?
+            return !$review['private'] && preg_match_all('/#\pL\w*/u', $review['review'], $matches) ?
                 array_merge($carry, $matches[0]) : $carry;
         }, []);
         $normalized = array_unique(array_map('strtolower', $hashtags));

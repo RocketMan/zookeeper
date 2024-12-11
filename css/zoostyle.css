@@ -784,6 +784,11 @@ th.sec {
     font-weight: bold;
     color: #cc0000;
 }
+.quiet-notice {
+    font-size: 20px;
+    color: #ccc;
+}
+
 .input { }
 .sel:link { color: #ff0000; }
 .sel:visited { color: #ff0000; }
@@ -1574,6 +1579,16 @@ a:hover.copy {
 
 .album-hashtag-area {
     padding-top: 15px;
+}
+
+.album-hashtag-area a {
+    color: inherit;
+}
+.album-hashtag-area a:hover {
+    text-decoration: none;
+}
+.album-hashtag-area a:hover .album-hashtag {
+    filter: brightness(115%);
 }
 
 .album-hashtag {
