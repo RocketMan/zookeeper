@@ -46,7 +46,8 @@ class Search extends MenuItem {
         "byArtist" => "artists",
         "byTrack" => "tracks",
         "byLabel" => "labels",
-        "byLabelKey" => "albumsByPubkey"
+        "byLabelKey" => "albumsByPubkey",
+        "byHashtag" => "hashtags"
     ];
 
     public $searchText;

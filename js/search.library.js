@@ -144,7 +144,7 @@ function emitAlbumsEx(table, data) {
     tr.append(header("Album", true));
     tr.append(header("Collection", false));
     tr.append(header("Media", false).attr('colSpan', 2));
-    tr.append(header("Added", false));
+    tr.append(header("Added", $("#type").val() == 'hashtags'));
     tr.append(header("Label", true));
     table.append($("<THEAD>").append(tr));
 
@@ -215,7 +215,8 @@ var requestMap = {
     albumsByPubkey: "album?filter[label.id]=",
     tracks: "album?filter[track]=",
     labels: "label?filter[name]=",
-    reviews: "album?filter[reviews.airname.id]="
+    reviews: "album?filter[reviews.airname.id]=",
+    hashtags: "album?filter[reviews.hashtag]="
 };
 
 var lists = {
@@ -370,6 +371,9 @@ var lists = {
     },
 };
 
+// hashtags and albums share the same marshaller
+lists.hashtags = lists.albums;
+
 function search(size, offset) {
     var suffix, type = $("#type").val();
     if(!type || !requestMap[type])
@@ -377,6 +381,7 @@ function search(size, offset) {
     switch(type) {
     case "albumsByPubkey":
     case "reviews":
+    case "hashtags":
         suffix = "";
         break;
     default:
@@ -428,6 +433,9 @@ function search(size, offset) {
                 case "albumsByPubkey":
                     ttype = "albums";
                     break;
+                case "hashtags":
+                    ttype = "albums tagged #" + $("#fkey").val();
+                    break;
                 default:
                     ttype = type;
                     break;
@@ -457,7 +465,7 @@ function search(size, offset) {
                 if($("#sortBy").val() == "")
                     $("#sortBy").val("Artist");
                 lists[type](results, response);
-            } else {
+            } else if (type != 'hashtags' ) {
                 if($("#m").is(":checked"))
                     results.append('Hint: Uncheck "Exact match" box to broaden search.');
                 else

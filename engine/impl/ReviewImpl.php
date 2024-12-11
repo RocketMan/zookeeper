@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -156,8 +156,44 @@ class ReviewImpl extends DBO implements IReview {
             $stmt->bindValue(2, $user);
         return $stmt->executeAndFetchAll(\PDO::FETCH_BOTH);
     }
+
+    public function getTrending(int $limit = 50) {
+        $query = "SELECT hashtag, count(*) freq FROM reviews_hashtags " .
+                 "GROUP BY hashtag ORDER BY id DESC LIMIT ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $limit, \PDO::PARAM_INT);
+        return $stmt->executeAndFetchAll();
+    }
+
+    protected function syncHashtags(int $tag, string $user, ?string $review = null) {
+        $this->adviseLock($tag);
+
+        $query = "DELETE FROM reviews_hashtags WHERE tag = ? AND user = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $tag);
+        $stmt->bindValue(2, $user);
+        $stmt->execute();
+
+        if($review && preg_match_all('/#(\pL\w*)/u', $review, $matches)) {
+            $query = "INSERT INTO reviews_hashtags (tag, user, hashtag) VALUES (?, ?, ?)";
+            $stmt = $this->prepare($query);
+            $stmt->bindValue(1, $tag);
+            $stmt->bindValue(2, $user);
+            $normalized = array_unique(array_map('strtolower', $matches[1]));
+            $hashtags = array_intersect_key($matches[1], $normalized);
+            foreach($hashtags as $hashtag) {
+                $stmt->bindValue(3, $hashtag);
+                $stmt->execute();
+            }
+        }
+
+        $this->adviseUnlock($tag);
+    }
     
     public function insertReview($tag, $private, $airname, $review, $user) {
+        // we must do this first, as caller depends on lastInsertId from INSERT
+        $this->syncHashtags($tag, $user, $review);
+
         $query = "INSERT INTO reviews " .
                  "(tag, user, created, private, review, airname) VALUES (" .
                  "?, ?, " .
@@ -171,7 +207,13 @@ class ReviewImpl extends DBO implements IReview {
         $stmt->bindValue(4, $review);
         if($airname)
             $stmt->bindValue(5, $airname);
-        return $stmt->execute()?$stmt->rowCount():0;
+        $count = $stmt->execute() ? $stmt->rowCount() : 0;
+
+        // back out hashtags on failure
+        if(!$count)
+            $this->syncHashtags($tag, $user);
+
+        return $count;
     }
     
     public function updateReview($tag, $private, $airname, $review, $user) {
@@ -188,7 +230,12 @@ class ReviewImpl extends DBO implements IReview {
         $stmt->bindValue($p++, $review);
         $stmt->bindValue($p++, $tag);
         $stmt->bindValue($p++, $user);
-        return $stmt->execute()?$stmt->rowCount():0;
+        $count = $stmt->execute() ? $stmt->rowCount() : 0;
+
+        if($count)
+            $this->syncHashtags($tag, $user, $review);
+
+        return $count;
     }
     
     public function deleteReview($tag, $user) {
@@ -197,7 +244,13 @@ class ReviewImpl extends DBO implements IReview {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $tag);
         $stmt->bindValue(2, $user);
-        return $stmt->execute()?$stmt->rowCount():0;
+        $count = $stmt->execute() ? $stmt->rowCount() : 0;
+
+        // delete any associated hashtags
+        if($count)
+            $this->syncHashtags($tag, $user);
+
+        return $count;
     }
 
     public function setExportId($tag, $user, $exportId) {

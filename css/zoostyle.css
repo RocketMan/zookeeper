@@ -1576,6 +1576,16 @@ a:hover.copy {
     padding-top: 15px;
 }
 
+.album-hashtag-area a {
+    color: inherit;
+}
+.album-hashtag-area a:hover {
+    text-decoration: none;
+}
+.album-hashtag-area a:hover .album-hashtag {
+    filter: brightness(115%);
+}
+
 .album-hashtag {
     border-radius: 6px;
     border: 1px solid #666;

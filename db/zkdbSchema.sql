@@ -336,6 +336,22 @@ CREATE TABLE IF NOT EXISTS `reviews` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `reviews_hashtags`
+--
+
+CREATE TABLE IF NOT EXISTS `reviews_hashtags` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `tag` int(11) NOT NULL,
+  `user` varchar(8) NOT NULL,
+  `hashtag` varchar(190) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tu` (`tag`,`user`),
+  KEY `hashtag` (`hashtag`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sessions`
 --
 

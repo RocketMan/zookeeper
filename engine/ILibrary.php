@@ -87,6 +87,7 @@ interface ILibrary {
     const TRACK_KEY = 9;
     const TRACK_NAME = 10;
     const ALBUM_LOCATION = 11;
+    const ALBUM_HASHTAG = 12;
 
     const OP_PREV_LINE = 0;
     const OP_NEXT_LINE = 1;

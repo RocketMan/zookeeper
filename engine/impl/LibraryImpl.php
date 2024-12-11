@@ -137,6 +137,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $query = "ORDER BY name$desc, album$desc, artist$desc ";
             break;
         case "created":
+        case "added":
             $query = "ORDER BY a.created$desc, artist$desc ";
             break;
         case "date":
@@ -306,11 +307,21 @@ class LibraryImpl extends DBO implements ILibrary {
             $query .= self::orderBy($sortBy);
             $query .= "LIMIT ?, ?";
             break;
+        case ILibrary::ALBUM_HASHTAG:
+            $query = "SELECT artist, album, category, medium, size, ".
+                     "a.created, a.updated, a.pubkey, location, bin, a.tag, iscoll, p.name ".
+                     "FROM reviews_hashtags r LEFT JOIN albumvol a ON a.tag = r.tag ".
+                     "LEFT JOIN publist p ON p.pubkey = a.pubkey ".
+                     "WHERE hashtag = ? GROUP BY r.tag ";
+            $query .= self::orderBy($sortBy);
+            $query .= "LIMIT ?, ?";
+            $bindType = 3;
+            break;
         default:
             error_log("searchPos: unknown key '$tableIndex'");
             return;
         }
-      
+
         // Collation for utf8mb4 coalesces related characters, such as
         // 'a', 'a-umlaut', 'a-acute', and so on, for searching.  However,
         // it does not coalese various punctuation, such as apostrophe
@@ -386,11 +397,13 @@ class LibraryImpl extends DBO implements ILibrary {
             else if($lim = strpos($query, " LIMIT"))
                 $query = substr($query, 0, $lim);
 
-            // For UNION queries, we must count number of aggregate rows.
+            // For UNION queries and for queries which contain GROUP BY,
+            // we must count the number of aggregate rows.
             //
             // This will work also for simple queries, but in that
             // case, we just do a count, as it's a tad more efficient.
-            if(strpos($query, " UNION SELECT ")) {
+            if(strpos($query, " UNION SELECT ") ||
+                    strpos($query, " GROUP BY ")) {
                 $query = "SELECT COUNT(*) FROM (" . $query . ") x";
             } else {
                 $from = strpos($query, "FROM");
