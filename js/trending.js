@@ -56,6 +56,13 @@ function loadCloud() {
 }
 
 $().ready(function() {
+    if(!$.fn.jQCloud) {
+        $("#cloud").append($("<p>", {
+            class: 'quiet-notice'
+        }).html('The trending cloud is unavailable.'));
+        return;
+    }
+
     $.ajax({
         dataType: 'json',
         type: 'GET',

@@ -784,6 +784,11 @@ th.sec {
     font-weight: bold;
     color: #cc0000;
 }
+.quiet-notice {
+    font-size: 20px;
+    color: #ccc;
+}
+
 .input { }
 .sel:link { color: #ff0000; }
 .sel:visited { color: #ff0000; }
