@@ -192,7 +192,7 @@ class ReviewImpl extends DBO implements IReview {
     
     public function insertReview($tag, $private, $airname, $review, $user) {
         // we must do this first, as caller depends on lastInsertId from INSERT
-        $this->syncHashtags($tag, $user, $review);
+        $this->syncHashtags($tag, $user, $private ? null : $review);
 
         $query = "INSERT INTO reviews " .
                  "(tag, user, created, private, review, airname) VALUES (" .
@@ -233,7 +233,7 @@ class ReviewImpl extends DBO implements IReview {
         $count = $stmt->execute() ? $stmt->rowCount() : 0;
 
         if($count)
-            $this->syncHashtags($tag, $user, $review);
+            $this->syncHashtags($tag, $user, $private ? null : $review);
 
         return $count;
     }
