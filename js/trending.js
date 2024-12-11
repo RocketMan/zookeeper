@@ -24,6 +24,7 @@
 
 var trending = null;
 var loading = false;
+var lastsize = 0;
 var timeout;
 
 function reposition() {
@@ -45,8 +46,14 @@ function reposition() {
 
 function loadCloud() {
     if(trending && !loading) {
-        loading = true;
         var width = $(".content").outerWidth();
+
+        // avoid re-layout on trivial resize
+        if(Math.abs(lastsize - width) < 10)
+            return;
+
+        loading = true;
+        lastsize = width;
         $("#cloud").css('opacity', 0).empty().jQCloud(trending, {
             width: width,
             height: 350,
