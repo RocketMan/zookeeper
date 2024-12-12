@@ -41,6 +41,8 @@ function reposition() {
         .css('opacity', 1)
         .parent().css('overflow-x','clip');
 
+    $(".loading").remove();
+
     loading = false;
 }
 
@@ -51,6 +53,12 @@ function loadCloud() {
         // avoid re-layout on trivial resize
         if(Math.abs(lastsize - width) < 10)
             return;
+
+        if($(".loading").length == 0) {
+            $(".content").append($("<div>", {
+                class: "loading"
+            }).append($("<div>")));
+        }
 
         loading = true;
         lastsize = width;
@@ -70,6 +78,10 @@ $().ready(function() {
         }).html('The trending cloud is unavailable.'));
         return;
     }
+
+    $(".content").append($("<div>", {
+        class: "loading"
+    }).append($("<div>")));
 
     $.ajax({
         dataType: 'json',
