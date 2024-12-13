@@ -28,7 +28,7 @@ var lastsize = 0;
 var timeout;
 
 function reposition() {
-    var pos = $("#cloud span").toArray().reduce(function(carry, span) {
+    var pos = loading.children('span').toArray().reduce(function(carry, span) {
         if(span.offsetLeft < carry.left)
             carry.left = span.offsetLeft;
         if(span.offsetTop < carry.top)
@@ -36,10 +36,11 @@ function reposition() {
         return carry;
     }, { left: 10000, top: 10000 } );
 
-    $("#cloud").css('margin-left', -pos.left + 'px')
-        .css('margin-top', -pos.top+20 + 'px')
-        .css('opacity', 1)
-        .parent().css('overflow-x','clip');
+    loading.css('margin-left', -pos.left + 'px')
+        .css('margin-top', -pos.top+20 + 'px');
+
+    $(".tag-cloud").replaceWith(loading).removeClass('invisible')
+        .parent().css('overflow-x', 'clip');
 
     $(".loading").remove();
 
@@ -57,16 +58,15 @@ function loadCloud() {
         if(Math.abs(lastsize - width) < 10)
             return;
 
-        if($(".loading").length == 0) {
-            $(".content").append($("<div>", {
-                class: "loading"
-            }).append($("<div>")));
-        }
-
-        loading = true;
         lastsize = width;
 
-        $("#cloud").css('opacity', 0).empty().jQCloud(trending, {
+        loading = $("<div>", {
+            class: "tag-cloud invisible"
+        });
+
+        content.append(loading);
+
+        loading.jQCloud(trending, {
             width: width,
             height: height,
             removeOverflowing: true,
@@ -78,7 +78,7 @@ function loadCloud() {
 
 $().ready(function() {
     if(!$.fn.jQCloud) {
-        $("#cloud").append($("<p>", {
+        $(".tag-cloud").append($("<p>", {
             class: 'quiet-notice'
         }).html('The trending cloud is unavailable.'));
         return;

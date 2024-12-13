@@ -52,6 +52,12 @@ div.jqcloud {
 
 div.jqcloud span { padding: 4px; }
 
+.tag-cloud.invisible {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+}
+
 /* loading */
 
 @keyframes loading {
