@@ -39,7 +39,8 @@ function reposition() {
     loading.css('margin-left', -pos.left + 'px')
         .css('margin-top', -pos.top+20 + 'px');
 
-    $(".tag-cloud").replaceWith(loading).removeClass('invisible')
+    $(".tag-cloud").replaceWith(loading);
+    loading.addClass('tag-cloud').removeClass('invisible')
         .parent().css('overflow-x', 'clip');
 
     $(".loading").remove();
@@ -61,7 +62,7 @@ function loadCloud() {
         lastsize = width;
 
         loading = $("<div>", {
-            class: "tag-cloud invisible"
+            class: "jqcloud invisible"
         });
 
         content.append(loading);

@@ -52,7 +52,7 @@ div.jqcloud {
 
 div.jqcloud span { padding: 4px; }
 
-.tag-cloud.invisible {
+div.jqcloud.invisible {
     position: absolute;
     top: -9999px;
     left: -9999px;
