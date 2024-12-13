@@ -34,7 +34,7 @@ function reposition() {
         if(span.offsetTop < carry.top)
             carry.top = span.offsetTop;
         return carry;
-    }, { left: 1000, top: 1000 } );
+    }, { left: 10000, top: 10000 } );
 
     $("#cloud").css('margin-left', -pos.left + 'px')
         .css('margin-top', -pos.top+20 + 'px')
@@ -48,7 +48,10 @@ function reposition() {
 
 function loadCloud() {
     if(trending && !loading) {
-        var width = $(".content").outerWidth();
+        var content = $(".content");
+        // shrink slightly to ensure we remain within the container
+        var width = content.outerWidth() - 50;
+        var height = content.outerHeight() - 50;
 
         // avoid re-layout on trivial resize
         if(Math.abs(lastsize - width) < 10)
@@ -62,10 +65,12 @@ function loadCloud() {
 
         loading = true;
         lastsize = width;
+
         $("#cloud").css('opacity', 0).empty().jQCloud(trending, {
             width: width,
-            height: 350,
-            removeOverflowing: false,
+            height: height,
+            removeOverflowing: true,
+            delayedMode: false,
             afterCloudRender: reposition
         });
     }
