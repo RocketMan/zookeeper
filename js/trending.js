@@ -28,6 +28,7 @@ var lastsize = 0;
 var timeout;
 
 function reposition() {
+    // determine the left and top edges of the word cloud
     var pos = loading.children('span').toArray().reduce(function(carry, span) {
         if(span.offsetLeft < carry.left)
             carry.left = span.offsetLeft;
@@ -36,6 +37,7 @@ function reposition() {
         return carry;
     }, { left: 10000, top: 10000 } );
 
+    // reposition the word cloud to the upper left of the content area
     loading.css('margin-left', -pos.left + 'px')
         .css('margin-top', -pos.top+20 + 'px');
 
@@ -51,6 +53,7 @@ function reposition() {
 function loadCloud() {
     if(trending && !loading) {
         var content = $(".content");
+
         // shrink slightly to ensure we remain within the container
         var width = content.outerWidth() - 50;
         var height = content.outerHeight() - 50;
@@ -61,6 +64,11 @@ function loadCloud() {
 
         lastsize = width;
 
+        // The div must be in the DOM *and* visible for jQCloud.
+        //
+        // We absolute position the div offscreen (class 'invisible'),
+        // let jQCloud do the layout, and then reposition the div into
+        // the normal document flow upon completion.
         loading = $("<div>", {
             class: "jqcloud invisible"
         });

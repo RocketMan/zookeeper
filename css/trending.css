@@ -53,9 +53,9 @@ div.jqcloud {
 div.jqcloud span { padding: 4px; }
 
 div.jqcloud.invisible {
-    position: absolute;
-    top: -9999px;
-    left: -9999px;
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
 }
 
 /* loading */
