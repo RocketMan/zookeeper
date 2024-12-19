@@ -2,7 +2,7 @@
 [![last commit](https://badgen.net/github/last-commit/RocketMan/zookeeper)](https://github.com/RocketMan/zookeeper/commits/master)
 [![Build Status](https://github.com/RocketMan/zookeeper/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/RocketMan/zookeeper/actions/workflows/main.yml)
 
-[![license](https://badgen.net/github/license/RocketMan/zookeeper)](https://github.com/RocketMan/zookeeper/blob/master/LICENSE)
+[![license](https://img.shields.io/github/license/RocketMan/zookeeper)](https://github.com/RocketMan/zookeeper/blob/master/LICENSE)
 [![latest version](https://badgen.net/github/release/RocketMan/zookeeper?label=latest)](https://github.com/RocketMan/zookeeper/releases)
 
 Zookeeper Online is a music database and charting application for
