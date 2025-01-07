@@ -307,7 +307,7 @@ class Editor extends MenuItem {
                     if($track->type_ == "index") {
                         $title = !empty($track->title) &&
                                 preg_match('/^(.+?)(?:\s\(.+\))?$/', $track->title, $matches) ?
-                                "{$matches[1]}: " : '';
+                                trim($matches[1]) . ': ' : '';
 
                         foreach($track->sub_tracks as $track) {
                             $entry = [];

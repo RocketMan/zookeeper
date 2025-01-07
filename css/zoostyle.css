@@ -1603,7 +1603,7 @@ a:hover.copy {
     text-decoration: none;
 }
 .album-hashtag-area a:hover .album-hashtag {
-    filter: brightness(115%);
+    filter: brightness(90%);
 }
 
 .album-hashtag {
