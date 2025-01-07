@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -55,6 +55,8 @@ class Reviews extends MenuItem {
         [ "a", "viewDJ", "By DJ", "reviewsByDJ" ],
         [ "a", "viewHashtag", "Trending", "viewTrending" ],
         [ "a", "trendingData", 0, "getTrendingData" ],
+        [ "u", "viewReviewShelf", "Review Shelf", "viewReviewShelf" ],
+        [ "u", "updateReviewShelf", 0, "updateReviewShelf" ],
     ];
 
     private $subaction;
@@ -148,6 +150,49 @@ class Reviews extends MenuItem {
         echo json_encode($data);
     }
 
+    public function viewReviewShelf() {
+        $albums = Engine::api(IReview::class)->getReviewShelf();
+        $this->addVar('GENRES', ILibrary::GENRES);
+        $this->addVar('albums', $albums);
+        $this->setTemplate("review.shelf.html");
+    }
+
+    public function updateReviewShelf() {
+        $op = $_REQUEST['op'] ?? false;
+        $tag = $_REQUEST['tag'] ?? false;
+        if(!$op || !$tag) {
+            http_response_code(400); // bad request
+            return;
+        }
+
+        switch($op) {
+        case 'claim':
+            Engine::api(IReview::class)->updateReviewShelf($tag, $this->session->getUser());
+            break;
+        case 'release':
+            // fall through...
+        case 'xdtm':
+            Engine::api(IReview::class)->updateReviewShelf($tag, null);
+            break;
+        }
+
+        $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)[0];
+        if($album['bin']) {
+            $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $album['bin']);
+            if(count($user))
+                $album['realname'] = $user[0]['realname'];
+        }
+
+        $this->claimReview($tag, $op);
+
+        $this->addVar('GENRES', ILibrary::GENRES);
+        $this->addVar('album', $album);
+        $this->setTemplate("review.shelf.html");
+        $html = $this->render('album');
+
+        echo json_encode(['html' => $html]);
+    }
+
     public function viewRecentReviews() {
         $isAuthorized = $this->session->isAuth('u');
         $author = $isAuthorized && ($_GET['dj'] ?? '') == 'Me' ? $this->session->getUser() : '';
@@ -164,6 +209,78 @@ class Reviews extends MenuItem {
         $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
     }
     
+    private function claimReview($tag, $op) {
+        // nothing to do if Slack is not configured
+        $config = Engine::param('slack');
+        if($op == 'dtm' ||
+                !$config || !($token = $config['token']) ||
+                !($channel = $config['review_channel'])) {
+            return;
+        }
+
+        // find the album
+        $libAPI = Engine::api(ILibrary::class);
+        $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        if(!count($albums))
+            return;
+
+        $artist = $albums[0]["iscoll"] ? "Various Artists" : $albums[0]["artist"];
+        $album = $albums[0]["album"];
+
+        $user = $libAPI->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
+        if(!count($user))
+            return;
+
+        $reviewer = $user[0]["realname"];
+        $unclaim = $op == 'release';
+        $action = $unclaim ? "has returned" : "is reviewing";
+        $verb = $unclaim ? "returned" : "claimed";
+
+        $base = Engine::getBaseUrl();
+        $title = Engine::param('station_title');
+
+        // compose the message
+        $body = [
+            'type' => 'section',
+            'text' => [
+                'type' => 'mrkdwn',
+                'text' => ":lower_left_fountain_pen: $reviewer $action <$base?s=byAlbumKey&amp;n=$tag&amp;action=search|$artist / $album>"
+            ],
+        ];
+
+        $client = new Client([
+            'base_uri' => self::SLACK_BASE,
+            RequestOptions::HEADERS => [
+                'User-Agent' => Engine::UA,
+                'Authorization' => 'Bearer ' . $token
+            ]
+        ]);
+
+        try {
+            $options = [
+                'channel' => $channel,
+                'text' => "$reviewer $verb $artist / $album",
+                'blocks' => [
+                    $body,
+                ],
+            ];
+
+            $method = 'chat.postMessage';
+
+            $response = $client->post($method, [
+                RequestOptions::JSON => $options
+            ]);
+
+            // Slack returns success/failure in 'ok' property
+            $body = $response->getBody()->getContents();
+            $json = json_decode($body);
+            if(!$json->ok)
+                error_log("postReview: $body");
+        } catch(\Exception $e) {
+            error_log("postReview: " . $e->getMessage());
+        }
+    }
+
     private function postReview($tag) {
         // nothing to do if Slack is not configured
         $config = Engine::param('slack');

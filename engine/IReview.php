@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -52,4 +52,16 @@ interface IReview {
     function updateReview($tag, $private, $airname, $review, $user);
     function deleteReview($tag, $user);
     function setExportId($tag, $user, $exportId);
+    function getReviewShelf();
+    /**
+     * update review shelf status
+     *
+     * @param int $tag target album
+     * @param ?string $user check album out to user or null (see below)
+     * @return ?array old status or null if none
+     *
+     * If $user is null and album is pending approval, it is moved
+     * to the library; otherwise, it is returned to the review shelf.
+     */
+    function updateReviewShelf(int $tag, ?string $user = null): ?array;
 }
