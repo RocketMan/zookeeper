@@ -171,7 +171,7 @@ class Reviews extends MenuItem {
             break;
         case 'release':
             // fall through...
-        case 'xdtm':
+        case 'dtm':
             Engine::api(IReview::class)->updateReviewShelf($tag, null);
             break;
         }
