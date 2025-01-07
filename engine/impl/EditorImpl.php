@@ -50,7 +50,7 @@ class EditorImpl extends DBO implements IEditor {
     }
     
     public function insertUpdateAlbum(&$album, $tracks, $label) {
-        if($album["location"] != "G")
+        if($album["location"] != "F" && $album["location"] != "G")
            $album["bin"] = "";
     
         $name = $label && array_key_exists("name", $label) ?

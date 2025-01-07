@@ -70,7 +70,7 @@ function changeList(list) {
                 html += '>' + htmlify(val) + '</A>';
                 field.html(html);
             } else {
-                field.html(htmlify(val));
+                field.html(htmlify(key != 'bin' || items[index].attributes['location'] == 'Storage' ? val : ''));
             }
         }
     }
