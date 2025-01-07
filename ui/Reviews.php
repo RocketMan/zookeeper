@@ -244,7 +244,7 @@ class Reviews extends MenuItem {
             'type' => 'section',
             'text' => [
                 'type' => 'mrkdwn',
-                'text' => ":lower_left_fountain_pen: $reviewer $action <$base?s=byAlbumKey&amp;n=$tag&amp;action=search|$artist / $album>"
+                'text' => ":headphones: $reviewer $action <$base?s=byAlbumKey&amp;n=$tag&amp;action=search|$artist / $album>"
             ],
         ];
 
