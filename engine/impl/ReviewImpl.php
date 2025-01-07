@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -29,6 +29,18 @@ namespace ZK\Engine;
  * Music review operations
  */
 class ReviewImpl extends DBO implements IReview {
+    // these codes are defined in ILibrary::LOCATIONS
+    private const ALBUM_AWAITING_REVIEW = 'E'; // Review Shelf
+    private const ALBUM_IN_REVIEW = 'F';       // Out for Review
+    private const ALBUM_REVIEWED = 'H';        // Pending Approval
+    private const ALBUM_LIBRARY = 'L';         // Library
+
+    private const REVIEW_SHELF = [
+        self::ALBUM_AWAITING_REVIEW,
+        self::ALBUM_IN_REVIEW,
+        self::ALBUM_REVIEWED
+    ];
+
     private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0) {
         // IMPORTANT: If columns change, revisit getRecentReviews below
         $query = "SELECT a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id as rid, u.realname, r.tag, v.category, v.album, v.artist, v.iscoll FROM reviews r ";
@@ -191,8 +203,9 @@ class ReviewImpl extends DBO implements IReview {
     }
     
     public function insertReview($tag, $private, $airname, $review, $user) {
-        // we must do this first, as caller depends on lastInsertId from INSERT
+        // we must do these first as caller depends on lastInsertId from INSERT
         $this->syncHashtags($tag, $user, $private ? null : $review);
+        $prev = $this->updateReviewShelf($tag, null, self::ALBUM_REVIEWED);
 
         $query = "INSERT INTO reviews " .
                  "(tag, user, created, private, review, airname) VALUES (" .
@@ -209,9 +222,13 @@ class ReviewImpl extends DBO implements IReview {
             $stmt->bindValue(5, $airname);
         $count = $stmt->execute() ? $stmt->rowCount() : 0;
 
-        // back out hashtags on failure
-        if(!$count)
+        // back out hashtags and review shelf on failure
+        if(!$count) {
             $this->syncHashtags($tag, $user);
+
+            if($prev)
+                $this->updateReviewShelf($tag, $prev['user'], $prev['status']);
+        }
 
         return $count;
     }
@@ -247,8 +264,10 @@ class ReviewImpl extends DBO implements IReview {
         $count = $stmt->execute() ? $stmt->rowCount() : 0;
 
         // delete any associated hashtags
-        if($count)
+        if($count) {
             $this->syncHashtags($tag, $user);
+            $this->updateReviewShelf($tag, null, self::ALBUM_AWAITING_REVIEW);
+        }
 
         return $count;
     }
@@ -261,5 +280,38 @@ class ReviewImpl extends DBO implements IReview {
         $stmt->bindValue(2, $tag);
         $stmt->bindValue(3, $user);
         return $stmt->execute()?$stmt->rowCount():0;
+    }
+
+    public function getReviewShelf() {
+        $n = count(self::REVIEW_SHELF);
+        $query = "SELECT a.*, u.realname FROM albumvol a LEFT JOIN users u ON a.bin = u.name WHERE location IN ( ?" . str_repeat(', ?', $n - 1) . " ) ORDER BY artist, album";
+        $stmt = $this->prepare($query);
+        foreach(self::REVIEW_SHELF as $status)
+            $stmt->bindValue($n--, $status);
+
+        return $stmt->executeAndFetchAll();
+    }
+
+    function updateReviewShelf(int $tag, ?string $user = null, ?string $status = null): ?array {
+        $query = "SELECT location status, bin user FROM albumvol WHERE tag = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $tag);
+        $result = $stmt->executeAndFetch() ?: null;
+
+        // if album is not in a review status, nothing to do
+        $ostatus = $result['status'] ?? '';
+        if(!in_array($ostatus, self::REVIEW_SHELF))
+            return null;
+
+        $location = $ostatus == self::ALBUM_REVIEWED ?
+                      self::ALBUM_LIBRARY : self::ALBUM_AWAITING_REVIEW;
+
+        $query = "UPDATE albumvol SET location = ?, bin = ?, updated = NOW() WHERE tag = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $status ??
+                ($user ? self::ALBUM_IN_REVIEW : $location));
+        $stmt->bindValue(2, $user);
+        $stmt->bindValue(3, $tag);
+        return $stmt->execute() ? $result : null;
     }
 }

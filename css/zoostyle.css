@@ -282,6 +282,15 @@ table.recent-reviews th {
     text-align: left;
 }
 
+/* review shelf */
+table.review-shelf tbody td {
+    border-color: rgba(0,0,0,0.08);
+}
+
+table.review-shelf tbody tr {
+    line-height: 30px;
+}
+
 /* home page */
 .top-albums {
     margin-top: 4px;
@@ -1001,9 +1010,15 @@ li.ui-menu-item .ui-state-active,
 .form-entry button.edit-mode.default:active:not(:disabled) {
     background-color: #5897ee;
 }
+.form-entry button.edit-delete,
 .form-entry button#edit-delete {
     color: #e33437;
     border-color: #e33437;
+}
+
+.form-entry button.edit-alert {
+    color: #8a2be2;
+    border-color: #8a2be2;
 }
 
 .form-entry label {
