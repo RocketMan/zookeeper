@@ -291,6 +291,11 @@ table.review-shelf tbody tr {
     line-height: 30px;
 }
 
+table.review-shelf tbody tr button {
+    font: inherit;
+    line-height: normal;
+}
+
 /* home page */
 .top-albums {
     margin-top: 4px;
