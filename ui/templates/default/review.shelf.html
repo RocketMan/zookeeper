@@ -81,7 +81,7 @@
               var tr = button.closest('tr');
               if(op == 'dtm') {
                   tr.children()
-                      .wrapInner('<div/>')
+                      .wrapInner('<div>')
                       .children()
                       .slideUp(function() {
                           tr.remove();
