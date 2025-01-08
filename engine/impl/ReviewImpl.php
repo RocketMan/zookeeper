@@ -29,16 +29,10 @@ namespace ZK\Engine;
  * Music review operations
  */
 class ReviewImpl extends DBO implements IReview {
-    // these codes are defined in ILibrary::LOCATIONS
-    private const ALBUM_AWAITING_REVIEW = 'E'; // Review Shelf
-    private const ALBUM_IN_REVIEW = 'F';       // Out for Review
-    private const ALBUM_REVIEWED = 'H';        // Pending Approval
-    private const ALBUM_LIBRARY = 'L';         // Library
-
     private const REVIEW_SHELF = [
-        self::ALBUM_AWAITING_REVIEW,
-        self::ALBUM_IN_REVIEW,
-        self::ALBUM_REVIEWED
+        ILibrary::LOCATION_AWAITING_REVIEW,
+        ILibrary::LOCATION_IN_REVIEW,
+        ILibrary::LOCATION_REVIEWED
     ];
 
     private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0) {
@@ -205,7 +199,7 @@ class ReviewImpl extends DBO implements IReview {
     public function insertReview($tag, $private, $airname, $review, $user) {
         // we must do these first as caller depends on lastInsertId from INSERT
         $this->syncHashtags($tag, $user, $private ? null : $review);
-        $prev = $this->updateReviewShelf($tag, null, self::ALBUM_REVIEWED);
+        $prev = $this->updateReviewShelf($tag, null, ILibrary::LOCATION_REVIEWED);
 
         $query = "INSERT INTO reviews " .
                  "(tag, user, created, private, review, airname) VALUES (" .
@@ -266,7 +260,7 @@ class ReviewImpl extends DBO implements IReview {
         // delete any associated hashtags
         if($count) {
             $this->syncHashtags($tag, $user);
-            $this->updateReviewShelf($tag, null, self::ALBUM_AWAITING_REVIEW);
+            $this->updateReviewShelf($tag, null, ILibrary::LOCATION_AWAITING_REVIEW);
         }
 
         return $count;
@@ -303,13 +297,13 @@ class ReviewImpl extends DBO implements IReview {
         if(!in_array($ostatus, self::REVIEW_SHELF))
             return null;
 
-        $location = $ostatus == self::ALBUM_REVIEWED ?
-                      self::ALBUM_LIBRARY : self::ALBUM_AWAITING_REVIEW;
+        $location = $ostatus == ILibrary::LOCATION_REVIEWED ?
+                      ILibrary::LOCATION_LIBRARY : ILibrary::LOCATION_AWAITING_REVIEW;
 
         $query = "UPDATE albumvol SET location = ?, bin = ?, updated = NOW() WHERE tag = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $status ??
-                ($user ? self::ALBUM_IN_REVIEW : $location));
+                ($user ? ILibrary::LOCATION_IN_REVIEW : $location));
         $stmt->bindValue(2, $user);
         $stmt->bindValue(3, $tag);
         return $stmt->execute() ? $result : null;

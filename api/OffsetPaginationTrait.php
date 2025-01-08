@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -191,7 +191,7 @@ trait OffsetPaginationTrait {
             $key = $locationMap[$normalKey];
 
             // allow optional bin constraint for storage
-            if($key == "G" && $request->hasFilter("bin"))
+            if($key == ILibrary::LOCATION_STORAGE && $request->hasFilter("bin"))
                 $key .= "|" . $request->filterValue("bin");
         }
 

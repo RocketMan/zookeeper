@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -61,6 +61,12 @@ interface ILibrary {
         "F"=>"Full",
         "S"=>"Single",
     ];
+
+    const LOCATION_AWAITING_REVIEW = 'E';
+    const LOCATION_IN_REVIEW = 'F';
+    const LOCATION_REVIEWED = 'H';
+    const LOCATION_STORAGE = 'G';
+    const LOCATION_LIBRARY = 'L';
 
     const LOCATIONS = [
         "D"=>"Received",

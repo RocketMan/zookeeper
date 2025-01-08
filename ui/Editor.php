@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -1139,7 +1139,7 @@ class Editor extends MenuItem {
             $amedium = $row["medium"];
             $aformat = $row["size"];
             $alocation = $row["location"];
-            $bin = $row["bin"];
+            $bin = $alocation == ILibrary::LOCATION_STORAGE ? $row["bin"] : '';
             $coll = substr($artist, 0, 8) == "[coll]: ";
             $name = $_REQUEST["name"];
             if(!$name) {
@@ -1201,7 +1201,7 @@ class Editor extends MenuItem {
             echo "             <OPTION VALUE=\"$code\"$selected>$location\n";
         }
     ?>
-                    </SELECT>&nbsp;&nbsp;<SPAN ID=lbin STYLE="visibility:<?php echo ($alocation == 'G')?"visible":"hidden";?>">Bin:&nbsp;</SPAN><INPUT NAME=bin TYPE=text CLASS=text SIZE=10 maxlength='8' VALUE="<?php echo $bin;?>" STYLE="visibility:<?php echo ($alocation == 'G')?"visible":"hidden";?>"></TD></TR>
+                    </SELECT>&nbsp;&nbsp;<SPAN ID=lbin STYLE="visibility:<?php echo ($alocation == ILibrary::LOCATION_STORAGE) ? "visible" : "hidden"; ?>">Bin:&nbsp;</SPAN><INPUT NAME=bin TYPE=text CLASS=text SIZE=10 maxlength='8' VALUE="<?php echo $bin;?>" STYLE="visibility:<?php echo ($alocation == ILibrary::LOCATION_STORAGE) ? "visible" : "hidden"; ?>"></TD></TR>
     <?php 
         if(!$_REQUEST["new"]) {
     ?>
