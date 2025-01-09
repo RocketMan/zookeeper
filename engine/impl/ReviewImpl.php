@@ -278,7 +278,7 @@ class ReviewImpl extends DBO implements IReview {
 
     public function getReviewShelf() {
         $n = count(self::REVIEW_SHELF);
-        $query = "SELECT a.*, u.realname FROM albumvol a LEFT JOIN users u ON a.bin = u.name WHERE location IN ( ?" . str_repeat(', ?', $n - 1) . " ) ORDER BY artist, album";
+        $query = "SELECT a.*, u.realname FROM albumvol a LEFT JOIN users u ON a.bin = u.name WHERE location IN ( ?" . str_repeat(', ?', $n - 1) . " ) ORDER BY album, artist";
         $stmt = $this->prepare($query);
         foreach(self::REVIEW_SHELF as $status)
             $stmt->bindValue($n--, $status);
