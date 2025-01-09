@@ -88,12 +88,12 @@
                       });
               } else {
                   tr.replaceWith(response.html);
-                  $('button').off().on('click', doOp);
+                  $('.review-shelf button').off().on('click', doOp);
               }
           });
       }
 
-      $('button').on('click', doOp);
+      $('.review-shelf button').on('click', doOp);
   });
   // -->
 </script>
