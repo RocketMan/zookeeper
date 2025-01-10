@@ -285,15 +285,15 @@ table.recent-reviews th {
 /* review shelf */
 table.review-shelf tbody td {
     border-color: rgba(0,0,0,0.08);
+    vertical-align: middle;
 }
 
 table.review-shelf tbody tr {
-    line-height: 30px;
+    height: 35px;
 }
 
 table.review-shelf tbody tr button {
     font: inherit;
-    line-height: normal;
 }
 
 /* home page */
