@@ -87,8 +87,9 @@
                           tr.remove();
                       });
               } else {
-                  tr.replaceWith(response.html);
-                  $('.review-shelf button').off().on('click', doOp);
+                  var row = $(response.html);
+                  row.find('button').on('click', doOp);
+                  tr.replaceWith(row);
               }
           });
       }
