@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -58,6 +58,7 @@ class Playlists extends MenuItem {
 
     private $action;
     private $subaction;
+    private $break;
 
     public function getSubactions($action) {
         return self::$subactions;
@@ -399,11 +400,28 @@ class Playlists extends MenuItem {
     }
 
     private function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTime) {
+        // $artist, $track, $album, and $label have already been trimmed
+        if(empty($artist) && empty($track) &&
+                empty($album) && empty($label)) {
+            // non-consecutive blank row inserts set separator
+            if(!$this->break) {
+                $entry = (new PlaylistEntry())->setSetSeparator();
+                if($spinTime)
+                    $entry->setCreated($spinTime->format(IPlaylist::TIME_FORMAT_SQL));
+                Engine::api(IPlaylist::class)->insertTrackEntry($playlistId, $entry, $status);
+                $this->break = true;
+            }
+            return;
+        }
+
         $id = 0;
         $status = '';
         // Run the query
         $success = Engine::api(IPlaylist::class)->insertTrack($playlistId,
                      $tag, $artist, $track, $album, $label, $spinTime, $id, $status);
+
+        if($success)
+            $this->break = false;
     }
 
     public function emitImportList() {
@@ -642,6 +660,13 @@ class Playlists extends MenuItem {
                              PlaylistEntry::scrubField($line[4]),  // label
                              $timestamp);     // timestamp
                     $count++;
+                    break;
+                case 1:
+                    // fgetcsv returns array with single null on blank line
+                    if(is_null($line[0])) {
+                        // set separator
+                        $this->insertTrack($playlist, 0, '', '', '', '', null);
+                    }
                     break;
                 }
             }
