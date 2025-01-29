@@ -96,8 +96,8 @@ function fixup() {
   </div>
 </xsl:template>
 <xsl:template match="zk:albumart">
-  <div class='album-thumb pull-right'>
-    <img data-lazysrc="{.}"/>
+  <div class="album-thumb pull-right">
+    <img data-lazysrc="{.}" title="album art"/>
   </div>
 </xsl:template>
 </xsl:stylesheet>
