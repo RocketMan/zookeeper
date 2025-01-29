@@ -43,16 +43,17 @@ h2 {
 -->
 <xsl:text><![CDATA[
 function fixup() {
-   var nodes = document.getElementsByClassName("description");
-   Array.prototype.slice.call(nodes).forEach(function(node) {
+   document.querySelectorAll('div[data-description]').forEach(function(node) {
       node.innerHTML = node.dataset.description;
+      delete node.dataset.description;
    });
+
    document.querySelectorAll('img[data-lazysrc]').forEach(function(img) {
       img.addEventListener('load', function() {
           img.style.opacity = 1;
       });
-      img.src = img.getAttribute('data-lazysrc');
-   })
+      img.src = img.dataset.lazysrc;
+   });
 }
 ]]>
 </xsl:text>
@@ -92,7 +93,7 @@ function fixup() {
       </span>
     </h3>
     </div>
-    <p class="description" data-description="{description}"/>
+    <div data-description="{description}"/>
   </div>
 </xsl:template>
 <xsl:template match="zk:albumart">
