@@ -24,6 +24,14 @@
     <source url="{{ app.baseUrl }}zkrss.php?feed=reviews">{{ app.station_title }} Album Reviews</source>
     <pubDate>{{ review.reviewed | date("r") }}</pubDate>
     <zk:subtitle>Reviewed {{ review.reviewed | date(dateSpec) }}</zk:subtitle>
+    <zk:reviewid>{{ review.rid }}</zk:reviewid>
+    <zk:category>{{ GENRES[review.album.category] }}</zk:category>
+    <zk:albumid>{{ review.album.tag }}</zk:albumid>
+    <zk:album>{{ review.album.album }}</zk:album>
+    <zk:artist>{{ artist }}</zk:artist>
+{% if review.album.image_url %}
+    <zk:albumart>{{ app.baseUrl ~ review.album.image_url }}</zk:albumart>
+{% endif %}
   </item>
 {% endfor %}
 </channel>

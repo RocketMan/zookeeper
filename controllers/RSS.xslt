@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Zookeeper Online (C) 1997-2021 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 -->
+<!-- Zookeeper Online (C) 1997-2025 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:dc="http://purl.org/dc/elements/1.1/"
     xmlns:zk="http://zookeeper.ibinx.com/zkns"
@@ -19,6 +19,12 @@ h2 {
 }
 .rss-channel > .rss-item {
   padding: 2px 0px;
+}
+.rss-item:has(.album-thumb) {
+  min-height: 180px;
+}
+.rss-item .album-thumb img {
+  border-radius: 5px;
 }
 ]]>
 </xsl:text>
@@ -67,6 +73,8 @@ function fixup() {
 </xsl:template>
 <xsl:template match="item">
   <div class="rss-item">
+    <div>
+    <xsl:apply-templates select="zk:albumart"/>
     <h3>
       <a class="nav" href="{link}">
         <xsl:value-of select="title"/>
@@ -75,7 +83,13 @@ function fixup() {
         <xsl:value-of select="zk:subtitle"/>
       </span>
     </h3>
+    </div>
     <p class="description" data-description="{description}"/>
+  </div>
+</xsl:template>
+<xsl:template match="zk:albumart">
+  <div class='album-thumb pull-right'>
+    <img src="{.}"/>
   </div>
 </xsl:template>
 </xsl:stylesheet>

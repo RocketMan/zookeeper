@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -25,6 +25,7 @@
 namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
+use ZK\Engine\IArtwork;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
@@ -102,12 +103,19 @@ class RSS extends CommandTarget implements IController {
 
         $limit = $_REQUEST['limit'] ?? 50;
         $results = Engine::api(IReview::class)->getRecentReviews('', 0, $limit);
+        // coalesce albums into one array for artwork injection
+        // use foreach, as reference passing does not work with array_map
+        $albums = [];
+        foreach($results as &$review)
+            $albums[] = &$review["album"];
+        Engine::api(IArtwork::class)->injectAlbumArt($albums);
         foreach($results as &$row) {
             $reviews = Engine::api(IReview::class)->getReviews($row['album']['tag'], 0, $row['user']);
             if(count($reviews))
                 $row['review'] = $reviews[0]['review'];
         }
 
+	$this->params['GENRES'] = ILibrary::GENRES;
         $this->params['reviews'] = $results;
     }
     
