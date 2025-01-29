@@ -25,6 +25,8 @@ h2 {
 }
 .rss-item .album-thumb img {
   border-radius: 5px;
+  opacity: 0;
+  transition: all 400ms ease 0s;
 }
 ]]>
 </xsl:text>
@@ -45,6 +47,12 @@ function fixup() {
    Array.prototype.slice.call(nodes).forEach(function(node) {
       node.innerHTML = node.dataset.description;
    });
+   document.querySelectorAll('img[data-lazysrc]').forEach(function(img) {
+      img.addEventListener('load', function() {
+          img.style.opacity = 1;
+      });
+      img.src = img.getAttribute('data-lazysrc');
+   })
 }
 ]]>
 </xsl:text>
@@ -89,7 +97,7 @@ function fixup() {
 </xsl:template>
 <xsl:template match="zk:albumart">
   <div class='album-thumb pull-right'>
-    <img src="{.}"/>
+    <img data-lazysrc="{.}"/>
   </div>
 </xsl:template>
 </xsl:stylesheet>
