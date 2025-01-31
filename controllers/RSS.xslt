@@ -16,7 +16,7 @@
 <xsl:text><![CDATA[
 div.box {
   width: auto;
-  margin: 0 10px;
+  max-width: 900px;
 }
 h2 {
   margin-top: revert;
