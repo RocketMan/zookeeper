@@ -17,7 +17,7 @@
     ]]></description>
   {%~ set artist = review.album.iscoll ? 'Various Artists' : review.album.artist %}
     <title>{{ artist ~ ' / ' ~ review.album.album }}</title>
-    <guid isPermaLink="false">review-{{ review.rid }}</guid>
+    <guid isPermaLink="true">{{ app.baseUrl ~ 'api/v1/review/' ~ review.rid }}</guid>
     <category>{{ GENRES[review.album.category] }}</category>
     <link>{{ app.baseUrl }}?action=viewRecentReview&amp;tag={{ review.album.tag }}</link>
     <dc:creator>{{ review.airname ?? review.realname }}</dc:creator>
