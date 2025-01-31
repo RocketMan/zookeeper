@@ -14,6 +14,10 @@
 <link rel="icon" href="{rss/@zk:favicon}"/>
 <style type="text/css">
 <xsl:text><![CDATA[
+div.box {
+  width: auto;
+  margin: 0 10px;
+}
 h2 {
   margin-top: revert;
 }
@@ -25,6 +29,7 @@ h2 {
 }
 .rss-item .album-thumb img {
   border-radius: 5px;
+  margin: 0 0 20px 20px;
   opacity: 0;
   transition: all 400ms ease 0s;
 }
