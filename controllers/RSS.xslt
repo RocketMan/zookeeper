@@ -22,7 +22,7 @@ h2 {
   margin-top: revert;
 }
 .rss-channel > .rss-item {
-  padding: 2px 0px;
+  padding: 2px 0;
 }
 .rss-item:has(.album-thumb) {
   min-height: 180px;

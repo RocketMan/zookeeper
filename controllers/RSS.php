@@ -115,7 +115,7 @@ class RSS extends CommandTarget implements IController {
                 $row['review'] = $reviews[0]['review'];
         }
 
-	$this->params['GENRES'] = ILibrary::GENRES;
+        $this->params['GENRES'] = ILibrary::GENRES;
         $this->params['reviews'] = $results;
     }
     
