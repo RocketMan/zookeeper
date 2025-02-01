@@ -283,6 +283,10 @@ table.recent-reviews th {
 }
 
 /* review shelf */
+table.review-shelf {
+    margin: 0;
+}
+
 table.review-shelf tbody td {
     border-color: rgba(0,0,0,0.08);
     vertical-align: middle;
