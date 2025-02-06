@@ -69,6 +69,7 @@ div.jqcloud.invisible {
 .loading {
   position: absolute;
   height: 100%;
+  max-height: 300px;
   aspect-ratio: 1 / 1;
   display: flex;
   justify-content: center;
