@@ -72,6 +72,11 @@
           var url = '?action=viewRecent&subaction=updateReviewShelf&op=' +
               encodeURIComponent(op) + "&tag=" +
               encodeURIComponent(tag);
+
+          var isDTM = op == 'dtm';
+          if(isDTM && !window.confirm('Send this album to the library?'))
+             return;
+
           $.ajax({
               dataType : 'json',
               type: 'GET',
@@ -79,7 +84,7 @@
               url: url,
           }).done(function (response) {
               var tr = button.closest('tr');
-              if(op == 'dtm') {
+              if(isDTM) {
                   tr.children()
                       .wrapInner('<div>')
                       .children()
