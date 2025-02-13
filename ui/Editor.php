@@ -1125,10 +1125,10 @@ class Editor extends MenuItem {
         $coll = $_REQUEST["coll"];
         if($_REQUEST["new"]) {
             echo "  <TR><TD></TD><TD>&nbsp;</TD></TR>\n";
-            $agenre = $category?$category:"G";
-            $amedium = $medium?$medium:"C";
-            $aformat = $format?$format:"F";
-            $alocation = $location?$location:"L";
+            $agenre = "G";    // General
+            $amedium = "C";   // CD
+            $aformat = "F";   // Full
+            $alocation = ILibrary::LOCATION_AWAITING_REVIEW;
             $this->skipVar("seltag");
             $this->skipVar("selpubkey");
         } else {

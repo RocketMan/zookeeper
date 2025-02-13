@@ -69,13 +69,13 @@ interface ILibrary {
     const LOCATION_LIBRARY = 'L';
 
     const LOCATIONS = [
-        "D"=>"Received",
+        /* "D"=>"Received", */
         "E"=>"Review Shelf",
         "F"=>"Out for Review",
         "H"=>"Pending Appr",
         "C"=>"A-File",
-        "G"=>"Storage",
         "L"=>"Library",
+        "G"=>"Storage",
         "M"=>"Missing",
         "R"=>"Needs Repair",
         "U"=>"Deaccessioned",
