@@ -22,7 +22,6 @@
   <tbody>
 {% for album in albums %}
 {% block album %}
-  {%- set genre = GENRES[album.category] %}
     <tr>
 {% if album.location == 'E' %}
     {#~ review shelf #}
@@ -38,7 +37,7 @@
 {% endif %}
       <td><a href='?action=viewRecentReview&amp;tag={{ album.tag }}'>{{ album.album }}</a></td>
       <td>{{ album.iscoll ? 'Various Artists' : album.artist }}</td>
-      <td>{{ genre }}</td>
+      <td>{{ GENRES[album.category] }}</td>
 {% if album.location == 'F' %} {# out for review #}
       <td>Out for review</td>
       <td>{{ album.realname }}</td>

@@ -275,9 +275,9 @@ class Reviews extends MenuItem {
             $body = $response->getBody()->getContents();
             $json = json_decode($body);
             if(!$json->ok)
-                error_log("postReview: $body");
+                error_log("claimReview: $body");
         } catch(\Exception $e) {
-            error_log("postReview: " . $e->getMessage());
+            error_log("claimReview: " . $e->getMessage());
         }
     }
 
