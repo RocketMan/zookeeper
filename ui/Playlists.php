@@ -414,6 +414,18 @@ class Playlists extends MenuItem {
             return;
         }
 
+        if(!$tag && $track && $artist && $album) {
+            $tracks = Engine::api(ILibrary::class)->search(ILibrary::TRACK_NAME, 0, 200, $track);
+            foreach($tracks as $t) {
+                if(mb_strtolower(PlaylistEntry::swapNames($t['artist'])) == mb_strtolower(PlaylistEntry::swapNames($artist)) &&
+                        // ILibrary::TRACK_NAME encodes compilation album title as '[coll]: title'
+                        mb_strtolower(mb_substr($t['album'], $t['iscoll'] ? 8 : 0, 8)) == mb_strtolower(mb_substr($album, 0, 8))) {
+                    $tag = $t['tag'];
+                    break;
+                }
+            }
+        }
+
         $id = 0;
         $status = '';
         // Run the query
