@@ -152,6 +152,7 @@ class Reviews extends MenuItem {
 
     public function viewReviewShelf() {
         $albums = Engine::api(IReview::class)->getReviewShelf();
+        Engine::api(ILibrary::class)->markAlbumsPlayable($albums);
         $this->addVar('GENRES', ILibrary::GENRES);
         $this->addVar('albums', $albums);
         $this->setTemplate("review.shelf.html");

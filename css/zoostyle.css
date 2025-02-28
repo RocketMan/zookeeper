@@ -1229,6 +1229,7 @@ input[type="checkbox"]:checked:active {
     float: right;
     width: 11px;
     height: 11px;
+    margin-right: 4px;
     background-size: 11px;
     background-repeat: no-repeat;
     background-image: URL('../img/discicon.svg');
