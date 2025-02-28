@@ -1234,6 +1234,11 @@ input[type="checkbox"]:checked:active {
     background-repeat: no-repeat;
     background-image: URL('../img/discicon.svg');
 }
+.review-shelf .albumPlayable {
+    float: none;
+    display: inline-block;
+    margin-left: 4px;
+}
 
 .tablesorter-default, .tablesorter-default .header, .tablesorter-default .tablesorter-header {
     font: inherit;
