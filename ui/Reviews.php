@@ -177,7 +177,11 @@ class Reviews extends MenuItem {
             break;
         }
 
-        $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)[0];
+        $api = Engine::api(ILibrary::class);
+        $albums = $api->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        $api->markAlbumsPlayable($albums);
+        $album = $albums[0];
+
         if($album['bin']) {
             $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $album['bin']);
             if(count($user))

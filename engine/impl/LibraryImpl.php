@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -554,19 +554,24 @@ class LibraryImpl extends DBO implements ILibrary {
 
         $urlFilter = $enableExternalLinks ? "url <> ''" : "url RLIKE ?";
 
-        $query = "SELECT tag FROM tracknames ".
-                 "WHERE $urlFilter AND tag IN (" . implode(',', $queryset) . ") ".
-                 "GROUP BY tag ";
-        if($querysetcoll)
-            $query .= "UNION SELECT tag FROM colltracknames ".
+        $query = $queryset ? "SELECT tag FROM tracknames " .
+                 "WHERE $urlFilter AND tag IN (" . implode(',', $queryset) . ") " .
+                 "GROUP BY tag" : "";
+
+        if($querysetcoll) {
+            if($query)
+                $query .= " UNION ";
+
+            $query .= "SELECT tag FROM colltracknames ".
                       "WHERE $urlFilter AND tag IN (" . implode(',', $querysetcoll) . ") ".
                       "GROUP BY tag";
+        }
         $stmt = $this->prepare($query);
         if(!$enableExternalLinks) {
             // RLIKE doesn't like (|s) so replace with equivalent s?
             $rlike = preg_replace(['/\(\|s\)/', '/\/(.*)\//'], ['s?', '\1'], $internalLinks);
             $stmt->bindValue(1, $rlike);
-            if($querysetcoll)
+            if($queryset && $querysetcoll)
                 $stmt->bindValue(2, $rlike);
         }
         $stmt->execute();
