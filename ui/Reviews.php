@@ -536,7 +536,7 @@ class Reviews extends MenuItem {
                 Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
                 $success = Engine::api(IReview::class)->insertReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
                 if($success >= 1) {
-                    if($_REQUEST["noise"])
+                    if($_REQUEST["noise"] ?? 0)
                         $this->postReview($_REQUEST["tag"]);
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
@@ -581,7 +581,7 @@ class Reviews extends MenuItem {
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["tag"]);
 
         $airnames = [];
-        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, $djname);
+        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
         while ($row = $records->fetch())
            $airnames[] = $row['airname'];
         $airnames[] = $self;
@@ -596,7 +596,7 @@ class Reviews extends MenuItem {
         $this->addVar("airnames", $airnames);
         $this->addVar("airname", $airname);
         $this->addVar("self", $self);
-        $this->addVar("review", $review);
+        $this->addVar("review", $review ?? '');
         $this->addVar("private", $_REQUEST["private"] ?? 0);
         $this->addVar("exported", !$export || isset($exportid));
         $this->addVar("MAX_AIRNAME_LENGTH", IDJ::MAX_AIRNAME_LENGTH);
