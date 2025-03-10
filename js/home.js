@@ -73,7 +73,7 @@ $().ready(function(){
                                "View album in " + station_title :
                                "View artist in Discogs");
             if(spin.track_tag)
-                img.append($("<div>", { class: "in-library" }).text("View in " +  station_title));
+                img.find("a").append($("<div>", { class: "in-library" }).text("View in " +  station_title));
         }
 
         var info = $("<div>", {
