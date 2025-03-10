@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -927,6 +927,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
      */
     protected function injectImageData(&$entry) {
         $imageApi = Engine::api(IArtwork::class);
+        /*
         if($entry['track_tag']) {
             // is the album already known to us?
             $image = $imageApi->getAlbumArt($entry['track_tag']);
@@ -936,6 +937,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 $infoUrl = $image['info_url'];
             }
         }
+        */
 
         if(!isset($imageUuid)) {
             // is the artist already known to us?

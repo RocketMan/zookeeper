@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -68,10 +68,13 @@ $().ready(function(){
             this.style.opacity = 1;
         })));
 
-        if(spin.track_tag || spin.info_url)
+        if(spin.track_tag || spin.info_url) {
             img.find("a").attr('title', spin.track_tag ?
                                "View album in " + station_title :
                                "View artist in Discogs");
+            if(spin.track_tag)
+                img.append($("<div>", { class: "in-library" }).text("View in " +  station_title));
+        }
 
         var info = $("<div>", {
             class: "info"
