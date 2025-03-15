@@ -128,6 +128,10 @@ class ReviewImpl extends DBO implements IReview {
             $query .= "AND ADDDATE(r.created, 12*7) > NOW() ";
         if(!$loggedIn)
             $query .= "AND r.private = 0 ";
+
+        // suppress 'micro reviews'
+        $query .= "AND LENGTH(review) > " . self::MICRO_REVIEW_LENGTH . " ";
+
         $query .= "GROUP BY a.airname UNION ";
         $query .= "SELECT u.name, u.realname FROM reviews r, users u ";
         $query .= "WHERE u.name = r.user AND r.airname IS NULL ";
