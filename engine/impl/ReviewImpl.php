@@ -62,6 +62,10 @@ class ReviewImpl extends DBO implements IReview {
         else if($weeks < 0)
             $query .= "$op c.tag IS NOT NULL ";
 
+        // suppress 'micro reviews'
+        $query .= ($weeks ? "AND" : $op) .
+                    " LENGTH(review) > " . self::MICRO_REVIEW_LENGTH . " ";
+
         return $query;
     }
     
@@ -131,6 +135,10 @@ class ReviewImpl extends DBO implements IReview {
             $query .= "AND ADDDATE(r.created, 12*7) > NOW() ";
         if(!$loggedIn)
             $query .= "AND r.private = 0 ";
+
+        // suppress 'micro reviews'
+        $query .= "AND LENGTH(review) > " . self::MICRO_REVIEW_LENGTH . " ";
+
         $query .= "GROUP BY u.name";
 
         $stmt = $this->prepare($query);
