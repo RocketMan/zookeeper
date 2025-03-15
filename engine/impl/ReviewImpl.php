@@ -63,8 +63,9 @@ class ReviewImpl extends DBO implements IReview {
             $query .= "$op c.tag IS NOT NULL ";
 
         // suppress 'micro reviews'
-        $query .= ($weeks ? "AND" : $op) .
-                    " LENGTH(review) > " . self::MICRO_REVIEW_LENGTH . " ";
+        if(!$user)
+            $query .= ($weeks ? "AND" : $op) .
+                        " LENGTH(review) > " . self::MICRO_REVIEW_LENGTH . " ";
 
         return $query;
     }
