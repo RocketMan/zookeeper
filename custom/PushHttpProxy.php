@@ -79,7 +79,7 @@ class PushHttpProxy {
 
     public function __construct(\React\EventLoop\LoopInterface $loop) {
         $this->loop = $loop;
-        $this->subscriber = new \Ratchet\Client\Connector($loop);
+        $this->subscriber = new Subscriber($loop);
         $this->httpClient = new \React\Http\Browser($loop);
     }
 
