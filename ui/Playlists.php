@@ -437,7 +437,7 @@ class Playlists extends MenuItem {
     }
 
     public function emitImportList() {
-        $validate = $_POST["validate"];
+        $validate = $_POST["validate"] ?? false;
         $format = $_REQUEST["format"] ?? "json";
         if($format == "csv") {
             $description = mb_substr(trim($_REQUEST["description"]), 0, IPlaylist::MAX_DESCRIPTION_LENGTH);
@@ -450,9 +450,7 @@ class Playlists extends MenuItem {
         }
         $delimiter = $_REQUEST["delimiter"] ?? "";
         $enclosure = $_REQUEST["enclosure"] ?? "\"";
-        $userfile = $_FILES['userfile']['tmp_name'];
-        $playlist = $_REQUEST["playlist"];
-        $button = $_REQUEST["button"];
+        $userfile = $_FILES['userfile']['tmp_name'] ?? null;
 
         $empty = $_POST["empty"] ?? 0;
         if($empty)
@@ -594,14 +592,14 @@ class Playlists extends MenuItem {
                     $validate == "edit" ?
                     ($errorMessage ?? "<b><font class='error'>Ensure fields are not blank and date is valid.</font></b><br>\n") : false);
             $this->addVar('format', $format);
-            $this->addVar('date', $date);
-            $this->addVar('fromtime', $fromtime);
-            $this->addVar('totime', $totime);
+            $this->addVar('date', $date ?? '');
+            $this->addVar('fromtime', $fromtime ?? '');
+            $this->addVar('totime', $totime ?? '');
             $this->addVar('dateformat', UI::isUsLocale() ? "mm/dd/yy" : "dd-mm-yy");
             $this->addVar('airnames', $this->getDJAirNames());
             $this->addVar('delimiter', $delimiter);
             $this->addVar('enclosure', $enclosure);
-            $this->addVar('description', stripslashes($description));
+            $this->addVar('description', stripslashes($description ?? ''));
             $this->addVar('MAX_DESCRIPTION_LENGTH', IPlaylist::MAX_DESCRIPTION_LENGTH);
             $this->addVar('airname', $airname ?? '');
             $this->addVar('MAX_AIRNAME_LENGTH', IDJ::MAX_AIRNAME_LENGTH);

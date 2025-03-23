@@ -585,7 +585,8 @@ class LibraryImpl extends DBO implements ILibrary {
     public function listAlbums($op, $key, $limit) {
         $cache = [];
         $reverse = 0;
-        $parts = explode('|', $key);
+        $split = '';
+        $parts = array_pad(explode('|', $key), 3, '');
         switch($op) {
         case ILibrary::OP_PREV_LINE:
             $query = "SELECT * FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey WHERE artist < ? OR (artist = ? AND album < ?) OR (artist = ? AND album = ? AND tag < ?) ORDER BY artist DESC, album DESC, tag DESC LIMIT 1";
@@ -768,7 +769,8 @@ class LibraryImpl extends DBO implements ILibrary {
     public function listLabels($op, $key, $limit) {
         $cache = [];
         $reverse = 0;
-        $parts = explode('|', $key);
+        $split = '';
+        $parts = array_pad(explode('|', $key), 2, '');
         switch($op) {
         case ILibrary::OP_PREV_LINE:
             $query = "SELECT * FROM publist WHERE name <> '' AND name < ? OR (name = ? AND pubkey < ?) ORDER BY name DESC, pubkey DESC LIMIT 1";
@@ -885,7 +887,7 @@ class LibraryImpl extends DBO implements ILibrary {
                 $stmt->bindValue(1, (int)$limit, \PDO::PARAM_INT);
             } else if ($op < ILibrary::OP_BY_NAME) {
                 // Handle case of forward scroll on the last page
-                $parts = explode('|', $key);
+                $parts = array_pad(explode('|', $key), 2, '');
                 $query = "SELECT * FROM publist WHERE name <> '' AND name > ? OR (name = ? AND pubkey >= ?) ORDER BY name, pubkey LIMIT ?";
                 $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $parts[0]);

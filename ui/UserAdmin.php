@@ -74,12 +74,12 @@ class UserAdmin extends MenuItem {
     public function updateAirnames() {
         UI::emitJS("js/playlists.pick.js");
 
-        $validate = $_POST["validate"];
-        $multi = $_REQUEST["multi"];
-        $url = $_REQUEST["url"];
-        $email = $_REQUEST["email"];
-        $airname = $_REQUEST["airname"];
-        $name = trim($_REQUEST["name"]);
+        $validate = $_POST["validate"] ?? false;
+        $multi = $_REQUEST["multi"] ?? false;
+        $url = $_REQUEST["url"] ?? '';
+        $email = $_REQUEST["email"] ?? '';
+        $airname = $_REQUEST["airname"] ?? '';
+        $name = trim($_REQUEST["name"] ?? '');
 
         if($validate && $airname) {
             // Update DJ info
@@ -166,10 +166,10 @@ class UserAdmin extends MenuItem {
 
     public function manageKeys() {
         $api = Engine::api(IUser::class);
-        if($_POST["newKey"]) {
+        if($_POST["newKey"] ?? false) {
             $newKey = sha1(uniqid(rand()));
             $api->addAPIKey($this->session->getUser(), $newKey);
-        } else if($_POST["deleteKey"]) {
+        } else if($_POST["deleteKey"] ?? false) {
             $selKeys = [];
             foreach($_POST as $key => $value) {
                 if(substr($key, 0, 2) == "id" && $value == "on")
@@ -198,12 +198,12 @@ class UserAdmin extends MenuItem {
     }
     
     public function adminUsers() {
-        $seq = $_REQUEST["seq"];
-        $uid = $_REQUEST["uid"];
-        $auName = $_REQUEST["auName"];
-        $auPass = $_REQUEST["auPass"];
-        $auGroups = $_REQUEST["auGroups"];
-        $auExpire = $_REQUEST["auExpire"];
+        $seq = $_REQUEST["seq"] ?? '';
+        $uid = $_REQUEST["uid"] ?? 0;
+        $auName = $_REQUEST["auName"] ?? '';
+        $auPass = $_REQUEST["auPass"] ?? '';
+        $auGroups = $_REQUEST["auGroups"] ?? '';
+        $auExpire = $_REQUEST["auExpire"] ?? '';
 
         if($seq == "editUser" && $_SERVER['REQUEST_METHOD'] == 'POST') {
             // Commit the changes
@@ -361,13 +361,9 @@ class UserAdmin extends MenuItem {
     }
     
     public function adminAirnames() {
-        $seq = $_REQUEST["seq"];
-        $uid = $_REQUEST["uid"];
-        $aid = $_REQUEST["aid"];
-        $auName = $_REQUEST["auName"];
-        $auPass = $_REQUEST["auPass"];
-        $auGroups = $_REQUEST["auGroups"];
-        $auExpire = $_REQUEST["auExpire"];
+        $seq = $_REQUEST["seq"] ?? '';
+        $uid = $_REQUEST["uid"] ?? 0;
+        $aid = $_REQUEST["aid"] ?? 0;
     
         if($seq == "editAirname" && $_SERVER['REQUEST_METHOD'] == 'POST') {
            if($uid) {
