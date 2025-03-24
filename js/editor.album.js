@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -40,7 +40,7 @@ function paginateAlbums(op, url) {
         dataType : 'json',
         type: 'GET',
         accept: "application/json; charset=utf-8",
-        url: url,
+        url: paginateUrl(url),
         success: function (response) {
             var list = $("#list");
             list.empty();

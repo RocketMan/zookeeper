@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -37,8 +37,10 @@
 
 var items, links, timer;
 
+var paginateSeq = 1;
+
 function htmlify(s) {
-    return s != null?s.replace(/&/g, '&amp;').replace(/</g, '&lt;'):'';
+    return s != null?String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'):'';
 }
 
 function getSelectedIndex(list) {
@@ -151,6 +153,15 @@ function onKeyDown(list, e) {
 
     changeList(list);
     e.preventDefault();
+}
+
+/**
+ * perturb the URL to avoid tripping DoS countermeasures
+ *
+ * useful for rapid requests to the same URL, as can occur in pagination
+ */
+function paginateUrl(url) {
+    return url.replace(/\/v1(\.\d+)?\//, `/v1.${paginateSeq++}/`);
 }
 
 $().ready(function() {
