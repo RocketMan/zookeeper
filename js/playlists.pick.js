@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2025 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     const intl = new Date().toLocaleTimeString().match(/am|pm/i) == null;
@@ -73,6 +73,20 @@ $().ready(function(){
         let ms = 1000 * 60 * minutes; // convert minutes to ms
         let roundedDate = new Date(Math.round(now.getTime() / ms) * ms);
         return roundedDate.toISOString().split('T');
+    }
+
+    /**
+     * return next date which matches the weekday of the target
+     *
+     * @param targetDate date string formatted yyyy-MM-dd
+     * @returns Date next matching weekday (can be today)
+     */
+    function getNextMatchingDate(targetDate) {
+        const current = new Date();
+        const target = new Date(targetDate);
+        const difference = (target.getDay() - current.getDay() + 7) % 7;
+        current.setDate(current.getDate() + difference);
+        return current;
     }
 
     /**
@@ -269,7 +283,7 @@ $().ready(function(){
                 $.ajax({
                     type: 'GET',
                     accept: 'application/json; charset=utf-8',
-                    url: 'api/v1/playlist?filter[user]=self&fields[show]=name,airname,rebroadcast',
+                    url: 'api/v1/playlist?filter[user]=self&fields[show]=name,airname,rebroadcast,date,time',
                 }).done(function(response) {
                     shownames = response.data.map(show => show.attributes)
                         .sort((a, b) => Intl.Collator().compare(a.name, b.name))
@@ -291,7 +305,11 @@ $().ready(function(){
             select: function(event, ui) {
                 var name = ui.item.value;
                 var show = shownames.find(show => show.name == name);
+                var time = show.time.split('-');
                 $("input.airname").val(show.airname);
+                $("input.date").datepicker('setDate', getNextMatchingDate(show.date));
+                $('input.time#start').fxtime('val', localTimeIntl(time[0]));
+                $('input.time#end').fxtime('val', localTimeIntl(time[1]));
             }
         }).on('click', function() {
             $(this).autocomplete('search', '');
