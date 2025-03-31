@@ -1125,10 +1125,13 @@ class Editor extends MenuItem {
         $coll = $_REQUEST["coll"] ?? false;
         if(@$_REQUEST["new"]) {
             echo "  <TR><TD></TD><TD>&nbsp;</TD></TR>\n";
+            $album = "";
+            $artist = "";
             $agenre = "G";    // General
             $amedium = "C";   // CD
             $aformat = "F";   // Full
             $alocation = ILibrary::LOCATION_AWAITING_REVIEW;
+            $bin = "";
             $this->skipVar("seltag");
             $this->skipVar("selpubkey");
         } else {
@@ -1363,7 +1366,7 @@ class Editor extends MenuItem {
             $this->skipVar("track".$trackNum);
             $this->skipVar("trackDuration".$trackNum);
             $this->skipVar("trackUrl".$trackNum);
-            $title = htmlentities(stripslashes($_POST["track".$trackNum]));
+            $title = htmlentities(stripslashes(@$_POST["track".$trackNum]));
             $focus = $focusTrack == $trackNum && self::isEmpty($title)? " data-focus" : "";
 
             echo "<TR>";
@@ -1371,16 +1374,16 @@ class Editor extends MenuItem {
             echo "<TD><INPUT NAME='track$trackNum' VALUE=\"$title\" TYPE=text CLASS='text $cellWidth' maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
 
             if($isCollection) {
-                $artist = htmlentities(stripslashes($_POST["artist".$trackNum]));
+                $artist = htmlentities(stripslashes(@$_POST["artist".$trackNum]));
                 $focus = !$focus && $focusTrack == $trackNum && self::isEmpty($artist)? " data-focus" : "";
                 echo "<TD><INPUT NAME=artist$trackNum VALUE=\"$artist\" TYPE=text CLASS='text $cellWidth' maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
                 $this->skipVar("artist".$trackNum);
             }
 
-            $duration = $_POST["trackDuration$trackNum"];
+            $duration = @$_POST["trackDuration$trackNum"];
             echo "<TD><INPUT NAME='trackDuration$trackNum' class='text duration' VALUE='$duration' maxlength='8' pattern='[0-9:]*'></TD>";
 
-            $url = $_POST["trackUrl$trackNum"];
+            $url = @$_POST["trackUrl$trackNum"];
             echo "<TD COLSPAN=2><INPUT class='text $cellWidth' value='{$url}' NAME='trackUrl$trackNum' TYPE='url' maxlength=" . IEditor::MAX_PLAYABLE_URL_LENGTH . " data-track='$trackNum' /></TD>";
 
             echo "</TR>\n";
