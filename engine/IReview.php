@@ -44,6 +44,12 @@ interface IReview {
      */
     const MAX_REVIEW_LENGTH = 64000;
 
+    /*
+     * MICRO_REVIEW_LENGTH is the minimum length of a review in characters
+     * to qualify for inclusion in Recent Reviews and the RSS reviews feed.
+     */
+    const MICRO_REVIEW_LENGTH = 80;
+
     function getRecentReviews($user = "", $weeks = 0, $limit = 0, $loggedIn = 0);
     function getActiveReviewers($viewAll=0, $loggedIn=0);
     function getReviews($tag, $byName=1, $user = "", $loggedIn = 0, $byId = 0);

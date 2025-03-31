@@ -283,12 +283,21 @@ table.recent-reviews th {
 }
 
 /* review shelf */
+table.review-shelf {
+    margin: 0;
+}
+
 table.review-shelf tbody td {
     border-color: rgba(0,0,0,0.08);
+    vertical-align: middle;
 }
 
 table.review-shelf tbody tr {
-    line-height: 30px;
+    height: 35px;
+}
+
+table.review-shelf tbody tr button {
+    font: inherit;
 }
 
 /* home page */
@@ -1220,9 +1229,15 @@ input[type="checkbox"]:checked:active {
     float: right;
     width: 11px;
     height: 11px;
+    margin-right: 4px;
     background-size: 11px;
     background-repeat: no-repeat;
     background-image: URL('../img/discicon.svg');
+}
+.review-shelf .albumPlayable {
+    float: none;
+    display: inline-block;
+    margin-left: 4px;
 }
 
 .tablesorter-default, .tablesorter-default .header, .tablesorter-default .tablesorter-header {

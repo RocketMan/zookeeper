@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -50,8 +50,17 @@ class EditorImpl extends DBO implements IEditor {
     }
     
     public function insertUpdateAlbum(&$album, $tracks, $label) {
-        if($album["location"] != "G")
-           $album["bin"] = "";
+        switch($album["location"]) {
+        case ILibrary::LOCATION_STORAGE:
+            break;
+        case ILibrary::LOCATION_IN_REVIEW:
+            $oa = $album['tag'] ? Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $album['tag']) : [];
+            $album['bin'] = count($oa) && $oa[0]['location'] == ILibrary::LOCATION_IN_REVIEW ? $oa[0]['bin'] : '';
+            break;
+        default:
+            $album['bin'] = '';
+            break;
+        }
     
         $name = $label && array_key_exists("name", $label) ?
             mb_substr(trim($label["name"]), 0, PlaylistEntry::MAX_FIELD_LENGTH) : null;

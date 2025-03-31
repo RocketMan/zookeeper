@@ -3,7 +3,7 @@
   <colgroup>
     <col style='width: 110px'>
     <col span='2'>
-    <col style='width: 130px'>
+    <col style='width: 140px'>
     <col style='width: 110px'>
     <col style='width: 160px'>
     <col style='width: 90px'>
@@ -22,7 +22,6 @@
   <tbody>
 {% for album in albums %}
 {% block album %}
-  {%- set genre = GENRES[album.category] %}
     <tr>
 {% if album.location == 'E' %}
     {#~ review shelf #}
@@ -36,10 +35,14 @@
 {% else %}
       <td></td>
 {% endif %}
-      <td><a href='?action=viewRecentReview&amp;tag={{ album.tag }}'>{{ album.album }}</a></td>
+      <td><a href='?action=viewRecentReview&amp;tag={{ album.tag }}'>{{ album.album }}</a>
+{%- if album.playable -%}
+        <div class='albumPlayable'></div>
+{%- endif -%}
+      </td>
       <td>{{ album.iscoll ? 'Various Artists' : album.artist }}</td>
-      <td>{{ genre }}</td>
-{% if album.location == 'F' %} {# out for review #}
+      <td>{{ GENRES[album.category] }}</td>
+{% if album.location == 'F' %} {#~ out for review #}
       <td>Out for review</td>
       <td>{{ album.realname }}</td>
       <td class='date'>{{ album.updated | date("Y-m-d") }}</td>
@@ -72,6 +75,11 @@
           var url = '?action=viewRecent&subaction=updateReviewShelf&op=' +
               encodeURIComponent(op) + "&tag=" +
               encodeURIComponent(tag);
+
+          var isDTM = op == 'dtm';
+          if(isDTM && !window.confirm('Send this album to the library?'))
+             return;
+
           $.ajax({
               dataType : 'json',
               type: 'GET',
@@ -79,21 +87,22 @@
               url: url,
           }).done(function (response) {
               var tr = button.closest('tr');
-              if(op == 'dtm') {
+              if(isDTM) {
                   tr.children()
-                      .wrapInner('<div/>')
+                      .wrapInner('<div>')
                       .children()
                       .slideUp(function() {
                           tr.remove();
                       });
               } else {
-                  tr.replaceWith(response.html);
-                  $('button').off().on('click', doOp);
+                  var row = $(response.html);
+                  row.find('button').on('click', doOp);
+                  tr.replaceWith(row);
               }
           });
       }
 
-      $('button').on('click', doOp);
+      $('.review-shelf button').on('click', doOp);
   });
   // -->
 </script>

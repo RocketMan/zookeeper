@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -37,4 +37,10 @@ interface IArtwork {
     function deleteArtistArt($artist);
     function expireCache($days=10, $expireAlbums=false);
     function expireEmpty($days=1);
+    /**
+     * Add `image_url` and/or `info_url` properties for each album with artwork
+     *
+     * @param $albums target album array (in/out)
+     */
+    function injectAlbumArt(array &$albums): void;
 }

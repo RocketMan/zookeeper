@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2025 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 /*
  * For the Albums and Labels tabs, implementations for the following
@@ -37,8 +37,10 @@
 
 var items, links, timer;
 
+var paginateSeq = 1;
+
 function htmlify(s) {
-    return s != null?s.replace(/&/g, '&amp;').replace(/</g, '&lt;'):'';
+    return s != null?String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'):'';
 }
 
 function getSelectedIndex(list) {
@@ -151,6 +153,15 @@ function onKeyDown(list, e) {
 
     changeList(list);
     e.preventDefault();
+}
+
+/**
+ * perturb the URL to avoid tripping DoS countermeasures
+ *
+ * useful for rapid requests to the same URL, as can occur in pagination
+ */
+function paginateUrl(url) {
+    return url.replace(/\/v1(\.\d+)?\//, `/v1.${paginateSeq++}/`);
 }
 
 $().ready(function() {

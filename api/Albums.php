@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -139,6 +139,9 @@ class Albums implements RequestHandlerInterface {
                 break;
             case "coll":
                 $value = $rec["iscoll"]?true:false;
+                break;
+            case "bin":
+                $value = $rec["location"] == ILibrary::LOCATION_STORAGE ? $rec[$field] ?? null : null;
                 break;
             default:
                 $value = $rec[$field] ?? null;

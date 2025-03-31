@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -155,7 +155,7 @@ class Editor extends MenuItem {
     private $tracksPerPage = 15;
 
     private $subaction;
-    private $emitted;
+    private $emitted = [];
     private $albumAdded;
     private $albumUpdated;
     private $tagPrinted;
@@ -477,7 +477,7 @@ class Editor extends MenuItem {
         for($i=0; $i<2; $i++) {
             if($i == 1) {
                 // Emit header
-                $title = $this->getPanelTitle($_REQUEST["seq"]);
+                $title = $this->getPanelTitle($_REQUEST["seq"] ?? '');
                 echo "  <FORM id='editor' ACTION=\"?\" METHOD=POST>\n";
                 echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n      <TR><TH ALIGN=LEFT>$title</TH><TH ALIGN=RIGHT CLASS=\"error\">";
                 if(!$this->subaction && $this->canPrintLocal()) {
@@ -488,20 +488,20 @@ class Editor extends MenuItem {
             }
     
             // Handle default case
-            if(!$this->editorPanels[$_REQUEST["seq"]])
+            if(!$this->editorPanels[$_REQUEST["seq"] ?? ''])
                 $_REQUEST["seq"] = "";
     
             // Dispatch to panel
-            $next = $this->editorPanels[$_REQUEST["seq"]][0];
+            $next = $this->editorPanels[$_REQUEST["seq"] ?? ''][0];
             $status = $this->$next($i==0);
             if($status)
-                $_REQUEST["seq"] = $this->editorPanels[$_REQUEST["seq"]][1];
+                $_REQUEST["seq"] = $this->editorPanels[$_REQUEST["seq"] ?? ''][1];
         }
     ?>
        </TD></TR>
     </TABLE>
 <?php 
-        $this->emitHidden("seq", $_REQUEST["seq"]);
+        $this->emitHidden("seq", $_REQUEST["seq"] ?? '');
         $this->emitVars();
         if($this->canPrintLocal())
             $this->emitPrinterSelection();
@@ -525,27 +525,27 @@ class Editor extends MenuItem {
         for($i=0; $i<2; $i++) {
             if($i == 1) {
                 // Emit header
-                $title = $this->getPanelTitle($_REQUEST["seq"]);
+                $title = $this->getPanelTitle($_REQUEST["seq"] ?? '');
                 echo "  <FORM id='editor' ACTION=\"?\" METHOD=POST>\n";
                 echo "    <TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=\"100%\">\n      <TR><TH ALIGN=LEFT>$title</TH></TR>\n      <TR><TD HEIGHT=130 VALIGN=MIDDLE>\n";
     
             }
     
             // Handle default case
-            if(!$this->tagQPanels[$_REQUEST["seq"]])
+            if(!$this->tagQPanels[$_REQUEST["seq"] ?? ''])
                 $_REQUEST["seq"] = "";
     
             // Dispatch to panel
-            $next = $this->tagQPanels[$_REQUEST["seq"]][0];
+            $next = $this->tagQPanels[$_REQUEST["seq"] ?? ''][0];
             $status = $this->$next($i==0);
             if($status)
-                $_REQUEST["seq"] = $this->tagQPanels[$_REQUEST["seq"]][1];
+                $_REQUEST["seq"] = $this->tagQPanels[$_REQUEST["seq"] ?? ''][1];
         }
     ?>
       </TD></TR>
     </TABLE>
 <?php
-        $this->emitHidden("seq", $_REQUEST["seq"]);
+        $this->emitHidden("seq", $_REQUEST["seq"] ?? '');
         $this->emitVars();
         if($this->canPrintLocal())
             $this->emitPrinterSelection();
@@ -554,7 +554,7 @@ class Editor extends MenuItem {
     
     public function queueList($validate) {
          if($validate) {
-              if($_REQUEST["printToPDF"]) {
+              if($_REQUEST["printToPDF"] ?? false) {
                   $selTags = array();
                   foreach($_POST as $key => $value) {
                       if(substr($key, 0, 3) == "tag" && $value == "on") {
@@ -579,7 +579,7 @@ class Editor extends MenuItem {
               foreach($_POST as $key => $value) {
                  if(substr($key, 0, 3) == "tag" && $value == "on") {
                      $tag = substr($key, 3);
-                     if($_REQUEST["print"])
+                     if($_REQUEST["print"] ?? false)
                          $this->printTag($tag);
                      Engine::api(IEditor::class)->dequeueTag($tag, $this->session->getUser());
                      $this->skipVar("tag".$tag);
@@ -596,7 +596,7 @@ class Editor extends MenuItem {
          echo "    <TABLE BORDER=0>\n      <TR><TH><INPUT NAME=all id='all' TYPE=checkbox></TH><TH ALIGN=RIGHT>Tag&nbsp;&nbsp;</TH><TH ALIGN=left>Artist</TH><TH>&nbsp;</TH><TH ALIGN=left>Album</TH></TR>\n";
          if($result = Engine::api(IEditor::class)->getQueuedTags($this->session->getUser())) {
               while($row = $result->fetch()) {
-                   echo "      <TR><TD><INPUT NAME=tag".$row["tag"]." TYPE=checkbox".($_POST["tag".$row["tag"]] == "on"?" checked":"")."></TD>";
+                   echo "      <TR><TD><INPUT NAME=tag".$row["tag"]." TYPE=checkbox".(@$_POST["tag".$row["tag"]] == "on"?" checked":"")."></TD>";
                    echo "<TD ALIGN=RIGHT>".$row["tag"]."&nbsp;&nbsp;</TD><TD>".htmlentities($row["artist"])."</TD><TD></TD><TD>".htmlentities($row["album"])."</TD></TR>\n";
                    $this->skipVar("tag".$row["tag"]);
               }
@@ -618,7 +618,7 @@ class Editor extends MenuItem {
     
     public function queueForm($validate) {
         if($validate) {
-            if($_REQUEST["back"]) {
+            if($_REQUEST["back"] ?? false) {
                 $this->tagQPanels["form"][1] = "select";
                 foreach(explode(",", $_REQUEST["seltags"]) as $tag)
                     $this->emitHidden("tag".$tag, "on");
@@ -639,7 +639,7 @@ class Editor extends MenuItem {
         echo "<P><B>Choose a label printer:</B></P>\n";
         echo "<TABLE BORDER=0>\n";
         foreach($this->printConfig['labels'] as $label)
-            echo "  <TR><TD><INPUT NAME=form TYPE=radio VALUE=\"".$label["code"]."\"".($_POST["form"] == $label["code"]?" checked":"").">".$label["name"]."</TD></TR>\n";
+            echo "  <TR><TD><INPUT NAME=form TYPE=radio VALUE=\"".$label["code"]."\"".(@$_POST["form"] == $label["code"]?" checked":"").">".$label["name"]."</TD></TR>\n";
         echo "</TABLE>\n";
         echo "<P><INPUT TYPE=submit CLASS=submit NAME=back VALUE=\" &lt; Back \">&nbsp;&nbsp;&nbsp;<INPUT TYPE=SUBMIT CLASS=submit NAME=next id='queueform-next' VALUE=\" Next &gt; \"></P>\n";
         $this->skipVar("form");
@@ -651,7 +651,7 @@ class Editor extends MenuItem {
         $labels = $this->printConfig['labels'];
         $oneform = count($labels) == 1;
         if($validate) {
-            if($_REQUEST["back"]) {
+            if($_REQUEST["back"] ?? false) {
                 if($oneform) {
                     foreach(explode(",", $_REQUEST["seltags"]) as $tag)
                         $this->emitHidden("tag".$tag, "on");
@@ -698,7 +698,7 @@ class Editor extends MenuItem {
 
     public function queueConfirm($validate) {
         if($validate) {
-            if($_REQUEST["back"]) {
+            if($_REQUEST["back"] ?? false) {
                 foreach(explode(",", $_REQUEST["seltags"]) as $tag)
                     $this->emitHidden("tag".$tag, "on");
             } else {
@@ -755,12 +755,12 @@ class Editor extends MenuItem {
 
     public function panelSearch($validate) {
         if($validate) {
-            if($_REQUEST["print"] && $_REQUEST["seltag"]) {
+            if(@$_REQUEST["print"] && @$_REQUEST["seltag"]) {
                $this->printTag($_REQUEST["seltag"]);
             }
-            return ($_REQUEST["seltag"] || $_REQUEST["new"]) &&
-                       !$_REQUEST["bup_x"] && !$_REQUEST["bdown_x"] &&
-                       !$_REQUEST["go"] && !$_REQUEST["print"];
+            return (@$_REQUEST["seltag"] || @$_REQUEST["new"]) &&
+                       !@$_REQUEST["bup_x"] && !@$_REQUEST["bdown_x"] &&
+                       !@$_REQUEST["go"] && !@$_REQUEST["print"];
         }
         $this->emitAlbumSel();
         $this->skipVar("bup");
@@ -800,11 +800,11 @@ class Editor extends MenuItem {
            
     public function panelDetails($validate) {
         if($validate) {
-            $success = ($_REQUEST["coll"] || $_REQUEST["artist"]) &&
-                                         $_REQUEST["album"];
-            if($_REQUEST["next"])
+            $success = (@$_REQUEST["coll"] || @$_REQUEST["artist"]) &&
+                                         @$_REQUEST["album"];
+            if(@$_REQUEST["next"])
                 $this->editorPanels["details"][1] = "tracks";
-            else if($_REQUEST["done"] && $success && $this->insertUpdateAlbum())
+            else if(@$_REQUEST["done"] && $success && $this->insertUpdateAlbum())
                 $this->editorPanels["details"][1] = "search";
             return $success;
         }
@@ -835,12 +835,12 @@ class Editor extends MenuItem {
     
     public function panelLabel($validate) {
         if($validate) {
-            $success = ($_REQUEST["selpubkey"] || $_REQUEST["lnew"] ||
-                       (string)($_REQUEST["selpubkey"]) == '0') &&
-                       !$_REQUEST["go"] && !$_REQUEST["bup_x"] &&
-                       !$_REQUEST["bdown_x"];
-            if($success && $_REQUEST["next"])
-                if($_REQUEST["seltag"])
+            $success = (@$_REQUEST["selpubkey"] || @$_REQUEST["lnew"] ||
+                       (string)(@$_REQUEST["selpubkey"]) == '0') &&
+                       !@$_REQUEST["go"] && !@$_REQUEST["bup_x"] &&
+                       !@$_REQUEST["bdown_x"];
+            if($success && @$_REQUEST["next"])
+                if(@$_REQUEST["seltag"])
                    $this->editorPanels["label"][1] = "details";
                 else
                    $this->editorPanels["label"][1] = "tracks";
@@ -870,10 +870,10 @@ class Editor extends MenuItem {
     
     public function panelLDetails($validate) {
         if($validate) {
-            $success = $_REQUEST["name"] != "";
+            $success = @$_REQUEST["name"] != "";
             if($success && $this->subaction == "labels")
                  $this->insertUpdateLabel();
-            else if($_REQUEST["seltag"])
+            else if(@$_REQUEST["seltag"])
                  $this->editorPanels["ldetails"][1] = "details";
             return $success;
         }
@@ -899,7 +899,7 @@ class Editor extends MenuItem {
     
     public function panelTracks($validate) {
         if($validate)
-            return $_REQUEST["next"] && $this->validateTracks() && $this->insertUpdateAlbum();
+            return @$_REQUEST["next"] && $this->validateTracks() && $this->insertUpdateAlbum();
         $this->trackForm();
         $this->skipVar("nextTrack");
         $this->skipVar("more");
@@ -926,7 +926,7 @@ class Editor extends MenuItem {
         $post = $_SERVER["REQUEST_METHOD"] == "POST";
     
         foreach($post?$_POST:$_GET as $key => $value)
-            if(!$this->emitted[$key])
+            if(!array_key_exists($key, $this->emitted))
                  echo "    <INPUT TYPE=HIDDEN NAME=$key VALUE=\"" . htmlentities(stripslashes($value)) . "\">\n";
     }
 
@@ -939,7 +939,7 @@ class Editor extends MenuItem {
         $result = Engine::api(IEditor::class)->insertUpdateAlbum($album, $tracks, $this->getLabel());
 
         if($result) {
-            if($_REQUEST["new"]) {
+            if(@$_REQUEST["new"]) {
                 $_REQUEST["seltag"] = $album["tag"];
                 $infoUrl = $_REQUEST["infoUrl"] ?? null;
                 if($infoUrl) {
@@ -954,8 +954,8 @@ class Editor extends MenuItem {
                     $this->printTag($_REQUEST["seltag"]);
             }
 
-            $this->albumAdded = $_REQUEST["new"];
-            $this->albumUpdated = !$_REQUEST["new"];
+            $this->albumAdded = @$_REQUEST["new"];
+            $this->albumUpdated = !@$_REQUEST["new"];
             $this->skipVar("name");
             $this->skipVar("imageUrl");
             $this->skipVar("infoUrl");
@@ -971,11 +971,11 @@ class Editor extends MenuItem {
         $label = $this->getLabel();
         $result = Engine::api(IEditor::class)->insertUpdateLabel($label);
         if($result) {
-            $this->albumAdded = $_REQUEST["lnew"];
-            $this->albumUpdated = !$_REQUEST["lnew"];
+            $this->albumAdded = @$_REQUEST["lnew"];
+            $this->albumUpdated = !@$_REQUEST["lnew"];
             if($this->albumAdded)
                 $_REQUEST["selpubkey"] = $label["pubkey"];
-            $_REQUEST["search"] = $_REQUEST["name"];
+            $_REQUEST["search"] = @$_REQUEST["name"];
         }
 
         return $result;
@@ -983,7 +983,7 @@ class Editor extends MenuItem {
 
     private function getAlbum() {
          $album = $_REQUEST;
-         $album["tag"] = $album["new"]?0:$album["seltag"];
+         $album["tag"] = @$album["new"] ? 0 : $album["seltag"];
          if(array_key_exists("selpubkey", $album))
               $album["pubkey"] = $album["selpubkey"];
          return $album;
@@ -991,7 +991,7 @@ class Editor extends MenuItem {
     
     private function getLabel() {
          $label = $_REQUEST;
-         $label["pubkey"] = $label["lnew"]?0:$label["selpubkey"];
+         $label["pubkey"] = @$label["lnew"] ? 0 : $label["selpubkey"];
          return $label;
     }
     
@@ -1017,7 +1017,7 @@ class Editor extends MenuItem {
     }
     
     private function getPanelTitle($seq) {
-        $albumLabel = htmlentities(stripslashes(($_REQUEST["coll"]?"":$_REQUEST["artist"] . " / ") . $_REQUEST["album"]));
+        $albumLabel = htmlentities(stripslashes((@$_REQUEST["coll"] ? "" : @$_REQUEST["artist"] . " / ") . @$_REQUEST["album"]));
         switch($seq) {
         case "search":
             $title = "Album Editor";
@@ -1031,7 +1031,7 @@ class Editor extends MenuItem {
             }
             break;
         case "details":
-            $title = $_REQUEST["new"]?"New Album":"Edit Album";
+            $title = @$_REQUEST["new"]?"New Album":"Edit Album";
             break;
         case "label":
             if($this->subaction == "labels") {
@@ -1048,7 +1048,7 @@ class Editor extends MenuItem {
             break;
         case "tracks":
             $title = "Tracks for $albumLabel";
-            if(!$_REQUEST["new"] && !isset($_REQUEST["nextTrack"]) &&
+            if(!@$_REQUEST["new"] && !isset($_REQUEST["nextTrack"]) &&
                     $this->getUrlAutofill())
                 $title .= " <button class='discogs-prefill' title='Load URLs from Discogs'><img src='img/discogs.svg'><span> Load URLs</span></button>";
             break;
@@ -1077,10 +1077,10 @@ class Editor extends MenuItem {
          UI::emitJS('js/editor.album.js');
     
          echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH='100%'><TR><TD VALIGN=TOP WIDTH=220>\n";
-         echo "<INPUT TYPE=HIDDEN NAME=seltag id='seltag' VALUE='".$_REQUEST["seltag"]."'>\n";
+         echo "<INPUT TYPE=HIDDEN NAME=seltag id='seltag' VALUE='".@$_REQUEST["seltag"]."'>\n";
          echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH='100%'>";
-         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Artist or Tag number:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE='width:214px;' NAME=search id='search' VALUE='$osearch' autocomplete=off><BR>\n";
-         echo "<SPAN CLASS='sub'>compilation?</SPAN><INPUT TYPE=CHECKBOX NAME=coll" . ($osearch&&$_REQUEST["coll"]?" CHECKED":"") . " id='coll'></TD><TD></TD></TR>\n";
+         echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Artist or Tag number:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE='width:214px;' NAME=search id='search' VALUE='' autocomplete=off><BR>\n";
+         echo "<SPAN CLASS='sub'>compilation?</SPAN><INPUT TYPE=CHECKBOX NAME=coll id='coll'></TD><TD></TD></TR>\n";
          echo "<TR><TD COLSPAN=2 ALIGN=LEFT><INPUT tabindex='-1' NAME='bup' id='bup' VALUE='&and;' TYPE='submit' CLASS='editorUp'><UL tabindex='0' class='listbox editorChooser no-text-select' id='list'>\n";
          for($i=0; $i<$this->limit; $i++)
              echo "  <LI>&nbsp;\n";
@@ -1122,13 +1122,13 @@ class Editor extends MenuItem {
     ?>
     <TABLE>
     <?php 
-        $coll = $_REQUEST["coll"];
-        if($_REQUEST["new"]) {
+        $coll = $_REQUEST["coll"] ?? false;
+        if(@$_REQUEST["new"]) {
             echo "  <TR><TD></TD><TD>&nbsp;</TD></TR>\n";
-            $agenre = $category?$category:"G";
-            $amedium = $medium?$medium:"C";
-            $aformat = $format?$format:"F";
-            $alocation = $location?$location:"L";
+            $agenre = "G";    // General
+            $amedium = "C";   // CD
+            $aformat = "F";   // Full
+            $alocation = ILibrary::LOCATION_AWAITING_REVIEW;
             $this->skipVar("seltag");
             $this->skipVar("selpubkey");
         } else {
@@ -1139,11 +1139,11 @@ class Editor extends MenuItem {
             $amedium = $row["medium"];
             $aformat = $row["size"];
             $alocation = $row["location"];
-            $bin = $row["bin"];
+            $bin = $alocation == ILibrary::LOCATION_STORAGE ? $row["bin"] : '';
             $coll = substr($artist, 0, 8) == "[coll]: ";
-            $name = $_REQUEST["name"];
+            $name = @$_REQUEST["name"];
             if(!$name) {
-                if($_REQUEST["selpubkey"]) {
+                if(@$_REQUEST["selpubkey"]) {
                     $row = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $_REQUEST["selpubkey"])[0];
                     $name = $row["name"] ?? "(Unknown)";
                     $address = $row["address"];
@@ -1201,9 +1201,9 @@ class Editor extends MenuItem {
             echo "             <OPTION VALUE=\"$code\"$selected>$location\n";
         }
     ?>
-                    </SELECT>&nbsp;&nbsp;<SPAN ID=lbin STYLE="visibility:<?php echo ($alocation == 'G')?"visible":"hidden";?>">Bin:&nbsp;</SPAN><INPUT NAME=bin TYPE=text CLASS=text SIZE=10 maxlength='8' VALUE="<?php echo $bin;?>" STYLE="visibility:<?php echo ($alocation == 'G')?"visible":"hidden";?>"></TD></TR>
+                    </SELECT>&nbsp;&nbsp;<SPAN ID=lbin STYLE="visibility:<?php echo ($alocation == ILibrary::LOCATION_STORAGE) ? "visible" : "hidden"; ?>">Bin:&nbsp;</SPAN><INPUT NAME=bin TYPE=text CLASS=text SIZE=10 maxlength='8' VALUE="<?php echo $bin;?>" STYLE="visibility:<?php echo ($alocation == ILibrary::LOCATION_STORAGE) ? "visible" : "hidden"; ?>"></TD></TR>
     <?php 
-        if(!$_REQUEST["new"]) {
+        if(!@$_REQUEST["new"]) {
     ?>
       <TR><TD COLSPAN=2></TD></TR>
       <TR><TD ALIGN=RIGHT>Label:</TD><TD CLASS="header"><?php echo $name;?></TD></TR>
@@ -1218,27 +1218,27 @@ class Editor extends MenuItem {
       <!--TR><TD ALIGN=RIGHT></TD><TD></TD></TR>
       <TR><TD ALIGN=RIGHT></TD><TD></TD></TR-->
       <TR><TD ALIGN=RIGHT></TD><TD>&nbsp;</TD></TR>
-      <TR><TD></TD><TD><?php if(!$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Change Label...  ">&nbsp;&nbsp;<?php }?><INPUT TYPE=SUBMIT NAME=<?php echo $_REQUEST["new"]?"edit":"next";?> CLASS=submit VALUE="  <?php echo $_REQUEST["new"]?"Next &gt;&gt;":"Tracks...";?>  ">&nbsp;&nbsp;<?php if(!$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=done CLASS=submit VALUE="  Done!  "><?php }?></TD></TR>
+      <TR><TD></TD><TD><?php if(!@$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Change Label...  ">&nbsp;&nbsp;<?php }?><INPUT TYPE=SUBMIT NAME=<?php echo @$_REQUEST["new"]?"edit":"next";?> CLASS=submit VALUE="  <?php echo @$_REQUEST["new"]?"Next &gt;&gt;":"Tracks...";?>  ">&nbsp;&nbsp;<?php if(!@$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=done CLASS=submit VALUE="  Done!  "><?php }?></TD></TR>
     </TABLE>
     <?php 
-        echo "  <INPUT TYPE=HIDDEN NAME=new VALUE=\"".$_REQUEST["new"]."\">\n";
+        echo "  <INPUT TYPE=HIDDEN NAME=new VALUE=\"".@$_REQUEST["new"]."\">\n";
     }
     
     private function emitLabelSel() {
          UI::emitJS('js/editor.label.js');
     
         echo "<TABLE CELLPADDING=5 CELLSPACING=5 WIDTH='100%'><TR><TD VALIGN=TOP WIDTH=220>\n";
-        echo "  <INPUT TYPE=HIDDEN NAME=selpubkey id='selpubkey' VALUE='".$_REQUEST["selpubkey"]."'>\n";
+        echo "  <INPUT TYPE=HIDDEN NAME=selpubkey id='selpubkey' VALUE='".@$_REQUEST["selpubkey"]."'>\n";
         echo "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 WIDTH='100%'>";
-        echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Label Name:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE='width:214px;' NAME=search id='search' VALUE='$osearch' autocomplete=off></TD></TR>\n";
+        echo "<TR><TD COLSPAN=2 ALIGN=LEFT><B>Label Name:</B><BR><INPUT TYPE=TEXT CLASS=text STYLE='width:214px;' NAME=search id='search' VALUE='' autocomplete=off></TD></TR>\n";
         echo "  <TR><TD COLSPAN=2 ALIGN=LEFT><INPUT tabindex='-1' NAME='bup' id='bup' VALUE='&and;' TYPE='submit' CLASS='editorUp'><UL tabindex='0' class='listbox editorChooser no-text-select' id='list'>\n";
         for($i=0; $i<$this->limit; $i++)
             echo "  <LI>&nbsp;\n";
         echo "</UL><INPUT tabindex='-1' NAME='bdown' id='bdown' VALUE='&or;' TYPE='submit' CLASS='editorDown'></TD>\n";
         echo "</TR></TABLE>\n";
         echo "  <INPUT TYPE=HIDDEN id='list-size' VALUE='$this->limit'>\n";
-        echo "  <INPUT TYPE=HIDDEN id='seltag' VALUE='".$_REQUEST["seltag"]."'>\n";
-        echo "  <INPUT TYPE=HIDDEN id='req-name' VALUE=\"".$_REQUEST["name"]."\">\n";
+        echo "  <INPUT TYPE=HIDDEN id='seltag' VALUE='".@$_REQUEST["seltag"]."'>\n";
+        echo "  <INPUT TYPE=HIDDEN id='req-name' VALUE=\"".@$_REQUEST["name"]."\">\n";
     ?>
     </TD><TD>
     <TABLE>
@@ -1260,7 +1260,7 @@ class Editor extends MenuItem {
     <!--P ALIGN=CENTER-->
       <INPUT TYPE=SUBMIT NAME=lnew CLASS=submit VALUE="  New  ">
       <INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Edit  ">
-    <?php  if($_REQUEST["seltag"]) { ?>
+    <?php  if(@$_REQUEST["seltag"]) { ?>
       <INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE="   OK   ">
     <?php  } else if($this->subaction != "labels") { ?>
       <INPUT TYPE=SUBMIT NAME=next CLASS=submit VALUE="Tracks &gt;&gt;">
@@ -1274,9 +1274,11 @@ class Editor extends MenuItem {
     private function labelForm() {
         echo "<TABLE>\n";
     
-        if($_REQUEST["lnew"]) {
+        if(@$_REQUEST["lnew"]) {
             echo "  <TR><TD></TD><TD>&nbsp;</TD></TR>\n";
             $this->skipVar("selpubkey");
+            $row = [];
+            $foreign = false;
         } else {
             $row = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $_REQUEST["selpubkey"])[0];
             $foreign = $row["international"] == "T";
@@ -1284,28 +1286,28 @@ class Editor extends MenuItem {
             echo "  <TR><TD ALIGN=RIGHT>Label&nbsp;ID:</TD><TH ALIGN=LEFT ID=\"pubkey\">".$row["pubkey"]."</TH></TR>\n";
         }
     ?>
-      <TR><TD ALIGN=RIGHT>Name:</TD><TD CLASS="header"><INPUT NAME=name TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["name"]));?>" data-zkalpha="true" data-focus></TD></TR>
-      <TR><TD ALIGN=RIGHT>Attn:</TD><TD><INPUT NAME=attention TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["attention"]));?>" data-zkalpha="true"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Address:</TD><TD><INPUT NAME=address TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["address"]));?>" data-zkalpha="true"></TD></TR>
-      <TR><TD ALIGN=RIGHT>City:</TD><TD><INPUT NAME=city TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["city"]));?>" data-zkalpha="true"></TD></TR>
-      <TR><TD ALIGN=RIGHT ID=lstate STYLE="visibility:<?php echo $foreign?"hidden":"visible";?>">State:</TD><TD><INPUT NAME=state TYPE=TEXT CLASS=text SIZE=20 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["state"]));?>" data-upper></TD></TR>
-      <TR><TD ALIGN=RIGHT ID=lzip><?php echo $foreign?"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country":"Postal Code";?>:</TD><TD><INPUT NAME=zip id='zip' TYPE=TEXT CLASS=text SIZE=20 maxlength='10' VALUE="<?php echo htmlentities(stripslashes($row["zip"]));?>" data-upper><INPUT NAME=foreign id='foreign' TYPE=CHECKBOX<?php echo $foreign?" CHECKED":"";?>><SPAN CLASS="sub">Foreign?</SPAN></TD></TR>
-      <TR><TD ALIGN=RIGHT>Phone:</TD><TD><INPUT NAME=phone TYPE=TEXT CLASS=text SIZE=20 maxlength='20' VALUE="<?php echo htmlentities(stripslashes($row["phone"]));?>"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Fax:</TD><TD><INPUT NAME=fax TYPE=TEXT CLASS=text SIZE=20 maxlength='20' VALUE="<?php echo htmlentities(stripslashes($row["fax"]));?>"></TD></TR>
-      <TR><TD ALIGN=RIGHT>E-Mail:</TD><TD><INPUT NAME=email TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["email"]));?>"></TD></TR>
-      <TR><TD ALIGN=RIGHT>URL:</TD><TD><INPUT NAME=url TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes($row["url"]));?>"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Mail List:</TD><TD><INPUT NAME=maillist TYPE=TEXT CLASS=text SIZE=5 VALUE="<?php echo $row["maillist"];?>" data-zkalpha="true"></TD></TR>
-      <TR><TD ALIGN=RIGHT>Mail Count:</TD><TD><INPUT NAME=mailcount TYPE=TEXT CLASS=text SIZE=5 VALUE="<?php echo $row["mailcount"];?>"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Name:</TD><TD CLASS="header"><INPUT NAME=name TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes(@$row["name"]));?>" data-zkalpha="true" data-focus></TD></TR>
+      <TR><TD ALIGN=RIGHT>Attn:</TD><TD><INPUT NAME=attention TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes(@$row["attention"]));?>" data-zkalpha="true"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Address:</TD><TD><INPUT NAME=address TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes(@$row["address"]));?>" data-zkalpha="true"></TD></TR>
+      <TR><TD ALIGN=RIGHT>City:</TD><TD><INPUT NAME=city TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes(@$row["city"]));?>" data-zkalpha="true"></TD></TR>
+      <TR><TD ALIGN=RIGHT ID=lstate STYLE="visibility:<?php echo $foreign?"hidden":"visible";?>">State:</TD><TD><INPUT NAME=state TYPE=TEXT CLASS=text SIZE=20 maxlength='80' VALUE="<?php echo htmlentities(stripslashes(@$row["state"]));?>" data-upper></TD></TR>
+      <TR><TD ALIGN=RIGHT ID=lzip><?php echo $foreign?"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Country":"Postal Code";?>:</TD><TD><INPUT NAME=zip id='zip' TYPE=TEXT CLASS=text SIZE=20 maxlength='10' VALUE="<?php echo htmlentities(stripslashes(@$row["zip"]));?>" data-upper><INPUT NAME=foreign id='foreign' TYPE=CHECKBOX<?php echo $foreign?" CHECKED":"";?>><SPAN CLASS="sub">Foreign?</SPAN></TD></TR>
+      <TR><TD ALIGN=RIGHT>Phone:</TD><TD><INPUT NAME=phone TYPE=TEXT CLASS=text SIZE=20 maxlength='20' VALUE="<?php echo htmlentities(stripslashes(@$row["phone"]));?>"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Fax:</TD><TD><INPUT NAME=fax TYPE=TEXT CLASS=text SIZE=20 maxlength='20' VALUE="<?php echo htmlentities(stripslashes(@$row["fax"]));?>"></TD></TR>
+      <TR><TD ALIGN=RIGHT>E-Mail:</TD><TD><INPUT NAME=email TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes(@$row["email"]));?>"></TD></TR>
+      <TR><TD ALIGN=RIGHT>URL:</TD><TD><INPUT NAME=url TYPE=TEXT CLASS=text SIZE=60 maxlength='80' VALUE="<?php echo htmlentities(stripslashes(@$row["url"]));?>"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Mail List:</TD><TD><INPUT NAME=maillist TYPE=TEXT CLASS=text SIZE=5 VALUE="<?php echo @$row["maillist"];?>" data-zkalpha="true"></TD></TR>
+      <TR><TD ALIGN=RIGHT>Mail Count:</TD><TD><INPUT NAME=mailcount TYPE=TEXT CLASS=text SIZE=5 VALUE="<?php echo @$row["mailcount"];?>"></TD></TR>
     <?php 
-        if(!$_REQUEST["lnew"]) {
+        if(!@$_REQUEST["lnew"]) {
     ?>
-      <TR><TD ALIGN=RIGHT>Date In:</TD><TD><?php echo $row["pcreated"];?></TD></TR>
-      <TR><TD ALIGN=RIGHT>Date Mod:</TD><TD><?php echo $row["modified"];?></TD></TR>
+      <TR><TD ALIGN=RIGHT>Date In:</TD><TD><?php echo @$row["pcreated"];?></TD></TR>
+      <TR><TD ALIGN=RIGHT>Date Mod:</TD><TD><?php echo @$row["modified"];?></TD></TR>
     <?php 
         }
     ?>
       <TR><TD ALIGN=RIGHT></TD><TD>&nbsp;</TD></TR>
-      <TR><TD></TD><TD><INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  <?php echo ($this->subaction=="labels")?"Done!":($_REQUEST["seltag"]?"  OK  ":"Next &gt;&gt;");?>  ">&nbsp;</TD></TR>
+      <TR><TD></TD><TD><INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  <?php echo ($this->subaction=="labels")?"Done!":(@$_REQUEST["seltag"] ? "  OK  " : "Next &gt;&gt;");?>  ">&nbsp;</TD></TR>
     </TABLE>
     <?php 
     }
@@ -1389,7 +1391,7 @@ class Editor extends MenuItem {
     private function trackForm() {
         $isCollection = $_REQUEST["coll"] ?? false;
 
-        if($_REQUEST["seltag"] && !$_REQUEST["tdb"]) {
+        if(@$_REQUEST["seltag"] && !@$_REQUEST["tdb"]) {
             $tracks = Engine::api(ILibrary::class)->search($isCollection?ILibrary::COLL_KEY:ILibrary::TRACK_KEY, 0, 2000, $_REQUEST["seltag"]);
             foreach($tracks as $row) {
                 $this->emitHidden("track".$row["seq"], $row["track"]);
@@ -1409,7 +1411,7 @@ class Editor extends MenuItem {
             $this->emitHidden("tdb", "true");
         }
 
-        if($_REQUEST["nextTrack"]) {
+        if(@$_REQUEST["nextTrack"]) {
             // validate previous batch of tracks were entered
             $lastBatch = $_REQUEST["nextTrack"] - $this->tracksPerPage;
             for($i=0; $i<$this->tracksPerPage; $i++) {
@@ -1424,10 +1426,10 @@ class Editor extends MenuItem {
             $_REQUEST["nextTrack"] = 1;
         }
     
-        $focusTrackList = $focusTrack ?: $_REQUEST["nextTrack"];
+        $focusTrackList = $focusTrack ?? $_REQUEST["nextTrack"];
         $this->emitTrackList($focusTrackList, $isCollection);
 
-        if($focusTrack)
+        if($focusTrack ?? false)
             echo "    <div class='error' style='padding-top: 8px; padding-left: 25px;'>Enter required field</div>";
     ?>
 

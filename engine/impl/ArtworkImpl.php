@@ -299,4 +299,36 @@ class ArtworkImpl extends DBO implements IArtwork {
 
         return $success ? $stmt->rowCount() + $count : false;
     }
+
+    public function injectAlbumArt(array &$albums): void {
+        $chain = [];
+        $tags = [];
+
+        for($i = 0; $i < count($albums); $i++) {
+            $tag = $albums[$i]["tag"] ?? 0;
+            if($tag && is_numeric($tag)) {
+                if(array_key_exists($tag, $tags))
+                    $chain[$i] = $tags[$tag];
+
+                $tags[$tag] = $i;
+            }
+        }
+
+        if(count($tags) == 0)
+            return;
+
+        $query = "SELECT tag, image_uuid, info_url FROM albummap a " .
+                 "LEFT JOIN artwork i ON a.image_id = i.id " .
+                 "WHERE tag IN (" . implode(',', array_keys($tags)) . ")";
+        $stmt = $this->prepare($query);
+        $stmt->execute();
+        while($row = $stmt->fetch()) {
+            for($next = $tags[$row["tag"]]; $next >= 0; $next = $chain[$next] ?? -1) {
+                if($row["image_uuid"])
+                    $albums[$next]["image_url"] = $this->getCachePath($row["image_uuid"]);
+                if($row["info_url"])
+                    $albums[$next]["info_url"] = $row["info_url"];
+            }
+        }
+    }
 }

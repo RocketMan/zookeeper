@@ -152,6 +152,7 @@ class Reviews extends MenuItem {
 
     public function viewReviewShelf() {
         $albums = Engine::api(IReview::class)->getReviewShelf();
+        Engine::api(ILibrary::class)->markAlbumsPlayable($albums);
         $this->addVar('GENRES', ILibrary::GENRES);
         $this->addVar('albums', $albums);
         $this->setTemplate("review.shelf.html");
@@ -171,12 +172,16 @@ class Reviews extends MenuItem {
             break;
         case 'release':
             // fall through...
-        case 'xdtm':
+        case 'dtm':
             Engine::api(IReview::class)->updateReviewShelf($tag, null);
             break;
         }
 
-        $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)[0];
+        $api = Engine::api(ILibrary::class);
+        $albums = $api->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        $api->markAlbumsPlayable($albums);
+        $album = $albums[0];
+
         if($album['bin']) {
             $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $album['bin']);
             if(count($user))
@@ -244,7 +249,7 @@ class Reviews extends MenuItem {
             'type' => 'section',
             'text' => [
                 'type' => 'mrkdwn',
-                'text' => ":lower_left_fountain_pen: $reviewer $action <$base?s=byAlbumKey&amp;n=$tag&amp;action=search|$artist / $album>"
+                'text' => ":headphones: $reviewer $action <$base?s=byAlbumKey&amp;n=$tag&amp;action=search|$artist / $album>"
             ],
         ];
 
@@ -275,9 +280,9 @@ class Reviews extends MenuItem {
             $body = $response->getBody()->getContents();
             $json = json_decode($body);
             if(!$json->ok)
-                error_log("postReview: $body");
+                error_log("claimReview: $body");
         } catch(\Exception $e) {
-            error_log("postReview: " . $e->getMessage());
+            error_log("claimReview: " . $e->getMessage());
         }
     }
 
@@ -531,7 +536,7 @@ class Reviews extends MenuItem {
                 Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
                 $success = Engine::api(IReview::class)->insertReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
                 if($success >= 1) {
-                    if($_REQUEST["noise"])
+                    if($_REQUEST["noise"] ?? 0)
                         $this->postReview($_REQUEST["tag"]);
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
@@ -576,7 +581,7 @@ class Reviews extends MenuItem {
         $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["tag"]);
 
         $airnames = [];
-        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, $djname);
+        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
         while ($row = $records->fetch())
            $airnames[] = $row['airname'];
         $airnames[] = $self;
@@ -591,7 +596,7 @@ class Reviews extends MenuItem {
         $this->addVar("airnames", $airnames);
         $this->addVar("airname", $airname);
         $this->addVar("self", $self);
-        $this->addVar("review", $review);
+        $this->addVar("review", $review ?? '');
         $this->addVar("private", $_REQUEST["private"] ?? 0);
         $this->addVar("exported", !$export || isset($exportid));
         $this->addVar("MAX_AIRNAME_LENGTH", IDJ::MAX_AIRNAME_LENGTH);

@@ -186,7 +186,7 @@ class ChartImpl extends DBO implements IChart {
     }
 
     private function updateLocation($tag, $location) {
-        $query = "UPDATE albumvol SET location = ? WHERE tag = ?";
+        $query = "UPDATE albumvol SET location = ?, bin = NULL WHERE tag = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $location);
         $stmt->bindValue(2, $tag);

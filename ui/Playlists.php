@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -58,6 +58,7 @@ class Playlists extends MenuItem {
 
     private $action;
     private $subaction;
+    private $break;
 
     public function getSubactions($action) {
         return self::$subactions;
@@ -399,15 +400,44 @@ class Playlists extends MenuItem {
     }
 
     private function insertTrack($playlistId, $tag, $artist, $track, $album, $label, $spinTime) {
+        // $artist, $track, $album, and $label have already been trimmed
+        if(empty($artist) && empty($track) &&
+                empty($album) && empty($label)) {
+            // non-consecutive blank row inserts set separator
+            if(!$this->break) {
+                $entry = (new PlaylistEntry())->setSetSeparator();
+                if($spinTime)
+                    $entry->setCreated($spinTime->format(IPlaylist::TIME_FORMAT_SQL));
+                Engine::api(IPlaylist::class)->insertTrackEntry($playlistId, $entry, $status);
+                $this->break = true;
+            }
+            return;
+        }
+
+        if(!$tag && $track && $artist && $album) {
+            $tracks = Engine::api(ILibrary::class)->search(ILibrary::TRACK_NAME, 0, 200, $track);
+            foreach($tracks as $t) {
+                if(mb_strtolower(PlaylistEntry::swapNames($t['artist'])) == mb_strtolower(PlaylistEntry::swapNames($artist)) &&
+                        // ILibrary::TRACK_NAME encodes compilation album title as '[coll]: title'
+                        mb_strtolower(mb_substr($t['album'], $t['iscoll'] ? 8 : 0, 8)) == mb_strtolower(mb_substr($album, 0, 8))) {
+                    $tag = $t['tag'];
+                    break;
+                }
+            }
+        }
+
         $id = 0;
         $status = '';
         // Run the query
         $success = Engine::api(IPlaylist::class)->insertTrack($playlistId,
                      $tag, $artist, $track, $album, $label, $spinTime, $id, $status);
+
+        if($success)
+            $this->break = false;
     }
 
     public function emitImportList() {
-        $validate = $_POST["validate"];
+        $validate = $_POST["validate"] ?? false;
         $format = $_REQUEST["format"] ?? "json";
         if($format == "csv") {
             $description = mb_substr(trim($_REQUEST["description"]), 0, IPlaylist::MAX_DESCRIPTION_LENGTH);
@@ -420,9 +450,7 @@ class Playlists extends MenuItem {
         }
         $delimiter = $_REQUEST["delimiter"] ?? "";
         $enclosure = $_REQUEST["enclosure"] ?? "\"";
-        $userfile = $_FILES['userfile']['tmp_name'];
-        $playlist = $_REQUEST["playlist"];
-        $button = $_REQUEST["button"];
+        $userfile = $_FILES['userfile']['tmp_name'] ?? null;
 
         $empty = $_POST["empty"] ?? 0;
         if($empty)
@@ -564,14 +592,14 @@ class Playlists extends MenuItem {
                     $validate == "edit" ?
                     ($errorMessage ?? "<b><font class='error'>Ensure fields are not blank and date is valid.</font></b><br>\n") : false);
             $this->addVar('format', $format);
-            $this->addVar('date', $date);
-            $this->addVar('fromtime', $fromtime);
-            $this->addVar('totime', $totime);
+            $this->addVar('date', $date ?? '');
+            $this->addVar('fromtime', $fromtime ?? '');
+            $this->addVar('totime', $totime ?? '');
             $this->addVar('dateformat', UI::isUsLocale() ? "mm/dd/yy" : "dd-mm-yy");
             $this->addVar('airnames', $this->getDJAirNames());
             $this->addVar('delimiter', $delimiter);
             $this->addVar('enclosure', $enclosure);
-            $this->addVar('description', stripslashes($description));
+            $this->addVar('description', stripslashes($description ?? ''));
             $this->addVar('MAX_DESCRIPTION_LENGTH', IPlaylist::MAX_DESCRIPTION_LENGTH);
             $this->addVar('airname', $airname ?? '');
             $this->addVar('MAX_AIRNAME_LENGTH', IDJ::MAX_AIRNAME_LENGTH);
@@ -642,6 +670,13 @@ class Playlists extends MenuItem {
                              PlaylistEntry::scrubField($line[4]),  // label
                              $timestamp);     // timestamp
                     $count++;
+                    break;
+                case 1:
+                    // fgetcsv returns array with single null on blank line
+                    if(is_null($line[0])) {
+                        // set separator
+                        $this->insertTrack($playlist, 0, '', '', '', '', null);
+                    }
                     break;
                 }
             }

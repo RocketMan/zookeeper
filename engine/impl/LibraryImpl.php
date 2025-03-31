@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -554,19 +554,24 @@ class LibraryImpl extends DBO implements ILibrary {
 
         $urlFilter = $enableExternalLinks ? "url <> ''" : "url RLIKE ?";
 
-        $query = "SELECT tag FROM tracknames ".
-                 "WHERE $urlFilter AND tag IN (" . implode(',', $queryset) . ") ".
-                 "GROUP BY tag ";
-        if($querysetcoll)
-            $query .= "UNION SELECT tag FROM colltracknames ".
+        $query = $queryset ? "SELECT tag FROM tracknames " .
+                 "WHERE $urlFilter AND tag IN (" . implode(',', $queryset) . ") " .
+                 "GROUP BY tag" : "";
+
+        if($querysetcoll) {
+            if($query)
+                $query .= " UNION ";
+
+            $query .= "SELECT tag FROM colltracknames ".
                       "WHERE $urlFilter AND tag IN (" . implode(',', $querysetcoll) . ") ".
                       "GROUP BY tag";
+        }
         $stmt = $this->prepare($query);
         if(!$enableExternalLinks) {
             // RLIKE doesn't like (|s) so replace with equivalent s?
             $rlike = preg_replace(['/\(\|s\)/', '/\/(.*)\//'], ['s?', '\1'], $internalLinks);
             $stmt->bindValue(1, $rlike);
-            if($querysetcoll)
+            if($queryset && $querysetcoll)
                 $stmt->bindValue(2, $rlike);
         }
         $stmt->execute();
@@ -580,7 +585,8 @@ class LibraryImpl extends DBO implements ILibrary {
     public function listAlbums($op, $key, $limit) {
         $cache = [];
         $reverse = 0;
-        $parts = explode('|', $key);
+        $split = '';
+        $parts = array_pad(explode('|', $key), 3, '');
         switch($op) {
         case ILibrary::OP_PREV_LINE:
             $query = "SELECT * FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey WHERE artist < ? OR (artist = ? AND album < ?) OR (artist = ? AND album = ? AND tag < ?) ORDER BY artist DESC, album DESC, tag DESC LIMIT 1";
@@ -763,7 +769,8 @@ class LibraryImpl extends DBO implements ILibrary {
     public function listLabels($op, $key, $limit) {
         $cache = [];
         $reverse = 0;
-        $parts = explode('|', $key);
+        $split = '';
+        $parts = array_pad(explode('|', $key), 2, '');
         switch($op) {
         case ILibrary::OP_PREV_LINE:
             $query = "SELECT * FROM publist WHERE name <> '' AND name < ? OR (name = ? AND pubkey < ?) ORDER BY name DESC, pubkey DESC LIMIT 1";
@@ -880,7 +887,7 @@ class LibraryImpl extends DBO implements ILibrary {
                 $stmt->bindValue(1, (int)$limit, \PDO::PARAM_INT);
             } else if ($op < ILibrary::OP_BY_NAME) {
                 // Handle case of forward scroll on the last page
-                $parts = explode('|', $key);
+                $parts = array_pad(explode('|', $key), 2, '');
                 $query = "SELECT * FROM publist WHERE name <> '' AND name > ? OR (name = ? AND pubkey >= ?) ORDER BY name, pubkey LIMIT ?";
                 $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $parts[0]);
