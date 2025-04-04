@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -200,6 +200,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
     
     public function updatePlaylist($playlist, $date, $time, $description, $airname, $deleteTracksPastEnd=0) {
+        $this->adviseLock($playlist);
+
         $query = "SELECT showdate, showtime FROM lists WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlist);
@@ -275,6 +277,28 @@ class PlaylistImpl extends DBO implements IPlaylist {
                         $stmt->bindValue(2, $seq);
                         $stmt->execute();
                     }
+
+                    // delete tracks that preceed new time range
+                    $query = "SELECT id FROM tracks " .
+                             "WHERE list = ? AND created < ? " .
+                             "ORDER BY seq DESC, id DESC LIMIT 1";
+                    $stmt = $this->prepare($query);
+                    $stmt->bindValue(1, $playlist);
+                    $stmt->bindValue(2, $fromStamp->format(self::TIME_FORMAT_SQL));
+                    $start = $stmt->executeAndFetch();
+                    if($start && ($seq = $this->getSeq($playlist, $start['id']))) {
+                        $query = "DELETE FROM tracks WHERE list = ? AND seq <= ?";
+                        $stmt = $this->prepare($query);
+                        $stmt->bindValue(1, $playlist);
+                        $stmt->bindValue(2, $seq);
+                        $stmt->execute();
+
+                        $query = "UPDATE tracks SET seq = seq - ? WHERE list = ?";
+                        $stmt = $this->prepare($query);
+                        $stmt->bindValue(1, $seq);
+                        $stmt->bindValue(2, $playlist);
+                        $stmt->execute();
+                    }
                 } else {
                     // allow spin timestamps within the grace period
                     $fromStamp->modify(self::GRACE_START);
@@ -308,7 +332,10 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue(5, $playlist);
         } else
             $stmt->bindValue(4, $playlist);
-        return $stmt->execute();
+        $result = $stmt->execute();
+
+        $this->adviseUnlock($playlist);
+        return $result;
     }
 
     protected function slicePlaylist($playlist, $time) {
