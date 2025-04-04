@@ -622,7 +622,7 @@ $().ready(function(){
         var oldTime = row.data('orig').attributes.time;
 
         if(duration(newTime) < duration(oldTime)
-               && !confirm("Show has been shortened.  Tracks past the end will be deleted.\n\nAre you sure you want to do this?"))
+               && !confirm("Show has been shortened.  Tracks outside the new time will be deleted.\n\nAre you sure you want to do this?"))
             return;
 
         var postData = {
