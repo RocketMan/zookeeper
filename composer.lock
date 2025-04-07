@@ -2495,8 +2495,8 @@
             "type": "metapackage",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -2868,16 +2868,16 @@
         },
         {
             "name": "vstelmakh/url-highlight",
-            "version": "v3.1.1",
+            "version": "v3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/vstelmakh/url-highlight.git",
-                "reference": "24b1ecf30d2a682de834d1f15838657768886c45"
+                "reference": "47cdbb686514d6b92995e6a4ee351f92b33e84f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vstelmakh/url-highlight/zipball/24b1ecf30d2a682de834d1f15838657768886c45",
-                "reference": "24b1ecf30d2a682de834d1f15838657768886c45",
+                "url": "https://api.github.com/repos/vstelmakh/url-highlight/zipball/47cdbb686514d6b92995e6a4ee351f92b33e84f6",
+                "reference": "47cdbb686514d6b92995e6a4ee351f92b33e84f6",
                 "shasum": ""
             },
             "require": {
@@ -2921,9 +2921,9 @@
             ],
             "support": {
                 "issues": "https://github.com/vstelmakh/url-highlight/issues",
-                "source": "https://github.com/vstelmakh/url-highlight/tree/v3.1.1"
+                "source": "https://github.com/vstelmakh/url-highlight/tree/v3.1.2"
             },
-            "time": "2024-09-15T17:36:16+00:00"
+            "time": "2025-04-05T09:15:51+00:00"
         }
     ],
     "packages-dev": [],
