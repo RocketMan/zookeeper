@@ -84,10 +84,10 @@ interface IPlaylist {
      *
      * @param $date string date (in format yyyy-MM-dd)
      * @param $user string target user
-     * @param $count int lookback limit (default 10)
+     * @param $count int lookback limit (default 12)
      * @return array of matching playlists (empty array if no matches)
      */
-    function getPlaylistsForWeekday(string $date, string $user, int $count = 10): array;
+    function getPlaylistsForWeekday(string $date, string $user, int $count = 12): array;
     /**
      * determine if the specified {$date, $time} is usual for the
      * specified user
