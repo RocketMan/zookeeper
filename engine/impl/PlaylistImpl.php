@@ -107,7 +107,61 @@ class PlaylistImpl extends DBO implements IPlaylist {
     public function getPlaylistsByDate($date) {
         return $this->getPlaylists(1, 1, $date);
     }
-    
+
+    /**
+     * calculate playlist overlap
+     *
+     * The function is called with an array of playlists, each element of
+     * which is an array that contains 'showdate' and 'showtime' elements,
+     * where showdate is specified in yyyy-MM-dd format, and showtime is
+     * a range in hhmm-hhmm format.
+     *
+     * @param $playlists array of playlists
+     * @return int minutes of overlap or 0 if none
+     */
+    protected function calculateOverlap(array $playlists): int {
+        $overlap = array_reduce(array_map(function($playlist) {
+            $time = explode('-', $playlist['showtime']);
+            $fromStamp = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT, $playlist['showdate'] . " " . $time[0]);
+            $toStamp =  \DateTime::createFromFormat(IPlaylist::TIME_FORMAT, $playlist['showdate'] . " " . $time[1]);
+
+            // if playlist spans midnight, end time is next day
+            if($toStamp < $fromStamp)
+                $toStamp->modify("+1 day");
+
+            $start = intval($fromStamp->getTimestamp() / 60);
+            $interval = $fromStamp->diff($toStamp);
+
+            // starting and ending point of playlist in minutes
+            return [ $start, $start + $interval->h * 60 + $interval->i ];
+        }, $playlists), function($carry, $item) {
+            // starting and ending point of overlap in minutes
+            return $carry ? [ max($carry[0], $item[0]), min($carry[1], $item[1]) ] : $item;
+        });
+
+        // minutes of overlap, or 0 if none
+        return max(0, $overlap[1] - $overlap[0]);
+    }
+
+    public function getPlaylistsForWeekday(string $date, string $user, int $count = 12): array {
+        $target = new \DateTime($date);
+        $weekday = $target->format('N');  // 1 = Monday .. 7 = Sunday
+        $playlists = $this->getPlaylists(1, 1, '', '', $user, 1, $count)->asArray();
+        return array_reduce($playlists, function($carry, $playlist) use($weekday) {
+            $date = new \DateTime($playlist['showdate']);
+            return $date->format('N') == $weekday ?
+                [...$carry, $playlist] : $carry;
+        }, []);
+    }
+
+    public function checkUsualSlot(string $date, string $time, string $user): bool {
+        $playlists = $this->getPlaylistsForWeekday($date, $user);
+        return array_reduce($playlists, function($carry, $playlist) use($time) {
+            return $carry ||
+                $this->calculateOverlap([['showdate' => $playlist['showdate'], 'showtime' => $time], $playlist]);
+        }, false);
+    }
+
     public function getWhatsOnNow() {
         // Incur the overhead of checking whether the show spans midnight
         // only if we're within the max show time interval around midnight

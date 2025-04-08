@@ -23,6 +23,8 @@
 /*! Zookeeper Online (C) 1997-2025 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function() {
+    const intl = new Date().toLocaleTimeString().match(/am|pm/i) == null;
+
     var shownames = null;
 
     /**
@@ -31,6 +33,24 @@ $().ready(function() {
     function localTimeIntl(time) {
         var stime = String(time);
         return stime.length ? stime.substring(0, 2) + ':' + stime.substring(2) : null;
+    }
+
+    /**
+     * @param time string formatted 'hhmm'
+     */
+    function localTime(time) {
+        if(intl)
+            return localTimeIntl(time);
+
+        var hour = time.substring(0, 2);
+        var ampm = hour >= 12?"pm":"am";
+        var m = time.substring(2);
+        var min = ':' + m;
+        if(hour > 12)
+            hour -= 12;
+        else if(hour == 0)
+            hour = 12;
+        return String(hour).padStart(2, '0') + min + ' ' + ampm;
     }
 
     function escQuote(s) {
@@ -117,23 +137,72 @@ $().ready(function() {
     });
 
     $(".import-csv").on('submit', function(e) {
-        if($("input[name=format]:checked").val() == "json")
-            return;
-        var airname = $("#airname").val().trim();
-        if(airname.length == 0 ||
-               $("#airnames option[value='" + escQuote(airname) + "' i]").length == 0 && !confirm('Create new airname "' + airname + '"?')) {
-            $("#airname").val('').trigger('focus');
-            e.preventDefault();
-            return;
+        e.preventDefault();
+
+        if($("input[name=format]:checked").val() == "csv") {
+            var airname = $("#airname").val().trim();
+            if(airname.length == 0 ||
+                   $("#airnames option[value='" + escQuote(airname) + "' i]").length == 0 && !confirm('Create new airname "' + airname + '"?')) {
+                $("#airname").val('').trigger('focus');
+                return;
+            }
+
+            var date = $(".date").datepicker('getDate');
+
+            // correct local timezone to UTC for toISOString
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+            $("#date").val(date.toISOString().split('T')[0]);
+
+            if(["fromtime", "totime"].some(function(id) {
+                var time = $(`#${id}-entry`).fxtime('val');
+                if(time)
+                    $(`#${id}`).val(time.replace(':', ''));
+                else {
+                    $(`#${id}-entry`).trigger('focus');
+                    return true;
+                }
+            })) return;
         }
 
-        var date = $(".date").datepicker('getDate');
-        // correct local timezone to UTC for toISOString
-        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-        $("#date").val(date.toISOString().split('T')[0]);
+        var formData = new FormData($('form.import-form')[0]);
 
-        $("#fromtime").val($("#fromtime-entry").fxtime('val').replace(':',''));
-        $("#totime").val($("#totime-entry").fxtime('val').replace(':',''));
+        $.ajax({
+            dataType: 'json',
+            type: 'POST',
+            accept: 'application/json; charset=utf-8',
+            url: '?',
+            data: formData,
+            processData: false,
+            contentType: false,
+            statusCode: {
+                // unusual date and time
+                422: function() {
+                    var showdate = new Date($("#date").val() + 'T00:00:00Z');
+                    var showtime = [ $("#fromtime").val(), $("#totime").val() ];
+                    $("#confirm-date-time-msg").text(showdate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' }) + ' ' + localTime(showtime[0]) + ' - ' + localTime(showtime[1]));
+                    $("#confirm-operation").text("importing");
+                    $(".zk-popup button").off().on('click', function() {
+                        $(".zk-popup").hide();
+                    });
+                    $(".zk-popup button#continue").on('click', function() {
+                        $("#require-usual-slot").val('0');
+                        $(".import-csv").trigger('submit');
+                    });
+                    $("#error-msg").text('');
+                    $("#confirm-date-time").show();
+                }
+            }
+        }).done(function(response) {
+            $("#error-msg").text(response.message);
+            if(response.success)
+                window.open(response.url, "_top");
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            if(jqXHR.status == 422) return; // already handled above
+            var message = jqXHR.status == 403 ?
+                'Server busy, try again...' :
+                'Error: ' + errorThrown;
+            $("#error-msg").text(message);
+        });
     });
 
     $("body").on('dragenter dragover', function(e) {

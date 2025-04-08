@@ -1,15 +1,13 @@
 <script src="{{ 'js/playlists.import.js' | decorate }}"></script>
-{% if errorMessage %}
-{{ errorMessage | raw }}
-{% endif %}
-<form class='import-form import-csv' enctype='multipart/form-data' action='?' method='post'>
+<form class='import-form import-csv' enctype='multipart/form-data' method='post'>
   <input type='hidden' name='action' value=''>
   <input type='hidden' name='subaction' value='import'>
-  <input type='hidden' name='validate' value='edit'>
+  <input type='hidden' name='validate' value='1'>
   <input type='hidden' name='MAX_FILE_SIZE' value='100000'>
-  <input type='hidden' name='date' id='date' value='{{ date }}'>
-  <input type='hidden' name='fromtime' id='fromtime' value='{{ fromtime }}'>
-  <input type='hidden' name='totime' id='totime' value='{{ totime }}'>
+  <input type='hidden' name='date' id='date' value=''>
+  <input type='hidden' name='fromtime' id='fromtime' value=''>
+  <input type='hidden' name='totime' id='totime' value=''>
+  <input type='hidden' name='require-usual-slot' id='require-usual-slot' value='1'>
   <input type='hidden' id='date-format' value='{{ dateformat }}'>
   <datalist id='airnames'>
 {% for airname in airnames %}
@@ -48,11 +46,11 @@
     </div>
     <div>
       <label>Show Name:</label>
-      <input type='text' id='description' name='description' value='{{ description }}' maxlength='{{ MAX_DESCRIPTION_LENGTH }}' class='csv-required'>
+      <input type='text' id='description' name='description' value='' maxlength='{{ MAX_DESCRIPTION_LENGTH }}' class='csv-required'>
     </div>
     <div>
       <label>DJ:</label>
-      <input type='text' id='airname' name='airname' value='{{ airname }}' maxlength='{{ MAX_AIRNAME_LENGTH }}' class='csv-required'>
+      <input type='text' id='airname' name='airname' value='' maxlength='{{ MAX_AIRNAME_LENGTH }}' class='csv-required'>
     </div>
     <div>
       <label>Date / Time:</label>
@@ -69,6 +67,11 @@
   <div>
     <label></label>
     <input type='submit' value=' Import Playlist '>
+
+  </div>
+  <div>
+    <label></label>
+    <span id='error-msg' class='error'></span>
   </div>
   <div>
     <label></label>
@@ -87,4 +90,5 @@
       <p>Any file data not in this format will be ignored.</p>
     </div>
   </div>
+{% include 'list/confirm.html' %}
 </form>

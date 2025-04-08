@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -79,6 +79,25 @@ interface IPlaylist {
     function getPlaylistsByAirname($airname);
     function getPlaylistsByUser($user, $onlyPublished=0, $withAirname=0);
     function getPlaylistsByDate($date);
+    /**
+     * get playlists from previous weeks that share same weekday as target
+     *
+     * @param $date string date (in format yyyy-MM-dd)
+     * @param $user string target user
+     * @param $count int lookback limit (default 12)
+     * @return array of matching playlists (empty array if no matches)
+     */
+    function getPlaylistsForWeekday(string $date, string $user, int $count = 12): array;
+    /**
+     * determine if the specified {$date, $time} is usual for the
+     * specified user
+     *
+     * @param $date string date in yyyy-MM-dd format
+     * @param $time string time range in hhmm-hhmm format
+     * @param $user string target user
+     * @return true if usual, false otherwise
+     *
+    function checkUsualSlot(string $date, string $time, string $user): bool;
     function getWhatsOnNow();
     function isNowWithinShow($listRow, $allowGrace = true);
     function insertPlaylist($user, $date, $time, $description, $airname);
