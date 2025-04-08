@@ -23,6 +23,8 @@
 /*! Zookeeper Online (C) 1997-2025 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function() {
+    const intl = new Date().toLocaleTimeString().match(/am|pm/i) == null;
+
     var shownames = null;
 
     /**
@@ -31,6 +33,24 @@ $().ready(function() {
     function localTimeIntl(time) {
         var stime = String(time);
         return stime.length ? stime.substring(0, 2) + ':' + stime.substring(2) : null;
+    }
+
+    /**
+     * @param time string formatted 'hhmm'
+     */
+    function localTime(time) {
+        if(intl)
+            return localTimeIntl(time);
+
+        var hour = time.substring(0, 2);
+        var ampm = hour >= 12?"pm":"am";
+        var m = time.substring(2);
+        var min = ':' + m;
+        if(hour > 12)
+            hour -= 12;
+        else if(hour == 0)
+            hour = 12;
+        return String(hour).padStart(2, '0') + min + ' ' + ampm;
     }
 
     /**
@@ -134,7 +154,7 @@ $().ready(function() {
             this.value = this.value.substring(0, max);
     });
 
-    $(".import-csv").on('submit', function(e) {
+    $(".import-csv").on('submit', function(e, requireUsualSlot = true) {
         if($("input[name=format]:checked").val() == "json")
             return;
         var airname = $("#airname").val().trim();
@@ -152,6 +172,35 @@ $().ready(function() {
 
         $("#fromtime").val($("#fromtime-entry").fxtime('val').replace(':',''));
         $("#totime").val($("#totime-entry").fxtime('val').replace(':',''));
+
+        if(requireUsualSlot) {
+            e.preventDefault();
+
+            $.ajax({
+                dataType: 'json',
+                type: 'GET',
+                accept: 'application/json; charset=utf-8',
+                url: '?action=&subaction=checkSlot&date=' +
+                    encodeURIComponent($("#date").val()) + "&time=" +
+                    encodeURIComponent($("#fromtime").val() + '-' + $("#totime").val())
+            }).done(function(response) {
+                if(response.usual) {
+                    $(".import-csv").trigger('submit', false);
+                } else {
+                    var showdate = new Date($("#date").val() + 'T00:00:00Z');
+                    var showtime = [ $("#fromtime").val(), $("#totime").val() ];
+                    $("#confirm-date-time-msg").text(showdate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' }) + ' ' + localTime(showtime[0]) + ' - ' + localTime(showtime[1]));
+                    $("#confirm-operation").text("creating");
+                    $(".zk-popup button").off().on('click', function() {
+                        $(".zk-popup").hide();
+                    });
+                    $(".zk-popup button#continue").on('click', function() {
+                        $(".import-csv").trigger('submit', false);
+                    });
+                    $("#confirm-date-time").show();
+                }
+            });
+        }
     });
 
     $("body").on('dragenter dragover', function(e) {

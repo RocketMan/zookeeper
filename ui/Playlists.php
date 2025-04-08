@@ -54,6 +54,7 @@ class Playlists extends MenuItem {
         [ "u", "editListEditor", 0, "emitEditor" ],
         [ "a", "viewDJ", "By DJ", "emitViewDJ" ],
         [ "u", "import", "Import", "emitImportList" ],
+        [ "u", "checkSlot", 0, "checkSlot" ],
     ];
 
     private $action;
@@ -846,5 +847,16 @@ class Playlists extends MenuItem {
 
         echo json_encode(["count" => $count, "tbody" => $tbody]);
     }
-}
 
+    public function checkSlot() {
+        $date = $_REQUEST["date"] ?? '';
+        $time = $_REQUEST["time"] ?? '';
+        if(!$date || !$time) {
+            http_response_code(400); // bad request
+            return;
+        }
+
+        $isUsual = Engine::api(IPlaylist::class)->checkUsualSlot($date, $time, $this->session->getUser());
+        echo json_encode(['usual' => $isUsual]);
+    }
+}

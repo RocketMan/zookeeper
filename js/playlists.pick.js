@@ -542,7 +542,7 @@ $().ready(function(){
             }));
     }
 
-    function newPlaylist(row) {
+    function newPlaylist(row, requireUsualSlot = true) {
         showUserError('');
         row.find("input").removeClass("invalid-input");
 
@@ -567,6 +567,9 @@ $().ready(function(){
                     date: list.attributes.date,
                     time: list.attributes.time
                 }
+            },
+            meta: {
+                requireUsualSlot: requireUsualSlot
             }
         };
 
@@ -591,17 +594,34 @@ $().ready(function(){
             dataType: 'text',
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
+            statusCode: {
+                // unusual date and time
+                422: function() {
+                    var showdate = new Date(list.attributes.date + 'T00:00:00Z');
+                    var showtime = list.attributes.time.split('-');
+                    $("#confirm-date-time-msg").text(showdate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' }) + ' ' + localTime(showtime[0]) + ' - ' + localTime(showtime[1]));
+                    $("#confirm-operation").text("creating");
+                    $(".zk-popup button").off().on('click', function() {
+                        $(".zk-popup").hide();
+                    });
+                    $(".zk-popup button#continue").on('click', function() {
+                        newPlaylist(row, false);
+                    });
+                    $("#confirm-date-time").show();
+                }
+            },
         }).done(function (data, textStatus, request) {
             var location = request.getResponseHeader('Location');
             var id = location.split('/').pop();
             window.open("?subaction=editListEditor&playlist=" + id, "_top");
         }).fail(function (jqXHR, textStatus, errorThrown) {
+            if(jqXHR.status == 422) return; // already handled above
             var message = getErrorMessage(jqXHR, 'Error: ' + errorThrown);
             showUserError(message);
         });
     }
 
-    function updatePlaylist(row) {
+    function updatePlaylist(row, requireUsualSlot = true) {
         showUserError('');
         row.find("input").removeClass("invalid-input");
 
@@ -635,6 +655,9 @@ $().ready(function(){
                     date: list.attributes.date,
                     time: list.attributes.time
                 }
+            },
+            meta: {
+                requireUsualSlot: requireUsualSlot
             }
         };
 
@@ -645,6 +668,22 @@ $().ready(function(){
             contentType: "application/json; charset=utf-8",
             accept: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
+            statusCode: {
+                // unusual date and time
+                422: function() {
+                    var showdate = new Date(list.attributes.date + 'T00:00:00Z');
+                    var showtime = list.attributes.time.split('-');
+                    $("#confirm-date-time-msg").text(showdate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' }) + ' ' + localTime(showtime[0]) + ' - ' + localTime(showtime[1]));
+                    $("#confirm-operation").text("updating");
+                    $(".zk-popup button").off().on('click', function() {
+                        $(".zk-popup").hide();
+                    });
+                    $(".zk-popup button#continue").on('click', function() {
+                        updatePlaylist(row, false);
+                    });
+                    $("#confirm-date-time").show();
+                }
+            }
         }).done(function (response) {
             addAirname(row);
 
@@ -652,6 +691,7 @@ $().ready(function(){
             row.replaceWith(nrow);
             editing = shownames = null;
         }).fail(function (jqXHR, textStatus, errorThrown) {
+            if(jqXHR.status == 422) return; // already handled above
             var message = getErrorMessage(jqXHR, 'Error: ' + errorThrown);
             showUserError(message);
         });

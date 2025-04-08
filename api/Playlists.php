@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -35,6 +35,7 @@ use ZK\Engine\PlaylistObserver;
 use ZK\UI\PlaylistBuilder;
 
 use Enm\JsonApi\Exception\BadRequestException;
+use Enm\JsonApi\Exception\HttpException;
 use Enm\JsonApi\Exception\NotAllowedException;
 use Enm\JsonApi\Exception\ResourceNotFoundException;
 use Enm\JsonApi\Model\Document\Document;
@@ -424,6 +425,11 @@ class Playlists implements RequestHandlerInterface {
             throw new \InvalidArgumentException("Invalid time range (min " . IPlaylist::MIN_SHOW_LEN . " minutes, max " . (IPlaylist::MAX_SHOW_LEN / 60) . " hours)");
     }
 
+    private function validateUsualSlot($date, $time) {
+        if(!Engine::api(IPlaylist::class)->checkUsualSlot($date, $time, Engine::session()->getUser()))
+            throw new HttpException(422, 'Unusual Date and Time');
+    }
+
     public function createResource(RequestInterface $request): ResponseInterface {
         $session = Engine::session();
         if(!$session->isAuth("u"))
@@ -460,6 +466,9 @@ class Playlists implements RequestHandlerInterface {
         list($year, $month, $day) = explode("-", $date = $attrs->getRequired("date"));
         if(!checkdate($month, $day, $year))
             throw new \InvalidArgumentException("date is invalid");
+
+        if($request->requestBody()->metaInformation()->getOptional("requireUsualSlot"))
+            $this->validateUsualSlot($date, $time); // raises exception on invalid
 
         // lookup the airname
         $aid = null;
@@ -606,6 +615,9 @@ class Playlists implements RequestHandlerInterface {
                 throw new \InvalidArgumentException("date is invalid");
         } else
             $date = $list['showdate'];
+
+        if($request->requestBody()->metaInformation()->getOptional("requireUsualSlot"))
+            $this->validateUsualSlot($date, $time); // raises exception on invalid
 
         if($attrs->has("airname")) {
             // lookup the airname
