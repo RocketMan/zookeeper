@@ -76,20 +76,6 @@ $().ready(function(){
     }
 
     /**
-     * return next date which matches the weekday of the target
-     *
-     * @param targetDate date string formatted yyyy-MM-dd
-     * @returns Date next matching weekday (can be today)
-     */
-    function getNextMatchingDate(targetDate) {
-        const current = new Date();
-        const target = new Date(targetDate);
-        const difference = (target.getDay() - current.getDay() + 7) % 7;
-        current.setDate(current.getDate() + difference);
-        return current;
-    }
-
-    /**
      * return duration in minutes for a specified interval
      *
      * if the end time preceeds the start, it is assumed to be the next day
@@ -283,7 +269,7 @@ $().ready(function(){
                 $.ajax({
                     type: 'GET',
                     accept: 'application/json; charset=utf-8',
-                    url: 'api/v1/playlist?filter[user]=self&fields[show]=name,airname,rebroadcast,date,time',
+                    url: 'api/v1/playlist?filter[user]=self&fields[show]=name,airname,rebroadcast',
                 }).done(function(response) {
                     shownames = response.data.map(show => show.attributes)
                         .sort((a, b) => Intl.Collator().compare(a.name, b.name))
@@ -305,11 +291,7 @@ $().ready(function(){
             select: function(event, ui) {
                 var name = ui.item.value;
                 var show = shownames.find(show => show.name == name);
-                var time = show.time.split('-');
                 $("input.airname").val(show.airname);
-                $("input.date").datepicker('setDate', getNextMatchingDate(show.date));
-                $('input.time#start').fxtime('val', localTimeIntl(time[0]));
-                $('input.time#end').fxtime('val', localTimeIntl(time[1]));
             }
         }).on('click', function() {
             $(this).autocomplete('search', '');
