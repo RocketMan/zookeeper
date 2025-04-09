@@ -54,7 +54,6 @@ class Playlists extends MenuItem {
         [ "u", "editListEditor", 0, "emitEditor" ],
         [ "a", "viewDJ", "By DJ", "emitViewDJ" ],
         [ "u", "import", "Import", "emitImportList" ],
-        [ "u", "checkSlot", 0, "checkSlot" ],
     ];
 
     private $action;
@@ -440,6 +439,23 @@ class Playlists extends MenuItem {
     public function emitImportList() {
         $validate = $_POST["validate"] ?? false;
         $format = $_REQUEST["format"] ?? "json";
+        $delimiter = $_REQUEST["delimiter"] ?? "";
+        $enclosure = $_REQUEST["enclosure"] ?? "\"";
+
+        if(!$validate) {
+            $this->addVar('dateformat', UI::isUsLocale() ? "mm/dd/yy" : "dd-mm-yy");
+            $this->addVar('airnames', $this->getDJAirNames());
+            $this->addVar('format', $format);
+            $this->addVar('delimiter', $delimiter);
+            $this->addVar('enclosure', $enclosure);
+            $this->addVar('MAX_DESCRIPTION_LENGTH', IPlaylist::MAX_DESCRIPTION_LENGTH);
+            $this->addVar('MAX_AIRNAME_LENGTH', IDJ::MAX_AIRNAME_LENGTH);
+            $this->setTemplate("list/import.html");
+            return;
+        }
+
+        $response = [ 'success' => false, 'message' => '' ];
+
         if($format == "csv") {
             $description = mb_substr(trim($_REQUEST["description"]), 0, IPlaylist::MAX_DESCRIPTION_LENGTH);
             $date = $_REQUEST["date"];
@@ -453,10 +469,6 @@ class Playlists extends MenuItem {
         $enclosure = $_REQUEST["enclosure"] ?? "\"";
         $userfile = $_FILES['userfile']['tmp_name'] ?? null;
 
-        $empty = $_POST["empty"] ?? 0;
-        if($empty)
-            $errorMessage = "<b><font class='error'>Import file contains no data.  Check the format and try again.</font></b>";
-
         if($format == "csv") {
             if(!$date)
                 $date = date("Y-m-d");
@@ -465,8 +477,7 @@ class Playlists extends MenuItem {
             $time = $this->composeTime($fromtime, $totime);
 
             if($validate == "edit" && !$time) {
-                $errorMessage = "<b><font class='error'>Invalid time range (min " . IPlaylist::MIN_SHOW_LEN . " minutes, max " . (IPlaylist::MAX_SHOW_LEN / 60) . " hours)</font></b>";
-                $totime = "";
+                $response['message'] = "Invalid time range (min " . IPlaylist::MIN_SHOW_LEN . " minutes, max " . (IPlaylist::MAX_SHOW_LEN / 60) . " hours)";
             }
 
             // lookup the airname
@@ -481,11 +492,17 @@ class Playlists extends MenuItem {
                         // success!
                         $aid = $djapi->lastInsertId();
                     } else {
-                        $errorMessage = "<b><font class='error'>Airname '$airname' is invalid or already exists.</font></b>";
+                        $response['message'] = "Airname '$airname' is invalid or already exists.";
                         $airname = "";
                         $aid = false;
                     }
                 }
+            }
+
+            if(!$response['message'] && $_REQUEST['requireUsualSlot'] &&
+                    !Engine::api(IPlaylist::class)->checkUsualSlot($date, $time, $this->session->getUser())) {
+                header('HTTP/1.1 422 Unusual Date and Time');
+                return;
             }
         }
 
@@ -504,7 +521,7 @@ class Playlists extends MenuItem {
                 else if($json && $json->data && $json->data->type == "show")
                     $json = $json->data;
                 else
-                    $errorMessage = "<B><FONT CLASS='error'>File is not in the expected format.  Ensure file is a valid JSON playlist.</FONT></B><BR>\n";
+                    $response['message'] = "File is not in the expected format.  Ensure file is a valid JSON playlist.";
             }
 
             if($json && $json->type == "show") {
@@ -563,22 +580,16 @@ class Playlists extends MenuItem {
 
                     if($count == 0) {
                         $papi->deletePlaylist($playlist);
-                        $errorMessage = "<b><font class='error'>Import file contains no entries.</font></b><br>\n";
+                        $response['message'] = "Import file contains no entries.";
                     } else {
                         // success
                         $this->lazyLoadImages($playlist);
 
-                        // display the editor
-?>
-    <SCRIPT><!--
-        window.open("?subaction=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
-    // -->
-    </SCRIPT>
-<?php
-                        $displayForm = false;
+                        $response['success'] = true;
+                        $response['url'] = "?subaction=editListEditor&playlist=$playlist";
                     }
                 } else
-                    $errorMessage = "<B><FONT CLASS='error'>Show details are invalid.</FONT></B><BR>\n";
+                    $response['message'] = "Show details are invalid.";
             }
         }
 
@@ -588,22 +599,8 @@ class Playlists extends MenuItem {
                     $time == '' ||
                     $aid === false ||
                     !checkdate($month, $day, $year))) {
-            $this->setTemplate("list/import.html");
-            $this->addVar('errorMessage',
-                    $validate == "edit" ?
-                    ($errorMessage ?? "<b><font class='error'>Ensure fields are not blank and date is valid.</font></b><br>\n") : false);
-            $this->addVar('format', $format);
-            $this->addVar('date', $date ?? '');
-            $this->addVar('fromtime', $fromtime ?? '');
-            $this->addVar('totime', $totime ?? '');
-            $this->addVar('dateformat', UI::isUsLocale() ? "mm/dd/yy" : "dd-mm-yy");
-            $this->addVar('airnames', $this->getDJAirNames());
-            $this->addVar('delimiter', $delimiter);
-            $this->addVar('enclosure', $enclosure);
-            $this->addVar('description', stripslashes($description ?? ''));
-            $this->addVar('MAX_DESCRIPTION_LENGTH', IPlaylist::MAX_DESCRIPTION_LENGTH);
-            $this->addVar('airname', $airname ?? '');
-            $this->addVar('MAX_AIRNAME_LENGTH', IDJ::MAX_AIRNAME_LENGTH);
+            if(!$response['message'])
+                $response['message'] = "Ensure fields are not blank and date is valid.";
         } else if($format == "csv"){
             // Create the playlist
             $api = Engine::api(IPlaylist::class);
@@ -681,24 +678,22 @@ class Playlists extends MenuItem {
                     break;
                 }
             }
-            // echo "<B>Imported $count tracks.</B>\n";
+
             $fd = null; // close
 
             if($count == 0) {
                 $api->deletePlaylist($playlist);
-                $_POST["empty"] = 1;
-                $this->emitImportList();
-                return;
-            }
+                $response['message'] = "Import file contains no data.  Check the format and try again.";
+            } else {
+                // success
+                $this->lazyLoadImages($playlist);
 
-            $this->lazyLoadImages($playlist);
-?>
-    <SCRIPT><!--
-        window.open("?subaction=editListEditor&playlist=<?php echo $playlist; ?>", "_top");
-    // -->
-    </SCRIPT>
-<?php
+                $response['success'] = true;
+                $response['url'] = "?subaction=editListEditor&playlist=$playlist";
+            }
         }
+
+        echo json_encode($response);
     }
     
     public function emitViewPlayList() {
@@ -846,17 +841,5 @@ class Playlists extends MenuItem {
         $tbody = $this->render('list');
 
         echo json_encode(["count" => $count, "tbody" => $tbody]);
-    }
-
-    public function checkSlot() {
-        $date = $_REQUEST["date"] ?? '';
-        $time = $_REQUEST["time"] ?? '';
-        if(!$date || !$time) {
-            http_response_code(400); // bad request
-            return;
-        }
-
-        $isUsual = Engine::api(IPlaylist::class)->checkUsualSlot($date, $time, $this->session->getUser());
-        echo json_encode(['usual' => $isUsual]);
     }
 }

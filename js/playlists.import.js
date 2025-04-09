@@ -136,53 +136,72 @@ $().ready(function() {
             this.value = this.value.substring(0, max);
     });
 
-    $(".import-csv").on('submit', function(e, requireUsualSlot = true) {
-        if($("input[name=format]:checked").val() == "json")
-            return;
-        var airname = $("#airname").val().trim();
-        if(airname.length == 0 ||
-               $("#airnames option[value='" + escQuote(airname) + "' i]").length == 0 && !confirm('Create new airname "' + airname + '"?')) {
-            $("#airname").val('').trigger('focus');
-            e.preventDefault();
-            return;
+    $(".import-csv").on('submit', function(e) {
+        e.preventDefault();
+
+        if($("input[name=format]:checked").val() == "csv") {
+            var airname = $("#airname").val().trim();
+            if(airname.length == 0 ||
+                   $("#airnames option[value='" + escQuote(airname) + "' i]").length == 0 && !confirm('Create new airname "' + airname + '"?')) {
+                $("#airname").val('').trigger('focus');
+                return;
+            }
+
+            var date = $(".date").datepicker('getDate');
+
+            // correct local timezone to UTC for toISOString
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+            $("#date").val(date.toISOString().split('T')[0]);
+
+            if(["fromtime", "totime"].some(function(id) {
+                var time = $(`#${id}-entry`).fxtime('val');
+                if(time)
+                    $(`#${id}`).val(time.replace(':', ''));
+                else {
+                    $(`#${id}-entry`).trigger('focus');
+                    return true;
+                }
+            })) return;
         }
 
-        var date = $(".date").datepicker('getDate');
-        // correct local timezone to UTC for toISOString
-        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-        $("#date").val(date.toISOString().split('T')[0]);
+        var formData = new FormData($('form.import-form')[0]);
 
-        $("#fromtime").val($("#fromtime-entry").fxtime('val').replace(':',''));
-        $("#totime").val($("#totime-entry").fxtime('val').replace(':',''));
-
-        if(requireUsualSlot) {
-            e.preventDefault();
-
-            $.ajax({
-                dataType: 'json',
-                type: 'GET',
-                accept: 'application/json; charset=utf-8',
-                url: '?action=&subaction=checkSlot&date=' +
-                    encodeURIComponent($("#date").val()) + "&time=" +
-                    encodeURIComponent($("#fromtime").val() + '-' + $("#totime").val())
-            }).done(function(response) {
-                if(response.usual) {
-                    $(".import-csv").trigger('submit', false);
-                } else {
+        $.ajax({
+            dataType: 'json',
+            type: 'POST',
+            accept: 'application/json; charset=utf-8',
+            url: '?',
+            data: formData,
+            processData: false,
+            contentType: false,
+            statusCode: {
+                // unusual date and time
+                422: function() {
                     var showdate = new Date($("#date").val() + 'T00:00:00Z');
                     var showtime = [ $("#fromtime").val(), $("#totime").val() ];
                     $("#confirm-date-time-msg").text(showdate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' }) + ' ' + localTime(showtime[0]) + ' - ' + localTime(showtime[1]));
-                    $("#confirm-operation").text("creating");
+                    $("#confirm-operation").text("importing");
                     $(".zk-popup button").off().on('click', function() {
                         $(".zk-popup").hide();
                     });
                     $(".zk-popup button#continue").on('click', function() {
-                        $(".import-csv").trigger('submit', false);
+                        $("#requireUsualSlot").val('0');
+                        $(".import-csv").trigger('submit');
                     });
                     $("#confirm-date-time").show();
                 }
-            });
-        }
+            }
+        }).done(function(response) {
+            $("#error-msg").text(response.message);
+            if(response.success)
+                window.open(response.url, "_top");
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            if(jqXHR.status == 422) return; // already handled above
+            var message = jqXHR.status == 403 ?
+                'Server busy, try again...' :
+                'Error: ' + errorThrown;
+            $("#error-msg").text(message);
+        });
     });
 
     $("body").on('dragenter dragover', function(e) {
