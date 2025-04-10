@@ -503,12 +503,12 @@ class Reviews extends MenuItem {
             return;
         }
 
-        $airname = mb_substr(trim($_REQUEST["airname"]), 0, IDJ::MAX_AIRNAME_LENGTH);
+        $airname = mb_substr(trim($_REQUEST["airname"] ?? ''), 0, IDJ::MAX_AIRNAME_LENGTH);
 
         $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
         $self = "(" . $user[0]["realname"] . ")";
         $errorMessage = "";
-        if($_POST["validate"]) {
+        if($_POST["validate"] ?? false) {
             $review = mb_substr(trim($_REQUEST["review"]), 0, IReview::MAX_REVIEW_LENGTH);
 
             // lookup the airname
@@ -547,7 +547,7 @@ class Reviews extends MenuItem {
                 $review = mb_substr(trim($_REQUEST["review"]), 0, IReview::MAX_REVIEW_LENGTH);
                 $success = Engine::api(IReview::class)->updateReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
                 if($success >= 0) {
-                    if($_REQUEST["noise"])
+                    if($_REQUEST["noise"] ?? false)
                         $this->postReview($_REQUEST["tag"]);
                     $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
