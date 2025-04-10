@@ -593,7 +593,7 @@ class Playlists extends MenuItem {
             }
         }
 
-        if(!$userfile || $userfile == "none" || $errorMessage || $empty ||
+        if(!$userfile || $userfile == "none" || $response['message'] || $empty ||
                 $format == "csv" && (
                     $description == "" ||
                     $time == '' ||
