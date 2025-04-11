@@ -123,7 +123,7 @@ class Reviews extends MenuItem {
                 $this->addVar("airname", $airname);
                 $this->addVar("key", $viewuser);
                 $this->tertiary = $airname;
-                $this->setTemplate("search.reviews.html");
+                $this->setTemplate("review/search.html");
                 return;
             }
         }
@@ -132,7 +132,7 @@ class Reviews extends MenuItem {
     }
 
     public function viewTrending() {
-        $this->setTemplate("review.trending.html");
+        $this->setTemplate("review/trending.html");
     }
 
     public function getTrendingData() {
@@ -155,7 +155,7 @@ class Reviews extends MenuItem {
         Engine::api(ILibrary::class)->markAlbumsPlayable($albums);
         $this->addVar('GENRES', ILibrary::GENRES);
         $this->addVar('albums', $albums);
-        $this->setTemplate("review.shelf.html");
+        $this->setTemplate("review/shelf.html");
     }
 
     public function updateReviewShelf() {
@@ -192,7 +192,7 @@ class Reviews extends MenuItem {
 
         $this->addVar('GENRES', ILibrary::GENRES);
         $this->addVar('album', $album);
-        $this->setTemplate("review.shelf.html");
+        $this->setTemplate("review/shelf.html");
         $html = $this->render('album');
 
         echo json_encode(['html' => $html]);
@@ -202,7 +202,7 @@ class Reviews extends MenuItem {
         $isAuthorized = $this->session->isAuth('u');
         $author = $isAuthorized && ($_GET['dj'] ?? '') == 'Me' ? $this->session->getUser() : '';
 
-        $this->setTemplate("review.recent.html");
+        $this->setTemplate("review/recent.html");
         $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <a type='application/rss+xml' href='zkrss.php?feed=reviews'><img src='img/rss.png' alt='rss'></a>";
         $this->addVar("GENRES", ILibrary::GENRES);
 
@@ -589,7 +589,7 @@ class Reviews extends MenuItem {
         $slack = Engine::param('slack');
         $export = $slack && $slack['token'] && $slack['review_channel'];
 
-        $this->setTemplate("review.edit.html");
+        $this->setTemplate("review/edit.html");
         $this->addVar("id", $id ?? 0);
         $this->addVar("album", $albums[0]);
         $this->addVar("errorMessage", $errorMessage);
