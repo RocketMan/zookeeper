@@ -1117,6 +1117,39 @@ li.ui-menu-item .ui-state-active,
     }
 }
 
+.overlay-loader {
+    position: absolute;
+    top: 20%;
+    left: 20%;
+    width: 10%;
+    z-index: 3;
+    aspect-ratio: 1 / 1;
+    border: 5px solid #fff;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    animation: overlay-loader-rotation 1s linear infinite;
+}
+
+@keyframes overlay-loader-rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.2);
+}
+
 .zk-popup {
     display: none;
     position: fixed;

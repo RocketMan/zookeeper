@@ -164,6 +164,8 @@ $().ready(function() {
             })) return;
         }
 
+        $('body').append("<div class='overlay'>").append("<div class='overlay-loader'>");
+
         var formData = new FormData($('form.import-form')[0]);
 
         $.ajax({
@@ -193,10 +195,12 @@ $().ready(function() {
                 }
             }
         }).done(function(response) {
+            $('.overlay, .overlay-loader').remove();
             $("#error-msg").text(response.message);
             if(response.success)
                 window.open(response.url, "_top");
         }).fail(function(jqXHR, textStatus, errorThrown) {
+            $('.overlay, .overlay-loader').remove();
             if(jqXHR.status == 422) return; // already handled above
             var message = jqXHR.status == 403 ?
                 'Server busy, try again...' :
