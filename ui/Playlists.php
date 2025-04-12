@@ -108,8 +108,6 @@ class Playlists extends MenuItem {
 
         if ($validRange)
             $retVal = $fromTimeN . "-" . $toTimeN;
-        else if ($fromTime || $toTime)
-            error_log("Error: invalid playlist time -" . $fromTime . "-, -" . $toTime ."-");
 
         return $retVal;
     }
@@ -566,7 +564,6 @@ class Playlists extends MenuItem {
                                             new \DateTime($created), $window);
                                 $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
                             } catch(\Exception $e) {
-                                error_log("failed to parse timestamp: $created");
                                 $entry->setCreated(null);
                             }
                         }
@@ -649,7 +646,6 @@ class Playlists extends MenuItem {
                             $timestamp = PlaylistEntry::scrubTimestamp(
                                             new \DateTime($line[5]), $window);
                         } catch(\Exception $e) {
-                            error_log("failed to parse timestamp: {$line[5]}");
                             $timestamp = null;
                         }
                     } else

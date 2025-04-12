@@ -771,7 +771,6 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $isWithinShow = $this->isWithinShow($insertTime, $row);
         if (!$isWithinShow) {
             $status = "Spin time is outside of show start/end times. ";
-            error_log($status);
             return 0;
         }
 
@@ -822,13 +821,10 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $timestamp = $trackRow['created'];
         $timeChanged = false;
 
-        if ($dateTime) {
-            if ($this->isDateTimeWithinShow($dateTime, $playlist)) {
-                $timestamp = $dateTime;
-                $timeChanged = true;
-            } else {
-                error_log("Error: ignoring time update for $id, $dateTime");
-            }
+        if ($dateTime &&
+                $this->isDateTimeWithinShow($dateTime, $playlist)) {
+            $timestamp = $dateTime;
+            $timeChanged = true;
         }
 
         $query = "UPDATE tracks SET ";

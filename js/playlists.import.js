@@ -195,17 +195,17 @@ $().ready(function() {
                 }
             }
         }).done(function(response) {
-            $('.overlay, .overlay-loader').remove();
             $("#error-msg").text(response.message);
             if(response.success)
                 window.open(response.url, "_top");
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            $('.overlay, .overlay-loader').remove();
             if(jqXHR.status == 422) return; // already handled above
             var message = jqXHR.status == 403 ?
                 'Server busy, try again...' :
                 'Error: ' + errorThrown;
             $("#error-msg").text(message);
+        }).always(function() {
+            $('.overlay, .overlay-loader').remove();
         });
     });
 

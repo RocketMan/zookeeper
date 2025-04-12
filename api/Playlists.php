@@ -535,7 +535,6 @@ class Playlists implements RequestHandlerInterface {
                                     new \DateTime($created), $window);
                         $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
                     } catch(\Exception $e) {
-                        error_log("failed to parse timestamp: $created");
                         $entry->setCreated(null);
                     }
                 }
@@ -562,7 +561,6 @@ class Playlists implements RequestHandlerInterface {
                                     new \DateTime($created), $window);
                         $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
                     } catch(\Exception $e) {
-                        error_log("failed to parse timestamp: $created");
                         $entry->setCreated(null);
                     }
                 }
