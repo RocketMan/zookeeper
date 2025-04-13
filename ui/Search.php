@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -69,7 +69,7 @@ class Search extends MenuItem {
         $libraryApi = Engine::api(ILibrary::class);
         $albums = $libraryApi->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
 
-        $this->setTemplate("album.html");
+        $this->setTemplate("album/view.html");
 
         if(!count($albums)) {
             $this->addVar("album", null);
