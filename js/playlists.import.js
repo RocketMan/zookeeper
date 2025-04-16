@@ -178,7 +178,19 @@ $().ready(function() {
             contentType: false,
             statusCode: {
                 // unusual date and time
-                422: function() {
+                422: function(jqXHR) {
+                    if(jqXHR.responseText) {
+                        try {
+                            // get date and time for json import
+                            var response = JSON.parse(jqXHR.responseText);
+                            var time = response.time.split('-');
+
+                            $("#date").val(response.date);
+                            $("#fromtime").val(time[0]);
+                            $("#totime").val(time[1]);
+                        } catch(e) {}
+                    }
+
                     var showdate = new Date($("#date").val() + 'T00:00:00Z');
                     var showtime = [ $("#fromtime").val(), $("#totime").val() ];
                     $("#confirm-date-time-msg").text(showdate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' }) + ' ' + localTime(showtime[0]) + ' - ' + localTime(showtime[1]));
@@ -190,6 +202,7 @@ $().ready(function() {
                         $("#requireUsualSlot").val('0');
                         $(".import-csv").trigger('submit');
                     });
+                    $("#error-msg").text('');
                     $("#confirm-date-time").show();
                 }
             }
