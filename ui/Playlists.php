@@ -545,6 +545,17 @@ class Playlists extends MenuItem {
                     }
                 }
 
+                if($valid && $_REQUEST['require-usual-slot'] &&
+                        !Engine::api(IPlaylist::class)->checkUsualSlot($attrs->date, $attrs->time, $this->session->getUser())) {
+                    header('HTTP/1.1 422 Unusual Date and Time');
+
+                    // client doesn't already have date/time for json import
+                    $response['date'] = $attrs->date;
+                    $response['time'] = $attrs->time;
+                    echo json_encode($response);
+                    return;
+                }
+
                 // create the playlist
                 if($valid) {
                     $papi->insertPlaylist($this->session->getUser(), $attrs->date, $attrs->time, mb_substr($attrs->name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $airname);
