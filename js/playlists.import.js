@@ -195,7 +195,7 @@ $().ready(function() {
 
                     var showdate = new Date($("#date").val() + 'T00:00:00Z');
                     var showtime = [ $("#fromtime").val(), $("#totime").val() ];
-                    $("#confirm-date-time-msg").text(showdate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' }) + ' ' + localTime(showtime[0]) + ' - ' + localTime(showtime[1]));
+                    $("#confirm-date-time-msg").text(showdate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric', timeZone: 'UTC' }) + ' ' + localTime(showtime[0]) + ' - ' + localTime(showtime[1]));
                     $("#confirm-operation").text("importing");
                     $(".zk-popup button").off().on('click', function() {
                         $(".zk-popup").hide();

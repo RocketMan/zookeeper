@@ -581,7 +581,7 @@ $().ready(function(){
                 422: function() {
                     var showdate = new Date(list.attributes.date + 'T00:00:00Z');
                     var showtime = list.attributes.time.split('-');
-                    $("#confirm-date-time-msg").text(showdate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' }) + ' ' + localTime(showtime[0]) + ' - ' + localTime(showtime[1]));
+                    $("#confirm-date-time-msg").text(showdate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric', timeZone: 'UTC' }) + ' ' + localTime(showtime[0]) + ' - ' + localTime(showtime[1]));
                     $("#confirm-operation").text("creating");
                     $(".zk-popup button").off().on('click', function() {
                         $(".zk-popup").hide();
@@ -655,7 +655,7 @@ $().ready(function(){
                 422: function() {
                     var showdate = new Date(list.attributes.date + 'T00:00:00Z');
                     var showtime = list.attributes.time.split('-');
-                    $("#confirm-date-time-msg").text(showdate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' }) + ' ' + localTime(showtime[0]) + ' - ' + localTime(showtime[1]));
+                    $("#confirm-date-time-msg").text(showdate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric', timeZone: 'UTC' }) + ' ' + localTime(showtime[0]) + ' - ' + localTime(showtime[1]));
                     $("#confirm-operation").text("updating");
                     $(".zk-popup button").off().on('click', function() {
                         $(".zk-popup").hide();
