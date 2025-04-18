@@ -1,7 +1,7 @@
 <div class='categoryPicker'>
   <label class='reviewLabel'>Categories:&nbsp;</label>
   <span class='review-categories zk-hidden'>
-{% for genre in GENRES %}
+{% for genre in GENRES | sort %}
     <span class='{{ genre | replace({' ': '-'}) }} zk-hidden'>
       <input type='checkbox' value='{{ genre }}'>
       <span>{{ genre }}</span>
