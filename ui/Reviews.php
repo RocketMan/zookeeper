@@ -61,6 +61,15 @@ class Reviews extends MenuItem {
 
     private $subaction;
 
+    /**
+     * ILibrary::GENRES exclusive collection prefix, if any
+     */
+    private static function getGenres(): array {
+        return array_map(function($genre) {
+            return array_reverse(explode(" - ", $genre))[0];
+        }, ILibrary::GENRES);
+    }
+
     public function processLocal($action, $subaction) {
         $this->subaction = $subaction;
         $this->dispatchAction($action, self::$actions);
@@ -153,7 +162,7 @@ class Reviews extends MenuItem {
     public function viewReviewShelf() {
         $albums = Engine::api(IReview::class)->getReviewShelf();
         Engine::api(ILibrary::class)->markAlbumsPlayable($albums);
-        $this->addVar('GENRES', ILibrary::GENRES);
+        $this->addVar('GENRES', self::getGenres());
         $this->addVar('albums', $albums);
         $this->setTemplate("review/shelf.html");
     }
@@ -190,7 +199,7 @@ class Reviews extends MenuItem {
 
         $this->claimReview($tag, $op);
 
-        $this->addVar('GENRES', ILibrary::GENRES);
+        $this->addVar('GENRES', self::getGenres());
         $this->addVar('album', $album);
         $this->setTemplate("review/shelf.html");
         $html = $this->render('album');
@@ -204,7 +213,7 @@ class Reviews extends MenuItem {
 
         $this->setTemplate("review/recent.html");
         $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <a type='application/rss+xml' href='zkrss.php?feed=reviews'><img src='img/rss.png' alt='rss'></a>";
-        $this->addVar("GENRES", ILibrary::GENRES);
+        $this->addVar("GENRES", self::getGenres());
 
         $reviews = Engine::api(IReview::class)->getRecentReviews($author, 0, 200, $isAuthorized);
         $this->addVar("reviews", $reviews);

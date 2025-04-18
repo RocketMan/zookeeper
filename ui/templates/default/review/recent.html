@@ -1,7 +1,7 @@
 <div class='categoryPicker'>
   <label class='reviewLabel'>Categories:&nbsp;</label>
   <span class='review-categories zk-hidden'>
-{% for genre in GENRES %}
+{% for genre in GENRES | sort %}
     <span class='{{ genre | replace({' ': '-'}) }} zk-hidden'>
       <input type='checkbox' value='{{ genre }}'>
       <span>{{ genre }}</span>
@@ -27,7 +27,7 @@
   <tr>
     <th>Album</th>
     <th>Artist</th>
-    <th>Collection</th>
+    <th>Category<sup style='font-weight: normal'>&dagger;</sup></th>
     <th>Reviewer</th>
     <th>Date</th>
   </tr>
@@ -45,6 +45,8 @@
 {% endfor %}
 </tbody>
 </table>
+<p><sup>&dagger;</sup>The categories Electronic, Experimental, and Loud
+  can be found in the General collection of the library.</p>
 <script><!--
   $().ready(function(){
       var INITIAL_SORT_COL = 4; //date

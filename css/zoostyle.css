@@ -45,6 +45,9 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 	vertical-align: baseline;
 	background: transparent;
 }
+sub, sup {
+	vertical-align: revert;
+}
 body {
 	line-height: 1;
 }
