@@ -204,7 +204,10 @@ class Reviews extends MenuItem {
 
         $this->setTemplate("review.recent.html");
         $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <a type='application/rss+xml' href='zkrss.php?feed=reviews'><img src='img/rss.png' alt='rss'></a>";
-        $this->addVar("GENRES", ILibrary::GENRES);
+        $genres = array_map(function($genre) {
+            return array_reverse(explode(" - ", $genre))[0];
+        }, ILibrary::GENRES);
+        $this->addVar("GENRES", $genres);
 
         $reviews = Engine::api(IReview::class)->getRecentReviews($author, 0, 200, $isAuthorized);
         $this->addVar("reviews", $reviews);
