@@ -55,7 +55,7 @@ class EditorImpl extends DBO implements IEditor {
             break;
         case ILibrary::LOCATION_IN_REVIEW:
             $oa = $album['tag'] ? Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $album['tag']) : [];
-            $album['bin'] = count($oa) && $oa[0]['location'] == ILibrary::LOCATION_IN_REVIEW ? $oa[0]['bin'] : '';
+            $album['bin'] = count($oa) && $oa[0]['location'] == ILibrary::LOCATION_IN_REVIEW ? $oa[0]['bin'] : Engine::session()->getUser();
             break;
         default:
             $album['bin'] = '';
