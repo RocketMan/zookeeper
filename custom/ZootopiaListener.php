@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -49,7 +49,6 @@ use GuzzleHttp\RequestOptions;
  *                'title' => 'show title',  // or array of show titles
  *                'airname' => 'airname',   // or array of airnames
  *                'recent' => true|false,   // include in recent airplay (optional; default false)
- *                'delete' => true|false,   // delete (true) or prematurely end (false) show if conflict detected (optional; default false)
  *                'tz' => 'tzName',
  *                'caption' => 'caption',
  *            ]
@@ -318,8 +317,7 @@ class ZootopiaListener {
                 $showLen = $now->getTimestamp() - $start->getTimestamp();
                 // delete if new end time is at or before the start time, or
                 // if the resulting truncated show is less than the minimum
-                $delete = $showLen < IPlaylist::MIN_SHOW_LEN * 60 ||
-                            ($this->config["delete"] ?? false);
+                $delete = $showLen < IPlaylist::MIN_SHOW_LEN * 60;
                 $id = $zootopia->id;
                 if($delete) {
                     return $this->zk->deleteAsync('api/v1/playlist/' . $id)->then(function() {
