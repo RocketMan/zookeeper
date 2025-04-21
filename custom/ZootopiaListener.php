@@ -49,6 +49,7 @@ use GuzzleHttp\RequestOptions;
  *                'title' => 'show title',  // or array of show titles
  *                'airname' => 'airname',   // or array of airnames
  *                'recent' => true|false,   // include in recent airplay (optional; default false)
+ *                'synthetic_end' => true|false, // always generate synthetic end time (optional; default false)
  *                'tz' => 'tzName',
  *                'caption' => 'caption',
  *            ]
@@ -215,7 +216,7 @@ class ZootopiaListener {
                     $showLen = $end->getTimestamp() - $now->getTimestamp();
                 }
 
-                if(empty($event["show_end"]) || $showLen > IPlaylist::MAX_SHOW_LEN * 60 || $showLen < 0) {
+                if(empty($event["show_end"]) || $showLen > IPlaylist::MAX_SHOW_LEN * 60 || $showLen < 0 || ($this->config["synthetic_end"] ?? false)) {
                     // generate synthetic show end time
                     $end = clone $now;
                     $end->modify("+" . floor(IPlaylist::MAX_SHOW_LEN / 2) . " minutes");
