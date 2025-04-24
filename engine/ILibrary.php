@@ -67,6 +67,7 @@ interface ILibrary {
     const LOCATION_REVIEWED = 'H';
     const LOCATION_STORAGE = 'G';
     const LOCATION_LIBRARY = 'L';
+    const LOCATION_DEACCESSIONED = 'U';
 
     const LOCATIONS = [
         /* "D"=>"Received", */
