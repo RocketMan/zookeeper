@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -83,6 +83,7 @@ class ZootopiaListener {
     protected $zk;
     protected $lastPing;
     protected $onAir;
+    protected $lastOn;
 
     private const TIDY_START = 5; // number of minutes to round show start/end
 
@@ -168,6 +169,63 @@ class ZootopiaListener {
         }, $this->handler, $this->handler));
     }
 
+    /**
+     * return a promise to create a new show
+     *
+     * @param $date string date in yyyy-MM-dd format
+     * @param $time string time range in hhmm-hhmm format
+     * @return \GuzzleHttp\Promise\Promise
+     */
+    protected function createShow(string $date, string $time): Promise\Promise {
+        // create new show
+        $title = $this->config["title"];
+        $airname = $this->config["airname"];
+        if(is_array($title)) {
+            $index = rand(0, count($title) - 1);
+            $title = $title[$index];
+            if(is_array($airname))
+                $airname = $airname[$index % count($airname)];
+        }
+        $show = "$title with $airname $date $time";
+
+        return $this->zk->postAsync('api/v1/playlist', [
+            RequestOptions::JSON => [
+                'data' => [
+                    'type' => 'show',
+                    'attributes' => [
+                        'name' => $title,
+                        'date' => $date,
+                        'time' => $time,
+                        'airname' => $airname,
+                    ]
+                ]
+            ]
+        ])->then(function($response) use($time, $show) {
+            $this->log("created $show");
+            $this->lastOn = $response->getHeader('Location')[0];
+            $this->onAir = true;
+
+            // add caption
+            if(isset($this->config["caption"])) {
+                return $this->zk->postAsync($this->lastOn . '/events', [
+                    RequestOptions::JSON => [
+                        'data' => [
+                            'type' => 'event',
+                            'attributes' => [
+                                'type' => 'comment',
+                                'comment' => $this->config["caption"],
+                                'created' => explode('-', $time)[0],
+                            ]
+                        ]
+                    ]
+                ])->then(null, function($e) use($show) {
+                    $this->log("could not insert caption for $show");
+                    // continue with remaining fulfilled callbacks
+                });
+            }
+        });
+    }
+
     public function addTrack($event) {
         $event["zootopia"] = in_array($event["type"] ?? null, ["schedule", "zootopia"]) &&
                 preg_match("/zootopia/i", $event["name"]) &&
@@ -176,7 +234,6 @@ class ZootopiaListener {
         if(!$this->onAir && !$event["zootopia"])
             return;
 
-        $show = null;
         $trackName = null;
 
         // get 'on now'
@@ -185,12 +242,12 @@ class ZootopiaListener {
                 "filter[date]" => "onnow",
                 "fields[show]" => "-events"
             ]
-        ])->then(function($response) use($event, &$show) {
+        ])->then(function($response) use($event) {
             $page = $response->getBody()->getContents();
             $json = json_decode($page);
             $count = sizeof($json->data);
-
             $now = new \DateTime();
+
             switch($count) {
             case 0:
                 if(!$event["zootopia"]) {
@@ -227,64 +284,62 @@ class ZootopiaListener {
 
                 $time .= "-" . $end->format("Hi");
 
-                // create new show
-                $title = $this->config["title"];
-                $airname = $this->config["airname"];
-                if(is_array($title)) {
-                    $index = rand(0, count($title) - 1);
-                    $title = $title[$index];
-                    if(is_array($airname))
-                        $airname = $airname[$index % count($airname)];
-                }
-                $show = "$title with $airname $date $time";
-
-                return $this->zk->postAsync('api/v1/playlist', [
-                    RequestOptions::JSON => [
-                        'data' => [
-                            'type' => 'show',
-                            'attributes' => [
-                                'name' => $title,
-                                'date' => $date,
-                                'time' => $time,
-                                'airname' => $airname,
-                            ]
+                if($this->lastOn) {
+                    return $this->zk->getAsync($this->lastOn, [
+                        RequestOptions::QUERY => [
+                            "fields[show]" => "name,date,time"
                         ]
-                    ]
-                ])->then(function($response) use($time, &$show) {
-                    $this->log("created $show");
-                    $lshow = $show;
-                    $show = $response->getHeader('Location')[0];
-                    $this->onAir = true;
+                    ])->then(function($response) use($time, $end) {
+                        $page = $response->getBody()->getContents();
+                        $json = json_decode($page);
+                        $attrs = $json->data->attributes;
 
-                    // add caption
-                    if(isset($this->config["caption"])) {
-                        return $this->zk->postAsync($show . '/events', [
-                            RequestOptions::JSON => [
-                                'data' => [
-                                    'type' => 'event',
-                                    'attributes' => [
-                                        'type' => 'comment',
-                                        'comment' => $this->config["caption"],
-                                        'created' => explode('-', $time)[0],
+                        $lastOn = explode('-', $attrs->time);
+                        $start = \DateTime::createFromFormat(IPlaylist::TIME_FORMAT,
+                                $attrs->date . " " . $lastOn[0]);
+                        $showLen = $end->getTimestamp() - $start->getTimestamp();
+                        if($lastOn[1] == explode('-', $time)[0] &&
+                                $showLen <= IPlaylist::MAX_SHOW_LEN * 60) {
+                            // extend existing show
+                            $time = $lastOn[0] . '-' . $end->format("Hi");
+
+                            return $this->zk->patchAsync($this->lastOn, [
+                                RequestOptions::JSON => [
+                                    'data' => [
+                                        'type' => 'show',
+                                        'id' => $json->data->id,
+                                        'attributes' => [
+                                            'time' => $time
+                                        ]
                                     ]
                                 ]
-                            ]
-                        ])->then(null, function($e) use($lshow) {
-                            $this->log("could not insert caption for $lshow");
-                            // continue with remaining fulfilled callbacks
-                        });
-                    }
-                });
-                break;
+                            ])->then(function() use($attrs, $time) {
+                                $this->log("extended {$attrs->name} {$attrs->date} $time");
+                                $this->onAir = true;
+                            });
+                        } else {
+                            // previous show cannot be extended
+                            return new RejectedPromise("extension failed");
+                        }
+                    })->then(null, function($e) use($date, $time) {
+                        // could not extend; create in the normal way
+                        $this->log("previous show cannot be extended; creating new show");
+                        $this->lastOn = null;
+                        return $this->createShow($date, $time);
+                    });
+                }
+
+                return $this->createShow($date, $time);
             case 1:
                 if(!$this->testTitle($json->data[0]->attributes->name)) {
+                    $this->lastOn = null;
                     $this->onAir = false;
                     return new RejectedPromise("DJ On Air");
                 }
 
                 if($event["zootopia"]) {
                     // We are already on-air; use the existing show.
-                    $show = $json->data[0]->links->self;
+                    $this->lastOn = $json->data[0]->links->self;
                     $this->onAir = true;
                     break;
                 }
@@ -303,6 +358,7 @@ class ZootopiaListener {
 
                 if(!$zootopia) {
                     // Multiple shows are on, but none of them ours.
+                    $this->lastOn = null;
                     $this->onAir = false;
                     return new RejectedPromise("DJ On Air");
                 }
@@ -322,6 +378,7 @@ class ZootopiaListener {
                 if($delete) {
                     return $this->zk->deleteAsync('api/v1/playlist/' . $id)->then(function() {
                         $this->log("another show detected, deleting our show");
+                        $this->lastOn = null;
                         $this->onAir = false;
                         return new RejectedPromise("DJ On Air");
                     });
@@ -337,8 +394,10 @@ class ZootopiaListener {
                                 ]
                             ]
                         ]
-                    ])->then(function() {
+                    ])->then(function() use($count) {
                         $this->log("another show detected, ending our show");
+                        if($count > 1)
+                            $this->lastOn = null;
                         $this->onAir = false;
                         return new RejectedPromise("DJ On Air");
                     });
@@ -381,10 +440,15 @@ class ZootopiaListener {
                 // continue with remaining fulfilled callbacks
                 return null;
             });
-        })->then(function($album) use($event, &$show, &$trackName) {
+        })->then(function($album) use($event, &$trackName) {
+            // multiple events can queue, such that the show
+            // could have ended already when this callback runs
+            if(!$this->onAir)
+                return;
+
             // add track
             if($album) {
-                return $this->zk->postAsync($show . '/events', [
+                return $this->zk->postAsync($this->lastOn . '/events', [
                     RequestOptions::JSON => [
                         'data' => [
                             'type' => 'event',
@@ -409,7 +473,7 @@ class ZootopiaListener {
                     ]
                 ]);
             } else {
-                return $this->zk->postAsync($show . '/events', [
+                return $this->zk->postAsync($this->lastOn . '/events', [
                     RequestOptions::JSON => [
                         'data' => [
                             'type' => 'event',
