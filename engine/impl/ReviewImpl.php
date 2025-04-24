@@ -35,6 +35,12 @@ class ReviewImpl extends DBO implements IReview {
         ILibrary::LOCATION_REVIEWED
     ];
 
+    /* locations to exclude from recent reviews */
+    private const EXCLUDE_LOCATIONS = [
+        ILibrary::LOCATION_STORAGE,
+        ILibrary::LOCATION_DEACCESSIONED
+    ];
+
     private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0) {
         // IMPORTANT: If columns change, revisit getRecentReviews below
         $query = "SELECT a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id as rid, u.realname, r.tag, v.category, v.album, v.artist, v.iscoll FROM reviews r ";
@@ -47,25 +53,26 @@ class ReviewImpl extends DBO implements IReview {
                       "c.adddate <= NOW() AND c.pulldate > NOW() ";
                       
         $query .= "LEFT JOIN airnames a ON r.airname = a.id ";
-    
-        $op = "AND";
+
+        // exclude deep storage and deaccessioned albums
+        $query .= "WHERE v.location NOT IN (" .
+                       implode(',', array_map(function($location) {
+                           return "'$location'";
+                       }, self::EXCLUDE_LOCATIONS)) . ") ";
     
         if($user)
-            $query .= "WHERE r.user=? ";
+            $query .= "AND r.user=? ";
         else if(!$loggedIn)
-            $query .= "WHERE r.private=0 ";
-        else
-            $op = "WHERE";
+            $query .= "AND r.private=0 ";
 
         if($weeks > 0)
-            $query .= "$op r.created >= ? ";
+            $query .= "AND r.created >= ? ";
         else if($weeks < 0)
-            $query .= "$op c.tag IS NOT NULL ";
+            $query .= "AND c.tag IS NOT NULL ";
 
         // suppress 'micro reviews'
         if(!$user)
-            $query .= ($weeks ? "AND" : $op) .
-                        " LENGTH(review) > " . self::MICRO_REVIEW_LENGTH . " ";
+            $query .= "AND LENGTH(review) > " . self::MICRO_REVIEW_LENGTH . " ";
 
         return $query;
     }
