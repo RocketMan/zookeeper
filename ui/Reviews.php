@@ -212,7 +212,7 @@ class Reviews extends MenuItem {
         $author = $isAuthorized && ($_GET['dj'] ?? '') == 'Me' ? $this->session->getUser() : '';
 
         $this->setTemplate("review/recent.html");
-        $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <a type='application/rss+xml' href='zkrss.php?feed=reviews'><img src='img/rss.png' alt='rss'></a>";
+        $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <a type='application/rss+xml' href='zkrss.php?feed=reviews&amp;fmt=1'><img src='img/rss.png' alt='rss'></a>";
         $this->addVar("GENRES", self::getGenres());
 
         $reviews = Engine::api(IReview::class)->getRecentReviews($author, 0, 200, $isAuthorized);

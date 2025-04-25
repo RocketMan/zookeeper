@@ -12,7 +12,18 @@
     <description><![CDATA[
   {%~ autoescape 'html' %}
       <p>Review by {{ review.airname ?? review.realname }}</p>
+    {%~ if app.request.fmt %}
+      <p>{{ review.body | nl2br }}</p>
+      {%~ if review.tracks %}
+      <details>
+        <summary><span>Explore the tracks</span></summary>
+        <p>{{ review.tracks | nl2br }}</p>
+      </details>
+      {%~ endif %}
+      <p class="rss-footer"><a href="{{ app.baseUrl }}?action=viewRecentReview&amp;tag={{ review.album.tag }}" target="_blank">View the album in {{ app.station_title }}</a></p>
+    {%~ else %}
       <p>{{ review.review | nl2br }}</p>
+    {%~ endif %}
   {%~ endautoescape %}
     ]]></description>
   {%~ set artist = review.album.iscoll ? 'Various Artists' : review.album.artist %}
