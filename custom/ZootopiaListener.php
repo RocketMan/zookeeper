@@ -315,6 +315,7 @@ class ZootopiaListener {
                                 ]
                             ])->then(function() use($attrs, $time) {
                                 $this->log("extended {$attrs->name} {$attrs->date} $time");
+                                $this->onAir = true;
                             });
                         } else {
                             // previous show cannot be extended
