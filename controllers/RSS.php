@@ -111,8 +111,15 @@ class RSS extends CommandTarget implements IController {
         Engine::api(IArtwork::class)->injectAlbumArt($albums);
         foreach($results as &$row) {
             $reviews = Engine::api(IReview::class)->getReviews($row['album']['tag'], 0, $row['user']);
-            if(count($reviews))
-                $row['review'] = $reviews[0]['review'];
+            if(count($reviews)) {
+                $row['review'] = $row['body'] = $reviews[0]['review'];
+                $row['tracks'] = '';
+                if(preg_match('/(.+?)(?=(\r?\n)[\p{P}\s]*\d+\p{P}*\s)/s',
+                        $row['review'], $matches) && $matches[1]) {
+                    $row['tracks'] = trim(mb_substr($row['review'], mb_strlen($matches[1])));
+                    $row['body'] = $matches[1];
+                }
+            }
         }
 
         $this->params['GENRES'] = ILibrary::GENRES;
