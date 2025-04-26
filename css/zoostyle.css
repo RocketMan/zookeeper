@@ -163,6 +163,13 @@ ol ul, ul ol, ul ul, ol ol {
     margin-top: 0;
     margin-bottom: 0;
 }
+details > summary > span {
+    color: var(--theme-link-colour);
+}
+details > summary > span:hover {
+    text-decoration: underline;
+    --webkit-text-decoration: underline;
+}
 
 /* default button styling */
 div.content input[type=button]:not(.submit),

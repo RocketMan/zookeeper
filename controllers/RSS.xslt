@@ -33,6 +33,14 @@ h2 {
   opacity: 0;
   transition: all 400ms ease 0s;
 }
+.rss-item .rss-footer {
+  font-size: 14px;
+}
+.rss-item details > p {
+  overflow: hidden;
+  height: 0;
+  transition: height 400ms ease 0s;
+}
 ]]>
 </xsl:text>
 </style>
@@ -59,6 +67,13 @@ function fixup() {
       });
       img.src = img.dataset.lazysrc;
    });
+
+   document.querySelectorAll('details').forEach(function(detail) {
+      const content = detail.querySelector('p');
+      detail.addEventListener('toggle', function(e) {
+         content.style.height = detail.open ? content.scrollHeight + 'px' : 0;
+      });
+  });
 }
 ]]>
 </xsl:text>

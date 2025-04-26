@@ -16,11 +16,11 @@
       <p>{{ review.body | nl2br }}</p>
       {%~ if review.tracks %}
       <details>
-        <summary>Explore the tracks</summary>
+        <summary><span>Explore the tracks</span></summary>
         <p>{{ review.tracks | nl2br }}</p>
       </details>
       {%~ endif %}
-      <p><a href="{{ app.baseUrl }}?action=viewRecentReview&amp;tag={{ review.album.tag }}">View the album in {{ app.station_title }}</a></p>
+      <p class="rss-footer"><a href="{{ app.baseUrl }}?action=viewRecentReview&amp;tag={{ review.album.tag }}" target="_blank">View the album in {{ app.station_title }}</a></p>
     {%~ else %}
       <p>{{ review.review | nl2br }}</p>
     {%~ endif %}
