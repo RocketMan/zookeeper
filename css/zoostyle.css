@@ -165,6 +165,7 @@ ol ul, ul ol, ul ul, ol ol {
 }
 details > summary > span {
     color: var(--theme-link-colour);
+    cursor: pointer;
 }
 details > summary > span:hover {
     text-decoration: underline;
