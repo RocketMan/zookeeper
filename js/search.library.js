@@ -395,7 +395,7 @@ function search(size, offset) {
         "&fields[label]=name,city,state,modified";
 
     if(type != 'tracks')
-        url += "&fields[album]=-tracks";
+        url += "&fields[album]=-tracks,-albumart";
 
     // For track search, limit the max results for the initial page,
     // as the JSON:API counts track search results by track and not by

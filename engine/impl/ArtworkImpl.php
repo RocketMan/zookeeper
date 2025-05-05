@@ -301,7 +301,7 @@ class ArtworkImpl extends DBO implements IArtwork {
         return $success ? $stmt->rowCount() + $count : false;
     }
 
-    public function injectAlbumArt(array &$albums): void {
+    public function injectAlbumArt(array &$albums, string $base=''): void {
         $chain = [];
         $tags = [];
 
@@ -328,7 +328,7 @@ class ArtworkImpl extends DBO implements IArtwork {
         while($row = $stmt->fetch()) {
             for($next = $tags[$row["tag"]]; $next >= 0; $next = $chain[$next] ?? -1) {
                 $albums[$next]["albumart"] = $row["image_uuid"] ?
-                    $this->getCachePath($row["image_uuid"]) :
+                    $base . $this->getCachePath($row["image_uuid"]) :
                     ($row["image_id"] === 0 ? '' : null);
             }
         }

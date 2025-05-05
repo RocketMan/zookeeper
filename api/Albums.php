@@ -146,10 +146,6 @@ class Albums implements RequestHandlerInterface {
             case "bin":
                 $value = $rec["location"] == ILibrary::LOCATION_STORAGE ? $rec[$field] ?? null : null;
                 break;
-            case "albumart":
-                $uuid = $rec["albumart"];
-                $value = $uuid ? Engine::getAppBasePath() . $uuid : $uuid;
-                break;
             default:
                 $value = $rec[$field] ?? null;
                 break;
@@ -195,7 +191,7 @@ class Albums implements RequestHandlerInterface {
 
         // require authentication to prevent scraping of artwork
         if($flags & self::LINKS_ARTWORK && Engine::session()->isAuth("u"))
-            Engine::api(IArtwork::class)->injectAlbumArt($records);
+            Engine::api(IArtwork::class)->injectAlbumArt($records, Engine::getAppBasePath());
 
         foreach($records as $record) {
             $resource = self::fromRecord($record, $flags & self::LINKS_TRACKS);

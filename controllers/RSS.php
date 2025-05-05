@@ -108,7 +108,7 @@ class RSS extends CommandTarget implements IController {
         $albums = [];
         foreach($results as &$review)
             $albums[] = &$review["album"];
-        Engine::api(IArtwork::class)->injectAlbumArt($albums);
+        Engine::api(IArtwork::class)->injectAlbumArt($albums, Engine::getBaseUrl());
         foreach($results as &$row) {
             $reviews = Engine::api(IReview::class)->getReviews($row['album']['tag'], 0, $row['user']);
             if(count($reviews)) {

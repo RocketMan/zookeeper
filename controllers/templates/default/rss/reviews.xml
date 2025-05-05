@@ -40,8 +40,8 @@
     <zk:albumid>{{ review.album.tag }}</zk:albumid>
     <zk:album>{{ review.album.album }}</zk:album>
     <zk:artist>{{ artist }}</zk:artist>
-{% if review.album.image_url %}
-    <zk:albumart>{{ app.baseUrl ~ review.album.image_url }}</zk:albumart>
+{% if review.album.albumart %}
+    <zk:albumart>{{ review.album.albumart }}</zk:albumart>
 {% endif %}
   </item>
 {% endfor %}

@@ -38,9 +38,9 @@ interface IArtwork {
      * null to prevent temporary re-query of the provider (effective
      * until expired by expireEmpty).
      *
-     * @param $tag int tag number
-     * @param $imageUrl ?string URL, empty string, or null
-     * @param $infoUrl ?string URL or null
+     * @param int $tag album tag number
+     * @param ?string $imageUrl URL, empty string, or null
+     * @param ?string $infoUrl URL or null
      * @return ?string uuid or null
      */
     function insertAlbumArt($tag, $imageUrl, $infoUrl);
@@ -53,11 +53,12 @@ interface IArtwork {
     /**
      * Add `albumart` property for each album
      *
-     * albumart will be an absolute URI path if album art exists,
-     * null if no album art is cached, or empty string if the album
-     * is prevented from having album art.
+     * albumart will be a URI path if album art exists, null if
+     * no album art is cached, or empty string if the album is
+     * prevented from having album art.
      *
-     * @param $albums target album array (in/out)
+     * @param array $albums target albums (in/out)
+     * @param string $base optional URI path prefix (default empty string)
      */
-    function injectAlbumArt(array &$albums): void;
+    function injectAlbumArt(array &$albums, string $base=''): void;
 }
