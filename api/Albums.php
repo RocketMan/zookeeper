@@ -25,6 +25,7 @@
 namespace ZK\API;
 
 use ZK\Engine\Engine;
+use ZK\Engine\IArtwork;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
@@ -48,7 +49,8 @@ class Albums implements RequestHandlerInterface {
     use OffsetPaginationTrait;
 
     const FIELDS = [ "artist", "album", "category", "medium", "size",
-                     "created", "updated", "location", "bin", "coll" ];
+                     "created", "updated", "location", "bin", "coll",
+                     "albumart" ];
 
     const TRACK_FIELDS = [ "seq", "artist", "track", "duration", "url" ];
 
@@ -57,6 +59,7 @@ class Albums implements RequestHandlerInterface {
     const LINKS_REVIEWS = 2;
     const LINKS_REVIEWS_WITH_BODY = 4;
     const LINKS_TRACKS = 8;
+    const LINKS_ARTWORK = 16;
     const LINKS_ALL = ~0;
 
     private static $paginateOps = [
@@ -143,6 +146,10 @@ class Albums implements RequestHandlerInterface {
             case "bin":
                 $value = $rec["location"] == ILibrary::LOCATION_STORAGE ? $rec[$field] ?? null : null;
                 break;
+            case "albumart":
+                $uuid = $rec["albumart"];
+                $value = $uuid ? Engine::getAppBasePath() . $uuid : $uuid;
+                break;
             default:
                 $value = $rec[$field] ?? null;
                 break;
@@ -185,6 +192,10 @@ class Albums implements RequestHandlerInterface {
         // it will appear in the response, we avoid it.
         if($flags & self::LINKS_REVIEWS)
             Engine::api(ILibrary::class)->linkReviews($records, Engine::session()->isAuth("u"), $flags & self::LINKS_REVIEWS_WITH_BODY);
+
+        // require authentication to prevent scraping of artwork
+        if($flags & self::LINKS_ARTWORK && Engine::session()->isAuth("u"))
+            Engine::api(IArtwork::class)->injectAlbumArt($records);
 
         foreach($records as $record) {
             $resource = self::fromRecord($record, $flags & self::LINKS_TRACKS);
@@ -317,8 +328,10 @@ class Albums implements RequestHandlerInterface {
                 ApiServer::DEFAULT_LIMIT;
 
         $records = Engine::api(ILibrary::class)->listAlbums($op, $key, $limit);
-        $wantTracks = $request->requestsField("album", "tracks")?self::LINKS_TRACKS:0;
-        $result = self::fromArray($records, self::LINKS_LABEL | $wantTracks);
+        $links = self::LINKS_LABEL;
+        $links |= $request->requestsField("album", "tracks") ? self::LINKS_TRACKS : 0;
+        $links |= $request->requestsField("album", "albumart") ? self::LINKS_ARTWORK : 0;
+        $result = self::fromArray($records, $links);
         $document = new Document($result);
 
         $base = Engine::getBaseUrl()."album?";
@@ -351,6 +364,9 @@ class Albums implements RequestHandlerInterface {
 
             if(!$request->requestsField("album", "tracks"))
                 $links &= ~self::LINKS_TRACKS;
+
+            if(!$request->requestsField("album", "albumart"))
+                $links &= ~self::LINKS_ARTWORK;
 
             $response = $this->paginateOffset($request, self::$paginateOps, $links);
             break;
@@ -448,8 +464,12 @@ class Albums implements RequestHandlerInterface {
 
         $a["tag"] = 0;
         $a["format"] = $a["size"];
-        if(Engine::api(IEditor::class)->insertUpdateAlbum($a, $tracks, $label))
+        if(Engine::api(IEditor::class)->insertUpdateAlbum($a, $tracks, $label)) {
+            if($attrs->has('albumart'))
+                Engine::api(IArtwork::class)->insertAlbumArt($a['tag'], $attrs->getRequired('albumart'), null);
+
             return new CreatedResponse(Engine::getBaseUrl()."album/{$a['tag']}");
+        }
         throw new \Exception("creation failed");
     }
 
@@ -471,6 +491,11 @@ class Albums implements RequestHandlerInterface {
         $albums[0] = array_merge($albums[0], $album);
         $albums[0]["format"] = $albums[0]["size"]; // post-merge
         Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], $tracks, null);
+        if($attrs->has('albumart')) {
+            $aapi = Engine::api(IArtwork::class);
+            $aapi->deleteAlbumArt($key);
+            $aapi->insertAlbumArt($key, $attrs->getRequired('albumart'), null);
+        }
 
         return new EmptyResponse();
     }

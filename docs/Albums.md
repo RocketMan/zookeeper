@@ -23,6 +23,7 @@ An [example album document](Samples.md#album) is available here.
 * location
 * bin
 * coll
+* albumart (requires X-APIKEY authentication; see below)
 * tracks -- array of zero or more:
   * seq
   * track
@@ -61,6 +62,13 @@ returned, not the number of albums.
 Fields match exactly, unless '*' is appended, in which case a stemming
 search is done.  The 'match' keyword indicates a full-text search against
 the indicated columns.
+
+X-APIKEY authentication is required to access the `albumart` property.
+`albumart` is the absolute URI path to the cached resource, null if
+artwork is not cached for the album, or empty string if artwork is
+disabled for the album.  When setting `albumart` in a POST or PATCH
+request, supply the full URL to the image you want to cache for the
+album, null to remove album art, or empty string to disable album art.
 
 X-APIKEY authentication is required for use of the location filter.
 Possible filter values are (case-insensitive): A-File, Deaccessioned,

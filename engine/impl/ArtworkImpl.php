@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -138,7 +138,8 @@ class ArtworkImpl extends DBO implements IArtwork {
                 $stmt->bindValue(2, $infoUrl);
                 if($stmt->execute())
                     $imageId = $this->lastInsertId();
-            }
+            } else if($imageUrl === '')
+                $imageId = 0;
 
             $query = "INSERT INTO albummap (tag, image_id) VALUES (?,?)";
             $stmt = $this->prepare($query);
@@ -311,23 +312,24 @@ class ArtworkImpl extends DBO implements IArtwork {
                     $chain[$i] = $tags[$tag];
 
                 $tags[$tag] = $i;
+
+                $albums[$i]["albumart"] = null;
             }
         }
 
         if(count($tags) == 0)
             return;
 
-        $query = "SELECT tag, image_uuid, info_url FROM albummap a " .
+        $query = "SELECT tag, image_id, image_uuid, info_url FROM albummap a " .
                  "LEFT JOIN artwork i ON a.image_id = i.id " .
                  "WHERE tag IN (" . implode(',', array_keys($tags)) . ")";
         $stmt = $this->prepare($query);
         $stmt->execute();
         while($row = $stmt->fetch()) {
             for($next = $tags[$row["tag"]]; $next >= 0; $next = $chain[$next] ?? -1) {
-                if($row["image_uuid"])
-                    $albums[$next]["image_url"] = $this->getCachePath($row["image_uuid"]);
-                if($row["info_url"])
-                    $albums[$next]["info_url"] = $row["info_url"];
+                $albums[$next]["albumart"] = $row["image_uuid"] ?
+                    $this->getCachePath($row["image_uuid"]) :
+                    ($row["image_id"] === 0 ? '' : null);
             }
         }
     }
