@@ -235,6 +235,10 @@ $().ready(function(){
         setAddButtonState(len > 0);
     });
 
+    $(".songRow").on('dblclick', function() {
+        $(this).find("a.songEdit")[0].click();
+    });
+
     $("#markdown-help-link").on('click', function() {
         if($("#markdown-help").is(":visible")) {
             $("#markdown-help").slideUp();
