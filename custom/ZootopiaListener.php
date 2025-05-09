@@ -87,6 +87,8 @@ class ZootopiaListener {
 
     private const TIDY_START = 5; // number of minutes to round show start/end
 
+    private const SYNTHETIC_LENGTH = 60; // show length in minutes when end time is unknown or invalid
+
     /**
      * test zootopia artist name against zookeeper artist
      *
@@ -275,7 +277,7 @@ class ZootopiaListener {
                 if(empty($event["show_end"]) || $showLen > IPlaylist::MAX_SHOW_LEN * 60 || $showLen < 0) {
                     // generate synthetic show end time
                     $end = clone $now;
-                    $end->modify("+" . floor(IPlaylist::MAX_SHOW_LEN / 2) . " minutes");
+                    $end->modify("+" . self::SYNTHETIC_LENGTH . " minutes");
                     $min = intval($end->format("i"));
                     if($min)
                         $end->modify("-$min minutes");
