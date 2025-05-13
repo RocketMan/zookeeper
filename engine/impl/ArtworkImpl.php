@@ -45,10 +45,15 @@ class ArtworkImpl extends DBO implements IArtwork {
 
         $file = sha1(uniqid(rand()));
         $path = $cacheDir . $file;
-        $client = new Client();
         try {
-            $client->get($url, [ 'sink' => $path ]);
-            switch(mime_content_type($path)) {
+            if(preg_match('/^data:(\w+)\/(\w+);base64,/', $url, $matches)) {
+                $data = base64_decode(substr($url, strlen($matches[0])));
+                file_put_contents($path, $data);
+            } else {
+                $client = new Client();
+                $client->get($url, [ 'sink' => $path ]);
+            }
+            switch($type = mime_content_type($path)) {
             case "image/jpeg":
                 $file .= ".jpeg";
                 break;
@@ -64,6 +69,10 @@ class ArtworkImpl extends DBO implements IArtwork {
             case "image/webp":
                 $file .= ".webp";
                 break;
+            default:
+                error_log("fetchImage: unsupported image type: $type");
+                unlink($path);
+                return null;
             }
 
             $target = $cacheDir . substr($file, 0, 2);

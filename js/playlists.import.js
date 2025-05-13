@@ -242,11 +242,14 @@ $().ready(function() {
                 return;
             }
             $("input[type=file]")[0].files = files;
+            $("input[type=file]").addClass('has-file');
             $(".file-area .success").text(files[0].name);
         }
     });
     $("input[type=file]").on('change', function(e) {
-        $(".file-area .success").text(this.files[0].name);
+        var hasFile = this.files.length > 0;
+        $(this).toggleClass('has-file', hasFile);
+        $(".file-area .success").text(hasFile ? this.files[0].name : '');
     });
 
     $("input[name=format]").on('change', function(e) {

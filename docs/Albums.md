@@ -69,6 +69,7 @@ artwork is not cached for the album, or empty string if artwork is
 disabled for the album.  When setting `albumart` in a POST or PATCH
 request, supply the full URL to the image you want to cache for the
 album, null to remove album art, or empty string to disable album art.
+Alternatively, you may specify a [data URL](https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Schemes/data) with the image data.
 
 X-APIKEY authentication is required for use of the location filter.
 Possible filter values are (case-insensitive): A-File, Deaccessioned,
