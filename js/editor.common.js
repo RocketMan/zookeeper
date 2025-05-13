@@ -602,7 +602,8 @@ $().ready(function() {
         e.preventDefault();
         if(confirm("Delete the album artwork?")) {
             $("#albumart").attr('src', '');
-            $("input[name=userfile]").val('').removeClass('has-file');
+            $("input[name=userfile]").val('').removeClass('has-file').removeAttr('title');
+            $("input[name=aimg]").val('');
             $("input[name=adel]").val('1');
         }
     });
@@ -616,7 +617,7 @@ $().ready(function() {
                 reader.onload = function(e) {
                     document.getElementById('albumart').src = e.target.result;
                     $("input[name=aimg]").val(e.target.result);
-                    $("input[name=userfile]").val('');
+                    $("input[name=userfile]").val('').attr('title', 'Album artwork');
                 };
                 reader.readAsDataURL(file);
             } else {
