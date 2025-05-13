@@ -790,6 +790,10 @@ class Editor extends MenuItem {
         $this->skipVar("format");
         $this->skipVar("location");
         $this->skipVar("bin");
+        $this->skipVar("userfile");
+        $this->skipVar("aart");
+        $this->skipVar("aimg");
+        $this->skipVar("adel");
         for($i=1; isset($_POST["track" . $i]); $i++) {
             $this->skipVar("track" . $i);
             $this->skipVar("artist" . $i);
@@ -826,6 +830,10 @@ class Editor extends MenuItem {
         $this->skipVar("format");
         $this->skipVar("location");
         $this->skipVar("bin");
+        $this->skipVar("userfile");
+        $this->skipVar("aart");
+        $this->skipVar("aimg");
+        $this->skipVar("adel");
         $this->skipVar("up");
         $this->skipVar("down");
         $this->skipVar("edit");
@@ -952,6 +960,27 @@ class Editor extends MenuItem {
                 // don't automatically print/queue tag for digital media
                 if($album["medium"] != "D")
                     $this->printTag($_REQUEST["seltag"]);
+            } else {
+                // album update
+                $aapi = Engine::api(IArtwork::class);
+                $tag = $_REQUEST["seltag"];
+                $art = $aapi->getAlbumArt($tag);
+                $aart = $_REQUEST["aart"]; // 1 to enable, 0 to disable
+                if(!$aart && (!$art || $art["image_id"] !== 0)) {
+                    // disable album art
+                    $aapi->deleteAlbumArt($tag);
+                    $aapi->insertAlbumArt($tag, '', null);
+                } else if($aart && $_REQUEST["aimg"]) {
+                    // upload album art
+                    $aapi->deleteAlbumArt($tag);
+                    $aapi->insertAlbumArt($tag, $_REQUEST["aimg"], null);
+                } else if($aart && $art && $art["image_id"] === 0) {
+                    // enable previously disabled album art
+                    $aapi->deleteAlbumArt($tag);
+                } else if($art && $_REQUEST['adel']) {
+                    // delete album art
+                    $aapi->deleteAlbumArt($tag);
+                }
             }
 
             $this->albumAdded = @$_REQUEST["new"];
@@ -1104,6 +1133,9 @@ class Editor extends MenuItem {
       <TR><TD ALIGN=RIGHT></TD><TD><SPAN ID="city"></SPAN>&nbsp;<SPAN ID="state"></SPAN>&nbsp;<SPAN ID="zip"></SPAN></TD></TR>
       <TR><TD ALIGN=RIGHT></TD><TD ID="label3">&nbsp;</TD></TR>
     </TABLE>
+    <div class="album-thumb">
+      <img id="albumart" src="img/blank.gif">
+    </div>
     </TD></TR>
     <TR><TD ALIGN=CENTER>
     <!--P ALIGN=CENTER-->
@@ -1207,19 +1239,38 @@ class Editor extends MenuItem {
                     </SELECT>&nbsp;&nbsp;<SPAN ID=lbin STYLE="visibility:<?php echo ($alocation == ILibrary::LOCATION_STORAGE) ? "visible" : "hidden"; ?>">Bin:&nbsp;</SPAN><INPUT NAME=bin TYPE=text CLASS=text SIZE=10 maxlength='8' VALUE="<?php echo $bin;?>" STYLE="visibility:<?php echo ($alocation == ILibrary::LOCATION_STORAGE) ? "visible" : "hidden"; ?>"></TD></TR>
     <?php 
         if(!@$_REQUEST["new"]) {
+            $art = Engine::api(IArtwork::class)->getAlbumArt($_REQUEST["seltag"]);
+            $isDisabled = $art && $art['image_id'] === 0;
+            $hasArt = $art && $art['image_uuid'];
     ?>
       <TR><TD COLSPAN=2></TD></TR>
       <TR><TD ALIGN=RIGHT>Label:</TD><TD CLASS="header"><?php echo $name;?></TD></TR>
       <TR><TD></TD><TD><?php echo $address;?></TD></TR>
       <TR><TD></TD><TD><?php echo "$city $state $zip";?></TD></TR>
-      <!--TR><TD ALIGN=RIGHT>Date In:</TD><TD></TD></TR>
-      <TR><TD ALIGN=RIGHT>Date Mod:</TD><TD></TD></TR>
-      <TR><TD ALIGN=RIGHT>Label:</TD><TD CLASS="header"></TD></TR-->
+      <TR><TD ALIGN=RIGHT>Album art:</TD><TD>
+        <SELECT NAME='aart' class='textsp'>
+          <OPTION VALUE="1">Enabled
+          <OPTION VALUE="0" <?php if($isDisabled) echo 'selected'; ?>>Disabled
+        </SELECT></TD></TR>
+      <TR><TD></TD><TD>
+        <div class='file-area album-thumb' <?php if($isDisabled) echo "style='display: none'"; ?>>
+          <input type='file' name='userfile' accept='image/*' <?php if($hasArt) echo "class='has-file'"; ?>>
+          <div class='file-overlay'>
+            <div class='default'>
+              <h4 class='caption'>Album Art</h4>
+              Drag&hairsp;&amp;&hairsp;Drop<br>file here or<br>
+              <div class='pseudo-button'>Browse Files</div>
+            </div>
+            <div class='success'><img id='albumart' src='<?php echo $hasArt ? Engine::api(IArtwork::class)->getCachePath($art['image_uuid']) : 'img/blank.gif'; ?>'></div>
+            <div class='delete'><a href='#' title='Delete album artwork'><span class='fas fa-trash'></span></a></div>
+            <input type='hidden' name='adel' value='0'>
+            <input type='hidden' name='aimg' value=''>
+          </div>
+        </div>
+      </TD></TR>
     <?php 
         }
     ?>
-      <!--TR><TD ALIGN=RIGHT></TD><TD></TD></TR>
-      <TR><TD ALIGN=RIGHT></TD><TD></TD></TR-->
       <TR><TD ALIGN=RIGHT></TD><TD>&nbsp;</TD></TR>
       <TR><TD></TD><TD><?php if(!@$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=edit CLASS=submit VALUE="  Change Label...  ">&nbsp;&nbsp;<?php }?><INPUT TYPE=SUBMIT NAME=<?php echo @$_REQUEST["new"]?"edit":"next";?> CLASS=submit VALUE="  <?php echo @$_REQUEST["new"]?"Next &gt;&gt;":"Tracks...";?>  ">&nbsp;&nbsp;<?php if(!@$_REQUEST["new"]){?><INPUT TYPE=SUBMIT NAME=done CLASS=submit VALUE="  Done!  "><?php }?></TD></TR>
     </TABLE>

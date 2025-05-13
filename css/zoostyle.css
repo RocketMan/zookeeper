@@ -1846,11 +1846,54 @@ div.toggle-time-entry div {
 .file-area input[type=file]:focus + .file-overlay {
     border-color: #637789;
 }
-.file-area input[type=file]:valid + .file-overlay .success {
+.file-area input[type=file].has-file + .file-overlay .success {
     display: inline-block;
 }
-.file-area input[type=file]:valid + .file-overlay .default {
+.file-area input[type=file].has-file + .file-overlay .default {
     display: none;
+}
+
+.file-area.album-thumb {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    display: block;
+    margin-top: 2px;
+}
+.file-area.album-thumb .file-overlay {
+    max-width: 130px;
+    max-height: 130px;
+    padding: 0;
+}
+.file-area.album-thumb .default {
+    line-height: 1.5;
+    height: 126px;
+}
+.file-area.album-thumb .default h4 {
+    margin: 10px auto;
+}
+.file-area.album-thumb .default .pseudo-button {
+    display: inline-block;
+    margin-top: 8px;
+}
+.file-area.album-thumb .delete {
+    line-height: 30px;
+    width: 30px;
+    position: absolute;
+    bottom: 6px;
+    left: 4px;
+}
+.file-area input[name=userfile]:not(.has-file) + .file-overlay .delete {
+    display: none;
+}
+.file-area.album-thumb .delete a {
+    border-radius: 50%;
+    background-color: #d00;
+    color: #fff;
+    display: block;
+}
+.file-area.album-thumb .delete a:hover {
+    background-color: #f00;
 }
 
 .no-text-select {

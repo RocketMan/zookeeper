@@ -60,19 +60,29 @@ function changeList(list) {
         var field = $("#"+key);
         if(field.length > 0) {
             var val = items[index].attributes[key];
-            if(val != null && (key == 'email' || key == 'url')) {
-                var html = '<A HREF="';
-                if(key == 'email' && val.indexOf('mailto:') != 0)
-                    html += 'mailto:';
-                else if(key == 'url' && val.indexOf('http') != 0)
-                    html += 'https://';
-                html += val + '"';
-                if(key == 'url')
-                    html += ' TARGET="_blank"';
-                html += '>' + htmlify(val) + '</A>';
-                field.html(html);
-            } else {
+            switch(key) {
+            case 'albumart':
+                field[0].src = val || 'img/blank.gif';
+                break;
+            case 'email':
+            case 'url':
+                if(val) {
+                    var html = '<A HREF="';
+                    if(key == 'email' && val.indexOf('mailto:') != 0)
+                        html += 'mailto:';
+                    else if(key == 'url' && val.indexOf('http') != 0)
+                        html += 'https://';
+                    html += val + '"';
+                    if(key == 'url')
+                        html += ' TARGET="_blank"';
+                    html += '>' + htmlify(val) + '</A>';
+                    field.html(html);
+                    break;
+                }
+                // fall through...
+            default:
                 field.html(htmlify(val));
+                break;
             }
         }
     }
@@ -581,6 +591,62 @@ $().ready(function() {
                       "Album not found in Discogs");
             }, 100);
         });
+    });
+
+    $("select[name=aart]").on('change selectmenuchange', function(e) {
+        var fileArea = $(".file-area");
+        $(this).val() * 1 ? fileArea.slideDown() : fileArea.slideUp();
+    });
+
+    $(".delete a").on('click', function(e) {
+        e.preventDefault();
+        if(confirm("Delete the album artwork?")) {
+            $("#albumart").attr('src', '');
+            $("input[name=userfile]").val('').removeClass('has-file');
+            $("input[name=adel]").val('1');
+        }
+    });
+
+    $("input[name=userfile]").on('change', function() {
+        $(this).toggleClass('has-file', this.files.length > 0);
+        if(this.files.length) {
+            var file = this.files[0];
+            if(file && file.type.startsWith('image/')) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('albumart').src = e.target.result;
+                    $("input[name=aimg]").val(e.target.result);
+                    $("input[name=userfile]").val('');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                $("input[name=userfile]").val('');
+                // TBD message user to select a valid image file (e.g., .jpg, .png, etc.)
+            }
+        }
+    });
+
+    $('body').on('dragenter dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('drop-active');
+    }).on('dragleave', function(e) {
+        if(e.target.matches('body'))
+            $(this).removeClass('drop-active');
+    }).on('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('drop-active');
+        if(e.originalEvent.dataTransfer &&
+                e.originalEvent.dataTransfer.files.length) {
+            var files = e.originalEvent.dataTransfer.files;
+            if(files.length > 1) {
+                alert('Please select only one file for import');
+                return;
+            }
+            $("input[name=userfile]")[0].files = files;
+            $("input[name=userfile]").trigger('change');
+        }
     });
 
     $("select.textsp").selectmenu();
