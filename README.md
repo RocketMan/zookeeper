@@ -14,12 +14,13 @@ https://zookeeper.ibinx.com/master/
 
 ### Requirements 
 
-* PHP 7.4 or later with MySQL PDO driver
+* PHP 8.2 or later with MySQL PDO driver
 * MySQL/MariaDB
 
-It is recommended to use PHP 8.2 or later, as older versions have
-reached EOL and may be deprecated for use with Zookeeper Online in the
-future.
+If you have a requirment to run on PHP 7.4, you can use builds from
+the release-3-0 branch (the v3.0.x release series).  Releases
+beginning with v3.1.0 require PHP 8.2 or later.  Older versions of
+PHP have reached EOL and are no longer supported.
 
 
 ### Getting Started
