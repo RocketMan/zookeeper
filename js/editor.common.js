@@ -617,7 +617,7 @@ $().ready(function() {
                 reader.onload = function(e) {
                     document.getElementById('albumart').src = e.target.result;
                     $("input[name=aimg]").val(e.target.result);
-                    $("input[name=userfile]").val('').attr('title', 'Album artwork');
+                    $("input[name=userfile]").val('').attr('title', 'Change album artwork');
                 };
                 reader.readAsDataURL(file);
             } else {
