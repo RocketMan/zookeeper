@@ -651,6 +651,7 @@ $().ready(function() {
             if(file.type && !file.type.startsWith('image/')) {
                 $("input[name=userfile]").val('');
                 // TBD message user to select a valid image file (e.g., .jpg, .png, etc.)
+                console.log("not a valid image file: " + file.type);
                 return;
             }
 
@@ -683,6 +684,7 @@ $().ready(function() {
                 img.onerror = function() {
                     $("input[name=userfile]").val('');
                     // TBD message user to select a valid image file (e.g., .jpg, .png, etc.)
+                    console.log("not a valid image file: " + (file.type || '(unknown type)'));
                 };
                 img.src = url;
             };
