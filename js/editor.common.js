@@ -35,6 +35,9 @@
  *
  */
 
+const MAX_IMAGE_SIZE = 1024 * 1024;  // (1MB) encoded image size (in bytes)
+const SCALE_WIDTH = 256;  // dimension of scaled image (in px)
+
 var items, links, timer;
 
 var paginateSeq = 1;
@@ -608,22 +611,82 @@ $().ready(function() {
         }
     });
 
+    /**
+     * draw `img` into `canvas` using the css equivalent:
+     *    object-fit: cover;
+     *    object-position: center `positionYPercent`%
+     */
+    function drawObjectFitCover(img, canvas, positionYPercent = 10) {
+        const ctx = canvas.getContext('2d');
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+
+        const imgRatio = img.width / img.height;
+        const canvasRatio = canvasWidth / canvasHeight;
+
+        let drawWidth, drawHeight;
+
+        if (imgRatio > canvasRatio) {
+            // image is wider than canvas -- crop horizontally
+            drawHeight = canvasHeight;
+            drawWidth = img.width * (canvasHeight / img.height);
+        } else {
+            // image is taller -- crop vertically
+            drawWidth = canvasWidth;
+            drawHeight = img.height * (canvasWidth / img.width);
+        }
+
+        // calculate cropping offsets
+        const offsetX = (canvasWidth - drawWidth) / 2;
+        const offsetY = (canvasHeight - drawHeight) * (positionYPercent / 100);
+
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+    }
+
     $("input[name=userfile]").on('change', function() {
         $(this).toggleClass('has-file', this.files.length > 0);
         if(this.files.length) {
             var file = this.files[0];
-            if(file && file.type.startsWith('image/')) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('albumart').src = e.target.result;
-                    $("input[name=aimg]").val(e.target.result);
-                    $("input[name=userfile]").val('').attr('title', 'Change album artwork');
-                };
-                reader.readAsDataURL(file);
-            } else {
+            if(file.type && !file.type.startsWith('image/')) {
                 $("input[name=userfile]").val('');
                 // TBD message user to select a valid image file (e.g., .jpg, .png, etc.)
+                return;
             }
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var url = e.target.result;
+                console.log("image size: " + url.length);
+
+                const img = new Image();
+                img.onload = function() {
+                    /*
+                     * If the image type is unknown from the file
+                     * extension, the data URL will be encoded as
+                     * application/octet-stream.  To ensure a valid
+                     * image type is uploaded in this case, force
+                     * conversion to jpeg regardless of its size.
+                     */
+                    if(!file.type || url.length > MAX_IMAGE_SIZE) {
+                        // scale and crop image
+                        const canvas = document.createElement('canvas');
+                        canvas.width = canvas.height = SCALE_WIDTH;
+                        drawObjectFitCover(img, canvas);
+                        url = canvas.toDataURL('image/jpeg', 0.75);
+                        console.log("image size (scaled): " + url.length);
+                    }
+                    document.getElementById('albumart').src = url;
+                    $("input[name=aimg]").val(url);
+                    $("input[name=userfile]").val('').attr('title', 'Change album artwork');
+                };
+                img.onerror = function() {
+                    $("input[name=userfile]").val('');
+                    // TBD message user to select a valid image file (e.g., .jpg, .png, etc.)
+                };
+                img.src = url;
+            };
+            reader.readAsDataURL(file);
         }
     });
 
