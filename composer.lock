@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5af08fc5299074fa9f7d09e94918baea",
+    "content-hash": "47633da0407fa3b2fa1f45fec853fdfe",
     "packages": [
         {
             "name": "axy/backtrace",
@@ -398,95 +398,6 @@
                 "source": "https://github.com/components/jqueryui/tree/master"
             },
             "time": "2016-09-16T05:47:55+00:00"
-        },
-        {
-            "name": "enm/json-api-common",
-            "version": "3.2.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/eosnewmedia/JSON-API-Common.git",
-                "reference": "b68f75e4086f39c103394c56d8300b046c2d2668"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/eosnewmedia/JSON-API-Common/zipball/b68f75e4086f39c103394c56d8300b046c2d2668",
-                "reference": "b68f75e4086f39c103394c56d8300b046c2d2668",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.2",
-                "psr/http-message": "^1.0"
-            },
-            "require-dev": {
-                "guzzlehttp/psr7": "^1.4",
-                "phpunit/phpunit": "^7.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Enm\\JsonApi\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Philipp Marien",
-                    "email": "marien@eosnewmedia.de"
-                }
-            ],
-            "description": "Basic php implementation (shared structures for client and server) of the json api specification (jsonapi.org)",
-            "support": {
-                "issues": "https://github.com/eosnewmedia/JSON-API-Common/issues",
-                "source": "https://github.com/eosnewmedia/JSON-API-Common/tree/3.2.2"
-            },
-            "time": "2019-08-29T13:00:52+00:00"
-        },
-        {
-            "name": "enm/json-api-server",
-            "version": "3.1.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/eosnewmedia/JSON-API-Server.git",
-                "reference": "1a1d0418aef528830b871fb4fd7b5d21a3e4f632"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/eosnewmedia/JSON-API-Server/zipball/1a1d0418aef528830b871fb4fd7b5d21a3e4f632",
-                "reference": "1a1d0418aef528830b871fb4fd7b5d21a3e4f632",
-                "shasum": ""
-            },
-            "require": {
-                "enm/json-api-common": "^3.2",
-                "php": ">=7.2"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^7.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Enm\\JsonApi\\Server\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Philipp Marien",
-                    "email": "marien@eosnewmedia.de"
-                }
-            ],
-            "description": "Abstract server-side php implementation of the json api specification (jsonapi.org)",
-            "support": {
-                "issues": "https://github.com/eosnewmedia/JSON-API-Server/issues",
-                "source": "https://github.com/eosnewmedia/JSON-API-Server/tree/3.1.1"
-            },
-            "time": "2019-08-30T19:20:28+00:00"
         },
         {
             "name": "erusev/parsedown",
@@ -2069,6 +1980,101 @@
             "time": "2024-03-30T19:22:15+00:00"
         },
         {
+            "name": "rocketman/json-api-common",
+            "version": "v3.2.2+rocketman.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/RocketMan/JSON-API-Common.git",
+                "reference": "aa2c02dc378709d8dd94ab4d39e12e9862bfd118"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/RocketMan/JSON-API-Common/zipball/aa2c02dc378709d8dd94ab4d39e12e9862bfd118",
+                "reference": "aa2c02dc378709d8dd94ab4d39e12e9862bfd118",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2",
+                "psr/http-message": "^1.0"
+            },
+            "require-dev": {
+                "guzzlehttp/psr7": "^1.4",
+                "phpunit/phpunit": "^7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Enm\\JsonApi\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Philipp Marien",
+                    "email": "marien@eosnewmedia.de"
+                },
+                {
+                    "name": "Jim Mason",
+                    "email": "jmason@ibinx.com"
+                }
+            ],
+            "description": "Basic php implementation (shared structures for client and server) of the json api specification (jsonapi.org)",
+            "support": {
+                "source": "https://github.com/RocketMan/JSON-API-Common/tree/v3.2.2+rocketman.1"
+            },
+            "time": "2025-06-04T17:55:39+00:00"
+        },
+        {
+            "name": "rocketman/json-api-server",
+            "version": "v3.1.1+rocketman.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/RocketMan/JSON-API-Server.git",
+                "reference": "2371b6b4b9da299f6f5b9c50f1b361b44b6ea8b3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/RocketMan/JSON-API-Server/zipball/2371b6b4b9da299f6f5b9c50f1b361b44b6ea8b3",
+                "reference": "2371b6b4b9da299f6f5b9c50f1b361b44b6ea8b3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2",
+                "rocketman/json-api-common": "^3.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Enm\\JsonApi\\Server\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Philipp Marien",
+                    "email": "marien@eosnewmedia.de"
+                },
+                {
+                    "name": "Jim Mason",
+                    "email": "jmason@ibinx.com"
+                }
+            ],
+            "description": "Abstract server-side php implementation of the json api specification (jsonapi.org)",
+            "support": {
+                "source": "https://github.com/RocketMan/JSON-API-Server/tree/v3.1.1+rocketman.1"
+            },
+            "time": "2025-06-04T18:19:48+00:00"
+        },
+        {
             "name": "rocketman/pdf-label",
             "version": "v1.6+rocketman.2",
             "source": {
@@ -2935,11 +2941,11 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=7.4",
+        "php": ">=8.2",
         "ext-curl": "*",
         "ext-pdo": "*",
         "ext-pdo_mysql": "*"
     },
-    "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
 }
