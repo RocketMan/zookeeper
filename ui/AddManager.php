@@ -184,25 +184,30 @@ class AddManager extends MenuItem {
         }
         echo "        </TABLE>\n";
     }
-    
-    public function panelAddPull($validate) {
-        $adddate = $_REQUEST["adddate"];
-        $pulldate = $_REQUEST["pulldate"];
-    
-        if($validate) {
-            list($ay, $am, $ad) = explode("-", $adddate);
-            list($py, $pm, $pd) = explode("-", $pulldate);
 
-            if(checkdate($am, $ad, $ay) && checkdate($pm, $pd, $py) &&
-                    $pulldate > $adddate)
-                return true;
-            else {
-                $this->errorMessage = $pulldate <= $adddate ?
-                    "Pull Date must follow Add Date" :
-                    "Ensure dates are valid";
-                return;
+    private function isValidYMD(string $date): bool {
+        $dt = \DateTime::createFromFormat("Y-m-d", $date);
+        return $dt && $dt->format("Y-m-d") === $date;
+    }
+
+    public function panelAddPull($validate) {
+        $adddate = $_REQUEST["adddate"] ?? '';
+        $pulldate = $_REQUEST["pulldate"] ?? '';
+
+        if($validate) {
+            if (!$this->isValidYMD($adddate) || !$this->isValidYMD($pulldate)) {
+                $this->errorMessage = "Ensure dates are valid";
+                return false;
             }
+
+            if ($pulldate <= $adddate) {
+                $this->errorMessage = "Pull Date must follow Add Date";
+                return false;
+            }
+
+            return true;
         }
+
         if(!$this->errorMessage) {
             // Setup defaults
             if(!$adddate)
@@ -212,8 +217,7 @@ class AddManager extends MenuItem {
         }
     ?>
           <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
-            <TR><TD>&nbsp;</TD>
-                <TD><FONT CLASS="error"><B><?php echo $message;?></B></FONT></TD></TR>
+            <TR><TD colspan=2>&nbsp;</TD></TR>
             <TR><TD ALIGN=RIGHT>Add Date:</TD>
                 <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=adddate VALUE="<?php echo $adddate;?>" CLASS=input SIZE=15 MAXLENGTH=15></TD></TR>
                 <TD ALIGN=RIGHT>Pull Date:</TD>
@@ -284,7 +288,7 @@ class AddManager extends MenuItem {
     }
     
     public function panelCats($validate) {
-        $catlist = $_REQUEST["catlist"];
+        $catlist = $_REQUEST["catlist"] ?? '';
     
         if($validate)
             return true;
@@ -301,19 +305,19 @@ class AddManager extends MenuItem {
         // Emit the checkbox table 
         for($i=0; $i<4; $i++) {
             echo "        <TR><TD>";
-            $selected = $selcats[$i]?" CHECKED":"";
+            $selected = @$selcats[$i]?" CHECKED":"";
             if($this->categoryMap[$i]["name"])
                 echo "<INPUT TYPE=CHECKBOX NAME=cat$i$selected>".htmlentities(stripslashes($this->categoryMap[$i]["name"]));
             echo "</TD><TD>";
-            $selected = $selcats[$i+4]?" CHECKED":"";
+            $selected = @$selcats[$i+4]?" CHECKED":"";
             if($this->categoryMap[$i+4]["name"])
                 echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+4)."$selected>".htmlentities(stripslashes($this->categoryMap[$i+4]["name"]));
             echo "</TD><TD>";
-            $selected = $selcats[$i+8]?" CHECKED":"";
+            $selected = @$selcats[$i+8]?" CHECKED":"";
             if($this->categoryMap[$i+8]["name"])
                 echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+8)."$selected>".htmlentities(stripslashes($this->categoryMap[$i+8]["name"]));
             echo "</TD><TD>";
-            $selected = $selcats[$i+12]?" CHECKED":"";
+            $selected = @$selcats[$i+12]?" CHECKED":"";
             if($this->categoryMap[$i+12]["name"])
                 echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+12)."$selected>".htmlentities(stripslashes($this->categoryMap[$i+12]["name"]));
             echo "</TD></TR>\n";
@@ -366,7 +370,7 @@ class AddManager extends MenuItem {
             <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
         $emitted = false;
         for($i=0; $i<self::MAX_CAT_COUNT; $i++)
-            if($_POST["cat".$i]) {
+            if(@$_POST["cat".$i]) {
                 if($emitted) echo ", ";
                 echo htmlentities(stripslashes($this->categoryMap[$i]["name"]));
                 $emitted = true;
