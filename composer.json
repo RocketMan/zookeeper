@@ -30,7 +30,7 @@
 	"ext-curl": "*",
 	"ext-pdo": "*",
 	"ext-pdo_mysql": "*",
-	"axy/sourcemap": "^0.1.5",
+	"axy/sourcemap": "^1.0.1",
 	"cboden/ratchet": "^0.4.3",
 	"components/jquery": "^3.6.0",
 	"components/jqueryui": "^1.12.1",
