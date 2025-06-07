@@ -935,7 +935,7 @@ class Editor extends MenuItem {
     
         foreach($post?$_POST:$_GET as $key => $value)
             if(!array_key_exists($key, $this->emitted))
-                 echo "    <INPUT TYPE=HIDDEN NAME=$key VALUE=\"" . htmlentities(stripslashes($value)) . "\">\n";
+                 echo "    <INPUT TYPE=HIDDEN NAME=$key VALUE=\"" . htmlentities(stripslashes($value ?? '')) . "\">\n";
     }
 
     private function insertUpdateAlbum() {
@@ -1020,7 +1020,7 @@ class Editor extends MenuItem {
     
     private function getLabel() {
          $label = $_REQUEST;
-         $label["pubkey"] = @$label["lnew"] ? 0 : $label["selpubkey"];
+         $label["pubkey"] = @$label["lnew"] ? 0 : @$label["selpubkey"];
          return $label;
     }
     
@@ -1417,7 +1417,7 @@ class Editor extends MenuItem {
             $this->skipVar("track".$trackNum);
             $this->skipVar("trackDuration".$trackNum);
             $this->skipVar("trackUrl".$trackNum);
-            $title = htmlentities(stripslashes(@$_POST["track".$trackNum]));
+            $title = isset($_POST["track" . $trackNum]) ? htmlentities(stripslashes($_POST["track".$trackNum])) : '';
             $focus = $focusTrack == $trackNum && self::isEmpty($title)? " data-focus" : "";
 
             echo "<TR>";
@@ -1425,7 +1425,7 @@ class Editor extends MenuItem {
             echo "<TD><INPUT NAME='track$trackNum' VALUE=\"$title\" TYPE=text CLASS='text $cellWidth' maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
 
             if($isCollection) {
-                $artist = htmlentities(stripslashes(@$_POST["artist".$trackNum]));
+                $artist = isset($_POST["artist".$trackNum]) ? htmlentities(stripslashes($_POST["artist".$trackNum])) : '';
                 $focus = !$focus && $focusTrack == $trackNum && self::isEmpty($artist)? " data-focus" : "";
                 echo "<TD><INPUT NAME=artist$trackNum VALUE=\"$artist\" TYPE=text CLASS='text $cellWidth' maxlength=" . PlaylistEntry::MAX_FIELD_LENGTH . " data-zkalpha='true' data-track='$trackNum' $focus ></TD>";
                 $this->skipVar("artist".$trackNum);
