@@ -114,7 +114,7 @@ class RSS extends CommandTarget implements IController {
             if(count($reviews)) {
                 $row['review'] = $row['body'] = $reviews[0]['review'];
                 $row['tracks'] = '';
-                if(preg_match('/(.+?)(?=(\r?\n)[\p{P}\s]*\d+\p{P}*\s)/s',
+                if(preg_match('/(.+?)(?=(\r?\n)[\p{P}\p{S}\s]*\d+[\p{P}\p{S}\d]*\s)/su',
                         $row['review'], $matches) && $matches[1]) {
                     $row['tracks'] = trim(mb_substr($row['review'], mb_strlen($matches[1])));
                     $row['body'] = $matches[1];
