@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -390,6 +390,7 @@ class UIController implements IController {
     }
 
     protected function doLogin($user, $password) {
+        $access = '';
         if(Engine::api(IUser::class)->validatePassword($user, $password, 1, $access)) {
             if(Session::checkLocal())
                 $access .= 'l';
@@ -424,6 +425,7 @@ class UIController implements IController {
     
     protected function doSSOOptions() {
         $success = false;
+        $access = '';
         switch($_REQUEST["account"]) {
         case "old":
             if(Engine::api(IUser::class)->validatePassword($_REQUEST["user"], $_REQUEST["password"], 0, $access) &&
@@ -458,7 +460,7 @@ class UIController implements IController {
             $_REQUEST["action"] = "loginValidate";
             if($location) {
                 $rq = array(
-                    "action" => $action,
+                    "action" => '',
                     "access" => $access
                 );
                 SSOCommon::zkHttpRedirect($location, $rq);

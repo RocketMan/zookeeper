@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -124,6 +124,7 @@ class SSOLogin implements IController {
             if(!SSOCommon::setupSSOByAccount($account) &&
                     !SSOCommon::setupSSOByName($account, $fullname)) {
                 // no joy; query user what he wants to do
+                $location = Engine::api(IUser::class)->getSsoRedirect($params['state']);
                 $this->ssoOptions = Engine::api(IUser::class)->setupSsoOptions($account, $fullname, $location);
                 $this->action = "ssoOptions";
             } else
