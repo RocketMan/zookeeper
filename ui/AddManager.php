@@ -340,7 +340,7 @@ class AddManager extends MenuItem {
             $emitted = false;
             $catstr = "";
             for($i=0; $i<self::MAX_CAT_COUNT; $i++)
-                if($_POST["cat".$i]) {
+                if(!empty($_POST["cat".$i])) {
                     if($emitted) $catstr .= ",";
                     $catstr .= (string)($i+1);
                     $emitted = true;
@@ -370,7 +370,7 @@ class AddManager extends MenuItem {
             <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
         $emitted = false;
         for($i=0; $i<self::MAX_CAT_COUNT; $i++)
-            if(@$_POST["cat".$i]) {
+            if(!empty($_POST["cat".$i])) {
                 if($emitted) echo ", ";
                 echo htmlentities(stripslashes($this->categoryMap[$i]["name"]));
                 $emitted = true;
@@ -496,7 +496,7 @@ class AddManager extends MenuItem {
             $emitted = false;
             $catstr = "";
             for($i=0; $i<self::MAX_CAT_COUNT; $i++)
-                if($_POST["cat".$i]) {
+                if(!empty($_POST["cat".$i])) {
                     if($emitted) $catstr .= ",";
                     $catstr .= (string)($i+1);
                     $emitted = true;
@@ -518,7 +518,7 @@ class AddManager extends MenuItem {
             <TR><TD ALIGN=RIGHT>Categories:</TD><TD ALIGN=LEFT><?php 
         $emitted = false;
         for($i=0; $i<self::MAX_CAT_COUNT; $i++)
-            if($_POST["cat".$i]) {
+            if(!empty($_POST["cat".$i])) {
                 if($emitted) echo ", ";
                 echo htmlentities(stripslashes($this->categoryMap[$i]["name"]));
                 $emitted = true;
