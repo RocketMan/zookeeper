@@ -43,7 +43,7 @@
 	"ratchet/pawl": "^0.4.1",
 	"rocketman/jquery-fxtime": "^1.0",
 	"rocketman/json-api-server": "^3.1",
-	"rocketman/pdf-label": "^1.6+rocketman.2",
+	"rocketman/pdf-label": "^1.6+rocketman.3",
 	"twig/twig": "^3.5.1",
 	"vstelmakh/url-highlight": "^3.0"
     },
