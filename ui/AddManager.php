@@ -305,19 +305,19 @@ class AddManager extends MenuItem {
         // Emit the checkbox table 
         for($i=0; $i<4; $i++) {
             echo "        <TR><TD>";
-            $selected = @$selcats[$i]?" CHECKED":"";
+            $selected = !empty($selcats[$i])?" CHECKED":"";
             if($this->categoryMap[$i]["name"])
                 echo "<INPUT TYPE=CHECKBOX NAME=cat$i$selected>".htmlentities(stripslashes($this->categoryMap[$i]["name"]));
             echo "</TD><TD>";
-            $selected = @$selcats[$i+4]?" CHECKED":"";
+            $selected = !empty($selcats[$i+4])?" CHECKED":"";
             if($this->categoryMap[$i+4]["name"])
                 echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+4)."$selected>".htmlentities(stripslashes($this->categoryMap[$i+4]["name"]));
             echo "</TD><TD>";
-            $selected = @$selcats[$i+8]?" CHECKED":"";
+            $selected = !empty($selcats[$i+8])?" CHECKED":"";
             if($this->categoryMap[$i+8]["name"])
                 echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+8)."$selected>".htmlentities(stripslashes($this->categoryMap[$i+8]["name"]));
             echo "</TD><TD>";
-            $selected = @$selcats[$i+12]?" CHECKED":"";
+            $selected = !empty($selcats[$i+12])?" CHECKED":"";
             if($this->categoryMap[$i+12]["name"])
                 echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+12)."$selected>".htmlentities(stripslashes($this->categoryMap[$i+12]["name"]));
             echo "</TD></TR>\n";
@@ -538,7 +538,6 @@ class AddManager extends MenuItem {
         $adddate = $_REQUEST["adddate"];
         $pulldate = $_REQUEST["pulldate"];
         $catlist = $_REQUEST["catlist"];
-        $date = $_REQUEST["date"];
     
         // We're always going to make two passes:
         //    Pass 1:  Call step $seq to validate
