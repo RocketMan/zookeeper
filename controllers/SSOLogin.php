@@ -33,7 +33,7 @@ class SSOLogin implements IController {
 
     public function processRequest() {
         $params = SSOCommon::zkQSParams();
-        $state = $params["state"];
+        $state = $params["state"] ?? false;
         if($state) {
             // process assertion
         
@@ -60,7 +60,7 @@ class SSOLogin implements IController {
         
         } else {
             // check that cookies are enabled
-            if($params["checkCookie"]) {
+            if($params["checkCookie"] ?? false) {
                 if(isset($_COOKIE["testcookie"])) {
                     // the cookie test was successful!
 
@@ -68,7 +68,7 @@ class SSOLogin implements IController {
                     setcookie("testcookie", "", time() - 3600);
 
                     // generate the SSO state token
-                    $token = Engine::api(IUser::class)->setupSsoRedirect($params["location"]);
+                    $token = Engine::api(IUser::class)->setupSsoRedirect($params["location"] ?? '');
         
                     // redirect to the Google auth page
                     $configParams = Engine::param('sso');
@@ -100,6 +100,7 @@ class SSOLogin implements IController {
     }
     
     public function doSSOLogin($params) {
+        $error = '';
         $profile = SSOCommon::ssoCheckAssertion($params, $error);
         if($profile) {
             $email = $profile["email"];
