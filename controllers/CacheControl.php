@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -37,6 +37,10 @@ class CacheControl implements IController {
     protected $dirs = 0;
     protected $files = 0;
     protected $verbose = false;
+    protected $base = '';
+    protected $stale = 0;
+    protected $fresh = 0;
+    protected $uncached = 0;
 
     /**
      * recursively remove contents of specified directory

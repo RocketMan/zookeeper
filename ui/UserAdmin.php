@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -442,7 +442,7 @@ class UserAdmin extends MenuItem {
     
         // Emit the airnames list
         foreach($users as $user) {
-            if(!strlen($user["name"]))
+            if(!$user["name"])
                 continue;
             if($user["id"] == $aid)
                 $class = "noQuota";

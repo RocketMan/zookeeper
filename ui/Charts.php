@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -167,17 +167,10 @@ class Charts extends MenuItem {
             return;
         }
     
-        if($monthly) {
-            $startDate = $chartAPI->getMonthlyChartStart($month, $year);
-            $endDate = $chartAPI->getMonthlyChartEnd($month, $year);
-            $displayDate = date("F Y", mktime(0,0,0,$month,1,$year));
-            echo "<P CLASS=\"header\">$station chart for month of $displayDate</P>\n";
-        } else {
-            $startDate = "";
-            $endDate = "$year-$month-$day";
-            $displayDate = date($dateSpec, mktime(0,0,0,$month,$day,$year));
-            echo "<P CLASS=\"header\">$station chart for the week ending $displayDate</P>\n";
-        }
+        $startDate = "";
+        $endDate = "$year-$month-$day";
+        $displayDate = date($dateSpec, mktime(0,0,0,$month,$day,$year));
+        echo "<P CLASS=\"header\">$station chart for the week ending $displayDate</P>\n";
 
         $this->title = "Chart for $displayDate";
     
@@ -186,8 +179,7 @@ class Charts extends MenuItem {
     // monthly = hip hop, reggae/world, jazz, blues, country, heavy shit, dance
     //     limit to 60 main, 10/cat
     
-        $mainLimit = $monthly?"60":"";
-        $catLimit = $monthly?"10":"";
+        $mainLimit = $catLimit = "";
     
         // JHM FIXME TBD - hardcoded for now
         $this->emitChart($startDate, $endDate, $mainLimit);
@@ -200,8 +192,7 @@ class Charts extends MenuItem {
         $this->emitChart($startDate, $endDate, $catLimit, "2"); // country
         $this->emitChart($startDate, $endDate, $catLimit, "4"); // heavy shit
         $this->emitChart($startDate, $endDate, $catLimit, "3"); // dance
-        if(!$monthly)
-            $this->emitChart($startDate, $endDate, $catLimit, "8"); // C/X
+        $this->emitChart($startDate, $endDate, $catLimit, "8"); // C/X
     
         UI::setFocus();
     }
@@ -467,11 +458,13 @@ class Charts extends MenuItem {
     
     public function chartEMail() {
         $chartAPI = Engine::api(IChart::class);
-        if($_REQUEST["seq"] == "update") {
+        if(($_REQUEST["seq"] ?? '') == "update") {
             $success = true;
             for($i=1; $success && $i<=16; $i++) {
-                $email = $_POST["email".$i];
-                $success &= $chartAPI->updateChartEMail($i, $email);
+                if(isset($_POST["email".$i])) {
+                    $email = $_POST["email".$i];
+                    $success &= $chartAPI->updateChartEMail($i, $email);
+                }
             }
         }
     ?>
@@ -489,7 +482,7 @@ class Charts extends MenuItem {
           <TR><TD>&nbsp;</TD>
               <TD COLSPAN=3 ALIGN=LEFT><INPUT TYPE=SUBMIT VALUE=" Update Addresses "></TD></TR>
     <?php 
-        if($_REQUEST["seq"] == "update") {
+        if(($_REQUEST["seq"] ?? '') == "update") {
             if($success)
                 echo "      <TR><TD>&nbsp;</TD><TD CLASS=\"header\" ALIGN=LEFT COLSPAN=2>E-Mail addresses updated.</TD></TR>\n";
             else

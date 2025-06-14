@@ -62,6 +62,7 @@ class RSS extends CommandTarget implements IController {
     }
 
     public function composeChartRSS($endDate, $limit="", $category="") {
+        $chart = [];
         Engine::api(IChart::class)->getChart($chart, "", $endDate, $limit, $category);
         $albums = [];
         if(sizeof($chart)) {

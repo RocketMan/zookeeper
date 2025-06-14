@@ -406,6 +406,7 @@ class Playlists extends MenuItem {
                 $entry = (new PlaylistEntry())->setSetSeparator();
                 if($spinTime)
                     $entry->setCreated($spinTime->format(IPlaylist::TIME_FORMAT_SQL));
+                $status = '';
                 Engine::api(IPlaylist::class)->insertTrackEntry($playlistId, $entry, $status);
                 $this->break = true;
             }
