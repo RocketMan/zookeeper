@@ -531,13 +531,13 @@ class AddManager extends MenuItem {
     
     public function addManagerEdit() {
         $id = $_REQUEST["id"];
-        $seq = $_REQUEST["seq"];
+        $seq = $_REQUEST["seq"] ?? '';
     
-        $aid = $_REQUEST["aid"];
-        $tag = $_REQUEST["tag"];
-        $adddate = $_REQUEST["adddate"];
-        $pulldate = $_REQUEST["pulldate"];
-        $catlist = $_REQUEST["catlist"];
+        $aid = $_REQUEST["aid"] ?? '';
+        $tag = $_REQUEST["tag"] ?? '';
+        $adddate = $_REQUEST["adddate"] ?? '';
+        $pulldate = $_REQUEST["pulldate"] ?? '';
+        $catlist = $_REQUEST["catlist"] ?? '';
     
         // We're always going to make two passes:
         //    Pass 1:  Call step $seq to validate
@@ -564,11 +564,11 @@ class AddManager extends MenuItem {
                 // Pull in the values for this album
                 $row = Engine::api(IChart::class)->getAlbum($id);
                 if($row) {
-                        $_REQUEST["aid"] = $row["afile_number"];
-                        $_REQUEST["tag"] = $row["tag"];
-                        $_REQUEST["adddate"] = $row["adddate"];
-                        $_REQUEST["pulldate"] = $row["pulldate"];
-                        $_REQUEST["catlist"] = $row["category"];
+                    $_REQUEST["aid"] = $row["afile_number"];
+                    $_REQUEST["tag"] = $row["tag"];
+                    $_REQUEST["adddate"] = $row["adddate"];
+                    $_REQUEST["pulldate"] = $row["pulldate"];
+                    $_REQUEST["catlist"] = $row["category"];
                     $this->emitHidden("tag", $row["tag"]);
                     $this->emitHidden("adddate", $row["adddate"]);
                     $this->emitHidden("pulldate", $row["pulldate"]);
@@ -801,6 +801,7 @@ class AddManager extends MenuItem {
         $lastDateRaw = null;
 
         // Get albums into array
+        $shows = [];
         $this->aFileActivityGetReport($records, $shows);
 
         $result = [];
