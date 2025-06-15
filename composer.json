@@ -49,5 +49,8 @@
     },
     "suggest": {
 	"ext-intl": "Allows transliteration of Cyrillic and Greek to Latin"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1"
     }
 }
