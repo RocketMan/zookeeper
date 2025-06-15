@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2020 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -32,7 +32,7 @@ use ZK\UI\UICommon as UI;
 
 class DeepStorage extends MenuItem {
     public function processLocal($action, $subaction) {
-        $userfile = $_FILES['userfile']['tmp_name'];
+        $userfile = $_FILES['userfile']['tmp_name'] ?? '';
         if(!$userfile || $_SERVER['REQUEST_METHOD'] != 'POST') {
     ?>
       <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
@@ -40,7 +40,7 @@ class DeepStorage extends MenuItem {
         <INPUT TYPE=hidden name=subaction value="deepStorage">
         <INPUT TYPE=hidden name=MAX_FILE_SIZE value=100000>
         <TABLE BORDER=0 CELLPADDING=2 style='margin-top: 2px'>
-          <TR><TD ALIGN=RIGHT>Send this tab-delimited file:</TD><TD><INPUT NAME=userfile TYPE=file></TD></TR>
+          <TR><TD ALIGN=RIGHT>Send this tab-delimited file:</TD><TD><INPUT NAME=userfile TYPE=file required></TD></TR>
           <TR><TD ALIGN=RIGHT>Tag column number:</TD><TD><INPUT TYPE=text name=column value="1" LENGTH=10></TD></TR>
           <TR><TD ALIGN=RIGHT>Box number:</TD><TD><INPUT TYPE=text name=bin LENGTH=10></TD></TR>
           <TR><TD ALIGN=RIGHT>Deaccession:</TD><TD><INPUT TYPE=checkbox name=deacc value="U"></TD></TR>

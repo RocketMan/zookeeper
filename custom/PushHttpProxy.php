@@ -101,7 +101,7 @@ class PushHttpProxy {
         $this->reconnect();
     }
 
-    protected static function newMessage(string $json = null) :
+    protected static function newMessage(?string $json = null) :
             \Ratchet\RFC6455\Messaging\Message {
         if($json === null)
             $json = NowAiringServer::toJson(null, null);

@@ -6,8 +6,29 @@ on:
   workflow_dispatch:
 
 jobs:
+  phpstan:
+    name: PHP Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Setup PHP 8.4 with increased memory
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4
+          ini-values: memory_limit=256M
+
+      - name: Install Composer dependencies (including dev)
+        uses: ramsey/composer-install@v2
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse controllers custom engine ui --no-progress --error-format=github
+
   build:
+    name: Build and Test Matrix
     runs-on: ${{ matrix.operating-system }}
+    needs: phpstan
     strategy:
       matrix:
         operating-system: [ubuntu-latest]
