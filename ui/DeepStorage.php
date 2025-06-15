@@ -32,7 +32,7 @@ use ZK\UI\UICommon as UI;
 
 class DeepStorage extends MenuItem {
     public function processLocal($action, $subaction) {
-        $userfile = $_FILES['userfile']['tmp_name'];
+        $userfile = $_FILES['userfile']['tmp_name'] ?? '';
         if(!$userfile || $_SERVER['REQUEST_METHOD'] != 'POST') {
     ?>
       <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
