@@ -48,7 +48,7 @@ use React\Socket\ConnectorInterface;
  * See https://github.com/ratchetphp/Pawl/issues/166
  */
 class Subscriber extends Connector {
-    public function __construct(LoopInterface $loop = null, ConnectorInterface $connector = null) {
+    public function __construct(?LoopInterface $loop = null, ?ConnectorInterface $connector = null) {
         $this->_loop = $loop ?: Loop::get();
 
         if (null === $connector) {
