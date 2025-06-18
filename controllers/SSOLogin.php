@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -33,7 +33,7 @@ class SSOLogin implements IController {
 
     public function processRequest() {
         $params = SSOCommon::zkQSParams();
-        $state = $params["state"];
+        $state = $params["state"] ?? false;
         if($state) {
             // process assertion
         
@@ -60,7 +60,7 @@ class SSOLogin implements IController {
         
         } else {
             // check that cookies are enabled
-            if($params["checkCookie"]) {
+            if($params["checkCookie"] ?? false) {
                 if(isset($_COOKIE["testcookie"])) {
                     // the cookie test was successful!
 
@@ -68,7 +68,7 @@ class SSOLogin implements IController {
                     setcookie("testcookie", "", time() - 3600);
 
                     // generate the SSO state token
-                    $token = Engine::api(IUser::class)->setupSsoRedirect($params["location"]);
+                    $token = Engine::api(IUser::class)->setupSsoRedirect($params["location"] ?? '');
         
                     // redirect to the Google auth page
                     $configParams = Engine::param('sso');
@@ -100,6 +100,7 @@ class SSOLogin implements IController {
     }
     
     public function doSSOLogin($params) {
+        $error = '';
         $profile = SSOCommon::ssoCheckAssertion($params, $error);
         if($profile) {
             $email = $profile["email"];
@@ -124,6 +125,7 @@ class SSOLogin implements IController {
             if(!SSOCommon::setupSSOByAccount($account) &&
                     !SSOCommon::setupSSOByName($account, $fullname)) {
                 // no joy; query user what he wants to do
+                $location = Engine::api(IUser::class)->getSsoRedirect($params['state']);
                 $this->ssoOptions = Engine::api(IUser::class)->setupSsoOptions($account, $fullname, $location);
                 $this->action = "ssoOptions";
             } else

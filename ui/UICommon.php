@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -26,9 +26,7 @@ namespace ZK\UI;
 
 use ZK\Engine\Engine;
 
-use Erusev\Parsedown\Configurables;
-use Erusev\Parsedown\Parsedown;
-use Erusev\Parsedown\State;
+use League\CommonMark\GithubFlavoredMarkdownConverter;
 
 use VStelmakh\UrlHighlight\UrlHighlight;
 
@@ -169,11 +167,15 @@ class UICommon {
      */
     public static function markdown($text) {
         return self::getSingleton('markdown', function() {
-            return new Parsedown(new State([
-                new Configurables\Breaks(true),
-                new Configurables\SafeMode(true)
-            ]));
-        })->toHtml($text);
+            return new GithubFlavoredMarkdownConverter([
+                'html_input' => 'escape',
+                'allow_unsafe_links' => false,
+                'renderer' => [
+                    'soft_break' => "<br />\n"
+                ],
+                'max_nesting_level' => 20
+            ]);
+        })->convert($text);
     }
 
     /**
