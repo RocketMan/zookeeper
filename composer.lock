@@ -4,29 +4,34 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3444b29a0ce1d1e548fda63c8c85fea1",
+    "content-hash": "ca528134ec99195f230bc796fe20fc66",
     "packages": [
         {
             "name": "axy/backtrace",
-            "version": "1.0.7",
+            "version": "3.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/axypro/backtrace.git",
-                "reference": "c6c7d0f3497a07ae934f9e8511cbc2286db311c5"
+                "reference": "23b217f74e4603202043848ad699d5472e7ae590"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/axypro/backtrace/zipball/c6c7d0f3497a07ae934f9e8511cbc2286db311c5",
-                "reference": "c6c7d0f3497a07ae934f9e8511cbc2286db311c5",
+                "url": "https://api.github.com/repos/axypro/backtrace/zipball/23b217f74e4603202043848ad699d5472e7ae590",
+                "reference": "23b217f74e4603202043848ad699d5472e7ae590",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.4.0"
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~10.0.15",
+                "squizlabs/php_codesniffer": "=3.7.1"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "axy\\backtrace\\": ""
+                    "axy\\backtrace\\": "src",
+                    "axy\\backtrace\\tests\\": "tests"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -49,32 +54,37 @@
             ],
             "support": {
                 "issues": "https://github.com/axypro/backtrace/issues",
-                "source": "https://github.com/axypro/backtrace/tree/1.0.7"
+                "source": "https://github.com/axypro/backtrace/tree/3.0.1"
             },
-            "time": "2019-02-02T15:52:44+00:00"
+            "time": "2023-03-16T11:02:09+00:00"
         },
         {
             "name": "axy/codecs-base64vlq",
-            "version": "1.0.1",
+            "version": "2.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/axypro/codecs-base64vlq.git",
-                "reference": "53a1957f2cb773c6533ac615b3f1ac59e40e13cc"
+                "reference": "1650b32b5fb706ed8416387ba16dee49bac2d02d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/axypro/codecs-base64vlq/zipball/53a1957f2cb773c6533ac615b3f1ac59e40e13cc",
-                "reference": "53a1957f2cb773c6533ac615b3f1ac59e40e13cc",
+                "url": "https://api.github.com/repos/axypro/codecs-base64vlq/zipball/1650b32b5fb706ed8416387ba16dee49bac2d02d",
+                "reference": "1650b32b5fb706ed8416387ba16dee49bac2d02d",
                 "shasum": ""
             },
             "require": {
-                "axy/errors": "~1.0.1",
-                "php": ">=5.4.0"
+                "axy/errors": "~3.0.1",
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~10.0.15",
+                "squizlabs/php_codesniffer": "=3.7.1"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "axy\\codecs\\base64vlq\\": ""
+                    "axy\\codecs\\base64vlq\\": "src",
+                    "axy\\codecs\\base64vlq\\tests\\": "tests"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -98,32 +108,37 @@
             ],
             "support": {
                 "issues": "https://github.com/axypro/codecs-base64vlq/issues",
-                "source": "https://github.com/axypro/codecs-base64vlq/tree/master"
+                "source": "https://github.com/axypro/codecs-base64vlq/tree/2.0.1"
             },
-            "time": "2015-11-23T07:08:52+00:00"
+            "time": "2023-03-16T11:26:28+00:00"
         },
         {
             "name": "axy/errors",
-            "version": "1.0.5",
+            "version": "3.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/axypro/errors.git",
-                "reference": "2c64374ae2b9ca51304c09b6b6acc275557fc34f"
+                "reference": "3f194e4f7e9e175033b4f05101518cfaae6d0e77"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/axypro/errors/zipball/2c64374ae2b9ca51304c09b6b6acc275557fc34f",
-                "reference": "2c64374ae2b9ca51304c09b6b6acc275557fc34f",
+                "url": "https://api.github.com/repos/axypro/errors/zipball/3f194e4f7e9e175033b4f05101518cfaae6d0e77",
+                "reference": "3f194e4f7e9e175033b4f05101518cfaae6d0e77",
                 "shasum": ""
             },
             "require": {
-                "axy/backtrace": "~1.0.2",
-                "php": ">=5.4.0"
+                "axy/backtrace": "~3.0.1",
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~10.0.15",
+                "squizlabs/php_codesniffer": "=3.7.1"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "axy\\errors\\": ""
+                    "axy\\errors\\": "src",
+                    "axy\\errors\\tests\\": "tests"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -144,34 +159,39 @@
             ],
             "support": {
                 "issues": "https://github.com/axypro/errors/issues",
-                "source": "https://github.com/axypro/errors/tree/1.0.5"
+                "source": "https://github.com/axypro/errors/tree/3.0.1"
             },
-            "time": "2019-02-02T18:26:18+00:00"
+            "time": "2023-03-16T11:12:22+00:00"
         },
         {
             "name": "axy/sourcemap",
-            "version": "0.1.5",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/axypro/sourcemap.git",
-                "reference": "95a52df5a08c3a011031dae2e79390134e28467c"
+                "reference": "254ab0cbcd155fc57a136ac9ce0896551885261d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/axypro/sourcemap/zipball/95a52df5a08c3a011031dae2e79390134e28467c",
-                "reference": "95a52df5a08c3a011031dae2e79390134e28467c",
+                "url": "https://api.github.com/repos/axypro/sourcemap/zipball/254ab0cbcd155fc57a136ac9ce0896551885261d",
+                "reference": "254ab0cbcd155fc57a136ac9ce0896551885261d",
                 "shasum": ""
             },
             "require": {
-                "axy/codecs-base64vlq": "~1.0.0",
-                "axy/errors": "~1.0.1",
+                "axy/codecs-base64vlq": "^2.0.1",
+                "axy/errors": "^3.0.1",
                 "ext-json": "*",
-                "php": ">=5.4.0"
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~10.0.15",
+                "squizlabs/php_codesniffer": "=3.7.1"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "axy\\sourcemap\\": ""
+                    "axy\\sourcemap\\": "src",
+                    "axy\\sourcemap\\tests\\": "tests"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -194,9 +214,9 @@
             ],
             "support": {
                 "issues": "https://github.com/axypro/sourcemap/issues",
-                "source": "https://github.com/axypro/sourcemap/tree/0.1.5"
+                "source": "https://github.com/axypro/sourcemap/tree/1.0.1"
             },
-            "time": "2020-08-20T09:49:44+00:00"
+            "time": "2023-03-16T11:44:41+00:00"
         },
         {
             "name": "cboden/ratchet",
@@ -3326,7 +3346,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -3335,6 +3355,6 @@
         "ext-pdo": "*",
         "ext-pdo_mysql": "*"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }
