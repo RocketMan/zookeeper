@@ -14,6 +14,13 @@
 	"preferred-install": "dist",
 	"discard-changes": "true"
     },
+    "repositories": [
+	{
+	    "_comment": "Using a fork of axy/sourcemap for PHP 8.4 support - see PR #10",
+	    "type": "vcs",
+	    "url": "https://github.com/RocketMan/sourcemap"
+	}
+    ],
     "autoload": {
 	"psr-4": {
 	    "ZK\\API\\": "api/",
@@ -30,7 +37,7 @@
 	"ext-curl": "*",
 	"ext-pdo": "*",
 	"ext-pdo_mysql": "*",
-	"axy/sourcemap": "^1.0.1",
+	"axy/sourcemap": "^1.0",
 	"cboden/ratchet": "^0.4.3",
 	"components/jquery": "^3.6.0",
 	"components/jqueryui": "^1.12.1",

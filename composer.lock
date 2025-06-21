@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ca528134ec99195f230bc796fe20fc66",
+    "content-hash": "72372861142d13ad494cd5cf32856b50",
     "packages": [
         {
             "name": "axy/backtrace",
@@ -165,16 +165,16 @@
         },
         {
             "name": "axy/sourcemap",
-            "version": "1.0.1",
+            "version": "v1.0.1+rocketman.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/axypro/sourcemap.git",
-                "reference": "254ab0cbcd155fc57a136ac9ce0896551885261d"
+                "url": "https://github.com/RocketMan/sourcemap.git",
+                "reference": "a15bb5dd58e17a39d94e2c64c8a302cb33c0cbb2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/axypro/sourcemap/zipball/254ab0cbcd155fc57a136ac9ce0896551885261d",
-                "reference": "254ab0cbcd155fc57a136ac9ce0896551885261d",
+                "url": "https://api.github.com/repos/RocketMan/sourcemap/zipball/a15bb5dd58e17a39d94e2c64c8a302cb33c0cbb2",
+                "reference": "a15bb5dd58e17a39d94e2c64c8a302cb33c0cbb2",
                 "shasum": ""
             },
             "require": {
@@ -194,7 +194,16 @@
                     "axy\\sourcemap\\tests\\": "tests"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "archive": {
+                "exclude": [
+                    "/tests/*",
+                    "/devops/*",
+                    "/doc/*",
+                    "/*.sh",
+                    "/*.xml.dist",
+                    "/CHANGELOG.md"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -207,16 +216,15 @@
             "description": "Work with JavaScript/CSS Source Map",
             "homepage": "https://github.com/axypro/sourcemap",
             "keywords": [
-                "Source map",
-                "css",
-                "javascript",
+                "CSS",
+                "JavaScript",
+                "Source Map",
                 "sourcemap"
             ],
             "support": {
-                "issues": "https://github.com/axypro/sourcemap/issues",
-                "source": "https://github.com/axypro/sourcemap/tree/1.0.1"
+                "source": "https://github.com/RocketMan/sourcemap/tree/v1.0.1+rocketman.1"
             },
-            "time": "2023-03-16T11:44:41+00:00"
+            "time": "2025-06-21T15:03:21+00:00"
         },
         {
             "name": "cboden/ratchet",
@@ -3346,7 +3354,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -3355,6 +3363,6 @@
         "ext-pdo": "*",
         "ext-pdo_mysql": "*"
     },
-    "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
 }
