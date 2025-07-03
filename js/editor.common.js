@@ -649,7 +649,7 @@ $().ready(function() {
         if(this.files.length) {
             var file = this.files[0];
             if(file.type && !file.type.startsWith('image/')) {
-                $("input[name=userfile]").val('');
+                $("input[name=userfile]").val('').trigger('change');
                 // TBD message user to select a valid image file (e.g., .jpg, .png, etc.)
                 console.log("not a valid image file: " + file.type);
                 return;
@@ -682,7 +682,7 @@ $().ready(function() {
                     $("input[name=userfile]").val('').attr('title', 'Change album artwork');
                 };
                 img.onerror = function() {
-                    $("input[name=userfile]").val('');
+                    $("input[name=userfile]").val('').trigger('change');
                     // TBD message user to select a valid image file (e.g., .jpg, .png, etc.)
                     console.log("not a valid image file: " + (file.type || '(unknown type)'));
                 };
