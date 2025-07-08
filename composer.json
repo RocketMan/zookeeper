@@ -14,6 +14,13 @@
 	"preferred-install": "dist",
 	"discard-changes": "true"
     },
+    "repositories": [
+	{
+	    "_comment": "Using a fork of axy/sourcemap for PHP 8.4 support - see PR #10",
+	    "type": "vcs",
+	    "url": "https://github.com/RocketMan/sourcemap"
+	}
+    ],
     "autoload": {
 	"psr-4": {
 	    "ZK\\API\\": "api/",
@@ -26,28 +33,31 @@
 	]
     },
     "require": {
-	"php": ">=7.4",
+	"php": ">=8.2",
 	"ext-curl": "*",
 	"ext-pdo": "*",
 	"ext-pdo_mysql": "*",
-	"axy/sourcemap": "^0.1.5",
+	"axy/sourcemap": "^1.0",
 	"cboden/ratchet": "^0.4.3",
 	"components/jquery": "^3.6.0",
 	"components/jqueryui": "^1.12.1",
-	"enm/json-api-server": "^3.1",
-	"erusev/parsedown": "^2.0.0-beta1",
 	"guzzlehttp/guzzle": "^7.4",
+	"league/commonmark": "^2.7",
 	"mottie/tablesorter": "^2.31.3",
 	"mrclay/jsmin-php": "^2.4.0",
 	"react/datagram": "^1.5",
 	"react/http": "^1.2",
 	"ratchet/pawl": "^0.4.1",
 	"rocketman/jquery-fxtime": "^1.0",
-	"rocketman/pdf-label": "^1.6+rocketman.2",
+	"rocketman/json-api-server": "^3.1",
+	"rocketman/pdf-label": "^1.6+rocketman.3",
 	"twig/twig": "^3.5.1",
 	"vstelmakh/url-highlight": "^3.0"
     },
     "suggest": {
 	"ext-intl": "Allows transliteration of Cyrillic and Greek to Latin"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1"
     }
 }

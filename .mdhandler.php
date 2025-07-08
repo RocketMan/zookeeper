@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -24,7 +24,7 @@
 
 require_once __DIR__."/vendor/autoload.php";
 
-use Erusev\Parsedown\Parsedown;
+use League\CommonMark\GithubFlavoredMarkdownConverter;
 
 use ZK\Engine\Engine;
 
@@ -38,9 +38,9 @@ if(strncmp($target, __DIR__.DIRECTORY_SEPARATOR, strlen(__DIR__)+1) ||
 }
 
 $mtime = filemtime($target);
-header("ETag: \"${mtime}\""); // RFC 2616 requires ETag in 304 response
+header("ETag: \"{$mtime}\""); // RFC 2616 requires ETag in 304 response
 if(isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
-        strstr($_SERVER['HTTP_IF_NONE_MATCH'], "\"${mtime}\"") !== false ||
+        strstr($_SERVER['HTTP_IF_NONE_MATCH'], "\"{$mtime}\"") !== false ||
         isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
         strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $mtime) {
     http_response_code(304); // Not Modified
@@ -65,7 +65,7 @@ echo "<title>".basename($_SERVER['REQUEST_URI'])."</title>\n";
 echo "</head>\n<body>\n<div class='box'>\n";
 
 ob_start(function($buffer) {
-    return (new Parsedown())->toHtml($buffer);
+    return (new GithubFlavoredMarkdownConverter())->convert($buffer);
 });
 
 require_once($target);

@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -33,10 +33,10 @@ class Config {
     /**
      * ctor
      *
-     * @param file base filename of configuration file (without extension)
-     * @param variable variable name in config file (default 'config')
+     * @param string $file base filename of configuration file (without extension)
+     * @param string $variable variable name in config file (default 'config')
      */
-    public function __construct($file, $variable = 'config') {
+    public function __construct(string $file, string $variable = 'config') {
         $path = dirname(__DIR__) . "/config/{$file}.php";
         if(!is_file($path))
             throw new \Exception("Config file not found: $file");
@@ -52,9 +52,9 @@ class Config {
     /**
      * merge an array of entries into this configuration
      *
-     * @param config array to merge
+     * @param array $config array to merge
      */
-    public function merge($config) {
+    public function merge(array $config): void {
         $this->config = array_merge($this->config, $config);
     }
 
@@ -64,10 +64,11 @@ class Config {
      * calls user-supplied callback for each entry.
      * iteration ceases upon first non-null return value from the callback
      *
-     * @param fn callback with signature 'function($entry)'
-     * @return first value returned by a callback, if any
+     * @param \Closure $fn callback to invoke for each entry.  Must accept 1 or 2 parameters
+     * @return mixed first non-null value returned by a callback, or null if none
+     * @throws \InvalidArgumentException if the callback does not accept 1 or 2 arguments
      */
-    public function iterate($fn) {
+    public function iterate(\Closure $fn): mixed {
         switch((new \ReflectionFunction($fn))->getNumberOfParameters()) {
         case 1:
             foreach($this->config as $entry)
@@ -82,35 +83,37 @@ class Config {
         default:
             throw new \InvalidArgumentException("closure expects 1 or 2 arguments");
         }
+
+        return null;
     }
 
     /**
      * return the default (first) configuration entry
      *
-     * @return default entry
+     * @return mixed default entry
      */
-    public function default() {
+    public function default(): mixed {
         return $this->config[array_keys($this->config)[0]];
     }
 
     /**
      * determine whether the specified configuration param exists
      *
-     * @param key name of param to test
-     * @return true if exists, false otherwise
+     * @param string $key name of param to test
+     * @return bool true if exists, false otherwise
      */
-    public function hasParam($key) {
+    public function hasParam(string $key): bool {
         return array_key_exists($key, $this->config);
     }
 
     /**
      * get a configuration value from the configuration file
      *
-     * @param key name of param
-     * @param default value if param is not set (optional)
-     * @return value or null if not set and no default specified
+     * @param string $key name of param
+     * @param mixed $default value if param is not set (optional)
+     * @return mixed value or null if not set and no default specified
      */
-    public function getParam($key, $default = null) {
+    public function getParam(string $key, mixed $default = null): mixed {
         return array_key_exists($key, $this->config)?
                    $this->config[$key]:$default;
     }

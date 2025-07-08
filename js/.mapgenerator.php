@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -76,7 +76,7 @@ foreach($minified as $dline => $dtext) {
         continue;
 
     $dcol = 0;
-    foreach(preg_split("/[^a-z]/i", $dtext, null, PREG_SPLIT_NO_EMPTY) as $token) {
+    foreach(preg_split("/[^a-z]/i", $dtext, 0, PREG_SPLIT_NO_EMPTY) as $token) {
         // token position in the minified file
         $dcol = strpos($dtext, $token, $dcol);
 
@@ -103,7 +103,7 @@ foreach($minified as $dline => $dtext) {
                 'column' => $dcol
             ],
             'source' => [
-                'fileName' => "${base}.src.js",
+                'fileName' => "{$base}.src.js",
                 'line' => $sline,
                 'column' => $scol
             ],
@@ -117,5 +117,5 @@ foreach($minified as $dline => $dtext) {
 fclose($source);
 
 // generate the source map JSON
-$map->file = "${base}.js";
+$map->file = "{$base}.js";
 $map->save('php://output', 0);

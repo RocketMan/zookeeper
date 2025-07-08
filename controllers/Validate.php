@@ -138,6 +138,7 @@ class Validate implements IController {
     }
 
     public function validateSignon() {
+        $access = '';
         if($this->doTest("validate signon")) {
             $this->showSuccess(
                 Engine::api(IUser::class)->validatePassword(
