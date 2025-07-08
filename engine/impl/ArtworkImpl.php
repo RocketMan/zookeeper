@@ -70,9 +70,7 @@ class ArtworkImpl extends DBO implements IArtwork {
                 $file .= ".webp";
                 break;
             default:
-                error_log("fetchImage: unsupported image type: $type");
-                unlink($path);
-                return null;
+                throw new \Exception("unsupported image type: $type");
             }
 
             $target = $cacheDir . substr($file, 0, 2);

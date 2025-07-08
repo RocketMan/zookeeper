@@ -335,7 +335,7 @@ class Reviews extends MenuItem {
             $reviewer .= " (" . $reviews[0]["airname"] . ")";
 
         // truncate the review at the track breakout
-        if(preg_match('/(.+?)(?=(\r?\n)[\p{P}\s]*\d+\p{P}*\s)/s', $review, $matches) && $matches[1])
+        if(preg_match('/(.+?)(?=(\r?\n)[\p{P}\p{S}\s]*\d+[\p{P}\p{S}\d]*\s)/su', $review, $matches) && $matches[1])
             $review = $matches[1];
 
         $base = Engine::getBaseUrl();

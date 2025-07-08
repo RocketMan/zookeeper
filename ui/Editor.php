@@ -1020,7 +1020,7 @@ class Editor extends MenuItem {
     
     private function getLabel() {
          $label = $_REQUEST;
-         $label["pubkey"] = @$label["lnew"] ? 0 : $label["selpubkey"];
+         $label["pubkey"] = @$label["lnew"] ? 0 : @$label["selpubkey"];
          return $label;
     }
     
@@ -1254,7 +1254,7 @@ class Editor extends MenuItem {
         </SELECT></TD></TR>
       <TR><TD></TD><TD>
         <div class='file-area album-thumb' <?php if($isDisabled) echo "style='display: none'"; ?>>
-          <input type='file' name='userfile' accept='image/*' <?php if($hasArt) echo "title='Album artwork' class='has-file'"; ?>>
+          <input type='file' name='userfile' accept='image/*' <?php if($hasArt) echo "title='Change album artwork' class='has-file'"; ?>>
           <div class='file-overlay'>
             <div class='default'>
               <h4 class='caption'>Album Art</h4>

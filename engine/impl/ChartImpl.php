@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -236,12 +236,17 @@ class ChartImpl extends DBO implements IChart {
     }
     
     public function deleteAlbum($id) {
+        $query = "SELECT tag FROM currents WHERE id = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $id);
+        $row = $stmt->executeAndFetch();
+
         $query = "DELETE FROM currents WHERE id = ?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $id);
         $success = $stmt->execute() && $stmt->rowCount() >= 0;
-        if($success)
-            $success &= $this->updateLocation($tag, 'L'); // Library
+        if($success && isset($row['tag']))
+            $success &= $this->updateLocation($row['tag'], 'L'); // Library
         return $success;
     }
 
@@ -630,7 +635,7 @@ class ChartImpl extends DBO implements IChart {
 
             // if we made it this far, success!
             return true;
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             $pdo->rollBack();
             error_log("doChart: " . $e->getMessage());
             return false;
