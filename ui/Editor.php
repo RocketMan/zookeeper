@@ -1020,7 +1020,8 @@ class Editor extends MenuItem {
     
     private function getLabel() {
          $label = $_REQUEST;
-         $label["pubkey"] = @$label["lnew"] ? 0 : @$label["selpubkey"];
+         $label["pubkey"] = !empty($label["lnew"]) ? 0 : ($label["selpubkey"] ?? 0);
+         $label["foreign"] ??= false;
          return $label;
     }
     
