@@ -620,7 +620,8 @@ class Playlists extends MenuItem {
             $fd = new \SplFileObject($userfile, "r");
             $window = $papi->getTimestampWindow($playlist);
             while($fd->valid()) {
-                $line = $fd->fgetcsv($delimiter, $enclosure);
+                // Allow only RFC 4180 escaping (double enclosure character)
+                $line = $fd->fgetcsv($delimiter, $enclosure, "");
                 switch(count($line)) {
                 case 4:
                     // artist track album label
