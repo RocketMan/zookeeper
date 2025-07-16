@@ -408,7 +408,7 @@ class ZootopiaListener {
             }
         })->then(function() use($event, &$trackName) {
             // lookup album by track name
-            $trackName = preg_match("/^(.+)( \(\d+\))$/", $event["track_title"], $matches) ? $matches[1] : $event["track_title"];
+            $trackName = trim(preg_match("/^(.+)( \(\d+\))$/", $event["track_title"], $matches) ? $matches[1] : $event["track_title"]);
 
             return $this->zk->getAsync('api/v1/album', [
                 RequestOptions::QUERY => [
