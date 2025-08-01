@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -74,9 +74,11 @@ class Reviews implements RequestHandlerInterface {
                 $value = $rec["airname"] ?? $rec["realname"];
                 break;
             case "published":
-                $value = !$rec["private"];
+                $value = !($rec["private"] ?? false);
                 break;
             default:
+                if(!array_key_exists($field, $rec))
+                    continue 2;
                 $value = $rec[$field];
                 break;
             }
