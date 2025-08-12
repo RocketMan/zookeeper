@@ -24,7 +24,9 @@
 
 namespace ZK\PushNotification;
 
+use ZK\Engine\IArtwork;
 use ZK\Engine\IPlaylist;
+use ZK\Engine\Engine;
 use ZK\Engine\PlaylistEntry;
 
 use GuzzleHttp\Client;
@@ -434,6 +436,10 @@ class ZootopiaListener {
                         break;
                     }
                 }
+
+                if($album && empty($album->attributes->albumart)
+                        && ($event['image_url'] ?? ''))
+                    Engine::api(IArtwork::class)->insertAlbumArt($album->id, $event['image_url'], null);
 
                 return $album;
             }, function($e) {
