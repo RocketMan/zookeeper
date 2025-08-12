@@ -30,6 +30,7 @@ use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
 
+use Enm\JsonApi\Exception\BadRequestException;
 use Enm\JsonApi\Exception\NotAllowedException;
 use Enm\JsonApi\Exception\ResourceNotFoundException;
 use Enm\JsonApi\Model\Document\Document;

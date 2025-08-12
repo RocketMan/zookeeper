@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -49,6 +49,11 @@ class UnifiedSearch implements RequestHandlerInterface {
     use NoResourceDeletionTrait;
     use NoResourceFetchTrait;
     use NoResourceModificationTrait;
+
+    // unused stub to hide OffsetPaginationTrait::fromArray
+    public static function fromArray(array $records, $flags = 0) {
+        return [];
+    }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
         if($request->hasFilter("*")) {

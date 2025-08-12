@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -31,7 +31,7 @@ use Enm\JsonApi\Model\Resource\ResourceInterface;
 /**
  * Zookeeper custom implementation of Request
  */
-class ApiRequest extends Request {
+final class ApiRequest extends Request {
     protected $requestCache = [];
     protected $fieldNegation = [];
 

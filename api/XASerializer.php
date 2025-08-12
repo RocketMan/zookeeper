@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -24,6 +24,7 @@
 
 namespace ZK\API;
 
+use Enm\JsonApi\Model\Resource\Extension\RelatedMetaInformationInterface;
 use Enm\JsonApi\Model\Resource\Link\LinkCollectionInterface;
 use Enm\JsonApi\Model\Resource\Link\LinkInterface;
 use Enm\JsonApi\Model\Resource\Relationship\RelationshipCollectionInterface;
