@@ -59,7 +59,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "name, address, city, state, zip, attention, phone, fax, " .
                   "international, pcreated, modified, p.url, email " .
                   "FROM colltracknames c " .
-                  "LEFT JOIN albumvol a ON a.tag = c.tag " .
+                  "JOIN albumvol a ON a.tag = c.tag AND iscoll = 1 " .
                   "LEFT JOIN publist p ON a.pubkey = p.pubkey " .
                   "WHERE MATCH (c.artist) AGAINST(? IN BOOLEAN MODE) " .
                   "AND location != 'U' " .
@@ -69,7 +69,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "SELECT c.tag, c.artist, album, category, medium, size, ".
                   "location, bin, created, updated, track, seq, url, pubkey, ".
                   "1 iscoll, duration FROM colltracknames c " .
-                  "LEFT JOIN albumvol ON albumvol.tag = c.tag " .
+                  "JOIN albumvol ON albumvol.tag = c.tag AND iscoll = 1 " .
                   "WHERE MATCH (c.artist,track) AGAINST(? IN BOOLEAN MODE) ".
                   "AND location != 'U' " .
                   "ORDER BY c.artist, album, c.tag, c.seq" ],
@@ -190,15 +190,16 @@ class LibraryImpl extends DBO implements ILibrary {
                      "attention, phone, fax, international, mailcount, ".
                      "maillist, pcreated, modified, p.url, email ".
                      "FROM albumvol a LEFT JOIN publist p ON a.pubkey = p.pubkey ".
-                     "WHERE artist LIKE ? ".
+                     "WHERE artist LIKE ? AND iscoll = 0 ".
                      "UNION SELECT c.tag, c.artist, a.artist, category, medium, size, ".
                      "created, updated, a.pubkey, location, bin, iscoll, ".
                      "name, address, city, state, zip, ".
                      "attention, phone, fax, international, mailcount, ".
                      "maillist, pcreated, modified, p.url, email ".
-                     "FROM colltracknames c, albumvol a LEFT JOIN publist p ".
-                     "ON a.pubkey = p.pubkey WHERE c.tag = a.tag ".
-                     "AND c.artist LIKE ? ".
+                     "FROM colltracknames c ".
+                     "JOIN albumvol a ON c.tag = a.tag AND iscoll = 1 ".
+                     "LEFT JOIN publist p ON a.pubkey = p.pubkey ".
+                     "WHERE c.artist LIKE ? ".
                      "GROUP BY c.tag ".
                      self::orderBy($sortBy).
                      "LIMIT ?, ?";
@@ -265,15 +266,16 @@ class LibraryImpl extends DBO implements ILibrary {
                      "category, medium, size, location, bin, ".
                      "a.pubkey, name, address, city, state, zip, iscoll, ".
                      "t.url, t.duration ".
-                     "FROM tracknames t, albumvol a ".
+                     "FROM tracknames t ".
+                     "JOIN albumvol a ON a.tag = t.tag AND iscoll = 0 ".
                      "LEFT JOIN publist p ON a.pubkey = p.pubkey ".
-                     "WHERE a.tag = t.tag AND ".
-                     "track LIKE ? ".
+                     "WHERE track LIKE ? ".
                      "UNION SELECT a.tag, track, c.artist, a.artist album, seq, ".
                      "category, medium, size, location, bin, ".
                      "a.pubkey, name, address, city, state, zip, iscoll, ".
                      "c.url, c.duration ".
-                     "FROM colltracknames c LEFT JOIN albumvol a ON a.tag = c.tag ".
+                     "FROM colltracknames c ".
+                     "JOIN albumvol a ON a.tag = c.tag AND iscoll = 1 ".
                      "LEFT JOIN publist p ON a.pubkey = p.pubkey ".
                      "WHERE track LIKE ? ".
                      self::orderBy($sortBy).

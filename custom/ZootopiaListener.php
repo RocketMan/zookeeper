@@ -24,7 +24,9 @@
 
 namespace ZK\PushNotification;
 
+use ZK\Engine\IArtwork;
 use ZK\Engine\IPlaylist;
+use ZK\Engine\Engine;
 use ZK\Engine\PlaylistEntry;
 
 use GuzzleHttp\Client;
@@ -408,7 +410,7 @@ class ZootopiaListener {
             }
         })->then(function() use($event, &$trackName) {
             // lookup album by track name
-            $trackName = preg_match("/^(.+)( \(\d+\))$/", $event["track_title"], $matches) ? $matches[1] : $event["track_title"];
+            $trackName = trim(preg_match("/^(.+)( \(\d+\))$/", $event["track_title"], $matches) ? $matches[1] : $event["track_title"]);
 
             return $this->zk->getAsync('api/v1/album', [
                 RequestOptions::QUERY => [
@@ -434,6 +436,10 @@ class ZootopiaListener {
                         break;
                     }
                 }
+
+                if($album && empty($album->attributes->albumart)
+                        && ($event['image_url'] ?? ''))
+                    Engine::api(IArtwork::class)->insertAlbumArt($album->id, $event['image_url'], null);
 
                 return $album;
             }, function($e) {
