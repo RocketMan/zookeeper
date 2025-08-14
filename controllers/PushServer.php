@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -390,7 +390,9 @@ class NowAiringServer implements MessageComponentInterface {
                         $infoUrl = $image['info_url'];
                     } else {
                         // otherwise, query Discogs
-                        $result = $this->queryDiscogs($entry['track_artist'], $entry['track_album']);
+                        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $entry['track_tag']);
+                        $iscoll = count($albums) ? $albums[0]["iscoll"] : false;
+                        $result = $this->queryDiscogs($iscoll ? "Various" : $entry['track_artist'], $entry['track_album']);
 
                         if($result) {
                             $imageUuid = $imageApi->insertAlbumArt($entry['track_tag'], $result->imageUrl, $result->infoUrl);
