@@ -71,7 +71,7 @@ class DeepStorage extends MenuItem {
                          Engine::api(IEditor::class)->setLocation($line[$column], $_REQUEST['deacc']);
                       } else {
                          // Change status to "Deep Storage" (G) and set box number
-                         Engine::api(IEditor::class)->setLocation($line[$column], IEditor::LOCATION_DEEP_STORAGE, $_REQUEST['bin']);
+                         Engine::api(IEditor::class)->setLocation($line[$column], ILibrary::LOCATION_STORAGE, $_REQUEST['bin']);
                       }
                       $count++;
                   }
