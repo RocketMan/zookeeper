@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -28,10 +28,6 @@ namespace ZK\Engine;
  * Library Editor operations
  */
 interface IEditor {
-    const LOCATION_DEACCESSIONED = 'U';
-    const LOCATION_DEEP_STORAGE = 'G';
-    const LOCATION_MISSING = 'M';
-
     const MAX_PLAYABLE_URL_LENGTH = 2083;
 
     function insertUpdateAlbum(&$album, $tracks, $label);
