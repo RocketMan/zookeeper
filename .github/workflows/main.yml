@@ -23,7 +23,7 @@ jobs:
         uses: ramsey/composer-install@v2
 
       - name: Run PHPStan
-        run: vendor/bin/phpstan analyse controllers custom engine ui --no-progress --error-format=github
+        run: vendor/bin/phpstan analyse api controllers custom engine ui --no-progress --error-format=github
 
   build:
     name: Build and Test Matrix
