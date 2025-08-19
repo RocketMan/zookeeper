@@ -1335,6 +1335,10 @@ input[type="checkbox"]:checked:active {
     background-color: gray;
 }
 
+.songRow:hover {
+    cursor: default;
+}
+
 .logEntry, .logEntry td,
 .logEntryEdit, .logEntryEdit td {
     /* entire log entry row */
