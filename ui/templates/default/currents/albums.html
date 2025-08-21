@@ -44,7 +44,7 @@
       <td align='center'>{{ _self.catcodes(catmap, album.afile_category) ?? '-' }}</td>
       <td>{{ album.reviewer }}</td>
       <td>{{ album.afile_number }}</td>
-      <td>{{ album.iscoll ? "Various Artists" : static and album.artist | length > 50 ? album.artist[:50] ~ '...' : album.artist }}&nbsp;&nbsp;</td>
+      <td>{{ album.iscoll ? "Various Artists" : static ? album.artist | truncate(50) : album.artist }}&nbsp;&nbsp;</td>
   {%~ if playableCell | length %}
       <td>
     {%~ if album.playable %}
@@ -53,7 +53,7 @@
       </td>
   {%~ endif %}
   {%~ if static %}
-      <td>{{ album.album | length > 50 ? album.album[:50] ~ '...' : album.album }}{{ _self.medium(album.medium) }}&nbsp;&nbsp;</td>
+      <td>{{ album.album | truncate(50) }}{{ _self.medium(album.medium) }}&nbsp;&nbsp;</td>
   {%~ else %}
       <td><a class='nav' href='?s=byAlbumKey&amp;n={{ album.tag }}&amp;action=search'>{{ album.album }}</a>{{ _self.medium(album.medium) }}&nbsp;&nbsp;</td>
       <td>{{ album.label }}</td>

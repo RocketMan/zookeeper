@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -105,6 +105,32 @@ class TemplateFactory {
         $this->twig->addGlobal('app', $this->app);
 
         $filter = new \Twig\TwigFilter('decorate', [ '\ZK\Engine\Engine', 'decorate' ]);
+        $this->twig->addFilter($filter);
+        $filter = new \Twig\TwigFilter('truncate', function($value, $length = 80, $preserveWords = false, $ellipsis = '...') {
+            if (mb_strlen($value) > $length) {
+                $ellipsisLen = mb_strlen($ellipsis);
+                if ($length <= $ellipsisLen)
+                    return mb_substr($value, 0, $length);
+
+                $length -= $ellipsisLen;
+                $nextChar = mb_substr($value, $length, 1);
+                $value = rtrim(mb_substr($value, 0, $length));
+
+                // If we did not rtrim (and hence are not already at the
+                // end of a word) and the next character is also not
+                // whitespace, then trim to the last whole word.
+                if ($preserveWords
+                        && mb_strlen($value) == $length
+                        && !ctype_space($nextChar)
+                        && preg_match('/^(.+?)\s+\S+$/su', $value, $matches)) {
+                    $value = $matches[1];
+                }
+
+                $value .= $ellipsis;
+            }
+
+            return $value;
+        });
         $this->twig->addFilter($filter);
     }
 
