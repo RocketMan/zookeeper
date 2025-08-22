@@ -38,6 +38,13 @@ The 'markdown' filter converts all markdown in the string to HTML.
 The 'smartURL' filter inserts HTML anchor tags for all URLs in the
 string, thereby rendering the URLs clickable.
 
+#### truncate
+The 'truncate' filter shortens a string to a specified length.  It
+has the signature `truncate(length|80, preserveWords|false, ellipsis|'...')`
+where *length* is the length to truncate to (default 80), *preserveWords*
+avoids breaking words, and *ellipsis* is the string to append to the
+truncated string.  The returned string is guaranteed never to exceed *length*.
+
 
 ### Template environment
 
