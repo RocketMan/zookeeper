@@ -122,8 +122,8 @@ class TemplateFactory {
                 if ($preserveWords
                         && mb_strlen($value) == $length
                         && !ctype_space($nextChar)
-                        && preg_match('/^(.+?\s+)\S+$/su', $value, $matches)) {
-                    $value = $matches[1];
+                        && preg_match('/^(.+?)\s+\S+$/su', $value, $matches)) {
+                    $value = $matches[1] . " ";
                 }
 
                 $value .= $ellipsis;
