@@ -109,6 +109,11 @@ class TemplateFactory {
         $filter = new \Twig\TwigFilter('truncate', function($value, $length = 80, $preserveWords = false, $ellipsis = '...') {
             if (mb_strlen($value) > $length) {
                 $ellipsisLen = mb_strlen($ellipsis);
+                if ($preserveWords && $ellipsisLen) {
+                    $ellipsis = ' ' . $ellipsis;
+                    $ellipsisLen++;
+                }
+
                 if ($length <= $ellipsisLen)
                     return mb_substr($value, 0, $length);
 
@@ -123,7 +128,7 @@ class TemplateFactory {
                         && mb_strlen($value) == $length
                         && !ctype_space($nextChar)
                         && preg_match('/^(.+?)\s+\S+$/su', $value, $matches)) {
-                    $value = $matches[1] . " ";
+                    $value = $matches[1];
                 }
 
                 $value .= $ellipsis;
