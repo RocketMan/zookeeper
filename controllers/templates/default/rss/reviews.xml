@@ -13,7 +13,7 @@
   {%~ autoescape 'html' %}
       <p>Review by {{ review.airname ?? review.realname }}</p>
     {%~ if app.request.fmt %}
-      <p>{{ review.body | truncate(800, true) | nl2br }}</p>
+      <p>{{ review.body | truncate(1000, true) | nl2br }}</p>
       {%~ if review.tracks %}
       <details>
         <summary><span>Explore the tracks</span></summary>

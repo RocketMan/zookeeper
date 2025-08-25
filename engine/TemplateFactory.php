@@ -109,6 +109,13 @@ class TemplateFactory {
         $filter = new \Twig\TwigFilter('truncate', function($value, $length = 80, $preserveWords = false, $ellipsis = '...') {
             if (mb_strlen($value) > $length) {
                 $ellipsisLen = mb_strlen($ellipsis);
+
+                // When preserving words, separate the ellipsis with a space.
+                if ($preserveWords && $ellipsisLen) {
+                    $ellipsis = ' ' . $ellipsis;
+                    $ellipsisLen++;
+                }
+
                 if ($length <= $ellipsisLen)
                     return mb_substr($value, 0, $length);
 
