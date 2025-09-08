@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -61,6 +61,24 @@ class RowIterator {
     public function asArray() {
         $result = $this->stmt ? $this->stmt->fetchAll($this->style) : false;
         return $result ?: [];
+    }
+}
+
+class ArrayRowIterator extends RowIterator {
+    protected $rows;
+
+    public function __construct($rows) {
+        $this->rows = $rows;
+    }
+
+    public function fetch() {
+        return count($this->rows) ? array_shift($this->rows) : false;
+    }
+
+    public function asArray() {
+        $result = $this->rows;
+        $this->rows = [];
+        return $result;
     }
 }
 

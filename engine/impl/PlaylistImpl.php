@@ -74,7 +74,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         else if($airname)
             $query .= "WHERE l.airname=? ";
         else if($showDate)
-            $query .= "WHERE l.showdate=? ";
+            $query .= "WHERE l.showdate IN (?, ?) ";
         if($onlyPublished)
             $query .= "AND l.airname IS NOT NULL ";
         $desc = $desc?"DESC":"";
@@ -90,10 +90,26 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue($p++, $user);
         else if($airname)
             $stmt->bindValue($p++, $airname);
-        else if($showDate)
-            $stmt->bindValue($p++, $showDate);
+        else if($showDate) {
+            $date = new \DateTime($showDate);
+            $end = $date->format('Y-m-d');
+            $date->modify("-1 day");
+            $start = $date->format('Y-m-d');
+            $stmt->bindValue($p++, $start);
+            $stmt->bindValue($p++, $end);
+        }
 
-        return $stmt->iterate(\PDO::FETCH_BOTH);
+        $result = $stmt->executeAndFetchAll(\PDO::FETCH_BOTH);
+
+        if(!$user && !$airname && $showDate) {
+            $result = array_filter($result, function($row) use($end) {
+                $t = explode('-', $row['showtime']);
+                return $row['showdate'] == $end ||
+                        count($t) == 2 && $t[1] != '0000' && $t[0] > $t[1];
+            });
+        }
+
+        return new ArrayRowIterator($result);
     }
     
     public function getPlaylistsByAirname($airname) {

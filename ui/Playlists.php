@@ -837,8 +837,15 @@ class Playlists extends MenuItem {
         $lists = Engine::api(IPlaylist::class)->getPlaylists(1, 1, $viewdate, 0, 0, 0, 20)->asArray();
         $count = count($lists);
 
-        foreach($lists as &$list)
+        foreach($lists as &$list) {
+            // finesse start time for playlists that span midnight
+            if($list['showdate'] != $viewdate) {
+                list($fromtime, $totime) = explode("-", $list['showtime']);
+                $list['showtime'] = "0000-$totime";
+            }
+
             $list['timerange'] = self::timeToLocale($list['showtime']);
+        }
 
         $this->setTemplate('list/bydate.html');
         $this->addVar('lists', $lists);
