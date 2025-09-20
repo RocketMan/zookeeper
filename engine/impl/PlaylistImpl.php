@@ -772,11 +772,15 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
 
     public function hashPlaylist(int $playlistId): string {
-        $query = "SELECT md5(group_concat(concat_ws('|', id, created) ORDER BY seq, id)) hash FROM tracks WHERE list = ?";
+        $query = "SELECT md5(concat_ws('|', id, created)) AS hash " .
+                 "FROM tracks WHERE list = ? ORDER BY seq, id";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlistId);
-        $row = $stmt->executeAndFetch();
-        return $row['hash'] ?? '';
+        $hashes = $stmt->executeAndFetchAll();
+        $ctx = hash_init("md5");
+        foreach ($hashes as $row)
+            hash_update($ctx, $row['hash']);
+        return hash_final($ctx);
     }
 
     // insert playlist track. return following: 0 - fail, 1 - success no 
