@@ -9,8 +9,9 @@
     {%~ if params.editMode %}
       <td>
         <div class='songManager'>
-          <div class='grab fas fa-grip-vertical' data-id='{{ entry.id }}'></div>
-          <a class='songEdit nav' href='#'><span class='fas fa-edit'></span></a>
+          <span class='grab fas fa-grip-vertical' data-id='{{ entry.id }}'></span>
+          <a class='songInsert nav' title='Insert below' href='#'><img src="img/insert-below.svg"></a>
+          <a class='songEdit nav' title='Edit' href='#'><span class='fas fa-edit'></span></a>
         </div>
       </td>
     {%~ endif %}

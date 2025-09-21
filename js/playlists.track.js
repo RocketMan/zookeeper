@@ -42,6 +42,7 @@ $().ready(function(){
         $("#track-add", parent).prop("disabled", !enableIt);
         $("#track-play", parent).prop("disabled", !enableIt || hasPending);
 
+        $("#edit-insert", parent).prop("disabled", !enableIt);
         $("#edit-save", parent).prop("disabled", !enableIt);
     }
 
@@ -158,9 +159,9 @@ $().ready(function(){
                 var form = $(".pl-inline-edit");
                 $(".track-type-pick", form).val(type).trigger('change');
                 if(event.attributes.created)
-                    $(".edit-time").fxtime('val', event.attributes.created);
+                    $(".track-time", form).fxtime('val', event.attributes.created);
                 else
-                    $(".edit-time")
+                    $(".track-time", form)
                         .fxtime('seg', 0, null)
                         .fxtime('seg', 1, null)
                         .fxtime('seg', 2, 0);
@@ -314,6 +315,138 @@ $().ready(function(){
         setAddButtonState(haveAll, parent);
     });
 
+    $("#edit-insert").on('click', function(){
+        // double check that we have everything.
+        var parent = $(this).closest('div.form-entry');
+        if (haveAllUserInput(parent) == false) {
+            showUserError('A required field is missing', parent);
+            return;
+        }
+
+        // don't allow submission of album tag in the artist field
+        if($(".track-artist", parent).val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
+            showUserError('Album tag is invalid', parent);
+            $(".track-artist", parent).trigger('focus');
+            return;
+        }
+
+        // check that the timestamp, if any, is valid
+        if($(".fxtime", parent).is(":invalid")) {
+            showUserError('Time is outside show start/end times', parent);
+            $(".fxtime", parent).trigger('focus');
+            return;
+        }
+
+        var itemType, comment, eventType, eventCode;
+        var artist, label, album, track;
+        var trackType = $(".track-type-pick", parent).val();
+        switch(trackType) {
+        case 'manual-entry':
+            itemType = 'spin';
+            artist = $(".track-artist", parent).val();
+            label =  $(".track-label", parent).val();
+            album =  $(".track-album", parent).val();
+            track =  $(".track-title", parent).val();
+            break;
+        case 'comment-entry':
+            itemType = 'comment';
+            comment = $(".comment-data", parent).val();
+            break;
+        case 'set-separator':
+            itemType = 'break';
+            break;
+        default:
+            itemType = 'logEvent';
+            eventType = getEventType(trackType);
+            eventCode = $(".nme-id", parent).val();
+            break;
+        }
+
+        var playlistId = $('#track-playlist').val();
+        var postData = {
+            data: {
+                type: 'event',
+                meta: {
+                    wantMeta: true,
+                    moveTo: row.find(".songManager .grab").data('id'),
+                    hash: $("#track-hash").val(),
+                },
+                attributes: {
+                    type: itemType,
+                    artist: artist,
+                    album: album,
+                    track: track,
+                    label: label,
+                    comment: comment,
+                    event: eventType,
+                    code: eventCode,
+                    created: $(".track-time", parent).fxtime('val')
+                }
+            }
+        };
+
+        if(trackType == 'manual-entry' && tagId) {
+            postData.data.relationships = {
+                album: {
+                    data: {
+                        type: 'album',
+                        id: tagId
+                    }
+                }
+            };
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: 'api/v1.1/playlist/' + playlistId + '/events',
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            accept: "application/json; charset=utf-8",
+            data: JSON.stringify(postData),
+            success: function(response) {
+                var meta = response.data.meta;
+                switch(meta.seq*1) {
+                case -1:
+                    // playlist is out of sync with table; reload
+                    location.href = "?subaction=" + $("#track-action").val() +
+                        "&playlist=" + playlistId;
+                    break;
+                default:
+                    // hide the inline edit
+                    var overlay = $(".pl-inline-edit");
+                    var dummy = overlay.closest("tr");
+                    overlay.hide().insertAfter($("#extend-show"));
+                    dummy.remove();
+
+                    // seq specifies the ordinal of the entry,
+                    // where 1 is the first (oldest).
+                    //
+                    // Calculate the zero-based row index from seq.
+                    // Table is ordered latest to oldest, which means
+                    // we must reverse the sense of seq.
+                    var rows = $(".playlistTable > tbody > tr");
+                    var index = rows.length - meta.seq;
+                    rows.eq(index++).after(meta.html);
+
+                    var target = $(".playlistTable > tbody > tr").eq(index);
+                    target.find(".grab").on('pointerdown', grabStart);
+                    target.find(".songInsert").on('click', inlineInsert);
+                    target.find(".songEdit").on('click', inlineEdit);
+
+                    $("#track-hash").val(meta.hash);
+
+                    row = null;
+                    break;
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                var message = getErrorMessage(jqXHR,
+                              'Error updating the item: ' + errorThrown);
+                showUserError(message, parent);
+            }
+        });
+    });
+
     $("#edit-save").on('click', function(){
         // double check that we have everything.
         var parent = $(this).closest('div.form-entry');
@@ -379,7 +512,7 @@ $().ready(function(){
                     comment: comment,
                     event: eventType,
                     code: eventCode,
-                    created: $(".edit-time", parent).fxtime('val') ?? 'clear'
+                    created: $(".track-time", parent).fxtime('val') ?? 'clear'
                 }
             }
         };
@@ -426,17 +559,18 @@ $().ready(function(){
                     var rows = $(".playlistTable > tbody > tr");
                     var index = rows.length - meta.seq;
                     if(index == row.index()) {
-                        row.off().replaceWith(meta.html);
+                        row.replaceWith(meta.html);
                     } else if(index < row.index()) {
-                        row.off().remove();
+                        row.remove();
                         rows.eq(index).before(meta.html);
                     } else {
-                        row.off().remove();
+                        row.remove();
                         rows.eq(index).after(meta.html);
                     }
 
                     var target = $(".playlistTable > tbody > tr").eq(index);
                     target.find(".grab").on('pointerdown', grabStart);
+                    target.find(".songInsert").on('click', inlineInsert);
                     target.find(".songEdit").on('click', inlineEdit);
 
                     $("#track-hash").val(meta.hash);
@@ -496,6 +630,8 @@ $().ready(function(){
                 // delete the row
                 row.remove();
                 row = null;
+
+                updatePlayable();
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 var message = getErrorMessage(jqXHR,
@@ -675,9 +811,14 @@ $().ready(function(){
                     $(".playlistTable > tbody").prepend(meta.html);
                     var target = $(".playlistTable > tbody > tr").eq(0);
                     target.find(".grab").on('pointerdown', grabStart);
+                    target.find(".songInsert").on('click', inlineInsert);
                     target.find(".songEdit").on('click', inlineEdit);
                     break;
                 default:
+                    // close the inline edit, if any
+                    if (row)
+                        closeInlineEdit(undefined, true);
+
                     // seq specifies the ordinal of the entry,
                     // where 1 is the first (oldest).
                     //
@@ -692,6 +833,7 @@ $().ready(function(){
                         rows.eq(rows.length - 1).after(meta.html);
                     var target = $(".playlistTable > tbody > tr").eq(index);
                     target.find(".grab").on('pointerdown', grabStart);
+                    target.find(".songInsert").on('click', inlineInsert);
                     target.find(".songEdit").on('click', inlineEdit);
                     break;
                 }
@@ -1007,7 +1149,7 @@ $().ready(function(){
         var highlight = null;
         var now = Date.now() / 1000;
 
-        $(".playlistTable > tbody > tr").each(function() {
+        $(".playlistTable > tbody > tr:not(.dummy)").each(function() {
             var timestamp = $(this).find(".time").data("utc");
             if(!timestamp)
                 highlight = this;
@@ -1071,7 +1213,10 @@ $().ready(function(){
                     else
                         rows.eq(rows.length - 1).after(meta.html);
 
-                    $(".playlistTable > tbody > tr").eq(index).find(".grab").on('pointerdown', grabStart);
+                    var target = $(".playlistTable > tbody > tr").eq(index);
+                    target.find(".grab").on('pointerdown', grabStart);
+                    target.find(".songInsert").on('click', inlineInsert);
+                    target.find(".songEdit").on('click', inlineEdit);
 
                     $("#track-hash").val(meta.hash);
 
@@ -1109,6 +1254,9 @@ $().ready(function(){
             playable.off().on('click', function() {
                 timestampTrack(highlight);
             });
+
+            if(row)
+                closeInlineEdit(undefined, true);
         } else if(playable != null) {
             playable.remove();
             playable = null;
@@ -1130,7 +1278,7 @@ $().ready(function(){
                     $(this).fxtime('val') &&
                     $('button.default:visible').is(':enabled')) {
                 // focus before click to trigger time validation
-                $('button.default:visible').trigger('focus').trigger('click');
+                $('button.default:visible', $(this).closest('.pl-form-entry')).trigger('focus').trigger('click');
 
                 if(this.matches(":invalid"))
                     this.trigger('focus');
@@ -1153,7 +1301,7 @@ $().ready(function(){
         });
 
     $(".fxtime")
-        .fxtime('val', $(".track-time").data('last-val'))
+        .fxtime('val', $(".pl-add-track .track-time").data('last-val'))
         .fxtime('seg', 1, null)
         .fxtime('seg', 2, 0);
 
@@ -1163,13 +1311,13 @@ $().ready(function(){
         if (fast) {
             overlay.hide().insertAfter($("#extend-show"));
             dummy.remove();
-            row.removeClass('selected').data('event', undefined);
+            row.removeClass('selected').data('event', null);
             row = null;
         } else {
             overlay.slideUp('fast', function() {
                 overlay.insertAfter($("#extend-show"));
                 dummy.remove();
-                row.removeClass('selected').data('event', undefined);
+                row.removeClass('selected').data('event', null);
                 row = null;
             });
         }
@@ -1190,18 +1338,51 @@ $().ready(function(){
         }
 
         var overlay = $(".pl-inline-edit");
-        var dummy = $("<tr><td colspan=6></td></tr>");
+        var dummy = $("<tr class='dummy'><td colspan=6></td></tr>");
         dummy.find("td").append(overlay);
         dummy.insertAfter(row);
         row.addClass('selected');
 
         $('#edit-insert').hide();
         $('#edit-save').show();
+        $('#edit-delete').show();
+        $('#edit-cancel').addClass('edit-mode');
 
         getEventInfo(row.find(".songManager .grab").data('id'));
     };
 
+    function inlineInsert(event) {
+        event.preventDefault();
+
+        var oldRow = row;
+        if(row)
+            closeInlineEdit(event, true);
+
+        row = $(this).closest("tr");
+        // selecting edit on the already open row closes it
+        if (oldRow && oldRow[0] == row[0]) {
+            row = null;
+            return;
+        }
+
+        var overlay = $(".pl-inline-edit");
+        var dummy = $("<tr class='dummy'><td colspan=6></td></tr>");
+        dummy.find("td").append(overlay);
+        dummy.insertAfter(row);
+
+        $('#edit-insert').show();
+        $('#edit-save').hide();
+        $('#edit-delete').hide();
+        $('#edit-cancel').removeClass('edit-mode');
+
+        clearUserInput(true, overlay);
+        $(".track-time", overlay).fxtime('seg', 1, null).fxtime('seg', 2, 0);
+        $('.track-type-pick', overlay).val('manual-entry').trigger('change');
+        overlay.slideDown();
+    };
+
     $(".songEdit").on('click', inlineEdit);
+    $(".songInsert").on('click', inlineInsert);
     $("#edit-cancel").on('click', closeInlineEdit);
 
     // stretch track-play if track-add is hidden

@@ -26,3 +26,6 @@ div.playTrack a {
 .playlist-accordion.ui-accordion .ui-accordion-header-icon {
     filter: brightness(0) saturate(100%) invert(12%) sepia(81%) saturate(6874%) hue-rotate(353deg) brightness(69%) contrast(103%); /* #b1040e see https://codepen.io/sosuke/pen/Pjoqqp */
 }
+.songInsert img {
+    filter: brightness(0) saturate(100%) invert(12%) sepia(81%) saturate(6874%) hue-rotate(353deg) brightness(69%) contrast(103%); /* #b1040e see https://codepen.io/sosuke/pen/Pjoqqp */
+}

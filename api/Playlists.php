@@ -795,7 +795,7 @@ class Playlists implements RequestHandlerInterface {
             try {
                 $stamp = PlaylistEntry::scrubTimestamp(new \DateTime($created), $window);
                 if($stamp)
-                    $entry->setCreated($stamp->format(IPlaylist::TIME_FORMAT_SQL));
+                    $entry->setCreated($created = $stamp->format(IPlaylist::TIME_FORMAT_SQL));
                 else
                     throw new \Exception("Time is outside show start/end times");
             } catch(\Exception $e) {
@@ -804,15 +804,25 @@ class Playlists implements RequestHandlerInterface {
         } else
             $entry->setCreated(null);
 
+        // set the timestamp only after first positioning the entry
+        $moveTo = $event->metaInformation()->getOptional("moveTo");
+        if($moveTo)
+            $entry->setCreated(null);
+
         $status = '';
         $success = $api->insertTrackEntry($key, $entry, $status);
 
-        if($success &&
-                ($moveTo = $event->metaInformation()->getOptional("moveTo"))) {
+        if($success && $moveTo) {
             $success = $api->moveTrack($key, $entry->getId(), $moveTo);
             if(!$success) {
                 $api->deleteTrack($entry->getId());
                 $status = 'moveTo failed';
+            }
+
+            // resequence if timestamp is inappropriate for the current position
+            if($success && $created) {
+                $entry->setCreated($created);
+                $api->updateTrackEntry($key, $entry);
             }
         }
 

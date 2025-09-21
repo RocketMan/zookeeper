@@ -790,16 +790,7 @@ a:hover {
 .playlistTable {
     width: 100%;
 }
-/*
-.playlistTable.edit-mode tr:not(.selected):not(.grabbed):not(:last-of-type) td {
-    border-color: rgba(0,0,0,0.08);
-    border-width: 0 0 1px 0;
-    border-style: solid;
-}
-.playlistTable.edit-mode td {
-    height: 25px;
-}
-*/
+
 .home-onnow, .chart-year-pick, th {
     font-size: 11pt;
     font-weight: bold;
@@ -1015,31 +1006,33 @@ li.ui-menu-item .ui-state-active,
 .form-entry button.edit-mode {
     width: 97px;
     height: 24px;
+}
+.form-entry button.inline-mode {
     color: #000;
     background-color: #f4f4f4;
     border-radius: 4px;
     border: 1px solid #cdcdcd;
 }
-.form-entry button.edit-mode:hover {
+.form-entry button.inline-mode:hover {
     background-color: #f8f8f8;
 }
-.form-entry button.edit-mode:active {
+.form-entry button.inline-mode:active {
     background-color: #d6d6d6;
 }
-.form-entry button.edit-mode.default {
+.form-entry button.inline-mode.default {
     color: #fff;
     border: 1px solid #5796ed;
     background-color: #5897ee;
 }
-.form-entry button.edit-mode.default:disabled {
+.form-entry button.inline-mode.default:disabled {
     color: gray;
     border: 1px solid #ccc;
     background-color: #ccc;
 }
-.form-entry button.edit-mode.default:hover:not(:disabled) {
+.form-entry button.inline-mode.default:hover:not(:disabled) {
     background-color: #5ba4fc;
 }
-.form-entry button.edit-mode.default:active:not(:disabled) {
+.form-entry button.inline-mode.default:active:not(:disabled) {
     background-color: #5897ee;
 }
 .form-entry button.edit-delete,
@@ -1314,7 +1307,7 @@ input[type="checkbox"]:checked:active {
 .songManager {
     top: 8px;
     height: 20px;
-    width: 38px;
+    width: 64px;
     position: relative;
     font-size:12px;
 }
@@ -1326,10 +1319,23 @@ input[type="checkbox"]:checked:active {
     width: 10px;
     height: 4px;
 }
+
 .songEdit {
     top: -2px;
+    left: 46px;
+    font-size: 14px;
+}
+
+.songInsert {
+    top: -1px;
     left: 16px;
     font-size: 14px;
+}
+
+.songInsert img {
+    filter: brightness(0) saturate(100%) invert(32%) sepia(90%) saturate(767%) hue-rotate(207deg) brightness(99%) contrast(94%); /* #5863da see https://codepen.io/sosuke/pen/Pjoqqp */
+    height: 30px;
+    width: 30px;
 }
 
 .currentsEdit {
@@ -1442,11 +1448,21 @@ input[type="checkbox"]:checked:active {
 	overflow: visible
     }
     .songEdit {
-	left: 25px;
+	left: 60px;
+    }
+    .songManager {
+	width: 85px;
     }
     .songManager .fas {
 	line-height: 1.2;
 	font-size: 18px;
+    }
+    .songInsert {
+	left: 25px;
+    }
+    .songInsert img {
+	height: 34px;
+	width: 34px;
     }
 }
 .grabbed {
