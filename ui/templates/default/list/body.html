@@ -7,11 +7,11 @@
 
 {%- macro makeEditDiv(params, entry) %}
     {%~ if params.editMode %}
-        {%~ set href = "?id=" ~ entry.id | e('url') ~ "&amp;subaction=" ~  params.action | e('url') ~ "&amp;seq=editTrack" %}
-        {%~ set editLink = "<a class='songEdit nav' href='" ~ href ~ "'><span class='fas fa-edit'></span></a>" %}
-        {%~ set dnd = "<div class='grab fas fa-grip-vertical' data-id='" ~ entry.id | e ~ "'></div>" %}
       <td>
-        <div class='songManager'>{{ dnd | raw }}{{ editLink | raw }}</div>
+        <div class='songManager'>
+          <div class='grab fas fa-grip-vertical' data-id='{{ entry.id }}'></div>
+          <a class='songEdit nav' href='#'><span class='fas fa-edit'></span></a>
+        </div>
       </td>
     {%~ endif %}
     {{~ _self.makeTime(params, entry) }}

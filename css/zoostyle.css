@@ -790,7 +790,16 @@ a:hover {
 .playlistTable {
     width: 100%;
 }
-
+/*
+.playlistTable.edit-mode tr:not(.selected):not(.grabbed):not(:last-of-type) td {
+    border-color: rgba(0,0,0,0.08);
+    border-width: 0 0 1px 0;
+    border-style: solid;
+}
+.playlistTable.edit-mode td {
+    height: 25px;
+}
+*/
 .home-onnow, .chart-year-pick, th {
     font-size: 11pt;
     font-weight: bold;
@@ -812,6 +821,9 @@ th.sec {
 .error {
     font-weight: bold;
     color: #cc0000;
+}
+.error-msg {
+    margin-left: 4px;
 }
 .quiet-notice {
     font-size: 20px;
@@ -1366,6 +1378,13 @@ input[type="checkbox"]:checked:active {
 /* see https://github.com/erusev/parsedown/issues/43 */
 .commentRowEdit > td > p {
     margin: 0;
+}
+
+.pl-inline-edit {
+    background-color: #eee;
+    margin-top: -2px;
+    padding-bottom: 10px;
+    display: none;
 }
 
 .markdown-help {
@@ -1956,7 +1975,8 @@ div.toggle-time-entry div {
     outline: 0;
     margin: 0;
 }
-.playlist-grid tr.selected {
+.playlist-grid tr.selected,
+.playlistTable tr.selected {
     background-color: #eee;
 }
 .playlist-grid th {

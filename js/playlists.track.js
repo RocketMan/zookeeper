@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -27,6 +27,7 @@ $().ready(function(){
     const NME_PREFIX=$("#const-prefix").val();
     var tagId = 0;
     var seq = 0;
+    var row;
 
     function htmlify(s) {
         return s?String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\'/g, '&#39;'):"";
@@ -36,40 +37,40 @@ $().ready(function(){
         return String(s).replace(/\'/g, '\\\'');
     }
 
-    function setAddButtonState(enableIt) {
-        var hasPending = $("#track-time").data("live") && getPending() != null;
-        $("#track-add").prop("disabled", !enableIt);
-        $("#track-play").prop("disabled", !enableIt || hasPending);
+    function setAddButtonState(enableIt, parent) {
+        var hasPending = $(".track-time", parent).data("live") && getPending() != null;
+        $("#track-add", parent).prop("disabled", !enableIt);
+        $("#track-play", parent).prop("disabled", !enableIt || hasPending);
 
-        $("#edit-save").prop("disabled", !enableIt);
+        $("#edit-save", parent).prop("disabled", !enableIt);
     }
 
-    function clearUserInput(clearArtistList) {
-        $("#manual-entry input").removeClass('invalid-input').val('');
-        $("#comment-entry textarea").val('');
-        $("#track-titles").empty();
-        $("#error-msg").text('');
-        $("#tag-status").text('');
-        $("#nme-entry input").val('');
+    function clearUserInput(clearArtistList, parent) {
+        $(".manual-entry input", parent).removeClass('invalid-input').val('');
+        $(".comment-entry textarea", parent).val('');
+        $(".track-titles", parent).empty();
+        $(".error-msg", parent).text('');
+        $(".tag-status", parent).text('');
+        $(".nme-entry input", parent).val('');
 
         if (clearArtistList)
-            $("#track-artists").empty();
+            $(".track-artists", parent).empty();
 
         tagId = 0;
 
-        setAddButtonState(false);
+        setAddButtonState(false, parent);
 
-        var mode = $("#track-type-pick").val();
+        var mode = $(".track-type-pick", parent).val();
         switch(mode) {
         case 'manual-entry':
-            $('#track-artist').trigger('focus');
+            $('.track-artist', parent).trigger('focus');
             break;
         case 'comment-entry':
-            $("#remaining").html("(0/" + $("#comment-max").val() + " characters)");
-            $('#comment-data').trigger('focus');
+            $(".remaining", parent).html("(0/" + $("#comment-max").val() + " characters)");
+            $('.comment-data', parent).trigger('focus');
             break;
         case 'set-separator':
-            setAddButtonState(true);
+            setAddButtonState(true, parent);
             break;
         }
     }
@@ -83,8 +84,8 @@ $().ready(function(){
         return entryType.substring(NME_PREFIX.length);
     }
 
-    function getEntryMode()  {
-        var entryMode = $('#track-type-pick').val();
+    function getEntryMode(parent)  {
+        var entryMode = $(".track-type-pick", parent).val();
         if (isNmeType(entryMode))
             entryMode = NME_ENTRY;
 
@@ -92,18 +93,18 @@ $().ready(function(){
     }
 
     // return true if have all required fields.
-    function haveAllUserInput()  {
+    function haveAllUserInput(parent)  {
         var isEmpty = false;
-        var entryMode = getEntryMode();
+        var entryMode = getEntryMode(parent);
 
         if (entryMode == 'manual-entry') {
-            $("#manual-entry input[required]").each(function() {
+            $(".manual-entry input[required]", parent).each(function() {
                 isEmpty = isEmpty || $(this).val().length == 0;
             });
         } else if (entryMode == 'comment-entry') {
-            isEmpty = $('#comment-data').val().length == 0;
+            isEmpty = $('.comment-data', parent).val().length == 0;
         } else if (entryMode == NME_ENTRY) {
-            isEmpty = $('#nme-id').val().length == 0;
+            isEmpty = $('.nme-id', parent).val().length == 0;
         }
 
         return !isEmpty;
@@ -122,12 +123,65 @@ $().ready(function(){
         return defaultValue;
     }
 
-    function showUserError(msg) {
-        $('#error-msg').text(msg);
+    function showUserError(msg, parent) {
+        $(".error-msg", parent).text(msg);
     }
 
-    function getDiskInfo(id, refArtist, refTitle) {
-        clearUserInput(false);
+    function getEventInfo(id) {
+        var url = "api/v2/playlist/" + $("#track-playlist").val() +
+            "/events?filter[event.id]=" + id;
+        $.ajax({
+            dataType : 'json',
+            type: 'GET',
+            accept: "application/json; charset=utf-8",
+            url: url,
+            success: function (response) {
+                var event = response.data[0];
+                row.data('event', event);
+
+                var type;
+                switch(event.attributes.type) {
+                case 'comment':
+                    type = 'comment-entry';
+                    break;
+                case 'break':
+                    type = 'set-separator';
+                    break;
+                case 'logEvent':
+                    type = NME_PREFIX + event.attributes.event;
+                    break;
+                default: // spin
+                    type = 'manual-entry';
+                    break;
+                }
+
+                var form = $(".pl-inline-edit");
+                $(".track-type-pick", form).val(type).trigger('change');
+                if(event.attributes.created)
+                    $(".edit-time").fxtime('val', event.attributes.created);
+                else
+                    $(".edit-time")
+                        .fxtime('seg', 0, null)
+                        .fxtime('seg', 1, null)
+                        .fxtime('seg', 2, 0);
+
+                var haveAll = haveAllUserInput(form);
+                setAddButtonState(haveAll, form);
+
+                form.slideDown();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                closeInlineEdit(undefined, true);
+
+                var message = getErrorMessage(jqXHR,
+                              'Error updating the item: ' + errorThrown);
+                showUserError(message, $(".pl-add-track"));
+            }
+        });
+    }
+
+    function getDiskInfo(id, refArtist, parent, refTitle) {
+        clearUserInput(false, parent);
 
         // chars [ and ] in the QS param name are supposed to be %-encoded.
         // It seems to work ok without and reads better in the server logs,
@@ -152,140 +206,150 @@ $().ready(function(){
                     "' data-index='" + htmlify(i+1) +
                     "' value='" + htmlify((i+1) + ". " + artist + track.track) + "'>";
             }
-            $("#track-titles").html(options);
-            $("#track-artist").val(diskInfo.attributes.artist);
-            $("#track-label").val(diskInfo.relationships != null &&
+            $(".track-titles", parent).html(options);
+            $(".track-artist", parent).val(diskInfo.attributes.artist);
+            $(".track-label", parent).val(diskInfo.relationships != null &&
                                   diskInfo.relationships.label != null ?
                                   diskInfo.relationships.label.meta.name :
                                   "(Unknown)");
-            $("#track-album").val(diskInfo.attributes.album);
-            $("#track-title").val(refTitle);
-            $(".track-submit").attr("disabled");
-            $(".track-submit").prop("disabled", true);
+            $(".track-album", parent).val(diskInfo.attributes.album);
+            $(".track-title", parent).val(refTitle);
+            $(".track-submit", parent).attr("disabled");
+            $(".track-submit", parent).prop("disabled", true);
             if(refArtist) {
-                var tracks = $("#track-titles option[data-artist='" +
-                               escQuote(refArtist) + "']");
+                var tracks = $(".track-titles option[data-artist='" +
+                               escQuote(refArtist) + "']", parent);
                 // for a compilation...
                 if(tracks.length > 0) {
                     // ...remove all artists but this one
-                    $("#track-titles option").not("[data-artist='" +
+                    $(".track-titles option", parent).not("[data-artist='" +
                                                   escQuote(refArtist) +
                                                   "']").remove();
                     // ...prefill the artist
-                    $("#track-artist").val(refArtist);
+                    $(".track-artist", parent).val(refArtist);
                     // ...if only one track by this artist, select it
                     if(tracks.length == 1) {
-                        $("#track-title").val(tracks.data("track"));
-                        setAddButtonState(true);
+                        $(".track-title", parent).val(tracks.data("track"));
+                        setAddButtonState(true, parent);
                     }
                 }
             }
 
             if(refTitle)
-                setAddButtonState(true);
+                setAddButtonState(true, parent);
         }).fail(function (jqXHR, textStatus, errorThrown) {
             var message = jqXHR.status == 404 ?
                 id + ' is not a valid tag.' :
                 getErrorMessage(jqXHR,
                         'Error retrieving the data: ' + errorThrown);
-            showUserError(message);
+            showUserError(message, parent);
         });
     }
 
-    $("#track-type-pick").on('change', function() {
+    $(".track-type-pick").on('change', function() {
         // display the user entry div for this type
-        var newType = getEntryMode();
-        clearUserInput(true);
-        $("#track-entry > div").addClass("zk-hidden");
-        $("#" + newType).removeClass("zk-hidden");
-        $("#" + newType + " *[data-focus]").trigger('focus');
+        var parent = $(this).closest('div.form-entry');
+        var newType = getEntryMode(parent);
+        clearUserInput(true, parent);
+        $(".track-entry > div", parent).addClass("zk-hidden");
+        $(`.${newType}`, parent).removeClass("zk-hidden");
+        $(`.${newType} *[data-focus]`, parent).trigger('focus');
+
+        var event;
+        if(parent.hasClass('pl-inline-edit') && row
+                && (event = row.data('event'))) {
+            ['artist','album','label','title'].forEach(function(field) {
+                var attr = field == 'title' ? 'track' : field;
+                $(".track-" + field, parent).val(event.attributes[attr]);
+            });
+            var tag = event.relationships?.album?.data.id ?? 0;
+            if(tag)
+                getDiskInfo(tag, event.attributes.artist, parent, event.attributes.track);
+            $(".comment-data", parent).val(event.attributes.comment).trigger('input');
+            $(".nme-id", parent).val(event.attributes.code);
+
+            var haveAll = haveAllUserInput(parent);
+            setAddButtonState(haveAll, parent);
+        }
+
         if (newType == NME_ENTRY) {
-            var option = $("option:selected", this);
-            var argCnt = $(option).data("args");
+            var option = $(".pl-add-track .track-type-pick option[value='" + $(this).val() + "']");
+            var argCnt = option.data("args");
             // insert default value if no user entry required.
-            if (argCnt == 0) {
-                $("#nme-id").val($(option).text());
-                setAddButtonState(true);
+            if (argCnt == 0 && $(".nme-id", parent).val().length == 0) {
+                $(".nme-id", parent).val(option.text());
+                setAddButtonState(true, parent);
             }
         }
-
-        if($("#edit-type").length > 0) {
-            ['artist','album','label','title'].forEach(function(field) {
-                $("#track-" + field).val($("#old-track-" + field).val());
-            });
-            var tag = $("#old-track-tag").val();
-            if(tag)
-                getDiskInfo(tag, $("#old-track-artist").val(), $("#old-track-title").val());
-            $("#comment-data").val($("#old-comment-data").val()).trigger('input');
-            $("#nme-id").val($("#old-event-code").val());
-
-            var haveAll = haveAllUserInput();
-            setAddButtonState(haveAll);
-        }
     });
 
-    $("#manual-entry input").on('input autocomplete', function() {
-        var haveAll = haveAllUserInput();
-        setAddButtonState(haveAll);
+    $('.manual-entry input').on('input autocomplete', function() {
+        var parent = $(this).closest('div.form-entry');
+        var haveAll = haveAllUserInput(parent);
+        setAddButtonState(haveAll, parent);
     });
 
-    $("#comment-entry textarea").on('input', function() {
+    $('.comment-entry textarea').on('input', function() {
+        var parent = $(this).closest('div.form-entry');
         var len = this.value.length;
-        $("#remaining").html("(" + len + "/" + $("#comment-max").val() + " characters)");
-        setAddButtonState(len > 0);
+        $(".remaining", parent).html("(" + len + "/" + $("#comment-max").val() + " characters)");
+        setAddButtonState(len > 0, parent);
     });
 
-    $("#markdown-help-link").on('click', function() {
-        if($("#markdown-help").is(":visible")) {
-            $("#markdown-help").slideUp();
-            $("#markdown-help-link").text("formatting help");
+    $(".markdown-help-link").on('click', function() {
+        var parent = $(this).closest('div.form-entry');
+        if($(".markdown-help", parent).is(":visible")) {
+            $(".markdown-help", parent).slideUp();
+            $(".markdown-help-link", parent).text("formatting help");
         } else {
-            $("#markdown-help").css('padding-left','80px');
-            $("#markdown-help").slideDown();
-            $("#markdown-help-link").text("hide help");
+            $(".markdown-help", parent).css('padding-left','80px');
+            $(".markdown-help", parent).slideDown();
+            $(".markdown-help-link", parent).text("hide help");
         }
     });
 
-    $("#nme-entry input").on('input', function() {
-        var haveAll = haveAllUserInput();
-        setAddButtonState(haveAll);
+    $('.nme-entry input').on('input', function() {
+        var parent = $(this).closest('div.form-entry');
+        var haveAll = haveAllUserInput(parent);
+        setAddButtonState(haveAll, parent);
     });
 
     $("#edit-save").on('click', function(){
         // double check that we have everything.
-        if (haveAllUserInput() == false) {
-            showUserError('A required field is missing');
+        var parent = $(this).closest('div.form-entry');
+        if (haveAllUserInput(parent) == false) {
+            showUserError('A required field is missing', parent);
             return;
         }
 
         // don't allow submission of album tag in the artist field
-        if($("#track-artist").val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
-            showUserError('Album tag is invalid');
-            $("#track-artist").trigger('focus');
+        if($(".track-artist", parent).val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
+            showUserError('Album tag is invalid', parent);
+            $(".track-artist", parent).trigger('focus');
             return;
         }
 
         // check that the timestamp, if any, is valid
-        if($(".fxtime").is(":invalid")) {
-            showUserError('Time is outside show start/end times');
-            $(".fxtime").trigger('focus');
+        if($(".fxtime", parent).is(":invalid")) {
+            showUserError('Time is outside show start/end times', parent);
+            $(".fxtime", parent).trigger('focus');
             return;
         }
 
         var itemType, comment, eventType, eventCode;
         var artist, label, album, track;
-        var trackType = $('#track-type-pick').val();
+        var trackType = $(".track-type-pick", parent).val();
         switch(trackType) {
         case 'manual-entry':
             itemType = 'spin';
-            artist = $("#track-artist").val();
-            label =  $("#track-label").val();
-            album =  $("#track-album").val();
-            track =  $("#track-title").val();
+            artist = $(".track-artist", parent).val();
+            label =  $(".track-label", parent).val();
+            album =  $(".track-album", parent).val();
+            track =  $(".track-title", parent).val();
             break;
         case 'comment-entry':
             itemType = 'comment';
-            comment = $("#comment-data").val();
+            comment = $(".comment-data", parent).val();
             break;
         case 'set-separator':
             itemType = 'break';
@@ -293,7 +357,7 @@ $().ready(function(){
         default:
             itemType = 'logEvent';
             eventType = getEventType(trackType);
-            eventCode = $("#nme-id").val();
+            eventCode = $(".nme-id", parent).val();
             break;
         }
 
@@ -301,7 +365,11 @@ $().ready(function(){
         var postData = {
             data: {
                 type: 'event',
-                id: $('#track-id').val(),
+                id: row.find(".songManager .grab").data('id'),
+                meta: {
+                    wantMeta: true,
+                    hash: $("#track-hash").val(),
+                },
                 attributes: {
                     type: itemType,
                     artist: artist,
@@ -311,7 +379,7 @@ $().ready(function(){
                     comment: comment,
                     event: eventType,
                     code: eventCode,
-                    created: $("#edit-time").fxtime('val')
+                    created: $(".edit-time", parent).fxtime('val') ?? 'clear'
                 }
             }
         };
@@ -335,13 +403,52 @@ $().ready(function(){
             accept: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
             success: function(response) {
-                location.href = "?subaction=" + $("#track-action").val() +
-                    "&playlist=" + playlistId;
+                var meta = response.data.meta;
+                switch(meta.seq*1) {
+                case -1:
+                    // playlist is out of sync with table; reload
+                    location.href = "?subaction=" + $("#track-action").val() +
+                        "&playlist=" + playlistId;
+                    break;
+                default:
+                    // hide the inline edit
+                    var overlay = $(".pl-inline-edit");
+                    var dummy = overlay.closest("tr");
+                    overlay.hide().insertAfter($("#extend-show"));
+                    dummy.remove();
+
+                    // seq specifies the ordinal of the entry,
+                    // where 1 is the first (oldest).
+                    //
+                    // Calculate the zero-based row index from seq.
+                    // Table is ordered latest to oldest, which means
+                    // we must reverse the sense of seq.
+                    var rows = $(".playlistTable > tbody > tr");
+                    var index = rows.length - meta.seq;
+                    if(index == row.index()) {
+                        row.off().replaceWith(meta.html);
+                    } else if(index < row.index()) {
+                        row.off().remove();
+                        rows.eq(index).before(meta.html);
+                    } else {
+                        row.off().remove();
+                        rows.eq(index).after(meta.html);
+                    }
+
+                    var target = $(".playlistTable > tbody > tr").eq(index);
+                    target.find(".grab").on('pointerdown', grabStart);
+                    target.find(".songEdit").on('click', inlineEdit);
+
+                    $("#track-hash").val(meta.hash);
+
+                    row = null;
+                    break;
+                }
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 var message = getErrorMessage(jqXHR,
                               'Error updating the item: ' + errorThrown);
-                showUserError(message);
+                showUserError(message, parent);
             }
         });
     });
@@ -354,7 +461,11 @@ $().ready(function(){
         var postData = {
             data: {
                 type: 'event',
-                id: $('#track-id').val()
+                id: row.find(".songManager .grab").data('id'),
+                meta: {
+                    wantMeta: true,
+                    hash: $("#track-hash").val(),
+                }
             }
         };
 
@@ -366,27 +477,33 @@ $().ready(function(){
             accept: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
             success: function(response) {
-                location.href = "?subaction=" + $("#track-action").val() +
-                    "&playlist=" + playlistId;
+                var meta = response.data.meta;
+                var hash = meta.hash;
+                if (!hash) {
+                    // playlist is out of sync with table; reload
+                    location.href = "?subaction=" + $("#track-action").val() +
+                        "&playlist=" + playlistId;
+                    return;
+                }
+                $("#track-hash").val(hash);
+
+                // hide the inline edit
+                var overlay = $(".pl-inline-edit");
+                var dummy = overlay.closest("tr");
+                overlay.hide().insertAfter($("#extend-show"));
+                dummy.remove();
+
+                // delete the row
+                row.remove();
+                row = null;
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 var message = getErrorMessage(jqXHR,
                               'Error deleting the item: ' + errorThrown);
-                showUserError(message);
+                showUserError(message, $(".pl-inline-edit"));
             }
         });
     });
-
-    $("#edit-cancel").on('click', function(){
-        location.href = "?subaction=" + $("#track-action").val() +
-            "&playlist=" + $("#track-playlist").val();
-    });
-
-    // display highlight on track edit
-    if($("#track-id").length > 0) {
-        var id = $("#track-id").val();
-        $("DIV[data-id=" + id + "]").closest("TR").addClass("highlight");
-    }
 
     function moveTrack(list, fromId, toId, tr, si, rows) {
         var postData = {
@@ -417,7 +534,7 @@ $().ready(function(){
 
                 // move succeeded, clear timestamp
                 tr.find("td").eq(1).data('utc','').html('');
-                $("#error-msg").text("");
+                $(".error-msg").text("");
                 $("#track-hash").val(meta.hash);
                 updatePlayable();
             },
@@ -429,7 +546,7 @@ $().ready(function(){
                     rows.eq(si).after(tr);
 
                 var status = getErrorMessage(jqXHR, errorThrown);
-                $('#error-msg').text("Error moving track: " + status);
+                showUserError("Error moving track: " + status, $('div.pl-add-track'));
             }
         });
     }
@@ -438,6 +555,8 @@ $().ready(function(){
     //
     // Reference: https://stackoverflow.com/questions/2072848/reorder-html-table-rows-using-drag-and-drop/42720364
     function grabStart(e) {
+        if (row) return; // disable resequencing during inline edit
+
         var tr = $(e.target).closest("TR"), si = tr.index(), sy = e.pageY, b = $(document.body), drag;
         window.getSelection().empty();
         b.addClass("grabCursor no-text-select");
@@ -475,28 +594,27 @@ $().ready(function(){
         $(document).on('pointermove', move).on('pointerup', up);
     }
 
-    function submitTrack(id) {
-        console.log("enter submitTrack");
+    function submitTrack(id, parent) {
         var itemType, spinTime, artist, label, album, track, eventType, eventCode, comment;
-        var trackType =  $("#track-type-pick").val();
+        var trackType =  $(".track-type-pick", parent).val();
 
         if (trackType == 'set-separator') {
             itemType = 'break';
         } else if (isNmeType(trackType)) {
             itemType = 'logEvent';
             eventType = getEventType(trackType);
-            eventCode = $("#nme-id").val();
+            eventCode = $(".nme-id", parent).val();
         } else if (trackType == 'comment-entry') {
             itemType = 'comment';
-            comment = $("#comment-data").val();
+            comment = $(".comment-data", parent).val();
         } else {
             itemType = 'spin';
-            artist = $("#track-artist").val();
-            label =  $("#track-label").val();
-            album =  $("#track-album").val();
-            track =  $("#track-title").val();
+            artist = $(".track-artist", parent).val();
+            label =  $(".track-label", parent).val();
+            album =  $(".track-album", parent).val();
+            track =  $(".track-title", parent).val();
         }
-        spinTime =  $("#track-time").fxtime('val');
+        spinTime =  $(".track-time", parent).fxtime('val');
 
         if(!spinTime && id == 'track-play')
             spinTime = 'auto';
@@ -555,7 +673,9 @@ $().ready(function(){
                 case 0:
                     // playlist is in natural order; prepend
                     $(".playlistTable > tbody").prepend(meta.html);
-                    $(".playlistTable > tbody > tr").eq(0).find(".grab").on('pointerdown', grabStart);
+                    var target = $(".playlistTable > tbody > tr").eq(0);
+                    target.find(".grab").on('pointerdown', grabStart);
+                    target.find(".songEdit").on('click', inlineEdit);
                     break;
                 default:
                     // seq specifies the ordinal of the entry,
@@ -570,19 +690,21 @@ $().ready(function(){
                         rows.eq(index).before(meta.html);
                     else
                         rows.eq(rows.length - 1).after(meta.html);
-                    $(".playlistTable > tbody > tr").eq(index).find(".grab").on('pointerdown', grabStart);
+                    var target = $(".playlistTable > tbody > tr").eq(index);
+                    target.find(".grab").on('pointerdown', grabStart);
+                    target.find(".songEdit").on('click', inlineEdit);
                     break;
                 }
 
                 $("#track-hash").val(meta.hash);
 
                 updatePlayable();
-                clearUserInput(true);
-                $("#track-time").fxtime('seg', 1, null).fxtime('seg', 2, 0);
+                clearUserInput(true, parent);
+                $(".track-time", parent).fxtime('seg', 1, null).fxtime('seg', 2, 0);
                 if(spinTime != null)
-                    $("#track-time").data('last-val', spinTime);
+                    $(".track-time", parent).data('last-val', spinTime);
 
-                $("#track-type-pick").val('manual-entry').trigger('change');
+                $('.track-type-pick', parent).val('manual-entry').trigger('change');
 
                 if(meta.runsover) {
                     $("#extend-show").show();
@@ -592,33 +714,34 @@ $().ready(function(){
             error: function (jqXHR, textStatus, errorThrown) {
                 var message = getErrorMessage(jqXHR,
                               'Your track was not saved: ' + errorThrown);
-                showUserError(message);
+                showUserError(message, parent);
             }
         });
     }
 
     $(".track-submit").on('click', function(e) {
         // double check that we have everything.
-        if (haveAllUserInput() == false) {
-            showUserError('A required field is missing');
+        var parent = $(this).closest('div.form-entry');
+        if (haveAllUserInput(parent) == false) {
+            showUserError('A required field is missing', parent);
             return;
         }
 
         // don't allow submission of album tag in the artist field
-        if($("#track-artist").val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
-            showUserError('Album tag is invalid');
-            $("#track-artist").trigger('focus');
+        if($(".track-artist", parent).val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
+            showUserError('Album tag is invalid', parent);
+            $(".track-artist", parent).trigger('focus');
             return;
         }
 
         // check that the timestamp, if any, is valid
-        if($(".fxtime").is(":invalid")) {
-            showUserError('Time is outside show start/end times');
-            $(".fxtime").trigger('focus');
+        if($(".fxtime", parent).is(":invalid")) {
+            showUserError('Time is outside show start/end times', parent);
+            $(".fxtime", parent).trigger('focus');
             return;
         }
 
-        submitTrack(this.id);
+        submitTrack(this.id, parent);
     });
 
     function getArtist(node) {
@@ -628,10 +751,9 @@ $().ready(function(){
         return htmlify(name);
     }
 
-    function addArtists(data, qlist) {
-        var results = $("#track-artists");
+    function addArtists(data, qlist, parent) {
+        var results = $(".track-artists", parent);
         results.empty();
-
         data.forEach(function(entry) {
             var attrs = entry.attributes;
             var row = htmlify(attrs.artist) + " - " +
@@ -649,7 +771,7 @@ $().ready(function(){
         $(".ui-menu").scrollTop(0);
     }
 
-    function searchLibrary(key, qlist) {
+    function searchLibrary(key, qlist, parent) {
         var url = "api/v1/album?filter[match(artist)]=" +
             encodeURIComponent(key) + "*" +
             "&page[size]=50&fields[album]=artist,album";
@@ -664,7 +786,7 @@ $().ready(function(){
                 // process only the last-issued search{Library,Tag} request
                 if(this.seq == seq)
                     addArtists(response.links.first.meta.total > 0 ?
-                               response.data : [], qlist);
+                               response.data : [], qlist, parent);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 // if not last request or rate limited, silently ignore
@@ -673,12 +795,12 @@ $().ready(function(){
 
                 var message = getErrorMessage(jqXHR,
                               'Error retrieving the data: ' + errorThrown);
-                showUserError(message);
+                showUserError(message, parent);
             }
         });
     }
 
-    function searchTag(id, qlist) {
+    function searchTag(id, qlist, parent) {
         var url = "api/v1/album/" + id +
             "?fields[album]=artist,album";
 
@@ -691,7 +813,7 @@ $().ready(function(){
             success: function(response) {
                 // process only the last-issued search{Library,Tag} request
                 if(this.seq == seq)
-                    addArtists([ response.data ], qlist);
+                    addArtists([ response.data ], qlist, parent);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 // if not last request, rate limited, or tag does not exist, silently ignore
@@ -700,38 +822,40 @@ $().ready(function(){
 
                 var message = getErrorMessage(jqXHR,
                               'Error retrieving the data: ' + errorThrown);
-                showUserError(message);
+                showUserError(message, parent);
             }
         });
     }
 
-    $("#track-artist").on('focusout', function() {
-        $("#error-msg").text('');
-        $(this).removeClass('invalid-input');
+    $(".track-artist").on('focusout', function() {
+        var parent = $(this).closest('div.form-entry');
         var artist = $(this).val();
         var scrub = artist.replace(/\s+/g, '');
+        $(this).removeClass('invalid-input');
+        $(".error-msg", parent).text('');
         if(scrub.match(/^\d+$/) && tagId == 0) {
-            var opt = $("#track-artists option[data-tag='" + escQuote(scrub) + "']");
+            var opt = $(".track-artists option[data-tag='" + escQuote(scrub) + "']", parent);
             if(opt.length > 0)
-                getDiskInfo(opt.data("tag"), opt.data("artist"));
+                getDiskInfo(opt.data("tag"), opt.data("artist"), parent);
             else
                 $(this).addClass('invalid-input');
         } else {
-            var opt = $("#track-artists option[value='" + escQuote(artist) + "']");
+            var opt = $(".track-artists option[value='" + escQuote(artist) + "']", parent);
             if(opt.length > 0)
-                getDiskInfo(opt.data("tag"), opt.data("artist"));
+                getDiskInfo(opt.data("tag"), opt.data("artist"), parent);
         }
     }).on('input', function() {
         var artist = $(this).val();
-        var opt = $("#track-artists option[value='" + escQuote(artist) + "']");
+        var parent = $(this).closest('div.form-entry');
+        var opt = $(".track-artists option[value='" + escQuote(artist) + "']", parent);
         if(opt.length == 0) {
-            $("#track-titles").empty();
+            $(".track-titles", parent).empty();
             // clear auto-filled album info
             if(tagId > 0) {
                 tagId = 0;
-                $("#track-title").val("");
-                $("#track-album").val("");
-                $("#track-label").val("");
+                $(".track-title", parent).val("");
+                $(".track-album", parent).val("");
+                $(".track-label", parent).val("");
             }
         }
     }).on('click', function() {
@@ -741,6 +865,7 @@ $().ready(function(){
         delay: 400,
         source: function(rq, rs) {
             var artist = rq.term;
+            var parent = $(this.element).closest('div.form-entry');
 
             // if artist is numeric with correct check digit,
             // treat it as an album tag
@@ -748,36 +873,39 @@ $().ready(function(){
             parseTag != null && parseTag[1]
                     .split('').map(Number)
                     .reduce((a, b) => a + b, 0) % 10 == parseTag[2] ?
-                searchTag(parseTag[0], rs) : searchLibrary(artist, rs);
+                searchTag(parseTag[0], rs, parent) : searchLibrary(artist, rs, parent);
         },
         select: function(event, ui) {
             var artist = ui.item.value;
-            var opt = $("#track-artists option[value='" + escQuote(artist) + "']");
+            var parent = $(this).closest('div.form-entry');
+            var opt = $(".track-artists option[value='" + escQuote(artist) + "']", parent);
             if(opt.length > 0)
-                getDiskInfo(opt.data("tag"), opt.data("artist"));
+                getDiskInfo(opt.data("tag"), opt.data("artist"), parent);
         }
     });
 
-    $("#track-title").on('click', function() {
+    $(".track-title").on('click', function() {
         $(this).autocomplete('search', '');
     }).on('blur autocomplete', function() {
         var index, title = this.value;
-        var opt = $("#track-titles option[value='" + escQuote(title) + "']");
+        var parent = $(this).closest('div.form-entry');
+        var opt = $(".track-titles option[value='" + escQuote(title) + "']", parent);
 
         if(opt.length == 0 && (index = title.trim().match(/^\d+$/)))
-            opt = $("#track-titles option[data-index='" + escQuote(index[0]) + "']");
+            opt = $(".track-titles option[data-index='" + escQuote(index[0]) + "']", parent);
 
         if(opt.length > 0) {
             var artist = opt.data("artist");
             if(artist)
-                $("#track-artist").val(artist);
-            $("#track-title").val(opt.data("track"));
+                $(".track-artist", parent).val(artist);
+            $(".track-title", parent).val(opt.data("track"));
         }
     }).autocomplete({
         minLength: 0,
         source: function(rq, rs) {
+            var parent = $(this.element).closest('div.form-entry');
             var term = rq.term.toLowerCase();
-            rs($("#track-titles option").map(function() {
+            rs($(".track-titles option", parent).map(function() {
                 return this.value;
             }).filter(function() {
                 return this.toLowerCase().includes(term);
@@ -792,7 +920,7 @@ $().ready(function(){
         }
     });
 
-    $("#track-album, #track-label").on('change', function() {
+    $(".track-album, .track-label").on('change', function() {
         tagId = 0;
     });
 
@@ -854,7 +982,7 @@ $().ready(function(){
             error: function(jqXHR, textStatus, errorThrown) {
                 var message = getErrorMessage(jqXHR,
                               'Error extending the show time: ' + errorThrown);
-                showUserError(message);
+                showUserError(message, $('div.pl-add-track'));
             }
         });
     });
@@ -869,7 +997,7 @@ $().ready(function(){
         if(timeEntry.hasClass('zk-hidden'))
             timeEntry.slideDown().removeClass('zk-hidden');
         else {
-            $("#error-msg").text('');
+            $(".pl-add-track .error-msg").text('');
             var input = timeEntry.slideUp().addClass('zk-hidden').find('input');
             input.fxtime('seg', 1, null).fxtime('seg', 2, 0);
         }
@@ -959,14 +1087,14 @@ $().ready(function(){
             error: function(jqXHR, textStatus, errorThrown) {
                 var message = getErrorMessage(jqXHR,
                               'Error updating the track: ' + errorThrown);
-                showUserError(message);
+                showUserError(message, row.closest('div.form-entry'));
             }
         });
     }
 
     var playable = null;
     function updatePlayable() {
-        if(!$("#track-time").data("live"))
+        if(!$(".pl-add-track .track-time").data("live"))
             return;
 
         var highlight = getPending();
@@ -991,10 +1119,10 @@ $().ready(function(){
 
     updatePlayable();
 
-    $("#track-type-pick").html($("#track-type-pick option").sort(function(a, b) {
+    $('.track-type-pick').html($('.pl-add-track .track-type-pick option').sort(function(a, b) {
         return b.value == 'manual-entry' || a.value != 'manual-entry' &&
             a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1;
-    })).val('manual-entry');
+    })).val('manual-entry').trigger('change');
 
     $(".fxtime").fxtime()
         .on('keydown', function(e) {
@@ -1008,7 +1136,7 @@ $().ready(function(){
                     this.trigger('focus');
             }
         }).on('segblur', function(e) {
-            if(e.detail.seg == 1) {
+            if(e.detail.seg == 1 && $(this).hasClass('track-time')) {
                 // auto-bump hour if new minute is well less than previous
                 var current = $(this).fxtime('val');
                 if(current != null) {
@@ -1021,29 +1149,63 @@ $().ready(function(){
             }
         }).on('blur', function() {
             if(this.matches(":valid"))
-                $("#error-msg").text("");
+                $(this).closest('pl-form-entry').find('.error-msg').text('');
         });
 
-    $("#track-time")
-        .fxtime('val', $("#track-time").data('last-val'))
+    $(".fxtime")
+        .fxtime('val', $(".track-time").data('last-val'))
         .fxtime('seg', 1, null)
         .fxtime('seg', 2, 0);
 
-    if($("#edit-type").length > 0) {
-        var type = $("#edit-type").val();
-        $("#track-type-pick").val(type).trigger('change');
-
-        var created = $("#old-created").val();
-        if(created)
-            $("#edit-time").fxtime('val', created);
-        else
-            $("#edit-time").fxtime('val', $("#edit-time").data('last-val'))
-                .fxtime('seg', 1, null)
-                .fxtime('seg', 2, 0);
+    function closeInlineEdit(event, fast = false) {
+        var overlay = $(".pl-inline-edit");
+        var dummy = overlay.closest("tr");
+        if (fast) {
+            overlay.hide().insertAfter($("#extend-show"));
+            dummy.remove();
+            row.removeClass('selected').data('event', undefined);
+            row = null;
+        } else {
+            overlay.slideUp('fast', function() {
+                overlay.insertAfter($("#extend-show"));
+                dummy.remove();
+                row.removeClass('selected').data('event', undefined);
+                row = null;
+            });
+        }
     }
 
+    function inlineEdit(event) {
+        event.preventDefault();
+
+        var oldRow = row;
+        if(row)
+            closeInlineEdit(event, true);
+
+        row = $(this).closest("tr");
+        // selecting edit on the already open row closes it
+        if (oldRow && oldRow[0] == row[0]) {
+            row = null;
+            return;
+        }
+
+        var overlay = $(".pl-inline-edit");
+        var dummy = $("<tr><td colspan=6></td></tr>");
+        dummy.find("td").append(overlay);
+        dummy.insertAfter(row);
+        row.addClass('selected');
+
+        $('#edit-insert').hide();
+        $('#edit-save').show();
+
+        getEventInfo(row.find(".songManager .grab").data('id'));
+    };
+
+    $(".songEdit").on('click', inlineEdit);
+    $("#edit-cancel").on('click', closeInlineEdit);
+
     // stretch track-play if track-add is hidden
-    $("#track-add.zk-hidden").prev().outerWidth($("#track-type-pick").outerWidth());
+    $("#track-add.zk-hidden").prev().outerWidth($("#track-entry .track-type-pick").outerWidth());
 
     $("*[data-focus]").trigger('focus');
 });

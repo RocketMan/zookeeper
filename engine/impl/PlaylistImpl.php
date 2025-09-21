@@ -841,7 +841,10 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $timestamp = $trackRow['created'];
         $timeChanged = false;
 
-        if ($dateTime &&
+        if ($dateTime == "clear") {
+            $timestamp = null;
+            // no need to set timeChanged, as clearing time does not resequence
+        } else if ($dateTime &&
                 $this->isDateTimeWithinShow($dateTime, $playlist)) {
             $timestamp = $dateTime;
             $timeChanged = true;

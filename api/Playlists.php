@@ -377,6 +377,14 @@ class Playlists implements RequestHandlerInterface {
                 $flags &= ~Albums::LINKS_REVIEWS_WITH_BODY;
 
             $relations = self::fetchEvents($id, $flags);
+
+            if($request->hasFilter("event.id")) {
+                $eventId = $request->filterValue("event.id");
+                $relations = new ResourceCollection(array_filter($relations->all(), function($event) use ($eventId) {
+                    return $event->id() == $eventId;
+                }));
+            }
+
             break;
         case "origin":
             $origin = $list['origin'];
@@ -799,8 +807,17 @@ class Playlists implements RequestHandlerInterface {
         $status = '';
         $success = $api->insertTrackEntry($key, $entry, $status);
 
+        if($success &&
+                ($moveTo = $event->metaInformation()->getOptional("moveTo"))) {
+            $success = $api->moveTrack($key, $entry->getId(), $moveTo);
+            if(!$success) {
+                $api->deleteTrack($entry->getId());
+                $status = 'moveTo failed';
+            }
+        }
+
         if($success && $list['airname']) {
-            if($autoTimestamp) {
+            if($autoTimestamp && !$moveTo) {
                 $list['id'] = $key;
                 if($entry->isType(PlaylistEntry::TYPE_SPIN)) {
                     $spin = $entry->asArray();
@@ -892,7 +909,7 @@ class Playlists implements RequestHandlerInterface {
         } catch(\Exception $e) {}
 
         $created = $entry->getCreated();
-        if($created) {
+        if($created && $created != "clear") {
             $window = $api->getTimestampWindow($key);
             try {
                 $stamp = PlaylistEntry::scrubTimestamp(new \DateTime($created), $window);
@@ -907,6 +924,9 @@ class Playlists implements RequestHandlerInterface {
 
         $success = $event->attributes()->isEmpty() ?
                         true : $api->updateTrackEntry($key, $entry);
+
+        if($success && $created == "clear")
+            $entry->setCreated(null);
 
         if($success &&
                 ($moveTo = $event->metaInformation()->getOptional("moveTo")))
@@ -962,10 +982,24 @@ class Playlists implements RequestHandlerInterface {
             throw new NotAllowedException("event not in list");
 
         $api->adviseLock($key);
+        try {
+
+        $hashStatus = $event->metaInformation()->getOptional("hash");
+        if(!is_null($hashStatus))
+            $hashStatus = $hashStatus == $api->hashPlaylist($key) ? 0 : -1;
 
         $success = $api->deleteTrack($id);
 
-        $api->adviseUnlock($key);
+        if($success && $event->metaInformation()->getOptional("wantMeta")) {
+            $entry = new PlaylistEntry($track);
+            $res = new JsonResource("event", $entry->getId());
+            $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $hashStatus, $entry);
+            return new DocumentResponse(new Document($res));
+        }
+
+        } finally {
+            $api->adviseUnlock($key);
+        }
 
         if($success)
             return new EmptyResponse();

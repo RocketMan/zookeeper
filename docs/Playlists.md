@@ -273,7 +273,9 @@ event;
 * PATCH (all API versions): If you supply a `created` attribute with
 value 'auto' in a PATCH request to the events endpoint, Zookeeper Online will
 timestamp the existing event, if the playlist is currently on-air.
-An empty or absent `created` attribute will not timestamp the event.
+If you supply a `created` attribute with the value 'clear', the existing
+timestamp, if any, will be cleared.  An empty, null, or absent `created`
+attribute will not change the timestamp.
 
 ### Event resequencing
 
