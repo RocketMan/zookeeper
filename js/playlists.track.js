@@ -25,7 +25,6 @@
 $().ready(function(){
     const NME_ENTRY='nme-entry';
     const NME_PREFIX=$("#const-prefix").val();
-    var tagId = 0;
     var seq = 0;
     var row;
 
@@ -57,7 +56,7 @@ $().ready(function(){
         if (clearArtistList)
             $(".track-artists", parent).empty();
 
-        tagId = 0;
+        $(".track-album", parent).data('tagId', 0);
 
         setAddButtonState(false, parent);
 
@@ -195,7 +194,7 @@ $().ready(function(){
             accept: "application/json; charset=utf-8",
             url: url,
         }).done(function (response) { //TODO: success?
-            tagId = id;
+            $(".track-album", parent).data('tagId', id);
             var options = "";
             var diskInfo = response.data;
             var trackList = diskInfo.attributes.tracks;
@@ -324,7 +323,7 @@ $().ready(function(){
         }
 
         // don't allow submission of album tag in the artist field
-        if($(".track-artist", parent).val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
+        if($(".track-artist", parent).val().replace(/\s+/g, '').match(/^\d+$/) && !$(".track-album", parent).data('tagId')) {
             showUserError('Album tag is invalid', parent);
             $(".track-artist", parent).trigger('focus');
             return;
@@ -385,6 +384,7 @@ $().ready(function(){
             }
         };
 
+        var tagId = $(".track-album", parent).data('tagId');
         if(trackType == 'manual-entry' && tagId) {
             postData.data.relationships = {
                 album: {
@@ -458,7 +458,7 @@ $().ready(function(){
         }
 
         // don't allow submission of album tag in the artist field
-        if($(".track-artist", parent).val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
+        if($(".track-artist", parent).val().replace(/\s+/g, '').match(/^\d+$/) && !$(".track-album", parent).data('tagId')) {
             showUserError('Album tag is invalid', parent);
             $(".track-artist", parent).trigger('focus');
             return;
@@ -519,6 +519,7 @@ $().ready(function(){
             }
         };
 
+        var tagId = $(".track-album", parent).data('tagId');
         if(trackType == 'manual-entry' && tagId) {
             postData.data.relationships = {
                 album: {
@@ -789,6 +790,7 @@ $().ready(function(){
             }
         };
 
+        var tagId = $(".track-album", parent).data('tagId');
         if(trackType == 'manual-entry' && tagId) {
             postData.data.relationships = {
                 album: {
@@ -882,7 +884,7 @@ $().ready(function(){
         }
 
         // don't allow submission of album tag in the artist field
-        if($(".track-artist", parent).val().replace(/\s+/g, '').match(/^\d+$/) && tagId == 0) {
+        if($(".track-artist", parent).val().replace(/\s+/g, '').match(/^\d+$/) && !$(".track-album", parent).data('tagId')) {
             showUserError('Album tag is invalid', parent);
             $(".track-artist", parent).trigger('focus');
             return;
@@ -987,7 +989,7 @@ $().ready(function(){
         var scrub = artist.replace(/\s+/g, '');
         $(this).removeClass('invalid-input');
         $(".error-msg", parent).text('');
-        if(scrub.match(/^\d+$/) && tagId == 0) {
+        if(scrub.match(/^\d+$/) && !$(".track-album", parent).data('tagId')) {
             var opt = $(".track-artists option[data-tag='" + escQuote(scrub) + "']", parent);
             if(opt.length > 0)
                 getDiskInfo(opt.data("tag"), opt.data("artist"), parent);
@@ -1005,10 +1007,9 @@ $().ready(function(){
         if(opt.length == 0) {
             $(".track-titles", parent).empty();
             // clear auto-filled album info
-            if(tagId > 0) {
-                tagId = 0;
+            if($(".track-album", parent).data('tagId')) {
                 $(".track-title", parent).val("");
-                $(".track-album", parent).val("");
+                $(".track-album", parent).data('tagId', 0).val("");
                 $(".track-label", parent).val("");
             }
         }
@@ -1075,7 +1076,9 @@ $().ready(function(){
     });
 
     $(".track-album, .track-label").on('change', function() {
-        tagId = 0;
+        var parent = $(this).closest('div.form-entry');
+        $(".track-album", parent).data('tagId', 0);
+        $(".track-titles", parent).empty();
     });
 
     $(".playlistTable .grab").on('pointerdown', grabStart);
