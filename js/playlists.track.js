@@ -691,9 +691,17 @@ $().ready(function(){
     //
     // Reference: https://stackoverflow.com/questions/2072848/reorder-html-table-rows-using-drag-and-drop/42720364
     function grabStart(e) {
+        e.preventDefault();
+
+        // disable draghandle longpress on mobile
+        $(this).off('contextmenu').on('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
         if (row) return; // disable resequencing during inline edit
 
         var tr = $(e.target).closest("TR"), si = tr.index(), sy = e.pageY, b = $(document.body), drag;
+        if (b.hasClass("grabCursor")) return; // already dragging
         window.getSelection().empty();
         b.addClass("grabCursor no-text-select");
         tr.addClass("grabbed");
