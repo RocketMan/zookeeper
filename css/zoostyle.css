@@ -1322,20 +1322,20 @@ input[type="checkbox"]:checked:active {
 
 .songEdit {
     top: -2px;
-    left: 46px;
+    left: 48px;
     font-size: 14px;
 }
 
 .songInsert {
-    top: -1px;
+    top: -2px;
     left: 16px;
     font-size: 14px;
 }
 
 .songInsert img {
     filter: brightness(0) saturate(100%) invert(32%) sepia(90%) saturate(767%) hue-rotate(207deg) brightness(99%) contrast(94%); /* #5863da see https://codepen.io/sosuke/pen/Pjoqqp */
-    height: 30px;
-    width: 30px;
+    height: 18px;
+    width: 26px;
 }
 
 .currentsEdit {
@@ -1448,7 +1448,7 @@ input[type="checkbox"]:checked:active {
 	overflow: visible
     }
     .songEdit {
-	left: 60px;
+	left: 64px;
     }
     .songManager {
 	width: 85px;
@@ -1461,7 +1461,7 @@ input[type="checkbox"]:checked:active {
 	left: 25px;
     }
     .songInsert img {
-	height: 34px;
+	height: 24px;
 	width: 34px;
     }
 }
