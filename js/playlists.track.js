@@ -576,6 +576,8 @@ $().ready(function(){
                     $("#track-hash").val(meta.hash);
 
                     row = null;
+
+                    updatePlayable();
                     break;
                 }
             },
