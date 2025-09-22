@@ -743,8 +743,30 @@ $().ready(function(){
         $(document).on('pointermove', move).on('pointerup', up);
     }
 
-    function submitTrack(id, parent) {
-        var itemType, spinTime, artist, label, album, track, eventType, eventCode, comment;
+    $(".track-submit").on('click', function(e) {
+        // double check that we have everything.
+        var parent = $(this).closest('div.form-entry');
+        if (haveAllUserInput(parent) == false) {
+            showUserError('A required field is missing', parent);
+            return;
+        }
+
+        // don't allow submission of album tag in the artist field
+        if($(".track-artist", parent).val().replace(/\s+/g, '').match(/^\d+$/) && !$(".track-album", parent).data('tagId')) {
+            showUserError('Album tag is invalid', parent);
+            $(".track-artist", parent).trigger('focus');
+            return;
+        }
+
+        // check that the timestamp, if any, is valid
+        if($(".fxtime", parent).is(":invalid")) {
+            showUserError('Time is outside show start/end times', parent);
+            $(".fxtime", parent).trigger('focus');
+            return;
+        }
+
+        var itemType, comment, eventType, eventCode;
+        var artist, label, album, track, spinTime;
         var trackType =  $(".track-type-pick", parent).val();
 
         if (trackType == 'set-separator') {
@@ -765,7 +787,7 @@ $().ready(function(){
         }
         spinTime =  $(".track-time", parent).fxtime('val');
 
-        if(!spinTime && id == 'track-play')
+        if(!spinTime && this.id == 'track-play')
             spinTime = 'auto';
 
         var postData = {
@@ -873,31 +895,6 @@ $().ready(function(){
                 showUserError(message, parent);
             }
         });
-    }
-
-    $(".track-submit").on('click', function(e) {
-        // double check that we have everything.
-        var parent = $(this).closest('div.form-entry');
-        if (haveAllUserInput(parent) == false) {
-            showUserError('A required field is missing', parent);
-            return;
-        }
-
-        // don't allow submission of album tag in the artist field
-        if($(".track-artist", parent).val().replace(/\s+/g, '').match(/^\d+$/) && !$(".track-album", parent).data('tagId')) {
-            showUserError('Album tag is invalid', parent);
-            $(".track-artist", parent).trigger('focus');
-            return;
-        }
-
-        // check that the timestamp, if any, is valid
-        if($(".fxtime", parent).is(":invalid")) {
-            showUserError('Time is outside show start/end times', parent);
-            $(".fxtime", parent).trigger('focus');
-            return;
-        }
-
-        submitTrack(this.id, parent);
     });
 
     function getArtist(node) {
