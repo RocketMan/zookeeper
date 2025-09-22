@@ -127,59 +127,6 @@ $().ready(function(){
         $(".error-msg", parent).text(msg);
     }
 
-    function getEventInfo(id) {
-        var url = "api/v2/playlist/" + $("#track-playlist").val() +
-            "/events?filter[event.id]=" + id;
-        $.ajax({
-            dataType : 'json',
-            type: 'GET',
-            accept: "application/json; charset=utf-8",
-            url: url,
-            success: function (response) {
-                var event = response.data[0];
-                row.data('event', event);
-
-                var type;
-                switch(event.attributes.type) {
-                case 'comment':
-                    type = 'comment-entry';
-                    break;
-                case 'break':
-                    type = 'set-separator';
-                    break;
-                case 'logEvent':
-                    type = NME_PREFIX + event.attributes.event;
-                    break;
-                default: // spin
-                    type = 'manual-entry';
-                    break;
-                }
-
-                var form = $(".pl-inline-edit");
-                $(".track-type-pick", form).val(type).trigger('change');
-                if(event.attributes.created)
-                    $(".track-time", form).fxtime('val', event.attributes.created);
-                else
-                    $(".track-time", form)
-                        .fxtime('seg', 0, null)
-                        .fxtime('seg', 1, null)
-                        .fxtime('seg', 2, 0);
-
-                var haveAll = haveAllUserInput(form);
-                setAddButtonState(haveAll, form);
-
-                form.slideDown();
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                closeInlineEdit(undefined, true);
-
-                var message = getErrorMessage(jqXHR,
-                              'Error updating the item: ' + errorThrown);
-                showUserError(message, $(".pl-add-track"));
-            }
-        });
-    }
-
     function getDiskInfo(id, refArtist, parent, refTitle) {
         clearUserInput(false, parent);
 
@@ -1349,18 +1296,66 @@ $().ready(function(){
             return;
         }
 
-        var overlay = $(".pl-inline-edit");
-        var dummy = $("<tr class='dummy'><td colspan=6></td></tr>");
-        dummy.find("td").append(overlay);
-        dummy.insertAfter(row);
-        row.addClass('selected');
+        var url = "api/v2/playlist/" + $("#track-playlist").val() +
+            "/events?filter[event.id]=" + row.find(".songManager .grab").data('id');
+        $.ajax({
+            dataType : 'json',
+            type: 'GET',
+            accept: "application/json; charset=utf-8",
+            url: url,
+            success: function (response) {
+                var event = response.data[0];
+                row.data('event', event);
 
-        $('#edit-insert').hide();
-        $('#edit-save').show();
-        $('#edit-delete').show();
-        $('#edit-cancel').addClass('edit-mode');
+                var type;
+                switch(event.attributes.type) {
+                case 'comment':
+                    type = 'comment-entry';
+                    break;
+                case 'break':
+                    type = 'set-separator';
+                    break;
+                case 'logEvent':
+                    type = NME_PREFIX + event.attributes.event;
+                    break;
+                default: // spin
+                    type = 'manual-entry';
+                    break;
+                }
 
-        getEventInfo(row.find(".songManager .grab").data('id'));
+                var overlay = $(".pl-inline-edit");
+                var dummy = $("<tr class='dummy'><td colspan=6></td></tr>");
+                dummy.find("td").append(overlay);
+                dummy.insertAfter(row);
+                row.addClass('selected');
+
+                $('#edit-insert').hide();
+                $('#edit-save').show();
+                $('#edit-delete').show();
+                $('#edit-cancel').addClass('edit-mode');
+
+                $(".track-type-pick", overlay).val(type).trigger('change');
+                if(event.attributes.created)
+                    $(".track-time", overlay).fxtime('val', event.attributes.created);
+                else
+                    $(".track-time", overlay)
+                        .fxtime('seg', 0, null)
+                        .fxtime('seg', 1, null)
+                        .fxtime('seg', 2, 0);
+
+                var haveAll = haveAllUserInput(overlay);
+                setAddButtonState(haveAll, overlay);
+
+                overlay.slideDown();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                row = null;
+
+                var message = getErrorMessage(jqXHR,
+                              'Error updating the item: ' + errorThrown);
+                showUserError(message, $(".pl-add-track"));
+            }
+        });
     };
 
     function inlineInsert(event) {
