@@ -1292,7 +1292,7 @@ $().ready(function(){
                     this.trigger('focus');
             }
         }).on('segblur', function(e) {
-            if(e.detail.seg == 1 && $(this).hasClass('track-time')) {
+            if(e.detail.seg == 1 && $(this).closest('.pl-add-track').length) {
                 // auto-bump hour if new minute is well less than previous
                 var current = $(this).fxtime('val');
                 if(current != null) {
