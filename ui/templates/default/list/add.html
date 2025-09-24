@@ -117,12 +117,12 @@
     <div>
         <label></label>
         <div class='action-area'>
-        <button type='button' disabled id='track-play' class='track-submit default'>Add {{ isLiveShow ? "(Playing Now)<img src='img/play.svg' />" : "Item" }}</button>
-        <button type='button' disabled id='track-add' class='track-submit {{~ not isLiveShow ? " zk-hidden" }}'>Add (Upcoming)<img src='img/play-pause.svg' /></button>
+            <button type='button' disabled id='track-play' class='track-submit default'>Add {{ isLiveShow ? "(Playing Now)<img src='img/play.svg' />" : "Item" }}</button>
+            <button type='button' disabled id='track-add' class='track-submit {{~ not isLiveShow ? " zk-hidden" }}'>Add (Upcoming)<img src='img/play-pause.svg' /></button>
         </div>
     </div>
     <div class='toggle-time-entry {{~ not isLiveShow ? " zk-hidden" }}'><div><!--&#x1f551;--></div></div>
-</div> <!-- track-editor -->
+</div> <!-- pl-add-track -->
 <hr>
 <div id="extend-show" class="zk-popup">
     <div class="zk-popup-content">
@@ -198,12 +198,12 @@
     <div>
         <label></label>
         <div class='action-area'>
-        <button type='button' id='edit-insert' class='inline-mode default'>Insert Item</button>
-        <button type='button' id='edit-save' class='inline-mode default'>Save</button>
-        <button type='button' id='edit-cancel' class='inline-mode'>Cancel</button>
+            <button type='button' id='edit-insert' class='inline-mode default'>Insert Item</button>
+            <button type='button' id='edit-save' class='inline-mode default'>Save</button>
+            <button type='button' id='edit-cancel' class='inline-mode'>Cancel</button>
         </div>
     </div>
-</div>
+</div> <!-- pl-inline-edit -->
 {% endblock %}
 {#--------------------------------------------------------------------------#}
 {% block body %}
