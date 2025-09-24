@@ -1307,7 +1307,7 @@ input[type="checkbox"]:checked:active {
 .songManager {
     top: 8px;
     height: 20px;
-    width: 64px;
+    width: 38px;
     position: relative;
     font-size:12px;
 }
@@ -1459,9 +1459,6 @@ input[type="checkbox"]:checked:active {
     /* allow touch area to overflow */
     div.content:has(.grab) {
 	overflow: visible
-    }
-    .songManager {
-	width: 85px;
     }
     .songManager .fas {
 	line-height: 1.2;
