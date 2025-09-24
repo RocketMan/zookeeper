@@ -65,12 +65,12 @@
            {%~ endfor %}
         </select>
     </div>
-    <div id='track-entry' class='track-entry'>
+    <div class='track-entry'>
         <div class='manual-entry'>
             <div style='white-space: nowrap'>
                 <label>Artist / Tag:</label>
                 <input required class='track-artist' autocomplete='off' maxlength={{ MAX_FIELD_LENGTH }} data-focus />
-                <span class='track-info' id='tag-status'>Artist name or tag number</span>
+                <span class='track-info'>Artist name or tag number</span>
                 <datalist class='track-artists'>
                 </datalist>
             </div>
@@ -89,12 +89,12 @@
                 <input class='track-label' maxlength={{ MAX_FIELD_LENGTH }} />
             </div>
         </div>
-        <div id='comment-entry' class='comment-entry' class='zk-hidden' >
+        <div class='comment-entry' class='zk-hidden' >
             <div>
                 <label style='vertical-align: top'>Comment:</label>
                 <textarea wrap=virtual class='comment-data' rows=4 maxlength={{ MAX_COMMENT_LENGTH }} required data-focus></textarea>
                 <div style='display: inline-block;'>
-                    <span class='remaining' id='remaining'>(0/{{ MAX_COMMENT_LENGTH }} characters)</span><br/>
+                    <span class='remaining'>(0/{{ MAX_COMMENT_LENGTH }} characters)</span><br/>
                     <a class='markdown-help-link' href='#'>formatting help</a>
                 </div>
                 <input id='comment-max' type='hidden' value='{{ MAX_COMMENT_LENGTH }}'>
@@ -153,7 +153,7 @@
             <div style='white-space: nowrap'>
                 <label>Artist / Tag:</label>
                 <input required class='track-artist' autocomplete='off' maxlength={{ MAX_FIELD_LENGTH }} data-focus />
-                <span class='track-info' id='pl-inline-tag-status'>Artist name or tag number</span>
+                <span class='track-info'>Artist name or tag number</span>
                 <datalist class='track-artists'>
                 </datalist>
             </div>
@@ -180,8 +180,6 @@
                     <span class='remaining' id='pl-inline-remaining'>(0/{{ MAX_COMMENT_LENGTH }} characters)</span><br/>
                     <a class='markdown-help-link' href='#'>formatting help</a>
                 </div>
-                <input id='pl-inline-comment-max' type='hidden' value='{{ MAX_COMMENT_LENGTH }}'>
-
             </div>
             {%~ include 'markdown-help.html' %}
         </div>
@@ -209,7 +207,7 @@
 {% endblock %}
 {#--------------------------------------------------------------------------#}
 {% block body %}
-<table class='playlistTable {{~ editMode ? ' edit-mode' }}' cellpadding=1>
+<table class='playlistTable' cellpadding=1>
   <thead>
     <tr class='playlistHdr' align=left>
       {{ editMode ? "<td></td>" }}
