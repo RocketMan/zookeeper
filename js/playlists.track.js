@@ -261,6 +261,17 @@ $().ready(function(){
         setAddButtonState(haveAll, parent);
     });
 
+    function addActions(target) {
+        $(".grab", target).on('pointerdown', grabStart);
+        $(".pl-stack a", target).on('click', showActions);
+        $(".songInsert", target).on('click', inlineInsert);
+        $(".songEdit", target).on('click', inlineEdit);
+        $(".songDelete", target).on('click', inlineDelete);
+        $(".pl-stack", target).on('click dblclick', function(e) {
+            e.stopPropagation();
+        });
+    }
+
     $("#edit-insert").on('click', function(){
         // double check that we have everything.
         var parent = $(this).closest('div.form-entry');
@@ -376,9 +387,7 @@ $().ready(function(){
                     rows.eq(index++).after(meta.html);
 
                     var target = $(".playlistTable > tbody > tr").eq(index);
-                    target.find(".grab").on('pointerdown', grabStart);
-                    target.find(".songInsert").on('click', inlineInsert);
-                    target.find(".songEdit").on('click', inlineEdit);
+                    addActions(target);
 
                     $("#track-hash").val(meta.hash);
 
@@ -519,9 +528,7 @@ $().ready(function(){
                     }
 
                     var target = $(".playlistTable > tbody > tr").eq(index);
-                    target.find(".grab").on('pointerdown', grabStart);
-                    target.find(".songInsert").on('click', inlineInsert);
-                    target.find(".songEdit").on('click', inlineEdit);
+                    addActions(target);
 
                     $("#track-hash").val(meta.hash);
 
@@ -539,9 +546,11 @@ $().ready(function(){
         });
     });
 
-    $("#edit-delete").on('click', function(){
-        if(!confirm("Delete this item?"))
+    function inlineDelete() {
+        if(!confirm("Delete this item?")) {
+            closeInlineEdit(undefined, true);
             return;
+        }
 
         var playlistId = $('#track-playlist').val();
         var postData = {
@@ -583,6 +592,7 @@ $().ready(function(){
                 row.remove();
                 row = null;
 
+                $(".pl-stack-content").hide();
                 updatePlayable();
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -591,7 +601,7 @@ $().ready(function(){
                 showUserError(message, $(".pl-inline-edit"));
             }
         });
-    });
+    }
 
     function moveTrack(list, fromId, toId, tr, si, rows) {
         var postData = {
@@ -793,9 +803,7 @@ $().ready(function(){
                     // playlist is in natural order; prepend
                     $(".playlistTable > tbody").prepend(meta.html);
                     var target = $(".playlistTable > tbody > tr").eq(0);
-                    target.find(".grab").on('pointerdown', grabStart);
-                    target.find(".songInsert").on('click', inlineInsert);
-                    target.find(".songEdit").on('click', inlineEdit);
+                    addActions(target);
                     break;
                 default:
                     // close the inline edit, if any
@@ -815,9 +823,7 @@ $().ready(function(){
                     else
                         rows.eq(rows.length - 1).after(meta.html);
                     var target = $(".playlistTable > tbody > tr").eq(index);
-                    target.find(".grab").on('pointerdown', grabStart);
-                    target.find(".songInsert").on('click', inlineInsert);
-                    target.find(".songEdit").on('click', inlineEdit);
+                    addActions(target);
                     break;
                 }
 
@@ -1025,8 +1031,6 @@ $().ready(function(){
         $(".track-titles", parent).empty();
     });
 
-    $(".playlistTable .grab").on('pointerdown', grabStart);
-
     // from home.js
     function localTime(date) {
         var hour = date.getHours();
@@ -1173,9 +1177,7 @@ $().ready(function(){
                         rows.eq(rows.length - 1).after(meta.html);
 
                     var target = $(".playlistTable > tbody > tr").eq(index);
-                    target.find(".grab").on('pointerdown', grabStart);
-                    target.find(".songInsert").on('click', inlineInsert);
-                    target.find(".songEdit").on('click', inlineEdit);
+                    addActions(target);
 
                     $("#track-hash").val(meta.hash);
 
@@ -1265,18 +1267,20 @@ $().ready(function(){
         .fxtime('seg', 2, 0);
 
     function closeInlineEdit(event, fast = false) {
+        $(".pl-stack-content").hide();
+
         var overlay = $(".pl-inline-edit");
         var dummy = overlay.closest("tr");
         if (fast) {
             overlay.hide().insertAfter($("#extend-show"));
             dummy.remove();
-            row.removeClass('selected').data('event', null);
+            row.off().removeClass('selected').data('event', null);
             row = null;
         } else {
             overlay.slideUp('fast', function() {
                 overlay.insertAfter($("#extend-show"));
                 dummy.remove();
-                row.removeClass('selected').data('event', null);
+                row.off().removeClass('selected').data('event', null);
                 row = null;
             });
         }
@@ -1285,16 +1289,7 @@ $().ready(function(){
     function inlineEdit(event) {
         event.preventDefault();
 
-        var oldRow = row;
-        if(row)
-            closeInlineEdit(event, true);
-
-        row = $(this).closest("tr");
-        // selecting edit on the already open row closes it
-        if (oldRow && oldRow[0] == row[0]) {
-            row = null;
-            return;
-        }
+        $(".pl-stack-content").hide();
 
         var url = "api/v2/playlist/" + $("#track-playlist").val() +
             "/events?filter[event.id]=" + row.find(".songManager .grab").data('id');
@@ -1327,12 +1322,9 @@ $().ready(function(){
                 var dummy = $("<tr class='dummy'><td colspan=6></td></tr>");
                 dummy.find("td").append(overlay);
                 dummy.insertAfter(row);
-                row.addClass('selected');
 
                 $('#edit-insert').hide();
                 $('#edit-save').show();
-                $('#edit-delete').show();
-                $('#edit-cancel').addClass('edit-mode');
 
                 $(".track-type-pick", overlay).val(type).trigger('change');
                 if(event.attributes.created)
@@ -1361,16 +1353,8 @@ $().ready(function(){
     function inlineInsert(event) {
         event.preventDefault();
 
-        var oldRow = row;
-        if(row)
-            closeInlineEdit(event, true);
-
-        row = $(this).closest("tr");
-        // selecting edit on the already open row closes it
-        if (oldRow && oldRow[0] == row[0]) {
-            row = null;
-            return;
-        }
+        row.off().removeClass('selected');
+        $(".pl-stack-content").hide();
 
         var overlay = $(".pl-inline-edit");
         var dummy = $("<tr class='dummy'><td colspan=6></td></tr>");
@@ -1379,8 +1363,6 @@ $().ready(function(){
 
         $('#edit-insert').show();
         $('#edit-save').hide();
-        $('#edit-delete').hide();
-        $('#edit-cancel').removeClass('edit-mode');
 
         clearUserInput(true, overlay);
         $(".track-time", overlay).fxtime('seg', 1, null).fxtime('seg', 2, 0);
@@ -1388,12 +1370,41 @@ $().ready(function(){
         overlay.slideDown();
     };
 
-    $(".songEdit").on('click', inlineEdit);
-    $(".songInsert").on('click', inlineInsert);
+    function showActions(e) {
+        e.preventDefault();
+
+        var oldRow = row;
+        if(row)
+            closeInlineEdit(event, true);
+
+        row = $(this).closest("tr");
+
+        // selecting action on the already open row closes it
+        if (oldRow && oldRow[0] == row[0]) {
+            row = null;
+            return;
+        }
+
+        row.addClass('selected').on('click', function(e) {
+            e.stopPropagation();
+        });
+        $(this).next().css('display', 'flex');
+    }
+
+    addActions($(".playlistTable"));
     $("#edit-cancel").on('click', closeInlineEdit);
 
     // stretch track-play if track-add is hidden
     $("#track-add.zk-hidden").prev().outerWidth($("#track-entry .track-type-pick").outerWidth());
 
     $("*[data-focus]").trigger('focus');
+
+    $(document).on('click', function() {
+        var stack = $(".pl-stack-content");
+        if (row && stack.is(":visible")) {
+            stack.hide();
+            row.off().removeClass('selected');
+            row = null;
+        }
+    });
 });

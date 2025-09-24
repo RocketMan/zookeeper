@@ -10,8 +10,14 @@
       <td>
         <div class='songManager'>
           <span class='grab fas fa-grip-vertical' data-id='{{ entry.id }}'></span>
-          <a class='songInsert nav' title='Insert below' href='#'><img src="img/insert-below.svg" /></a>
-          <a class='songEdit nav' title='Edit' href='#'><span class='fas fa-edit'></span></a>
+          <div class='pl-stack'>
+            <a class='nav' title='Actions'><span class='fas fa-wrench'></span></a>
+            <div class='pl-stack-content'>
+              <button class="songEdit" title='Edit'><span class='fas fa-edit'></span></button>
+              <button class="songInsert" title='Insert below'><img src='img/insert-below.svg' /></button>
+              <button class="songDelete" title='Delete'><span class='fas fa-trash'</span></button>
+            </div>
+          </div>
         </div>
       </td>
     {%~ endif %}

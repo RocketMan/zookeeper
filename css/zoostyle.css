@@ -1320,20 +1320,33 @@ input[type="checkbox"]:checked:active {
     height: 4px;
 }
 
-.songEdit {
-    top: -2px;
-    left: 48px;
-    font-size: 14px;
-}
-
-.songInsert {
-    top: -2px;
+.pl-stack a {
+    top: -1px;
     left: 16px;
     font-size: 14px;
 }
 
+.pl-stack a:hover {
+    cursor: pointer;
+}
+
+.pl-stack-content {
+    display: none;
+    background: linear-gradient(#aaa, #eee);
+    border-radius: 4px 4px 0 0;
+    position: absolute;
+    padding: 2px 10px 2px;
+    bottom: 20px;
+    z-index: 1;
+}
+
+.pl-stack-content button {
+    width: 40px;
+    height: 30px;
+    margin: 2px 0;
+}
+
 .songInsert img {
-    filter: brightness(0) saturate(100%) invert(32%) sepia(90%) saturate(767%) hue-rotate(207deg) brightness(99%) contrast(94%); /* #5863da see https://codepen.io/sosuke/pen/Pjoqqp */
     height: 18px;
     width: 26px;
 }
@@ -1447,9 +1460,6 @@ input[type="checkbox"]:checked:active {
     div.content:has(.grab) {
 	overflow: visible
     }
-    .songEdit {
-	left: 64px;
-    }
     .songManager {
 	width: 85px;
     }
@@ -1457,8 +1467,12 @@ input[type="checkbox"]:checked:active {
 	line-height: 1.2;
 	font-size: 18px;
     }
-    .songInsert {
-	left: 25px;
+    .pl-stack a {
+	left: 24px;
+    }
+    .pl-stack .pl-stack-content button {
+	width: 60px;
+	height: 40px;
     }
     .songInsert img {
 	height: 24px;
