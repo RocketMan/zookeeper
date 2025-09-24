@@ -1326,6 +1326,8 @@ $().ready(function(){
                 $('#edit-insert').hide();
                 $('#edit-save').show();
 
+                overlay.slideDown();
+
                 $(".track-type-pick", overlay).val(type).trigger('change');
                 if(event.attributes.created)
                     $(".track-time", overlay).fxtime('val', event.attributes.created);
@@ -1337,8 +1339,6 @@ $().ready(function(){
 
                 var haveAll = haveAllUserInput(overlay);
                 setAddButtonState(haveAll, overlay);
-
-                overlay.slideDown();
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 row = null;
@@ -1364,10 +1364,11 @@ $().ready(function(){
         $('#edit-insert').show();
         $('#edit-save').hide();
 
-        clearUserInput(true, overlay);
         $(".track-time", overlay).fxtime('seg', 1, null).fxtime('seg', 2, 0);
         $('.track-type-pick', overlay).val('manual-entry').trigger('change');
         overlay.slideDown();
+
+        clearUserInput(true, overlay);
     };
 
     function showActions(e) {
@@ -1396,8 +1397,6 @@ $().ready(function(){
 
     // stretch track-play if track-add is hidden
     $("#track-add.zk-hidden").prev().outerWidth($(".pl-add-track .track-type-pick").outerWidth());
-
-    $("*[data-focus]").trigger('focus');
 
     $(document).on('click', function() {
         var stack = $(".pl-stack-content");
