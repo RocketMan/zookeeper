@@ -2,7 +2,11 @@
    {%~ set created = entry.createdTimestamp %}
    {#~ colon is included in 24hr format for symmetry with fxtime #}
    {%~ set format = params.usLocale ? "h:i a" : "H:i" %}
+   {%~ if params.editMode %}
+      <td class='time' data-utc='{{ created }}' data-hour='{{ created ? created | date('H') }}'>{{ created ? created | date(format) }}</td>
+   {% else %}
       <td class='time' data-utc='{{ created }}'>{{ created ? created | date(format) }}</td>
+   {% endif %}
 {%- endmacro %}
 
 {%- macro makeEditDiv(params, entry) %}

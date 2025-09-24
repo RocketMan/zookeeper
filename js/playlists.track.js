@@ -1356,6 +1356,15 @@ $().ready(function(){
         row.off().removeClass('selected');
         $(".pl-stack-content").hide();
 
+        // look back from the current event to find the most recently used hour
+        var hour = null;
+        $(".playlistTable > tbody > tr .time").slice(row.index()+1).each(function() {
+            if (this.dataset.hour !== '') {
+                hour = this.dataset.hour;
+                return false;
+            }
+        });
+
         var overlay = $(".pl-inline-edit");
         var dummy = $("<tr class='dummy'><td colspan=6></td></tr>");
         dummy.find("td").append(overlay);
@@ -1364,7 +1373,7 @@ $().ready(function(){
         $('#edit-insert').show();
         $('#edit-save').hide();
 
-        $(".track-time", overlay).fxtime('seg', 1, null).fxtime('seg', 2, 0);
+        $(".track-time", overlay).fxtime('seg', 0, hour).fxtime('seg', 1, null).fxtime('seg', 2, 0);
         $('.track-type-pick', overlay).val('manual-entry').trigger('change');
         overlay.slideDown();
 
