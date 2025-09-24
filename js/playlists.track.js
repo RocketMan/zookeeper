@@ -1395,7 +1395,7 @@ $().ready(function(){
     $("#edit-cancel").on('click', closeInlineEdit);
 
     // stretch track-play if track-add is hidden
-    $("#track-add.zk-hidden").prev().outerWidth($("#track-entry .track-type-pick").outerWidth());
+    $("#track-add.zk-hidden").prev().outerWidth($(".pl-add-track .track-type-pick").outerWidth());
 
     $("*[data-focus]").trigger('focus');
 
