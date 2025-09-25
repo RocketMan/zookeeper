@@ -2,16 +2,27 @@
    {%~ set created = entry.createdTimestamp %}
    {#~ colon is included in 24hr format for symmetry with fxtime #}
    {%~ set format = params.usLocale ? "h:i a" : "H:i" %}
+   {%~ if params.editMode %}
+      <td class='time' data-utc='{{ created }}' data-hour='{{ created ? created | date('H') }}'>{{ created ? created | date(format) }}</td>
+   {% else %}
       <td class='time' data-utc='{{ created }}'>{{ created ? created | date(format) }}</td>
+   {% endif %}
 {%- endmacro %}
 
 {%- macro makeEditDiv(params, entry) %}
     {%~ if params.editMode %}
-        {%~ set href = "?id=" ~ entry.id | e('url') ~ "&amp;subaction=" ~  params.action | e('url') ~ "&amp;seq=editTrack" %}
-        {%~ set editLink = "<a class='songEdit nav' href='" ~ href ~ "'><span class='fas fa-edit'></span></a>" %}
-        {%~ set dnd = "<div class='grab fas fa-grip-vertical' data-id='" ~ entry.id | e ~ "'></div>" %}
       <td>
-        <div class='songManager'>{{ dnd | raw }}{{ editLink | raw }}</div>
+        <div class='songManager'>
+          <span class='grab fas fa-grip-vertical' data-id='{{ entry.id }}'></span>
+          <div class='pl-stack'>
+            <a class='nav' title='Actions'><span class='fas fa-wrench'></span></a>
+            <div class='pl-stack-content'>
+              <button class="songEdit" title='Edit'><span class='fas fa-edit'></span></button>
+              <button class="songInsert" title='Insert below'><img src='img/insert-below.svg' /></button>
+              <button class="songDelete" title='Delete'><span class='fas fa-trash'</span></button>
+            </div>
+          </div>
+        </div>
       </td>
     {%~ endif %}
     {{~ _self.makeTime(params, entry) }}

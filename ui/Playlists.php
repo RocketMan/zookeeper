@@ -353,30 +353,9 @@ class Playlists extends MenuItem {
         $this->addVar("timeMsg", $timeMsg);
     }
 
-    private function emitEditForm($playlist, $id, $album) {
-        $entry = new PlaylistEntry($album);
-        $showName = $playlist['description'];
-        $djName = $playlist['airname'] ?? "None";
-
-        $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
-        $this->emitTrackAdder($playlist, $id);
-        $this->addVar("entry", $entry);
-        $this->setTemplate('list/edit.html');
-    }
-
     public function emitEditor() {
         $playlistId = $_REQUEST["playlist"] ?? null;
-        $seq = $_REQUEST["seq"] ?? null;
         $id = $_REQUEST["id"] ?? null;
-
-        if($seq == "editTrack") {
-            $albuminfo = Engine::api(IPlaylist::class)->getTrack($id);
-            if($albuminfo) {
-                // if editing a track, always get the playlist from
-                // the track, even if one is supplied in the request
-                $playlistId = $albuminfo['list'];
-            }
-        }
 
         if(is_null($playlistId) || !$this->isOwner($playlistId)) {
             echo "<B>Sorry, the playlist you have requested does not exist.</B>";
@@ -385,14 +364,7 @@ class Playlists extends MenuItem {
 
         $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
 
-        switch ($seq) {
-        case "editTrack":
-            $this->emitEditForm($playlist, $id, $albuminfo);
-            break;
-        default:
-            $this->emitAddForm($playlist);
-            break;
-        }
+        $this->emitAddForm($playlist);
 
         $this->emitPlaylistBody($playlist, true);
     }

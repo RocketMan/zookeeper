@@ -813,6 +813,9 @@ th.sec {
     font-weight: bold;
     color: #cc0000;
 }
+.error-msg {
+    margin-left: 4px;
+}
 .quiet-notice {
     font-size: 20px;
     color: #ccc;
@@ -1003,31 +1006,33 @@ li.ui-menu-item .ui-state-active,
 .form-entry button.edit-mode {
     width: 97px;
     height: 24px;
+}
+.form-entry button.inline-mode {
     color: #000;
     background-color: #f4f4f4;
     border-radius: 4px;
     border: 1px solid #cdcdcd;
 }
-.form-entry button.edit-mode:hover {
+.form-entry button.inline-mode:hover {
     background-color: #f8f8f8;
 }
-.form-entry button.edit-mode:active {
+.form-entry button.inline-mode:active {
     background-color: #d6d6d6;
 }
-.form-entry button.edit-mode.default {
+.form-entry button.inline-mode.default {
     color: #fff;
     border: 1px solid #5796ed;
     background-color: #5897ee;
 }
-.form-entry button.edit-mode.default:disabled {
+.form-entry button.inline-mode.default:disabled {
     color: gray;
     border: 1px solid #ccc;
     background-color: #ccc;
 }
-.form-entry button.edit-mode.default:hover:not(:disabled) {
+.form-entry button.inline-mode.default:hover:not(:disabled) {
     background-color: #5ba4fc;
 }
-.form-entry button.edit-mode.default:active:not(:disabled) {
+.form-entry button.inline-mode.default:active:not(:disabled) {
     background-color: #5897ee;
 }
 .form-entry button.edit-delete,
@@ -1314,10 +1319,37 @@ input[type="checkbox"]:checked:active {
     width: 10px;
     height: 4px;
 }
-.songEdit {
-    top: -2px;
+
+.pl-stack a {
+    top: -1px;
     left: 16px;
     font-size: 14px;
+}
+
+.pl-stack a:hover {
+    cursor: pointer;
+}
+
+.pl-stack-content {
+    display: none;
+    background: linear-gradient(#ccc, #eee);
+    border-radius: 4px 4px 0 0;
+    position: absolute;
+    padding: 2px 10px 2px;
+    bottom: 20px;
+    margin-left: -1px;
+    z-index: 1;
+}
+
+.pl-stack-content button {
+    width: 40px;
+    height: 30px;
+    margin: 2px 0;
+}
+
+.songInsert img {
+    height: 18px;
+    width: 26px;
 }
 
 .currentsEdit {
@@ -1366,6 +1398,13 @@ input[type="checkbox"]:checked:active {
 /* see https://github.com/erusev/parsedown/issues/43 */
 .commentRowEdit > td > p {
     margin: 0;
+}
+
+.pl-inline-edit {
+    background-color: #eee;
+    margin-top: -2px;
+    padding-bottom: 10px;
+    display: none;
 }
 
 .markdown-help {
@@ -1422,12 +1461,20 @@ input[type="checkbox"]:checked:active {
     div.content:has(.grab) {
 	overflow: visible
     }
-    .songEdit {
-	left: 25px;
-    }
     .songManager .fas {
 	line-height: 1.2;
 	font-size: 18px;
+    }
+    .pl-stack a {
+	left: 24px;
+    }
+    .pl-stack .pl-stack-content button {
+	width: 60px;
+	height: 40px;
+    }
+    .songInsert img {
+	height: 24px;
+	width: 34px;
     }
 }
 .grabbed {
@@ -1956,7 +2003,8 @@ div.toggle-time-entry div {
     outline: 0;
     margin: 0;
 }
-.playlist-grid tr.selected {
+.playlist-grid tr.selected,
+.playlistTable tr.selected {
     background-color: #eee;
 }
 .playlist-grid th {

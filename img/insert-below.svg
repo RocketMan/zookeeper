@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- License: CC0, Zookeeper Online https://zookeeper.ibinx.com/ -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="30 50 100 70" width="200" height="140">
+  <g fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Rectangle: 50 × 15 -->
+    <rect x="70" y="60" width="50" height="15" rx="5" ry="5"/>
+
+    <!-- Right-pointing triangle: apex centred at (60, 94), base 78 - 110 -->
+    <path fill="#000" d="M60 94 L40 78 L40 110 Z"/>
+  </g>
+</svg>
