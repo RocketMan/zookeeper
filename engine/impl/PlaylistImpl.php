@@ -74,7 +74,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         else if($airname)
             $query .= "WHERE l.airname=? ";
         else if($showDate)
-            $query .= "WHERE l.showdate=? ";
+            $query .= "WHERE l.showdate IN (?, ?) ";
         if($onlyPublished)
             $query .= "AND l.airname IS NOT NULL ";
         $desc = $desc?"DESC":"";
@@ -90,10 +90,26 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue($p++, $user);
         else if($airname)
             $stmt->bindValue($p++, $airname);
-        else if($showDate)
-            $stmt->bindValue($p++, $showDate);
+        else if($showDate) {
+            $date = new \DateTime($showDate);
+            $end = $date->format('Y-m-d');
+            $date->modify("-1 day");
+            $start = $date->format('Y-m-d');
+            $stmt->bindValue($p++, $start);
+            $stmt->bindValue($p++, $end);
+        }
 
-        return $stmt->iterate(\PDO::FETCH_BOTH);
+        $result = $stmt->executeAndFetchAll(\PDO::FETCH_BOTH);
+
+        if(!$user && !$airname && $showDate) {
+            $result = array_filter($result, function($row) use($end) {
+                list($hfrom, $hto) = explode('-', $row['showtime']);
+                return $row['showdate'] == $end ||
+                        $hto != '0000' && $hfrom > $hto;
+            });
+        }
+
+        return new ArrayRowIterator($result);
     }
     
     public function getPlaylistsByAirname($airname) {
@@ -756,11 +772,15 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
 
     public function hashPlaylist(int $playlistId): string {
-        $query = "SELECT md5(group_concat(concat_ws('|', id, created) ORDER BY seq, id)) hash FROM tracks WHERE list = ?";
+        $query = "SELECT md5(concat_ws('|', id, created)) AS hash " .
+                 "FROM tracks WHERE list = ? ORDER BY seq, id";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $playlistId);
-        $row = $stmt->executeAndFetch();
-        return $row['hash'] ?? '';
+        $hashes = $stmt->executeAndFetchAll();
+        $ctx = hash_init("md5");
+        foreach ($hashes as $row)
+            hash_update($ctx, $row['hash']);
+        return hash_final($ctx);
     }
 
     // insert playlist track. return following: 0 - fail, 1 - success no 
