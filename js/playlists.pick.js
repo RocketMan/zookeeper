@@ -45,7 +45,7 @@ $().ready(function(){
      */
     function localTimeIntl(time) {
         var stime = String(time);
-        return stime.length ? stime.substring(0, 2) + ':' + stime.substring(2) : null;
+        return stime.length ? stime.match(/\d{2}/g).join(':') : null;
     }
 
     /**
@@ -317,15 +317,17 @@ $().ready(function(){
         // correct datepicker local timezone to UTC
         date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
         var airname = row.find('input.airname');
-        var start = row.find('input#start').fxtime('val').replace(':','');
-        var end = row.find('input#end').fxtime('val').replace(':','');
+        var time = row.find('input.time').map(function() {
+            return $(this).fxtime('val').replace(':','');
+        }).toArray().join('-');
+
         return {
             id: row.data('id'),
             attributes: {
                 name: row.find('input.description').val().trim(),
                 airname: airname.val().trim(),
                 date: date.toISOString().split('T')[0],
-                time: start + '-' + end
+                time: time
             }
         };
     }
@@ -536,7 +538,7 @@ $().ready(function(){
             return;
         }
 
-        if(!checkAirname(row))
+        if(requireUsualSlot && !checkAirname(row))
             return;
 
         var list = getEditRow(row);
@@ -623,7 +625,7 @@ $().ready(function(){
         var newTime = list.attributes.time;
         var oldTime = row.data('orig').attributes.time;
 
-        if(duration(newTime) < duration(oldTime)
+        if(requireUsualSlot && duration(newTime) < duration(oldTime)
                && !confirm("Show has been shortened.  Tracks outside the new time will be deleted.\n\nAre you sure you want to do this?"))
             return;
 

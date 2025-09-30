@@ -5,10 +5,46 @@
 {% set djLink = djId ? "<a href='?subaction=viewDJ&amp;seq=selUser&amp;viewuser=" ~ djId ~ "' class='nav2'>" ~ djName | e ~ "</a>" : djName | e %}
 
 <div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>{{ showName }}</span> <span id='banner-dj'>with {{ djLink | raw }}</span></span><div>{{ showDateTime }}
-{%- if not editMode and app.session.isAuth('v') -%}
-&nbsp;<a href='javascript:document.duplist.submit();' title='Duplicate Playlist'><span class='fas fa-clone dup-playlist'></span></a><form name='duplist' action='?' method='POST'><input type='hidden' name='subaction' value='editList'><input type='hidden' name='duplicate' value='1'><input type='hidden' name='playlist' value='{{ playlist.id }}'></form>"
+{%- if editMode %}
+<a href='#' id='pl-banner-edit-button' title='Edit playlist'><i class='fas fa-edit edit-playlist'></i></a>
+{%- elseif app.session.isAuth('v') -%}
+<a href='javascript:document.duplist.submit();' id='pl-banner-dup-button' title='Duplicate playlist'><i class='fas fa-clone dup-playlist'></i></a><form name='duplist' action='?' method='POST'><input type='hidden' name='subaction' value='editList'><input type='hidden' name='duplicate' value='1'><input type='hidden' name='playlist' value='{{ playlist.id }}'></form>
 {%- endif -%}
 &nbsp;</div></div>
+{% if editMode %}
+<datalist class='airnames'>
+  {%~ for airname in airnames %}
+  <option value='{{ airname }}'>
+  {%~ endfor %}
+</datalist>
+<div class='pl-banner-edit'>
+  <div class='description'>
+    <label>Show</label>
+    <input pattern='.*\S.*' maxlength='{{ MAX_DESCRIPTION_LENGTH }}' required>
+  </div>
+  <div class='airname'>
+    <label>DJ</label>
+    <input pattern='.*\S.*' maxlength='{{ MAX_AIRNAME_LENGTH }}' required>
+  </div>
+  <div class='date'>
+    <label>Date</label>
+    <input required>
+  </div>
+  <div class='start time'>
+    <label>Start</label>
+    <input required>
+  </div>
+  <span class='separator'>-</span>
+  <div class='end time'>
+    <label>End</label>
+    <input required>
+  </div>
+  <div class='pl-banner-actions'>
+    <button class='default' id='pl-banner-save'>Save</button>
+    <button id='pl-banner-cancel'>Cancel</button>
+  </div>
+</div>
+{% endif %}
 
 <script><!--
 {#
@@ -124,6 +160,7 @@
     <div class='toggle-time-entry {{~ not isLiveShow ? " zk-hidden" }}'><div><!--&#x1f551;--></div></div>
 </div> <!-- pl-add-track -->
 <hr>
+{% include 'list/confirm.html' %}
 <div id="extend-show" class="zk-popup">
     <div class="zk-popup-content">
         <h4>You have reached the end time of your show.</h4>
