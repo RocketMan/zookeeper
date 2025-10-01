@@ -1433,7 +1433,8 @@ $().ready(function(){
     /* BEGIN PLAYLIST EDIT */
     var show;
     function openPlaylistEdit() {
-        var url = "api/v2/playlist/" + $("#track-playlist").val();
+        var url = "api/v1/playlist/" + $("#track-playlist").val()
+            + '?fields[show]=name,airname,date,time';
 
         $.ajax({
             dataType : 'json',
@@ -1635,7 +1636,7 @@ $().ready(function(){
             $.ajax({
                 type: 'GET',
                 accept: 'application/json; charset=utf-8',
-                url: 'api/v2/playlist?filter[user]=self&fields[show]=name,airname,rebroadcast',
+                url: 'api/v1/playlist?filter[user]=self&fields[show]=name,airname,rebroadcast',
             }).done(function(response) {
                 shownames = response.data.map(show => show.attributes)
                     .sort((a, b) => Intl.Collator().compare(a.name, b.name))
