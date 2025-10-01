@@ -841,10 +841,8 @@ a:hover {
 }
 #pl-banner-edit-button {
     margin-left: 10px;
-}
-.playlistBanner .edit-playlist {
-    color: #fff;
-    font-size: 14px;
+    height: auto;
+    vertical-align: middle;
 }
 #pl-banner-dup-button {
     margin-left: 3px;
@@ -2119,6 +2117,7 @@ div.toggle-time-entry div {
 }
 .newPlaylist button,
 .pl-banner-edit button,
+.playlistBanner button,
 .playlist-grid button {
     color: #000;
     background-color: #f4f4f4;
@@ -2129,11 +2128,13 @@ div.toggle-time-entry div {
 }
 .newPlaylist button:hover,
 .pl-banner-edit button:hover,
+.playlistBanner button:hover,
 .playlist-grid button:hover {
     background-color: #f8f8f8;
 }
 .newPlaylist button:active,
 .pl-banner-edit button:active,
+.playlistBanner button:active,
 .playlist-grid button:active {
     background-color: #d6d6d6;
 }
