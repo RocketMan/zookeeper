@@ -289,9 +289,12 @@ $().ready(function(){
                 });
             },
             select: function(event, ui) {
-                var name = ui.item.value;
-                var show = shownames.find(show => show.name == name);
-                $("input.airname").val(show.airname);
+                var airname = $("input.airname");
+                if (!airname.prop('disabled')) {
+                    var name = ui.item.value;
+                    var show = shownames.find(show => show.name == name);
+                    airname.val(show.airname);
+                }
             }
         }).on('click', function() {
             $(this).autocomplete('search', '');
