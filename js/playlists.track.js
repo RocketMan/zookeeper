@@ -956,12 +956,15 @@ $().ready(function(){
         });
     }
 
-    function preg_quote(str) {
-        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // simple RegExp.escape polyfill for pre-Baseline 2025
+    if (!RegExp.escape) {
+        RegExp.escape = function(str) {
+            return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        };
     }
 
     function searchPlaylistArtists(artist) {
-        var preg = new RegExp('\\b' + preg_quote(artist), 'i');
+        var preg = new RegExp('\\b' + RegExp.escape(artist), 'i');
 
         var spins = $(".playlistTable tr.songRow").filter(function() {
             // exclude library albums, as these are included by searchLibrary
