@@ -45,6 +45,10 @@
   {%~ set type = entry.type %}
   {%~ if type is constant('TYPE_SPIN', entry) %}
     {%~ block spin %}
+    {#~
+        IMPORTANT: If you change the layout in the spin block, revisit
+        the function searchPlaylistArtists in playlists.track.js
+    #}
     {%~ set reviewCell = entry.reviewed ? "<div class='albumReview'></div>" %}
     {%~ set artistName = entry.tag ? entry.swapNames(entry.artist) : entry.artist %}
     <tr class='songRow'>
