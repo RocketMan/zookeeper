@@ -25,13 +25,13 @@
     <tr>
 {% if album.location == 'E' %}
     {#~ review shelf #}
-      <td><button type=button class='edit-mode' data-op='claim' data-tag='{{ album.tag }}'>Claim it</button></td>
+      <td><button type=button class='edit-mode inline-mode' data-op='claim' data-tag='{{ album.tag }}'>Claim it</button></td>
 {% elseif album.location == 'F' and app.session.getUser() == album.bin %}
     {#~ out for review by this user #}
-      <td><button type=button class='edit-mode edit-delete' data-op='release' data-tag='{{ album.tag }}'>Release</button></td>
+      <td><button type=button class='edit-mode inline-mode edit-delete' data-op='release' data-tag='{{ album.tag }}'>Release</button></td>
 {% elseif album.location == 'H' and app.session.isAuth('n') %}
     {#~ pending approval for add manager #}
-      <td><button type=button class='edit-mode edit-alert' data-op='dtm' data-tag='{{ album.tag }}'>DTM</button></td>
+      <td><button type=button class='edit-mode inline-mode edit-alert' data-op='dtm' data-tag='{{ album.tag }}'>DTM</button></td>
 {% else %}
       <td></td>
 {% endif %}

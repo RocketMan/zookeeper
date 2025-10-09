@@ -23,6 +23,8 @@
 /*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
+    const intl = new Date().toLocaleTimeString().match(/am|pm/i) == null;
+
     const NME_ENTRY='nme-entry';
     const NME_PREFIX=$("#const-prefix").val();
     var seq = 0;
@@ -611,7 +613,7 @@ $().ready(function(){
             error: function(jqXHR, textStatus, errorThrown) {
                 var message = getErrorMessage(jqXHR,
                               'Error deleting the item: ' + errorThrown);
-                showUserError(message, $(".pl-inline-edit"));
+                showUserError(message, $('.pl-add-track'));
             }
         });
     }
@@ -1085,11 +1087,32 @@ $().ready(function(){
         $(".track-titles", parent).empty();
     });
 
-    // from home.js
+    /**
+     * from playlists.pick.js
+     *
+     * @param time string formatted 'hhmm'
+     */
+    function localTimeIntl(time) {
+        var stime = String(time);
+        return stime.length ? stime.match(/\d{2}/g).join(':') : null;
+    }
+
+    /**
+     * @param date Date containing the time, or a time string formatted 'hhmm'
+     */
     function localTime(date) {
-        var hour = date.getHours();
+        var hour, m;
+        if(date instanceof Date) {
+            hour = date.getHours();
+            m = date.getMinutes();
+        } else {
+            if(intl)
+                return localTimeIntl(date);
+
+            hour = date.substring(0, 2);
+            m = date.substring(2);
+        }
         var ampm = hour >= 12?"pm":"am";
-        var m = date.getMinutes();
         var min = m == 0?'':':' + String(m).padStart(2, '0');
         if(hour > 12)
             hour -= 12;
@@ -1460,6 +1483,267 @@ $().ready(function(){
 
     // stretch track-play if track-add is hidden
     $("#track-add.zk-hidden").prev().outerWidth($(".pl-add-track .track-type-pick").outerWidth());
+
+    /* BEGIN PLAYLIST EDIT */
+    var show;
+    function openPlaylistEdit() {
+        var url = "api/v1/playlist/" + $("#track-playlist").val()
+            + '?fields[show]=name,airname,date,time';
+
+        $.ajax({
+            dataType : 'json',
+            type: 'GET',
+            accept: "application/json; charset=utf-8",
+            url: url,
+            success: function (response) {
+                show = response.data.attributes;
+
+                $(".playlistBanner").hide();
+                $(".pl-banner-edit input").removeClass("invalid-input");
+                $(".pl-banner-edit").css('display', 'flex');
+
+                $(".airname input")
+                    .prop('disabled', show.airname && $(".airnames option[value='" + escQuote(show.airname) + "' i]").length == 0)
+                    .val(show.airname);
+
+                $(".date input").datepicker('setDate',
+                        $.datepicker.parseDate('yy-mm-dd', show.date));
+
+                var time = show.time.split('-').map(function(t) {
+                    return localTimeIntl(t);
+                });
+                $(".start input").fxtime('val', time[0]);
+                $(".end input").fxtime('val', time[1]);
+                $(".description input").val(show.name).trigger('focus');
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                var message = getErrorMessage(jqXHR, errorThrown);
+                showUserError(message, $(".pl-add-track"));
+            }
+        });
+    }
+
+    function closePlaylistEdit() {
+        $(".pl-banner-edit").hide();
+        $(".playlistBanner").show();
+        $(".pl-add-track .track-type-pick").trigger('change');
+    }
+
+    /**
+     * modelled on checkAirname() from playlists.pick.js
+     */
+    function checkAirname() {
+        var input = $(".airname input");
+        if(input.prop('disabled'))
+            return true;
+
+        var airname = input.val().trim();
+        return $(".airnames option[value='" + escQuote(airname) + "' i]").length > 0 || confirm('Create new air name "' + airname + '"?');
+    }
+
+    /**
+     * from playlists.pick.js
+     */
+    function duration(interval) {
+        return interval.split('-').map(function(time) {
+            return new Date('1970-01-01T' + localTimeIntl(time) + ':00Z');
+        }).reduce(function(start, end) {
+            if(end < start)
+                end.setDate(end.getDate() + 1);
+            return (end.getTime() - start.getTime()) / 60000;
+        });
+    }
+
+    /**
+     * semantics of getEditRow() from playlists.pick.js
+     */
+    function getBannerEdit() {
+        var date = $('.date input').datepicker('getDate');
+        // correct datepicker local timezone to UTC
+        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+        var airname = $(".airname input");
+        var time = $(".pl-banner-edit .time input").map(function() {
+            return $(this).fxtime('val').replace(':','');
+        }).toArray().join('-');
+
+        return {
+            id: $("#track-playlist").val(),
+            attributes: {
+                name: $(".description input").val().trim(),
+                airname: airname.val().trim(),
+                date: date.toISOString().split('T')[0],
+                time: time
+            }
+        };
+    }
+
+    /**
+     * modelled on updatePlaylist() from playlists.pick.js
+     */
+    function updatePlaylist(requireUsualSlot = true) {
+        showUserError('', $(".pl-add-track"));
+        $(".pl-banner-edit input").removeClass("invalid-input");
+
+        // validate required fields
+        var required = $(".pl-banner-edit input:invalid");
+        if(required.length > 0) {
+            required.addClass("invalid-input");
+            required.first().trigger('focus');
+            return;
+        }
+
+        if(requireUsualSlot && !checkAirname()) {
+            $(".airname input").trigger('focus');
+            return;
+        }
+
+        var list = getBannerEdit();
+
+        var newTime = list.attributes.time;
+        var oldTime = show.time;
+
+        if(requireUsualSlot && duration(newTime) < duration(oldTime)
+               && !confirm("Show has been shortened.  Tracks outside the new time will be deleted.\n\nAre you sure you want to do this?"))
+            return;
+
+        var postData = {
+            data: {
+                type: 'show',
+                id: list.id,
+                attributes: {
+                    name: list.attributes.name,
+                    airname: list.attributes.airname,
+                    date: list.attributes.date,
+                    time: list.attributes.time
+                }
+            },
+            meta: {
+                requireUsualSlot: requireUsualSlot
+            }
+        };
+
+        $.ajax({
+            type: 'PATCH',
+            url: 'api/v1/playlist/' + list.id,
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            accept: "application/json; charset=utf-8",
+            data: JSON.stringify(postData),
+            statusCode: {
+                // unusual date and time
+                422: function() {
+                    var showdate = new Date(list.attributes.date + 'T00:00:00Z');
+                    var showtime = list.attributes.time.split('-');
+                    $("#confirm-date-time-msg").text(showdate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric', timeZone: 'UTC' }) + ' ' + localTime(showtime[0]) + ' - ' + localTime(showtime[1]));
+                    $("#confirm-operation").text("updating");
+                    $("#confirm-date-time button").off().on('click', function() {
+                        $("#confirm-date-time").hide();
+                    });
+                    $("#confirm-date-time button#continue").on('click', function() {
+                        updatePlaylist(false);
+                    });
+                    $("#confirm-date-time").show();
+                }
+            }
+        }).done(function (response) {
+            // NB, not only can the banner change, but the entries
+            // can as well if the date or time changes.
+            //
+            // Thus, we reload the playlist to pick up any changes
+            // rather than trying to effect updates dynamically.
+            location.href = "?subaction=" + $("#track-action").val() +
+                "&playlist=" + list.id;
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            if(jqXHR.status == 422) return; // already handled above
+            var message = getErrorMessage(jqXHR, 'Error: ' + errorThrown);
+            showUserError(message, $('.pl-add-track'));
+        });
+    }
+
+    $("#pl-banner-edit-button").on('click', function() {
+        openPlaylistEdit();
+    });
+
+    $("#pl-banner-save").on('click', function() {
+        updatePlaylist();
+    });
+
+    $("#pl-banner-cancel").on('click', function() {
+        closePlaylistEdit();
+    });
+
+    /**
+     * modelled on tr.find(".description").autocomplete of playlists.pick.js
+     */
+    var shownames = null;
+    $(".description input").autocomplete({
+        minLength: 0,
+        source: function(rq, rs) {
+            var term = rq.term.toLowerCase();
+            if(shownames) {
+                rs(shownames.filter(function(show) {
+                    return show.name.toLowerCase().startsWith(term);
+                }).map(show => show.name));
+                return;
+            }
+
+            $.ajax({
+                type: 'GET',
+                accept: 'application/json; charset=utf-8',
+                url: 'api/v1/playlist?filter[user]=self&fields[show]=name,airname,rebroadcast',
+            }).done(function(response) {
+                shownames = response.data.map(show => show.attributes)
+                    .sort((a, b) => Intl.Collator().compare(a.name, b.name))
+                    .filter(function(show, pos, shows) {
+                        return !pos ||
+                            show.name.localeCompare(shows[pos - 1].name,
+                                                    undefined,
+                                                    { sensitivity: 'base' });
+                    })
+                    .filter(function(show) {
+                        return !show.rebroadcast;
+                    });
+
+                rs(shownames.filter(function(show) {
+                    return show.name.toLowerCase().startsWith(term);
+                }).map(show => show.name));
+            });
+        },
+        select: function(event, ui) {
+            var airname = $(".airname input");
+            if (!airname.prop('disabled')) {
+                var name = ui.item.value;
+                var show = shownames.find(show => show.name == name);
+                airname.val(show.airname);
+            }
+        }
+    }).on('click', function() {
+        $(this).autocomplete('search', '');
+    });
+
+    /**
+     * modelled on tr.find(".airname").autocomplete of playlists.pick.js
+     */
+    $(".airname input").autocomplete({
+        minLength: 0,
+        source: function(rq, rs) {
+            var term = rq.term.toLowerCase();
+            rs($(".airnames option").map(function() {
+                return this.value;
+            }).filter(function() {
+                return this.toLowerCase().includes(term);
+            }));
+        }
+    }).on('click', function() {
+        $(this).autocomplete('search', '');
+    });
+
+    $(".time input").fxtime();
+    $(".date input").datepicker({
+        dateFormat: intl ? 'dd-mm-yy' : 'mm/dd/yy'
+    });
+
+    /* END PLAYLIST EDIT*/
 
     $(document).on('click', function() {
         var stack = $(".pl-stack-content");

@@ -769,16 +769,25 @@ a:hover {
     white-space: nowrap;
     vertical-align: top;
 }
+.playlistBanner > span {
+    margin-left: 5px;
+}
 .playlistBanner > div {
-    font-size: 11pt;
     float: right;
     font-size: 10px;
     max-height: 24px;
+    margin-right: 5px;
 }
-.playlistBanner .dup-playlist {
-    color: white;
-    vertical-align: inherit;
-    padding: 0 5px;
+.playlistBanner > div > a {
+    font-size: 11pt;
+    color: #fff;
+    margin-left: 10px;
+    cursor: pointer;
+}
+.playlistBanner > div > button {
+    margin-left: 10px;
+    height: auto;
+    vertical-align: middle;
 }
 
 .playlistHdr {
@@ -789,6 +798,56 @@ a:hover {
 }
 .playlistTable {
     width: 100%;
+}
+
+.pl-banner-edit {
+    display: none;
+    flex-wrap: nowrap;
+    gap: 10px;
+    padding: 4px;
+    background-color: #eee;
+    font-family: 'Roboto', Helvetica, sans-serif;
+}
+.pl-banner-edit > div {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 1;
+    flex-basis: auto;
+    min-width: 50px;
+}
+.pl-banner-edit label {
+    font-weight: bold;
+}
+.pl-banner-edit input {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: 24px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 1px 2px;
+    border: 1px solid #666;
+    border-radius: 3px;
+    font-family: 'Roboto', Helvetica, sans-serif;
+    font-size: 10pt;
+}
+.pl-banner-edit .description { flex: 1 1 40%; }
+.pl-banner-edit .airname { flex: 1 1 10%; }
+.pl-banner-edit .date { flex: 0 0 85px; }
+.pl-banner-edit .time { flex: 0 0 65px; }
+.pl-banner-edit .separator {
+    align-self: flex-end;
+    padding: 5px 0;
+    flex: 0 0 auto;
+}
+.pl-banner-edit .pl-banner-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: flex-end;
+    flex: 0 0 auto;
+    min-width: 100px;
+    margin-left: 5px;
+    gap: 2px;
 }
 
 .home-onnow, .chart-year-pick, th {
@@ -2059,6 +2118,8 @@ div.toggle-time-entry div {
     width: 60px;
 }
 .newPlaylist button,
+.pl-banner-edit button,
+.playlistBanner button,
 .playlist-grid button {
     color: #000;
     background-color: #f4f4f4;
@@ -2068,26 +2129,34 @@ div.toggle-time-entry div {
     padding: 2px 6px 3px;
 }
 .newPlaylist button:hover,
+.pl-banner-edit button:hover,
+.playlistBanner button:hover,
 .playlist-grid button:hover {
     background-color: #f8f8f8;
 }
 .newPlaylist button:active,
+.pl-banner-edit button:active,
+.playlistBanner button:active,
 .playlist-grid button:active {
     background-color: #d6d6d6;
 }
+.pl-banner-edit button.default,
 .playlist-grid button.default {
     color: #fff;
     border: 1px solid #5796ed;
     background-color: #5897ee;
 }
+.pl-banner-edit button.default:disabled,
 .playlist-grid button.default:disabled {
     color: gray;
     border: 1px solid #ccc;
     background-color: #ccc;
 }
+.pl-banner-edit button.default:hover:not(:disabled),
 .playlist-grid button.default:hover:not(:disabled) {
     background-color: #5ba4fc;
 }
+.pl-banner-edit button.default:active:not(:disabled),
 .playlist-grid button.default:active:not(:disabled) {
     background-color: #5897ee;
 }

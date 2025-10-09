@@ -4,11 +4,47 @@
 {% set djName = playlist.airname ?? "None" %}
 {% set djLink = djId ? "<a href='?subaction=viewDJ&amp;seq=selUser&amp;viewuser=" ~ djId ~ "' class='nav2'>" ~ djName | e ~ "</a>" : djName | e %}
 
-<div class='playlistBanner'><span id='banner-caption'>&nbsp;<span id='banner-description'>{{ showName }}</span> <span id='banner-dj'>with {{ djLink | raw }}</span></span><div>{{ showDateTime }}
-{%- if not editMode and app.session.isAuth('v') -%}
-&nbsp;<a href='javascript:document.duplist.submit();' title='Duplicate Playlist'><span class='fas fa-clone dup-playlist'></span></a><form name='duplist' action='?' method='POST'><input type='hidden' name='subaction' value='editList'><input type='hidden' name='duplicate' value='1'><input type='hidden' name='playlist' value='{{ playlist.id }}'></form>"
+<div class='playlistBanner'><span id='banner-caption'><span id='banner-description'>{{ showName }}</span> <span id='banner-dj'>with {{ djLink | raw }}</span></span><div>{{ showDateTime }}
+{%- if editMode %}
+<button id='pl-banner-edit-button' title='Edit playlist'>Edit</button>
+{%- elseif app.session.isAuth('v') -%}
+<a href='javascript:document.duplist.submit();' id='pl-banner-dup-button' title='Duplicate playlist'><i class='fas fa-clone dup-playlist'></i></a><form name='duplist' action='?' method='POST'><input type='hidden' name='subaction' value='editList'><input type='hidden' name='duplicate' value='1'><input type='hidden' name='playlist' value='{{ playlist.id }}'></form>
 {%- endif -%}
-&nbsp;</div></div>
+</div></div>
+{% if editMode %}
+<datalist class='airnames'>
+  {%~ for airname in airnames %}
+  <option value='{{ airname }}'>
+  {%~ endfor %}
+</datalist>
+<div class='pl-banner-edit'>
+  <div class='description'>
+    <label>Show</label>
+    <input pattern='.*\S.*' maxlength='{{ MAX_DESCRIPTION_LENGTH }}' required>
+  </div>
+  <div class='airname'>
+    <label>DJ</label>
+    <input pattern='.*\S.*' maxlength='{{ MAX_AIRNAME_LENGTH }}' required>
+  </div>
+  <div class='date'>
+    <label>Date</label>
+    <input required>
+  </div>
+  <div class='start time'>
+    <label>Start</label>
+    <input required>
+  </div>
+  <span class='separator'>-</span>
+  <div class='end time'>
+    <label>End</label>
+    <input required>
+  </div>
+  <div class='pl-banner-actions'>
+    <button class='default' id='pl-banner-save'>Save</button>
+    <button id='pl-banner-cancel'>Cancel</button>
+  </div>
+</div>
+{% endif %}
 
 <script><!--
 {#
@@ -43,6 +79,7 @@
     <input id='track-action' type='hidden' value='{{ app.request.subaction }}'>
     <input id='track-hash' type='hidden' value='{{ playlist.hash }}'>
     <input id='const-prefix' type='hidden' value='{{ NME_PREFIX }}'>
+    <input id='comment-max' type='hidden' value='{{ MAX_COMMENT_LENGTH }}'>
     <label></label><span class='error-msg error'></span>
     <div>
         <div class='dot-menu pull-right' tabindex='-1'>
@@ -65,6 +102,11 @@
            {%~ endfor %}
         </select>
     </div>
+{% block trackEntry %}
+{#
+    IMPORTANT: Do not use element IDs in the trackEntry block,
+    as it occurs multiple times in the page.
+#}
     <div class='track-entry'>
         <div class='manual-entry'>
             <div style='white-space: nowrap'>
@@ -97,8 +139,6 @@
                     <span class='remaining'>(0/{{ MAX_COMMENT_LENGTH }} characters)</span><br/>
                     <a class='markdown-help-link' href='#'>formatting help</a>
                 </div>
-                <input id='comment-max' type='hidden' value='{{ MAX_COMMENT_LENGTH }}'>
-
             </div>
             {%~ include 'markdown-help.html' %}
         </div>
@@ -109,6 +149,7 @@
             </div>
         </div>
     </div> <!-- track-entry -->
+{% endblock %}
     <div id='time-entry'{{ isLiveShow ? " class='zk-hidden'" }}>
       <label>Time:</label>
       <input class='fxtime track-time' type='{{ ttype }}' step='1' min='{{ window.start.format('H:i') }}' max='{{ window.end.format('H:i') }}' data-live='{{ isLiveShow ? 1 : 0 }}' data-last-val='{{ time }}' />
@@ -124,6 +165,7 @@
     <div class='toggle-time-entry {{~ not isLiveShow ? " zk-hidden" }}'><div><!--&#x1f551;--></div></div>
 </div> <!-- pl-add-track -->
 <hr>
+{% include 'list/confirm.html' %}
 <div id="extend-show" class="zk-popup">
     <div class="zk-popup-content">
         <h4>You have reached the end time of your show.</h4>
@@ -148,48 +190,8 @@
         <select class='track-type-pick'> {# js populates from main form ~#}
         </select>
     </div>
-    <div class='track-entry'>
-        <div class='manual-entry'>
-            <div style='white-space: nowrap'>
-                <label>Artist / Tag:</label>
-                <input required class='track-artist' autocomplete='off' maxlength={{ MAX_FIELD_LENGTH }} data-focus />
-                <span class='track-info'>Artist name or tag number</span>
-                <datalist class='track-artists'>
-                </datalist>
-            </div>
-            <div>
-                <label>Track:</label>
-                <input required class='track-title' maxlength={{ MAX_FIELD_LENGTH }} autocomplete='off'/>
-                <datalist class='track-titles'>
-                </datalist>
-            </div>
-            <div>
-                <label>Album:</label>
-                <input class='track-album' maxlength={{ MAX_FIELD_LENGTH }} />
-            </div>
-            <div>
-                <label>Label:</label>
-                <input class='track-label' maxlength={{ MAX_FIELD_LENGTH }} />
-            </div>
-        </div>
-        <div id='pl-inline-comment-entry' class='comment-entry' class='zk-hidden' >
-            <div>
-                <label style='vertical-align: top'>Comment:</label>
-                <textarea wrap=virtual class='comment-data' rows=4 maxlength={{ MAX_COMMENT_LENGTH }} required data-focus></textarea>
-                <div style='display: inline-block;'>
-                    <span class='remaining' id='pl-inline-remaining'>(0/{{ MAX_COMMENT_LENGTH }} characters)</span><br/>
-                    <a class='markdown-help-link' href='#'>formatting help</a>
-                </div>
-            </div>
-            {%~ include 'markdown-help.html' %}
-        </div>
-        <div class='nme-entry' class='zk-hidden' >
-            <div>
-                <label>Name/ID:</label>
-                <input class='nme-id' maxlength={{ MAX_FIELD_LENGTH }} data-focus/>
-            </div>
-        </div>
-    </div> <!-- track-entry -->
+{{ block('trackEntry') }}
+{#- #}
     <div id='pl-inline-time-entry'>
       <label>Time:</label>
       <input class='fxtime track-time' type='{{ ttype }}' step='1' min='{{ window.start.format('H:i') }}' max='{{ window.end.format('H:i') }}' data-live='{{ isLiveShow ? 1 : 0 }}' data-last-val='{{ time }}' />

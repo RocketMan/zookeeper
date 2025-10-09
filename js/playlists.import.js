@@ -32,7 +32,7 @@ $().ready(function() {
      */
     function localTimeIntl(time) {
         var stime = String(time);
-        return stime.length ? stime.substring(0, 2) + ':' + stime.substring(2) : null;
+        return stime.length ? stime.match(/\d{2}/g).join(':') : null;
     }
 
     /**

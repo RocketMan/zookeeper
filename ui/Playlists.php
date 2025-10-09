@@ -281,6 +281,12 @@ class Playlists extends MenuItem {
         $this->addVar("entries", $entries);
         $this->addVar("editMode", $editMode);
         $this->addVar("isLive", $api->isNowWithinShow($playlist));
+
+        if($editMode) {
+            $this->addVar('airnames', $this->getDJAirNames());
+            $this->addVar('MAX_DESCRIPTION_LENGTH', IPlaylist::MAX_DESCRIPTION_LENGTH);
+            $this->addVar('MAX_AIRNAME_LENGTH', IDJ::MAX_AIRNAME_LENGTH);
+        }
     }
 
     private function emitPlaylistBanner($playlist) {

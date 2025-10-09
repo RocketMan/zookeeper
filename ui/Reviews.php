@@ -220,7 +220,7 @@ class Reviews extends MenuItem {
     }
 
     public function viewReview() {
-        $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
+        $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"] ?? 0);
     }
     
     private function claimReview($tag, $op) {
