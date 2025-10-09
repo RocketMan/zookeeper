@@ -130,6 +130,19 @@ $().ready(function(){
     function getDiskInfo(id, refArtist, parent, refTitle) {
         clearUserInput(false, parent);
 
+        if (id < 0) {
+            // need to do this asynchronously for autocomplete
+            setTimeout(function() {
+                var entry = parent.data('entries')[ -id - 1 ];
+                $(".track-artist", parent).val(entry.artist);
+                $(".track-label", parent).val(entry.label);
+                $(".track-album", parent).data('tagId', 0).val(entry.album);
+                $(".track-submit", parent).attr("disabled");
+                $(".track-submit", parent).prop("disabled", true);
+            }, 0);
+            return;
+        }
+
         // chars [ and ] in the QS param name are supposed to be %-encoded.
         // It seems to work ok without and reads better in the server logs,
         // but this may need revisiting if there are problems.
@@ -857,9 +870,19 @@ $().ready(function(){
         return htmlify(name);
     }
 
-    function addArtists(data, qlist, parent) {
+    function addArtists(data, qlist, parent, key) {
         var results = $(".track-artists", parent);
         results.empty();
+        if (key) {
+            var entries = searchPlaylistArtists(key);
+            parent.data('entries', entries);
+            entries.forEach(function(attrs, index) {
+                var row = htmlify(attrs.artist) + " - " + htmlify(attrs.album);
+                results.append("<option data-tag='" + (-index - 1) +
+                               "' data-artist='" + htmlify(attrs.artist) +
+                               "' value='" + row + "'>");
+            });
+        }
         data.forEach(function(entry) {
             var attrs = entry.attributes;
             var row = htmlify(attrs.artist) + " - " +
@@ -892,7 +915,7 @@ $().ready(function(){
                 // process only the last-issued search{Library,Tag} request
                 if(this.seq == seq)
                     addArtists(response.links.first.meta.total > 0 ?
-                               response.data : [], qlist, parent);
+                               response.data : [], qlist, parent, key);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 // if not last request or rate limited, silently ignore
@@ -931,6 +954,34 @@ $().ready(function(){
                 showUserError(message, parent);
             }
         });
+    }
+
+    function preg_quote(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function searchPlaylistArtists(artist) {
+        var preg = new RegExp('\\b' + preg_quote(artist), 'i');
+
+        var spins = $(".playlistTable tr.songRow").filter(function() {
+            // exclude library albums, as these are included by searchLibrary
+            return $(this).find("td > a").length === 0;
+        }).map(function() {
+            var row = $(this);
+            var albumLabel = row.find("td:nth-child(6)").text().split(' / ');
+            return {
+                artist: row.find("td:nth-child(3)").text(),
+                album: albumLabel[0],
+                label: albumLabel[1] ?? ''
+            };
+        }).get().filter(spin => preg.test(spin.artist) && spin.album);
+
+        // deduplicate and sort
+        var seen = new Set();
+        return spins.filter(spin => {
+            spin.key = spin.artist.toLowerCase() + '|' + spin.album.toLowerCase();
+            return !seen.has(spin.key) && seen.add(spin.key);
+        }).sort((a, b) => a.key.localeCompare(b.key));
     }
 
     $(".track-artist").on('focusout', function() {
