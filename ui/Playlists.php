@@ -812,7 +812,7 @@ class Playlists extends MenuItem {
 
     public function handlePlaylistsByDate() {
         $viewdate = $_REQUEST["viewdate"];
-        $lists = Engine::api(IPlaylist::class)->getPlaylists(1, 1, $viewdate, 0, 0, 0, 20)->asArray();
+        $lists = Engine::api(IPlaylist::class)->getPlaylists(1, 1, $viewdate, 0, 0, 0)->asArray();
         $count = count($lists);
 
         foreach($lists as &$list) {
