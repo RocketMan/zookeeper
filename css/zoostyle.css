@@ -838,6 +838,7 @@ a:hover {
 .pl-banner-edit .separator {
     align-self: flex-end;
     padding: 5px 0;
+    margin: 0 -4px;
     flex: 0 0 auto;
 }
 .pl-banner-edit .pl-banner-actions {
