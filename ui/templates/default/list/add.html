@@ -4,7 +4,7 @@
 {% set djName = playlist.airname ?? "None" %}
 {% set djLink = djId ? "<a href='?subaction=viewDJ&amp;seq=selUser&amp;viewuser=" ~ djId ~ "' class='nav2'>" ~ djName | e ~ "</a>" : djName | e %}
 
-<div class='playlistBanner'><span id='banner-caption'><span id='banner-description'>{{ showName }}</span> <span id='banner-dj'>with {{ djLink | raw }}</span></span><div>{{ showDateTime }}
+<div class='playlistBanner'><span id='banner-caption'><span id='banner-description'>{{ showName }}</span> <span id='banner-dj'>with {{ djLink | raw }}</span></span><div><span id='banner-date-time'>{{ showDateTime }}</span>
 {%- if editMode %}
 <button id='pl-banner-edit-button' title='Edit playlist'>Edit</button>
 {%- elseif app.session.isAuth('v') -%}

@@ -1105,13 +1105,16 @@ $().ready(function(){
         if(date instanceof Date) {
             hour = date.getHours();
             m = date.getMinutes();
-        } else {
-            if(intl)
-                return localTimeIntl(date);
 
+            date = String(hour).padStart(2, '0') + String(m).padStart(2, '0');
+        } else {
             hour = date.substring(0, 2);
             m = date.substring(2);
         }
+
+        if(intl)
+            return date;
+
         var ampm = hour >= 12?"pm":"am";
         var min = m == 0?'':':' + String(m).padStart(2, '0');
         if(hour > 12)
@@ -1157,9 +1160,9 @@ $().ready(function(){
             success: function(response) {
                 $("#show-time").val(showTime);
 
-                var banner = $(".playlistBanner > DIV");
-                var prefix = banner.html().split('-')[0];
-                banner.html(prefix + " - " + localTime(edate) + "&nbsp;");
+                var banner = $("#banner-date-time");
+                var prefix = banner.html().split(' - ')[0];
+                banner.html(prefix + ' - ' + localTime(edate));
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 var message = getErrorMessage(jqXHR,
