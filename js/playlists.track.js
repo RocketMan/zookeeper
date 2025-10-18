@@ -970,7 +970,7 @@ $().ready(function(){
 
         var spins = $(".playlistTable tr.songRow").filter(function() {
             // exclude library albums, as these are included by searchLibrary
-            return $(this).find("td > a").length === 0;
+            return $(this).find("td > a.nav").length === 0;
         }).map(function() {
             var row = $(this);
             var albumLabel = row.find("td:nth-child(6)").text().split(' / ');
