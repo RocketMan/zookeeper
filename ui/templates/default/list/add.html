@@ -71,6 +71,7 @@
 {#--------------------------------------------------------------------------#}
 {% block entry %}
 {% set isLiveShow = not editTrack and isLive %}
+<div id='in-progress' class='zk-popup'></div>
 <div class='pl-add-track pl-form-entry form-entry'>
     <input id='show-time' type='hidden' value="{{ playlist.showtime }}" >
     {#~ TZO is server equivalent of javascript Date.getTimezoneOffset() #}

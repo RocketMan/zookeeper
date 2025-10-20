@@ -29,6 +29,7 @@ $().ready(function(){
     const NME_PREFIX=$("#const-prefix").val();
     var seq = 0;
     var row;
+    var updating;
 
     function htmlify(s) {
         return s?String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\'/g, '&#39;'):"";
@@ -127,6 +128,18 @@ $().ready(function(){
 
     function showUserError(msg, parent) {
         $(".error-msg", parent).text(msg);
+    }
+
+    function setUpdating() {
+        updating = true;
+        $('#in-progress').css('background-color', 'transparent').show();
+        $('body').addClass('waiting');
+    }
+
+    function clearUpdating(jqXHR, textStatus) {
+        $('body').removeClass('waiting');
+        $('#in-progress').hide();
+        updating = false;
     }
 
     function getDiskInfo(id, refArtist, parent, refTitle) {
@@ -288,6 +301,8 @@ $().ready(function(){
     }
 
     $("#edit-insert").on('click', function(){
+        if (updating) return;
+
         // double check that we have everything.
         var parent = $(this).closest('div.form-entry');
         if (haveAllUserInput(parent) == false) {
@@ -369,6 +384,7 @@ $().ready(function(){
             };
         }
 
+        setUpdating();
         $.ajax({
             type: 'POST',
             url: 'api/v1.1/playlist/' + playlistId + '/events',
@@ -376,6 +392,7 @@ $().ready(function(){
             contentType: "application/json; charset=utf-8",
             accept: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
+            complete: clearUpdating,
             success: function(response) {
                 var meta = response.data.meta;
                 switch(meta.seq*1) {
@@ -421,6 +438,8 @@ $().ready(function(){
     });
 
     $("#edit-save").on('click', function(){
+        if (updating) return;
+
         // double check that we have everything.
         var parent = $(this).closest('div.form-entry');
         if (haveAllUserInput(parent) == false) {
@@ -502,6 +521,7 @@ $().ready(function(){
             };
         }
 
+        setUpdating();
         $.ajax({
             type: 'PATCH',
             url: 'api/v1/playlist/' + playlistId + '/events',
@@ -509,6 +529,7 @@ $().ready(function(){
             contentType: "application/json; charset=utf-8",
             accept: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
+            complete: clearUpdating,
             success: function(response) {
                 var meta = response.data.meta;
                 switch(meta.seq*1) {
@@ -562,6 +583,8 @@ $().ready(function(){
     });
 
     function inlineDelete() {
+        if (updating) return;
+
         if(!confirm("Delete this item?")) {
             closeInlineEdit(undefined, true);
             return;
@@ -579,6 +602,7 @@ $().ready(function(){
             }
         };
 
+        setUpdating();
         $.ajax({
             type: 'DELETE',
             url: 'api/v1/playlist/' + playlistId + '/events',
@@ -586,6 +610,7 @@ $().ready(function(){
             contentType: "application/json; charset=utf-8",
             accept: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
+            complete: clearUpdating,
             success: function(response) {
                 var meta = response.data.meta;
                 var hash = meta.hash;
@@ -631,12 +656,14 @@ $().ready(function(){
             }
         };
 
+        setUpdating();
         $.ajax({
             type: "PATCH",
             url: "api/v1/playlist/" + list + "/events",
             dataType : "json",
             accept: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
+            complete: clearUpdating,
             success: function(respObj) {
                 var meta = respObj.data.meta;
                 if(meta.seq == -1) {
@@ -675,7 +702,7 @@ $().ready(function(){
             e.preventDefault();
         });
 
-        if (row) return; // disable resequencing during inline edit
+        if (row || updating) return; // disable resequencing during inline edit
 
         var tr = $(e.target).closest("TR"), si = tr.index(), sy = e.pageY, b = $(document.body), drag;
         if (b.hasClass("grabCursor")) return; // already dragging
@@ -716,6 +743,8 @@ $().ready(function(){
     }
 
     $(".track-submit").on('click', function(e) {
+        if (updating) return;
+
         // double check that we have everything.
         var parent = $(this).closest('div.form-entry');
         if (haveAllUserInput(parent) == false) {
@@ -797,6 +826,7 @@ $().ready(function(){
         }
 
         var playlistId = $("#track-playlist").val();
+        setUpdating();
         $.ajax({
             type: "POST",
             // use API v1.1 or later for correct auto timestamp semantics
@@ -805,6 +835,7 @@ $().ready(function(){
             contentType: "application/json; charset=utf-8",
             accept: "application/json; charset=utf-8",
             data: JSON.stringify(postData),
+            complete: clearUpdating,
             success: function(respObj) {
                 var meta = respObj.data.meta;
                 // *1 to coerce to int as switch uses strict comparison
@@ -1204,6 +1235,8 @@ $().ready(function(){
     }
 
     function timestampTrack(row) {
+        if (updating) return;
+
         var postData = {
             data: {
                 type: 'event',
@@ -1220,6 +1253,7 @@ $().ready(function(){
         };
 
         var playlistId = $("#track-playlist").val();
+        setUpdating();
         $.ajax({
             dataType : 'json',
             type: 'PATCH',
@@ -1227,6 +1261,7 @@ $().ready(function(){
             accept: "application/json; charset=utf-8",
             url: "api/v1/playlist/" + playlistId + "/events",
             data: JSON.stringify(postData),
+            complete: clearUpdating,
             success: function(respObj) {
                 var meta = respObj.data.meta;
                 // *1 to coerce to int as switch uses strict comparison
