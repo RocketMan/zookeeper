@@ -42,7 +42,7 @@ $().ready(function(){
         }
 
         if (startIndex + IMAGE_BATCH_SIZE < images.length) {
-            setTimeout(() => loadBatch(startIndex + IMAGE_BATCH_SIZE), 500);
+            setTimeout(() => loadImages(images, startIndex + IMAGE_BATCH_SIZE), 500);
         }
     }
 
