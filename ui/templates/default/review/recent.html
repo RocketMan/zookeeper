@@ -57,7 +57,7 @@
   can be found in the General collection of the library.</p>
 <script><!--
   {%~ set jsreviews = reviews | map(review => {
-      reviewer: review.airanme ?? review.realname,
+      reviewer: review.airname ?? review.realname,
       album: review.album,
       hashtags: review.hashtags,
       title: review.album.album,
