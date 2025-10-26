@@ -39,6 +39,9 @@ $().ready(function(){
             if (currentSort.key === "reviewed") {
                 valA = new Date(valA);
                 valB = new Date(valB);
+            } else {
+                valA = String(valA).toLowerCase();
+                valB = String(valB).toLowerCase();
             }
 
             if (valA < valB) return currentSort.direction === "asc" ? -1 : 1;
