@@ -24,28 +24,27 @@
 
 $().ready(function(){
     const ROWS_PER_PAGE = 50;
+    const MAX_CONCURRENT = 4;
 
     let totalCount;
     let currentPage = 1;
     let currentSort = { key: "reviewed", direction: "desc" };
     let genresVisible = new Set();
     let queue = [];
-    let loading;
+    let active = 0;
 
-    function processImageQueue() {
-        if (loading || queue.length === 0) return;
-        loading = true;
+    function loadNextImage() {
+        if (active >= MAX_CONCURRENT || queue.length === 0) return;
 
+        active++;
         let img = queue.shift();
-        img.addEventListener('load', () => {
+        img.onload = img.onerror = () => {
             img.style.opacity = 1;
-        });
+            active--;
+            setTimeout(loadNextImage, 100);
+        };
         img.src = img.dataset.lazysrc;
         img.removeAttribute('data-lazysrc');
-        setTimeout(() => {
-            loading = false;
-            processImageQueue();
-        }, 200);
     }
     
     function renderTable() {
@@ -106,7 +105,7 @@ $().ready(function(){
                 if (entry.isIntersecting) {
                     queue.push(entry.target);
                     observer.unobserve(entry.target);
-                    processImageQueue();
+                    loadNextImage();
                 }
             });
         }, {
