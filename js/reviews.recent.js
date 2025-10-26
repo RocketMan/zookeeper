@@ -24,24 +24,42 @@
 
 $().ready(function(){
     const ROWS_PER_PAGE = 50;
-    const MAX_CONCURRENT = 4;
+    const MAX_CONCURRENT = 3;
+    const MIN_DELAY = 125;         // ~8 images per second
+    const WINDOW_MS = 3000;
+    const IMAGES_PER_WINDOW = 25;  // max requests per window
 
     let totalCount;
     let currentPage = 1;
     let currentSort = { key: "reviewed", direction: "desc" };
     let genresVisible = new Set();
     let queue = [];
+    let loadTimestamps = [];
     let active = 0;
 
     function loadNextImage() {
         if (active >= MAX_CONCURRENT || queue.length === 0) return;
 
+        const now = Date.now();
+        loadTimestamps = loadTimestamps.filter(ts => now - ts < WINDOW_MS);
+        if (loadTimestamps.length >= IMAGES_PER_WINDOW) {
+            // too many image loads recently; wait and retry
+            setTimeout(loadNext, 300);
+            return;
+        }
+
+        loadTimestamps.push(now);
         active++;
+
         let img = queue.shift();
-        img.onload = img.onerror = () => {
+        img.onload = () => {
             img.style.opacity = 1;
             active--;
-            setTimeout(loadNextImage, 100);
+            setTimeout(loadNextImage, 125);
+        };
+        img.onerror = () => {
+            active--;
+            setTimeout(loadNextImage, 125);
         };
         img.src = img.dataset.lazysrc;
         img.removeAttribute('data-lazysrc');
