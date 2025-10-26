@@ -320,12 +320,16 @@ table.recent-reviews tr:first-child td {
 table.recent-reviews td strong {
     font-size: 1.1rem;
 }
-table.recent-reviews td img {
+table.recent-reviews td .artwork {
     float: left;
     margin: 0 1rem 1rem 0;
-
     width: 180px;
     height: 180px;
+}
+table.recent-reviews td img {
+    width: 180px;
+    height: 180px;
+
     aspect-ratio: 1 / 1;
     object-fit: cover;
     object-position: center 10%;

@@ -29,6 +29,8 @@ $().ready(function(){
     const WINDOW_MS = 3000;
     const IMAGES_PER_WINDOW = 25;  // max requests per window
 
+    var palette = [ '#bdd0c4', '#9ab7d3', '#f5d2d3', '#f7e1d3', '#dfccf1' ];
+
     let totalCount;
     let currentPage = 1;
     let currentSort = { key: "reviewed", direction: "desc" };
@@ -64,7 +66,7 @@ $().ready(function(){
         img.src = img.dataset.lazysrc;
         img.removeAttribute('data-lazysrc');
     }
-    
+
     function renderTable() {
         const start = (currentPage - 1) * ROWS_PER_PAGE;
         const end = start + ROWS_PER_PAGE;
@@ -93,7 +95,7 @@ $().ready(function(){
             var html = '<td colspan=2>';
             if (review.album.albumart) {
                 html += `
-                  <a href='?action=search&amp;s=byAlbumKey&amp;n=${review.album.tag}'><img data-lazysrc='${review.album.albumart}' alt='Album artwork'></a>`;
+                  <div class='artwork' style='background-color: ${palette[Math.floor((Math.random() * palette.length))]}'><a href='?action=search&amp;s=byAlbumKey&amp;n=${review.album.tag}'><img data-lazysrc='${review.album.albumart}' alt='Album artwork'></a></div>`;
             }
             html += `
                   <div><a href='?action=search&amp;s=byAlbumKey&amp;n=${review.album.tag}'><strong>${review.title}</strong></a></div>
