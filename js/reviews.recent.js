@@ -24,11 +24,27 @@
 
 $().ready(function(){
     const ROWS_PER_PAGE = 50;
+    const IMAGE_BATCH_SIZE = 5;
 
     let totalCount;
     let currentPage = 1;
     let currentSort = { key: "reviewed", direction: "desc" };
     let genresVisible = new Set();
+
+    function loadImages(images, startIndex = 0) {
+        for (let i = startIndex; i < startIndex + IMAGE_BATCH_SIZE && i < images.length; i++) {
+            let img = images[i];
+            img.addEventListener('load', () => {
+                img.style.opacity = 1;
+            });
+            img.src = img.dataset.lazysrc;
+            img.removeAttribute('data-lazysrc');
+        }
+
+        if (startIndex + IMAGE_BATCH_SIZE < images.length) {
+            setTimeout(() => loadBatch(startIndex + IMAGE_BATCH_SIZE), 500);
+        }
+    }
 
     function renderTable() {
         const start = (currentPage - 1) * ROWS_PER_PAGE;
@@ -83,12 +99,7 @@ $().ready(function(){
             tbody.appendChild(row);
         });
 
-        document.querySelectorAll('img[data-lazysrc]').forEach(img => {
-            img.addEventListener('load', () => {
-                img.style.opacity = 1;
-            });
-            img.src = img.dataset.lazysrc;
-        });
+        loadImages(document.querySelectorAll('img[data-lazysrc]'));
         renderPagination();
         updateSortIndicators();
     }
