@@ -24,28 +24,30 @@
 
 $().ready(function(){
     const ROWS_PER_PAGE = 50;
-    const IMAGE_BATCH_SIZE = 5;
 
     let totalCount;
     let currentPage = 1;
     let currentSort = { key: "reviewed", direction: "desc" };
     let genresVisible = new Set();
+    let queue = [];
+    let loading;
 
-    function loadImages(images, startIndex = 0) {
-        for (let i = startIndex; i < startIndex + IMAGE_BATCH_SIZE && i < images.length; i++) {
-            let img = images[i];
-            img.addEventListener('load', () => {
-                img.style.opacity = 1;
-            });
-            img.src = img.dataset.lazysrc;
-            img.removeAttribute('data-lazysrc');
-        }
+    function processImageQueue() {
+        if (loading || queue.length === 0) return;
+        loading = true;
 
-        if (startIndex + IMAGE_BATCH_SIZE < images.length) {
-            setTimeout(() => loadImages(images, startIndex + IMAGE_BATCH_SIZE), 500);
-        }
+        let img = queue.shift();
+        img.addEventListener('load', () => {
+            img.style.opacity = 1;
+        });
+        img.src = img.dataset.lazysrc;
+        img.removeAttribute('data-lazysrc');
+        setTimeout(() => {
+            loading = false;
+            processImageQueue();
+        }, 200);
     }
-
+    
     function renderTable() {
         const start = (currentPage - 1) * ROWS_PER_PAGE;
         const end = start + ROWS_PER_PAGE;
@@ -99,7 +101,20 @@ $().ready(function(){
             tbody.appendChild(row);
         });
 
-        loadImages(document.querySelectorAll('img[data-lazysrc]'));
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    queue.push(entry.target);
+                    observer.unobserve(entry.target);
+                    processImageQueue();
+                }
+            });
+        }, {
+            rootMargin: '100px',
+            threshold: 0.1
+        });
+
+        document.querySelectorAll('img[data-lazysrc]').forEach(img => observer.observe(img));
         renderPagination();
         updateSortIndicators();
     }
