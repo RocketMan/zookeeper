@@ -310,7 +310,7 @@ table.recent-reviews td {
     padding: 1rem 0;
     text-align: left;
     vertical-align: top;
-    border-top: 1px solid #eee;
+    border-top: 1px solid rgba(0,0,0,0.08);
     font-size: 1rem;
 }
 table.recent-reviews tr:first-child td {
