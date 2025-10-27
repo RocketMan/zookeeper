@@ -27,7 +27,7 @@ $().ready(function(){
     const MAX_CONCURRENT = 3;
     const MIN_DELAY = 125;         // ~8 images per second
     const WINDOW_MS = 3000;
-    const IMAGES_PER_WINDOW = 25;  // max requests per window
+    const IMAGES_PER_WINDOW = 25;  // max 25 requests per 3 seconds
 
     var palette = [ '#bdd0c4', '#9ab7d3', '#f5d2d3', '#f7e1d3', '#dfccf1' ];
 
@@ -46,7 +46,7 @@ $().ready(function(){
         loadTimestamps = loadTimestamps.filter(ts => now - ts < WINDOW_MS);
         if (loadTimestamps.length >= IMAGES_PER_WINDOW) {
             // too many image loads recently; wait and retry
-            setTimeout(loadNextImage, 300);
+            setTimeout(loadNextImage, MIN_DELAY * 2);
             return;
         }
 
@@ -57,11 +57,11 @@ $().ready(function(){
         img.onload = () => {
             img.style.opacity = 1;
             if (active > 0) active--;
-            setTimeout(loadNextImage, 125);
+            setTimeout(loadNextImage, MIN_DELAY);
         };
         img.onerror = () => {
             if (active > 0) active--;
-            setTimeout(loadNextImage, 125);
+            setTimeout(loadNextImage, MIN_DELAY);
         };
         img.src = img.dataset.lazysrc;
         img.removeAttribute('data-lazysrc');
@@ -70,7 +70,7 @@ $().ready(function(){
     function renderTable() {
         const start = (currentPage - 1) * ROWS_PER_PAGE;
         const end = start + ROWS_PER_PAGE;
-        const sorted = [...reviews].filter((r) => genresVisible.has(r.genre)).sort((a, b) => {
+        const sorted = reviews.filter(r => genresVisible.has(r.genre)).sort((a, b) => {
             let valA = a[currentSort.key];
             let valB = b[currentSort.key];
             if (currentSort.key === "reviewed") {
