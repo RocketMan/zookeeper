@@ -920,6 +920,7 @@ a:hover {
 .pl-banner-edit .separator {
     align-self: flex-end;
     padding: 5px 0;
+    margin: 0 -4px;
     flex: 0 0 auto;
 }
 .pl-banner-edit .pl-banner-actions {
@@ -1632,6 +1633,14 @@ input[type="checkbox"]:checked:active {
     border: 2px solid #f88;
     border-radius: 2px;
     box-shadow: 0 0 2px #f88, inset 0 0 2px #f88;
+}
+
+.waiting,
+.waiting button,
+.waiting input,
+.waiting select,
+.waiting textarea {
+    cursor: wait !important;
 }
 
 /* hack for fx not to display red border on empty field */

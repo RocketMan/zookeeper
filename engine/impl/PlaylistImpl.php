@@ -80,7 +80,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $desc = $desc?"DESC":"";
         $query .= "ORDER BY l.showdate $desc, l.showtime $desc, l.id $desc";
 
-        if ($limit)
+        // we test $user and $airname to ensure limit is applied,
+        // even if non-empty $showDate is supplied in combination
+        if ($limit && ($user || $airname))
             $query .= " limit $limit ";
 
         $stmt = $this->prepare($query);
@@ -107,6 +109,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 return $row['showdate'] == $end ||
                         count($t) == 2 && $t[1] != '0000' && $t[0] > $t[1];
             });
+
+            if($limit && count($result) > $limit)
+                $result = array_slice($result, 0, $limit);
         }
 
         return new ArrayRowIterator($result);
