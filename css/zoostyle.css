@@ -368,11 +368,9 @@ table.recent-reviews div.meta {
     table.recent-reviews col.meta {
         display: none;
     }
-    div.sort {
-        display: block;
-    }
+    div.sort,
     table.recent-reviews div.meta {
-        display: inline-block;
+        display: block;
     }
 }
 
