@@ -50,7 +50,7 @@ interface IReview {
      */
     const MICRO_REVIEW_LENGTH = 80;
 
-    function getRecentReviews($user = "", $weeks = 0, $limit = 0, $loggedIn = 0);
+    function getRecentReviews($user = "", $weeks = 0, $limit = 0, $loggedIn = 0, $includeReview = 0);
     function getActiveReviewers($viewAll=0, $loggedIn=0);
     function getReviews($tag, $byName=1, $user = "", $loggedIn = 0, $byId = 0);
     function getTrending(int $limit = 50);

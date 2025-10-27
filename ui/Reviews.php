@@ -215,8 +215,40 @@ class Reviews extends MenuItem {
         $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <a type='application/rss+xml' href='zkrss.php?feed=reviews&amp;fmt=1'><img src='img/rss.png' alt='rss'></a>";
         $this->addVar("GENRES", self::getGenres());
 
-        $reviews = Engine::api(IReview::class)->getRecentReviews($author, 0, 200, $isAuthorized);
-        $this->addVar("reviews", $reviews);
+        $results = Engine::api(IReview::class)->getRecentReviews($author, 0, 200, $isAuthorized, 1);
+
+        // coalesce albums into one array for artwork injection
+        // use foreach, as reference passing does not work with array_map
+        $albums = [];
+        foreach($results as &$review)
+            $albums[] = &$review["album"];
+        Engine::api(IArtwork::class)->injectAlbumArt($albums);
+        foreach($results as &$row) {
+            $row['body'] = $row['review'];
+            $row['tracks'] = '';
+            if(preg_match('/(.+?)(?=(\r?\n)[\p{P}\p{S}\s]*\d+[\p{P}\p{S}\d]*\s)/su',
+                    $row['review'], $matches) && $matches[1]) {
+                $row['tracks'] = trim(mb_substr($row['review'], mb_strlen($matches[1])));
+                $row['body'] = $matches[1];
+            }
+
+            // hashtags
+            if(!$row['private'] &&
+                    preg_match_all('/#\pL\w*/u', $row['review'], $matches)) {
+                $hashtags = $matches[0];
+                $normalized = array_unique(array_map('strtolower', $hashtags));
+                $hashtags = array_intersect_key($hashtags, $normalized);
+                $index = array_map(function($tag) {
+                    return hexdec(hash('crc32', $tag)) % Search::HASHTAG_PALETTE_SIZE;
+                }, $normalized);
+
+                $row['hashtags'] = array_map(function($hash, $index) {
+                    return [ 'name' => $hash, 'index' => $index ];
+                }, $hashtags, $index);
+            }
+        }
+
+        $this->addVar("reviews", $results);
     }
 
     public function viewReview() {
