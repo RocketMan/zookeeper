@@ -374,6 +374,7 @@ table.recent-reviews div.meta {
 
 /* review shelf */
 table.review-shelf {
+    width: calc(100% - 5px);
     margin: 0;
 }
 
