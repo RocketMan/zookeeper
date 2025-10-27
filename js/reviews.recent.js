@@ -200,6 +200,7 @@ $().ready(function(){
             currentSort.key = key;
             currentSort.direction = "asc";
         }
+        currentPage = 1;
         renderTable();
     }).selectmenu();
 
@@ -212,6 +213,7 @@ $().ready(function(){
                 currentSort.key = key;
                 currentSort.direction = "asc";
             }
+            currentPage = 1;
             renderTable();
         });
     });
