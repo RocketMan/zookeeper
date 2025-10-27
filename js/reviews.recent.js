@@ -56,11 +56,11 @@ $().ready(function(){
         let img = queue.shift();
         img.onload = () => {
             img.style.opacity = 1;
-            active--;
+            if (active > 0) active--;
             setTimeout(loadNextImage, 125);
         };
         img.onerror = () => {
-            active--;
+            if (active > 0) active--;
             setTimeout(loadNextImage, 125);
         };
         img.src = img.dataset.lazysrc;
@@ -91,6 +91,7 @@ $().ready(function(){
         const tbody = document.getElementById("review-body");
         tbody.innerHTML = '';
         queue.length = 0;
+        active = 0;
         pageItems.forEach(review => {
             var row = document.createElement("tr");
             var html = '<td colspan=2>';
@@ -219,6 +220,7 @@ $().ready(function(){
 
     function setGenreVisibility(genre, showIt) {
         showIt ? genresVisible.add(genre) : genresVisible.delete(genre);
+        currentPage = 1;
         renderTable();
     }
 
