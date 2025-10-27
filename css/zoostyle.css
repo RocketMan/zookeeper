@@ -358,10 +358,10 @@ table.recent-reviews div.meta {
         margin-right: auto;
     }
     table.recent-reviews {
-	margin-top: 10px;
+        margin-top: 10px;
     }
     table.recent-reviews tr:first-child td {
-	border-top: 1px solid #000;
+        border-top: 1px solid #000;
     }
     table.recent-reviews th,
     table.recent-reviews td.meta,
