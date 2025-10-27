@@ -149,9 +149,9 @@ $().ready(function(){
             return;
 
         let numchunks = 10;
-        let start = ((currentPage / numchunks) | 0) * numchunks;
+        let start = (((currentPage - 1) / numchunks) | 0) * numchunks;
         if (start == 0) start = 1;
-        let end = Math.min(totalPages, start + numchunks + 2);
+        let end = Math.min(totalPages, start + numchunks + 1);
 
         const ul = $('<ul>', {
             class: 'pagination'
