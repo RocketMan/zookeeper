@@ -41,9 +41,11 @@ class ReviewImpl extends DBO implements IReview {
         ILibrary::LOCATION_DEACCESSIONED
     ];
 
-    private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0) {
+    private function getRecentSubquery($user = "", $weeks = 0, $loggedIn = 0, $includeReview = 0) {
         // IMPORTANT: If columns change, revisit getRecentReviews below
-        $query = "SELECT a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id as rid, u.realname, r.tag, v.category, v.album, v.artist, v.iscoll FROM reviews r ";
+        $rq = $includeReview ? "review, private," : "";
+        $query = "SELECT a.airname, r.user, DATE_FORMAT(r.created, GET_FORMAT(DATE, 'ISO')) reviewed, r.id as rid, u.realname, $rq r.tag, v.category, v.album, v.artist, v.iscoll ";
+        $query .= "FROM reviews r ";
 
         $query .= "INNER JOIN albumvol v ON r.tag = v.tag ";
         $query .= "INNER JOIN users u ON r.user = u.name ";
@@ -77,7 +79,7 @@ class ReviewImpl extends DBO implements IReview {
         return $query;
     }
     
-    public function getRecentReviews($user = "", $weeks = 0, $limit = 0, $loggedIn = 0) {
+    public function getRecentReviews($user = "", $weeks = 0, $limit = 0, $loggedIn = 0, $includeReview = 0) {
         if($weeks) {
             // The UNION construct is obtuse but efficient, as it allows
             // us to use multiple indexes on the reviews table, thus
@@ -86,13 +88,15 @@ class ReviewImpl extends DBO implements IReview {
             // See: https://www.techfounder.net/2008/10/15/optimizing-or-union-operations-in-mysql/
             //
             // IMPORTANT:  If columns change, revisit loop below
-            $query = "SELECT z.airname, z.user, z.reviewed, z.rid, z.realname, z.tag, z.category, z.album, z.artist, z.iscoll FROM (";
-            $query .= $this->getRecentSubquery($user, $weeks, $loggedIn);
+            $rq = $includeReview ? "z.review, z.private," : "";
+            $query = "SELECT z.airname, z.user, z.reviewed, z.rid, z.realname, $rq z.tag, z.category, z.album, z.artist, z.iscoll ";
+            $query .= "FROM (";
+            $query .= $this->getRecentSubquery($user, $weeks, $loggedIn, $includeReview);
             $query .= "UNION ";
-            $query .= $this->getRecentSubquery($user, -1, $loggedIn);
+            $query .= $this->getRecentSubquery($user, -1, $loggedIn, $includeReview);
             $query .= ") AS z GROUP BY z.tag ORDER BY z.rid DESC";
         } else {
-            $query = $this->getRecentSubquery($user, 0, $loggedIn);
+            $query = $this->getRecentSubquery($user, 0, $loggedIn, $includeReview);
             $query .= "ORDER BY r.created DESC";
         }
             
@@ -120,9 +124,10 @@ class ReviewImpl extends DBO implements IReview {
         $reviews = $stmt->executeAndFetchAll();
 
         // move album columns into 'album' property
+        $offset = $includeReview ? 7 : 5;
         foreach($reviews as &$review) {
-            $album = array_slice($review, 5);
-            array_splice($review, 5);
+            $album = array_slice($review, $offset);
+            array_splice($review, $offset);
             $review['album'] = $album;
         }
 

@@ -215,7 +215,7 @@ class Reviews extends MenuItem {
         $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <a type='application/rss+xml' href='zkrss.php?feed=reviews&amp;fmt=1'><img src='img/rss.png' alt='rss'></a>";
         $this->addVar("GENRES", self::getGenres());
 
-        $results = Engine::api(IReview::class)->getRecentReviews($author, 0, 50, $isAuthorized);
+        $results = Engine::api(IReview::class)->getRecentReviews($author, 0, 200, $isAuthorized, 1);
 
         // coalesce albums into one array for artwork injection
         // use foreach, as reference passing does not work with array_map
@@ -224,30 +224,27 @@ class Reviews extends MenuItem {
             $albums[] = &$review["album"];
         Engine::api(IArtwork::class)->injectAlbumArt($albums);
         foreach($results as &$row) {
-            $reviews = Engine::api(IReview::class)->getReviews($row['album']['tag'], 0, $row['user']);
-            if(count($reviews)) {
-                $row['review'] = $row['body'] = $reviews[0]['review'];
-                $row['tracks'] = '';
-                if(preg_match('/(.+?)(?=(\r?\n)[\p{P}\p{S}\s]*\d+[\p{P}\p{S}\d]*\s)/su',
-                        $row['review'], $matches) && $matches[1]) {
-                    $row['tracks'] = trim(mb_substr($row['review'], mb_strlen($matches[1])));
-                    $row['body'] = $matches[1];
-                }
+            $row['body'] = $row['review'];
+            $row['tracks'] = '';
+            if(preg_match('/(.+?)(?=(\r?\n)[\p{P}\p{S}\s]*\d+[\p{P}\p{S}\d]*\s)/su',
+                    $row['review'], $matches) && $matches[1]) {
+                $row['tracks'] = trim(mb_substr($row['review'], mb_strlen($matches[1])));
+                $row['body'] = $matches[1];
+            }
 
-                // hashtags
-                if(!$reviews[0]['private'] &&
-                        preg_match_all('/#\pL\w*/u', $row['review'], $matches)) {
-                    $hashtags = $matches[0];
-                    $normalized = array_unique(array_map('strtolower', $hashtags));
-                    $hashtags = array_intersect_key($hashtags, $normalized);
-                    $index = array_map(function($tag) {
-                        return hexdec(hash('crc32', $tag)) % Search::HASHTAG_PALETTE_SIZE;
-                    }, $normalized);
+            // hashtags
+            if(!$row['private'] &&
+                    preg_match_all('/#\pL\w*/u', $row['review'], $matches)) {
+                $hashtags = $matches[0];
+                $normalized = array_unique(array_map('strtolower', $hashtags));
+                $hashtags = array_intersect_key($hashtags, $normalized);
+                $index = array_map(function($tag) {
+                    return hexdec(hash('crc32', $tag)) % Search::HASHTAG_PALETTE_SIZE;
+                }, $normalized);
 
-                    $row['hashtags'] = array_map(function($hash, $index) {
-                        return [ 'tag' => $hash, 'index' => $index ];
-                    }, $hashtags, $index);
-                }
+                $row['hashtags'] = array_map(function($hash, $index) {
+                    return [ 'name' => $hash, 'index' => $index ];
+                }, $hashtags, $index);
             }
         }
 

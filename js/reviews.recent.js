@@ -23,7 +23,7 @@
 /*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
-    const ROWS_PER_PAGE = 50;
+    const ROWS_PER_PAGE = 20;
     const MAX_CONCURRENT = 3;
     const MIN_DELAY = 125;         // ~8 images per second
     const WINDOW_MS = 3000;
@@ -90,6 +90,7 @@ $().ready(function(){
         const pageItems = sorted.slice(start, end);
         const tbody = document.getElementById("review-body");
         tbody.innerHTML = '';
+        queue.length = 0;
         pageItems.forEach(review => {
             var row = document.createElement("tr");
             var html = '<td colspan=2>';
@@ -105,7 +106,7 @@ $().ready(function(){
                 html += "<div class='album-hashtag-area'>";
                 review.hashtags.forEach(hashtag => {
                     html += `
-                            <a href='?action=search&amp;s=byHashtag&amp;n=${hashtag.tag.slice(1)}'><span class='album-hashtag palette-${hashtag.index}'>${hashtag.tag}</span></a>`;
+                            <a href='?action=search&amp;s=byHashtag&amp;n=${hashtag.name.slice(1)}'><span class='album-hashtag palette-${hashtag.index}'>${hashtag.name}</span></a>`;
                 })
                 html += '</div>';
             }
