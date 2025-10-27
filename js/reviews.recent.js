@@ -46,7 +46,7 @@ $().ready(function(){
         loadTimestamps = loadTimestamps.filter(ts => now - ts < WINDOW_MS);
         if (loadTimestamps.length >= IMAGES_PER_WINDOW) {
             // too many image loads recently; wait and retry
-            setTimeout(loadNext, 300);
+            setTimeout(loadNextImage, 300);
             return;
         }
 
