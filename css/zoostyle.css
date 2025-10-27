@@ -339,6 +339,9 @@ table.recent-reviews td img {
     transition: all 400ms ease 0s;
     border: 0;
 }
+table.recent-reviews .album-hashtag-area {
+    margin-right: -450px; /* width of category|reviewer|date */
+}
 table.recent-reviews .excerpt {
     font-size: 14px;
     color: #555;
@@ -350,6 +353,7 @@ table.recent-reviews div.meta {
     display: none;
 }
 @media (max-width: 900px) {
+    table.recent-reviews .album-hashtag-area,
     table.recent-reviews .excerpt {
         margin-right: auto;
     }
