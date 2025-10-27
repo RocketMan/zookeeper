@@ -67,6 +67,7 @@
       reviewed: review.reviewed
   }) %}
   const reviews = {{ jsreviews | json_encode | raw }};
+  const stationTitle = '{{ app.station_title | e('js') }}';
   // -->
 </script>
 <script src="{{ 'js/reviews.recent.js' | decorate }}"></script>
