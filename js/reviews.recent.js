@@ -97,7 +97,7 @@ $().ready(function(){
             var html = '<td colspan=2>';
             if (review.album.albumart) {
                 html += `
-                  <div class='artwork' style='background-color: ${palette[Math.floor((Math.random() * palette.length))]}'><a href='?action=search&amp;s=byAlbumKey&amp;n=${review.album.tag}'><img data-lazysrc='${review.album.albumart}' alt='Album artwork'></a></div>`;
+                  <div class='artwork' style='background-color: ${palette[Math.floor((Math.random() * palette.length))]}'><a href='?action=search&amp;s=byAlbumKey&amp;n=${review.album.tag}'><img data-lazysrc='${review.album.albumart}'></a></div>`;
             }
             html += `
                   <div><a href='?action=search&amp;s=byAlbumKey&amp;n=${review.album.tag}'><strong>${review.title}</strong></a></div>
