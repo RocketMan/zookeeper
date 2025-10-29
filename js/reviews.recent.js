@@ -189,20 +189,15 @@ $().ready(function(){
             }
         });
 
+        $('.sort .sense').each(function () {
+            this.classList.remove("desc");
+            if (currentSort.direction === "desc") {
+                this.classList.add("desc");
+            }
+        });
+
         $('.sort select').val(currentSort.key).selectmenu('refresh');
     }
-
-    $('.sort select').on('change selectmenuchange', function() {
-        var key = $(this).val();
-        if (currentSort.key === key) {
-            currentSort.direction = currentSort.direction === "asc" ? "desc" : "asc";
-        } else {
-            currentSort.key = key;
-            currentSort.direction = "asc";
-        }
-        currentPage = 1;
-        renderTable();
-    }).selectmenu();
 
     $('.recent-reviews th').each(function () {
         $(this).on('click', () => {
@@ -216,6 +211,19 @@ $().ready(function(){
             currentPage = 1;
             renderTable();
         });
+    });
+
+    $('.sort select').on('change selectmenuchange', function() {
+        currentSort.key = this.value;
+        currentSort.direction = "asc";
+        currentPage = 1;
+        renderTable();
+    }).selectmenu();
+
+    $('.sort .sense').on('click', () => {
+        currentSort.direction = currentSort.direction === "asc" ? "desc" : "asc";
+        currentPage = 1;
+        renderTable();
     });
 
     renderTable();

@@ -285,6 +285,17 @@ span.review-categories > span.zk-hidden {
     display:none;
 }
 
+.sort .sense {
+    cursor: pointer;
+    margin-left: 8px;
+}
+.sort .sense::after {
+    content: '\25B2'; /* Up arrow */
+}
+.sort .sense.desc::after {
+    content: '\25BC'; /* Down arrow */
+}
+
 table.recent-reviews {
     width: calc(100% - 5px);
 }
