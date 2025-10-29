@@ -180,20 +180,14 @@ $().ready(function(){
 
     function updateSortIndicators() {
         $('.recent-reviews th').each(function () {
-            this.classList.remove("active", "desc");
-            if (this.dataset.key === currentSort.key) {
-                this.classList.add("active");
-                if (currentSort.direction === "desc") {
-                    this.classList.add("desc");
-                }
-            }
+            const isActive = this.dataset.key === currentSort.key;
+
+            this.classList.toggle("active", isActive);
+            this.classList.toggle("desc", isActive && currentSort.direction === "desc");
         });
 
         $('.sort .sense').each(function () {
-            this.classList.remove("desc");
-            if (currentSort.direction === "desc") {
-                this.classList.add("desc");
-            }
+            this.classList.toggle("desc", currentSort.direction === "desc");
         });
 
         $('.sort select').val(currentSort.key).selectmenu('refresh');
