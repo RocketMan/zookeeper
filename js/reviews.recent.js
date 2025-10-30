@@ -29,7 +29,10 @@ $().ready(function(){
     const WINDOW_MS = 3000;
     const IMAGES_PER_WINDOW = 25;  // max 25 requests per 3 seconds
 
-    var palette = [ '#bdd0c4', '#9ab7d3', '#f5d2d3', '#f7e1d3', '#dfccf1' ];
+    const palette = [ '#bdd0c4', '#9ab7d3', '#f5d2d3', '#f7e1d3', '#dfccf1' ];
+
+    const reviews = JSON.parse(document.getElementById("reviews-data").textContent);
+    const stationTitle = document.getElementById("station-title").value;
 
     let totalCount;
     let currentPage = 1;

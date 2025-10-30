@@ -56,7 +56,8 @@
 <div id='pagination'></div>
 <p><sup>&dagger;</sup>The categories Electronic, Experimental, and Loud
   can be found in the General collection of the library.</p>
-<script><!--
+<input id='station-title' type='hidden' value='{{ app.station_title }}'>
+<script id='reviews-data' type='application/json'>
   {%~ set jsreviews = reviews | map(review => {
       reviewer: (review.airname ?? review.realname) | e,
       album: {
@@ -70,8 +71,6 @@
       body: review.body | truncate(1000, true) | nl2br,
       reviewed: review.reviewed
   }) %}
-  const reviews = {{ jsreviews | json_encode | raw }};
-  const stationTitle = '{{ app.station_title | e('js') }}';
-  // -->
+  {{~ jsreviews | json_encode | raw }}
 </script>
 <script src="{{ 'js/reviews.recent.js' | decorate }}"></script>
