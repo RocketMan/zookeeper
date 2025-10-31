@@ -252,7 +252,7 @@ $().ready(function(){
     let categoryStr = localStorage.getItem(storageKey);
     let categories = categoryStr ? JSON.parse(categoryStr) : {};
 
-    $(".categoryPicker input").each(function(e) {
+    $(".categoryPicker input:visible").each(function(e) {
         let genre  = $(this).val();
         let isChecked = !(categories[genre] === false);
         setGenreVisibility(genre, isChecked)
