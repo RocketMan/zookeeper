@@ -223,12 +223,9 @@ $().ready(function(){
         renderTable();
     });
 
-    renderTable();
-
     function setGenreVisibility(genre, showIt) {
         showIt ? genresVisible.add(genre) : genresVisible.delete(genre);
         currentPage = 1;
-        renderTable();
     }
 
     let genreMap = {};
@@ -259,6 +256,8 @@ $().ready(function(){
         $(this).prop('checked', isChecked);
     });
 
+    renderTable();
+
     $("#djPicker").on('change selectmenuchange', function(e) {
         let selectedDj = $(this).children("option:selected").val();
         window.location.assign('?action=viewRecent&dj=' + selectedDj);
@@ -268,6 +267,7 @@ $().ready(function(){
         let genre = $(this).val();
         let isChecked = $(this).prop('checked');
         setGenreVisibility(genre, isChecked);
+        renderTable();
         categories[genre] = isChecked;
         localStorage.setItem(storageKey, JSON.stringify(categories));
     });
