@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2025 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     const ROWS_PER_PAGE = 20;
@@ -225,7 +225,6 @@ $().ready(function(){
 
     function setGenreVisibility(genre, showIt) {
         showIt ? genresVisible.add(genre) : genresVisible.delete(genre);
-        currentPage = 1;
     }
 
     let genreMap = {};
@@ -267,6 +266,7 @@ $().ready(function(){
         let genre = $(this).val();
         let isChecked = $(this).prop('checked');
         setGenreVisibility(genre, isChecked);
+        currentPage = 1;
         renderTable();
         categories[genre] = isChecked;
         localStorage.setItem(storageKey, JSON.stringify(categories));
