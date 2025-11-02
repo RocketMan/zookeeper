@@ -65,8 +65,8 @@
 <div>
 {% if hashtags | length %}
   <div class='album-hashtag-area' style='font-size: 1.1rem'>
-{% for tag, index in hashtags %}
-    <a href='?action=search&amp;s=byHashtag&amp;n={{ tag | slice(1) }}'><span class='album-hashtag palette-{{ index }}'>{{ tag }}</span></a>
+{% for hashtag in hashtags %}
+    <a href='?action=search&amp;s=byHashtag&amp;n={{ hashtag.name | slice(1) }}'><span class='album-hashtag palette-{{ hashtag.index }}'>{{ hashtag.name }}</span></a>
 {% endfor %}
   </div>
 {% endif %}
