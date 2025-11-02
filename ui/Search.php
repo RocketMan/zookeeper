@@ -140,7 +140,9 @@ class Search extends MenuItem {
         $index = array_map(function($tag) {
             return hexdec(hash('crc32', $tag)) % self::HASHTAG_PALETTE_SIZE;
         }, $normalized);
-        $this->addVar("hashtags", array_combine($hashtags, $index));
+        $this->addVar("hashtags", array_map(function($hash, $index) {
+            return [ 'name' => $hash, 'index' => $index ];
+        }, $hashtags, $index));
 
         // tracks
         $tracks = $libraryApi->search($albums[0]['iscoll'] ? ILibrary::COLL_KEY : ILibrary::TRACK_KEY, 0, 200, $tag);
