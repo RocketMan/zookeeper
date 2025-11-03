@@ -55,22 +55,67 @@ h2 {
    */
 -->
 <xsl:text><![CDATA[
-function fixup() {
-   document.querySelectorAll('div[data-description]').forEach(function(node) {
+const MAX_CONCURRENT = 3;
+const MIN_DELAY = 125;         // ~8 images per second
+const WINDOW_MS = 3000;
+const IMAGES_PER_WINDOW = 25;  // max 25 requests per 3 seconds
+
+let queue = [];
+let loadTimestamps = [];
+let active = 0;
+
+function loadNextImage() {
+   if (active >= MAX_CONCURRENT || queue.length === 0) return;
+
+   const now = Date.now();
+   loadTimestamps = loadTimestamps.filter(ts => now - ts < WINDOW_MS);
+   if (loadTimestamps.length >= IMAGES_PER_WINDOW) {
+      // too many image loads recently; wait and retry
+      setTimeout(loadNextImage, MIN_DELAY * 2);
+      return;
+   }
+
+   loadTimestamps.push(now);
+   active++;
+
+   let img = queue.shift();
+   img.onload = () => {
+      img.style.opacity = 1;
+      if (active > 0) active--;
+      setTimeout(loadNextImage, MIN_DELAY);
+   };
+   img.onerror = () => {
+      if (active > 0) active--;
+      setTimeout(loadNextImage, MIN_DELAY);
+   };
+   img.src = img.dataset.lazysrc;
+   delete img.dataset.lazysrc;
+}
+
+window.onload = () => {
+   document.querySelectorAll('div[data-description]').forEach((node) => {
       node.innerHTML = node.dataset.description;
       delete node.dataset.description;
    });
 
-   document.querySelectorAll('img[data-lazysrc]').forEach(function(img) {
-      img.addEventListener('load', function() {
-          img.style.opacity = 1;
+   const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+         if (entry.isIntersecting) {
+            queue.push(entry.target);
+            observer.unobserve(entry.target);
+            loadNextImage();
+         }
       });
-      img.src = img.dataset.lazysrc;
+   }, {
+      rootMargin: '100px',
+      threshold: 0.1
    });
 
-   document.querySelectorAll('details').forEach(function(detail) {
+   document.querySelectorAll('img[data-lazysrc]').forEach(img => observer.observe(img));
+
+   document.querySelectorAll('details').forEach((detail) => {
       const content = detail.querySelector('p');
-      detail.addEventListener('toggle', function(e) {
+      detail.addEventListener('toggle', () => {
          content.style.height = detail.open ? content.scrollHeight + 'px' : 0;
       });
   });
@@ -79,7 +124,7 @@ function fixup() {
 </xsl:text>
 </script>
 </head>
-<body onload="fixup()">
+<body>
   <div class="box">
     <div class="user-tip" style="display: block">
       <p>This is a Really Simple Syndication (RSS) feed.  RSS is a family of
