@@ -253,7 +253,7 @@ class ExportPlaylist extends CommandTarget implements IController {
                  htmlentities($entry->getTrack()). "</TD><TD ALIGN=LEFT>" .
                  htmlentities($entry->getAlbum()). "<BR><FONT CLASS=\"sub\">" .
                  htmlentities($entry->getLabel()). "</FONT></TD><TD ALIGN=RIGHT VALIGN=TOP>";
-            if($this->session->isAuth("u"))
+            if($this->session->isAuth("u") && $entry->getTag())
                  echo htmlentities($entry->getTag());
             echo "</TD></TR>\n";
             $break = false;
