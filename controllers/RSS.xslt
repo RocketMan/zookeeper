@@ -119,7 +119,7 @@ window.onload = () => {
          content.style.height = detail.open ? content.scrollHeight + 'px' : 0;
       });
   });
-}
+};
 ]]>
 </xsl:text>
 </script>
