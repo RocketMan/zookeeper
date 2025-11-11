@@ -1,20 +1,26 @@
+<div class='album-details'>
 {% if album %}
 {% include 'album/info.html' %}
-
-{% if currents | length %}
-{% include 'album/currents.html' %}
-{% endif %}
-
-{% if recent | length %}
-{% include 'album/recent.html' %}
-{% endif %}
 
 {% if reviews | length %}
 {% include 'album/reviews.html' %}
 {% endif %}
 
+<div class='album-recent-chart-box'>
+{% if recent | length %}
+<div>
+{% include 'album/recent.html' %}
+</div>
+{% endif %}
+
+{% if currents | length %}
+<div>
+{% include 'album/currents.html' %}
+</div>
+{% endif %}
+</div>
+
 {% block tracks %}
-<div class='secdiv'>Track Listing</div>
 {% if tracks | length %}
 {% include 'album/tracks.html' %}
 {% endif %}
@@ -22,3 +28,4 @@
 {% else %}
 <h3>No album found</h3>
 {% endif %}
+</div>

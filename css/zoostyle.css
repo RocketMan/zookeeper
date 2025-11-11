@@ -474,34 +474,46 @@ table.review-shelf tbody tr button {
     padding: 4px;
     text-align: center;
 }
-.currents-activity tr:first-child td {
-    border-style: solid;
-    border-width: 1px 1px 0 1px;
-    border-color: #ccc;
-    font-size: 80%;
-    background-color: #eee;
-    color: #000;
-}
-.currents-activity tr:last-child td {
-    border-style: solid;
-    border-width: 0 1px 1px 1px;
-    border-color: #ccc;
-    font-size: 80%;
-    color: #000;
-}
 .currents-activity th {
     text-align: right;
     font-weight: normal;
-    font-size: 8pt;
+    font-size: 0.9rem;
     font-family: inherit;
+    color: #555;
 }
 
-div.reviews > div {
-    padding: 2px;
+div.reviews {
+    position: relative;
+    max-height: 150px;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
 }
-div.reviews > div.edit-mine,
+div.reviews.expanded {
+    max-height: 1000px;
+}
+.fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3em;
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+    pointer-events: none;
+}
+.fade-toggle-btn {
+    display: inline-block;
+    margin-top: 8px;
+    color: #fff;
+    border: 1px solid #5796ed;
+    background-color: #5897ee;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
 div.reviews > div.review-body {
-    font-size: 10pt;
+    margin-top: 10px;
+    color: #555;
 }
 div.reviews > div.view-more {
     padding-top: 8px;
@@ -625,7 +637,8 @@ td.label-form {
 }
 
 .trackTable td {
-    line-height: 18px;
+    padding-bottom: 2px;
+    padding-right: 2px;
 }
 
 .trackTable td {
@@ -1820,30 +1833,37 @@ a:hover.copy {
     max-width: 1210px;
 }
 
-/* artwork on album details page */
-.album-info {
-    display: inline-flex;
-    flex-flow: column nowrap;
-    justify-content: space-between;
-    align-items: flex-start;
-    vertical-align: top;
-    padding-bottom: 10px;
-}
-.album-info.with-thumb {
-    max-width: calc(100% - 140px);
-    min-height: 126px;
-    padding-bottom: 0;
+/* album details page */
+.album-details {
+    font-size: 1rem;
 }
 
+.album-preview,
 .album-thumb {
     display: inline-block;
     padding: 2px 6px 2px 0;
+}
+
+.album-preview {
+    float: left;
+    width: 33.33%;
+    position: relative;
+    margin-right: 10px;
+    margin-bottom: 10px;
 }
 
 .album-thumb img {
     max-height: 126px;
     min-height: 126px;
     width: 126px;
+    object-fit: cover;
+    object-position: center 10%;
+}
+
+.album-preview img {
+    height: auto;
+    width: 100%;
+    aspect-ratio: 1 / 1;
     object-fit: cover;
     object-position: center 10%;
 }
@@ -1883,6 +1903,81 @@ a:hover.copy {
 }
 .album-hashtag.palette-4 {
     background-color: #dfccf1;
+}
+
+.album-reviews {
+    float: right;
+    width: calc(66.6% - 16px);
+    margin-top: 20px;
+}
+
+.album-reviews .reviews > h2 {
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.album-recent-chart-box {
+    display: flex;
+    justify-content: space-between;
+    float: right;
+    width: calc(66.6% - 30px);
+    margin-right: 14px;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.album-recent-chart-box > div {
+    padding: 10px;
+    /*background-color: #dbdbc3;*/
+    /*background-color: #ede8d0;*/
+    background-color: #f4f3f2;
+    border-radius: 4px;
+    box-shadow: rgba(0, 0, 0, 0.5) 0 1px 1px;
+    flex-grow: 2;
+}
+
+.album-recent-chart-box > div > h2 {
+    margin-top: 0;
+    color: #555;
+}
+
+.album-tracks {
+    width: 33.3%;
+}
+
+.album-tracks > h2 {
+    color: #555;
+    margin-block-start: 1em;
+    margin-bottom: 5px;
+}
+
+@media (max-width: 800px) {
+    .album-details h2 {
+	padding-left: 30px;
+	background: no-repeat left url('../img/discicon.svg');
+    }
+
+    .album-preview,
+    .album-reviews,
+    .album-recent-chart-box {
+	float: none;
+	width: calc(100% - 20px);
+	display: block;
+    }
+    .album-recent-chart-box > div {
+	padding: inherit;
+	background-color: inherit;
+	box-shadow: none;
+	margin-top: 20px;
+    }
+    .album-recent-chart-box > div > h2 {
+	color: #555;
+	margin-top: 30px;
+    }
+    .album-tracks {
+	width: 100%;
+	margin-top: 30px;
+    }
 }
 
 div.toggle-time-entry {
