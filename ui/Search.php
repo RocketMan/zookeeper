@@ -34,7 +34,7 @@ use ZK\Engine\IReview;
 use ZK\UI\UICommon as UI;
 
 class Search extends MenuItem {
-    const HASHTAG_PALETTE_SIZE = 10;  // css colours palette-0..palette-(n-1)
+    const HASHTAG_PALETTE_SIZE = 5;  // css colours palette-0..palette-(n-1)
 
     private static $legacySearchActions = [
         [ "", "searchForm" ],
