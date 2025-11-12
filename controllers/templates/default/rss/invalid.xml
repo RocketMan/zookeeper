@@ -1,7 +1,8 @@
 {% autoescape 'xml' %}
+{% set feed = app.request.feed ?: 'No feed specified' %}
 <channel>
-  <title>Invalid feed: {{ app.request.feed }}</title>
+  <title>Invalid feed: {{ feed }}</title>
   <link>{{ app.baseUrl }}</link>
-  <description>Invalid feed: {{ app.request.feed }}</description>
+  <description>Invalid feed: {{ feed }}</description>
 </channel>
 {% endautoescape %}
