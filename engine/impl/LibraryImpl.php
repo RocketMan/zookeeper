@@ -160,7 +160,10 @@ class LibraryImpl extends DBO implements ILibrary {
 
     public function searchPos($tableIndex, &$pos, $count, $search, $sortBy = 0) {
         $retVal = array();
-      
+
+        // nothing to return if search is null or empty
+        if (!$search) return $count >= 0 ? $retVal : 0;
+
         // 2007-08-04 thwart injection attacks by aborting if we encounter
         // 'union select'
         $searchl = strtolower($search);
