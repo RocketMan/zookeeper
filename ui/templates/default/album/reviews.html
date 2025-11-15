@@ -1,5 +1,6 @@
-<div class='secdiv'>Album Review{{ reviews | length > 1 ? "s" }}</div>
-<div class='reviews'>
+<div class='album-reviews'>
+<div class='reviews' id='textBox'>
+  <h2><img src='img/album-reviews.png'> Reviews</h2>
 {% set space = false %}
 {% for review in reviews %}
   {%~ if space %}
@@ -7,15 +8,15 @@
   {%~ endif %}
   {%~ set space = true %}
   <div><b>{{ review.airname ?? review.realname }}</b><br>
-    <span class='sub'>Reviewed {{ review.created | slice(0, 10) }}
-    {{- review.private ? ' <font color="#cc0000">(private)</font>' -}}
+    <span style='font-size: 0.9rem'>Reviewed {{ review.created | slice(0, 10) }}
+    {{- review.private ? ' (private)' -}}
     </span>
-  </div>
   {%~ if app.session.isUser(review.user) %}
-  <div class='edit-mine'>
-    <a href='?action=searchReviewEdit&amp;tag={{ review.tag }}'>[This is my review and I want to edit it]</a>
-  </div>
+    <span style='margin-left: 10px;'>
+      <a href='?action=searchReviewEdit&amp;tag={{ review.tag }}'>Edit review</a>
+    </span>
   {%~ endif %}
+  </div>
   <div class='review-body'>
     {{~ review.review | nl2br }}
   </div>
@@ -23,5 +24,34 @@
     <a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&amp;viewuser={{ review.aid ?? review.user }}'>View more reviews by {{ review.airname ?? review.realname }}</a>
   </div>
 {% endfor %}
+<div class='fade' id='fade'></div>
 </div>
-<br>
+<button class='fade-toggle-btn' id='toggleBtn'>Show more</button>
+</div>
+<script>
+    const textBox = document.getElementById('textBox');
+    const fade = document.getElementById('fade');
+    const toggleBtn = document.getElementById('toggleBtn');
+
+    // Check if content overflows
+    function checkOverflow() {
+        if (textBox.scrollHeight <= textBox.clientHeight) {
+            // No overflow: hide button and fade
+            toggleBtn.style.display = 'none';
+            fade.style.display = 'none';
+        }
+    }
+
+    checkOverflow();
+
+    toggleBtn.addEventListener('click', () => {
+        const expanded = textBox.classList.toggle('expanded');
+        if (expanded) {
+            fade.style.display = 'none';
+            toggleBtn.textContent = 'Show less';
+        } else {
+            fade.style.display = 'block';
+            toggleBtn.textContent = 'Show more';
+        }
+    });
+</script>

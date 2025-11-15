@@ -1,37 +1,10 @@
-<div class='secdiv'>Recent Airplay</div>
-<table class='recentAirplay' cellpadding=2 cellspacing=0 border=0>
-{# pad out if necessary so there is an even number #}
-{% if recent | length % 2 %}
-  {%~ set recent = recent | merge([{'description': null}]) %}
-{% endif %}
-{% set mid = recent | length / 2 %}
-{% for i in 0..(recent | length - 1) %}
-  {%~ if i % 2 %}
-  {#~ right column #}
-  {%~ set idx = mid + (i + 1) / 2 - 1 %}
-  {%~ else %}
-  {#~ left column #}
-  <tr>
-  {%~ set idx = (i + 2) / 2 - 1 %}
-  {%~ endif %}
-  {%~ set play = recent[idx] %}
-  {%~ if play.description %}
-    <td>{{ idx + 1 }}.</td>
-    <td class='date' style='min-width:80px'>{{ play.showdate | date(DATE_FORMAT_FULL) }}:</td>
-    <td><a href='?subaction=viewDJ&amp;playlist={{ play.id }}&amp;seq=selList'>{{ play.description }}</a>
-      <br>
-      {{ play.tracks | join(', ') }}
-    </td>
-  {%~ else %}
-    {#~ placeholder #}
-    <td colspan=3></td>
-  {%~ endif %}
-  {%~ if i % 2 %}
-  </tr>
-  {%~ else %}
-    {#~ inter-column spacer #}
-    <td width=20></td>
-  {%~ endif %}
-{% endfor %}
-</table>
-<br>
+<h2 style='white-space: nowrap'><img src='img/album-airplay.png'> Recent airplay</h2>
+<div>
+  {% for play in recent %}
+  <div style='margin-bottom: 8px'>
+  <div>{{ play.tracks | join (', ') }}</div>
+  <div style='font-size: 14px'><a href='?subaction=viewDJ&amp;playlist={{ play.id }}&amp;seq=selList'>{{ play.description }}</a> &mdash; <span style='font-size: 0.9rem'>{{ play.showdate | date(DATE_FORMAT_FULL) }}</span></div>
+  </div>
+  {% endfor %}
+</div>
+

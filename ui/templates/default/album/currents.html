@@ -14,36 +14,26 @@
         and currents | length
         and currents[0].adddate <= today
         and currents[0].pulldate > today ?
-    "<span style='margin-left: 0.25em'>(File #" ~ currents[0].afile_number | e ~ ")</span>" %}
-<div class='secdiv'>A-File Activity {{ afile_number | raw }}</div>
+    "<span style='font-weight: normal; font-size: 1rem; margin-left: 0.25em'>(File #" ~ currents[0].afile_number | e ~ ")</span>" %}
+<h2><img src='img/album-charts.png'> Charting {{ afile_number | raw }}</h2>
 {% for current in currents %}
-<table class="currents-details">
-  <tr>
-    <th>Add Date:</th>
-    <td class='date'>{{ current.adddate }}</td>
-    <th>Pull Date:</th>
-    <td class='date'>{{ current.pulldate }}</td>
+<div>{{ current.adddate }} &mdash; {{ current.pulldate }}
 {% if current.category %}
-    <th>Charts:</th>
-    <td>{{ _self.catnames(CATMAP, current.category) }}</td>
+<span style='margin-left: 0.25em; color: #555'>{{ _self.catnames(CATMAP, current.category) }}</span>
 {% endif %}
-  </tr>
-</table>
+</div>
 {% if current.spins | length %}
 <table class='currents-activity'>
   <tr>
-    <th>Week Ending:</th>
-    {%~ for week in current.spins %}
-    <td class='date'>{{ week.week | date(DATE_FORMAT_SHORT) }}</td>
-    {%~ endfor %}
+    <th>Week Ending</th><th>Airplays</th>
   </tr>
+  {%~ for week in current.spins %}
   <tr>
-    <th>Airplays:</th>
-    {%~ for week in current.spins %}
+    <td class='date'>{{ week.week | date(DATE_FORMAT_SHORT) }}</td>
     <td>{{ week.plays }}</td>
-    {%~ endfor %}
   </tr>
+  {%~ endfor %}
 </table>
 {% endif %}
 {% endfor %}
-<br>
+
