@@ -2,7 +2,7 @@
 <a href='?s={{ searchBy }}&amp;n={{ name | e('url') }}&amp;action=search'>{{ name }}</a>
 {%- endmacro -%}
 <div class='album-tracks'>
-  <h2>Track listing</h2>
+  <h2><img src='img/album-tracks.png'> Track listing</h2>
 <table class='trackTable' style='font-size: 1rem' width='95%'>
   {%~ for track in tracks %}
   <tr>
