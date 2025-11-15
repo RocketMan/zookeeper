@@ -3,22 +3,22 @@
 {%- endmacro -%}
 <div class='album-tracks'>
   <h2><img src='img/album-tracks.png'> Track listing</h2>
-<table class='trackTable' style='font-size: 1rem' width='95%'>
+<table class='trackTable'>
   {%~ for track in tracks %}
   <tr>
-    <td style='vertical-align: top'>
+    <td>
     {%~ if track.url %}
       <div class='playTrack'><a target='_blank' href='{{ track.url }}'></a></div>
     {%~ endif %}
     </td>
-    <td style='vertical-align: top'>{{ track.seq }}.</td>
+    <td>{{ track.seq }}.</td>
     <td width='99%'>
         {{ track.track }}
   {%~ if album.iscoll %}
     <div style='font-size: 14px'>{{ _self.tracklink('byArtist', track.artist) }}</div>
   {%~ endif %}
     </td>
-    <td align=right {{ album.iscoll ? "style='vertical-align: top'" }}>{{ track.duration }}</td>
+    <td align=right>{{ track.duration }}</td>
   </tr>
   {%~ endfor %}
 </table>

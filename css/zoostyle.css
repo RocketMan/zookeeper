@@ -639,15 +639,6 @@ td.label-form {
     padding-right: 4px;
 }
 
-.trackTable td {
-    padding-bottom: 2px;
-    padding-right: 2px;
-}
-
-.trackTable td {
-    vertical-align: middle;
-}
-
 div.playTrack {
     padding-right: 4px;
 }
@@ -1964,6 +1955,20 @@ a:hover.copy {
     color: #555;
     margin-block-start: 1em;
     margin-bottom: 5px;
+}
+
+.album-tracks .trackTable {
+    font-size: 1rem;
+    width: 95%;
+}
+
+.album-tracks .trackTable td {
+    padding-bottom: 2px;
+    padding-right: 2px;
+}
+
+.album-tracks .trackTable td {
+    vertical-align: top;
 }
 
 @media (max-width: 800px) {
