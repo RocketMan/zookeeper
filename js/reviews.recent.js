@@ -20,16 +20,19 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2025 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     const ROWS_PER_PAGE = 20;
     const MAX_CONCURRENT = 3;
     const MIN_DELAY = 125;         // ~8 images per second
     const WINDOW_MS = 3000;
-    const IMAGES_PER_WINDOW = 25;  // max requests per window
+    const IMAGES_PER_WINDOW = 25;  // max 25 requests per 3 seconds
 
-    var palette = [ '#bdd0c4', '#9ab7d3', '#f5d2d3', '#f7e1d3', '#dfccf1' ];
+    const palette = [ '#bdd0c4', '#9ab7d3', '#f5d2d3', '#f7e1d3', '#dfccf1' ];
+
+    const reviews = JSON.parse(document.getElementById("reviews-data").textContent);
+    const stationTitle = document.getElementById("station-title").value;
 
     let totalCount;
     let currentPage = 1;
@@ -46,7 +49,7 @@ $().ready(function(){
         loadTimestamps = loadTimestamps.filter(ts => now - ts < WINDOW_MS);
         if (loadTimestamps.length >= IMAGES_PER_WINDOW) {
             // too many image loads recently; wait and retry
-            setTimeout(loadNextImage, 300);
+            setTimeout(loadNextImage, MIN_DELAY * 2);
             return;
         }
 
@@ -57,11 +60,11 @@ $().ready(function(){
         img.onload = () => {
             img.style.opacity = 1;
             if (active > 0) active--;
-            setTimeout(loadNextImage, 125);
+            setTimeout(loadNextImage, MIN_DELAY);
         };
         img.onerror = () => {
             if (active > 0) active--;
-            setTimeout(loadNextImage, 125);
+            setTimeout(loadNextImage, MIN_DELAY);
         };
         img.src = img.dataset.lazysrc;
         img.removeAttribute('data-lazysrc');
@@ -70,7 +73,7 @@ $().ready(function(){
     function renderTable() {
         const start = (currentPage - 1) * ROWS_PER_PAGE;
         const end = start + ROWS_PER_PAGE;
-        const sorted = [...reviews].filter((r) => genresVisible.has(r.genre)).sort((a, b) => {
+        const sorted = reviews.filter(r => genresVisible.has(r.genre)).sort((a, b) => {
             let valA = a[currentSort.key];
             let valB = b[currentSort.key];
             if (currentSort.key === "reviewed") {
@@ -97,7 +100,7 @@ $().ready(function(){
             var html = '<td colspan=2>';
             if (review.album.albumart) {
                 html += `
-                  <div class='artwork' style='background-color: ${palette[Math.floor((Math.random() * palette.length))]}'><a href='?action=search&amp;s=byAlbumKey&amp;n=${review.album.tag}'><img data-lazysrc='${review.album.albumart}' alt='Album artwork'></a></div>`;
+                  <div class='artwork' style='background-color: ${palette[Math.floor((Math.random() * palette.length))]}'><a href='?action=search&amp;s=byAlbumKey&amp;n=${review.album.tag}'><img data-lazysrc='${review.album.albumart}' title='View full review in ${stationTitle}'></a></div>`;
             }
             html += `
                   <div><a href='?action=search&amp;s=byAlbumKey&amp;n=${review.album.tag}'><strong>${review.title}</strong></a></div>
@@ -180,28 +183,18 @@ $().ready(function(){
 
     function updateSortIndicators() {
         $('.recent-reviews th').each(function () {
-            this.classList.remove("active", "desc");
-            if (this.dataset.key === currentSort.key) {
-                this.classList.add("active");
-                if (currentSort.direction === "desc") {
-                    this.classList.add("desc");
-                }
-            }
+            const isActive = this.dataset.key === currentSort.key;
+
+            this.classList.toggle("active", isActive);
+            this.classList.toggle("desc", isActive && currentSort.direction === "desc");
+        });
+
+        $('.sort .sense').each(function () {
+            this.classList.toggle("desc", currentSort.direction === "desc");
         });
 
         $('.sort select').val(currentSort.key).selectmenu('refresh');
     }
-
-    $('.sort select').on('change selectmenuchange', function() {
-        var key = $(this).val();
-        if (currentSort.key === key) {
-            currentSort.direction = currentSort.direction === "asc" ? "desc" : "asc";
-        } else {
-            currentSort.key = key;
-            currentSort.direction = "asc";
-        }
-        renderTable();
-    }).selectmenu();
 
     $('.recent-reviews th').each(function () {
         $(this).on('click', () => {
@@ -212,16 +205,26 @@ $().ready(function(){
                 currentSort.key = key;
                 currentSort.direction = "asc";
             }
+            currentPage = 1;
             renderTable();
         });
     });
 
-    renderTable();
+    $('.sort select').on('change selectmenuchange', function() {
+        currentSort.key = this.value;
+        currentSort.direction = "asc";
+        currentPage = 1;
+        renderTable();
+    }).selectmenu();
+
+    $('.sort .sense').on('click', () => {
+        currentSort.direction = currentSort.direction === "asc" ? "desc" : "asc";
+        currentPage = 1;
+        renderTable();
+    });
 
     function setGenreVisibility(genre, showIt) {
         showIt ? genresVisible.add(genre) : genresVisible.delete(genre);
-        currentPage = 1;
-        renderTable();
     }
 
     let genreMap = {};
@@ -245,12 +248,14 @@ $().ready(function(){
     let categoryStr = localStorage.getItem(storageKey);
     let categories = categoryStr ? JSON.parse(categoryStr) : {};
 
-    $(".categoryPicker input").each(function(e) {
+    $(".categoryPicker input:visible").each(function(e) {
         let genre  = $(this).val();
         let isChecked = !(categories[genre] === false);
         setGenreVisibility(genre, isChecked)
         $(this).prop('checked', isChecked);
     });
+
+    renderTable();
 
     $("#djPicker").on('change selectmenuchange', function(e) {
         let selectedDj = $(this).children("option:selected").val();
@@ -261,6 +266,8 @@ $().ready(function(){
         let genre = $(this).val();
         let isChecked = $(this).prop('checked');
         setGenreVisibility(genre, isChecked);
+        currentPage = 1;
+        renderTable();
         categories[genre] = isChecked;
         localStorage.setItem(storageKey, JSON.stringify(categories));
     });

@@ -31,6 +31,7 @@
     <option value='reviewer'>Reviewer</option>
     <option value='reviewed'>Date</option>
   </select>
+  <span class='sense'></span>
 </div>
 
 <table class='recent-reviews'>
@@ -55,18 +56,21 @@
 <div id='pagination'></div>
 <p><sup>&dagger;</sup>The categories Electronic, Experimental, and Loud
   can be found in the General collection of the library.</p>
-<script><!--
+<input id='station-title' type='hidden' value='{{ app.station_title }}'>
+<script id='reviews-data' type='application/json'>
   {%~ set jsreviews = reviews | map(review => {
-      reviewer: review.airname ?? review.realname,
-      album: review.album,
+      reviewer: (review.airname ?? review.realname) | e,
+      album: {
+          tag: review.album.tag,
+          albumart: review.album.albumart
+      },
       hashtags: review.hashtags,
-      title: review.album.album,
-      artist: review.album.iscoll ? 'Various Artists' : review.album.artist,
-      genre: GENRES[review.album.category],
+      title: review.album.album | e,
+      artist: review.album.iscoll ? 'Various Artists' : review.album.artist | e,
+      genre: GENRES[review.album.category] | e,
       body: review.body | truncate(1000, true) | nl2br,
       reviewed: review.reviewed
   }) %}
-  const reviews = {{ jsreviews | json_encode | raw }};
-  // -->
+  {{~ jsreviews | json_encode | raw }}
 </script>
 <script src="{{ 'js/reviews.recent.js' | decorate }}"></script>

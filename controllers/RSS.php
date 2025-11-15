@@ -103,7 +103,7 @@ class RSS extends CommandTarget implements IController {
         $this->params['feeds'][] = 'reviews';
 
         $limit = $_REQUEST['limit'] ?? 50;
-        $results = Engine::api(IReview::class)->getRecentReviews('', 0, $limit);
+        $results = Engine::api(IReview::class)->getRecentReviews('', 0, $limit, 0, 1);
         // coalesce albums into one array for artwork injection
         // use foreach, as reference passing does not work with array_map
         $albums = [];
@@ -111,15 +111,12 @@ class RSS extends CommandTarget implements IController {
             $albums[] = &$review["album"];
         Engine::api(IArtwork::class)->injectAlbumArt($albums, Engine::getBaseUrl());
         foreach($results as &$row) {
-            $reviews = Engine::api(IReview::class)->getReviews($row['album']['tag'], 0, $row['user']);
-            if(count($reviews)) {
-                $row['review'] = $row['body'] = $reviews[0]['review'];
-                $row['tracks'] = '';
-                if(preg_match('/(.+?)(?=(\r?\n)[\p{P}\p{S}\s]*\d+[\p{P}\p{S}\d]*\s)/su',
-                        $row['review'], $matches) && $matches[1]) {
-                    $row['tracks'] = trim(mb_substr($row['review'], mb_strlen($matches[1])));
-                    $row['body'] = $matches[1];
-                }
+            $row['body'] = $row['review'];
+            $row['tracks'] = '';
+            if(preg_match('/(.+?)(?=(\r?\n)[\p{P}\p{S}\s]*\d+[\p{P}\p{S}\d]*\s)/su',
+                    $row['review'], $matches) && $matches[1]) {
+                $row['tracks'] = trim(mb_substr($row['review'], mb_strlen($matches[1])));
+                $row['body'] = $matches[1];
             }
         }
 

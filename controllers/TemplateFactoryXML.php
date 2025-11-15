@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -35,7 +35,7 @@ class TemplateFactoryXML extends TemplateFactory {
         $escaper = $this->twig->getExtension(\Twig\Extension\EscaperExtension::class);
         $escaper->setEscaper('xml', function($env, $str) {
             return str_replace(['&', '"', "'", '<', '>', '`'],
-                ['&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'], $str);
+                ['&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'], $str ?? '');
         });
         $escaper->setDefaultStrategy('xml');
 
