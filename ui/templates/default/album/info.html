@@ -72,7 +72,6 @@
 {% endif %}
 </div>
 <script>
-$().ready(function() {
    document.querySelectorAll('img[data-lazysrc]').forEach(img => {
       img.onload = () => {
           img.style.opacity = 1;
@@ -85,5 +84,4 @@ $().ready(function() {
       img.src = img.dataset.lazysrc;
       delete img.dataset.lazysrc;
    });
-});
 </script>
