@@ -1876,6 +1876,8 @@ a:hover.copy {
     aspect-ratio: 1 / 1;
     object-fit: cover;
     object-position: center 10%;
+    opacity: 0;
+    transition: all 400ms ease 0s;
 }
 
 .album-hashtag-area {

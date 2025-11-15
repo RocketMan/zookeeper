@@ -1,9 +1,9 @@
 {% if image_url %}
 <div class='album-preview'>
   {%~ if info_url %}
-  <a href='{{ info_url }}' target='_blank'><img src='{{ image_url }}' title='View album in Discogs' /></a>
+  <a href='{{ info_url }}' target='_blank'><img data-lazysrc='{{ image_url }}' title='View album in Discogs' /></a>
   {%~ else %}
-  <img src='{{ image_url }}' />
+  <img data-lazysrc='{{ image_url }}' />
   {%~ endif %}
 </div>
 {% endif %}
@@ -71,3 +71,19 @@
   </div>
 {% endif %}
 </div>
+<script>
+$().ready(function() {
+   document.querySelectorAll('img[data-lazysrc]').forEach(img => {
+      img.onload = () => {
+          img.style.opacity = 1;
+      };
+      img.onerror = () => {
+          document.querySelectorAll('.album-preview').forEach(preview => {
+              preview.style.display = 'none';
+          });
+      };
+      img.src = img.dataset.lazysrc;
+      delete img.dataset.lazysrc;
+   });
+});
+</script>
