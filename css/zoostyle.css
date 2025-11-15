@@ -472,7 +472,10 @@ table.review-shelf tbody tr button {
 .currents-activity td,
 .currents-activity th {
     padding: 4px;
-    text-align: center;
+    text-align: left;
+}
+.currents-activity td {
+    padding-left: 20px;
 }
 .currents-activity th {
     text-align: right;
