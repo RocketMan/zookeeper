@@ -100,10 +100,10 @@ $().ready(function(){
             var html = '<td colspan=2>';
             if (review.album.albumart) {
                 html += `
-                  <div class='artwork' style='background-color: ${palette[Math.floor((Math.random() * palette.length))]}'><a href='?action=search&amp;s=byAlbumKey&amp;n=${review.album.tag}'><img data-lazysrc='${review.album.albumart}' title='View full review in ${stationTitle}'></a></div>`;
+                  <div class='artwork' style='background-color: ${palette[Math.floor((Math.random() * palette.length))]}'><a href='?action=viewRecentReview&amp;tag=${review.album.tag}'><img data-lazysrc='${review.album.albumart}' title='View full review in ${stationTitle}'></a></div>`;
             }
             html += `
-                  <div><a href='?action=search&amp;s=byAlbumKey&amp;n=${review.album.tag}'><strong>${review.title}</strong></a></div>
+                  <div><a href='?action=viewRecentReview&amp;tag=${review.album.tag}'><strong>${review.title}</strong></a></div>
                   <div>${review.artist}</div>
                   <div class='meta'>${review.genre} | ${review.reviewer} | ${review.reviewed}</div>`;
             if (review.hashtags) {
