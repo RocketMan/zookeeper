@@ -15,7 +15,7 @@
         and currents[0].adddate <= today
         and currents[0].pulldate > today ?
     "<span style='font-weight: normal; font-size: 1rem; margin-left: 0.25em'>(File #" ~ currents[0].afile_number | e ~ ")</span>" %}
-<h2><img src='img/album-charts.png'> Charting {{ afile_number | raw }}</h2>
+<h2><img src='img/album-charts.svg'> Charting {{ afile_number | raw }}</h2>
 {% for current in currents %}
 <div>{{ current.adddate }} &mdash; {{ current.pulldate }}
 {% if current.category %}
