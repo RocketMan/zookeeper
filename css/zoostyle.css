@@ -1843,16 +1843,6 @@ a:hover.copy {
     font-size: 1rem;
 }
 
-.album-details h2 > img {
-    width: 32px;
-    height: 32px;
-    vertical-align: middle;
-}
-
-.album-tracks h2 > img {
-    display: none;
-}
-
 .album-preview,
 .album-thumb {
     display: inline-block;
@@ -1983,10 +1973,6 @@ a:hover.copy {
 }
 
 @media (max-width: 800px) {
-    .album-details h2 > img {
-	display: inline-block;
-    }
-
     .album-preview,
     .album-reviews,
     .album-recent-chart-box {

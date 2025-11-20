@@ -15,6 +15,9 @@
 {% endif %}
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/mottie/tablesorter@2.32.0/dist/css/theme.default.min.css" onerror="this.onerror=null;this.href='vendor/mottie/tablesorter/dist/css/theme.default.min.css';" />
     <link rel="stylesheet" type="text/css" href="{{ "css/zoostyle.css" | decorate }}" />
+{% if app.content.template starts with 'album' %}
+    <link rel="stylesheet" type="text/css" href="{{ "css/album.css" | decorate }}" />
+{% endif %}
 {% if app.stylesheet is not empty %}
     <link rel="stylesheet" type="text/css" href="{{ app.stylesheet | decorate }}" />
 {% endif %}

@@ -8,13 +8,13 @@
 
 <div class='album-recent-chart-box'>
 {% if recent | length %}
-<div>
+<div class='album-recent'>
 {% include 'album/recent.html' %}
 </div>
 {% endif %}
 
 {%- if currents | length %}
-<div>
+<div class='album-chart'>
 {% include 'album/currents.html' %}
 </div>
 {% endif %}
