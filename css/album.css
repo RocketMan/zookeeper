@@ -1,8 +1,9 @@
 .album-details div h2::before {
     content: "";
     display: inline-block;
-    width: 38px;
+    width: 32px;
     height: 32px;
+    padding-right: 0.5ch;
     vertical-align: middle;
     background: no-repeat left center / 32px;
 }
