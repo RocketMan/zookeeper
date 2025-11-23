@@ -2,25 +2,25 @@
 {% if album %}
 {% include 'album/info.html' %}
 
-{% if reviews | length %}
+{%- if reviews | length %}
 {% include 'album/reviews.html' %}
-{% endif %}
+{% endif -%}
 
 <div class='album-recent-chart-box'>
 {% if recent | length %}
-<div>
+<div class='album-recent'>
 {% include 'album/recent.html' %}
 </div>
 {% endif %}
 
-{% if currents | length %}
-<div>
+{%- if currents | length %}
+<div class='album-chart'>
 {% include 'album/currents.html' %}
 </div>
 {% endif %}
 </div>
 
-{% block tracks %}
+{%- block tracks %}
 {% if tracks | length %}
 {% include 'album/tracks.html' %}
 {% endif %}
