@@ -703,14 +703,15 @@ class Playlists extends MenuItem {
     
     public function emitViewDJ() {
         $seq = $_REQUEST["seq"] ?? '';
-        $viewuser = $_REQUEST["viewuser"] ?? -1;
+        $viewuser = $_REQUEST["viewuser"] ?? 0;
         $playlist = $_REQUEST["playlist"] ?? 0;
     
         settype($playlist, "integer");
         settype($viewuser, "integer");
     
         if(((($seq == "selUser") && $viewuser)) ||
-                (($seq == "selList") && !$playlist)) {
+                (($seq == "selList") && !$playlist && $viewuser)) {
+
             $weeks = 10;
             $limit = 10;
             $count = 10;
