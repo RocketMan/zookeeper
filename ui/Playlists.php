@@ -710,11 +710,13 @@ class Playlists extends MenuItem {
         settype($viewuser, "integer");
     
         if(((($seq == "selUser") && $viewuser)) ||
-                (($seq == "selList") && !$playlist && $viewuser)) {
+                (($seq == "selList") && !$playlist)) {
 
             $weeks = 10;
             $limit = 10;
             $count = 10;
+
+            if(!$viewuser) $viewuser = -1;
 
             $dj = Engine::api(IDJ::class)->getAirnames(0, $viewuser)->fetch();
             if(!$dj) {
