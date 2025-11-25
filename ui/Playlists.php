@@ -745,7 +745,7 @@ class Playlists extends MenuItem {
             }
     
             $topPlays = Engine::api(IPlaylist::class)->getTopPlays($viewuser, $weeks * 7, $limit);
-            $recentPlays = Engine::api(IPlaylist::class)->getRecentPlays($viewuser, $count);
+            $recentPlays = $this->session->isAuth("u") ? Engine::api(IPlaylist::class)->getRecentPlays($viewuser, $count) : [];
             $recentReviews = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_AIRNAME, 0, $count - 1, $viewuser, "Date-");
             $playlists = Engine::api(IPlaylist::class)->getPlaylists(0, 0, 0, $viewuser)->asArray();
 
