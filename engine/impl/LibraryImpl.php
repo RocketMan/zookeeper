@@ -358,7 +358,7 @@ class LibraryImpl extends DBO implements ILibrary {
 
             $search = preg_replace("/[$cchars]/u", "_", $search);
         } else
-            $rlike = null;
+            $rlike = $key = null;
 
         if($count > 0) {
             if($rlike)
