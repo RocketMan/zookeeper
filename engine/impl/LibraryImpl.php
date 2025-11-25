@@ -31,6 +31,7 @@ namespace ZK\Engine;
 class LibraryImpl extends DBO implements ILibrary {
     const DEFAULT_FT_LIMIT = 35;
     const MAX_FT_LIMIT = 200;
+    const ENHANCED_COLLATION = false;
 
     private static $ftSearch = [
          //   elt name   rec name    table    index    fields     query
@@ -339,7 +340,8 @@ class LibraryImpl extends DBO implements ILibrary {
         // it is expensive; thus, we let LIKE do the heavy lifting in
         // a derived table and then run RLIKE over the result.
         $cchars = implode(self::$coalesce);
-        if(preg_match("/[$cchars]/u", $search) &&
+        if(self::ENHANCED_COLLATION &&
+                preg_match("/[$cchars]/u", $search) &&
                 preg_match('/(\w+) LIKE /', $query, $matches)) {
             $key = $matches[1];
 
