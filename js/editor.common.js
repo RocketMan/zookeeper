@@ -36,7 +36,7 @@
  */
 
 const MAX_IMAGE_SIZE = 1024 * 1024;  // (1MB) encoded image size (in bytes)
-const SCALE_WIDTH = 256;  // dimension of scaled image (in px)
+const SCALE_WIDTH = 400;  // dimension of scaled image (in px)
 
 var items, links, timer;
 
