@@ -918,6 +918,10 @@ class LibraryImpl extends DBO implements ILibrary {
         $retVal = array();
         $loggedIn = Engine::session()->isAuth("u");
 
+        // nothing to return if search is null or empty
+        if(!$key || strlen(trim($key)) == 0)
+            return [ 0, $retVal ];
+
         // Limit maximum number of results
         $size = $size ? min($size, self::MAX_FT_LIMIT) :
                             self::DEFAULT_FT_LIMIT;
@@ -927,7 +931,7 @@ class LibraryImpl extends DBO implements ILibrary {
              $search = $key;
         } else {
              $words = array_filter(preg_split('/\W+/u', $key, 0, PREG_SPLIT_NO_EMPTY), function($word) {
-                 return !in_array($word, self::$ftExclude);
+                 return !in_array(mb_strtolower($word), self::$ftExclude);
              });
              $search = "+" . implode(" +", $words);
         }
