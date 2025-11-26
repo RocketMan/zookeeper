@@ -918,8 +918,8 @@ class LibraryImpl extends DBO implements ILibrary {
         $retVal = array();
         $loggedIn = Engine::session()->isAuth("u");
 
-        // nothing to return if search is null or empty
-        if(!$key || strlen(trim($key)) == 0)
+        // nothing to return if search is null or trivial
+        if(!$key || strlen(trim($key)) < 3)
             return [ 0, $retVal ];
 
         // Limit maximum number of results
