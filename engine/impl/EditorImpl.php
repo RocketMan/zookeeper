@@ -304,12 +304,14 @@ class EditorImpl extends DBO implements IEditor {
         $pdo->beginTransaction();
 
         try {
-            $query = "SELECT count(*) c FROM albumvol WHERE tag = ?";
+            $query = "SELECT artist, album FROM albumvol WHERE tag = ?";
             $stmt = $pdo->prepare($query);
             $stmt->bindValue(1, $tag);
             $result = $stmt->executeAndFetch();
-            if($result['c'] == 0)
+            if(!$result)
                 throw new \Exception("album does not exist");
+
+            error_log("deleteAlbum: dn=" . Engine::session()->getDN() . ", tag=$tag, title=" . $result['album'] . ", artist=" . $result['artist']);
 
             $query = "SELECT count(*) c FROM reviews WHERE tag = ?";
             $stmt = $pdo->prepare($query);
