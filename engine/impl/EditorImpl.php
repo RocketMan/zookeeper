@@ -50,6 +50,8 @@ class EditorImpl extends DBO implements IEditor {
     }
     
     public function insertUpdateAlbum(&$album, $tracks, $label) {
+        error_log("insertUpdateAlbum: user=" . Engine::session()->getDN() . ", tag=" . ($album["tag"] ?? "new") . ", title=" . $album["album"]);
+
         switch($album["location"]) {
         case ILibrary::LOCATION_STORAGE:
             break;
