@@ -174,7 +174,9 @@ class UIController implements IController {
         // Setup/teardown a session
         switch($_REQUEST["action"] ?? '') {
         case "loginValidate":
-            if(!$this->session->isAuth("u"))
+            if(!$this->session->isAuth("u") &&
+                    isset($_REQUEST["user"]) &&
+                    isset($_REQUEST["password"]))
                 $this->doLogin($_REQUEST["user"], $_REQUEST["password"]);
             break;
         case "ssoOptions":
