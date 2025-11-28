@@ -360,11 +360,11 @@ abstract class DBO {
     /**
      * audit an action
      *
-     * @param AuditAction $op operation
+     * @param AuditAction $op the action
      * @param int $id identifier
      * @param string|null $message optional message
      */
-    protected function audit(AuditAction $op, int $id, ?string $message) {
+    protected function audit(AuditAction $op, int $id, ?string $message = null) {
         $banner = implode(' | ', [
             $this->getAdvisoryLockName($id),
             strtoupper($op->name),
