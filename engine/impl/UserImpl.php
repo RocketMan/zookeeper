@@ -189,7 +189,7 @@ class UserImpl extends DBO implements IUser {
     }
     
     public function updateUser($user, $password, $realname="XXZZ", $groups="XXZZ", $expiration="XXZZ") {
-        error_log("updateUser: dn=" . Engine::session()->getDN() . ", user=$user, groups=$groups");
+        $this->audit(AuditAction::Update, 0, "user=$user, groups=$groups");
 
         $comma = "";
         $query = "UPDATE users SET";
@@ -227,7 +227,7 @@ class UserImpl extends DBO implements IUser {
     }
     
     public function insertUser($user, $password, $realname, $groups, $expiration) {
-        error_log("insertUser: dn=" . Engine::session()->getDN() . ", user=$user, groups=$groups");
+        $this->audit(AuditAction::Insert, 0, "user=$user, groups=$groups");
 
         $salt = substr(md5(uniqid(rand())), 0, 2);
         $query = "INSERT INTO users (name, password, realname, `groups`, expires) VALUES (?, ?, ?, ?, ?)";
@@ -242,7 +242,7 @@ class UserImpl extends DBO implements IUser {
     }
 
     public function deleteUser($user) {
-        error_log("deleteUser: dn=" . Engine::session()->getDN() . ", user=$user");
+        $this->audit(AuditAction::Delete, 0, "user=$user");
 
         // validate this user has no playlists nor reviews
         $query = "SELECT COUNT(*) c FROM lists WHERE dj = ?";

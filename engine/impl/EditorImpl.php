@@ -50,8 +50,6 @@ class EditorImpl extends DBO implements IEditor {
     }
     
     public function insertUpdateAlbum(&$album, $tracks, $label) {
-        error_log("insertUpdateAlbum: dn=" . Engine::session()->getDN() . ", tag=" . ($album["tag"] ?? "new") . ", title=" . $album["album"]);
-
         switch($album["location"]) {
         case ILibrary::LOCATION_STORAGE:
             break;
@@ -231,7 +229,11 @@ class EditorImpl extends DBO implements IEditor {
                 $stmt->execute();
             }
         }
-    
+
+        $this->audit($newAlbum ? AuditAction::Insert : AuditAction::Update,
+                        $album["tag"],
+                        "tag={$album["tag"]}, title=\"{$album["album"]}\"");
+
         return true;
     }
     
@@ -307,11 +309,9 @@ class EditorImpl extends DBO implements IEditor {
             $query = "SELECT artist, album FROM albumvol WHERE tag = ?";
             $stmt = $pdo->prepare($query);
             $stmt->bindValue(1, $tag);
-            $result = $stmt->executeAndFetch();
-            if(!$result)
+            $album = $stmt->executeAndFetch();
+            if(!$album)
                 throw new \Exception("album does not exist");
-
-            error_log("deleteAlbum: dn=" . Engine::session()->getDN() . ", tag=$tag, title=" . $result['album'] . ", artist=" . $result['artist']);
 
             $query = "SELECT count(*) c FROM reviews WHERE tag = ?";
             $stmt = $pdo->prepare($query);
@@ -333,6 +333,8 @@ class EditorImpl extends DBO implements IEditor {
             $result = $stmt->executeAndFetch();
             if($result['c'])
                 throw new \Exception("album has charted");
+
+            $this->audit(AuditAction::Delete, $tag, "title=\"{$album['album']}\", artist=\"{$album['artist']}\"");
 
             $query = "DELETE FROM tagqueue WHERE tag = ?";
             $stmt = $pdo->prepare($query);

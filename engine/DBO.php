@@ -232,6 +232,12 @@ class BasePDO {
     }
 }
 
+enum AuditAction {
+    case Insert;
+    case Update;
+    case Delete;
+}
+
 /**
  * DBO is the superclass for all engine objects which require database access
  *
@@ -349,6 +355,24 @@ abstract class DBO {
      */
     protected function exec(string $stmt) {
         return $this->getPDO()->exec($stmt);
+    }
+
+    /**
+     * audit an action
+     *
+     * @param AuditAction $op operation
+     * @param int $id identifier
+     * @param string|null $message optional message
+     */
+    protected function audit(AuditAction $op, int $id, ?string $message) {
+        $banner = implode(' | ', [
+            $this->getAdvisoryLockName($id),
+            strtoupper($op->name),
+            Engine::session()->getDN(),
+            $message ?? ''
+        ]);
+
+        error_log("AUDIT $banner");
     }
 
     private function getAdvisoryLockName(int $id): string {
