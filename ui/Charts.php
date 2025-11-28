@@ -31,6 +31,8 @@ use ZK\Engine\ILibrary;
 use ZK\UI\UICommon as UI;
 
 class Charts extends MenuItem {
+    const DECENNIUM_CHART = false;
+
     private static $subactions = [
         [ "a", "", "Top 30", "chartTop30" ],
         [ "a", "weekly", "Weekly", "chartWeekly" ],
@@ -248,7 +250,7 @@ class Charts extends MenuItem {
                     if($year != $y) {
                         if($year)
                             echo "      </UL>\n    </TD></TR>\n";
-                        if($m == 12 && $y % 10 == 9) {
+                        if(self::DECENNIUM_CHART && $m == 12 && $y % 10 == 9) {
                             $genDecChart = 1;
                             $dnum = intdiv($y, 10);
                             $dstart = $y - 9;
@@ -284,7 +286,7 @@ class Charts extends MenuItem {
             return;
         }
 
-        if($dnum) {
+        if(self::DECENNIUM_CHART && $dnum) {
             $dstart = $dnum * 10;
             $dend = $dstart + 9;
             if(!checkdate(1, 1, $dstart) || !checkdate(1, 1, $dend)) {
