@@ -345,10 +345,11 @@ class UIController implements IController {
             if($this->session->isAuth("g"))
                 echo "   <P><B>IMPORTANT:  This login can be used ONLY at the station.</B></P>\n";
             Editor::emitQueueHook($this->session);
-            $success = true;
-        } else
+        } else if(empty(Engine::param('sso')['client_id'])) {
             $this->emitLogin("badCredentials");
-        return $success;
+            return false;
+        }
+        return true;
     }
     
     protected function emitLogout() {
