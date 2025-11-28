@@ -345,7 +345,7 @@ class UIController implements IController {
             if($this->session->isAuth("g"))
                 echo "   <P><B>IMPORTANT:  This login can be used ONLY at the station.</B></P>\n";
             Editor::emitQueueHook($this->session);
-        } else if(empty(Engine::param('sso')['client_id'])) {
+        } else if(isset($_REQUEST['user'])) {
             $this->emitLogin("badCredentials");
             return false;
         }
