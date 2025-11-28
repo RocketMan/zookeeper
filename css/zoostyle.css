@@ -1946,6 +1946,10 @@ a:hover.copy {
     color: #555;
 }
 
+.album-chart > div:not(:first-of-type) {
+    padding-top: 10px;
+}
+
 .album-tracks {
     width: 33.3%;
 }
