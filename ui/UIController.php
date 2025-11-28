@@ -340,7 +340,6 @@ class UIController implements IController {
     }
 
     protected function emitLoginValidate() {
-        $success = false;
         if($this->session->isAuth("u")) {
             if($this->session->isAuth("g"))
                 echo "   <P><B>IMPORTANT:  This login can be used ONLY at the station.</B></P>\n";
