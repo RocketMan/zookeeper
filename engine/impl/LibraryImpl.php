@@ -183,8 +183,12 @@ class LibraryImpl extends DBO implements ILibrary {
         // remove semicolons to thwart injection attacks
         $search = preg_replace('/([;])/', '_', $search);
 
-        if(substr($search, strlen($search)-1, 1) == "*")
-            $search = substr($search, 0, strlen($search)-1)."%";
+        if(substr($search, strlen($search)-1, 1) == "*") {
+            $search = trim(substr($search, 0, strlen($search)-1))."%";
+
+            // return empty for degenerate search
+            if (strlen($search) < 4) return $count >= 0 ? $retVal : 0;
+        }
 
         switch($tableIndex) {
         case ILibrary::ALBUM_ARTIST:
