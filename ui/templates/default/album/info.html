@@ -24,7 +24,7 @@
 {% if album.iscoll %}
   {{ artist }}
 {% else %}
-  <a href="?s=byArtist&amp;n={{ artist | e('url') }}&amp;action=search" class="nav">{{ artist }}</a>
+  <a href="?action=search&amp;s=byArtist&amp;n={{ artist | e('url') }}" class="nav">{{ artist }}</a>
 {% endif %}
 </div>
 {##  MUSIC LABEL  ##}
