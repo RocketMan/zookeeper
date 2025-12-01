@@ -79,7 +79,7 @@ class Challenge implements IController {
         $challenge = bin2hex(random_bytes(8));
         $expires   = time() + self::TTL_SECONDS;
 
-        $secret = Engine::param('challenge_secret', '');
+        $secret = Engine::param('challenge_secret');
         $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDDR'] ?? '') : '';
         $payload = $challenge . '|' . $expires . '|' . self::DIFFICULTY . $addr;
         $signature = hash_hmac('sha256', $payload, $secret);
