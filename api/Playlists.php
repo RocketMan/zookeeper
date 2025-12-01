@@ -36,6 +36,7 @@ use ZK\UI\PlaylistBuilder;
 
 use Enm\JsonApi\Exception\BadRequestException;
 use Enm\JsonApi\Exception\HttpException;
+use Enm\JsonApi\Exception\JsonApiException;
 use Enm\JsonApi\Exception\NotAllowedException;
 use Enm\JsonApi\Exception\ResourceNotFoundException;
 use Enm\JsonApi\Model\Document\Document;
@@ -345,14 +346,14 @@ class Playlists implements RequestHandlerInterface {
 
         // unpublished playlists are visible to owner only
         if(!$list["airname"] && $list["dj"] != Engine::session()->getUser())
-            throw new ResourceNotFoundException("show", $id);
+            throw new AuthenticationException("Operation requires authentication");
 
         $relations = new ResourceCollection();
 
         switch($request->relationship()) {
         case "albums":
             if(Engine::getApiVer() >= 2)
-                throw new NotAllowedException('You are not allowed to fetch the  relationship ' . $request->relationship());
+                throw new BadRequestException('You are not allowed to fetch the  relationship ' . $request->relationship());
 
             if(!$request->requestsInclude("reviews"))
                 $flags &= ~Albums::LINKS_REVIEWS_WITH_BODY;
@@ -398,9 +399,9 @@ class Playlists implements RequestHandlerInterface {
             }
             break;
         case "relationships":
-            throw new NotAllowedException("unspecified relationship");
+            throw new BadRequestException("unspecified relationship");
         default:
-            throw new NotAllowedException('You are not allowed to fetch the relationship ' . $request->relationship());
+            throw new BadRequestException('You are not allowed to fetch the relationship ' . $request->relationship());
         }
 
         $document = new Document($relations);
@@ -441,7 +442,7 @@ class Playlists implements RequestHandlerInterface {
     public function createResource(RequestInterface $request): ResponseInterface {
         $session = Engine::session();
         if(!$session->isAuth("u"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new AuthenticationException("Operation requires authentication");
 
         $user = $session->getUser();
 
@@ -593,7 +594,7 @@ class Playlists implements RequestHandlerInterface {
     public function patchResource(RequestInterface $request): ResponseInterface {
         $session = Engine::session();
         if(!$session->isAuth("u"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new AuthenticationException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -671,12 +672,12 @@ class Playlists implements RequestHandlerInterface {
             return new EmptyResponse();
         }
 
-        throw new BadRequestException("DB update error");
+        throw new JsonApiException("DB update error");
     }
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("u"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new AuthenticationException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -724,11 +725,11 @@ class Playlists implements RequestHandlerInterface {
 
     public function addRelatedResources(RequestInterface $request): ResponseInterface {
         if($request->relationship() != "events") {
-            throw new NotAllowedException('You are not allowed to modify the relationship ' . $request->relationship());
+            throw new BadRequestException('You are not allowed to modify the relationship ' . $request->relationship());
         }
 
         if(!Engine::session()->isAuth("u"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new AuthenticationException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -855,16 +856,16 @@ class Playlists implements RequestHandlerInterface {
             $api->adviseUnlock($key);
         }
 
-        throw new BadRequestException($status ?? "DB update error");
+        throw new JsonApiException($status ?? "DB update error");
     }
 
     public function replaceRelatedResources(RequestInterface $request): ResponseInterface {
         if($request->relationship() != "events") {
-            throw new NotAllowedException('You are not allowed to modify the relationship ' . $request->relationship());
+            throw new BadRequestException('You are not allowed to modify the relationship ' . $request->relationship());
         }
 
         if(!Engine::session()->isAuth("u"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new AuthenticationException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -961,16 +962,16 @@ class Playlists implements RequestHandlerInterface {
         if($success)
             return new EmptyResponse();
 
-        throw new BadRequestException("DB update error");
+        throw new JsonApiException("DB update error");
     }
 
     public function removeRelatedResources(RequestInterface $request): ResponseInterface {
         if($request->relationship() != "events") {
-            throw new NotAllowedException('You are not allowed to modify the relationship ' . $request->relationship());
+            throw new BadRequestException('You are not allowed to modify the relationship ' . $request->relationship());
         }
 
         if(!Engine::session()->isAuth("u"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new AuthenticationException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -1014,6 +1015,6 @@ class Playlists implements RequestHandlerInterface {
         if($success)
             return new EmptyResponse();
 
-        throw new BadRequestException("DB update error");
+        throw new JsonApiException("DB update error");
     }
 }

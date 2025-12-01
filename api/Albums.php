@@ -31,7 +31,6 @@ use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
 
 use Enm\JsonApi\Exception\BadRequestException;
-use Enm\JsonApi\Exception\NotAllowedException;
 use Enm\JsonApi\Exception\ResourceNotFoundException;
 use Enm\JsonApi\Model\Document\Document;
 use Enm\JsonApi\Model\Request\RequestInterface;
@@ -318,7 +317,7 @@ class Albums implements RequestHandlerInterface {
             $op = ILibrary::OP_NEXT_LINE;
             $key = $request->paginationValue("next");
         } else
-            throw new NotAllowedException("must specify filter or page");
+            throw new BadRequestException("must specify filter or page");
 
         $limit = $request->hasPagination("size") ?
                 min($request->paginationValue("size"), ApiServer::MAX_LIMIT) :
@@ -368,7 +367,7 @@ class Albums implements RequestHandlerInterface {
             $response = $this->paginateOffset($request, self::$paginateOps, $links);
             break;
         default:
-            throw new NotAllowedException("unknown pagination profile '{$profile}'");
+            throw new BadRequestException("unknown pagination profile '{$profile}'");
         }
 
         return $response;
@@ -398,9 +397,9 @@ class Albums implements RequestHandlerInterface {
             }
             break;
         case "relationships":
-            throw new NotAllowedException("unspecified relationship");
+            throw new BadRequestException("unspecified relationship");
         default:
-            throw new NotAllowedException('You are not allowed to fetch the relationship ' . $request->relationship());
+            throw new BadRequestException('You are not allowed to fetch the relationship ' . $request->relationship());
         }
 
         $document = new Document($res);
@@ -417,7 +416,7 @@ class Albums implements RequestHandlerInterface {
 
     public function createResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("m"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new AuthenticationException("Operation requires authentication");
 
         $album = $request->requestBody()->data()->first("album");
         $attrs = $album->attributes();
@@ -472,7 +471,7 @@ class Albums implements RequestHandlerInterface {
 
     public function patchResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("m"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new AuthenticationException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -499,7 +498,7 @@ class Albums implements RequestHandlerInterface {
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("m"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new AuthenticationException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -512,7 +511,7 @@ class Albums implements RequestHandlerInterface {
 
     public function addRelatedResources(RequestInterface $request): ResponseInterface {
         if($request->relationship() != "printq" || !Engine::session()->isAuth("m"))
-            throw new NotAllowedException('You are not allowed to modify the relationship ' . $request->relationship());
+            throw new BadRequestException('You are not allowed to modify the relationship ' . $request->relationship());
 
         $tag = $request->id();
         $user = Engine::session()->getUser();
@@ -524,7 +523,7 @@ class Albums implements RequestHandlerInterface {
 
     public function removeRelatedResources(RequestInterface $request): ResponseInterface {
         if($request->relationship() != "printq" || !Engine::session()->isAuth("m"))
-            throw new NotAllowedException('You are not allowed to modify the relationship ' . $request->relationship());
+            throw new BadRequestException('You are not allowed to modify the relationship ' . $request->relationship());
 
         $tag = $request->id();
         if(Engine::api(IEditor::class)->dequeueTag($tag, Engine::session()->getUser()))
@@ -535,10 +534,10 @@ class Albums implements RequestHandlerInterface {
 
     public function replaceRelatedResources(RequestInterface $request): ResponseInterface {
         if($request->relationship() != "label")
-            throw new NotAllowedException('You are not allowed to modify the relationship ' . $request->relationship());
+            throw new BadRequestException('You are not allowed to modify the relationship ' . $request->relationship());
 
         if(!Engine::session()->isAuth("m"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new AuthenticationException("Operation requires authentication");
 
         $pubkey = $request->requestBody()->data()->first("label")->id();
         $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $pubkey);

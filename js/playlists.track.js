@@ -585,6 +585,8 @@ $().ready(function(){
     function inlineDelete() {
         if (updating) return;
 
+        $(".error-msg").text("");
+
         if(!confirm("Delete this item?")) {
             closeInlineEdit(undefined, true);
             return;
@@ -1404,6 +1406,8 @@ $().ready(function(){
     function inlineEdit(event) {
         event.preventDefault();
 
+        $(".error-msg").text("");
+
         $(".pl-stack-content").hide();
 
         var url = "api/v2/playlist/" + $("#track-playlist").val() +
@@ -1456,6 +1460,7 @@ $().ready(function(){
                 setAddButtonState(haveAll, overlay);
             },
             error: function(jqXHR, textStatus, errorThrown) {
+                row.off().removeClass('selected');
                 row = null;
 
                 var message = getErrorMessage(jqXHR,
@@ -1467,6 +1472,8 @@ $().ready(function(){
 
     function inlineInsert(event) {
         event.preventDefault();
+
+        $(".error-msg").text("");
 
         row.off().removeClass('selected');
         $(".pl-stack-content").hide();

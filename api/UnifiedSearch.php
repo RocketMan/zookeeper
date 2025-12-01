@@ -27,7 +27,7 @@ namespace ZK\API;
 use ZK\Engine\Engine;
 use ZK\Engine\ILibrary;
 
-use Enm\JsonApi\Exception\NotAllowedException;
+use Enm\JsonApi\Exception\BadRequestException;
 use Enm\JsonApi\Model\Document\Document;
 use Enm\JsonApi\Model\Request\RequestInterface;
 use Enm\JsonApi\Model\Resource\JsonResource;
@@ -59,7 +59,7 @@ class UnifiedSearch implements RequestHandlerInterface {
         if($request->hasFilter("*")) {
             $key = $request->filterValue("*");
         } else
-            throw new NotAllowedException("Must specify filter.  May be one of: *");
+            throw new BadRequestException("Must specify filter.  May be one of: *");
 
         $limit = $request->hasPagination("size") ?
                 min($request->paginationValue("size"), ApiServer::MAX_LIMIT) :
