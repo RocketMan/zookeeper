@@ -323,6 +323,9 @@ class Albums implements RequestHandlerInterface {
                 min($request->paginationValue("size"), ApiServer::MAX_LIMIT) :
                 ApiServer::DEFAULT_LIMIT;
 
+        if(!Engine::session()->isAuth('C'))
+            throw new NotAllowedException("Operation requires authentication");
+
         $records = Engine::api(ILibrary::class)->listAlbums($op, $key, $limit);
         $links = self::LINKS_LABEL;
         $links |= $request->requestsField("album", "tracks") ? self::LINKS_TRACKS : 0;

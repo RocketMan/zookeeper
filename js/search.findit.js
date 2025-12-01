@@ -395,7 +395,7 @@ function searchAll() {
     }
 }
 
-function search(type, url, size, offset) {
+async function search(type, url, size, offset) {
     if(size >= 0)
         url += "&page[size]=" + size;
 
@@ -409,11 +409,14 @@ function search(type, url, size, offset) {
     url += "&fields[label]=name,city,state";
     url += "&fields[review]=-review";
 
+    const pow = await getPoW();
+
     $.ajax({
         dataType: 'json',
         type: 'GET',
         accept: 'application/json; charset=utf-8',
         url: url,
+        headers: { 'X-CHALLENGE': JSON.stringify(pow) },
         success: function(response) {
             if(type != null) {
                 lists[type](getTable(type), response, response.data);
@@ -484,7 +487,7 @@ function search(type, url, size, offset) {
         }
     });
 
-    $("#type").on('fsearch', function() {
+    $("#type").on('fsearch', async function() {
         var url = "api/v1/search?filter[*]=" +
                     encodeURIComponent($("#fkey").val());
         search(null, url, 5, -1);

@@ -39,15 +39,17 @@ You may specify at most one filter as a query string parameter of the
 form `filter[_field_]=_value_`.  Possible fields are listed below.
 
 * Offset Profile
-  * name
-  * match(name)
+  * name (^see note below)
+  * match(name) (^)
 * Cursor Profile
-  * name
+  * name (^)
   * album.id
 
 Fields match exactly, unless '*' is appended, in which case a stemming
 search is done.  The 'match' keyword indicates a full-text search against
 the indicated column.
+
+NOTE: Filters indicated with '^' require X-APIKEY authentication.
 
 ### Sorting
 

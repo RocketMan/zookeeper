@@ -43,7 +43,7 @@ listed below.
   * date
   * id
   * user
-  * match(event)
+  * match(event) (^see note below)
 
 `date` may have the value 'onNow', which returns the curently on-air
 playlist, if any.  `user` may have the value 'self' for the
@@ -54,6 +54,8 @@ In the case of `filter[user]`, you may specify in addition
 `filter[deleted]=1` to return only deleted but not yet purged
 playlists.  In this case, the `expires` property will be set for each
 playlist in the response.
+
+NOTE: Filters indicated with '^' require X-APIKEY authentication.
 
 Pagination is supported only for match.  Sorting is not supported.
 

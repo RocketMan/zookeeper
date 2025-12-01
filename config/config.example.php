@@ -126,6 +126,11 @@ $config = [
     ],
 
     /**
+     * Proof of Work HMAC secret
+     */
+    'challenge_secret' => '',
+
+    /**
      * Discogs integration
      *
      * see INSTALLATION.md for details

@@ -209,12 +209,17 @@ trait OffsetPaginationTrait {
             [$total, $records] = self::$ops($request, $type, $key, $offset, $limit);
             $ops = [ -1, null ];
         } else if($ops[1]) {
+            if (!Engine::session()->isAuth('C'))
+                throw new NotAllowedException("Operation requires authentication");
             [$total, $retval] = $libraryAPI->searchFullText($ops[1], $key, $limit, $offset);
             $records = $total ? $retval[0]["result"] : [];
             $offset += $limit;
             if($offset >= $total)
                 $offset = 0;
         } else {
+            if (!Engine::session()->isAuth('C'))
+                throw new NotAllowedException("Operation requires authentication");
+
             $total = (int)$libraryAPI->searchPos($ops[0], $offset, -1, $key);
             $records = $libraryAPI->searchPos($ops[0], $offset, $limit, $key, $sort);
         }
