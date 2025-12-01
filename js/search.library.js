@@ -414,7 +414,7 @@ async function search(size, offset) {
         type: 'GET',
         accept: 'application/json; charset=utf-8',
         url: url,
-        headers: { 'X-CHALLENGE': JSON.stringify(pow) },
+        headers: { 'X-Challenge': JSON.stringify(pow) },
         success: function(response) {
             var total = response.links.first.meta.total;
             var results;
