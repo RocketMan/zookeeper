@@ -87,11 +87,22 @@ class SSOLogin implements IController {
                     $rq = [ "action" => "cookiesDisabled" ];
                     $target = Engine::getBaseUrl();
                 }
+            } else if(empty(Engine::param('sso')['client_id'])) {
+                // not SSO; redirect to legacy login
+                $rq = [
+                    "action" => "login",
+                    "location" => $params["location"] ?? '',
+                ];
+                $target = Engine::getBaseUrl();
             } else {
                 // send a test cookie
                 setcookie("testcookie", "testcookie");
-                $rq = [ "checkCookie" => 1 ];
-                $target = $_SERVER['REQUEST_URI'];
+                $rq = [
+                    "target" => "sso",
+                    "checkCookie" => 1,
+                    "location" => $params["location"] ?? '',
+                ];
+                $target = Engine::getBaseUrl();
             }
         }
         

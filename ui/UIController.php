@@ -318,6 +318,7 @@ class UIController implements IController {
 <?php } ?>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=action VALUE="loginValidate">
+    <INPUT TYPE=HIDDEN NAME=location VALUE="<?php echo $_REQUEST["location"] ?? ''; ?>">
     </FORM>
 <?php
         UI::setFocus("user");
@@ -383,7 +384,11 @@ class UIController implements IController {
         } else {
             // send a test cookie
             setcookie("testcookie", "testcookie");
-            $rq = [ "action" => "login", "checkCookie" => 1 ];
+            $rq = [
+                "action" => "login",
+                "checkCookie" => 1,
+                "location" => $_REQUEST['location'] ?? '',
+            ];
         }
 
         // do the redirection
@@ -407,6 +412,12 @@ class UIController implements IController {
             // Create a session
             $sessionID = md5(uniqid(rand()));
             $this->session->create($sessionID, $user, $access);
+
+            $location = $_REQUEST['location'] ?? '';
+            if ($location) {
+                header("Location: " . $location, true, 307);
+                exit;
+            }
         }
     }
     
