@@ -47,17 +47,17 @@ class SSOLogin implements IController {
                 $this->action = "ssoError";
         
             // setup redirection to the application
-            $rq = [
-                "action" => $this->action,
-                "ssoOptions" => $this->ssoOptions
-            ];
-        
             if($location) {
-                // external redirection requested
+                // deep link redirection requested
+                $rq = [];
                 $target = $location;
-            } else
+            } else {
+                $rq = [
+                    "action" => $this->action,
+                    "ssoOptions" => $this->ssoOptions
+                ];
                 $target = Engine::getBaseUrl();
-        
+            }
         } else {
             // check that cookies are enabled
             if($params["checkCookie"] ?? false) {

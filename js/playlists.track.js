@@ -117,7 +117,7 @@ $().ready(function(){
         if(jqXHR.status == 403)
             return 'Server busy, try again...';
         else if(jqXHR.status == 401 &&
-                confirm('Your session is no longer active.  Select OK to sign in again and continue')) {
+                confirm('Your session is no longer active.  Select OK to sign in again and continue.')) {
             location.href = '?target=sso&location=' + encodeURIComponent(location.href);
             return;
         }
