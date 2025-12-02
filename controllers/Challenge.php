@@ -32,7 +32,7 @@ class Challenge implements IController {
     const INCLUDE_CLIENT_ADDR = true;
 
     public static function validate($challenge) {
-        $pow = json_decode($challenge, true);
+        $pow = json_decode(base64_decode($challenge), true);
 
         // 1. Check that the challenge is well-formed and has not expired
         $expires = $pow['expires'] ?? 0;

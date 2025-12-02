@@ -416,7 +416,7 @@ async function search(type, url, size, offset) {
         type: 'GET',
         accept: 'application/json; charset=utf-8',
         url: url,
-        headers: { 'X-Challenge': JSON.stringify(pow) },
+        headers: { 'X-Challenge': btoa(JSON.stringify(pow)) },
         success: function(response) {
             if(type != null) {
                 lists[type](getTable(type), response, response.data);
