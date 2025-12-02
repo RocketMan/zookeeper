@@ -72,28 +72,16 @@ async function getPoW() {
     const now = Date.now();
 
     // reuse cached proof if it remains valid
-    if (powCache && now < (powCache.expires * 1000) - POW_MIN_VALIDITY)
-        return powCache;
+    if (!powCache || now > (powCache.expires * 1000) - POW_MIN_VALIDITY) {
+        // request new challenge from the service
+        powCache = await $.getJSON("?target=challenge");
 
-    // request new challenge from the service
-    const challengeData = await $.getJSON("?target=challenge");
+        const challenge  = powCache.challenge;
+        const difficulty = powCache.difficulty;
 
-    const challenge  = challengeData.challenge;
-    const difficulty = challengeData.difficulty;
-    const expires    = challengeData.expires;
-    const signature  = challengeData.signature;
-
-    // solve the challenge (service indicates 0 if challenge is unneeded)
-    const nonce = challenge ? await solvePoW(challenge, difficulty) : 0;
-
-    // cache result for reuse
-    powCache = {
-        challenge,
-        nonce,
-        difficulty,
-        expires,
-        signature
-    };
+        // solve the challenge (service indicates 0 if challenge is unneeded)
+        powCache.nonce = challenge ? await solvePoW(challenge, difficulty) : 0;
+    }
 
     return powCache;
 }
