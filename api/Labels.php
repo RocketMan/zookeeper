@@ -144,7 +144,7 @@ class Labels implements RequestHandlerInterface {
                 ApiServer::DEFAULT_LIMIT;
 
         if(!Engine::session()->isAuth('C'))
-            throw new UnauthorizedRequestException("Operation requires authentication");
+            throw new BadRequestException("Operation requires challenge");
 
         $records = Engine::api(ILibrary::class)->listLabels($op, $key, $limit);
         $result = [];

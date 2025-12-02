@@ -210,7 +210,7 @@ trait OffsetPaginationTrait {
             $ops = [ -1, null ];
         } else if($ops[1]) {
             if (!Engine::session()->isAuth('C'))
-                throw new UnauthorizedRequestException("Operation requires authentication");
+                throw new BadRequestException("Operation requires challenge");
             [$total, $retval] = $libraryAPI->searchFullText($ops[1], $key, $limit, $offset);
             $records = $total ? $retval[0]["result"] : [];
             $offset += $limit;
@@ -218,7 +218,7 @@ trait OffsetPaginationTrait {
                 $offset = 0;
         } else {
             if (!Engine::session()->isAuth('C'))
-                throw new UnauthorizedRequestException("Operation requires authentication");
+                throw new BadRequestException("Operation requires challenge");
 
             $total = (int)$libraryAPI->searchPos($ops[0], $offset, -1, $key);
             $records = $libraryAPI->searchPos($ops[0], $offset, $limit, $key, $sort);
