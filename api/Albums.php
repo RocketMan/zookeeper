@@ -324,7 +324,7 @@ class Albums implements RequestHandlerInterface {
                 ApiServer::DEFAULT_LIMIT;
 
         if(!Engine::session()->isAuth('C'))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $records = Engine::api(ILibrary::class)->listAlbums($op, $key, $limit);
         $links = self::LINKS_LABEL;
