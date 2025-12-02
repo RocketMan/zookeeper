@@ -189,6 +189,8 @@ class UserImpl extends DBO implements IUser {
     }
     
     public function updateUser($user, $password, $realname="XXZZ", $groups="XXZZ", $expiration="XXZZ") {
+        $this->audit(AuditAction::Update, 0, "user=$user, groups=$groups");
+
         $comma = "";
         $query = "UPDATE users SET";
         if($password) {
@@ -225,6 +227,8 @@ class UserImpl extends DBO implements IUser {
     }
     
     public function insertUser($user, $password, $realname, $groups, $expiration) {
+        $this->audit(AuditAction::Insert, 0, "user=$user, groups=$groups");
+
         $salt = substr(md5(uniqid(rand())), 0, 2);
         $query = "INSERT INTO users (name, password, realname, `groups`, expires) VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->prepare($query);
@@ -238,6 +242,8 @@ class UserImpl extends DBO implements IUser {
     }
 
     public function deleteUser($user) {
+        $this->audit(AuditAction::Delete, 0, "user=$user");
+
         // validate this user has no playlists nor reviews
         $query = "SELECT COUNT(*) c FROM lists WHERE dj = ?";
         $stmt = $this->prepare($query);

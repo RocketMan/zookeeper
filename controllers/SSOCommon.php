@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -34,7 +34,9 @@ use GuzzleHttp\RequestOptions;
 class SSOCommon {
     public static function zkHttpRedirect($url, $params) {
         $qs = http_build_query($params);
-        header("Location: " . $url . "?" . $qs, true, 307);
+        if (strlen($qs))
+            $url .= '?' . $qs;
+        header("Location: " . $url, true, 307);
     }
     
     // alternative to $_GET[] that does not munge dots in qs param names

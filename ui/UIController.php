@@ -174,7 +174,9 @@ class UIController implements IController {
         // Setup/teardown a session
         switch($_REQUEST["action"] ?? '') {
         case "loginValidate":
-            if(!$this->session->isAuth("u"))
+            if(!$this->session->isAuth("u") &&
+                    isset($_REQUEST["user"]) &&
+                    isset($_REQUEST["password"]))
                 $this->doLogin($_REQUEST["user"], $_REQUEST["password"]);
             break;
         case "ssoOptions":
@@ -316,6 +318,7 @@ class UIController implements IController {
 <?php } ?>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=action VALUE="loginValidate">
+    <INPUT TYPE=HIDDEN NAME=location VALUE="<?php echo $_REQUEST["location"] ?? ''; ?>">
     </FORM>
 <?php
         UI::setFocus("user");
@@ -340,15 +343,15 @@ class UIController implements IController {
     }
 
     protected function emitLoginValidate() {
-        $success = false;
         if($this->session->isAuth("u")) {
             if($this->session->isAuth("g"))
                 echo "   <P><B>IMPORTANT:  This login can be used ONLY at the station.</B></P>\n";
             Editor::emitQueueHook($this->session);
-            $success = true;
-        } else
+        } else if(isset($_REQUEST['user'])) {
             $this->emitLogin("badCredentials");
-        return $success;
+            return false;
+        }
+        return true;
     }
     
     protected function emitLogout() {
@@ -381,7 +384,11 @@ class UIController implements IController {
         } else {
             // send a test cookie
             setcookie("testcookie", "testcookie");
-            $rq = [ "action" => "login", "checkCookie" => 1 ];
+            $rq = [
+                "action" => "login",
+                "checkCookie" => 1,
+                "location" => $_REQUEST['location'] ?? '',
+            ];
         }
 
         // do the redirection
@@ -405,6 +412,12 @@ class UIController implements IController {
             // Create a session
             $sessionID = md5(uniqid(rand()));
             $this->session->create($sessionID, $user, $access);
+
+            $location = $_REQUEST['location'] ?? '';
+            if ($location) {
+                header("Location: " . $location, true, 307);
+                exit;
+            }
         }
     }
     

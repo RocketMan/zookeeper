@@ -49,9 +49,7 @@ class RSS extends CommandTarget implements IController {
         $template = $templateFactory->load('rss.xml');
         $this->params['feeds'] = [];
 
-        $feeds = explode(',', $_REQUEST['feed'] ?? '');
-        foreach($feeds as $feed)
-            $this->processLocal($feed, null);
+        $this->processLocal($_REQUEST['feed'] ?? '', null);
 
         echo $template->render($this->params);
         ob_end_flush(); // ob_gzhandler

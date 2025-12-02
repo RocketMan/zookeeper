@@ -462,77 +462,6 @@ table.review-shelf tbody tr button {
     padding-top: 6px;
 }
 
-/* album details */
-.currents-details {
-    border-spacing: 2px;
-    border-collapse: separate;
-}
-.currents-details td {
-    padding: 2px;
-}
-.currents-details th {
-    text-align: right;
-    font-size: inherit;
-    font-weight: normal;
-    font-family: inherit;
-}
-.currents-details td {
-    padding-right: 24px;
-    font-family: inherit;
-}
-.currents-activity td,
-.currents-activity th {
-    padding: 4px;
-    text-align: left;
-}
-.currents-activity td {
-    padding-left: 20px;
-}
-.currents-activity th {
-    text-align: right;
-    font-weight: normal;
-    font-size: 0.9rem;
-    font-family: inherit;
-    color: #555;
-}
-
-div.reviews {
-    position: relative;
-    max-height: 150px;
-    overflow: hidden;
-    transition: max-height 0.4s ease;
-}
-div.reviews.expanded {
-    max-height: 1000px;
-}
-.fade {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 3em;
-    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
-    pointer-events: none;
-}
-.fade-toggle-btn {
-    display: inline-block;
-    margin-top: 8px;
-    color: #fff;
-    border: 1px solid #5796ed;
-    background-color: #5897ee;
-    padding: 6px 12px;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 0.9em;
-}
-div.reviews > div.review-body {
-    margin-top: 10px;
-    color: #555;
-}
-div.reviews > div.view-more {
-    padding-top: 8px;
-}
-
 /* DJ selector */
 table.djzone td:last-child {
     width: 100%;
@@ -1838,6 +1767,28 @@ a:hover.copy {
     max-width: 1210px;
 }
 
+.fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3em;
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+    pointer-events: none;
+}
+
+.fade-toggle-btn {
+    display: inline-block;
+    margin-top: 8px;
+    color: #fff;
+    border: 1px solid #5796ed;
+    background-color: #5897ee;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
 /* album details page */
 .album-details {
     font-size: 1rem;
@@ -1877,6 +1828,7 @@ a:hover.copy {
 
 .album-hashtag-area {
     padding-top: 15px;
+    font-size: 1.1rem;
 }
 
 .album-hashtag-area a {
@@ -1923,6 +1875,26 @@ a:hover.copy {
     margin-bottom: 5px;
 }
 
+.album-reviews .reviews {
+    position: relative;
+    max-height: 150px;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+.album-reviews .reviews.expanded {
+    max-height: 1000px;
+}
+
+.album-reviews .reviews > .review-body {
+    margin-top: 10px;
+    color: #555;
+}
+
+.album-reviews .reviews > .view-more {
+    padding-top: 8px;
+}
+
 .album-recent-chart-box {
     display: flex;
     justify-content: space-between;
@@ -1935,8 +1907,6 @@ a:hover.copy {
 
 .album-recent-chart-box > div {
     padding: 10px;
-    /*background-color: #dbdbc3;*/
-    /*background-color: #ede8d0;*/
     background-color: #f4f3f2;
     border-radius: 4px;
     box-shadow: rgba(0, 0, 0, 0.5) 0 1px 1px;
@@ -1945,6 +1915,26 @@ a:hover.copy {
 
 .album-recent-chart-box > div > h2 {
     margin-top: 0;
+    color: #555;
+}
+
+.album-chart > div:not(:first-of-type) {
+    padding-top: 10px;
+}
+
+.currents-activity td,
+.currents-activity th {
+    padding: 4px;
+    text-align: left;
+}
+.currents-activity td {
+    padding-left: 20px;
+}
+.currents-activity th {
+    text-align: right;
+    font-weight: normal;
+    font-size: 0.9rem;
+    font-family: inherit;
     color: #555;
 }
 

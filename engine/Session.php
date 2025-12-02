@@ -158,12 +158,14 @@ class Session extends DBO {
         $row = Engine::api(IUser::class)->getUser($user);
         if($row)
             $this->displayName = $row['realname'];
-        $this->user = $user;
-        $this->access = $auth;
-        $this->sessionID = $sessionID;
 
-        $this->dbCreate($sessionID, $user, $auth, $this->displayName);
-        $this->setSessionCookie($sessionID);
+        $success = $this->dbCreate($sessionID, $user, $auth, $this->displayName);
+        if ($success) {
+            $this->user = $user;
+            $this->access = $auth;
+            $this->sessionID = $sessionID;
+            $this->setSessionCookie($sessionID);
+        }
     }
 
     public function authorizeApiKey($apikey) {

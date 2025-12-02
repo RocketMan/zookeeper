@@ -31,6 +31,7 @@ namespace ZK\Engine;
 class LibraryImpl extends DBO implements ILibrary {
     const DEFAULT_FT_LIMIT = 35;
     const MAX_FT_LIMIT = 200;
+    const ENHANCED_COLLATION = false;
 
     private static $ftSearch = [
          //   elt name   rec name    table    index    fields     query
@@ -182,8 +183,12 @@ class LibraryImpl extends DBO implements ILibrary {
         // remove semicolons to thwart injection attacks
         $search = preg_replace('/([;])/', '_', $search);
 
-        if(substr($search, strlen($search)-1, 1) == "*")
-            $search = substr($search, 0, strlen($search)-1)."%";
+        if(substr($search, strlen($search)-1, 1) == "*") {
+            $search = trim(substr($search, 0, strlen($search)-1))."%";
+
+            // return empty for degenerate search
+            if (strlen($search) < 4) return $count >= 0 ? $retVal : 0;
+        }
 
         switch($tableIndex) {
         case ILibrary::ALBUM_ARTIST:
@@ -339,7 +344,8 @@ class LibraryImpl extends DBO implements ILibrary {
         // it is expensive; thus, we let LIKE do the heavy lifting in
         // a derived table and then run RLIKE over the result.
         $cchars = implode(self::$coalesce);
-        if(preg_match("/[$cchars]/u", $search) &&
+        if(self::ENHANCED_COLLATION &&
+                preg_match("/[$cchars]/u", $search) &&
                 preg_match('/(\w+) LIKE /', $query, $matches)) {
             $key = $matches[1];
 
@@ -356,7 +362,7 @@ class LibraryImpl extends DBO implements ILibrary {
 
             $search = preg_replace("/[$cchars]/u", "_", $search);
         } else
-            $rlike = null;
+            $rlike = $key = null;
 
         if($count > 0) {
             if($rlike)
@@ -916,6 +922,10 @@ class LibraryImpl extends DBO implements ILibrary {
         $retVal = array();
         $loggedIn = Engine::session()->isAuth("u");
 
+        // nothing to return if search is null or trivial
+        if(!$key || strlen(trim($key)) < 3)
+            return [ 0, $retVal ];
+
         // Limit maximum number of results
         $size = $size ? min($size, self::MAX_FT_LIMIT) :
                             self::DEFAULT_FT_LIMIT;
@@ -925,7 +935,7 @@ class LibraryImpl extends DBO implements ILibrary {
              $search = $key;
         } else {
              $words = array_filter(preg_split('/\W+/u', $key, 0, PREG_SPLIT_NO_EMPTY), function($word) {
-                 return !in_array($word, self::$ftExclude);
+                 return !in_array(mb_strtolower($word), self::$ftExclude);
              });
              $search = "+" . implode(" +", $words);
         }

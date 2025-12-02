@@ -229,7 +229,11 @@ class EditorImpl extends DBO implements IEditor {
                 $stmt->execute();
             }
         }
-    
+
+        $this->audit($newAlbum ? AuditAction::Insert : AuditAction::Update,
+                        $album["tag"],
+                        "tag={$album["tag"]}, title=\"{$album["album"]}\"");
+
         return true;
     }
     
@@ -302,11 +306,11 @@ class EditorImpl extends DBO implements IEditor {
         $pdo->beginTransaction();
 
         try {
-            $query = "SELECT count(*) c FROM albumvol WHERE tag = ?";
+            $query = "SELECT artist, album FROM albumvol WHERE tag = ?";
             $stmt = $pdo->prepare($query);
             $stmt->bindValue(1, $tag);
-            $result = $stmt->executeAndFetch();
-            if($result['c'] == 0)
+            $album = $stmt->executeAndFetch();
+            if(!$album)
                 throw new \Exception("album does not exist");
 
             $query = "SELECT count(*) c FROM reviews WHERE tag = ?";
@@ -329,6 +333,8 @@ class EditorImpl extends DBO implements IEditor {
             $result = $stmt->executeAndFetch();
             if($result['c'])
                 throw new \Exception("album has charted");
+
+            $this->audit(AuditAction::Delete, $tag, "title=\"{$album['album']}\", artist=\"{$album['artist']}\"");
 
             $query = "DELETE FROM tagqueue WHERE tag = ?";
             $stmt = $pdo->prepare($query);

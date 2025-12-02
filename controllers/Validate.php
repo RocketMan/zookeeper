@@ -81,6 +81,11 @@ class Validate implements IController {
         echo self::NORMAL."\n";
     }
 
+    private function errorReporting($mask) {
+        error_reporting($mask);
+        ini_set('error_log', $mask ? null : '/dev/null');
+    }
+
     public function processRequest() {
         if(php_sapi_name() != "cli") {
             http_response_code(400);
@@ -118,8 +123,10 @@ class Validate implements IController {
         $this->doTest("create user");
         $this->testUser = "_0".substr(md5(uniqid(rand())), 0, 6);
         $this->testPass = md5(uniqid(rand()));
+        $this->errorReporting(0);
         $success = $api->insertUser($this->testUser, $this->testPass,
                 self::TEST_NAME, self::TEST_ACCESS, "");
+        $this->errorReporting(E_ALL & ~E_NOTICE);
         $this->showSuccess($success);
 
         if($this->doTest("validate user", $success)) {
@@ -129,9 +136,9 @@ class Validate implements IController {
         }
 
         if(!$success) {
-            error_reporting(0);
+            $this->errorReporting(0);
             $api->deleteUser($this->testUser);
-            error_reporting(E_ALL & ~E_NOTICE);
+            $this->errorReporting(E_ALL & ~E_NOTICE);
 
             $this->testUser = null;
         }
@@ -147,7 +154,7 @@ class Validate implements IController {
 
         if($this->doTest("validate session")) {
             // Suppress warnings from session cookie creation
-            error_reporting(E_ERROR);
+            $this->errorReporting(E_ERROR);
             $sessionID = md5(uniqid(rand()));
             $this->session->create($sessionID, $this->testUser, $access);
 
@@ -157,7 +164,7 @@ class Validate implements IController {
             $this->showSuccess($success);
 
             // Resume normal error reporting
-            error_reporting(E_ALL & ~E_NOTICE);
+            $this->errorReporting(E_ALL & ~E_NOTICE);
         }
 
         if($this->doTest("create api key")) {
@@ -617,7 +624,9 @@ class Validate implements IController {
             // invalidate session
             $this->session->invalidate();
 
+            $this->errorReporting(0);
             $success = Engine::api(IUser::class)->deleteUser($this->testUser);
+            $this->errorReporting(E_ALL & ~E_NOTICE);
             $this->showSuccess($success);
         }
     }

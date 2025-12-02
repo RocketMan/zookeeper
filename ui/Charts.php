@@ -31,6 +31,8 @@ use ZK\Engine\ILibrary;
 use ZK\UI\UICommon as UI;
 
 class Charts extends MenuItem {
+    const DECENNIUM_CHART = false;
+
     private static $subactions = [
         [ "a", "", "Top 30", "chartTop30" ],
         [ "a", "weekly", "Weekly", "chartWeekly" ],
@@ -121,9 +123,9 @@ class Charts extends MenuItem {
         $station = Engine::param('station', 'KZSU');
     
         $chartAPI = Engine::api(IChart::class);
-        $year = $_REQUEST["year"] ?? 0;
-        $month = $_REQUEST["month"] ?? 0;
-        $day = $_REQUEST["day"] ?? 0;
+        $year = (int)($_REQUEST["year"] ?? 0);
+        $month = (int)($_REQUEST["month"] ?? 0);
+        $day = (int)($_REQUEST["day"] ?? 0);
 
         $dateSpec = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
 
@@ -166,7 +168,12 @@ class Charts extends MenuItem {
             $this->title = "Weekly charts for $year";
             return;
         }
-    
+
+        if(!checkdate($month, $day, $year)) {
+            echo "<B>The requested date is invalid.</B>";
+            return;
+        }
+
         $startDate = "";
         $endDate = "$year-$month-$day";
         $displayDate = date($dateSpec, mktime(0,0,0,$month,$day,$year));
@@ -201,11 +208,11 @@ class Charts extends MenuItem {
         $station = Engine::param('station', 'KZSU');
     
         $chartAPI = Engine::api(IChart::class);
-        $year = $_REQUEST["year"] ?? 0;
-        $month = $_REQUEST["month"] ?? 0;
-        $day = $_REQUEST["day"] ?? 0;
-        $cyear = $_REQUEST["cyear"] ?? 0;
-        $dnum = $_REQUEST["dnum"] ?? 0;
+        $year = (int)($_REQUEST["year"] ?? 0);
+        $month = (int)($_REQUEST["month"] ?? 0);
+        $day = (int)($_REQUEST["day"] ?? 0);
+        $cyear = (int)($_REQUEST["cyear"] ?? 0);
+        $dnum = (int)($_REQUEST["dnum"] ?? 0);
 
         $config = Engine::param('chart');
         $earliestYear = array_key_exists('earliest_chart_year', $config)?
@@ -243,7 +250,7 @@ class Charts extends MenuItem {
                     if($year != $y) {
                         if($year)
                             echo "      </UL>\n    </TD></TR>\n";
-                        if($m == 12 && $y % 10 == 9) {
+                        if(self::DECENNIUM_CHART && $m == 12 && $y % 10 == 9) {
                             $genDecChart = 1;
                             $dnum = intdiv($y, 10);
                             $dstart = $y - 9;
@@ -279,9 +286,14 @@ class Charts extends MenuItem {
             return;
         }
 
-        if($dnum) {
-            $dstart = (int)$dnum * 10;
+        if(self::DECENNIUM_CHART && $dnum) {
+            $dstart = $dnum * 10;
             $dend = $dstart + 9;
+            if(!checkdate(1, 1, $dstart) || !checkdate(1, 1, $dend)) {
+                echo "<B>The requested date is invalid.</B>";
+                return;
+            }
+
             $startDate = $chartAPI->getMonthlyChartStart(1, $dstart);
             $endDate = $chartAPI->getMonthlyChartEnd(12, $dend);
             $name = "$dstart - $dend";
@@ -291,18 +303,33 @@ class Charts extends MenuItem {
             $this->title = "Chart for $name";
             $monthly = 0;
         } else if($cyear) {
+            if(!checkdate(1, 1, $cyear)) {
+                echo "<B>The requested date is invalid.</B>";
+                return;
+            }
+
             $startDate = $chartAPI->getMonthlyChartStart(1, $cyear);
             $endDate = $chartAPI->getMonthlyChartEnd(12, $cyear);
             echo "<P CLASS=\"header\">$station Top 100 for the year $cyear</P>\n";
             $this->title = "Chart for $cyear";
             $monthly = 0;
         } else if($monthly) {
+            if(!checkdate($month, 1, $year)) {
+                echo "<B>The requested date is invalid.</B>";
+                return;
+            }
+
             $startDate = $chartAPI->getMonthlyChartStart($month, $year);
             $endDate = $chartAPI->getMonthlyChartEnd($month, $year);
             $displayDate = date("F Y", mktime(0,0,0,$month,1,$year));
             echo "<P CLASS=\"header\">$station chart for month of $displayDate</P>\n";
             $this->title = "Chart for $displayDate";
         } else {
+            if(!checkdate($month, $day, $year)) {
+                echo "<B>The requested date is invalid.</B>";
+                return;
+            }
+
             $startDate = "";
             $endDate = "$year-$month-$day";
             $dateSpec = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';

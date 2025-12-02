@@ -1013,14 +1013,20 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
     
     public function getRecentPlays($airname, $count) {
-        $query = "SELECT t.tag, t.artist, t.album, t.label, t.track FROM tracks t, lists l ";
-        $query .= "WHERE t.list = l.id AND ";
-        $query .= "l.airname = ? AND t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' ";
-        $query .= "GROUP BY l.showdate, t.artist, t.album, t.label ";
-        $query .= "ORDER BY l.showdate DESC, t.id DESC LIMIT $count";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, (int)$airname, \PDO::PARAM_INT);
-        return $stmt->executeAndFetchAll();
+        $result = [];
+        $lists = $this->getPlaylists(0, 0, "", $airname, "", 1, 4)->asArray();
+        foreach($lists as $list) {
+            $tracks = $this->getTracks($list['id'], 1)->asArray();
+
+            $result = array_merge($result, array_filter($tracks, function($t) {
+                return !str_starts_with($t['artist'], IPlaylist::SPECIAL_TRACK);
+            }));
+
+            if(count($result) >= $count)
+                break;
+        }
+
+        return array_slice($result, 0, $count);
     }
 
     /**

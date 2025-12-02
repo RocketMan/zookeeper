@@ -29,7 +29,7 @@ use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 
 use Enm\JsonApi\Exception\BadRequestException;
-use Enm\JsonApi\Exception\NotAllowedException;
+use Enm\JsonApi\Exception\JsonApiException;
 use Enm\JsonApi\Exception\ResourceNotFoundException;
 use Enm\JsonApi\Model\Document\Document;
 use Enm\JsonApi\Model\Request\RequestInterface;
@@ -137,7 +137,7 @@ class Labels implements RequestHandlerInterface {
             $op = ILibrary::OP_NEXT_LINE;
             $key = $request->paginationValue("next");
         } else
-            throw new NotAllowedException("must specify filter or page");
+            throw new BadRequestException("must specify filter or page");
 
         $limit = $request->hasPagination("size") ?
                 min($request->paginationValue("size"), ApiServer::MAX_LIMIT) :
@@ -180,7 +180,7 @@ class Labels implements RequestHandlerInterface {
             $response = $this->paginateOffset($request, self::$paginateOps, 0);
             break;
         default:
-            throw new NotAllowedException("unknown pagination profile '{$profile}'");
+            throw new BadRequestException("unknown pagination profile '{$profile}'");
         }
 
         return $response;
@@ -188,7 +188,7 @@ class Labels implements RequestHandlerInterface {
 
     public function createResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("m"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $lr = $request->requestBody()->data()->first("label");
         $attrs = $lr->attributes();
@@ -197,7 +197,7 @@ class Labels implements RequestHandlerInterface {
         $name = Albums::zkAlpha($attrs->getRequired("name"), true);
         $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_NAME, 0, 1, $name);
         if(sizeof($rec))
-            throw new NotAllowedException("label with this name already exists");
+            throw new JsonApiException("label with this name already exists");
 
         $label = self::fromAttrs($attrs);
         $label["pubkey"] = 0;
@@ -211,7 +211,7 @@ class Labels implements RequestHandlerInterface {
 
     public function patchResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("m"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -230,7 +230,7 @@ class Labels implements RequestHandlerInterface {
             $name = Albums::zkAlpha($attrs->getRequired("name"), true);
             $alt = Engine::api(ILibrary::class)->search(ILibrary::LABEL_NAME, 0, 10, $name);
             if(sizeof($alt) > 1 || sizeof($alt) && $alt[0]["pubkey"] != $key)
-                throw new NotAllowedException("label with this name already exists");
+                throw new JsonApiException("label with this name already exists");
         }
 
         $label = array_merge($label, self::fromAttrs($attrs));
@@ -244,7 +244,7 @@ class Labels implements RequestHandlerInterface {
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("m"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))

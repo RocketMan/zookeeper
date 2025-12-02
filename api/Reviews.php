@@ -29,6 +29,8 @@ use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
 
+use Enm\JsonApi\Exception\BadRequestException;
+use Enm\JsonApi\Exception\JsonApiException;
 use Enm\JsonApi\Exception\NotAllowedException;
 use Enm\JsonApi\Exception\ResourceNotFoundException;
 use Enm\JsonApi\Model\Document\Document;
@@ -169,9 +171,9 @@ class Reviews implements RequestHandlerInterface {
             }
             break;
         case "relationships":
-            throw new NotAllowedException("unspecified relationship");
+            throw new BadRequestException("unspecified relationship");
         default:
-            throw new NotAllowedException('You are not allowed to fetch the relationship ' . $request->relationship());
+            throw new BadRequestException('You are not allowed to fetch the relationship ' . $request->relationship());
         }        
 
         $document = new Document($res);
@@ -202,7 +204,7 @@ class Reviews implements RequestHandlerInterface {
             // airname does not exist; try to create it
             $success = $djapi->insertAirname(mb_substr($an, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
             if(!$success)
-                throw new NotAllowedException("Cannot create airname $an");
+                throw new JsonApiException("Cannot create airname $an");
 
             $airname = $djapi->lastInsertId();
         }
@@ -237,7 +239,7 @@ class Reviews implements RequestHandlerInterface {
             // airname does not exist; try to create it
             $success = $djapi->insertAirname(mb_substr($an, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
             if(!$success)
-                throw new NotAllowedException("Cannot create airname $an");
+                throw new JsonApiException("Cannot create airname $an");
 
             $airname = $djapi->lastInsertId();
         }
@@ -259,7 +261,7 @@ class Reviews implements RequestHandlerInterface {
     public function deleteResource(RequestInterface $request): ResponseInterface {
         $session = Engine::session();
         if(!$session->isAuth("u"))
-            throw new NotAllowedException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         $revapi = Engine::api(IReview::class);
