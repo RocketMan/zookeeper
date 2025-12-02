@@ -261,7 +261,7 @@ class Reviews implements RequestHandlerInterface {
     public function deleteResource(RequestInterface $request): ResponseInterface {
         $session = Engine::session();
         if(!$session->isAuth("u"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         $revapi = Engine::api(IReview::class);

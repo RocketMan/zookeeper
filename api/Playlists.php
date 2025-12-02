@@ -346,7 +346,7 @@ class Playlists implements RequestHandlerInterface {
 
         // unpublished playlists are visible to owner only
         if(!$list["airname"] && $list["dj"] != Engine::session()->getUser())
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $relations = new ResourceCollection();
 
@@ -442,7 +442,7 @@ class Playlists implements RequestHandlerInterface {
     public function createResource(RequestInterface $request): ResponseInterface {
         $session = Engine::session();
         if(!$session->isAuth("u"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $user = $session->getUser();
 
@@ -594,7 +594,7 @@ class Playlists implements RequestHandlerInterface {
     public function patchResource(RequestInterface $request): ResponseInterface {
         $session = Engine::session();
         if(!$session->isAuth("u"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -677,7 +677,7 @@ class Playlists implements RequestHandlerInterface {
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("u"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -729,7 +729,7 @@ class Playlists implements RequestHandlerInterface {
         }
 
         if(!Engine::session()->isAuth("u"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -865,7 +865,7 @@ class Playlists implements RequestHandlerInterface {
         }
 
         if(!Engine::session()->isAuth("u"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -971,7 +971,7 @@ class Playlists implements RequestHandlerInterface {
         }
 
         if(!Engine::session()->isAuth("u"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))

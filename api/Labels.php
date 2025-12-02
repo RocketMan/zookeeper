@@ -188,7 +188,7 @@ class Labels implements RequestHandlerInterface {
 
     public function createResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("m"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $lr = $request->requestBody()->data()->first("label");
         $attrs = $lr->attributes();
@@ -211,7 +211,7 @@ class Labels implements RequestHandlerInterface {
 
     public function patchResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("m"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -244,7 +244,7 @@ class Labels implements RequestHandlerInterface {
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("m"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))

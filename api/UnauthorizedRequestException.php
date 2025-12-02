@@ -26,7 +26,7 @@ namespace ZK\API;
 
 use Enm\JsonApi\Exception\JsonApiException;
 
-class AuthenticationException extends JsonApiException {
+class UnauthorizedRequestException extends JsonApiException {
     public function getHttpStatus(): int {
         return 401;
     }

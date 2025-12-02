@@ -416,7 +416,7 @@ class Albums implements RequestHandlerInterface {
 
     public function createResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("m"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $album = $request->requestBody()->data()->first("album");
         $attrs = $album->attributes();
@@ -471,7 +471,7 @@ class Albums implements RequestHandlerInterface {
 
     public function patchResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("m"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -498,7 +498,7 @@ class Albums implements RequestHandlerInterface {
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
         if(!Engine::session()->isAuth("m"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
@@ -537,7 +537,7 @@ class Albums implements RequestHandlerInterface {
             throw new BadRequestException('You are not allowed to modify the relationship ' . $request->relationship());
 
         if(!Engine::session()->isAuth("m"))
-            throw new AuthenticationException("Operation requires authentication");
+            throw new UnauthorizedRequestException("Operation requires authentication");
 
         $pubkey = $request->requestBody()->data()->first("label")->id();
         $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $pubkey);
