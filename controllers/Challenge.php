@@ -31,7 +31,16 @@ class Challenge implements IController {
     const TTL_SECONDS = 180;  // challenge expires in 3 minutes
     const INCLUDE_CLIENT_ADDR = true;
 
+    private static function isDisabled($secret) {
+        return !$secret || Engine::session()->isAuth('u');
+    }
+
     public static function validate($challenge) {
+        // Nothing to do if challenge is disabled
+        $secret = Engine::param('challenge_secret');
+        if (self::isDisabled($secret))
+            return true;
+
         $pow = json_decode(base64_decode($challenge), true);
 
         // 1. Check that the challenge is well-formed and has not expired
@@ -40,7 +49,6 @@ class Challenge implements IController {
             return false;
 
         // 2. Verify signature
-        $secret = Engine::param('challenge_secret');
         $challenge = $pow['challenge'] ?? '';
         $difficulty = $pow['difficulty'] ?? self::DIFFICULTY;
         $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDDR'] ?? '') : '';
@@ -86,7 +94,7 @@ class Challenge implements IController {
 
         header('Content-Type: application/json');
         echo json_encode([
-            "challenge"  => Engine::session()->isAuth('u') ? 0 : $challenge,
+            "challenge"  => self::isDisabled($secret) ? 0 : $challenge,
             "difficulty" => self::DIFFICULTY,
             "expires"    => $expires,
             "signature"  => $signature
