@@ -108,10 +108,13 @@ class Turnstile implements IController {
                     $location = ($qs['location'] ?? '') ?: Engine::getBaseUrl();
                     SSOCommon::zkHttpRedirect($location, []);
                     exit;
-                } else
+                } else {
+                    error_log("Turnstile validation failed: " . implode(', ', $json->{'error-codes'} ?? []));
                     $message = "Validation failed";
+                }
             } catch (\Exception $e) {
-                $message = $e->getMessage();
+                error_log("Turnstile connection error: " . $e->getMessage());
+                $message = "There was a problem accessing the service.";
             }
 
             $templateName = 'turnstile/error.html';
