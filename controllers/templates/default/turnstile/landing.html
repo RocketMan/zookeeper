@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+    <link rel="preconnect" href='{{ preconnect_uri }}'>
+    <script src='{{ turnstile_uri }}'></script>
+    <style type='text/css'>
+      body {
+        padding: 30px 50px;
+        font-family: Helvetica, sans-serif;
+        line-height: 1.2;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Accessing {{ app.station_title }}, please wait...</h2>
+    <div id="turnstile-container"></div>
+    <script>
+      const redirectTo = '{{ app.request.location | e('js') }}';
+      const widgetId = turnstile.render("#turnstile-container", {
+          sitekey: "{{ sitekey }}",
+          callback: function (token) {
+	      location.href = "?target={{ app.request.target }}&token=" + encodeURIComponent(token) + "&location=" + encodeURIComponent(redirectTo);
+          },
+      });
+    </script>
+  </body>
+</html>

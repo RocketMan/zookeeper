@@ -26,6 +26,7 @@ namespace ZK\UI;
 
 use ZK\Controllers\IController;
 use ZK\Controllers\SSOCommon;
+use ZK\Controllers\Turnstile;
 use ZK\Engine\Config;
 use ZK\Engine\Engine;
 use ZK\Engine\IUser;
@@ -170,7 +171,17 @@ class UIController implements IController {
                 $_REQUEST["action"] != "logout") {
             $_REQUEST["action"] = "invalidAction";
         }
-        
+
+        // Turnstile validation
+        if(!Turnstile::validate()) {
+            $rq = [
+                'target' => 'turnstile',
+                'location' => $_SERVER['REQUEST_URI'],
+            ];
+            SSOCommon::zkHttpRedirect(Engine::getBaseURL(), $rq);
+            exit;
+        }
+
         // Setup/teardown a session
         switch($_REQUEST["action"] ?? '') {
         case "loginValidate":

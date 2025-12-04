@@ -28,16 +28,19 @@ use ZK\Engine\Engine;
 use ZK\Engine\TemplateFactory;
 
 class TemplateFactoryXML extends TemplateFactory {
-    public function __construct() {
+    /**
+     * @param string $default default escaper (optional; default 'xml')
+     */
+    public function __construct(string $default = 'xml') {
         parent::__construct(__DIR__ . '/templates');
 
-        // setup an xml escaper and make it the default strategy
+        // setup an xml escaper
         $escaper = $this->twig->getExtension(\Twig\Extension\EscaperExtension::class);
         $escaper->setEscaper('xml', function($env, $str) {
             return str_replace(['&', '"', "'", '<', '>', '`'],
                 ['&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'], $str ?? '');
         });
-        $escaper->setDefaultStrategy('xml');
+        $escaper->setDefaultStrategy($default);
 
         $this->app->baseUrl = Engine::getBaseUrl();
         $this->app->UA = Engine::UA;
