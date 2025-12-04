@@ -32,7 +32,7 @@ class Challenge implements IController {
     const INCLUDE_CLIENT_ADDR = true;
 
     private static function isDisabled($secret) {
-        return !$secret || Engine::session()->isAuth('u');
+        return !$secret;
     }
 
     public static function validate($challenge) {
