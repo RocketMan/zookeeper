@@ -40,8 +40,13 @@ class Turnstile implements IController {
             return true;
 
         $cookie = $_COOKIE['turnstile'] ?? '';
-        if (!$cookie)
-            return false;
+        if (!$cookie) {
+            // allow whitelisted traffic through
+            $domain = gethostbyaddr(explode(',', $_SERVER['REMOTE_ADDR'])[0]);
+            $allowed = array_filter($config['whitelist'] ?? [],
+                            fn($suffix) => str_ends_with($domain, $suffix));
+            return !empty($allowed);
+        }
 
         $token = json_decode(base64_decode($cookie));
 
