@@ -70,8 +70,8 @@ and reliable service.
 
 #### No Advertising or Tracking
 
-Neither this website, Zookeeper Online, nor Cloudflare Turnstile use
-the data collected for advertising, profiling, or retargeting
+Neither this website, nor Zookeeper Online, nor Cloudflare Turnstile
+use the data collected for advertising, profiling, or retargeting
 purposes.
 
 #### Data Transfers
@@ -107,13 +107,14 @@ third-parties.
 For visitors who access Zookeeper Online without logging in, we may
 use a transient session cookie as outlined above to remember that
 your browser has been validated.  **The cookie does not contain any
-personally identifiable information.**
+personally identifiable information.**  The cookie expires automatically
+when the session ends.
 
 For visitors who have a user account with us and who login to access
 additional content on the website, Zookeeper Online uses transient
 session cookies.  These cookies are used to maintain session
 information whilst a user is logged in.  The cookies are deleted
-automatically when the user logs out or closes the browser window.
+automatically when the user logs out or closes the browser.
 
 Zookeeper Online does not use third-party cookies nor web beacons.
 
