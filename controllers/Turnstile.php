@@ -133,9 +133,7 @@ class Turnstile implements IController {
                     // do the Turnstile challenge
                     $templateName = 'turnstile/landing.html';
                     $params = [
-                        'sitekey' => $config['sitekey'],
-                        'preconnect_uri' => $config['preconnect_uri'],
-                        'turnstile_uri' => $config['turnstile_uri'],
+                        'config' => $config,
                     ];
                 } else {
                     // cookies are not enabled; alert user

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang='en'>
   <head>
-{% if preconnect_uri | length %}
-    <link rel="preconnect" href='{{ preconnect_uri }}'>
+{% if config.preconnect_uri | length %}
+    <link rel="preconnect" href='{{ config.preconnect_uri }}'>
 {% endif %}
-    <script src='{{ turnstile_uri }}'></script>
+    <script src='{{ config.turnstile_uri }}'></script>
     <style type='text/css'>
       body {
         padding: 30px 50px;
@@ -19,7 +19,7 @@
     <script>
       const redirectTo = '{{ app.request.location | e('js') }}';
       const widgetId = turnstile.render("#turnstile-container", {
-          sitekey: "{{ sitekey }}",
+          sitekey: "{{ config.sitekey }}",
           callback: function (token) {
 	      location.href = "?target={{ app.request.target }}&token=" + encodeURIComponent(token) + "&location=" + encodeURIComponent(redirectTo);
           },
