@@ -58,7 +58,7 @@ class Turnstile implements IController {
         }
 
         // validate the signature
-        $payload = $token->uuid . '|' . $expires . '|' . ($_SERVER['REMOTE_ADDDR'] ?? '');
+        $payload = ($token->uuid ?? '') . '|' . $expires . '|' . ($_SERVER['REMOTE_ADDDR'] ?? '');
         $signature = hash_hmac('sha256', $payload, $config['secret']);
         return hash_equals($signature, $token->signature ?? '');
     }
