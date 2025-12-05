@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -76,9 +76,14 @@ class DJImpl extends DBO implements IDJ {
         $query = "SELECT a.id, a.airname FROM lists l, airnames a " .
                  "WHERE a.id = l.airname AND l.airname IS NOT NULL ";
         if(!$viewAll)
-            $query .= "AND ADDDATE(l.showdate, 12*7) > NOW() ";
+            $query .= "AND l.showdate > ? ";
         $query .=  "GROUP BY a.airname ORDER BY a.airname";
         $stmt = $this->prepare($query);
+        if(!$viewAll) {
+            $now = new \DateTime("now");
+            $since = $now->modify("-12 week")->format("Y-m-d");
+            $stmt->bindValue(1, $since);
+        }
         return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
