@@ -31,14 +31,10 @@ class Challenge implements IController {
     const TTL_SECONDS = 180;  // challenge expires in 3 minutes
     const INCLUDE_CLIENT_ADDR = true;
 
-    private static function isDisabled($secret) {
-        return !$secret;
-    }
-
     public static function validate($challenge) {
         // Nothing to do if challenge is disabled
         $secret = Engine::param('challenge_secret');
-        if (self::isDisabled($secret))
+        if (!$secret)
             return true;
 
         $pow = json_decode(base64_decode($challenge), true);
@@ -94,7 +90,7 @@ class Challenge implements IController {
 
         header('Content-Type: application/json');
         echo json_encode([
-            "challenge"  => self::isDisabled($secret) ? 0 : $challenge,
+            "challenge"  => $secret ? $challenge : 0,
             "difficulty" => self::DIFFICULTY,
             "expires"    => $expires,
             "signature"  => $signature
