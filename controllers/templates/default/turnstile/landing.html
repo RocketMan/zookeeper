@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang='en'>
   <head>
+{% if preconnect_uri | length %}
     <link rel="preconnect" href='{{ preconnect_uri }}'>
+{% endif %}
     <script src='{{ turnstile_uri }}'></script>
     <style type='text/css'>
       body {
