@@ -77,7 +77,7 @@ Library, Missing, Needs Repair, Out for Review, Pending Appr,
 Received, Review Shelf, Storage.  With Storage, you may supply an
 additional, optional filter `bin` to specify the storage location.
 
-NOTE: Filters indicated with '^' require X-APIKEY authentication.
+NOTE: Filters indicated with '^' require X-APIKEY authentication or challenge.
 
 ### Sorting
 

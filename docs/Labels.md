@@ -49,7 +49,7 @@ Fields match exactly, unless '*' is appended, in which case a stemming
 search is done.  The 'match' keyword indicates a full-text search against
 the indicated column.
 
-NOTE: Filters indicated with '^' require X-APIKEY authentication.
+NOTE: Filters indicated with '^' require X-APIKEY authentication or challenge.
 
 ### Sorting
 
