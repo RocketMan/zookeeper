@@ -239,18 +239,16 @@ class ArtworkImpl extends DBO implements IArtwork {
 
         $query = "SELECT image_uuid FROM artwork " .
                  "LEFT JOIN artistmap ON artistmap.image_id = artwork.id " .
-                 "WHERE cached < ?";
+                 "WHERE ADDDATE(cached, ?) < NOW()";
         $stmt = $this->prepare($query);
-        $now = new \DateTime("now");
-        $since = $now->modify("-$days day")->format("Y-m-d");
-        $stmt->bindValue(1, $since);
+        $stmt->bindValue(1, $days);
         $images = $stmt->executeAndFetchAll();
 
         $query = "DELETE FROM artistmap, artwork USING artistmap " .
                  "LEFT JOIN artwork ON artistmap.image_id = artwork.id " .
-                 "WHERE cached < ?";
+                 "WHERE ADDDATE(cached, ?) < NOW()";
         $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $since);
+        $stmt->bindValue(1, $days);
         $success = $stmt->execute();
 
         if($success) {
@@ -266,16 +264,16 @@ class ArtworkImpl extends DBO implements IArtwork {
         if($success && $expireAlbums) {
             $query = "SELECT image_uuid FROM artwork " .
                      "LEFT JOIN albummap ON albummap.image_id = artwork.id " .
-                     "WHERE cached < ?";
+                     "WHERE ADDDATE(cached, ?) < NOW()";
             $stmt = $this->prepare($query);
-            $stmt->bindValue(1, $since);
+            $stmt->bindValue(1, $days);
             $images = $stmt->executeAndFetchAll();
 
             $query = "DELETE FROM albummap, artwork USING albummap " .
                      "LEFT JOIN artwork ON albummap.image_id = artwork.id " .
-                     "WHERE cached < ?";
+                     "WHERE ADDDATE(cached, ?) < NOW()";
             $stmt = $this->prepare($query);
-            $stmt->bindValue(1, $since);
+            $stmt->bindValue(1, $days);
             $success = $stmt->execute();
 
             if($success) {
@@ -294,19 +292,17 @@ class ArtworkImpl extends DBO implements IArtwork {
 
     public function expireEmpty($days=1) {
         $query = "DELETE FROM artistmap " .
-                 "WHERE image_id IS NULL AND cached < ?";
+                 "WHERE image_id IS NULL AND ADDDATE(cached, ?) < NOW()";
         $stmt = $this->prepare($query);
-        $now = new \DateTime("now");
-        $since = $now->modify("-$days day")->format("Y-m-d");
-        $stmt->bindValue(1, $since);
+        $stmt->bindValue(1, $days);
         $success = $stmt->execute();
 
         $count = $success ? $stmt->rowCount() : 0;
 
         $query = "DELETE FROM albummap " .
-                 "WHERE image_id IS NULL AND cached < ?";
+                 "WHERE image_id IS NULL AND ADDDATE(cached, ?) < NOW()";
         $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $since);
+        $stmt->bindValue(1, $days);
         $success &= $stmt->execute();
 
         return $success ? $stmt->rowCount() + $count : false;
