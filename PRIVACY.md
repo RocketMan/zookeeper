@@ -20,7 +20,7 @@ privacy.  **_In addition to this Privacy Policy, please see also the
 privacy policy of the radio station or other party who is hosting the
 website you are accessing now._**
 
-### Use of _Cloudflare Turnstile_
+### Use of Cloudflare Turnstile
 
 Zookeeper Online makes use of Cloudflare Turnstile, a security service
 provided by Cloudflare, Inc., to protect this website against malicious
@@ -32,7 +32,7 @@ users from bots in a privacy-preserving way.
 When Turnstile is triggered, minimal browser and client data (such as
 IP address, TLS handshake fingerprint, user-agent and other browser
 signals) will be sent to Cloudflare **only for the purpose of
-verifying that the request comes from a real browser**.  We do **not**
+verifying that the request comes from a real browser**.  We do not
 use Turnstile or its data to profile, track, or identify individual
 visitors for marketing or tracking purposes, only to protect the
 site’s integrity and prevent abuse.
