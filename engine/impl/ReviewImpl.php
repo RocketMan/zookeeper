@@ -138,7 +138,7 @@ class ReviewImpl extends DBO implements IReview {
         $query = "SELECT a.id, a.airname FROM reviews r, airnames a ";
         $query .= "WHERE a.id = r.airname AND r.airname IS NOT NULL ";
         if(!$viewAll)
-            $query .= "AND ADDDATE(r.created, 12*7) > NOW() ";
+            $query .= "AND r.created > ? ";
         if(!$loggedIn)
             $query .= "AND r.private = 0 ";
 
@@ -149,7 +149,7 @@ class ReviewImpl extends DBO implements IReview {
         $query .= "SELECT u.name, u.realname FROM reviews r, users u ";
         $query .= "WHERE u.name = r.user AND r.airname IS NULL ";
         if(!$viewAll)
-            $query .= "AND ADDDATE(r.created, 12*7) > NOW() ";
+            $query .= "AND r.created > ? ";
         if(!$loggedIn)
             $query .= "AND r.private = 0 ";
 
@@ -159,6 +159,12 @@ class ReviewImpl extends DBO implements IReview {
         $query .= "GROUP BY u.name";
 
         $stmt = $this->prepare($query);
+        if(!$viewAll) {
+            $now = new \DateTime("now");
+            $since = $now->modify("-12 week")->format("Y-m-d");
+            $stmt->bindValue(1, $since);
+            $stmt->bindValue(2, $since);
+        }
         return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
