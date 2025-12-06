@@ -31,6 +31,7 @@ use GuzzleHttp\RequestOptions;
 
 class Turnstile implements IController {
     const TTL_SECONDS = 8 * 60 * 60;  // 8 hour token validation
+    const INCLUDE_CLIENT_ADDR = true;
 
     const DEFAULT_RESOLVER = "8.8.8.8";  // google DNS
 
@@ -225,7 +226,8 @@ class Turnstile implements IController {
         }
 
         // validate the signature
-        $payload = ($token->uuid ?? '') . '|' . $expires . '|' . ($_SERVER['REMOTE_ADDDR'] ?? '');
+        $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDR'] ?? '') : '';
+        $payload = ($token->uuid ?? '') . '|' . $expires . $addr;
         $signature = hash_hmac('sha256', $payload, $config['secret']);
         return hash_equals($signature, $token->signature ?? '');
     }
@@ -251,7 +253,7 @@ class Turnstile implements IController {
                     RequestOptions::FORM_PARAMS => [
                         'secret' => $config['secret'],
                         'response' => $token,
-                        'remoteip' => $_SERVER['REMOTE_ADDDR'] ?? '',
+                        'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
                         'idempotency_key' => $uuid,
                     ]
                 ]);
@@ -260,7 +262,8 @@ class Turnstile implements IController {
                 if($json->success) {
                     // create cookie and redirect
                     $expires = time() + self::TTL_SECONDS;
-                    $payload = $uuid . '|' . $expires . '|' . ($_SERVER['REMOTE_ADDDR'] ?? '');
+                    $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDR'] ?? '') : '';
+                    $payload = $uuid . '|' . $expires . $addr;
                     $signature = hash_hmac('sha256', $payload, $config['secret']);
                     $cookie = base64_encode(json_encode([
                         'uuid' => $uuid,

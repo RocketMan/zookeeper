@@ -47,7 +47,7 @@ class Challenge implements IController {
         // 2. Verify signature
         $challenge = $pow['challenge'] ?? '';
         $difficulty = $pow['difficulty'] ?? self::DIFFICULTY;
-        $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDDR'] ?? '') : '';
+        $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDR'] ?? '') : '';
         $payload = $challenge . '|' . $expires . '|' . $difficulty . $addr;
         $sig = hash_hmac('sha256', $payload, $secret);
 
@@ -84,7 +84,7 @@ class Challenge implements IController {
         $expires   = time() + self::TTL_SECONDS;
 
         $secret = Engine::param('challenge_secret');
-        $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDDR'] ?? '') : '';
+        $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDR'] ?? '') : '';
         $payload = $challenge . '|' . $expires . '|' . self::DIFFICULTY . $addr;
         $signature = hash_hmac('sha256', $payload, $secret);
 
