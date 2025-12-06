@@ -187,7 +187,8 @@ class LibraryImpl extends DBO implements ILibrary {
             $search = trim(substr($search, 0, strlen($search)-1))."%";
 
             // return empty for degenerate search
-            if (strlen($search) < 4) return $count >= 0 ? $retVal : 0;
+            if ($tableIndex != ILibrary::PASSWD_NAME &&
+                    strlen($search) < 4) return $count >= 0 ? $retVal : 0;
         }
 
         switch($tableIndex) {
