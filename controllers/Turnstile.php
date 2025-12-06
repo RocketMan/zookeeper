@@ -32,6 +32,170 @@ use GuzzleHttp\RequestOptions;
 class Turnstile implements IController {
     const TTL_SECONDS = 8 * 60 * 60;  // 8 hour token validation
 
+    const DEFAULT_RESOLVER = "8.8.8.8";  // google DNS
+
+    // TBD refactor me out
+    /**
+     * `gethostbyaddr` with timeout
+     *
+     * adapted from original code and concept presented at
+     * https://www.php.net/manual/en/function.gethostbyaddr.php#46869
+     *
+     * @param string $ip IP address to resolve
+     * @param string $dns IP address of DNS resolver
+     * @param float $timeout timeout in seconds (optional; default 1)
+     * @return string|false host name on success or false on failure
+     */
+    public static function gethostbyaddr_timeout(string $ip, string $dns, float $timeout = 1.0): string|false {
+        // build PTR query name
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $octets = array_reverse(explode('.', $ip));
+            $queryName = implode('.', $octets) . '.in-addr.arpa.';
+            $qtype = 12; // PTR
+        } elseif (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $nibbles = str_split(str_replace(':', '', inet_pton($ip)));
+            $hex = unpack('H*', inet_pton($ip))[1];
+            $nibbles = array_reverse(str_split($hex));
+            $queryName = implode('.', $nibbles) . '.ip6.arpa.';
+            $qtype = 12; // PTR
+        } else
+            return false;
+
+        // encode query name to DNS wire format
+        $encodeName = function (string $name): string {
+            $parts = explode('.', rtrim($name, '.'));
+            $out = '';
+            foreach ($parts as $p) {
+                $l = strlen($p);
+                if ($l > 63) return ''; // invalid
+                $out .= chr($l) . $p;
+            }
+            return $out . "\0";
+        };
+
+        $qname = $encodeName($queryName);
+        if ($qname === '')
+            return false;
+
+        // construct DNS query packet
+        $id = random_int(0, 0xFFFF);
+        $flags = 0x0100; // recursion desired
+        $qdcount = 1;
+        $ancount = 0;
+        $nscount = 0;
+        $arcount = 0;
+
+        $packet = pack(
+            'nnnnnn',
+            $id, $flags, $qdcount, $ancount, $nscount, $arcount
+        );
+        $packet .= $qname;
+        $packet .= pack('nn', $qtype, 1); // QTYPE PTR, QCLASS IN
+
+        // send UDP query and read response
+        $sock = @fsockopen("udp://$dns", 53, $errno, $errstr, $timeout);
+        if (!$sock) return false;
+        stream_set_timeout($sock, 0, (int)($timeout * 1e6));
+        fwrite($sock, $packet);
+        $response = @fread($sock, 4096);
+        fclose($sock);
+
+        if ($response === false || strlen($response) < 12)
+            return false;
+
+        $buf = $response;
+        $len = strlen($buf);
+
+        // parse DNS header
+        $header = unpack('nid/nflags/nqd/nan/nns/nar', substr($buf, 0, 12));
+        $id2 = $header['id'];
+        $flags = $header['flags'];
+        $qd = $header['qd'];
+        $an = $header['an'];
+        $ns = $header['ns'];
+        $ar = $header['ar'];
+        $off = 12;
+
+        // response ID mismatch or no answers, bail
+        if ($id2 !== $id || $an < 1) return false;
+
+        // decode DNS domain name with compression
+        $expandName = function($buf, $offset) use (&$expandName, $len) {
+            $labels = [];
+            $jumped = false;
+            $orig = $offset;
+
+            while (true) {
+                if ($offset >= $len) return [false, 0];
+                $c = ord($buf[$offset]);
+
+                // pointer
+                if (($c & 0xC0) === 0xC0) {
+                    if ($offset + 1 >= $len) return [false, 0];
+                    $ptr = (($c & 0x3F) << 8) | ord($buf[$offset + 1]);
+                    $offset += 2;
+                    if ($ptr >= $len) return [false, 0];
+                    list($name, $_) = $expandName($buf, $ptr);
+                    if ($name === false) return [false, 0];
+                    $labels[] = $name;
+                    $jumped = true;
+                    break;
+                }
+
+                // end of name
+                if ($c === 0) {
+                    $offset++;
+                    break;
+                }
+
+                // literal label
+                $l = $c;
+                $offset++;
+                if ($offset + $l > $len) return [false, 0];
+                $labels[] = substr($buf, $offset, $l);
+                $offset += $l;
+            }
+
+            $name = implode('.', $labels);
+            return [$name, $jumped ? ($offset - $orig > 0 ? $offset - $orig : 2) : ($offset - $orig)];
+        };
+
+        // skip question section
+        for ($i = 0; $i < $qd; $i++) {
+            list($_name, $consumed) = $expandName($buf, $off);
+            if ($_name === false) return false;
+            $off += $consumed;
+            if ($off + 4 > $len) return false;
+            $off += 4; // QTYPE + QCLASS
+        }
+
+        // parse answer RRs
+        for ($i = 0; $i < $an; $i++) {
+            // NAME
+            list($_name, $consumed) = $expandName($buf, $off);
+            if ($_name === false) return false;
+            $off += $consumed;
+
+            // TYPE, CLASS, TTL, RDLENGTH
+            if ($off + 10 > $len) return false;
+            $rr = unpack('ntype/nclass/Nttl/nrdlen', substr($buf, $off, 10));
+            $off += 10;
+
+            $rdlen = $rr['rdlen'];
+            if ($off + $rdlen > $len) return false;
+
+            if ($rr['type'] === 12) { // PTR
+                list($ptrName, $_) = $expandName($buf, $off);
+                return $ptrName ?: false;
+            }
+
+            // skip non-PTR
+            $off += $rdlen;
+        }
+
+        return false;
+    }
+
     public static function validate() {
         // Nothing to do if turnstile is disabled or authenticated user
         $config = Engine::param('turnstile');
@@ -42,8 +206,11 @@ class Turnstile implements IController {
         $cookie = $_COOKIE['turnstile'] ?? '';
         if (!$cookie) {
             // allow whitelisted traffic through
-            $domain = gethostbyaddr(explode(',', $_SERVER['REMOTE_ADDR'])[0]);
-            $allowed = array_filter($config['whitelist'] ?? [],
+            $domain = self::gethostbyaddr_timeout(
+                            explode(',', $_SERVER['REMOTE_ADDR'])[0],
+                            $config['resolver'] ?? self::DEFAULT_RESOLVER,
+                            0.5);
+            $allowed = $domain && array_filter($config['whitelist'] ?? [],
                             fn($suffix) => str_ends_with($domain, $suffix));
             return !empty($allowed);
         }
