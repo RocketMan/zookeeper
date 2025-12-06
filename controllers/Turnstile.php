@@ -210,8 +210,8 @@ class Turnstile implements IController {
                             explode(',', $_SERVER['REMOTE_ADDR'])[0],
                             $config['resolver'] ?? self::DEFAULT_RESOLVER,
                             0.5);
-            $allowed = $domain && array_filter($config['whitelist'] ?? [],
-                            fn($suffix) => str_ends_with($domain, $suffix));
+            $allowed = $domain ? array_filter($config['whitelist'] ?? [],
+                            fn($suffix) => str_ends_with($domain, $suffix)) : false;
             return !empty($allowed);
         }
 
