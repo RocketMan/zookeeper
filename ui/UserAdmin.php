@@ -341,7 +341,7 @@ class UserAdmin extends MenuItem {
         echo "  </TR></THEAD>\n";
     
         // Get and sort the user list
-        $users = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 100000, "*");
+        $users = Engine::api(IUser::class)->getUsers()->asArray();
     
         // Emit the user list
         foreach($users as $user) {
