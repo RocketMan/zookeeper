@@ -43,6 +43,43 @@ use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
+class LRUCache {
+    private array $items;
+    private int $maxSize;
+
+    public function __construct(int $maxSize) {
+        $this->maxSize = $maxSize;
+        $this->items = [];
+    }
+
+    protected function touch(string $key, $value = null) {
+        $item = $value ?? $this->items[$key];
+        unset($this->items[$key]);
+        $this->items[$key] = $item;
+        return $item;
+    }
+
+    public function add(string $key, $value): void {
+        if (key_exists($key, $this->items)) {
+            $this->touch($key, $value);
+            return;
+        }
+
+        $this->items[$key] = $value;
+
+        if (count($this->items) <= $this->maxSize)
+            return;
+
+        // remove oldest item
+        reset($this->items);
+        unset($this->items[key($this->items)]);
+    }
+
+    public function get(string $key) {
+        return key_exists($key, $this->items) ? $this->touch($key) : null;
+    }
+}
+
 class NowAiringServer implements MessageComponentInterface {
     const TIME_FORMAT_INTERNAL = "Y-m-d Hi"; // eg, 2019-01-01 1234
 
@@ -681,6 +718,11 @@ class PushServer implements IController {
     const WSSERVER_HOST = "127.0.0.1";
     const WSSERVER_PORT = 32080;
 
+    const RESOLVER_CACHE_SIZE = 500;
+    const RESOLVER_CACHE_TIMEOUT = 20000; // in usec
+
+    protected LRUCache $resolverCache;
+
     public static function sendAsyncNotification($show = null, $spin = null) {
         if(!Engine::param('push_enabled', true))
             return;
@@ -721,6 +763,35 @@ class PushServer implements IController {
         socket_close($socket);
     }
 
+    public static function lruCache(string $key, ?string $value = null) {
+        if(!Engine::param('push_enabled', true))
+            return null;
+
+        $data = $value ? "resolve($key, $value)" : "resolve($key)";
+
+        $addr = PushServer::WSSERVER_HOST;
+        $port = PushServer::WSSERVER_PORT;
+
+        $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+        socket_sendto($socket, $data, strlen($data), 0, $addr, $port);
+
+        $data = null;
+        socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO,
+                [ 'sec' => 0, 'usec' => self::RESOLVER_CACHE_TIMEOUT ]);
+        socket_recvfrom($socket, $data, 256, 0, $addr, $port);
+        socket_close($socket);
+        return $data == "null" ? null : $data;
+    }
+
+    protected function resolve($server, $addr, $key, $value) {
+        if($value !== null)
+            $this->resolverCache->add($key, $value);
+        else
+            $value = $this->resolverCache->get($key);
+
+        $server->send($value ?? "null", $addr);
+    }
+
     public function processRequest() {
         if(php_sapi_name() != "cli") {
             http_response_code(400);
@@ -732,6 +803,8 @@ class PushServer implements IController {
             echo "See INSTALLATION.md for more information.\n";
             return;
         }
+
+        $this->resolverCache = new LRUCache(self::RESOLVER_CACHE_SIZE);
 
         try {
             // websocket server for subscribers
@@ -761,6 +834,8 @@ class PushServer implements IController {
                             $nas->loadImages($matches[1], $matches[3] ?? 0);
                         else if(preg_match("/^reloadAlbum\((\d+)(,\s*(\d+))?\)$/", $message, $matches))
                             $nas->reloadAlbum($matches[1], $matches[3] ?? 1);
+                        else if(preg_match("/^resolve\((.+?)(,\s*(.+))?\)$/", $message, $matches))
+                            $this->resolve($client, $addr, $matches[1], $matches[3] ?? null);
                         else if($message && $message[0] == '{')
                             $nas->sendNotification($message);
                         else // empty message means poll database

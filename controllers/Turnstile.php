@@ -207,10 +207,16 @@ class Turnstile implements IController {
         $cookie = $_COOKIE['turnstile'] ?? '';
         if (!$cookie) {
             // allow whitelisted traffic through
-            $domain = self::gethostbyaddr_timeout(
-                            explode(',', $_SERVER['REMOTE_ADDR'])[0],
+            $addr = explode(',', $_SERVER['REMOTE_ADDR'])[0];
+            $domain = PushServer::lruCache($addr);
+            if (!$domain) {
+                $domain = self::gethostbyaddr_timeout($addr,
                             $config['resolver'] ?? self::DEFAULT_RESOLVER,
                             0.5);
+                if ($domain)
+                    PushServer::lruCache($addr, $domain);
+            }
+
             $allowed = $domain ? array_filter($config['whitelist'] ?? [],
                             fn($suffix) => str_ends_with($domain, $suffix)) : false;
             return !empty($allowed);
