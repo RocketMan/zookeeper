@@ -34,6 +34,7 @@ class Turnstile implements IController {
     const INCLUDE_CLIENT_ADDR = true;
 
     const DEFAULT_RESOLVER = "8.8.8.8";  // google DNS
+    const RESOLVER_TIMEOUT = 0.3;  // in sec
 
     // TBD refactor me out
     /**
@@ -212,7 +213,7 @@ class Turnstile implements IController {
             if (!$domain) {
                 $domain = self::gethostbyaddr_timeout($addr,
                             $config['resolver'] ?? self::DEFAULT_RESOLVER,
-                            0.5);
+                            self::RESOLVER_TIMEOUT);
                 if ($domain)
                     PushServer::lruCache($addr, $domain);
             }
