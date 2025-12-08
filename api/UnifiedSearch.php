@@ -61,6 +61,9 @@ class UnifiedSearch implements RequestHandlerInterface {
         } else
             throw new BadRequestException("Must specify filter.  May be one of: *");
 
+        if(!Engine::session()->isAuth('C'))
+            throw new BadRequestException("Operation requires challenge");
+
         $limit = $request->hasPagination("size") ?
                 min($request->paginationValue("size"), ApiServer::MAX_LIMIT) :
                 ApiServer::DEFAULT_LIMIT;

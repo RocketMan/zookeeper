@@ -126,6 +126,22 @@ $config = [
     ],
 
     /**
+     * Turnstile configuration
+     */
+    'turnstile' => [
+        'sitekey' => '',
+        'secret' => '',
+        'preconnect_uri' => 'https://challenges.cloudflare.com',
+        'siteverify_uri' => 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+        'turnstile_uri' => 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
+    ],
+
+    /**
+     * Proof of Work HMAC secret
+     */
+    'challenge_secret' => '',
+
+    /**
      * Discogs integration
      *
      * see INSTALLATION.md for details

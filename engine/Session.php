@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -24,6 +24,7 @@
 
 namespace ZK\Engine;
 
+use ZK\Controllers\Challenge;
 
 class Session extends DBO {
     private const TOKEN_AUTH = "apikey";
@@ -34,6 +35,7 @@ class Session extends DBO {
     private $sessionID = null;
     private $sessionCookieName = "session";
     private $secure;
+    private $challenge;
 
     public function __construct() {
         // Cookies are shared between all instances on the same server.
@@ -63,6 +65,8 @@ class Session extends DBO {
             $this->validate($_COOKIE[$this->sessionCookieName]);
         else if(!empty($_SERVER['HTTP_X_APIKEY']))
             $this->authorizeApiKey($_SERVER['HTTP_X_APIKEY']);
+        else if(!empty($_SERVER['HTTP_X_CHALLENGE']))
+            $this->challenge = Challenge::validate($_SERVER['HTTP_X_CHALLENGE']);
     }
 
     public function getDN() { return $this->displayName; }
@@ -220,6 +224,9 @@ class Session extends DBO {
         switch($mode) {
         case "a":    // all
             $allow = true;
+            break;
+        case "C":    // challenge (auth user or successful challenge)
+            $allow = !empty($this->sessionID) || $this->challenge;
             break;
         case "T":    // token authentication
             $allow = $this->sessionID == self::TOKEN_AUTH;

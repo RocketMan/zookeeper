@@ -42,18 +42,18 @@ You may specify at most one filter as a query string parameter of the
 form `filter[_field_]=_value_`.  Possible fields are listed below.
 
 * Offset Profile
-  * artist
-  * album
-  * track
-  * location (requires X-APIKEY authentication; see below)
+  * artist (^see note below)
+  * album (^)
+  * track (^)
+  * location (^)
   * label.id
   * reviews.airname.id
-  * match(artist)
-  * match(artist,album)
-  * match(artist,track)
-  * match(track)
+  * match(artist) (^)
+  * match(artist,album) (^)
+  * match(artist,track) (^)
+  * match(track) (^)
 * Cursor Profile
-  * artist
+  * artist (^)
   * id
 
 Note for the track filter, page[size] refers to the number of tracks
@@ -76,6 +76,8 @@ Possible filter values are (case-insensitive): A-File, Deaccessioned,
 Library, Missing, Needs Repair, Out for Review, Pending Appr,
 Received, Review Shelf, Storage.  With Storage, you may supply an
 additional, optional filter `bin` to specify the storage location.
+
+NOTE: Filters indicated with '^' require X-APIKEY authentication or challenge.
 
 ### Sorting
 

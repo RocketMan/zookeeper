@@ -510,7 +510,7 @@ class Playlists extends MenuItem {
                     $valid = true;
 
                 // lookup the airname
-                if($valid) {
+                if($valid && strcasecmp($attrs->airname, "none")) {
                     $djapi = Engine::api(IDJ::class);
                     $airname = $djapi->getAirname($attrs->airname, $this->session->getUser());
                     if(!$airname) {
@@ -522,7 +522,8 @@ class Playlists extends MenuItem {
                         } else
                             $valid = false;
                     }
-                }
+                } else
+                    $airname = null;
 
                 if($valid && $_REQUEST['require-usual-slot'] &&
                         !Engine::api(IPlaylist::class)->checkUsualSlot($attrs->date, $attrs->time, $this->session->getUser())) {

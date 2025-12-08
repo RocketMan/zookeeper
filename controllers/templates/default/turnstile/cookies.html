@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+    <style type='text/css'>
+      body {
+        padding: 10px 2%;
+        font-family: Helvetica, sans-serif;
+        line-height: 1.2;
+      }
+      button {
+        font-size: 1.0rem;
+        font-weight: bold;
+      }
+      .footer {
+        margin-top: 50px;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Cookies Required to Use {{ app.station_title }}</h2>
+    <p>
+      This site needs a small, temporary cookie to verify your browser and
+      maintain a secure session.
+      Please enable cookies for <strong>{{ app.baseUrl }}</strong> and try again.
+    </p>
+    <h3>After enabling cookies, select <em>Try Again</em> below.</h3>
+    <form action='?' method='GET'>
+      <input type='hidden' name='target' value='{{ app.request.target }}'>
+      <input type='hidden' name='location' value='{{ app.request.location }}'>
+      <button type='submit'>Try Again</button>
+    </form>
+    <p class='footer'>For details on how we use cookies, see the <a href='PRIVACY.md' target='_blank'>Privacy Policy</a>.</p>
+  </body>
+</html>

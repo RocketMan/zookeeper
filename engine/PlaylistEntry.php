@@ -211,6 +211,21 @@ class PlaylistEntry {
                     $entry->setLabel($albumrec[0]["name"]);
                 }
             }
+
+            if(!$entry->getTag() && $entry->getTrack() &&
+                    $entry->getArtist() && $entry->getAlbum()) {
+                $artist = self::swapNames($entry->getArtist());
+                $album = $entry->getAlbum();
+                $tracks = Engine::api(ILibrary::class)->search(ILibrary::TRACK_NAME, 0, 200, $entry->getTrack());
+                foreach($tracks as $t) {
+                    if(mb_strtolower(PlaylistEntry::swapNames($t['artist'])) == mb_strtolower($artist) &&
+                            // ILibrary::TRACK_NAME encodes compilation album title as '[coll]: title'
+                            mb_strtolower(mb_substr($t['album'], $t['iscoll'] ? 8 : 0, 8)) == mb_strtolower(mb_substr($album, 0, 8))) {
+                        $entry->setTag($t['tag']);
+                        break;
+                    }
+                }
+            }
             break;
         }
         $entry->setCreated($json->created);

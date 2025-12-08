@@ -374,7 +374,7 @@ var lists = {
 // hashtags and albums share the same marshaller
 lists.hashtags = lists.albums;
 
-function search(size, offset) {
+async function search(size, offset) {
     var suffix, type = $("#type").val();
     if(!type || !requestMap[type])
         return;
@@ -407,11 +407,14 @@ function search(size, offset) {
     if(offset >= 0)
         url += "&page[offset]=" + offset;
 
+    const pow = await getPoW();
+
     $.ajax({
         dataType: 'json',
         type: 'GET',
         accept: 'application/json; charset=utf-8',
         url: url,
+        headers: { 'X-Challenge': btoa(JSON.stringify(pow)) },
         success: function(response) {
             var total = response.links.first.meta.total;
             var results;
@@ -558,7 +561,7 @@ function search(size, offset) {
         }
     });
 
-    $("#type").on('lsearch', function() {
+    $("#type").on('lsearch', async function() {
         if($("#fkey").val().length == 0)
             $("#fkey").val($(".search-data").val());
         search(maxresults, 0);

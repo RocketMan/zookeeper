@@ -28,7 +28,7 @@ use ZK\Engine\Engine;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
 
-use Enm\JsonApi\Exception\NotAllowedException;
+use Enm\JsonApi\Exception\BadRequestException;
 use Enm\JsonApi\Model\Document\Document;
 use Enm\JsonApi\Model\Request\RequestInterface;
 use Enm\JsonApi\Model\Resource\JsonResource;
@@ -173,12 +173,12 @@ trait OffsetPaginationTrait {
         }
 
         if(!$ops)
-            throw new NotAllowedException("Must specify filter.  May be one of: ".implode(", ", array_keys($paginateOps)));
+            throw new BadRequestException("Must specify filter.  May be one of: ".implode(", ", array_keys($paginateOps)));
 
         if($ops[0] == ILibrary::ALBUM_LOCATION) {
             // require authentication to prevent database scraping
             if(!Engine::session()->isAuth("u"))
-                throw new NotAllowedException("Operation requires authentication");
+                throw new UnauthorizedRequestException("Operation requires authentication");
             $locations = array_values(ILibrary::LOCATIONS);
             $locationMap = array_combine(
                 array_map("strtolower", $locations),
@@ -209,12 +209,17 @@ trait OffsetPaginationTrait {
             [$total, $records] = self::$ops($request, $type, $key, $offset, $limit);
             $ops = [ -1, null ];
         } else if($ops[1]) {
+            if (!Engine::session()->isAuth('C'))
+                throw new BadRequestException("Operation requires challenge");
             [$total, $retval] = $libraryAPI->searchFullText($ops[1], $key, $limit, $offset);
             $records = $total ? $retval[0]["result"] : [];
             $offset += $limit;
             if($offset >= $total)
                 $offset = 0;
         } else {
+            if (!Engine::session()->isAuth('C'))
+                throw new BadRequestException("Operation requires challenge");
+
             $total = (int)$libraryAPI->searchPos($ops[0], $offset, -1, $key);
             $records = $libraryAPI->searchPos($ops[0], $offset, $limit, $key, $sort);
         }

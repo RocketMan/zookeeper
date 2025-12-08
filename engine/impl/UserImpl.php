@@ -37,7 +37,7 @@ class UserImpl extends DBO implements IUser {
     }
 
     public function getUsers() {
-        $query = "SELECT name, realname FROM users u ORDER BY name";
+        $query = "SELECT * FROM users ORDER BY name";
         $stmt = $this->prepare($query);
         return $stmt->iterate();
     }

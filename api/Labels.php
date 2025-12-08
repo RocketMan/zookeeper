@@ -143,6 +143,9 @@ class Labels implements RequestHandlerInterface {
                 min($request->paginationValue("size"), ApiServer::MAX_LIMIT) :
                 ApiServer::DEFAULT_LIMIT;
 
+        if(!Engine::session()->isAuth('C'))
+            throw new BadRequestException("Operation requires challenge");
+
         $records = Engine::api(ILibrary::class)->listLabels($op, $key, $limit);
         $result = [];
         foreach($records as $record) {

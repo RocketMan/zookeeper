@@ -18,6 +18,8 @@ $controllers = [
     'sso' =>          ZK\Controllers\SSOLogin::class,
     'push' =>         ZK\Controllers\PushServer::class,
     'validate' =>     ZK\Controllers\Validate::class,
+    'challenge' =>    ZK\Controllers\Challenge::class,
+    'turnstile' =>    ZK\Controllers\Turnstile::class,
 ];
 
 /**
