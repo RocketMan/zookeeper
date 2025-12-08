@@ -764,9 +764,6 @@ class PushServer implements IController {
     }
 
     public static function lruCache(string $key, ?string $value = null) {
-        if(!Engine::param('push_enabled', true))
-            return null;
-
         $data = $value ? "resolve($key, $value)" : "resolve($key)";
 
         $addr = PushServer::WSSERVER_HOST;
