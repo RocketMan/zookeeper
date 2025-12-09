@@ -38,28 +38,31 @@ class Turnstile implements IController {
 
     // TBD refactor me out
     /**
-     * `gethostbyaddr` with timeout
+     * `gethostbyaddr` and `gethostbyname` with timeout
      *
      * adapted from original code and concept presented at
      * https://www.php.net/manual/en/function.gethostbyaddr.php#46869
      *
-     * @param string $ip IP address to resolve
+     * @param string $name IP address or FQDN to resolve
      * @param string $dns IP address of DNS resolver
      * @param float $timeout timeout in seconds (optional; default 1)
-     * @return string|false host name on success or false on failure
+     * @return string|array|false host name or array of IP address on success or false on failure
      */
-    public static function gethostbyaddr_timeout(string $ip, string $dns, float $timeout = 1.0): string|false {
+    public static function dnslookup(string $name, string $dns, float $timeout = 1.0): string|array|false {
         // build PTR query name
-        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            $octets = array_reverse(explode('.', $ip));
+        if (filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $octets = array_reverse(explode('.', $name));
             $queryName = implode('.', $octets) . '.in-addr.arpa.';
             $qtype = 12; // PTR
-        } elseif (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            $nibbles = str_split(str_replace(':', '', inet_pton($ip)));
-            $hex = unpack('H*', inet_pton($ip))[1];
+        } elseif (filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $nibbles = str_split(str_replace(':', '', inet_pton($name)));
+            $hex = unpack('H*', inet_pton($name))[1];
             $nibbles = array_reverse(str_split($hex));
             $queryName = implode('.', $nibbles) . '.ip6.arpa.';
             $qtype = 12; // PTR
+        } elseif (filter_var($name, FILTER_VALIDATE_DOMAIN, 0)) {
+            $queryName = rtrim($name, '.') . '.';
+            $qtype = 1; // A
         } else
             return false;
 
@@ -172,6 +175,7 @@ class Turnstile implements IController {
         }
 
         // parse answer RRs
+        $answers = [];
         for ($i = 0; $i < $an; $i++) {
             // NAME
             list($_name, $consumed) = $expandName($buf, $off);
@@ -186,14 +190,25 @@ class Turnstile implements IController {
             $rdlen = $rr['rdlen'];
             if ($off + $rdlen > $len) return false;
 
-            if ($rr['type'] === 12) { // PTR
+            if ($rr['type'] === 12 && $qtype == 12) { // PTR
                 list($ptrName, $_) = $expandName($buf, $off);
                 return $ptrName ?: false;
+            } elseif ($rr['type'] === 1 && $qtype === 1 && $rdlen === 4) { // A
+                $addr = inet_ntop(substr($buf, $off, 4));
+                if ($addr !== false)
+                    $answers[] = $addr;
+            } elseif ($rr['type'] === 28 && $qtype === 1 && $rdlen === 16) { // AAAA record may appear even if we asked for A
+                $addr = inet_ntop(substr($buf, $off, 16));
+                if ($addr !== false)
+                    $answers[] = $addr;
             }
 
-            // skip non-PTR
+            // advance to next record
             $off += $rdlen;
         }
+
+        if (!empty($answers))
+            return array_values(array_unique($answers));
 
         return false;
     }
@@ -211,11 +226,31 @@ class Turnstile implements IController {
             $addr = explode(',', $_SERVER['REMOTE_ADDR'])[0];
             $domain = PushServer::lruCache($addr);
             if (!$domain) {
-                $domain = self::gethostbyaddr_timeout($addr,
+                $domain = self::dnslookup($addr,
                             $config['resolver'] ?? self::DEFAULT_RESOLVER,
                             self::RESOLVER_TIMEOUT);
                 if ($domain)
                     PushServer::lruCache($addr, $domain);
+            }
+
+            // forward-confirm the reverse DNS (FCrDNS)
+            if ($domain) {
+                $addrs = PushServer::lruCache($domain);
+                if ($addrs)
+                    $addrs = explode(',', $addrs);
+                else {
+                    $addrs = self::dnslookup($domain,
+                                $config['resolver'] ?? self::DEFAULT_RESOLVER,
+                                self::RESOLVER_TIMEOUT);
+                    if ($addrs)
+                        PushServer::lruCache($domain, implode(',', $addrs));
+                }
+
+                // discard if forward lookup does not return the address
+                if (!$addrs || !in_array($addr, $addrs)) {
+                    error_log("DNS mismatch: $addr $domain");
+                    $domain = false;
+                }
             }
 
             $allowed = $domain ? array_filter($config['whitelist'] ?? [],
