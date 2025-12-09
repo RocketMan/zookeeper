@@ -38,7 +38,7 @@ class Turnstile implements IController {
 
     // TBD refactor me out
     /**
-     * `gethostbyaddr` and `gethostbyname` with timeout
+     * `gethostbyaddr` and `gethostbynamel` replacement with timeout
      *
      * adapted from original code and concept presented at
      * https://www.php.net/manual/en/function.gethostbyaddr.php#46869
@@ -49,18 +49,17 @@ class Turnstile implements IController {
      * @return string|array|false host name or array of IP address on success or false on failure
      */
     public static function dnslookup(string $name, string $dns, float $timeout = 1.0): string|array|false {
-        // build PTR query name
+        // build query name
         if (filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             $octets = array_reverse(explode('.', $name));
             $queryName = implode('.', $octets) . '.in-addr.arpa.';
             $qtype = 12; // PTR
         } elseif (filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            $nibbles = str_split(str_replace(':', '', inet_pton($name)));
             $hex = unpack('H*', inet_pton($name))[1];
             $nibbles = array_reverse(str_split($hex));
             $queryName = implode('.', $nibbles) . '.ip6.arpa.';
             $qtype = 12; // PTR
-        } elseif (filter_var($name, FILTER_VALIDATE_DOMAIN, 0)) {
+        } elseif (filter_var($name, FILTER_VALIDATE_DOMAIN)) {
             $queryName = rtrim($name, '.') . '.';
             $qtype = 1; // A
         } else
@@ -95,7 +94,7 @@ class Turnstile implements IController {
             $id, $flags, $qdcount, $ancount, $nscount, $arcount
         );
         $packet .= $qname;
-        $packet .= pack('nn', $qtype, 1); // QTYPE PTR, QCLASS IN
+        $packet .= pack('nn', $qtype, 1); // QTYPE, QCLASS IN
 
         // send UDP query and read response
         $sock = @fsockopen("udp://$dns", 53, $errno, $errstr, $timeout);
