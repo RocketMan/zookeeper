@@ -233,8 +233,12 @@ class Turnstile implements IController {
                     PushServer::lruCache($addr, $domain);
             }
 
+            $allowed = $domain ? array_filter($config['whitelist'] ?? [],
+                            fn($suffix) => str_ends_with($domain, $suffix)) : false;
+            $whitelisted = !empty($allowed);
+
             // forward-confirm the reverse DNS (FCrDNS)
-            if ($domain) {
+            if ($whitelisted) {
                 $addrs = PushServer::lruCache($domain);
                 if ($addrs)
                     $addrs = explode(',', $addrs);
@@ -249,13 +253,11 @@ class Turnstile implements IController {
                 // discard if forward lookup does not return the address
                 if (!$addrs || !in_array($addr, $addrs)) {
                     error_log("DNS mismatch: $addr $domain");
-                    $domain = false;
+                    $whitelisted = false;
                 }
             }
 
-            $allowed = $domain ? array_filter($config['whitelist'] ?? [],
-                            fn($suffix) => str_ends_with($domain, $suffix)) : false;
-            return !empty($allowed);
+            return $whitelisted;
         }
 
         $token = json_decode(base64_decode($cookie));
