@@ -314,6 +314,9 @@ class Turnstile implements IController {
                         'signature' => $signature,
                     ]));
 
+                    // clear the test cookie
+                    setcookie('testcookie', '', time() - 3600);
+
                     setcookie('turnstile', $cookie, [
                         'expires' => 0,
                         'path' => '/',
@@ -344,9 +347,6 @@ class Turnstile implements IController {
             if($qs["checkCookie"] ?? false) {
                 if(isset($_COOKIE["testcookie"])) {
                     // the cookie test was successful!
-
-                    // clear the test cookie
-                    setcookie('testcookie', '', time() - 3600);
 
                     // do the Turnstile challenge
                     $templateName = 'turnstile/landing.html';
