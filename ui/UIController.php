@@ -174,8 +174,11 @@ class UIController implements IController {
 
         // Turnstile validation
         if(!Turnstile::validate()) {
+            // preset the test cookie to avoid an additional redirect
+            setcookie('testcookie', 'testcookie');
             $rq = [
                 'target' => 'turnstile',
+                'checkCookie' => 1,
                 'location' => $_SERVER['REQUEST_URI'],
             ];
             SSOCommon::zkHttpRedirect(Engine::getBaseURL(), $rq);
