@@ -76,7 +76,8 @@ interface IPlaylist {
     function getPlaylist($playlist, $withAirname=0);
     function getPlaylists($onlyPublished=0, $withAirname=0,
                                $showDate="", $airname="", $user="", $desc=1);
-    function getPlaylistsByAirname($airname);
+    function getPlaylistsByAirnameCount($airname);
+    function getPlaylistsByAirname($airname, $pos = 0, $count = 10000);
     function getPlaylistsByUser($user, $onlyPublished=0, $withAirname=0);
     function getPlaylistsByDate($date);
     /**

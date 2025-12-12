@@ -56,27 +56,22 @@
 {% endif %}
 </div>
 
-<form action="?" class="selector" method=post>
 <div>
-  <div class='subhead nopadding small'>{{ dj.airname }}'s playlists:</div>
-  <ul tabindex='0' class='selector listbox no-text-select' data-name='playlist'>
-{% for playlist in playlists %}
-    <li data-value="{{ playlist.id }}">{{ playlist.showdate ~ ' -- ' ~ playlist.description }}</li>
-{% endfor %}
-  </ul>
-  <script src="{{ 'js/zklistbox.js' | decorate }}"></script>
-  <script><!--
-     $().ready(function() {
-         $("ul.selector").zklistbox().trigger('focus');
-     });
-  // -->
+  <div class='subhead nopadding'>{{ dj.airname }}'s playlists:</div>
+  <table class='searchTable djplaylists'></table>
+  <input type='hidden' id='chunksize' value='6'>
+  <style>
+    .djplaylists th {
+	font-size: 10pt;
+    }
+    .djplaylists td:first-of-type {
+	width: 100px;
+    }
+  </style>
+  <script>
+    $().ready(function() {
+	$("#fkey").val('{{ dj.id }}');
+	$("#type").val('playlists').trigger('lsearch');
+    });
   </script>
-  <div>
-    <input type=submit value=" View Playlist ">
-    <input type=hidden name=playlist value="">
-    <input type=hidden name=viewuser value="{{ dj.id }}">
-    <input type=hidden name=subaction value="viewDJ">
-    <input type=hidden name=seq value="selList">
-  </div>
 </div>
-</form>

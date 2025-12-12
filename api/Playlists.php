@@ -69,6 +69,7 @@ class Playlists implements RequestHandlerInterface {
         "date" => "paginate",
         "id" => "paginate",
         "user" => "paginate",
+        "airname.id" => "paginate",
         "match(event)" => [ self::PLAYLIST_SEARCH, "playlists" ],
     ];
 
@@ -114,6 +115,15 @@ class Playlists implements RequestHandlerInterface {
                 $rows = $api->getListsSelNormal($key, $offset, $limit);
                 $count = $api->getNormalPlaylistCount($key);
             }
+            $result = $rows->asArray();
+            $offset += sizeof($result);
+            return [ $count, $result ];
+        case "airname.id":
+            if(!$key)
+                throw new \InvalidArgumentException("Must supply value for airname.id filter");
+            $api = Engine::api(IPlaylist::class);
+            $rows = $api->getPlaylistsByAirname($key, $offset, $limit);
+            $count = $api->getPlaylistsByAirnameCount($key);
             $result = $rows->asArray();
             $offset += sizeof($result);
             return [ $count, $result ];
