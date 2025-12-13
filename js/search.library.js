@@ -23,7 +23,6 @@
 /*! Zookeeper Online (C) 1997-2025 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function() {
-// can be overridden by request params 'q' and 'chunksize', respectively
 const DEFAULT_CHUNKSIZE = 15;
 
 var maxresults = 50, chunksize = DEFAULT_CHUNKSIZE;
@@ -421,9 +420,12 @@ async function search(size, offset) {
     // For track search, limit the max results for the initial page,
     // as the JSON:API counts track search results by track and not by
     // album.  Thus, we are unable to slice a bigger result to size.
+    //
+    // Similarly, we constrain playlists results to the allocated
+    // area on the By DJ page.
     if(size >= 0)
         url += "&page[size]=" +
-                (type == 'tracks' ? Math.min(size, chunksize) : size);
+                (type == 'tracks' || type == 'playlists' ? Math.min(size, chunksize) : size);
 
     if(offset >= 0)
         url += "&page[offset]=" + offset;

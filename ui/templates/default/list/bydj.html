@@ -17,61 +17,45 @@
   {%~ endfor %}
 {%- endmacro -%}
 
-{% if topPlays | length %}
 <div class='djinfo'>
-  <div class='subhead nopadding'>{{ dj.airname }}'s top {{ limit }}</div>
-  <div class='subhead nopadding smaller'>for the {{ weeks }} week period ending {{ "now" | date("l, j F Y") }}</div>
-  <ol>
-  {{ _self.emitViewDJAlbum(topPlays, "label") }}
-  </ol>
-</div>
-{% endif %}
 
-<div class='djinfo-group'>
-{% if recentPlays | length %}
-  <div class='djinfo grow'>
-    <div class="subhead nopadding">{{ topPlays | length ? '' : dj.airname ~ "'s " ~}} Recent airplay</div>
-    <ul {{~ recentReviews | length ? ' class="sub"' }}>
-    {{ _self.emitViewDJAlbum(recentPlays, "label") }}
-    </ul>
+<div class='djinfo-top-10-reviews-box'>
+
+{% if topPlays | length %}
+  <div class='djinfo-top-10'>
+    <h2>{{ dj.airname }}'s Top {{ limit }}</h2>
+    <h3>for the {{ weeks }} weeks ending {{ "now" | date("l, j F Y") }}</h3>
+    <ol>
+      {{ _self.emitViewDJAlbum(topPlays, "label") }}
+    </ol>
   </div>
 {% endif %}
 
 {% if recentReviews | length %}
-  <div class='djinfo'>
-    {%~ set block = topPlays | length or recentPlays | length %}
-    <div class='subhead nopadding'>{{ block ? '' : dj.airname ~ "'s " ~}} Recent reviews</div>
-    <ul {{~ block ? ' class="sub"' ~}}>
+  <div class='djinfo-reviews'>
+    {%~ set block = topPlays | length %}
+    <h2>{{ block ? '' : dj.airname ~ "'s " ~}} Recent reviews</h2>
+    <ul>
       {{ _self.emitViewDJAlbum(recentReviews, "name") }}
     {%~ if recentReviews | length == count - 1 %}
-      <li style='list-style-type: none'><a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&amp;viewuser={{ dj.id }}' class='nav'>More reviews...</a></li>
+      <li class='more'><a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&amp;viewuser={{ dj.id }}'>More reviews...</a></li>
     {%~ endif %}
     </ul>
   </div>
-  {%~ if recentPlays | length %}
-  {#~ balance the two divs above to layout like table-row but with wrap #}
-  <div class='grow'></div>
-  <div class='grow'></div>
-  {%~ endif %}
 {% endif %}
 </div>
 
-<div>
-  <div class='subhead nopadding'>{{ dj.airname }}'s playlists:</div>
-  <table class='searchTable djplaylists'></table>
+<div class='djinfo-playlists'>
+  {%~ set block = topPlays | length or recentReviews | length %}
+  <h2>{{ block ? '' : dj.airname ~ "'s " ~}}Recent playlists</h2>
+  <table class='searchTable'></table>
   <input type='hidden' id='chunksize' value='6'>
-  <style>
-    .djplaylists th {
-	font-size: 10pt;
-    }
-    .djplaylists td:first-of-type {
-	width: 100px;
-    }
-  </style>
   <script>
     $().ready(function() {
 	$("#fkey").val('{{ dj.id }}');
 	$("#type").val('playlists').trigger('lsearch');
     });
   </script>
+</div>
+
 </div>
