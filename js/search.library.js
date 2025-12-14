@@ -388,6 +388,8 @@ var lists = {
         });
 
         emitMore(table, data);
+
+        table.css('opacity', 1);
     },
 };
 
@@ -402,6 +404,7 @@ async function search(size, offset) {
     case "albumsByPubkey":
     case "reviews":
     case "hashtags":
+    case "playlists":
         suffix = "";
         break;
     default:

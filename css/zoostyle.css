@@ -545,6 +545,10 @@ table.djzone li:not(:last-of-type):after {
     margin-bottom: 0;
 }
 
+.djinfo-playlists .searchTable {
+    opacity: 0;
+    transition: all 400ms ease 0s;
+}
 .djinfo-playlists .searchTable th {
     font-size: 0.9rem;
     color: #555;
