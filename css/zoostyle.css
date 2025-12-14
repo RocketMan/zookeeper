@@ -505,6 +505,9 @@ table.djzone li:not(:last-of-type):after {
 }
 .djinfo ol li {
     display: block;
+}
+.djinfo ol li,
+.djinfo ul li {
     line-height: 1.4;
 }
 .djinfo ol li::before {
