@@ -281,7 +281,7 @@ class Turnstile implements IController {
                         'expires' => 0,
                         'path' => '/',
                         'domain' => $_SERVER['SERVER_NAME'],
-                        'secure' => $_SERVER['REQUEST_SCHEME'] == 'https',
+                        'secure' => $_SERVER['CLIENT_SCHEME'] == 'https',
                         'httponly' => true,
                         'samesite' => 'lax'
                     ]);

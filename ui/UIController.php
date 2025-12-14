@@ -297,7 +297,7 @@ class UIController implements IController {
         case "cookiesDisabled":
             echo "  <TR><TD>&nbsp;</TD><TD><P><B><FONT CLASS=\"error\">You must enable cookies to login to Zookeeper Online.</FONT></B></P>".
             "<P>Enable cookies in your browser for the website '".
-            $_SERVER['REQUEST_SCHEME']."://".$_SERVER['SERVER_NAME'].
+            $_SERVER['CLIENT_SCHEME']."://".$_SERVER['SERVER_NAME'].
             "/' and try again.</P>".
             "<P>For information on how we use cookies, see the ".
             "<A HREF='PRIVACY.md' TARGET='_blank'>Privacy Policy</A>.</TD></TR>\n";
