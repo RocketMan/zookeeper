@@ -973,7 +973,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $query .= "    l.airname = ? AND";
         if($days)
             $query .= "    date_add(l.showdate, interval $days day) > now() ";
-        $query .= " GROUP BY t.album, t.label ORDER BY 2 DESC, 7 DESC, t.seq DESC, t.tag DESC LIMIT ?";
+        $query .= " GROUP BY t.album, t.label ORDER BY 2 DESC, 7 DESC, t.id DESC LIMIT ?";
         $stmt = $this->prepare($query);
         $p = 1;
         if($airname)
