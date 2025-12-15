@@ -56,7 +56,8 @@ class Session extends DBO {
             }
         }
 
-        $this->secure = $_SERVER['CLIENT_SCHEME'] == 'https';
+        $this->secure = empty($_SERVER['REQUEST_SCHEME'])?false:
+            $_SERVER['REQUEST_SCHEME'] == 'https';
 
         // we no longer accept the session ID as a request parameter;
         // it must be delievered in the request header as a cookie.

@@ -16,12 +16,6 @@ Options -Indexes
     php_value request_order GP
 </IfModule>
 
-<IfModule mod_setenvif.c>
-SetEnvIf X-Forwarded-Proto ^https$ CLIENT_SCHEME=https
-SetEnvIf HTTPS ^on$ CLIENT_SCHEME=https
-SetEnvIf CLIENT_SCHEME ^$ CLIENT_SCHEME=http
-</IfModule>
-
 <IfModule mod_rewrite.c>
 RewriteEngine on
 RewriteRule ^zkrss\.php$ index.php?target=rss [QSA,L]
