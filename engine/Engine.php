@@ -126,7 +126,7 @@ class Engine {
             $port = "";
 
         // compose the URL
-        return $_SERVER['REQUEST_SCHEME'] . "://" .
+        return self::$session->getClientScheme() . "://" .
                $_SERVER['SERVER_NAME'] . $port .
                self::getAppBasePath();
     }
