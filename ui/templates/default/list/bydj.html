@@ -37,7 +37,7 @@
     <h2>{{ block ? '' : dj.airname ~ "'s " ~}} Recent reviews</h2>
     <ul>
       {{ _self.emitViewDJAlbum(recentReviews, "name") }}
-    {%~ if recentReviews | length == count - 1 %}
+    {%~ if moreReviews %}
       <li class='more'><a href='?action=viewRecent&amp;subaction=viewDJ&amp;seq=selUser&amp;viewuser={{ dj.id }}'>More reviews...</a></li>
     {%~ endif %}
     </ul>
