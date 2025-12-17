@@ -34,6 +34,7 @@ class Session extends DBO {
     private $access = null;
     private $sessionID = null;
     private $sessionCookieName = "session";
+    private $clientScheme;
     private $secure;
     private $challenge;
 
@@ -56,8 +57,18 @@ class Session extends DBO {
             }
         }
 
-        $this->secure = empty($_SERVER['REQUEST_SCHEME'])?false:
-            $_SERVER['REQUEST_SCHEME'] == 'https';
+        // $this->clientScheme is a synthetic value set to
+        // the protocol that is used by the frontend client.
+        //
+        // Caution: $_SERVER['REQUEST_SCHEME'] reflects the *backend*
+        // protocol, which may not be the same as the frontend
+        // when a proxy or load balancer is used.
+        //
+        // Per the doc, PHP sets $_SERVER['HTTPS'] on frontend https.
+        $this->clientScheme = !empty($_SERVER['HTTPS']) ? 'https' :
+                $_SERVER['REQUEST_SCHEME'] ?? 'http';
+
+        $this->secure = $this->clientScheme == 'https';
 
         // we no longer accept the session ID as a request parameter;
         // it must be delievered in the request header as a cookie.
@@ -71,6 +82,8 @@ class Session extends DBO {
 
     public function getDN() { return $this->displayName; }
     public function getUser() { return $this->user; }
+    public function getClientScheme(): string { return $this->clientScheme; }
+    public function isSecure(): bool { return $this->secure; }
 
     private function setSessionCookie($session) {
         // help prevent CSRF attacks with SameSite cookie flag
