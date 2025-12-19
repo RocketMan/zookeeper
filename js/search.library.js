@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,11 +20,12 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2025 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function() {
-// can be overridden by request params 'q' and 'chunksize', respectively
-var maxresults = 50, chunksize = 15;
+const DEFAULT_CHUNKSIZE = 15;
+
+var maxresults = 50, chunksize = DEFAULT_CHUNKSIZE;
 
 function encobj(o, html) {
     // we're encoding for the URI fragment, which can contain ':' and ','
@@ -216,7 +217,8 @@ var requestMap = {
     tracks: "album?filter[track]=",
     labels: "label?filter[name]=",
     reviews: "album?filter[reviews.airname.id]=",
-    hashtags: "album?filter[reviews.hashtag]="
+    hashtags: "album?filter[reviews.hashtag]=",
+    playlists: "playlist?filter[airname.id]="
 };
 
 var lists = {
@@ -369,6 +371,26 @@ var lists = {
 
         emitMore(table, data);
     },
+
+    playlists: function(table, data) {
+        var tr = $("<TR>");
+        tr.append(header("Date", false));
+        tr.append(header("Show", false));
+        table.append($("<THEAD>").append(tr));
+
+        data.data.forEach(function(entry) {
+            tr = $("<TR>");
+            var attrs = entry.attributes;
+            tr.append($("<TD>").html(htmlify(attrs.date)));
+            tr.append($("<TD>").append(
+                $(`<A href='?subaction=viewDJ&amp;seq=selList&amp;playlist=${entry.id}'>`).append(htmlify(attrs.name))));
+            table.append(tr);
+        });
+
+        emitMore(table, data);
+
+        table.css('opacity', 1);
+    },
 };
 
 // hashtags and albums share the same marshaller
@@ -382,6 +404,7 @@ async function search(size, offset) {
     case "albumsByPubkey":
     case "reviews":
     case "hashtags":
+    case "playlists":
         suffix = "";
         break;
     default:
@@ -400,9 +423,12 @@ async function search(size, offset) {
     // For track search, limit the max results for the initial page,
     // as the JSON:API counts track search results by track and not by
     // album.  Thus, we are unable to slice a bigger result to size.
+    //
+    // Similarly, we constrain playlists results to the allocated
+    // area on the By DJ page.
     if(size >= 0)
         url += "&page[size]=" +
-                (type == 'tracks' ? Math.min(size, chunksize) : size);
+                (type == 'tracks' || type == 'playlists' ? Math.min(size, chunksize) : size);
 
     if(offset >= 0)
         url += "&page[offset]=" + offset;
@@ -418,7 +444,7 @@ async function search(size, offset) {
         success: function(response) {
             var total = response.links.first.meta.total;
             var results;
-            if(type == "reviews") {
+            if(type == "reviews" || type == "playlists") {
                 // reviews uses pre-existing table, as there is
                 // some other content already on the page (the header)
                 results = $(".searchTable");
@@ -550,6 +576,7 @@ async function search(size, offset) {
                 break;
             }
 
+            chunksize = DEFAULT_CHUNKSIZE;
             if(params.type == "all")
                 $("#type").trigger('fsearch');
             else
@@ -562,6 +589,8 @@ async function search(size, offset) {
     });
 
     $("#type").on('lsearch', async function() {
+        var c = $("#chunksize");
+        chunksize = c.length ? c.val() : DEFAULT_CHUNKSIZE;
         if($("#fkey").val().length == 0)
             $("#fkey").val($(".search-data").val());
         search(maxresults, 0);

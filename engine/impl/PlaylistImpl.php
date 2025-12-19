@@ -116,9 +116,30 @@ class PlaylistImpl extends DBO implements IPlaylist {
 
         return new ArrayRowIterator($result);
     }
+
+    public function getPlaylistsByAirnameCount($airname) {
+        $query = "SELECT COUNT(*) count FROM lists l ".
+                 "LEFT JOIN lists_del d ON l.id = d.listid ".
+                 "WHERE l.airname=? AND deleted IS NULL";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $airname);
+        $row = $stmt->executeAndFetch();
+        return $row["count"];
+    }
     
-    public function getPlaylistsByAirname($airname) {
-        return $this->getPlaylists(0, 0, "", $airname);
+    public function getPlaylistsByAirname($airname, $pos = 0, $count = 10000) {
+        $query = "SELECT l.id, showdate, showtime, description, a.airname, origin ".
+                 "FROM lists l ".
+                 "LEFT JOIN lists_del ON l.id = lists_del.listid ".
+                 "LEFT JOIN airnames a ON l.airname = a.id ".
+                 "WHERE l.airname=? AND deleted IS NULL ".
+                 "ORDER BY showdate DESC, showtime DESC ".
+                 "LIMIT ?, ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $airname);
+        $stmt->bindValue(2, $pos, \PDO::PARAM_INT);
+        $stmt->bindValue(3, $count, \PDO::PARAM_INT);
+        return $stmt->iterate(\PDO::FETCH_BOTH);
     }
     
     public function getPlaylistsByUser($user, $onlyPublished=0, $withAirname=0) {
@@ -943,7 +964,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
     
     public function getTopPlays($airname=0, $days=41, $count=10) {
         $over = $airname?"distinct t.list":"*";
-        $query = "SELECT t.tag, count($over) plays, l.showdate, IFNULL(a.artist, t.artist) artist, t.album, t.label, count(*)" .
+        $query = "SELECT t.tag, count($over) plays, l.showdate, IFNULL(a.artist, t.artist) artist, t.album, t.label, count(*), a.iscoll" .
                  " FROM tracks t JOIN lists l ON t.list = l.id " .
                  " LEFT JOIN albumvol a ON a.tag = t.tag " .
                  " WHERE t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' AND".
@@ -952,7 +973,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $query .= "    l.airname = ? AND";
         if($days)
             $query .= "    date_add(l.showdate, interval $days day) > now() ";
-        $query .= " GROUP BY t.album, t.label ORDER BY 2 DESC, 7 DESC, t.artist LIMIT ?";
+        $query .= " GROUP BY t.album, t.label ORDER BY 2 DESC, 7 DESC, t.id DESC LIMIT ?";
         $stmt = $this->prepare($query);
         $p = 1;
         if($airname)

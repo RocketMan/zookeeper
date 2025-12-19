@@ -746,18 +746,15 @@ class Playlists extends MenuItem {
             }
     
             $topPlays = Engine::api(IPlaylist::class)->getTopPlays($viewuser, $weeks * 7, $limit);
-            $recentPlays = $this->session->isAuth("u") ? Engine::api(IPlaylist::class)->getRecentPlays($viewuser, $count) : [];
-            $recentReviews = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_AIRNAME, 0, $count - 1, $viewuser, "Date-");
-            $playlists = Engine::api(IPlaylist::class)->getPlaylists(0, 0, 0, $viewuser)->asArray();
+            $pos = 0;
+            $recentReviews = Engine::api(ILibrary::class)->searchPos(ILibrary::ALBUM_AIRNAME, $pos, $count, $viewuser, "Date-");
 
             $this->addVar('topPlays', $topPlays);
-            $this->addVar('recentPlays', $recentPlays);
             $this->addVar('recentReviews', $recentReviews);
-            $this->addVar('playlists', $playlists);
             $this->addVar('dj', $dj);
             $this->addVar('weeks', $weeks);
             $this->addVar('limit', $limit);
-            $this->addVar('count', $count);
+            $this->addVar('moreReviews', $pos);
             $this->setTemplate('list/bydj.html');
 
             return;

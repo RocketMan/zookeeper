@@ -478,6 +478,7 @@ async function search(type, url, size, offset) {
                 switch($("#type").val()) {
                 case "albumsByPubkey":
                 case "reviews":
+                case "playlists":
                     break;
                 default:
                     $(".search-data").val($("#fkey").val());
