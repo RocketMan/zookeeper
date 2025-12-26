@@ -130,7 +130,7 @@ $().ready(function(){
             $("body").css("--theme-content-background-colour", "#eee");
 
         const count = getCount();
-        const plays = JSON.parse(document.getElementById("recent-plays").textContent).slice(0, count);
+        const plays = JSON.parse(document.getElementById("recent-play-data").textContent).slice(0, count);
 
         plays.forEach(function(spin) {
             if(target.find("div[data-id='" + spin.id + "']").length == 0) {
