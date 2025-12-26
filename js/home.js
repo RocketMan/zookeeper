@@ -159,7 +159,7 @@ $().ready(function(){
 
         // completely fill the last row
         const currentCount = target.find(".card").length;
-        count -= currentCount % count;
+        count -= currentCount % (count / 2);
 
         url += "&count=" + encodeURIComponent(count);
 
