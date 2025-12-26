@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -31,6 +31,8 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 
 class Home extends MenuItem {
+    private const DEFAULT_COUNT = 12;
+
     private static $subactions = [
         [ "", "emitHome" ],
         [ "recent", "recentSpins" ],
@@ -42,7 +44,7 @@ class Home extends MenuItem {
     }
 
     public function recentSpins() {
-        $plays = Engine::api(IPlaylist::class)->getPlaysBefore($_REQUEST["before"] ?? null, $_REQUEST["count"] ?? 10);
+        $plays = Engine::api(IPlaylist::class)->getPlaysBefore($_REQUEST["before"] ?? null, $_REQUEST["count"] ?? self::DEFAULT_COUNT);
         echo json_encode($plays);
     }
 
@@ -93,6 +95,9 @@ class Home extends MenuItem {
         $this->addVar('discogs', true);
         $this->makeDatePicker();
         $this->makeTimePicker();
+
+        $plays = Engine::api(IPlaylist::class)->getPlaysBefore(null, self::DEFAULT_COUNT);
+        $this->addVar('plays', $plays);
     }
 
     private function emitTopPlays($numweeks=1, $limit=10) {
