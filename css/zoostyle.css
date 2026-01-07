@@ -1953,7 +1953,7 @@ a:hover.copy {
 }
 
 .album-reviews .reviews.expanded {
-    max-height: 1000px;
+    max-height: none;
 }
 
 .album-reviews .reviews > .review-body {
