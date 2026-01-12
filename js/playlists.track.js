@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2026 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     const intl = new Date().toLocaleTimeString().match(/am|pm/i) == null;
@@ -557,7 +557,7 @@ $().ready(function(){
                     // Table is ordered latest to oldest, which means
                     // we must reverse the sense of seq.
                     var rows = $(".playlistTable > tbody > tr");
-                    var index = rows.length - meta.seq;
+                    var index = meta.seq ? rows.length - meta.seq : row.index();
                     if(index == row.index()) {
                         row.replaceWith(meta.html);
                     } else if(index < row.index()) {
