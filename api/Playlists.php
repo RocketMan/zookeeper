@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -961,7 +961,6 @@ class Playlists implements RequestHandlerInterface {
 
         if($success && $event->metaInformation()->getOptional("wantMeta")) {
             $res = new JsonResource("event", $entry->getId());
-            $api->getSeq($key, $entry->getId()); // force seq
             $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $hashStatus, $entry);
             return new DocumentResponse(new Document($res));
         }
