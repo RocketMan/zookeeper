@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -47,20 +47,19 @@ if($_SERVER['REQUEST_METHOD'] == "HEAD")
     return;
 
 ob_start("ob_gzhandler");
-ob_start("compress");
 
 // function for compressing the CSS as tightly as possible
 // Adapted from: https://gist.github.com/Xeoncross/2407286
-function compress($buffer) {
+ob_start(function ($buffer) {
     // Remove CSS comments
     $buffer = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $buffer);
     // Remove tabs, spaces, newlines, etc.
     $buffer = str_replace(
         ["\r\n", "\r", "\n", "\t", '  ', '    ', '    '], '', $buffer);
     return $buffer;
-}
+});
 
-require_once($target);
+echo file_get_contents($target);
 
 ob_end_flush(); // compress
 ob_end_flush(); // ob_gzhandler

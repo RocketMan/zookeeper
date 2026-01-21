@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -64,13 +64,8 @@ echo "<link rel=\"stylesheet\" href=\"$stylesheet\">\n";
 echo "<title>".basename($_SERVER['REQUEST_URI'])."</title>\n";
 echo "</head>\n<body>\n<div class='box'>\n";
 
-ob_start(function($buffer) {
-    return (new GithubFlavoredMarkdownConverter())->convert($buffer);
-});
-
-require_once($target);
-
-ob_end_flush(); // markdown
+$markdownConverter = new GithubFlavoredMarkdownConverter();
+echo $markdownConverter->convert(file_get_contents($target));
 
 echo "\n</div>\n</body>\n</html>\n";
 
