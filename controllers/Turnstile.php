@@ -225,7 +225,7 @@ class Turnstile implements IController {
 
         // Nothing to do if edge prevalidation has already run
         if (($config['prevalidate'] ?? false) &&
-                $_SERVER['HTTP_X_' . strtoupper($config['prevalidate'])] ?? false)
+                $_SERVER[strtoupper($config['prevalidate'])] ?? false)
             return true;
 
         $cookie = $_COOKIE['turnstile'] ?? '';
