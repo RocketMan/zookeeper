@@ -144,11 +144,12 @@ class SpoaTurnstile implements IPushProxy {
                 function ($result) use ($addr) {
                     return $result ??
                     $this->dnslookup($addr, self::RESOLVER_TIMEOUT)->then(
-                    function ($domain) use ($addr) {
-                        if ($domain)
-                            $this->lruCache->set($addr, $domain);
-                        return $domain;
-                    });
+                        function ($domain) use ($addr) {
+                            if ($domain)
+                                $this->lruCache->set($addr, $domain);
+                            return $domain;
+                        }
+                    );
                 }
             );
 
@@ -171,7 +172,8 @@ class SpoaTurnstile implements IPushProxy {
                                     if ($addrs)
                                         $this->lruCache->set($domain, implode(',', $addrs));
                                     return $addrs;
-                                });
+                                }
+                            );
                         }
                     );
 
@@ -183,7 +185,8 @@ class SpoaTurnstile implements IPushProxy {
 
                         return self::result(true);
                     });
-                });
+                }
+            );
         }
 
         // If cookie present, decode & validate
