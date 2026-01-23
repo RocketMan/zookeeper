@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -24,6 +24,7 @@
 
 namespace ZK\PushNotification;
 
+use ZK\Controllers\IPushProxy;
 use ZK\Engine\IArtwork;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\Engine;
@@ -45,17 +46,15 @@ use GuzzleHttp\RequestOptions;
  *        [
  *            'proxy' => ZK\PushNotification\ZootopiaListener::class,
  *            'ws_endpoint' => 'wss://example/kzsu/socket.io/endpoint',
- *            'http_endpoints' => [
- *                'apikey' => 'apikey',
- *                'base_url' => 'base url',
- *                'title' => 'show title',  // or array of show titles
- *                'airname' => 'airname',   // or array of airnames
- *                'recent' => true|false,   // include in recent airplay (optional; default false)
- *                'tz' => 'tzName',
- *                'caption' => 'caption',
- *            ]
+ *            'apikey' => 'apikey',
+ *            'base_url' => 'base url',
+ *            'title' => 'show title',  // or array of show titles
+ *            'airname' => 'airname',   // or array of airnames
+ *            'recent' => true|false,   // include in recent airplay (optional; default false)
+ *             'tz' => 'tzName',
+ *            'caption' => 'caption',
  *        ],
- *        ...repeat for additional proxies...
+ *        ...more proxies...
  *    ],
  *
  * where:
@@ -76,11 +75,9 @@ use GuzzleHttp\RequestOptions;
  * See INSTALLATION.md for details on installing and configuring push
  * notifications.
  */
-class ZootopiaListener {
-    protected $loop;
+class ZootopiaListener implements IPushProxy {
     protected $subscriber;
     protected $wsEndpoint;
-    protected $config;
     protected $handler;
     protected $zk;
     protected $lastPing;
@@ -124,8 +121,10 @@ class ZootopiaListener {
                     $title);
     }
 
-    public function __construct(\React\EventLoop\LoopInterface $loop) {
-        $this->loop = $loop;
+    public function __construct(
+        protected \React\EventLoop\LoopInterface $loop,
+        protected array $config,
+    ) {
         $this->subscriber = new Subscriber($loop);
         $this->handler = new CurlMultiHandler();
     }
@@ -147,9 +146,8 @@ class ZootopiaListener {
         });
     }
 
-    public function connect(string $wsEndpoint, array $httpEndpoints) {
-        $this->wsEndpoint = $wsEndpoint;
-        $this->config = $httpEndpoints;
+    public function connect() {
+        $this->wsEndpoint = $this->config[IPushProxy::WS_ENDPOINT];
         $this->zk = new Client([
             'handler' => HandlerStack::create($this->handler),
             'base_uri' => $this->config["base_url"],

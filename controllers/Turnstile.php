@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -39,6 +39,10 @@ class Turnstile implements IController {
     // TBD refactor me out
     /**
      * `gethostbyaddr` and `gethostbynamel` replacement with timeout
+     *
+     * If given an IP address, returns the FQDN string; if given a
+     * hostname, returns an array<string> of addresses.  Upon failure,
+     * (e.g., no record found, timeout), returns false.
      *
      * adapted from original code and concept presented at
      * https://www.php.net/manual/en/function.gethostbyaddr.php#46869
@@ -217,6 +221,11 @@ class Turnstile implements IController {
         $config = Engine::param('turnstile');
         if (!$config || !isset($config['secret']) ||
                 Engine::session()->isAuth('u'))
+            return true;
+
+        // Nothing to do if edge prevalidation has already run
+        if (($config['prevalidate'] ?? false) &&
+                $_SERVER['HTTP_X_' . strtoupper($config['prevalidate'])] ?? false)
             return true;
 
         $cookie = $_COOKIE['turnstile'] ?? '';
