@@ -674,6 +674,61 @@ class NowAiringServer implements MessageComponentInterface {
         error_log("NowAiringServer: " . $e->getMessage());
         $conn->close();
     }
+
+    public function start() {
+        $wsserver = new \Ratchet\WebSocket\WsServer($this);
+        $wsserver->enableKeepAlive($this->loop, 30);
+        $routes = new RouteCollection();
+        $routes->add('/push/onair', new Route('/push/onair', [
+            '_controller' => $wsserver
+        ]));
+        $router = new \Ratchet\Http\Router(
+            new UrlMatcher($routes, new RequestContext()));
+        new IoServer(new \Ratchet\Http\HttpServer($router),
+            new \React\Socket\Server(PushServer::WSSERVER_HOST . ":" .
+                                     PushServer::WSSERVER_PORT, $this->loop));
+    }
+}
+
+class DatagramServer {
+    public function __construct(
+        protected LoopInterface $loop,
+        protected CacheInterface $resolverCache,
+        protected NowAiringServer $nas,
+    ) {}
+
+    protected function resolve($server, $addr, $key, $value) {
+        if($value !== null)
+            $this->resolverCache->set($key, $value);
+        else
+            $value = $this->resolverCache->get($key);
+
+        Promise\resolve($value)->then(function($result) use ($server, $addr) {
+            $server->send($result ?? "null", $addr);
+        });
+    }
+
+    public function start() {
+        $dgfact = new \React\Datagram\Factory($this->loop);
+        $dgfact->createServer(PushServer::WSSERVER_HOST . ":" .
+                              PushServer::WSSERVER_PORT)->then(
+            function(\React\Datagram\Socket $client) {
+                $client->on('message', function($message, $addr, $client) {
+                    // echo "received $message from $addr\n";
+
+                    if(preg_match("/^loadImages\((\d+)(,\s*(\d+))?\)$/", $message, $matches))
+                        $this->nas->loadImages($matches[1], $matches[3] ?? 0);
+                    else if(preg_match("/^reloadAlbum\((\d+)(,\s*(\d+))?\)$/", $message, $matches))
+                        $this->nas->reloadAlbum($matches[1], $matches[3] ?? 1);
+                    else if(preg_match("/^resolve\((.+?)(,\s*(.+))?\)$/", $message, $matches))
+                        $this->resolve($client, $addr, $matches[1], $matches[3] ?? null);
+                    else if($message && $message[0] == '{')
+                        $this->nas->sendNotification($message);
+                    else // empty message means poll database
+                        $this->nas->refreshOnNow();
+            });
+        });
+    }
 }
 
 class ProxyFactory {
@@ -691,57 +746,18 @@ class ProxyFactory {
 class PushServerInstance {
     public function __construct(
         protected LoopInterface $loop,
-        protected CacheInterface $resolverCache,
-        protected ProxyFactory $proxyFactory,
         protected NowAiringServer $nas,
+        protected DatagramServer $ds,
+        protected ProxyFactory $proxyFactory,
     ) {}
-
-    protected function resolve($server, $addr, $key, $value) {
-        if($value !== null)
-            $this->resolverCache->set($key, $value);
-        else
-            $value = $this->resolverCache->get($key);
-
-        Promise\resolve($value)->then(function($result) use ($server, $addr) {
-            $server->send($result ?? "null", $addr);
-        });
-    }
 
     public function run() {
         try {
             // websocket server for subscribers
-            $wsserver = new \Ratchet\WebSocket\WsServer($this->nas);
-            $wsserver->enableKeepAlive($this->loop, 30);
-            $routes = new RouteCollection();
-            $routes->add('/push/onair', new Route('/push/onair', [
-                '_controller' => $wsserver
-            ]));
-            $router = new \Ratchet\Http\Router(
-                new UrlMatcher($routes, new RequestContext()));
-            new IoServer(new \Ratchet\Http\HttpServer($router),
-                new \React\Socket\Server(PushServer::WSSERVER_HOST . ":" .
-                                         PushServer::WSSERVER_PORT, $this->loop));
+            $this->nas->start();
 
             // datagram server for application
-            $dgfact = new \React\Datagram\Factory($this->loop);
-            $dgfact->createServer(PushServer::WSSERVER_HOST . ":" .
-                                  PushServer::WSSERVER_PORT)->then(
-                function(\React\Datagram\Socket $client) {
-                    $client->on('message', function($message, $addr, $client) {
-                        // echo "received $message from $addr\n";
-
-                        if(preg_match("/^loadImages\((\d+)(,\s*(\d+))?\)$/", $message, $matches))
-                            $this->nas->loadImages($matches[1], $matches[3] ?? 0);
-                        else if(preg_match("/^reloadAlbum\((\d+)(,\s*(\d+))?\)$/", $message, $matches))
-                            $this->nas->reloadAlbum($matches[1], $matches[3] ?? 1);
-                        else if(preg_match("/^resolve\((.+?)(,\s*(.+))?\)$/", $message, $matches))
-                            $this->resolve($client, $addr, $matches[1], $matches[3] ?? null);
-                        else if($message && $message[0] == '{')
-                            $this->nas->sendNotification($message);
-                        else // empty message means poll database
-                            $this->nas->refreshOnNow();
-                });
-            });
+            $this->ds->start();
 
             // push proxy servers, if configured
             $config = Engine::param('push_proxy');
