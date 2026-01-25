@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -24,6 +24,7 @@
 
 namespace ZK\PushNotification;
 
+use ZK\Controllers\IPushProxy;
 use ZK\Controllers\NowAiringServer;
 
 use Ratchet\RFC6455\Messaging\Frame;
@@ -69,16 +70,17 @@ use Ratchet\RFC6455\Messaging\Frame;
  * function (see above).
  */
 #[\AllowDynamicProperties]
-class PushHttpProxy {
-    protected $loop;
+class PushHttpProxy implements IPushProxy {
     protected $subscriber;
     protected $httpClient;
     protected $wsEndpoint;
     protected $httpEndpoints;
     protected $current;
 
-    public function __construct(\React\EventLoop\LoopInterface $loop) {
-        $this->loop = $loop;
+    public function __construct(
+        protected \React\EventLoop\LoopInterface $loop,
+        protected array $config,
+    ) {
         $this->subscriber = new Subscriber($loop);
         $this->httpClient = new \React\Http\Browser($loop);
     }
@@ -95,9 +97,9 @@ class PushHttpProxy {
         });
     }
 
-    public function connect(string $wsEndpoint, array $httpEndpoints) {
-        $this->wsEndpoint = $wsEndpoint;
-        $this->httpEndpoints = $httpEndpoints;
+    public function connect() {
+        $this->wsEndpoint = $this->config[IPushProxy::WS_ENDPOINT];
+        $this->httpEndpoints = $this->config[IPushProxy::HTTP_ENDPOINTS];
         $this->reconnect();
     }
 

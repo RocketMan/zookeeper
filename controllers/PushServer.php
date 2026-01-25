@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -33,52 +33,21 @@ use ZK\Engine\OnNowFilter;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
 
+use DI\ContainerBuilder;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
 use Ratchet\Server\IoServer;
+use React\Cache\ArrayCache;
+use React\Cache\CacheInterface;
+use React\EventLoop\LoopInterface;
+use React\Promise;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
-class LRUCache {
-    private array $items;
-    private int $maxSize;
-
-    public function __construct(int $maxSize) {
-        $this->maxSize = $maxSize;
-        $this->items = [];
-    }
-
-    protected function touch(string $key, $value = null) {
-        $item = $value ?? $this->items[$key];
-        unset($this->items[$key]);
-        $this->items[$key] = $item;
-        return $item;
-    }
-
-    public function add(string $key, $value): void {
-        if (key_exists($key, $this->items)) {
-            $this->touch($key, $value);
-            return;
-        }
-
-        $this->items[$key] = $value;
-
-        if (count($this->items) <= $this->maxSize)
-            return;
-
-        // remove oldest item
-        reset($this->items);
-        unset($this->items[key($this->items)]);
-    }
-
-    public function get(string $key) {
-        return key_exists($key, $this->items) ? $this->touch($key) : null;
-    }
-}
 
 class NowAiringServer implements MessageComponentInterface {
     const TIME_FORMAT_INTERNAL = "Y-m-d Hi"; // eg, 2019-01-01 1234
@@ -89,7 +58,6 @@ class NowAiringServer implements MessageComponentInterface {
     const QUERY_DELAY = 5;  // in seconds
 
     protected $clients;
-    protected $loop;
     protected $timer;
 
     protected $current;
@@ -153,10 +121,9 @@ class NowAiringServer implements MessageComponentInterface {
         return stripos($albumArtist, $trackArtist) !== false;
     }
 
-    public function __construct($loop) {
+    public function __construct(protected LoopInterface $loop) {
         $this->clients = new \SplObjectStorage;
         $this->imageQ = new \SplQueue;
-        $this->loop = $loop;
 
         $config = Engine::param('discogs');
         if($config) {
@@ -707,6 +674,105 @@ class NowAiringServer implements MessageComponentInterface {
         error_log("NowAiringServer: " . $e->getMessage());
         $conn->close();
     }
+
+    public function start() {
+        $wsserver = new \Ratchet\WebSocket\WsServer($this);
+        $wsserver->enableKeepAlive($this->loop, 30);
+        $routes = new RouteCollection();
+        $routes->add('/push/onair', new Route('/push/onair', [
+            '_controller' => $wsserver
+        ]));
+        $router = new \Ratchet\Http\Router(
+            new UrlMatcher($routes, new RequestContext()));
+        new IoServer(new \Ratchet\Http\HttpServer($router),
+            new \React\Socket\Server(PushServer::WSSERVER_HOST . ":" .
+                                     PushServer::WSSERVER_PORT, $this->loop));
+    }
+}
+
+class DatagramServer {
+    public function __construct(
+        protected LoopInterface $loop,
+        protected CacheInterface $resolverCache,
+        protected NowAiringServer $nas,
+    ) {}
+
+    protected function resolve($server, $addr, $key, $value) {
+        if($value !== null)
+            $this->resolverCache->set($key, $value);
+        else
+            $value = $this->resolverCache->get($key);
+
+        Promise\resolve($value)->then(function($result) use ($server, $addr) {
+            $server->send($result ?? "null", $addr);
+        });
+    }
+
+    public function start() {
+        $dgfact = new \React\Datagram\Factory($this->loop);
+        $dgfact->createServer(PushServer::WSSERVER_HOST . ":" .
+                              PushServer::WSSERVER_PORT)->then(
+            function(\React\Datagram\Socket $client) {
+                $client->on('message', function($message, $addr, $client) {
+                    // echo "received $message from $addr\n";
+
+                    if(preg_match("/^loadImages\((\d+)(,\s*(\d+))?\)$/", $message, $matches))
+                        $this->nas->loadImages($matches[1], $matches[3] ?? 0);
+                    else if(preg_match("/^reloadAlbum\((\d+)(,\s*(\d+))?\)$/", $message, $matches))
+                        $this->nas->reloadAlbum($matches[1], $matches[3] ?? 1);
+                    else if(preg_match("/^resolve\((.+?)(,\s*(.+))?\)$/", $message, $matches))
+                        $this->resolve($client, $addr, $matches[1], $matches[3] ?? null);
+                    else if($message && $message[0] == '{')
+                        $this->nas->sendNotification($message);
+                    else // empty message means poll database
+                        $this->nas->refreshOnNow();
+            });
+        });
+    }
+}
+
+class ProxyFactory {
+    public function __construct(
+        private \DI\Container $container,
+    ) {}
+
+    public function create(string $className, array $config): IPushProxy {
+        return $this->container->make($className, [
+            'config' => $config
+        ]);
+    }
+}
+
+class PushServerInstance {
+    public function __construct(
+        protected LoopInterface $loop,
+        protected NowAiringServer $nas,
+        protected DatagramServer $ds,
+        protected ProxyFactory $proxyFactory,
+    ) {}
+
+    public function run() {
+        try {
+            // websocket server for subscribers
+            $this->nas->start();
+
+            // datagram server for application
+            $this->ds->start();
+
+            // push proxy servers, if configured
+            $config = Engine::param('push_proxy');
+            if($config) {
+                foreach($config as $proxy) {
+                    $app = $this->proxyFactory->create($proxy['proxy'], $proxy);
+                    $app->connect();
+                }
+            }
+
+            $this->loop->run();
+        } catch(\Exception $e) {
+            error_log("PushServer: " . $e->getMessage());
+        }
+    }
 }
 
 class PushServer implements IController {
@@ -720,8 +786,6 @@ class PushServer implements IController {
 
     const RESOLVER_CACHE_SIZE = 500;
     const RESOLVER_CACHE_TIMEOUT = 20000; // in usec
-
-    protected LRUCache $resolverCache;
 
     public static function sendAsyncNotification($show = null, $spin = null) {
         if(!Engine::param('push_enabled', true))
@@ -780,15 +844,6 @@ class PushServer implements IController {
         return $data == "null" ? null : $data;
     }
 
-    protected function resolve($server, $addr, $key, $value) {
-        if($value !== null)
-            $this->resolverCache->add($key, $value);
-        else
-            $value = $this->resolverCache->get($key);
-
-        $server->send($value ?? "null", $addr);
-    }
-
     public function processRequest() {
         if(php_sapi_name() != "cli") {
             http_response_code(400);
@@ -801,58 +856,16 @@ class PushServer implements IController {
             return;
         }
 
-        $this->resolverCache = new LRUCache(self::RESOLVER_CACHE_SIZE);
+        $builder = new ContainerBuilder();
+        $builder->addDefinitions([
+            CacheInterface::class => \DI\create(ArrayCache::class)->constructor(self::RESOLVER_CACHE_SIZE),
+            LoopInterface::class => function() {
+                return \React\EventLoop\Loop::get();
+            },
+        ]);
 
-        try {
-            // websocket server for subscribers
-            $loop = \React\EventLoop\Factory::create();
-            $nas = new NowAiringServer($loop);
-            $wsserver = new \Ratchet\WebSocket\WsServer($nas);
-            $wsserver->enableKeepAlive($loop, 30);
-            $routes = new RouteCollection();
-            $routes->add('/push/onair', new Route('/push/onair', [
-                '_controller' => $wsserver
-            ]));
-            $router = new \Ratchet\Http\Router(
-                new UrlMatcher($routes, new RequestContext()));
-            new IoServer(new \Ratchet\Http\HttpServer($router),
-                new \React\Socket\Server(PushServer::WSSERVER_HOST . ":" .
-                                         PushServer::WSSERVER_PORT, $loop));
-
-            // datagram server for application
-            $dgfact = new \React\Datagram\Factory($loop);
-            $dgfact->createServer(PushServer::WSSERVER_HOST . ":" .
-                                  PushServer::WSSERVER_PORT)->then(
-                function(\React\Datagram\Socket $client) use($nas) {
-                    $client->on('message', function($message, $addr, $client) use($nas) {
-                        // echo "received $message from $addr\n";
-
-                        if(preg_match("/^loadImages\((\d+)(,\s*(\d+))?\)$/", $message, $matches))
-                            $nas->loadImages($matches[1], $matches[3] ?? 0);
-                        else if(preg_match("/^reloadAlbum\((\d+)(,\s*(\d+))?\)$/", $message, $matches))
-                            $nas->reloadAlbum($matches[1], $matches[3] ?? 1);
-                        else if(preg_match("/^resolve\((.+?)(,\s*(.+))?\)$/", $message, $matches))
-                            $this->resolve($client, $addr, $matches[1], $matches[3] ?? null);
-                        else if($message && $message[0] == '{')
-                            $nas->sendNotification($message);
-                        else // empty message means poll database
-                            $nas->refreshOnNow();
-                });
-            });
-
-            // push proxy server, if configured
-            $config = Engine::param('push_proxy');
-            if($config) {
-                foreach($config as $proxy) {
-                    $app = new $proxy['proxy']($loop);
-                    $app->connect($proxy['ws_endpoint'],
-                                    $proxy['http_endpoints']);
-                }
-            }
-
-            $loop->run();
-        } catch(\Exception $e) {
-            error_log("PushServer: " . $e->getMessage());
-        }
+        $container = $builder->build();
+        $server = $container->get(PushServerInstance::class);
+        $server->run();
     }
 }
