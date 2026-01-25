@@ -85,7 +85,7 @@ class SpoaTurnstile implements IPushProxy {
         array $config, // NOT the `config` property; this is used only in the ctor
     ) {
         $server = new \React\Socket\Server($config['server'] ?? self::DEFAULT_SPOA_SERVER, $loop);
-        $server->on('connection', function(\React\Socket\ConnectionInterface $conn) {
+        $server->on('connection', function(\React\Socket\ConnectionInterface $conn) use ($config) {
             $spoaConnection = new Connection($conn, $config['debug'] ?? false);
             $spoaConnection->on('pre-validate', fn($args) => $this->onPreValidate($args));
         });
