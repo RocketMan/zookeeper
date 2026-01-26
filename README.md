@@ -45,4 +45,4 @@ for more information.
 **Zookeeper Online** is released under the
 [**GNU GENERAL PUBLIC LICENSE Version 3 (GPL)**](http://www.gnu.org/licenses/gpl-3.0.html).
 
-Copyright &copy; 1997-2025 Jim Mason.
+Copyright &copy; 1997-2026 Jim Mason.

@@ -67,6 +67,9 @@ $().ready(function() {
     <input type='button' id='more' value='show more'>
   </form>
 </div>
+<script id='recent-play-data' type='application/json'>
+  {{~ plays | json_encode | raw }}
+</script>
 {% elseif topplays | length %}
 <table style="width: 100%">
   <tr>

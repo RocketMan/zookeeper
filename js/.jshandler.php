@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -61,7 +61,7 @@ if($_SERVER['REQUEST_METHOD'] == "HEAD")
 ob_start("ob_gzhandler");
 ob_start([JSMin::class, 'minify']);
 
-require_once($target);
+echo file_get_contents($target);
 
 ob_end_flush(); // JSMin::minify
 ob_end_flush(); // ob_gzhandler

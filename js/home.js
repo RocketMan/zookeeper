@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2025 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     function localTime(date) {
@@ -48,9 +48,9 @@ $().ready(function(){
         return date;
     }
 
-    var palette = [ '#bdd0c4', '#9ab7d3', '#f5d2d3', '#f7e1d3', '#dfccf1' ];
+    const palette = [ '#bdd0c4', '#9ab7d3', '#f5d2d3', '#f7e1d3', '#dfccf1' ];
 
-    var station_title = $("#station-title").val();
+    const station_title = $("#station-title").val();
 
     function makeCard(spin) {
         var img = $("<div>").css('background-color', palette[Math.floor((Math.random() * palette.length))]
@@ -99,8 +99,50 @@ $().ready(function(){
         return card;
     }
 
+    function getCount() {
+        const width = $(document).width();
+        var count;
+
+        // widths correspond to the recently-played
+        // @media settings in zoostyle.css
+        if(width > 1150)
+            count = 12;
+        else if(width > 900)
+            count = 10;
+        else if(width > 700)
+            count = 8;
+        else
+            count = 6;
+
+        return count;
+    }
+
+    function populateInitial() {
+        const target = $(".recently-played");
+        if(target.length == 0)
+            return;
+
+        $("div.content").css("background-color", "#eee");
+
+        // hack to keep white body in sync
+        const color = $("body").css("background-color");
+        if(color == "rgb(255, 255, 255)")
+            $("body").css("--theme-content-background-colour", "#eee");
+
+        const count = getCount();
+        const plays = JSON.parse(document.getElementById("recent-play-data").textContent).slice(0, count);
+
+        plays.forEach(function(spin) {
+            if(target.find("div[data-id='" + spin.id + "']").length == 0) {
+                var card = makeCard(spin);
+                target.append(card);
+            }
+        });
+    }
+
+
     function populateCards(replace, before) {
-        var target = replace ?
+        const target = replace ?
             $("<div>", {
                 class: "recently-played"
             }).css("display", "none") :
@@ -113,26 +155,13 @@ $().ready(function(){
         if(before != null)
             url += "&before=" + encodeURIComponent(before);
 
-        var width = $(document).width();
-        var count;
-        // widths correspond to the recently-played
-        // @media settings in zoostyle.css
-        if(width > 1150)
-            count = 12;
-        else if(width > 900)
-            count = 10;
-        else if(width > 700)
-            count = 8;
-        else
-            count = 6;
+        var count = getCount();
+
+        // completely fill the last row
+        const currentCount = target.find(".card").length;
+        count -= currentCount % (count / 2);
+
         url += "&count=" + encodeURIComponent(count);
-
-        $("div.content").css("background-color", "#eee");
-
-        // hack to keep white body in sync
-        var color = $("body").css("background-color");
-        if(color == "rgb(255, 255, 255)")
-            $("body").css("--theme-content-background-colour", "#eee");
 
         $.ajax({
             dataType: 'json',
@@ -239,6 +268,6 @@ $().ready(function(){
 
     $(".search-data").trigger('focus');
 
-    populateCards(false, null);
+    populateInitial();
     connect({ open: false });
 });
