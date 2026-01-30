@@ -502,7 +502,7 @@ class Playlists implements RequestHandlerInterface {
                     $aid = $djapi->lastInsertId();
                 } else {
                     $aid = $djapi->getAirname($airname);
-                    throw new \InvalidArgumentException($aid ? "DJ name is already in use by another user" : "DJ name is invalid");
+                    throw new \InvalidArgumentException($aid ? "DJ name is already in use by another DJ" : "DJ name is invalid");
                 }
             }
         }
@@ -659,7 +659,7 @@ class Playlists implements RequestHandlerInterface {
                             $aid = $djapi->lastInsertId();
                         } else {
                             $aid = $djapi->getAirname($airname);
-                            throw new \InvalidArgumentException($aid ? "DJ name is already in use by another user" : "DJ name is invalid");
+                            throw new \InvalidArgumentException($aid ? "DJ name is already in use by another DJ" : "DJ name is invalid");
                         }
                     }
                 }
