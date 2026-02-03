@@ -165,7 +165,7 @@ function emitAlbumsEx(table, data) {
                 $("<A href='#" + encobj({
                     type: 'artist',
                     fkey: attrs.artist,
-                    sortBy: 'Artist',
+                    sortBy: 'Album',
                     form: true
                 }, true) + "'>").append(getArtist(attrs)));
         }
@@ -257,7 +257,7 @@ var lists = {
                     $("<A href='#" + encobj({
                         type: 'artist',
                         fkey: artist,
-                        sortBy: 'Artist',
+                        sortBy: 'Album',
                         form: true
                     }, true) + "'>").append(htmlify(artist)));
                 tr.append(td);
