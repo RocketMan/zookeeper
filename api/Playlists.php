@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -500,8 +500,10 @@ class Playlists implements RequestHandlerInterface {
                 if($success > 0) {
                     // success!
                     $aid = $djapi->lastInsertId();
-                } else
-                    throw new \InvalidArgumentException("airname is invalid");
+                } else {
+                    $aid = $djapi->getAirname($airname);
+                    throw new \InvalidArgumentException($aid ? "DJ name is already in use by another DJ" : "DJ name is invalid");
+                }
             }
         }
 
@@ -655,8 +657,10 @@ class Playlists implements RequestHandlerInterface {
                         if($success > 0) {
                             // success!
                             $aid = $djapi->lastInsertId();
-                        } else
-                            throw new \InvalidArgumentException("airname is invalid");
+                        } else {
+                            $aid = $djapi->getAirname($airname);
+                            throw new \InvalidArgumentException($aid ? "DJ name is already in use by another DJ" : "DJ name is invalid");
+                        }
                     }
                 }
             }

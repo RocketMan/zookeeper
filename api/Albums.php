@@ -488,7 +488,8 @@ class Albums implements RequestHandlerInterface {
         [$album, $tracks] = self::fromAttrs($attrs);
         $albums[0]["coll"] = $albums[0]["iscoll"]; // pre-merge
         $albums[0] = array_merge($albums[0], $album);
-        $albums[0]["format"] = $albums[0]["size"]; // post-merge
+        if (array_key_exists("size", $albums[0]))
+            $albums[0]["format"] = $albums[0]["size"]; // post-merge
         Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], $tracks, null);
         if($attrs->has('albumart')) {
             $aapi = Engine::api(IArtwork::class);

@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -988,8 +988,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
             foreach($proxies as $proxy) {
                 if($proxy['proxy'] ==
                         \ZK\PushNotification\ZootopiaListener::class &&
-                        !($proxy['http_endpoints']['recent'] ?? false))
-                    return $proxy['http_endpoints']['airname'] ?? null;
+                        !($proxy['recent'] ?? false))
+                    return $proxy['airname'] ?? null;
             }
         }
     }
