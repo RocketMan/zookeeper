@@ -25,7 +25,7 @@
 namespace ZK\Engine;
 
 class Engine {
-    const VERSION = "3.2.7";
+    const VERSION = "3.2.8";
 
     const UA = "Zookeeper/2.0; (+https://zookeeper.ibinx.com/)";
 
