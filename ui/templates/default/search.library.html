@@ -9,7 +9,7 @@ $().ready(function() {
 {% if type == "all" %}
     $(".search-data").val(text);
     $("#fkey").val(text);
-{% elseif type == "albumsByPubkey" or type == "hashtags" %}
+{% elseif type == "albumsByPubkey" or type == "hashtags" or type == "artist" %}
     $("#fkey").val(text);
 {% else %}
     $("#search-filter").val(type).selectmenu('refresh');

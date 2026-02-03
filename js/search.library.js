@@ -163,7 +163,7 @@ function emitAlbumsEx(table, data) {
         } else {
             td.append(
                 $("<A href='#" + encobj({
-                    type: 'artists',
+                    type: 'artist',
                     fkey: attrs.artist,
                     sortBy: 'Artist',
                     form: true
@@ -221,6 +221,9 @@ var requestMap = {
     playlists: "playlist?filter[airname.id]="
 };
 
+// artist and artists share the same request
+requestMap.artist = requestMap.artists;
+
 var lists = {
     artists: function(table, data) {
         emitAlbumsEx(table, data);
@@ -252,7 +255,7 @@ var lists = {
                 var artist = track.artist != null?track.artist:attrs.artist;
                 td.append(
                     $("<A href='#" + encobj({
-                        type: 'artists',
+                        type: 'artist',
                         fkey: artist,
                         sortBy: 'Artist',
                         form: true
@@ -393,6 +396,9 @@ var lists = {
     },
 };
 
+// artist and artists share the same marshaller
+lists.artist = lists.artists;
+
 // hashtags and albums share the same marshaller
 lists.hashtags = lists.albums;
 
@@ -401,6 +407,7 @@ async function search(size, offset) {
     if(!type || !requestMap[type])
         return;
     switch(type) {
+    case "artist":
     case "albumsByPubkey":
     case "reviews":
     case "hashtags":
@@ -460,6 +467,7 @@ async function search(size, offset) {
                 }
                 var ttype;
                 switch(type) {
+                case "artist":
                 case "albumsByPubkey":
                     ttype = "albums";
                     break;
@@ -554,6 +562,7 @@ async function search(size, offset) {
                 $("#" + property).val(params[property]);
 
             switch(params.type) {
+            case "artist":
             case "albumsByPubkey":
                 $("#search-filter").val('all').selectmenu('refresh');
                 var width = $("#search-filter-button").get(0).offsetWidth;
