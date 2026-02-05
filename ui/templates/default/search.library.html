@@ -9,7 +9,7 @@ $().ready(function() {
 {% if type == "all" %}
     $(".search-data").val(text);
     $("#fkey").val(text);
-{% elseif type == "albumsByPubkey" or type == "hashtags" %}
+{% elseif type == "albumsByPubkey" or type == "hashtags" or type == "artist" %}
     $("#fkey").val(text);
 {% else %}
     $("#search-filter").val(type).selectmenu('refresh');
@@ -18,6 +18,7 @@ $().ready(function() {
     $(".search-data").val(text)
         .css('padding-right', (width + 6) + "px");
     $("#fkey").val(text);
+{% endif %}
 
     var sortBy;
     switch(type) {
@@ -25,6 +26,7 @@ $().ready(function() {
     case "hashtags":
         sortBy = "Artist";
         break;
+    case "artist":
     case "albums":
         sortBy = "Album";
         break;
@@ -36,7 +38,6 @@ $().ready(function() {
         break;
     }
     $("#sortBy").val(sortBy);
-{% endif %}
     $("#type").val(type).trigger('{{ type == 'all' ? 'f' : 'l' }}search');
 });
 // -->

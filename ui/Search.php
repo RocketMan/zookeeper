@@ -43,7 +43,7 @@ class Search extends MenuItem {
 
     private static $typeFromLegacy = [
         "byAlbum" => "albums",
-        "byArtist" => "artists",
+        "byArtist" => "artist",
         "byTrack" => "tracks",
         "byLabel" => "labels",
         "byLabelKey" => "albumsByPubkey",

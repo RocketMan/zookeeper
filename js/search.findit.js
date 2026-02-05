@@ -476,6 +476,7 @@ async function search(type, url, size, offset) {
             // schedule for later to avoid webkit's autocomplete=off blanking
             setTimeout(function() {
                 switch($("#type").val()) {
+                case "artist":
                 case "albumsByPubkey":
                 case "reviews":
                 case "playlists":

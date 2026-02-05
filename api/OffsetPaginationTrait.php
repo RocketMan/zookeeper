@@ -217,7 +217,7 @@ trait OffsetPaginationTrait {
             if($offset >= $total)
                 $offset = 0;
         } else {
-            if (!Engine::session()->isAuth('C'))
+            if (str_ends_with($key, '*') && !Engine::session()->isAuth('C'))
                 throw new BadRequestException("Operation requires challenge");
 
             $total = (int)$libraryAPI->searchPos($ops[0], $offset, -1, $key);
