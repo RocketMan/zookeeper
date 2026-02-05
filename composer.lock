@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7e761d968678b3d4d4dbaa8443eb732b",
+    "content-hash": "a5dfb7971add666772f02778846c4eff",
     "packages": [
         {
             "name": "axy/backtrace",
@@ -2890,16 +2890,16 @@
         },
         {
             "name": "rocketman/spoa-php",
-            "version": "v0.9.3",
+            "version": "v0.9.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/RocketMan/spoa-php.git",
-                "reference": "2c33fc15578fcb637b936da559a311ac4fdc122d"
+                "reference": "953ed44e32b6522c02f05ea51badb5fe7b2bedc3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/RocketMan/spoa-php/zipball/2c33fc15578fcb637b936da559a311ac4fdc122d",
-                "reference": "2c33fc15578fcb637b936da559a311ac4fdc122d",
+                "url": "https://api.github.com/repos/RocketMan/spoa-php/zipball/953ed44e32b6522c02f05ea51badb5fe7b2bedc3",
+                "reference": "953ed44e32b6522c02f05ea51badb5fe7b2bedc3",
                 "shasum": ""
             },
             "require": {
@@ -2930,9 +2930,9 @@
             "description": "Stream Processing Offload Agent (SPOA) framework for PHP",
             "support": {
                 "issues": "https://github.com/RocketMan/spoa-php/issues",
-                "source": "https://github.com/RocketMan/spoa-php/tree/v0.9.3"
+                "source": "https://github.com/RocketMan/spoa-php/tree/v0.9.4"
             },
-            "time": "2026-02-02T16:39:10+00:00"
+            "time": "2026-02-05T11:03:04+00:00"
         },
         {
             "name": "setasign/tfpdf",
