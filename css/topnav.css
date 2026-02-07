@@ -406,8 +406,9 @@ nav .search-icon {
 
 .result-count {
     position: absolute;
-    font-size: 16px;
+    font-size: 1.1rem;
     font-weight: bold;
+    color: #555;
     top: 90px;
     left: 20px;
     z-order: -1;

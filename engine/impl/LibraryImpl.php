@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -272,7 +272,7 @@ class LibraryImpl extends DBO implements ILibrary {
                 $search = substr($search, 0, -1);
       
             $query = "SELECT a.tag, track, artist, album, seq, ".
-                     "category, medium, size, location, bin, ".
+                     "category, medium, size, location, bin, created, ".
                      "a.pubkey, name, address, city, state, zip, iscoll, ".
                      "t.url, t.duration ".
                      "FROM tracknames t ".
@@ -280,7 +280,7 @@ class LibraryImpl extends DBO implements ILibrary {
                      "LEFT JOIN publist p ON a.pubkey = p.pubkey ".
                      "WHERE track LIKE ? ".
                      "UNION SELECT a.tag, track, c.artist, a.artist album, seq, ".
-                     "category, medium, size, location, bin, ".
+                     "category, medium, size, location, bin, created, ".
                      "a.pubkey, name, address, city, state, zip, iscoll, ".
                      "c.url, c.duration ".
                      "FROM colltracknames c ".

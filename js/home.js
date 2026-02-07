@@ -126,8 +126,10 @@ $().ready(function(){
 
         // hack to keep white body in sync
         const color = $("body").css("background-color");
-        if(color == "rgb(255, 255, 255)")
-            $("body").css("--theme-content-background-colour", "#eee");
+        if(color == "rgb(255, 255, 255)") {
+            $("body").css("--theme-content-background-colour", "#eee")
+                .data("saved-background-colour", color);
+        }
 
         const count = getCount();
         const plays = JSON.parse(document.getElementById("recent-play-data").textContent).slice(0, count);

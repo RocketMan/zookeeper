@@ -300,6 +300,7 @@ table.recent-reviews {
     width: calc(100% - 5px);
 }
 
+table.searchTable th.sortable,
 table.recent-reviews th {
     text-align: left;
     cursor: pointer;
@@ -307,6 +308,7 @@ table.recent-reviews th {
     position: relative;
     border-bottom: 2px solid grey;
 }
+table.searchTable th.active::after,
 table.recent-reviews th.active::after {
     content: '\25B2'; /* Up arrow */
     position: absolute;
@@ -314,6 +316,7 @@ table.recent-reviews th.active::after {
     font-size: 0.8rem;
     bottom: 4px;
 }
+table.searchTable th.active.desc::after,
 table.recent-reviews th.desc::after {
     content: '\25BC'; /* Down arrow */
 }
@@ -548,17 +551,17 @@ table.djzone li:not(:last-of-type):after {
 .djinfo-playlists .searchTable {
     opacity: 0;
     transition: all 400ms ease 0s;
+    line-height: 1.2;
 }
 .djinfo-playlists .searchTable th {
     font-size: 0.9rem;
-    color: #555;
 }
 .djinfo-playlists .searchTable td:first-of-type {
     width: 100px;
 }
-.djinfo-playlists .pagination li:not(.more) {
-    line-height: 35px;
-    width: 35px;
+.djinfo-playlists .searchTable td {
+    padding: 2px;
+    border-bottom: none;
 }
 
 @media (max-width: 800px) {
@@ -1406,27 +1409,62 @@ input[type="checkbox"]:checked:active {
 /* base styling for tables that show list data, eg tracks.
  */
 .searchTable {
+    font-size: 1rem;
     text-align:left;
     border: 0;
     border-spacing: 0;
+    line-height: 1.8;
 }
 .searchTable > thead > tr {
+    line-height: 1;
     border-bottom: 1px solid gray;
 }
+.searchTable > thead th.sortable {
+    min-width: 80px; /* ensure enough space for up/down arrow */
+    color: var(--theme-link-colour);
+}
 .searchTable th {
+    font-size: 1rem;
+    color: #555;
     padding: 2px 2px 0;
+    border-bottom: 2px solid grey;
 }
 .searchTable td {
-    padding: 2px;
+    padding-right: 20px;
+    border-bottom: 1px solid #ccc;
 }
-.albumReview:before {
+.searchTable td:has(.pagination) {
+    border-bottom: none;
+}
+.searchTable tr.data:focus-visible,
+.searchTable tr.data:hover {
+    background-color: #eee;
+    cursor: pointer;
+}
+
+.searchTable td i {
+    white-space: nowrap;
+}
+.searchTable div.meta {
+    font-size: 0.9rem;
+    margin-top: -8px;
+}
+.searchTable span.sep {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+.searchTable span.sep::before {
+    content: '\00B7'; // &middot;
+}
+.albumReview::before {
     content: 'i';
     font-family: monospace;
     font-size: 10px;
-    padding: 0 3px;
+    padding: 1px 4px;
     vertical-align: 13%;
     border-radius: 2px;
     background-color: #333;
+    margin-right: 2px;
     color: #fff;
 }
 .albumNoReview {
@@ -2533,8 +2571,8 @@ ul.pagination {
     font-weight: bold;
 }
 ul.pagination li:not(.more) {
-    width: 30px;
-    line-height: 30px;
+    width: 35px;
+    line-height: 35px;
     margin: 0;
 }
 ul.pagination li a {
