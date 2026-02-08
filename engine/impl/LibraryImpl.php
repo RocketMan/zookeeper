@@ -142,6 +142,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $query = "ORDER BY a.created$desc, artist$desc ";
             break;
         case "date":
+        case "reviewed":
             $query = "ORDER BY r.created$desc ";
             break;
         case "track":
