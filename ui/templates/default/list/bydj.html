@@ -48,7 +48,7 @@
 <div class='djinfo-playlists'>
   {%~ set block = topPlays | length or recentReviews | length %}
   <h2>{{ block ? '' : dj.airname ~ "'s " ~}}Recent playlists</h2>
-  <table class='searchTable'></table>
+  <table class='searchTable autoSize'></table>
   <input type='hidden' id='chunksize' value='6'>
   <script>
     $().ready(function() {

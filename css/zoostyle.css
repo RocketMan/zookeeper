@@ -1414,6 +1414,12 @@ input[type="checkbox"]:checked:active {
     border: 0;
     border-spacing: 0;
     line-height: 1.8;
+    width: 100%;
+    max-width: 1200px;
+}
+.searchTable.autoSize {
+    width: auto;
+    max-width: none;
 }
 .searchTable > thead > tr {
     line-height: 1;

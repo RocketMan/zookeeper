@@ -161,6 +161,13 @@ function openLabel(e) {
 }
 
 function emitAlbumsEx(table, data) {
+    var colgroup = $("<colgroup>");
+    colgroup.append($("<col>", { style: "width: 30%" }));
+    colgroup.append($("<col>", { style: "width: 20px" }));
+    colgroup.append($("<col>"));
+    colgroup.append($("<col>", { style: "width: 20%" }));
+    table.append(colgroup).removeClass('autoSize');
+
     var tr = $("<TR>");
     tr.append(header("Artist", true));
     tr.append(header("", false));
@@ -251,6 +258,13 @@ var lists = {
     },
 
     tracks: function(table, data) {
+        var colgroup = $("<colgroup>");
+        colgroup.append($("<col>", { style: "width: 25%" }));
+        colgroup.append($("<col>", { style: "width: 25%" }));
+        colgroup.append($("<col>"));
+        colgroup.append($("<col>", { style: "width: 15%" }));
+        table.append(colgroup).removeClass('autoSize');
+
         var tr = $("<TR>");
         tr.append(header("Artist", true));
         tr.append(header("Album", true));
@@ -314,7 +328,7 @@ var lists = {
         tr.append(header("Name", false));
         tr.append(header("Location", false).attr('colSpan', 2));
         tr.append(header("Last Updated", false));
-        table.append($("<THEAD>").append(tr));
+        table.append($("<THEAD>").append(tr)).addClass('autoSize');;
 
         data.data.forEach(function(entry) {
             tr = $("<TR>", { class: 'data', 'data-pubkey': entry.id, tabindex: 0 })
@@ -337,6 +351,13 @@ var lists = {
     },
 
     reviews: function(table, data) {
+        var colgroup = $("<colgroup>");
+        colgroup.append($("<col>", { style: "width: 30%" }));
+        colgroup.append($("<col>"));
+        colgroup.append($("<col>", { style: "width: 20%" }));
+        colgroup.append($("<col>", { style: "width: 120px" }));
+        table.append(colgroup).removeClass('autoSize');
+
         var tr = $("<TR>");
         tr.append(header("Artist", true));
         tr.append(header("Album", true));
