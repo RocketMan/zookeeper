@@ -1427,7 +1427,7 @@ input[type="checkbox"]:checked:active {
 }
 .searchTable > thead th.sortable {
     min-width: 80px; /* ensure enough space for up/down arrow */
-    color: var(--theme-link-colour);
+    color: #000;
 }
 .searchTable th {
     font-size: 1rem;
