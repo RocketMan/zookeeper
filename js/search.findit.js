@@ -40,7 +40,7 @@ function emitMore(table, response, data, type) {
     if(more > 0) {
         var offset = links.meta.offset;
         var ul = $("<ul>", {
-            class: 'pagination'
+            class: 'pagination legacy'
         }).css('margin', 'auto');
 
         if(!response.all) {

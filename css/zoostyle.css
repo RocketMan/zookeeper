@@ -2581,6 +2581,10 @@ ul.pagination li:not(.more) {
     line-height: 35px;
     margin: 0;
 }
+ul.pagination.legacy li:not(.more) {
+    width: 30px;
+    line-height: 30px;
+}
 ul.pagination li a {
     display: block;
     border-radius: 50%;
