@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2025 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2026 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     function localTime(date) {
@@ -122,12 +122,12 @@ $().ready(function(){
         if(target.length == 0)
             return;
 
-        $("div.content").css("background-color", "#eee");
+        $("div.content").css("background-color", "#ebebeb");
 
         // hack to keep white body in sync
         const color = $("body").css("background-color");
         if(color == "rgb(255, 255, 255)") {
-            $("body").css("--theme-content-background-colour", "#eee")
+            $("body").css("--theme-content-background-colour", "#ebebeb")
                 .data("saved-background-colour", color);
         }
 

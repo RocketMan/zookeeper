@@ -44,7 +44,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "LEFT JOIN publist ON albumvol.pubkey = publist.pubkey " .
                   "WHERE MATCH (artist,album) AGAINST(? IN BOOLEAN MODE) ".
                   "AND location != 'U' " .
-                  "ORDER BY artist, album, tag" ],
+                  "ORDER BY album, artist, tag" ],
          [ "artists", "albumrec", null, "artist",
                   "SELECT tag, artist, album, category, medium, " .
                   "created, updated, a.pubkey, location, bin, iscoll, " .
@@ -105,7 +105,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   //"LEFT JOIN publist ON albumvol.pubkey = publist.pubkey ".
                   "WHERE MATCH (track) AGAINST(? IN BOOLEAN MODE) ".
                   "AND location != 'U' " .
-                  "ORDER BY artist, album, t.tag" ]
+                  "ORDER BY album, artist, t.tag" ]
     ];
 
     /**

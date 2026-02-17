@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,17 +20,17 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2026 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function() {
+const OPTS = { day: "numeric", month: "short", year: "numeric" };
+
 function htmlify(s) {
     return s != null?s.replace(/&/g, '&amp;').replace(/</g, '&lt;'):'';
 }
 
-function indent() {
-    return $("<TD>", {
-        class: 'ind'
-    });
+function makeLink(href, name) {
+    return $("<a>", { href: href }).html(name);
 }
 
 function emitMore(table, response, data, type) {
@@ -40,11 +40,11 @@ function emitMore(table, response, data, type) {
     if(more > 0) {
         var offset = links.meta.offset;
         var ul = $("<ul>", {
-            class: 'pagination legacy'
+            class: 'pagination'
         }).css('margin', 'auto');
 
         if(!response.all) {
-            var chunksize = 15, numchunks = 10;
+            var chunksize = 10, numchunks = 10;
             var page = (offset / chunksize) | 0;
             var start = ((page / numchunks) | 0) * numchunks;
             if(start == 0) start = 1;
@@ -74,14 +74,14 @@ function emitMore(table, response, data, type) {
                 ul.append($("<li>").text("..."));
         } else {
             var offset = -1, size = -1; // scope for closure
-            if(more > 25) {
+            if(more > 20) {
                 offset = 0;
-                size = 15;
+                size = 10;
             }
             var a = $("<a>", {
                 class: 'nav',
                 href: '#',
-            }).text(more + ' more...').on('click', (function(size, offset) {
+            }).html(`View ${more} more &darr;`).on('click', (function(size, offset) {
                 return function() {
                     search(type, links.href, size, offset);
                     return false;
@@ -91,9 +91,7 @@ function emitMore(table, response, data, type) {
                 class: 'more',
             }).css('width', 'auto').append(a));
         }
-        table.append($("<tr>").append(indent()).append($("<td>", {
-            colSpan: 3
-        }).append(ul)));
+        table.append($("<footer>").append(ul));
     }
 }
 
@@ -106,30 +104,26 @@ function getArtist(node) {
 
 function emitAlbumsEx(table, response, odata, header, tag) {
     var data = response.all ? odata.relationships.album.data : odata;
-    var tr = $("<TR>");
-    var th = $("<TH>", {
-        class: 'sec',
-        colSpan: 2
-    }).html(header);
-    tr.append(th);
-    table.append(tr);
+
+    var th = $("<header>").append($("<div>", { class: 'section-title' }).html(header));
+    table.append(th);
 
     data.forEach(function(entry) {
         var album = response.all ?
                     response.included.find(x => { return x.id == entry.id && x.type == 'album'; }) : entry;
-        tr = $("<TR>").append(indent());
-        var tagId = "";
+        var href = `?action=search&s=byAlbumKey&n=${album.id}`;
+        var tr = $("<article>", { 'data-href': href, tabindex: 0 });
+        var albumx = $("<span>", { class: 'album' })
+            .append(makeLink(href, htmlify(album.attributes.album)));
+        tr.append(albumx);
+        var artistx = $("<span>", { class: 'artist' }).html(getArtist(album.attributes));
+        tr.append(artistx);
+        var labelx = $("<span>", { class: 'meta' }).html(htmlify(album.relationships && album.relationships.label ? album.relationships.label.meta.name : "Unknown"));
+        tr.append(labelx);
+
         if(tag)
-            tagId = "Tag #" + album.id + "&nbsp;&#8226;&nbsp;";
-        td = $("<TD>").html(tagId + '<A HREF="?s=byArtist&n=' +
-                            encodeURIComponent(album.attributes.artist) +
-                            '&action=search" CLASS="nav">' +
-                            getArtist(album.attributes) + '</A>' +
-                            "&nbsp;&#8226;&nbsp;");
-        var albumx = $("<I>").html('<A HREF="?action=search&s=byAlbumKey&n=' + album.id +
-                                   '" CLASS="nav">' + htmlify(album.attributes.album) + '</A>');
-        td.append(albumx).append('&nbsp; (' + htmlify(album.relationships && album.relationships.label ? album.relationships.label.meta.name : "Unknown") + ')');
-        tr.append(td);
+            tr.append($("<span>").html("Tag #" + album.id));
+
         table.append(tr);
     });
 
@@ -137,21 +131,9 @@ function emitAlbumsEx(table, response, odata, header, tag) {
 }
 
 function newTable(parent, id) {
-    var table = $("<TABLE>", {
-        cellPadding: 2,
-        cellSpacing: 2,
-        border: 0,
-        width: "100%"
-    });
-
-    var body = $("<TBODY>", {
-        id: id
-    });
-
-    table.append(body);
-    parent.append(table);
-
-    return body;
+    var section = $("<section>", { id: id });
+    parent.append(section);
+    return section;
 }
 
 var savedTable = null;
@@ -167,7 +149,14 @@ function getTable(id) {
         savedTable = table.clone(true);
         savedTableID = id;
     }
-    table.empty();
+
+    const showMore = table.has('li.more').length;
+    if (showMore) {
+        const start = table.outerHeight(true);
+        table.css('height', start + 'px');
+    }
+
+    table.data('animate', showMore).empty();
     return table;
 }
 
@@ -175,42 +164,36 @@ function clearSavedTable() {
     savedTableID = null;
 }
 
-var months = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
-
 var lists = {
     tags: function(table, response, data) {
-        emitAlbumsEx(table, response, data, "Album Tags:", 1);
+        emitAlbumsEx(table, response, data, "Album Tags", 1);
     },
 
     albums: function(table, response, data) {
-        emitAlbumsEx(table, response, data, "Artists and Albums:", 0);
+        emitAlbumsEx(table, response, data, "Artists and Albums", 0);
     },
 
     compilations: function(table, response, odata) {
         var data = response.all ? odata.relationships.album.data : odata;
-        var tr = $("<TR>");
-        var th = $("<TH>", {
-            class: 'sec',
-            colSpan: 2
-        }).html("Compilations:");
-        tr.append(th);
-        table.append(tr);
+
+        var th = $("<header>").append($("<div>", { class: 'section-title' }).html('Compilations'));
+        table.append(th);
 
         data.forEach(function(entry) {
             var album = response.all ?
                         response.included.find(x => { return x.id == entry.id && x.type == 'album'; }) : entry;
             album.attributes.tracks.forEach(function(track) {
-                tr = $("<TR>").append(indent());
-                var td = $("<TD>").html('<A HREF="?s=byArtist&n=' +
-                                    encodeURIComponent(track.artist) +
-                                    '&action=search" CLASS="nav">' + getArtist(track) + '</A>' +
-                                    "&nbsp;&#8226;&nbsp;");
-                var albumx = $("<I>").html('<A HREF="?action=search&s=byAlbumKey&n=' + entry.id +
-                                      '" CLASS="nav">' + htmlify(album.attributes.album) + '</A>');
-                td.append(albumx);
-                td.append('&nbsp;&#8226;&nbsp;"' + htmlify(track.track) + '"');
-                tr.append(td);
+                var href = `?action=search&s=byAlbumKey&n=${album.id}`;
+                var tr = $("<article>", { 'data-href': href, tabindex: 0 });
+                var albumx = $("<span>", { class: 'album' })
+                    .append(makeLink(href, htmlify(album.attributes.album)));
+                tr.append(albumx);
+                if (track.artist) {
+                    var artistx = $("<span>", { class: 'artist' }).html(getArtist(track));
+                    tr.append(artistx);
+                }
+                var trackx = $("<span>", { class: 'meta' }).html(htmlify(track.track));
+                tr.append(trackx);
                 table.append(tr);
             });
         });
@@ -220,25 +203,21 @@ var lists = {
 
     labels: function(table, response, odata) {
         var data = response.all ? odata.relationships.label.data : odata;
-        var tr = $("<TR>");
-        var th = $("<TH>", {
-            class: 'sec',
-            colSpan: 2
-        }).html("Labels:");
-        tr.append(th);
-        table.append(tr);
+
+        var th = $("<header>").append($("<div>", { class: 'section-title' }).html('Labels'));
+        table.append(th);
 
         data.forEach(function(entry) {
             var label = response.all ?
                         response.included.find(x => { return x.id == entry.id && x.type == 'label'; }) : entry;
-            tr = $("<TR>").append(indent());
-            var td = $("<TD>").html('<A HREF="?s=byLabelKey&n=' +
-                                    entry.id + '&action=search" CLASS="nav">' +
-                                    htmlify(label.attributes.name) + '</A>');
-            if(label.attributes.city)
-                td.append("&nbsp;&#8226; " + htmlify(label.attributes.city) + "&nbsp;" +
-                          htmlify(label.attributes.state));
+            var href = `?action=search&s=byLabelKey&n=${label.id}`;
+            var tr = $("<article>", { 'data-href': href, tabindex: 0 });
+            var td = $("<span>", { class: 'labelName' })
+                .append(makeLink(href, htmlify(label.attributes.name)));
             tr.append(td);
+            if(label.attributes.city)
+                tr.append($("<span>", { class: 'meta' }).html(htmlify(label.attributes.city) + "&nbsp;" +
+                                                              htmlify(label.attributes.state)));
             table.append(tr);
         });
 
@@ -247,47 +226,46 @@ var lists = {
 
     playlists: function(table, response, odata) {
         var data = response.all ? odata.relationships.show.data : odata;
-        var tr = $("<TR>");
-        var th = $("<TH>", {
-            class: 'sec',
-            colSpan: 2
-        }).html("Playlists:");
-        tr.append(th);
-        table.append(tr);
+
+        var th = $("<header>").append($("<div>", { class: 'section-title' }).html('Airplay'));
+        table.append(th);
 
         data.forEach(function(entry) {
             var list = response.all ?
                         response.included.find(x => { return x.id == entry.id && x.type == 'show'; }) : entry;
-            tr = $("<TR>").append(indent());
-            var now = new Date();
-            var sd = list.attributes.date;
-            var day = sd.substr(8, 2) * 1;
-            var month = sd.substr(5, 2) * 1;
-            var year = " " + sd.substr(0, 4);
-            var td = $("<TD>", {
-                align: 'left'
-            }).html('<A HREF="?subaction=viewDJ&seq=selList&playlist=' +
-                    list.id + '" CLASS="nav">' +
-                    htmlify(list.attributes.name) + '</A>' +
-                    '&nbsp;&#8226;&nbsp;' +
-                    day + " " + months[month-1] + year + '&nbsp;&nbsp;(' +
-                    htmlify(list.attributes.airname) + ')');
-            tr.append(td);
+            tr = $("<article>", { 'data-href': `?subaction=viewDJ&seq=selList&playlist=${list.id}`, tabindex: 0 });
+
             table.append(tr);
 
             list.attributes.events.forEach(function(event) {
-                if(event.artist) {
-                    td.append('<BR>&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="sub">' +
-                          getArtist(event) +
-                          '&nbsp;&#8226;&nbsp;<I>' +
-                          htmlify(event.album) + '</I>' +
-                          '&nbsp;&#8226;&nbsp;"' +
-                          htmlify(event.track) + '"</SPAN>');
-                } else if (comment = event.comment) {
-                    td.append('<BR>&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="sub"><I>' +
-                          htmlify(comment) + '...</I></SPAN>');
+                var td = $("<div>");
+                if (event.artist) {
+                    if (event.album) {
+                        var albumx = $("<span>", { class: 'album' });
+                        albumx.html(htmlify(event.album));
+                        td.append(albumx);
+                    }
+                    var artistx = $("<span>", { class: 'artist' });
+                    artistx.html(getArtist(event));
+                    td.append(artistx);
+                    var trackx = $("<span>");
+                    trackx.html('"' + htmlify(event.track) + '"');
+                    td.append(trackx);
+                } else if (event.comment) {
+                    var commentx = $("<span>");
+                    commentx.html(htmlify(event.comment) + '...');
+                    td.append(commentx);
                 }
+                tr.append(td);
             });
+
+            var airedOn = $("<div>", { class: 'meta' });
+            var showx = $("<span>").html(`<a href="?subaction=viewDJ&amp;seq=selList&amp;playlist=${list.id}">` + htmlify(list.attributes.name) + '</a>');
+            airedOn.append(showx);
+            var datex = $("<span>").html(
+                new Date(list.attributes.date).toLocaleDateString(undefined, OPTS));
+            airedOn.append(datex);
+            tr.append(airedOn);
         });
 
         emitMore(table, response, odata, "playlists");
@@ -295,29 +273,23 @@ var lists = {
 
     reviews: function(table, response, odata) {
         var data = response.all ? odata.relationships.review.data : odata;
-        var tr = $("<TR>");
-        var th = $("<TH>", {
-            class: 'sec',
-            colSpan: 2
-        }).html("Reviews:");
-        tr.append(th);
-        table.append(tr);
+
+        var th = $("<header>").append($("<div>", { class: 'section-title' }).html('Reviews'));
+        table.append(th);
 
         data.forEach(function(entry) {
             var review = response.all ?
                         response.included.find(x => { return x.id == entry.id && x.type == 'review'; }) : entry;
             var album = review.relationships.album;
-            tr = $("<TR>").append(indent());
-            var td = $("<TD>").html('<A HREF="?s=byArtist&n=' +
-                                    encodeURIComponent(album.meta.artist) +
-                                    '&action=search" CLASS="nav">' +
-                                    getArtist(album.meta) + '</A>' +
-                                    '&nbsp;&#8226;&nbsp;' +
-                                    '<I><A HREF="?action=search&s=byAlbumKey&n=' +
-                                    album.data.id + '" CLASS="nav">' +
-                                    htmlify(album.meta.album) + '</A></I>' +
-                                    '&nbsp;&nbsp;(' +
-                                    htmlify(review.attributes.airname) + ')');
+            var href = `?action=search&s=byAlbumKey&n=${album.data.id}`;
+            var tr = $("<article>", { 'data-href': href, tabindex: 0 });
+            var td = $("<span>", { class: 'album' })
+                .append(makeLink(href, htmlify(album.meta.album)));
+            tr.append(td);
+            td = $("<span>", { class: 'artist' }).html(getArtist(album.meta));
+            tr.append(td);
+            td = $("<span>", { class: 'meta' }).html('(' +
+                                  htmlify(review.attributes.airname) + ')');
             tr.append(td);
             table.append(tr);
         });
@@ -327,30 +299,22 @@ var lists = {
 
     tracks: function(table, response, odata) {
         var data = response.all ? odata.relationships.album.data : odata;
-        var tr = $("<TR>");
-        var th = $("<TH>", {
-            class: 'sec',
-            colSpan: 2
-        }).html("Tracks:");
-        tr.append(th);
-        table.append(tr);
+
+        var th = $("<header>").append($("<div>", { class: 'section-title' }).html('Tracks'));
+        table.append(th);
 
         data.forEach(function(entry) {
             var album = response.all ?
                         response.included.find(x => { return x.id == entry.id && x.type == 'album'; }) : entry;
             album.attributes.tracks.forEach(function(track) {
-                tr = $("<TR>").append(indent());
-                var td = $("<TD>");
-                td.html('<A HREF="?s=byArtist&n=' +
-                        encodeURIComponent(album.attributes.artist) +
-                        '&action=search" CLASS="nav">' +
-                        getArtist(album.attributes) + '</A>' +
-                        "&nbsp;&#8226;&nbsp;" +
-                        "<I>" +
-                        '<A HREF="?action=search&s=byAlbumKey&n=' +
-                        entry.id + '" CLASS="nav">' +
-                        htmlify(album.attributes.album) + '</A></I>' +
-                        '&nbsp;&#8226;&nbsp;"' + htmlify(track.track) + '"');
+                var href = `?action=search&s=byAlbumKey&n=${album.id}`;
+                var tr = $("<article>", { 'data-href': href, tabindex: 0 });
+                var td = $("<span>", { class: 'album' })
+                    .append(makeLink(href, htmlify(album.attributes.album)));
+                tr.append(td);
+                td = $("<span>", { class: 'artist' }).html(getArtist(album.attributes));
+                tr.append(td);
+                td = $("<span>", { class: 'meta' }).html('"' + htmlify(track.track) + '"');
                 tr.append(td);
                 table.append(tr);
             });
@@ -418,8 +382,36 @@ async function search(type, url, size, offset) {
         url: url,
         headers: { 'X-Challenge': btoa(JSON.stringify(pow)) },
         success: function(response) {
+            // hack to keep white body in sync
+            const color = $("body").css("background-color");
+            if(color == "rgb(255, 255, 255)") {
+                $("body").css("--theme-content-background-colour", "#ebebeb")
+                    .data("saved-background-colour", color);
+                $("div.content").css("background-color", "#ebebeb");
+            }
+
             if(type != null) {
-                lists[type](getTable(type), response, response.data);
+                var table = getTable(type);
+                lists[type](table, response, response.data);
+
+                table.find('article').on('click keydown', function(e) {
+                    if (e.type == 'keydown' && e.which != 13)
+                        return;
+
+                    location.href = this.dataset.href;
+                });
+
+                if (table.data('animate')) {
+                    const end = table.prop('scrollHeight');
+                    requestAnimationFrame(() => {
+                        table.css('height', end + 'px');
+                    });
+
+                    table.one('transitioned webkitTransitionEnd oTransitionEnd', () => {
+                        table.css('height', 'auto');
+                    });
+                }
+
                 return;
             }
 
@@ -438,12 +430,25 @@ async function search(type, url, size, offset) {
             $(".nav-items li").removeClass("selected");
             $(".breadcrumbs").hide();
             $(".topnav-extra").hide();
-            var results = $(".content");
-            results.empty();
+            var content = $(".content");
+            content.empty();
+            var results = $("<div>", { class: 'findit' });
+            content.append(results);
             response.all = true;
             response.data.forEach(function(list) {
                 var type = list.type;
                 lists[type](newTable(results, type), response, list);
+            });
+
+            $('.findit article').on('click keydown', function(e) {
+                if (e.type == 'keydown' && e.which != 13)
+                    return;
+
+                location.href = this.dataset.href;
+            });
+
+            $('.findit footer').on('click', function() {
+                $(this).find('a').trigger('click');
             });
         },
         error: function(jqXHR, textStatus, errorThrown) {

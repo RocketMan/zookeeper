@@ -406,11 +406,11 @@ nav .search-icon {
 
 .result-count {
     position: absolute;
-    font-size: 1.1rem;
+    font-size: 1.0rem;
     font-weight: bold;
     color: #555;
     top: 90px;
-    left: 20px;
+    left: 22px;
     z-order: -1;
 }
 
