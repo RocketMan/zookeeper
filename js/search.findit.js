@@ -233,7 +233,8 @@ var lists = {
         data.forEach(function(entry) {
             var list = response.all ?
                         response.included.find(x => { return x.id == entry.id && x.type == 'show'; }) : entry;
-            tr = $("<article>", { 'data-href': `?subaction=viewDJ&seq=selList&playlist=${list.id}`, tabindex: 0 });
+            var href = `?subaction=viewDJ&seq=selList&playlist=${list.id}`;
+            var tr = $("<article>", { 'data-href': href, tabindex: 0 });
 
             table.append(tr);
 
@@ -260,7 +261,8 @@ var lists = {
             });
 
             var airedOn = $("<div>", { class: 'meta' });
-            var showx = $("<span>").html(`<a href="?subaction=viewDJ&amp;seq=selList&amp;playlist=${list.id}">` + htmlify(list.attributes.name) + '</a>');
+            var showx = $("<span>")
+                .append(makeLink(href, htmlify(list.attributes.name)));
             airedOn.append(showx);
             var datex = $("<span>").html(
                 new Date(list.attributes.date).toLocaleDateString(undefined, OPTS));
