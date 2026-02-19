@@ -409,7 +409,7 @@ async function search(type, url, size, offset) {
                         table.css('height', end + 'px');
                     });
 
-                    table.one('transitioned webkitTransitionEnd oTransitionEnd', () => {
+                    table.one('transitionend', () => {
                         table.css('height', 'auto');
                     });
                 }
