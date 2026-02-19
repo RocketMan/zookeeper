@@ -188,7 +188,11 @@ $().ready(function(){
     }
 
     function connect(last) {
-        var socket = new WebSocket($("#push-subscribe").val());
+        var endpoint = $("#push-subscribe").val();
+        if (endpoint === undefined)
+            return;
+
+        var socket = new WebSocket(endpoint);
         socket.last = last;
         socket.onmessage = function(message) {
             var onnow = JSON.parse(message.data);
@@ -211,7 +215,7 @@ $().ready(function(){
 
                     var time = $("#time").val();
                     var nowPlaying = $(".recently-played");
-                    if(time == 'now' &&
+                    if(time == 'now' && nowPlaying.length &&
                             nowPlaying.find("div[data-id='" + onnow.id + "']").length == 0) {
                         var card = makeCard(onnow);
                         nowPlaying.prepend(card);
