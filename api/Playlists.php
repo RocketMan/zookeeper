@@ -171,7 +171,7 @@ class Playlists implements RequestHandlerInterface {
 
             $tag = $entry->getTag();
             if($tag) {
-                $a->set("artist", PlaylistEntry::swapNames($entry->getArtist()));
+                $a->set("artist", $entry->getArtist());
                 if($aflags && sizeof($albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
                     $res = Albums::fromArray($albums, $aflags)[0];
                 else
