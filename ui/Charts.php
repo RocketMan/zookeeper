@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -27,11 +27,15 @@ namespace ZK\UI;
 use ZK\Engine\Engine;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
+use ZK\Engine\PlaylistEntry;
 
 use ZK\UI\UICommon as UI;
 
 class Charts extends MenuItem {
     const DECENNIUM_CHART = false;
+
+    const TOP_MAIN = 30;
+    const TOP_GENRE = 10;
 
     private static $subactions = [
         [ "a", "", "Top 30", "chartTop30" ],
@@ -49,35 +53,55 @@ class Charts extends MenuItem {
     }
 
     public function chartTop30() {
-        $maintop = 30;
-        $top = 10;
-        $weeks = Engine::api(IChart::class)->getChartDates(2);
-        $count = 0;
-        echo "<TABLE CLASS=\"top30\" BORDER=0 CELLPADDING=5 CELLSPACING=0>\n  <TR>\n";
-        while($weeks && ($week = $weeks->fetch())) {
+        $this->addVar('top', [
+            'main' => self::TOP_MAIN,
+            'genre' => self::TOP_GENRE
+        ]);
+
+        $chartAPI = Engine::api(IChart::class);
+        $cats = $chartAPI->getCategories();
+        $this->addVar('categories', $cats);
+
+        $dateSpec = UI::getClientLocale() == 'en_US' ? 'l, F j, Y' : 'l, j F Y';
+        $this->addVar('dateSpec', $dateSpec);
+
+        $charts = [];
+        $weeks = $chartAPI->getChartDates(2);
+        while ($weeks && ($week = $weeks->fetch())) {
             $endDate = $week["week"];
-            list($y, $m, $d) = explode("-", $endDate);
-            $dateSpec = UI::getClientLocale() == 'en_US' ? 'l, F j, Y' : 'l, j F Y';
-            $formatDate = date($dateSpec, mktime(0,0,0,$m,$d,$y));
-            echo "    <TD ALIGN=LEFT VALIGN=TOP CLASS=\"top30\">\n";
-            echo "      <TABLE CELLPADDING=5 CELLSPACING=0 BORDER=0>\n";
-            echo "        <TR><TH ALIGN=RIGHT COLSPAN=2>Week ending $formatDate</TH></TR>\n";
-    
-            // JHM FIXME TBD - hardcoded for now
-            $this->emitChart2("", $endDate, $maintop);
-            $this->emitChart2("", $endDate, $top, "5");   // hip-hop
-            $this->emitChart2("", $endDate, $top, "7");   // reggae/world
-            if($this->session->isAuth("r"))
-                $this->emitChart2("", $endDate, $top, "9");   // reggae
-            $this->emitChart2("", $endDate, $top, "6");   // jazz
-            $this->emitChart2("", $endDate, $top, "1");   // blues
-            $this->emitChart2("", $endDate, $top, "2");   // country
-            $this->emitChart2("", $endDate, $top, "4");   // heavy shit
-            $this->emitChart2("", $endDate, $top, "3");   // dance
-            $this->emitChart2("", $endDate, $top, "8");   // C/X
-            echo "      </TABLE>\n    </TD>\n";
+
+            $charts[$endDate] = [];
+
+            // top 30
+            $chart = [];
+            $chartAPI->getChart($chart, '', $endDate, self::TOP_MAIN, '');
+            $charts[$endDate][0] = $chart;
+
+            // genre charts
+            $genres = [
+                5, // hip-hop
+                7, // reggae/world
+                9, // reggae
+                6, // jazz
+                1, // blues
+                2, // country
+                4, // heavy shit
+                3, // dance
+                8  // C/X
+            ];
+            if (!$this->session->isAuth("r"))
+                unset($genres[2]); // 2 is ordinal of reggae chart
+
+            foreach ($genres as $genre) {
+                $chart = [];
+                $chartAPI->getChart($chart, '', $endDate, self::TOP_GENRE, $genre);
+                $charts[$endDate][$genre] = $chart;
+            }
         }
-        echo "  </TR>\n</TABLE>\n";
+
+        $this->addVar('allcharts', $charts);
+        $this->addVar('entry', new PlaylistEntry());
+        $this->setTemplate('charts/top30.html');
         $this->title = "Airplay Top 30";
     }
     
@@ -428,61 +452,6 @@ class Charts extends MenuItem {
         }
     }
     
-    private function emitChart2($startDate, $endDate, $limit="", $category="") {
-        $chart = [];
-        $chartAPI = Engine::api(IChart::class);
-        $chartAPI->getChart($chart, $startDate, $endDate, $limit, $category);
-        if(sizeof($chart)) {
-            echo "          <TR CLASS=\"secdiv\"><TH ALIGN=LEFT CLASS=\"sub\"";
-            if($category) {
-                echo " COLSPAN=2>";
-                // Get the chart categories
-                $cats = $chartAPI->getCategories();
-    
-                echo mb_strtoupper($cats[$category-1]["name"]);
-            } else {
-                echo ">";
-                if($limit) echo "TOP $limit";
-                echo "</TH><TH ALIGN=RIGHT CLASS=\"sub\">#&nbsp;ARTIST&nbsp;<I>ALBUM</I>&nbsp;(LABEL)";
-            }
-    
-            echo "</TH>\n            <TR><TD COLSPAN=2 CLASS=\"sub\">\n";
-            for($i=0; $i < sizeof($chart); $i++) {
-                // Fixup the artist, album, and label names
-                $artist = $chart[$i]["artist"];
-                $label = str_replace(" Records", "", $chart[$i]["label"]);
-                $label = str_replace(" Recordings", "", $label);
-    
-                // Setup medium
-                $album = $chart[$i]["album"];
-                switch($chart[$i]["medium"]) {
-                case "S":
-                    $medium = " 7\"";
-                    break;
-                case "T":
-                    $medium = " 10\"";
-                    break;
-                case "V":
-                    $medium = " 12\"";
-                    break;
-                default:
-                    $medium = "";
-                    break;
-                }
-    
-                echo "              ".(string)($i + 1).". ";
-                // Artist
-                echo UI::HTMLify(mb_strtoupper($artist), 20) . " <I>";
-                // Album & Label
-                echo "<A CLASS=\"calNav\" HREF=\"".
-                             "?s=byAlbumKey&amp;n=". UI::URLify($chart[$i]["tag"]).
-                             "&amp;action=search\">". UI::HTMLify($album, 20) . "</A></I>$medium (" .
-                     UI::HTMLify($label, 20) . ")<BR>\n";
-            }
-            echo "          </TD></TR>\n";
-        }
-    }
-    
     public function chartEMail() {
         $chartAPI = Engine::api(IChart::class);
         if(($_REQUEST["seq"] ?? '') == "update") {
@@ -531,7 +500,7 @@ class Charts extends MenuItem {
             $chart['weekly_subscribe']:false;
         $monthlyPage = array_key_exists('monthly_subscribe', $chart)?
             $chart['monthly_subscribe']:false;
-        $this->setTemplate("charts.subscribe.html");
+        $this->setTemplate("charts/subscribe.html");
         $this->addVar("weeklyPage", $weeklyPage);
         $this->addVar("monthlyPage", $monthlyPage);
     }

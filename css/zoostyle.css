@@ -239,20 +239,61 @@ table.afileactivity {
 }
 
 /* charts */
-.top30 .sub {
-    font-size: 10pt;
+.top30 {
+    font-size: 1rem;
+}
+
+.top30 > div {
     vertical-align: top;
+    display: inline-block;
+    width: 50%;
+    margin-right: -5px;
 }
-.top30 th.sub {
-    line-height: 24px;
+
+.top30 header {
+    margin-left: 4px;/*.4rem;/*JM XXX*/
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    color: #555;
 }
-table.top30,
-table.top30 table {
-    width: 100%;
+
+.top30 section {
+    counter-reset: item;
 }
+
+.top30 article {
+    position: relative;
+}
+
+.top30 article > span:first-child {
+    margin-left: 2em;
+}
+
+.top30 article > span:first-child::before {
+    content: counter(item) ". ";
+    counter-increment: item;
+    position: absolute;
+    margin-left: -1.7em;
+    color: #555;
+}
+
+.top30 .album a {
+    margin-left: 4px;
+}
+
 @media (max-width: 800px) {
-    td.top30:last-child:not(:only-child) table {
+    .top30 > div:last-child:not(:only-child) {
 	display: none;
+    }
+    .top30 > div:first-child:not(:only-child) {
+	width: 100%;
+    }
+    .top30 article > span:first-child::before {
+        top: 9px;
+    }
+    .top30 .album {
+        font-size: 1.1rem;
     }
 }
 
@@ -261,6 +302,7 @@ table.top30 table {
     font-size: 1rem;
 }
 
+.top30 section,
 .findit section {
     background: #fff;
     margin-bottom: 1.5rem;
@@ -274,21 +316,29 @@ table.top30 table {
     transition: height .3s ease;
 }
 
+.top30 section article:hover,
 .findit section article:hover,
 .findit section footer:has(li.more):hover {
     background-color: #f5f5f5;
     cursor: pointer;
 }
 
+.top30 section > *,
 .findit section > * {
     transition: background-color .3s ease;
     border-bottom: 1px solid rgba(0,0,0, 0.1);
     padding: 12px;
 }
+.top30 section > * {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+.top30 section > *:first-child,
 .findit section > *:first-child {
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
 }
+.top30 section > *:last-child,
 .findit section > *:last-child {
     border-bottom: none;
     border-bottom-left-radius: 6px;
@@ -307,11 +357,13 @@ table.top30 table {
     font-size: 1.1rem;
 }
 
+.top30 .meta,
 .findit .meta {
     font-size: 0.85rem;
     color: #666;
 }
 
+.top30 article span:not(:first-child)::before,
 .findit article span:not(:first-child)::before {
     content: '\00B7'; /* &middot; */
     font-style: normal;

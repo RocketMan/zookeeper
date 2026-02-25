@@ -386,7 +386,7 @@ async function search(type, url, size, offset) {
         success: function(response) {
             // hack to keep white body in sync
             const color = $("body").css("background-color");
-            if(color == "rgb(255, 255, 255)") {
+            if(color != "rgb(235, 235, 235)") {
                 $("body").css("--theme-content-background-colour", "#ebebeb")
                     .data("saved-background-colour", color);
                 $("div.content").css("background-color", "#ebebeb");
