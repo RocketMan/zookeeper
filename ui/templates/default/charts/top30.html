@@ -13,25 +13,25 @@
     <h2>Week ending {{ week | date(dateSpec) }}</h2>
   {%~ for cat, chart in charts %}
     {%~ if chart|length %}
-      <section>
-        <header>{{ cat ? categories[cat-1].name : 'Top ' ~ top.main }}</header>
+    <section>
+      <header>{{ cat ? categories[cat-1].name : 'Top ' ~ top.main }}</header>
       {%~ for spin in chart %}
         {%~ set href = '?action=search&s=byAlbumKey&n=' ~ spin.tag %}
         {%~ set artist = spin.artist == 'COLL' ? 'Various Artists' : spin.artist %}
         {%~ set medium = _self.medium(spin) %}
         {%~ set label = spin.label | replace({' Records': '', ' Recordings': '' }) %}
-          <article data-href='{{ href }}' tabindex='0'>
-            <span class='artist'>{{ entry.swapNames(artist) }}</span>
-            <span class='album'><a href='{{ href }}'>{{ spin.album | truncate(32) }}</a></span>
-            <span class='meta'>
+      <article data-href='{{ href }}' tabindex='0'>
+        <span class='artist'>{{ entry.swapNames(artist) }}</span>
+        <span class='album'><a href='{{ href }}'>{{ spin.album | truncate(32) }}</a></span>
+        <span class='meta'>
         {%~ if medium %}
-              <span>{{ medium|trim }}</span>
+          <span>{{ medium|trim }}</span>
         {%~ endif %}
-              <span>{{ label }}</span>
-            </span>
-          </article>
+          <span>{{ label }}</span>
+        </span>
+      </article>
       {%~ endfor %}
-      </section>
+    </section>
     {%~ endif %}
   {%~ endfor %}
   </div>
