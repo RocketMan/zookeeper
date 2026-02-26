@@ -22,7 +22,7 @@
         {%~ set label = spin.label | replace({' Records': '', ' Recordings': '' }) %}
       <article data-href='{{ href }}' tabindex='0'>
         <span class='artist'>{{ entry.swapNames(artist) }}</span>
-        <span class='album'><a href='{{ href }}'>{{ spin.album | truncate(32) }}</a></span>
+        <span class='album'><a href='{{ href }}'>{{ spin.album }}</a></span>
         <span class='meta'>
         {%~ if medium %}
           <span>{{ medium|trim }}</span>
