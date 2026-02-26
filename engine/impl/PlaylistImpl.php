@@ -33,14 +33,16 @@ class PlaylistImpl extends DBO implements IPlaylist {
     const GRACE_END = "+30 minutes";
 
     public function getShowdates($year, $month) {
-        $yearMonth = sprintf("%04d-%02d", $year, $month) . "-%";
+        $start = (new \DateTime())->setDate($year, $month, 1);
+        $end = (clone $start)->modify("+1 month")->modify("-1 day");
     
         $query = "SELECT showdate FROM lists " .
                  "WHERE airname IS NOT NULL " .
-                 "AND showdate LIKE ? " .
+                 "AND showdate BETWEEN ? AND ? " .
                  "GROUP BY showdate ORDER BY showdate DESC";
         $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $yearMonth);
+        $stmt->bindValue(1, $start->format("Y-m-d"));
+        $stmt->bindValue(2, $end->format("Y-m-d"));
         return $stmt->iterate();
     }
     
