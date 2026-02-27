@@ -282,6 +282,14 @@ table.afileactivity {
     margin-left: 4px;
 }
 
+.top30 .medium {
+    color: #666;
+    margin-left: 4px;
+}
+.top30 .medium::before {
+    display: none;
+}
+
 @media (max-width: 800px) {
     .top30 > div:last-child:not(:only-child) {
 	display: none;
