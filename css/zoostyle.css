@@ -278,16 +278,13 @@ table.afileactivity {
     color: #555;
 }
 
-.top30 .album a {
+.top30 .artist::after {
     margin-left: 4px;
 }
 
 .top30 .medium {
     color: #666;
     margin-left: 4px;
-}
-.top30 .medium::before {
-    display: none;
 }
 
 @media (max-width: 800px) {
@@ -371,7 +368,7 @@ table.afileactivity {
     color: #666;
 }
 
-.top30 article span:not(:first-child)::before,
+.top30 article span:not(:last-of-type)::after,
 .findit article span:not(:first-child)::before {
     content: '\00B7'; /* &middot; */
     font-style: normal;
