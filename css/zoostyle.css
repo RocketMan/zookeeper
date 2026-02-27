@@ -266,11 +266,11 @@ table.afileactivity {
     position: relative;
 }
 
-.top30 article > span:first-child {
+.top30 article > div {
     margin-left: 2em;
 }
 
-.top30 article > span:first-child::before {
+.top30 article > div::before {
     content: counter(item) ". ";
     counter-increment: item;
     position: absolute;
@@ -289,7 +289,7 @@ table.afileactivity {
     .top30 > div:first-child:not(:only-child) {
 	width: 100%;
     }
-    .top30 article > span:first-child::before {
+    .top30 article > div::before {
         top: 9px;
     }
     .top30 .album {
