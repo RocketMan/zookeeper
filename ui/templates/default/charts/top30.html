@@ -14,13 +14,21 @@
   {%~ for cat, chart in charts %}
     {%~ if chart|length %}
     <section>
-      <header>{{ cat ? categories[cat-1].name : 'Top ' ~ top.main }}</header>
+      <header>{{ cat ? categories[cat-1].name : 'Top ' ~ top.main }}
+    {%~ if not cat %}
+         <span class='legend meta'>
+           <span class='rank'>This&hairsp;Week. Last&hairsp;Week</span>
+           <span class='main'>Artist&hairsp;&middot;&hairsp;Album&hairsp;&middot;&hairsp;</span>Label
+         </span>
+    {%~ endif %}
+      </header>
       {%~ for spin in chart %}
         {%~ set href = '?action=search&s=byAlbumKey&n=' ~ spin.tag %}
         {%~ set artist = spin.artist == 'COLL' ? 'Various Artists' : spin.artist %}
         {%~ set medium = _self.medium(spin) %}
         {%~ set label = spin.label | replace({' Records': '', ' Recordings': '' }) %}
       <article data-href='{{ href }}' tabindex='0'><div>
+        <div class='lw meta'>{{ spin.lw ?? 'n/a' }} {{~ spin.change ? spin.change > 0 ? ' &#x25b4;' : ' &#x25be;' }}</div>
         <span class='artist'>{{ entry.swapNames(artist) }}</span>
         <span class='album'><a href='{{ href }}'>{{ spin.album }}</a>
         {%~ if medium %}

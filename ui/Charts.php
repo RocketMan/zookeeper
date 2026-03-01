@@ -52,6 +52,18 @@ class Charts extends MenuItem {
         return $this->dispatchSubaction($action, $subaction, $extra);
     }
 
+    private function mergeLast(&$current, $last) {
+        $last = array_column($last, 'tag');
+        array_unshift($last, null);
+        $lastMap = array_flip($last);
+
+        foreach($current as $index => &$row) {
+            $row['lw'] = $lastMap[$row['tag']] ?? null;
+            if ($row['lw'])
+                $row['change'] = $row['lw'] <=> ++$index;
+        }
+    }
+
     public function chartTop30() {
         $this->addVar('top', [
             'main' => self::TOP_MAIN,
@@ -65,38 +77,47 @@ class Charts extends MenuItem {
         $dateSpec = UI::getClientLocale() == 'en_US' ? 'l, F j, Y' : 'l, j F Y';
         $this->addVar('dateSpec', $dateSpec);
 
+        $weeks = $chartAPI->getChartDates(2)->asArray();
+        $thisWeek = $weeks[0]['week'];
+        $lastWeek = $weeks[1]['week'];
+
+        // top 30
+        $chart = [];
+        $chartAPI->getChart($chart, '', $thisWeek, self::TOP_MAIN, '');
+
+        $last = [];
+        $chartAPI->getChart($last, '', $lastWeek, self::TOP_MAIN, '');
+        $this->mergeLast($chart, $last);
+
         $charts = [];
-        $weeks = $chartAPI->getChartDates(2);
-        while ($weeks && ($week = $weeks->fetch())) {
-            $endDate = $week["week"];
+        $charts[$thisWeek][0] = $chart;
+        $charts[$lastWeek][0] = $last;
 
-            $charts[$endDate] = [];
+        // genre charts
+        $genres = [
+            5, // hip-hop
+            7, // reggae/world
+            9, // reggae
+            6, // jazz
+            1, // blues
+            2, // country
+            4, // heavy shit
+            3, // dance
+            8  // C/X
+        ];
+        if (!$this->session->isAuth("r"))
+            unset($genres[2]); // 2 is ordinal of reggae chart
 
-            // top 30
+        foreach ($genres as $genre) {
             $chart = [];
-            $chartAPI->getChart($chart, '', $endDate, self::TOP_MAIN, '');
-            $charts[$endDate][0] = $chart;
+            $chartAPI->getChart($chart, '', $thisWeek, self::TOP_GENRE, $genre);
 
-            // genre charts
-            $genres = [
-                5, // hip-hop
-                7, // reggae/world
-                9, // reggae
-                6, // jazz
-                1, // blues
-                2, // country
-                4, // heavy shit
-                3, // dance
-                8  // C/X
-            ];
-            if (!$this->session->isAuth("r"))
-                unset($genres[2]); // 2 is ordinal of reggae chart
+            $last = [];
+            $chartAPI->getChart($last, '', $lastWeek, self::TOP_GENRE, $genre);
+            $this->mergeLast($chart, $last);
 
-            foreach ($genres as $genre) {
-                $chart = [];
-                $chartAPI->getChart($chart, '', $endDate, self::TOP_GENRE, $genre);
-                $charts[$endDate][$genre] = $chart;
-            }
+            $charts[$thisWeek][$genre] = $chart;
+            $charts[$lastWeek][$genre] = $last;
         }
 
         $this->addVar('allcharts', $charts);
