@@ -359,35 +359,14 @@ class Charts extends MenuItem {
                 }
             }
         }
-    ?>
-      <FORM ACTION="" METHOD=POST>
-        <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
-          <TR><TH ALIGN=RIGHT>&nbsp;</TH><TH ALIGN=LEFT>E-Mail Addresses</TH></TR>
-    <?php 
-        $addresses = $chartAPI->getChartEMail();
-        while($addresses && ($row = $addresses->fetch())) {
-            $i = $row["id"];
-            echo "      <TR><TD ALIGN=RIGHT>".htmlentities(stripslashes($row["chart"])).":</TD>\n";
-            echo "          <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=email$i VALUE=\"".htmlentities(stripslashes($row["address"]))."\" CLASS=input SIZE=50 MAXLENGTH=255></TD></TR>\n";
-        }
-    ?>
-          <TR><TD>&nbsp;</TD>
-              <TD COLSPAN=3 ALIGN=LEFT><INPUT TYPE=SUBMIT VALUE=" Update Addresses "></TD></TR>
-    <?php 
-        if(($_REQUEST["seq"] ?? '') == "update") {
-            if($success)
-                echo "      <TR><TD>&nbsp;</TD><TD CLASS=\"header\" ALIGN=LEFT COLSPAN=2>E-Mail addresses updated.</TD></TR>\n";
-            else
-                echo "      <TR><TD>&nbsp;</TD><TD CLASS=\"header\" ALIGN=LEFT COLSPAN=2 BGCOLOR=\"#cc0000\">Updated failed.</TD></TR>\n";
-        }
-    ?>
-        </TABLE>
-        <INPUT TYPE=HIDDEN NAME=action VALUE="viewChart">
-        <INPUT TYPE=HIDDEN NAME=subaction VALUE="chartemail">
-        <INPUT TYPE=HIDDEN NAME=seq VALUE="update">
-      </FORM>
-    <?php 
-        UI::setFocus("email1");
+
+        $addresses = $chartAPI->getChartEMail()->asArray();
+        $this->addVar('addresses', $addresses);
+
+        if(($_REQUEST["seq"] ?? '') == "update")
+            $this->addVar($success ? 'success' : 'failure', true);
+
+        $this->setTemplate('charts/email.html');
     }
     
     public function emitSubscribe() {

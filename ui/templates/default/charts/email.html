@@ -1,0 +1,19 @@
+<form action="" method='POST'>
+  <table cellpadding=2 cellspacing=0 border=0>
+    <tr><th align=right>&nbsp;</th><th align=left>E-Mail Addresses</th></tr>
+{% for address in addresses %}
+    <tr><td align=right>{{ address.chart }}:</td>
+        <td align=left><input type=text name=email{{ address.id }} value="{{ address.address }}" class=input size=50 maxlength=255></td></tr>
+{% endfor %}
+    <tr><td>&nbsp;</td>
+        <td colspan=3 align=left><input type=submit value=" Update Addresses "></td></tr>
+    {%~ if success %}
+    <tr><td>&nbsp;</td><td class="header" align=left colspan=2>E-Mail addresses updated.</td></tr>
+    {%~ elseif failure %}
+    <tr><td>&nbsp;</td><td class="header" align=left colspan=2 style="color: #c00">Updated failed.</td></tr>
+    {%~ endif %}
+  </table>
+  <input type=hidden name=action value="viewChart">
+  <input type=hidden name=subaction value="chartemail">
+  <input type=hidden name=seq value="update">
+</form>
