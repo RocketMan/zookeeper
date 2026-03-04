@@ -1,0 +1,72 @@
+{% macro medium(spin) %}
+  {%~ if spin.medium == 'S' %}
+    7"
+  {%~ elseif spin.medium == 'T' %}
+    10"
+  {%~ elseif spin.medium == 'V' %}
+    12"
+  {%~ endif %}
+{% endmacro %}
+{% if years | length %}
+<div class='charts'>
+  <div class='chart-year-pick'>
+    <form action="?" method="POST" autocomplete="off">
+      <input type="hidden" name="action" value="viewChart">
+      <input type="hidden" name="subaction" value="weekly">
+      Weekly charts for
+      <select name="year" style='display: none'>
+    {%~ for year in years %}
+        <option value='{{ year }}' {{~ year == currentYear ? ' selected'}}>{{ year }}</option>
+    {%~ endfor %}
+      </select>
+    </form>
+  </div>
+  <ul>
+    {%~ set month = 0 %}
+    {%~ for week in weeks %}
+        {%~ set wc = week | split('-') %}
+        {%~ if month and month != wc[1] %}
+  </ul>
+  <ul>
+        {%~ endif %}
+        {%~ set month = wc[1] %}
+    <li><a href='?action=viewChart&amp;subaction=weekly&amp;year={{ wc[0] }}&amp;month={{ wc[1] }}&amp;day={{ wc[2] }}'>Week ending {{ week | date(dateSpec) }}</a>
+    {%~ endfor %}
+  </ul>
+</div>
+<script>
+  $().ready(function() {
+      $("div.chart-year-pick select").selectmenu({width: 'auto'})
+          .on('change selectmenuchange', function() {
+              this.form.submit();
+          })
+          .selectmenu('menuWidget')
+          .addClass('chart-year-select');
+      $("div.chart-year-pick select")
+          .selectmenu('widget')
+          .addClass('chart-year-select')
+          .trigger('focus');
+      $("div.chart-year-pick").css('opacity', '1');
+  });
+</script>
+{% else %}
+<div class='charts'>
+  <h2>{{ app.station }} chart for the week ending {{ endDate | date(dateSpec) }}</h2>
+  {%~ for cat, chart in charts %}
+    {%~ if chart|length %}
+  <h3>{{ cat ? categories[cat-1].name|upper : 'MAIN' }}
+      {%- if not cat -%}
+    <span class='legend'># ARTIST <i>Album</i> (Label)</span>
+      {%- endif -%}
+  </h3>
+  <ol>
+      {%~ for spin in chart %}
+        {%~ set medium = _self.medium(spin) %}
+        {%~ set label = spin.label | replace({' Records': '', ' Recordings': ''}) %}
+    <li>{{ entry.swapNames(spin.artist) | upper }} <i><a href='?action=search&amp;s=byAlbumKey&amp;n={{ spin.tag }}'>{{ spin.album }}</a></i> {{ medium | trim }} ({{ label }})
+      {%~ endfor %}
+  </ol>
+    {%~ endif %}
+  {%~ endfor %}
+</div>
+{% endif %}

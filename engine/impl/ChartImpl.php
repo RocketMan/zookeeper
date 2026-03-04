@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -332,7 +332,7 @@ class ChartImpl extends DBO implements IChart {
     }
     
     public function getChartYears($limit=0) {
-        $query = "SELECT YEAR(week) FROM plays " .
+        $query = "SELECT YEAR(week) year FROM plays " .
                  "GROUP BY YEAR(week) ORDER BY YEAR(week) DESC";
         if($limit)
             $query .= " LIMIT ?";

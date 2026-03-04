@@ -335,6 +335,54 @@ table.afileactivity {
     }
 }
 
+.charts {
+    font-size: 1rem;
+    margin-right: 10px;
+}
+
+.chart-year-pick {
+    font-weight: bold;
+    min-height: 33px;
+    opacity: 0;
+    transition: all 400ms ease 0s;
+}
+
+.chart-year-select.ui-selectmenu-button.ui-button {
+    padding: 6px;
+}
+
+.chart-year-select .ui-selectmenu-text {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ul.chart-year-select {
+    max-height: 300px;
+}
+
+.chart-year-select li.ui-menu-item {
+    font-size: 16px;
+    border-top: 1px solid #c5c5c5;
+}
+
+.chart-year-select li.ui-menu-item div.ui-menu-item-wrapper {
+    padding: 8px;
+}
+
+.charts .legend {
+    float: right;
+    font-weight: normal;
+}
+
+.charts ol {
+    margin-left: 40px;
+    margin-top: 6px;
+}
+
+.charts li {
+    padding: 2px;
+}
+
 /* Find It! */
 .findit {
     font-size: 1rem;
@@ -1101,7 +1149,7 @@ a:hover {
     gap: 2px;
 }
 
-.home-onnow, .chart-year-pick, th {
+.home-onnow, th {
     font-size: 11pt;
     font-weight: bold;
     color: #000000;

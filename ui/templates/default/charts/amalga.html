@@ -1,0 +1,57 @@
+{% macro medium(spin) %}
+  {%~ if spin.medium == 'S' %}
+    7"
+  {%~ elseif spin.medium == 'T' %}
+    10"
+  {%~ elseif spin.medium == 'V' %}
+    12"
+  {%~ endif %}
+{% endmacro %}
+<div class='charts'>
+{% if weeks | length %}
+    {%~ set year = 0 %}
+    {%~ for index, week in weeks %}
+        {%~ set wc = week | split('-') %}
+        {%~ if year != wc[0] %}
+            {%~ set fullyear = wc[1] == 12 and weeks|length - index > 12 %}
+            {%~ if year %}
+  </ul>
+            {%~ endif %}
+            {%~ if decenniumCharts and fullyear and (wc[0] + 1) % 10 == 0 %}
+  <h2>Amalgamated charts {{ wc[0] - 9 }} - {{ wc[0] }}</h2>
+  <ul>
+    <li><a href='?action=viewChart&amp;subaction=amalgamated&amp;dnum={{ wc[0] // 10 }}'>Top 100 for the decennium that was {{ wc[0] - 9 }} - {{ wc[0] }}</a>
+  </ul>
+            {%~ endif %}
+  <h2>Amalgamated charts {{ wc[0] }}</h2>
+            {%~ if fullyear %}
+  <ul>
+    <li><a href='?action=viewChart&amp;subaction=amalgamated&amp;cyear={{ wc[0] }}'>Top 100 for the year {{ wc[0] }}</a>
+  </ul>
+            {%~ endif %}
+  <ul>
+        {%~ endif %}
+        {%~ set year = wc[0] %}
+    <li><a href='?action=viewChart&amp;subaction=amalgamated&amp;year={{ wc[0] }}&amp;month={{ wc[1] }}'>{{ week | date(dateSpec) }}</a>
+    {%~ endfor %}
+  </ul>
+{% else %}
+  <h2>{{ app.station }} {{ title }}</h2>
+  {%~ for cat, chart in charts %}
+    {%~ if chart|length %}
+  <h3>{{ cat ? categories[cat-1].name|upper : 'MAIN' }}
+      {%- if not cat -%}
+    <span class='legend'># ARTIST <i>Album</i> (Label)</span>
+      {%- endif -%}
+  </h3>
+  <ol>
+      {%~ for spin in chart %}
+        {%~ set medium = _self.medium(spin) %}
+        {%~ set label = spin.label | replace({' Records': '', ' Recordings': ''}) %}
+    <li>{{ entry.swapNames(spin.artist) | upper }} <i><a href='?action=search&amp;s=byAlbumKey&amp;n={{ spin.tag }}'>{{ spin.album }}</a></i> {{ medium | trim }} ({{ label }})
+      {%~ endfor %}
+  </ol>
+    {%~ endif %}
+  {%~ endfor %}
+{% endif %}
+</div>

@@ -126,46 +126,8 @@ class Charts extends MenuItem {
         $this->title = "Airplay Top 30";
     }
     
-    public function emitChartYearNav($currentYear, $header=0) {
-?>
-  <div class="chart-year-pick">
-  <form action="?" method="POST" autocomplete="off">
-  <input type="hidden" name="action" value="viewChart">
-  <input type="hidden" name="subaction" value="weekly">
-  Weekly charts for
-  <select name="year" style='display: none'>
-<?php
-        $oldestYear = null;
-        $years = Engine::api(IChart::class)->getChartYears();
-        while($years && ($year = $years->fetch())) {
-            echo "    <option value=\"{$year[0]}\"";
-            if($year[0] == $currentYear)
-                echo " selected";
-            echo ">{$year[0]}</option>\n";
-            $oldestYear = $year[0];
-        }
-        ?>
-  </select>
-  </form>
-  </div>
-  <script><!--
-  $().ready(function() {
-      $("div.chart-year-pick select").selectmenu({width: 'auto'})
-          .on('change selectmenuchange', function() {
-              this.form.submit();
-          })
-          .selectmenu('menuWidget').css('max-height', '300px');
-      $("div.content > div").css('display', 'block');
-      $("div.chart-year-pick select").selectmenu('widget').trigger('focus');
-  });
-  // -->
-  </script>
-<?php
-        return $oldestYear == $currentYear;
-    }
-    
     public function chartWeekly() {
-        $station = Engine::param('station', 'KZSU');
+        $station = Engine::param('station');
     
         $chartAPI = Engine::api(IChart::class);
         $year = (int)($_REQUEST["year"] ?? 0);
@@ -173,6 +135,7 @@ class Charts extends MenuItem {
         $day = (int)($_REQUEST["day"] ?? 0);
 
         $dateSpec = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
+        $this->addVar('dateSpec', $dateSpec);
 
         if(!$month) {
             if(!$year) {
@@ -187,30 +150,15 @@ class Charts extends MenuItem {
                 $month = $today["mon"];
             }
     
-            echo "  <div style='display: none'>\n";
-            $isOldestYear = $this->emitChartYearNav($year, 1);
-            echo "  <TABLE WIDTH=\"100%\">\n";
-            echo "    <TR><TD>\n      <UL>\n";
-            $weeks = $chartAPI->getChartDatesByYear($year);
-            while($weeks && ($week = $weeks->fetch())) {
-                list($y, $m, $d) = explode("-", $week["week"]);
-                if($y != $year)
-                    continue;
-                if($month != $m) {
-                    echo "      </UL><UL>\n";
-                    $month = $m;
-                }
-                echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=weekly&amp;year=$y&amp;month=$m&amp;day=$d\">Week ending ".date($dateSpec, mktime(0,0,0,$m,$d,$y))."</A>\n";
-            }
-            echo "      </UL>\n    </TD></TR>\n";
-            echo "  </TABLE>\n";
+            $this->addVar('currentYear', $year);
+            $years = $chartAPI->getChartYears();
+            $this->addVar('years', array_column($years->asArray(), 'year'));
 
-            $urls = Engine::param('urls');
-            if($isOldestYear && array_key_exists('old_charts', $urls))
-                echo "  <P><A HREF=\"".$urls['old_charts']."\">Older airplay charts</A> are available here.</P>\n";
-            echo "  </div>\n";
+            $weeks = $chartAPI->getChartDatesByYear($year);
+            $this->addVar('weeks', array_column($weeks->asArray(), 'week'));
 
             $this->title = "Weekly charts for $year";
+            $this->setTemplate('charts/weekly.html');
             return;
         }
 
@@ -219,13 +167,15 @@ class Charts extends MenuItem {
             return;
         }
 
-        $startDate = "";
         $endDate = "$year-$month-$day";
-        $displayDate = date($dateSpec, mktime(0,0,0,$month,$day,$year));
-        echo "<P CLASS=\"header\">$station chart for the week ending $displayDate</P>\n";
+        $this->addVar('endDate', $endDate);
 
+        $displayDate = date($dateSpec, mktime(0,0,0,$month,$day,$year));
         $this->title = "Chart for $displayDate";
     
+        $cats = $chartAPI->getCategories();
+        $this->addVar('categories', $cats);
+
     // weekly = hip hop, reggae/world, jazz, heavy shit, dance, classical/exp
     //     no limits
     // monthly = hip hop, reggae/world, jazz, blues, country, heavy shit, dance
@@ -233,24 +183,40 @@ class Charts extends MenuItem {
     
         $mainLimit = $catLimit = "";
     
-        // JHM FIXME TBD - hardcoded for now
-        $this->emitChart($startDate, $endDate, $mainLimit);
-        $this->emitChart($startDate, $endDate, $catLimit, "5"); // hip-hop
-        $this->emitChart($startDate, $endDate, $catLimit, "7"); // reggae/world
-        if($this->session->isAuth("r"))
-            $this->emitChart($startDate, $endDate, $catLimit, "9"); // reggae
-        $this->emitChart($startDate, $endDate, $catLimit, "6"); // jazz
-        $this->emitChart($startDate, $endDate, $catLimit, "1"); // blues
-        $this->emitChart($startDate, $endDate, $catLimit, "2"); // country
-        $this->emitChart($startDate, $endDate, $catLimit, "4"); // heavy shit
-        $this->emitChart($startDate, $endDate, $catLimit, "3"); // dance
-        $this->emitChart($startDate, $endDate, $catLimit, "8"); // C/X
-    
-        UI::setFocus();
+        $chart = [];
+        $chartAPI->getChart($chart, '', $endDate, $mainLimit, '');
+
+        $charts = [];
+        $charts[0] = $chart;
+
+        // genre charts
+        $genres = [
+            5, // hip-hop
+            7, // reggae/world
+            9, // reggae
+            6, // jazz
+            1, // blues
+            2, // country
+            4, // heavy shit
+            3, // dance
+            8  // C/X
+        ];
+        if (!$this->session->isAuth("r"))
+            unset($genres[2]); // 2 is ordinal of reggae chart
+
+        foreach ($genres as $genre) {
+            $chart = [];
+            $chartAPI->getChart($chart, '', $endDate, $catLimit, $genre);
+            $charts[$genre] = $chart;
+        }
+
+        $this->addVar('charts', $charts);
+        $this->addVar('entry', new PlaylistEntry());
+        $this->setTemplate('charts/weekly.html');
     }
     
     public function chartMonthly() {
-        $station = Engine::param('station', 'KZSU');
+        $station = Engine::param('station');
     
         $chartAPI = Engine::api(IChart::class);
         $year = (int)($_REQUEST["year"] ?? 0);
@@ -262,16 +228,14 @@ class Charts extends MenuItem {
         $config = Engine::param('chart');
         $earliestYear = array_key_exists('earliest_chart_year', $config)?
             (int)$config['earliest_chart_year']:2003;
-    
-        $monthly = 1;
-    
+
+        $this->addVar('decenniumCharts', self::DECENNIUM_CHART);
+
         if(!$dnum && !$cyear && !$month) {
             if(!$year) {
                 // current year
                 $today = getdate(time());
                 $month = $today["mon"];
-    
-                echo "  <TABLE WIDTH=\"100%\">\n";
     
                 // Determine if we need to include the current month
                 $weeks = $chartAPI->getChartDates(1);
@@ -280,53 +244,16 @@ class Charts extends MenuItem {
                     $chartEnd = $chartAPI->getMonthlyChartEnd($m, $y);
                     $skipCurMonth = strcmp($curWeek["week"], $chartEnd) != 0;
                 }
-    
-                $year = 0;
-                $weeks = $chartAPI->getChartMonths();
-                while($weeks && ($week = $weeks->fetch())) {
-                    if($skipCurMonth) {
-                        $skipCurMonth = 0;
-                        continue;
-                    }
-    
-                    $genDecChart = $genYearChart = 0;
-                    list($y, $m, $d) = explode("-", $week["week"]);
-    
-                    if($year != $y) {
-                        if($year)
-                            echo "      </UL>\n    </TD></TR>\n";
-                        if(self::DECENNIUM_CHART && $m == 12 && $y % 10 == 9) {
-                            $genDecChart = 1;
-                            $dnum = intdiv($y, 10);
-                            $dstart = $y - 9;
-                            $name = ($dstart % 100)?"$dstart's":"noughties";
-                            if($y - $earliestYear < 10)
-                                $name .= " (based on available data)";
-                            echo "    <TR><TH CLASS=\"header\" ALIGN=LEFT>Amalgamated charts $dstart - $y</TH></TR>\n    <TR><TD>\n      <UL>\n";
-                            echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=amalgamated&amp;dnum=$dnum\">Top 100 for the decennium that was the $name</A>\n      </UL><UL>\n";
-                        }
-                        echo "    <TR><TH CLASS=\"header\" ALIGN=LEFT>Amalgamated charts $y</TH></TR>\n    <TR><TD>\n      <UL>\n";
-    
-                        if($y >= $earliestYear &&  // first year we have charts for full year
-                                $m == 12)
-                            $genYearChart = 1;
-                        $year = $y;
-                    }
-    
-                    if($genYearChart)
-                        echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=amalgamated&amp;cyear=$y\">Top 100 for the year $y</A>\n      </UL><UL>\n";
-    
-                     echo "        <LI><A HREF=\"?action=viewChart&amp;subaction=amalgamated&amp;year=$y&amp;month=$m\">".date("F Y", mktime(0,0,0,$m,1,$y))."</A>\n";
-                }
-    
-                if($year)
-                    echo "      </UL>\n    </TD></TR>\n";
-                $urls = Engine::param('urls');
-                if(array_key_exists('old_charts', $urls))
-                    echo "    <TR><TD><A HREF=\"".$urls['old_charts']."\">Old airplay charts</A> are available here.</TD></TR>\n";
-                echo "  </TABLE>\n";
+
+                $weeks = $chartAPI->getChartMonths()->asArray();
+                if ($skipCurMonth)
+                    array_shift($weeks);
+
+                $this->addVar('weeks', array_column($weeks, 'week'));
+                $this->addVar('dateSpec', 'F Y');
             }
 
+            $this->setTemplate('charts/amalga.html');
             $this->title = "Amalgamated charts";
             return;
         }
@@ -344,9 +271,8 @@ class Charts extends MenuItem {
             $name = "$dstart - $dend";
             if($dend - $earliestYear < 10)
                 $name .= " (based on available data)";
-            echo "<P CLASS=\"header\">$station Top 100 for the decennium $name</P>\n";
+            $this->addVar('title', "Top 100 for the decennium $name");
             $this->title = "Chart for $name";
-            $monthly = 0;
         } else if($cyear) {
             if(!checkdate(1, 1, $cyear)) {
                 echo "<B>The requested date is invalid.</B>";
@@ -355,10 +281,9 @@ class Charts extends MenuItem {
 
             $startDate = $chartAPI->getMonthlyChartStart(1, $cyear);
             $endDate = $chartAPI->getMonthlyChartEnd(12, $cyear);
-            echo "<P CLASS=\"header\">$station Top 100 for the year $cyear</P>\n";
+            $this->addVar('title', "Top 100 for the year $cyear");
             $this->title = "Chart for $cyear";
-            $monthly = 0;
-        } else if($monthly) {
+        } else {
             if(!checkdate($month, 1, $year)) {
                 echo "<B>The requested date is invalid.</B>";
                 return;
@@ -367,22 +292,13 @@ class Charts extends MenuItem {
             $startDate = $chartAPI->getMonthlyChartStart($month, $year);
             $endDate = $chartAPI->getMonthlyChartEnd($month, $year);
             $displayDate = date("F Y", mktime(0,0,0,$month,1,$year));
-            echo "<P CLASS=\"header\">$station chart for month of $displayDate</P>\n";
-            $this->title = "Chart for $displayDate";
-        } else {
-            if(!checkdate($month, $day, $year)) {
-                echo "<B>The requested date is invalid.</B>";
-                return;
-            }
-
-            $startDate = "";
-            $endDate = "$year-$month-$day";
-            $dateSpec = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
-            $displayDate = date($dateSpec, mktime(0,0,0,$month,$day,$year));
-            echo "<P CLASS=\"header\">$station chart for the week ending $displayDate</P>\n";
+            $this->addVar('title', "chart for $displayDate");
             $this->title = "Chart for $displayDate";
         }
     
+        $cats = $chartAPI->getCategories();
+        $this->addVar('categories', $cats);
+
     // weekly = hip hop, reggae/world, jazz, heavy shit, dance, classical/exp
     //     no limits
     // monthly = hip hop, reggae/world, jazz, blues, country, heavy shit, dance
@@ -395,84 +311,43 @@ class Charts extends MenuItem {
             $mainLimit = $monthly?($this->session->isAuth("f")?"100":"60"):"";
             $catLimit = $monthly?($this->session->isAuth("f")?"40":"10"):"";
         }
-    
-        // JHM FIXME TBD - hardcoded for now
-        $this->emitChart($startDate, $endDate, $mainLimit);
-        $this->emitChart($startDate, $endDate, $catLimit, "5"); // hip-hop
-        $this->emitChart($startDate, $endDate, $catLimit, "7"); // reggae/world
-        if($this->session->isAuth("r"))
-            $this->emitChart($startDate, $endDate, $catLimit, "9"); // reggae
-        $this->emitChart($startDate, $endDate, $catLimit, "6"); // jazz
-        if($monthly || $cyear || $dnum) {
-            $this->emitChart($startDate, $endDate, $catLimit, "1"); // blues
-            $this->emitChart($startDate, $endDate, $catLimit, "2"); // country
-        }
-        $this->emitChart($startDate, $endDate, $catLimit, "4"); // heavy shit
-        $this->emitChart($startDate, $endDate, $catLimit, "3"); // dance
-        if(!$monthly)
-            $this->emitChart($startDate, $endDate, $catLimit, "8"); // C/X
-    
-        UI::setFocus();
-    }
-    
-    private function emitChart($startDate, $endDate, $limit="", $category="") {
+
         $chart = [];
-        $chartAPI = Engine::api(IChart::class);
-        $chartAPI->getChart($chart, $startDate, $endDate, $limit, $category);
-        Engine::api(ILibrary::class)->markAlbumsReviewed($chart);
-        if(sizeof($chart)) {
-            echo "<TABLE WIDTH=\"100%\" BORDER=0 CELLPADDING=2 CELLSPACING=0>\n";
-            echo "  <TR><TH CLASS=\"subhead\" ALIGN=LEFT";
-            if($category) {
-                echo " COLSPAN=2>";
-                // Get the chart categories
-                $cats = $chartAPI->getCategories();
-    
-                echo mb_strtoupper($cats[$category-1]["name"]);
-            } else {
-                echo ">";
-                echo "MAIN";
-                echo "</TH><TH ALIGN=RIGHT>#&nbsp;ARTIST&nbsp;<I>ALBUM</I>&nbsp;(LABEL)";
-            }
-    
-            echo "</TH></TR>\n  <TR><TD COLSPAN=2>\n    <OL>\n";
-            for($i=0; $i < sizeof($chart); $i++) {
-    
-                // Fixup the artist, album, and label names
-                $artist = $chart[$i]["artist"];
-                $label = str_replace(" Records", "", $chart[$i]["label"]);
-                $label = str_replace(" Recordings", "", $label);
-    
-                // Setup medium
-                $album = $chart[$i]["album"];
-                switch($chart[$i]["medium"]) {
-                case "S":
-                    $medium = " 7\"";
-                    break;
-                case "T":
-                    $medium = " 10\"";
-                    break;
-                case "V":
-                    $medium = " 12\"";
-                    break;
-                default:
-                    $medium = "";
-                    break;
-                }
-    
-                echo "      <LI>";
-                // Artist
-                echo UI::HTMLify(mb_strtoupper($artist), 20) . " <I>";
-                // Album & Label
-                echo "<A CLASS=\"calNav\" HREF=\"".
-                             "?s=byAlbumKey&amp;n=". UI::URLify($chart[$i]["tag"]).
-                             "&amp;action=search\">". UI::HTMLify($album, 20) . "</A></I>$medium (" .
-                     UI::HTMLify($label, 20) . ")\n";
-            }
-            echo "  </OL></TD></TR>\n</TABLE><BR>\n";
+        $chartAPI->getChart($chart, $startDate, $endDate, $mainLimit, '');
+
+        $charts = [];
+        $charts[0] = $chart;
+
+        // genre charts
+        $genres = [
+            5, // hip-hop
+            7, // reggae/world
+            9, // reggae
+            6, // jazz
+            1, // blues
+            2, // country
+            4, // heavy shit
+            3, // dance
+            8  // C/X
+        ];
+
+        if ($monthly)
+            unset($genres[8]); // 8 is ordinal of C/X chart
+
+        if (!$this->session->isAuth("r"))
+            unset($genres[2]); // 2 is ordinal of reggae chart
+
+        foreach ($genres as $genre) {
+            $chart = [];
+            $chartAPI->getChart($chart, $startDate, $endDate, $catLimit, $genre);
+            $charts[$genre] = $chart;
         }
+
+        $this->addVar('charts', $charts);
+        $this->addVar('entry', new PlaylistEntry());
+        $this->setTemplate('charts/amalga.html');
     }
-    
+
     public function chartEMail() {
         $chartAPI = Engine::api(IChart::class);
         if(($_REQUEST["seq"] ?? '') == "update") {
