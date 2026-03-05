@@ -54,7 +54,7 @@ class Charts extends MenuItem {
 
     private function mergeLast(&$current, $last) {
         $last = array_column($last, 'tag');
-        array_unshift($last, null);
+        array_unshift($last, 0);
         $lastMap = array_flip($last);
 
         foreach($current as $index => &$row) {
