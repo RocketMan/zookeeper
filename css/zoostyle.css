@@ -369,7 +369,8 @@ ul.chart-year-select {
     padding: 8px;
 }
 
-.charts h3 {
+.charts h3,
+.charts li::marker {
     color: #555;
 }
 
@@ -385,6 +386,10 @@ ul.chart-year-select {
 
 .charts li {
     padding: 2px;
+}
+
+.charts ol li {
+    padding-left: 4px;
 }
 
 /* Find It! */
