@@ -231,6 +231,8 @@ class Charts extends MenuItem {
 
         $this->addVar('decenniumCharts', self::DECENNIUM_CHART);
 
+        $monthly = 1;
+
         if(!$dnum && !$cyear && !$month) {
             if(!$year) {
                 // current year
@@ -273,6 +275,7 @@ class Charts extends MenuItem {
                 $name .= " (based on available data)";
             $this->addVar('title', "Top 100 for the decennium $name");
             $this->title = "Chart for $name";
+            $monthly = 0;
         } else if($cyear) {
             if(!checkdate(1, 1, $cyear)) {
                 echo "<B>The requested date is invalid.</B>";
@@ -283,6 +286,7 @@ class Charts extends MenuItem {
             $endDate = $chartAPI->getMonthlyChartEnd(12, $cyear);
             $this->addVar('title', "Top 100 for the year $cyear");
             $this->title = "Chart for $cyear";
+            $monthly = 0;
         } else {
             if(!checkdate($month, 1, $year)) {
                 echo "<B>The requested date is invalid.</B>";
