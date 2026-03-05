@@ -369,6 +369,10 @@ ul.chart-year-select {
     padding: 8px;
 }
 
+.charts h3 {
+    color: #555;
+}
+
 .charts .legend {
     float: right;
     font-weight: normal;
