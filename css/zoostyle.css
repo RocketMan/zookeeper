@@ -392,6 +392,10 @@ ul.chart-year-select {
     padding-left: 4px;
 }
 
+.charts ol li a {
+    font-size: 1.1rem;
+}
+
 /* Find It! */
 .findit {
     font-size: 1rem;
