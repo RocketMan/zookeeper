@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -29,6 +29,7 @@ use ZK\Engine\IArtwork;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
+use ZK\Engine\PlaylistEntry;
 
 use ZK\UI\UICommon as UI;
 
@@ -62,18 +63,7 @@ class RSS extends CommandTarget implements IController {
     public function composeChartRSS($endDate, $limit="", $category="") {
         $chart = [];
         Engine::api(IChart::class)->getChart($chart, "", $endDate, $limit, $category);
-        $albums = [];
-        if(sizeof($chart)) {
-            for($i=0; $i < sizeof($chart); $i++) {
-                $album = $chart[$i];
-                $label = str_replace(" Records", "", $chart[$i]["label"]);
-                $label = str_replace(" Recordings", "", $label);
-                $album['label'] = $label;
-                $album['rank'] = $i + 1;
-                $albums[] = $album;
-            }
-        }
-        return $albums;
+        return $chart;
     }
     
     public function recentCharts() {
@@ -83,6 +73,7 @@ class RSS extends CommandTarget implements IController {
         $this->params['limit'] = $top;
         $this->params['dateSpec'] = UI::isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
         $this->params['MEDIA'] = ILibrary::MEDIA;
+        $this->params['entry'] = new PlaylistEntry();
         $weeks = Engine::api(IChart::class)->getChartDates($weeks)->asArray();
         $charts = array_map(function($week) use ($top) {
             return [
