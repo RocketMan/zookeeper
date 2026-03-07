@@ -30,7 +30,7 @@
   <ul>
         {%~ endif %}
         {%~ set month = wc[1] %}
-    <li><a href='?action=viewChart&amp;subaction=weekly&amp;year={{ wc[0] }}&amp;month={{ wc[1] }}&amp;day={{ wc[2] }}'>Week ending {{ week | date(dateSpec) }}</a>
+    <li><a href='?action=viewChart&amp;subaction=weekly&amp;year={{ wc[0] }}&amp;month={{ wc[1] }}&amp;day={{ wc[2] }}'>Week ending {{ week | date(dateSpec) }}</a></li>
     {%~ endfor %}
   </ul>
 </div>

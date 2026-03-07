@@ -20,19 +20,19 @@
             {%~ if decenniumCharts and fullyear and (wc[0] + 1) % 10 == 0 %}
   <h2>Amalgamated charts {{ wc[0] - 9 }} - {{ wc[0] }}</h2>
   <ul>
-    <li><a href='?action=viewChart&amp;subaction=amalgamated&amp;dnum={{ wc[0] // 10 }}'>Top 100 for the decennium that was {{ wc[0] - 9 }} - {{ wc[0] }}</a>
+    <li><a href='?action=viewChart&amp;subaction=amalgamated&amp;dnum={{ wc[0] // 10 }}'>Top 100 for the decennium that was {{ wc[0] - 9 }} - {{ wc[0] }}</a></li>
   </ul>
             {%~ endif %}
   <h2>Amalgamated charts {{ wc[0] }}</h2>
             {%~ if fullyear %}
   <ul>
-    <li><a href='?action=viewChart&amp;subaction=amalgamated&amp;cyear={{ wc[0] }}'>Top 100 for the year {{ wc[0] }}</a>
+    <li><a href='?action=viewChart&amp;subaction=amalgamated&amp;cyear={{ wc[0] }}'>Top 100 for the year {{ wc[0] }}</a></li>
   </ul>
             {%~ endif %}
   <ul>
         {%~ endif %}
         {%~ set year = wc[0] %}
-    <li><a href='?action=viewChart&amp;subaction=amalgamated&amp;year={{ wc[0] }}&amp;month={{ wc[1] }}'>{{ week | date(dateSpec) }}</a>
+    <li><a href='?action=viewChart&amp;subaction=amalgamated&amp;year={{ wc[0] }}&amp;month={{ wc[1] }}'>{{ week | date(dateSpec) }}</a></li>
     {%~ endfor %}
   </ul>
 {% else %}
