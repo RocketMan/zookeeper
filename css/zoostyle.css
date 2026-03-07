@@ -388,12 +388,13 @@ ul.chart-year-select {
     padding: 2px;
 }
 
-.charts ol li {
-    padding-left: 4px;
+.charts .album {
+    font-size: 1.1rem;
+    font-style: italic;
 }
 
-.charts ol li a {
-    font-size: 1.1rem;
+.charts ol li span {
+    padding-left: 4px;
 }
 
 /* Find It! */
@@ -457,6 +458,7 @@ ul.chart-year-select {
 }
 
 .top30 .meta,
+.charts .meta,
 .findit .meta {
     font-size: 0.85rem;
     color: #666;

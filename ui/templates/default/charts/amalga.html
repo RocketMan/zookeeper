@@ -48,7 +48,14 @@
       {%~ for spin in chart %}
         {%~ set medium = _self.medium(spin) %}
         {%~ set label = spin.label | replace({' Records': '', ' Recordings': ''}) %}
-    <li>{{ entry.swapNames(spin.artist) | upper }} <i><a href='?action=search&amp;s=byAlbumKey&amp;n={{ spin.tag }}'>{{ spin.album }}</a></i> {{ medium | trim }} ({{ label }})
+    <li>
+      <span class='artist'>{{ entry.swapNames(spin.artist) | upper }}</span>
+      <span class='album'><a href='?action=search&amp;s=byAlbumKey&amp;n={{ spin.tag }}'>{{ spin.album }}</a></span>
+        {%~ if medium %}
+      <span class='medium'>{{ medium | trim }}</span>
+        {%~ endif %}
+      <span class='meta'>({{ label }})</span>
+    </li>
       {%~ endfor %}
   </ol>
     {%~ endif %}
