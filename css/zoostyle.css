@@ -2122,6 +2122,37 @@ a:hover.copy {
     font-size: 1rem;
 }
 
+.album-details .title {
+    font-size: 1.3rem;
+    margin-bottom: 0;
+}
+
+.album-details .title span,
+.album-details .title a {
+    font-size: 1rem;
+    font-weight: normal;
+    margin-left: 0.25em;
+}
+
+.album-details .artist {
+    font-size: 1.1rem;
+}
+
+.album-details .label {
+    font-size: 1rem;
+}
+
+.album-details .meta {
+    font-size: 1rem;
+    margin-top: 10px;
+}
+
+.album-details .write-review {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
 .album-preview,
 .album-thumb {
     display: inline-block;
@@ -2191,6 +2222,8 @@ a:hover.copy {
 .album-hashtag.palette-4 {
     background-color: #dfccf1;
 }
+
+
 
 .album-reviews {
     float: right;
