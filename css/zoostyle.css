@@ -397,6 +397,15 @@ ul.chart-year-select {
     padding-left: 4px;
 }
 
+.subscribe {
+    font-size: 1rem;
+    max-width: 800px;
+}
+
+.subscribe li {
+    padding: 10px;
+}
+
 /* Find It! */
 .findit {
     font-size: 1rem;
@@ -2222,8 +2231,6 @@ a:hover.copy {
 .album-hashtag.palette-4 {
     background-color: #dfccf1;
 }
-
-
 
 .album-reviews {
     float: right;
