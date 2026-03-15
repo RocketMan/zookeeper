@@ -925,7 +925,7 @@ class LibraryImpl extends DBO implements ILibrary {
         $loggedIn = Engine::session()->isAuth("u");
 
         // nothing to return if search is null or trivial
-        if(!$key || strlen(trim($key)) < 3)
+        if(!$key || strlen($tkey = trim($key)) < 3)
             return [ 0, $retVal ];
 
         // Limit maximum number of results
@@ -933,8 +933,8 @@ class LibraryImpl extends DBO implements ILibrary {
                             self::DEFAULT_FT_LIMIT;
 
         // Construct full text query string
-        if(substr($key, 0, 2) == "\\\"") {
-             $search = $key;
+        if(substr($tkey, 0, 1) == "\"") {
+             $search = $tkey;
         } else {
              $words = array_filter(preg_split('/\W+/u', $key, 0, PREG_SPLIT_NO_EMPTY), function($word) {
                  return !in_array(mb_strtolower($word), self::$ftExclude);
