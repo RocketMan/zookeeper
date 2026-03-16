@@ -166,8 +166,26 @@ ul#search-filter-menu li {
     font-size: 16px;
     outline-offset: -3px;
 }
+#search-submit.loading {
+    color: transparent;
+}
 #search-submit:hover {
     cursor: pointer;
+}
+#search-submit.loading::after {
+    content: "";
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 4px solid #d8d8d8;
+    border-right-color: #fa3;
+    animation: l2 1s infinite linear;
+}
+@keyframes l2 {
+    to { transform: rotate(1turn) }
 }
 
 nav .menu-icon,

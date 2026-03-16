@@ -375,6 +375,10 @@ async function search(type, url, size, offset) {
     url += "&fields[label]=name,city,state";
     url += "&fields[review]=-review";
 
+    var loading = setTimeout(function() {
+        $("#search-submit").addClass("loading");
+    }, 300);
+
     const pow = await getPoW();
 
     $.ajax({
@@ -383,6 +387,10 @@ async function search(type, url, size, offset) {
         accept: 'application/json; charset=utf-8',
         url: url,
         headers: { 'X-Challenge': btoa(JSON.stringify(pow)) },
+        complete: function() {
+            clearTimeout(loading);
+            $("#search-submit").removeClass("loading");
+        },
         success: function(response) {
             // hack to keep white body in sync
             const color = $("body").css("background-color");

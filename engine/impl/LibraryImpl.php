@@ -934,12 +934,15 @@ class LibraryImpl extends DBO implements ILibrary {
 
         // Construct full text query string
         if(substr($tkey, 0, 1) == "\"") {
-             $search = $tkey;
+            if(in_array(mb_strtolower(trim($tkey, " \"")), self::$ftExclude))
+                return [ 0, $retVal ];
+
+            $search = $tkey;
         } else {
-             $words = array_filter(preg_split('/\W+/u', $key, 0, PREG_SPLIT_NO_EMPTY), function($word) {
-                 return !in_array(mb_strtolower($word), self::$ftExclude);
-             });
-             $search = "+" . implode(" +", $words);
+            $words = array_filter(preg_split('/\W+/u', $key, 0, PREG_SPLIT_NO_EMPTY), function($word) {
+                return !in_array(mb_strtolower($word), self::$ftExclude);
+            });
+            $search = "+" . implode(" +", $words);
         }
     
         // JM 2010-09-26 remove semicolons to thwart injection attacks
