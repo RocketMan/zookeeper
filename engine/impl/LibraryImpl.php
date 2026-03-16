@@ -182,7 +182,7 @@ class LibraryImpl extends DBO implements ILibrary {
         $search = preg_replace('/([_%])/', '\\\\$1', $search);
       
         // remove semicolons to thwart injection attacks
-        $search = preg_replace('/([;])/', '_', $search);
+        $search = str_replace(';', '_', $search);
 
         if(substr($search, strlen($search)-1, 1) == "*") {
             $search = trim(substr($search, 0, strlen($search)-1))."%";
@@ -946,7 +946,7 @@ class LibraryImpl extends DBO implements ILibrary {
         }
     
         // JM 2010-09-26 remove semicolons to thwart injection attacks
-        $search = preg_replace('/([;])/', '', $search);
+        $search = str_replace(';', '', $search);
     
         // JM 2010-09-26 if search string includes 'union select', abort
         $searchl = strtolower($search);
