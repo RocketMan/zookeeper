@@ -45,7 +45,7 @@ function reposition() {
     loading.addClass('tag-cloud').removeClass('invisible')
         .parent().css('overflow-x', 'clip');
 
-    $(".loading").remove();
+    $("div.loading").remove();
 
     loading = false;
 }
