@@ -19,6 +19,8 @@
     <link rel="stylesheet" type="text/css" href="{{ "css/zoostyle.css" | decorate }}" />
 {% if app.content.template starts with 'album' %}
     <link rel="stylesheet" type="text/css" href="{{ "css/album.css" | decorate }}" />
+{% elseif app.content.template starts with 'review/trending' %}
+    <link rel="stylesheet" type="text/css" href="{{ "css/trending.css" | decorate }}" />
 {% endif %}
 {% if app.stylesheet is not empty %}
     <link rel="stylesheet" type="text/css" href="{{ app.stylesheet | decorate }}" />

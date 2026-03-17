@@ -184,9 +184,6 @@ ul#search-filter-menu li {
     border-right-color: #fa3;
     animation: l2 1s infinite linear;
 }
-#search-submit:not(.loading)::after {
-    content: none;
-}
 @keyframes l2 {
     to { transform: rotate(1turn) }
 }
