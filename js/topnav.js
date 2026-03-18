@@ -63,6 +63,7 @@ $().ready(function() {
         $(".nav-items").addClass("active");
         $(".search-icon").addClass("hide");
         $(".cancel-icon").addClass("show");
+        $("nav form").removeClass("active");
         window.scrollTo(0, 0);
         $("html").addClass("no-scroll");
         $(".nav-items > li.selected a").trigger('click');
@@ -83,6 +84,7 @@ $().ready(function() {
         $(this).addClass("hide");
         $("nav form").addClass("active");
         $(".cancel-icon").addClass("show");
+        $(".search-data").trigger('focus');
     });
 
     $(window).on('resize', function() {
