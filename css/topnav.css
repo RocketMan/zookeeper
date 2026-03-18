@@ -358,12 +358,6 @@ nav .search-icon {
         flex: 0;
         margin-left: 0;
     }
-    #search-submit {
-        left: 8px;
-    }
-    #search-filter-button {
-        right: 4px;
-    }
     nav .menu-icon,
     nav .search-icon,
     nav .menu-icon span {
