@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -89,7 +89,7 @@ trait OffsetPaginationTrait {
                     $relation = new Relationship("label", $res);
                     $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
                     $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
-                    $relation->metaInformation()->set("name", $record["name"]);
+                    $relation->metaInformation()->set("name", $record["name"] ?? "(Unknown)");
                     $resource->relationships()->set($relation);
                 }
             }
@@ -155,7 +155,7 @@ trait OffsetPaginationTrait {
             $relation = new Relationship("label", $res);
             $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
             $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
-            $relation->metaInformation()->set("name", $record["name"]);
+            $relation->metaInformation()->set("name", $record["name"] ?? "(Unknown)");
             $resource->relationships()->set($relation);
         }
 
