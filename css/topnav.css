@@ -259,16 +259,6 @@ nav .search-icon {
 }
 /* end subnav */
 
-.result-count {
-    position: absolute;
-    font-size: 1.0rem;
-    font-weight: bold;
-    color: #555;
-    top: 90px;
-    left: 22px;
-    z-order: -1;
-}
-
 @media (max-width: 1245px) {
     nav {
         padding: 0 20px;
@@ -505,6 +495,18 @@ nav .search-icon {
     margin-left: 3px;
 }
 /* end topnav extra */
+
+/* begin result count */
+.result-count {
+    position: absolute;
+    font-size: 1.0rem;
+    font-weight: bold;
+    color: #555;
+    top: 90px;
+    left: 22px;
+    z-order: -1;
+}
+/* end result count */
 
 /* start footer */
 .footer {
