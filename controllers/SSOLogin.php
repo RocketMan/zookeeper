@@ -82,9 +82,9 @@ class SSOLogin implements IController {
                         "hd" => $configParams['domain'],
                     ];
 
-                    // force reauthentication on shared local machine
+                    // force account selection on shared local machine
                     if (Session::checkLocal())
-                        $rq["prompt"] = "login select_account";
+                        $rq["prompt"] = "select_account";
         
                     $target = $configParams['oauth_auth_uri'];
                 } else {
