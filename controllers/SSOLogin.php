@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -25,6 +25,7 @@
 namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
+use ZK\Engine\Session;
 use ZK\Engine\IUser;
 
 class SSOLogin implements IController {
@@ -80,6 +81,10 @@ class SSOLogin implements IController {
                         "state" => $token,
                         "hd" => $configParams['domain'],
                     ];
+
+                    // force account selection on shared local machine
+                    if (Session::checkLocal())
+                        rq["prompt"] = "select_account";
         
                     $target = $configParams['oauth_auth_uri'];
                 } else {
