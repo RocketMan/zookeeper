@@ -84,7 +84,7 @@ class SSOLogin implements IController {
 
                     // force account selection on shared local machine
                     if (Session::checkLocal())
-                        rq["prompt"] = "select_account";
+                        $rq["prompt"] = "select_account";
         
                     $target = $configParams['oauth_auth_uri'];
                 } else {
