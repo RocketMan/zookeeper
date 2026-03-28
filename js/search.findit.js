@@ -267,7 +267,7 @@ var lists = {
             var datex = $("<span>").html(
                 new Date(list.attributes.date).toLocaleDateString(undefined, OPTS));
             airedOn.append(datex);
-            var dj = $("<span>").html(list.attributes.airname);
+            var dj = $("<span>").text(list.attributes.airname);
             airedOn.append(dj);
             tr.append(airedOn);
         });
