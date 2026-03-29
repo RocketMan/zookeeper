@@ -387,12 +387,11 @@ nav .search-icon {
         margin-left: 31px;
     }
 }
-@media (max-width: 500px) {
-    nav form {
-        left: 100px;
-    }
-}
 @media (max-width: 400px) {
+    nav form.active {
+        left: 50px;
+        right: 110px;
+    }
     nav .menu-icon,
     nav .cancel-icon,
     nav .search-icon {
