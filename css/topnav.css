@@ -325,6 +325,9 @@ nav .search-icon {
         pointer-events: none;
         transition: left 0.3s ease;
     }
+    nav form.logout {
+        right: 134px;
+    }
     nav form.active {
         left: 60px;
         opacity: 1;
@@ -369,6 +372,7 @@ nav .search-icon {
         position: absolute;
         top: 4px;
         right: 24px;
+        z-index: 20;
     }
     nav .login-search .login .whois-sep {
         display: none;
@@ -391,6 +395,9 @@ nav .search-icon {
     nav form.active {
         left: 50px;
         right: 110px;
+    }
+    nav form.active.logout {
+        right: 120px;
     }
     nav .menu-icon,
     nav .cancel-icon,

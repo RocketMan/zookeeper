@@ -59,7 +59,7 @@ Credits:
       <a href="?action=login">Login</a>
 {% endif %}
     </div>
-    <form action="#">
+    <form action="#" {{~ app.session.isAuth("u") ? " class='logout'"}}>
       <input type="search" class="search-data" placeholder="Search" required>
       <select id="search-filter" style="display: none">
         <option value="all" data-default="true" selected>All</option>
