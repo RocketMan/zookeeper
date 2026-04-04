@@ -925,7 +925,8 @@ class LibraryImpl extends DBO implements ILibrary {
         $loggedIn = Engine::session()->isAuth("u");
 
         // nothing to return if search is null or trivial
-        if(!$key || strlen($tkey = trim($key)) < 3)
+        if(!$key ||
+                strlen(preg_replace('/[^\p{L}\p{N}]+/u', '', $tkey = trim($key))) < 3)
             return [ 0, $retVal ];
 
         // Limit maximum number of results
