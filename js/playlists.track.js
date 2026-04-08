@@ -942,7 +942,7 @@ $().ready(function(){
 
     function searchLibrary(key, qlist, parent) {
         var url = "api/v1/album?filter[match(artist)]=" +
-            encodeURIComponent(key) + "*" +
+            encodeURIComponent(key) +
             "&page[size]=50&fields[album]=artist,album";
 
         $.ajax({
