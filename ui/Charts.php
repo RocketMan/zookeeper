@@ -78,25 +78,28 @@ class Charts extends MenuItem {
         $this->addVar('dateSpec', $dateSpec);
 
         $weeks = $chartAPI->getChartDates(2)->asArray();
-        if (count($weeks) != 2) {
+        if (count($weeks) < 1) {
             $this->setTemplate('charts/nocharts.html');
             return;
         }
 
         $thisWeek = $weeks[0]['week'];
-        $lastWeek = $weeks[1]['week'];
+        $lastWeek = count($weeks) > 1 ? $weeks[1]['week'] : null;
 
         // top 30
         $chart = [];
         $chartAPI->getChart($chart, '', $thisWeek, self::TOP_MAIN, '');
 
-        $last = [];
-        $chartAPI->getChart($last, '', $lastWeek, self::TOP_MAIN, '');
-        $this->mergeLast($chart, $last);
-
         $charts = [];
+
+        if ($lastWeek) {
+            $last = [];
+            $chartAPI->getChart($last, '', $lastWeek, self::TOP_MAIN, '');
+            $this->mergeLast($chart, $last);
+            $charts[$lastWeek][0] = $last;
+        }
+
         $charts[$thisWeek][0] = $chart;
-        $charts[$lastWeek][0] = $last;
 
         // genre charts
         $genres = [
@@ -117,12 +120,14 @@ class Charts extends MenuItem {
             $chart = [];
             $chartAPI->getChart($chart, '', $thisWeek, self::TOP_GENRE, $genre);
 
-            $last = [];
-            $chartAPI->getChart($last, '', $lastWeek, self::TOP_GENRE, $genre);
-            $this->mergeLast($chart, $last);
+            if ($lastWeek) {
+                $last = [];
+                $chartAPI->getChart($last, '', $lastWeek, self::TOP_GENRE, $genre);
+                $this->mergeLast($chart, $last);
+                $charts[$lastWeek][$genre] = $last;
+            }
 
             $charts[$thisWeek][$genre] = $chart;
-            $charts[$lastWeek][$genre] = $last;
         }
 
         $this->addVar('allcharts', $charts);
