@@ -78,6 +78,11 @@ class Charts extends MenuItem {
         $this->addVar('dateSpec', $dateSpec);
 
         $weeks = $chartAPI->getChartDates(2)->asArray();
+        if (count($weeks) != 2) {
+            $this->setTemplate('charts/nocharts.html');
+            return;
+        }
+
         $thisWeek = $weeks[0]['week'];
         $lastWeek = $weeks[1]['week'];
 
@@ -133,6 +138,12 @@ class Charts extends MenuItem {
         $year = (int)($_REQUEST["year"] ?? 0);
         $month = (int)($_REQUEST["month"] ?? 0);
         $day = (int)($_REQUEST["day"] ?? 0);
+
+        $check = $chartAPI->getChartDates(1)->asArray();
+        if (count($check) != 1) {
+            $this->setTemplate('charts/nocharts.html');
+            return;
+        }
 
         $dateSpec = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
         $this->addVar('dateSpec', $dateSpec);
@@ -228,6 +239,12 @@ class Charts extends MenuItem {
         $config = Engine::param('chart');
         $earliestYear = array_key_exists('earliest_chart_year', $config)?
             (int)$config['earliest_chart_year']:2003;
+
+        $check = $chartAPI->getChartDates(1)->asArray();
+        if (count($check) != 1) {
+            $this->setTemplate('charts/nocharts.html');
+            return;
+        }
 
         $this->addVar('decenniumCharts', self::DECENNIUM_CHART);
 
