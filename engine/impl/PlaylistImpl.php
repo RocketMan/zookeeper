@@ -970,7 +970,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
                  " FROM tracks t JOIN lists l ON t.list = l.id " .
                  " LEFT JOIN albumvol a ON a.tag = t.tag " .
                  " WHERE t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' AND".
-                 " t.album <> '' AND t.label <> '' AND";
+                 " t.album <> '' AND";
         if($airname)
             $query .= "    l.airname = ? AND";
         if($days)
