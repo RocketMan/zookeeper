@@ -555,7 +555,7 @@ class Playlists implements RequestHandlerInterface {
                         $stamp = PlaylistEntry::scrubTimestamp(
                                     new \DateTime($created), $window);
                         $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
-                    } catch(\Exception $e) {
+                    } catch(\Throwable $e) {
                         $entry->setCreated(null);
                     }
                 }
@@ -581,7 +581,7 @@ class Playlists implements RequestHandlerInterface {
                         $stamp = PlaylistEntry::scrubTimestamp(
                                     new \DateTime($created), $window);
                         $entry->setCreated($stamp?$stamp->format(IPlaylist::TIME_FORMAT_SQL):null);
-                    } catch(\Exception $e) {
+                    } catch(\Throwable $e) {
                         $entry->setCreated(null);
                     }
                 }
@@ -812,9 +812,11 @@ class Playlists implements RequestHandlerInterface {
                 if($stamp)
                     $entry->setCreated($created = $stamp->format(IPlaylist::TIME_FORMAT_SQL));
                 else
-                    throw new \Exception("Time is outside show start/end times");
+                    throw new \InvalidArgumentException("Time is outside show start/end times");
             } catch(\Exception $e) {
-                throw new \InvalidArgumentException($e->getMessage());
+                throw $e;
+            } catch(\Throwable $e) {
+                throw new \InvalidArgumentException("created is invalid");
             }
         } else
             $entry->setCreated(null);
@@ -941,9 +943,11 @@ class Playlists implements RequestHandlerInterface {
                 if($stamp)
                     $entry->setCreated($stamp->format(IPlaylist::TIME_FORMAT_SQL));
                 else
-                    throw new \Exception("Time is outside show start/end times");
+                    throw new \InvalidArgumentException("Time is outside show start/end times");
             } catch(\Exception $e) {
-                throw new \InvalidArgumentException($e->getMessage());
+                throw $e;
+            } catch(\Throwable $e) {
+                throw new \InvalidArgumentException("created is invalid");
             }
         }
 
