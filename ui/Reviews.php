@@ -54,7 +54,6 @@ class Reviews extends MenuItem {
         [ "a", "", "Recent Reviews", "viewRecentReviews" ],
         [ "a", "viewDJ", "By DJ", "reviewsByDJ" ],
         [ "a", "viewHashtag", "Trending", "viewTrending" ],
-        [ "a", "trendingData", 0, "getTrendingData" ],
         [ "u", "viewReviewShelf", "Review Shelf", "viewReviewShelf" ],
         [ "u", "updateReviewShelf", 0, "updateReviewShelf" ],
     ];
@@ -141,6 +140,7 @@ class Reviews extends MenuItem {
     }
 
     public function viewTrending() {
+        $this->addVar("trending", $this->getTrendingData());
         $this->setTemplate("review/trending.html");
     }
 
@@ -156,7 +156,7 @@ class Reviews extends MenuItem {
             ];
         }, $trending);
 
-        echo json_encode($data);
+        return $data;
     }
 
     public function viewReviewShelf() {

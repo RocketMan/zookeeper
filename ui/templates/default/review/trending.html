@@ -2,3 +2,6 @@
 <script src="{{ 'js/trending.js' | decorate }}"></script>
 <h2>Music review tags trending on {{ app.station_title }}:</h2>
 <div class="tag-cloud"></div>
+<script id='trending-data' type='application/json'>
+  {{~ trending | json_encode | raw }}
+</script>
