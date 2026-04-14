@@ -96,6 +96,7 @@ class Charts extends MenuItem {
             $last = [];
             $chartAPI->getChart($last, '', $lastWeek, self::TOP_MAIN, '');
             $this->mergeLast($chart, $last);
+            $charts[$thisWeek] = [];
             $charts[$lastWeek][0] = $last;
         }
 
