@@ -816,7 +816,7 @@ class Playlists implements RequestHandlerInterface {
             } catch(\Exception $e) {
                 throw $e;
             } catch(\Throwable $e) {
-                throw new \InvalidArgumentException("created is invalid");
+                throw new \InvalidArgumentException("Time is invalid");
             }
         } else
             $entry->setCreated(null);
@@ -947,7 +947,7 @@ class Playlists implements RequestHandlerInterface {
             } catch(\Exception $e) {
                 throw $e;
             } catch(\Throwable $e) {
-                throw new \InvalidArgumentException("created is invalid");
+                throw new \InvalidArgumentException("Time is invalid");
             }
         }
 
