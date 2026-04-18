@@ -943,6 +943,10 @@ class LibraryImpl extends DBO implements ILibrary {
             $words = array_filter(preg_split('/\W+/u', $key, 0, PREG_SPLIT_NO_EMPTY), function($word) {
                 return !in_array(mb_strtolower($word), self::$ftExclude);
             });
+
+            if (strlen(implode('', $words)) < 3)
+                return [ 0, $retVal ];
+
             $search = "+" . implode(" +", $words);
         }
     
