@@ -3709,16 +3709,16 @@
         },
         {
             "name": "vstelmakh/url-highlight",
-            "version": "v3.1.4",
+            "version": "v3.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/vstelmakh/url-highlight.git",
-                "reference": "b171ccde2026deed2ec9f7e4833ffa0c3aa5c371"
+                "reference": "5e9ba63a8753361583a079d3107c888fb66338f1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vstelmakh/url-highlight/zipball/b171ccde2026deed2ec9f7e4833ffa0c3aa5c371",
-                "reference": "b171ccde2026deed2ec9f7e4833ffa0c3aa5c371",
+                "url": "https://api.github.com/repos/vstelmakh/url-highlight/zipball/5e9ba63a8753361583a079d3107c888fb66338f1",
+                "reference": "5e9ba63a8753361583a079d3107c888fb66338f1",
                 "shasum": ""
             },
             "require": {
@@ -3762,9 +3762,9 @@
             ],
             "support": {
                 "issues": "https://github.com/vstelmakh/url-highlight/issues",
-                "source": "https://github.com/vstelmakh/url-highlight/tree/v3.1.4"
+                "source": "https://github.com/vstelmakh/url-highlight/tree/v3.2.0"
             },
-            "time": "2026-04-03T17:34:40+00:00"
+            "time": "2026-04-14T19:58:01+00:00"
         }
     ],
     "packages-dev": [
