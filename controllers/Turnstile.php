@@ -305,13 +305,15 @@ class Turnstile implements IController {
                     RequestOptions::FORM_PARAMS => [
                         'secret' => $config['secret'],
                         'response' => $token,
-                        'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
                         'idempotency_key' => $uuid,
                     ]
                 ]);
 
                 $json = json_decode($response->getBody()->getContents());
-                if($json->success) {
+                $codes = $json->{'error-codes'} ?? [];
+
+                if($json->success
+                        || in_array('invalid-input-response', $codes)) {
                     // create cookie and redirect
                     $expires = time() + self::TTL_SECONDS;
                     $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDR'] ?? '') : '';
@@ -335,11 +337,14 @@ class Turnstile implements IController {
                         'samesite' => 'lax'
                     ]);
 
+                    if(!$json->success)
+                        error_log("Turnstile validation warning: " . implode(', ', $codes));
+
                     $location = ($qs['location'] ?? '') ?: Engine::getBaseUrl();
                     SSOCommon::zkHttpRedirect($location, []);
                     exit;
                 } else {
-                    error_log("Turnstile validation failed: " . implode(', ', $json->{'error-codes'} ?? []));
+                    error_log("Turnstile validation failed: " . implode(', ', $codes));
                     $message = "Validation failed";
                 }
             } catch (\Exception $e) {
