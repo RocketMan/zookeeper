@@ -59,7 +59,7 @@ $().ready(function(){
                 "?s=byAlbumKey&n=" +
                 encodeURIComponent(spin.track_tag) +
                 "&action=search" :
-                spin.info_url,
+                spin.image_url ? spin.info_url : null,
             target: spin.track_tag ? "_self" : "_blank"
         }).append($("<img>", {
             class: "artwork",
