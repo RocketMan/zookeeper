@@ -1082,7 +1082,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         }
 
         $entry['info_url'] = $infoUrl ?? null;
-        $entry['image_url'] = isset($imageUuid) ? $imageApi->getCachePath($imageUuid) : ($entry['info_url'] || $entry['track_tag'] ? "img/discogs.svg" : "img/blank.gif");
+        $entry['image_url'] = isset($imageUuid) ? $imageApi->getCachePath($imageUuid) : ($entry['track_tag'] ? "img/album-sleeve.svg" : null);
     }
 
     public function getPlaysBefore($timestamp, $limit) {

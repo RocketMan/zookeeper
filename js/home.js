@@ -63,12 +63,12 @@ $().ready(function(){
             target: spin.track_tag ? "_self" : "_blank"
         }).append($("<img>", {
             class: "artwork",
-            src: spin.image_url
+            src: spin.image_url ?? 'img/blank.gif'
         }).on('load', function() {
             this.style.opacity = 1;
         })));
 
-        if(spin.track_tag || spin.info_url)
+        if(spin.track_tag || spin.info_url && spin.image_url)
             img.find("a").attr('title', spin.track_tag ?
                                "View album in " + station_title :
                                "View artist in Discogs");
