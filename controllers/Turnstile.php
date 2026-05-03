@@ -36,8 +36,6 @@ class Turnstile implements IController {
     const DEFAULT_RESOLVER = "8.8.8.8";  // google DNS
     const RESOLVER_TIMEOUT = 0.3;  // in sec
 
-    const SITEVERIFY_LAX = false;
-
     // TBD refactor me out
     /**
      * `gethostbyaddr` and `gethostbynamel` replacement with timeout
@@ -314,7 +312,7 @@ class Turnstile implements IController {
                 $json = json_decode($response->getBody()->getContents());
                 $codes = $json->{'error-codes'} ?? [];
 
-                if($json->success || self::SITEVERIFY_LAX
+                if($json->success || ($config['siteverify_lax'] ?? false)
                         && in_array('invalid-input-response', $codes)) {
                     // create cookie and redirect
                     $expires = time() + self::TTL_SECONDS;
