@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -89,39 +89,27 @@ class Session extends DBO {
         // help prevent CSRF attacks with SameSite cookie flag
         // 'SameSite=Lax' omits the cookie in cross-site POST requests
         // see https://portswigger.net/web-security/csrf/samesite-cookies
-        if(PHP_VERSION_ID < 70300) {
-            // work-around for missing SameSite flag in php 7.2 and earlier
-            setcookie($this->sessionCookieName, $session, 0, "/; samesite=lax", $_SERVER['SERVER_NAME'], $this->secure, true);
-        } else {
-            setcookie($this->sessionCookieName, $session, [
-                'expires' => 0,
+        setcookie($this->sessionCookieName, $session, [
+            'expires' => 0,
+            'path' => '/',
+            'domain' => $_SERVER['SERVER_NAME'],
+            'secure' => $this->secure,
+            'httponly' => true,
+            'samesite' => 'lax'
+        ]);
+    }
+
+    private function clearSessionCookie() {
+        // Clear the session cookie, if any
+        if(isset($_COOKIE[$this->sessionCookieName])) {
+            setcookie($this->sessionCookieName, "", [
+                'expires' => time() - 3600,
                 'path' => '/',
                 'domain' => $_SERVER['SERVER_NAME'],
                 'secure' => $this->secure,
                 'httponly' => true,
                 'samesite' => 'lax'
             ]);
-        }
-    }
-
-    private function clearSessionCookie() {
-        // Clear the session cookie, if any
-        if(isset($_COOKIE[$this->sessionCookieName])) {
-            if(PHP_VERSION_ID < 70300) {
-                // work-around for missing SameSite flag in php 7.2 and earlier
-                setcookie($this->sessionCookieName, "",
-                          time() - 3600, "/; samesite=lax",
-                          $_SERVER['SERVER_NAME'], $this->secure, true);
-            } else {
-                setcookie($this->sessionCookieName, "", [
-                    'expires' => time() - 3600,
-                    'path' => '/',
-                    'domain' => $_SERVER['SERVER_NAME'],
-                    'secure' => $this->secure,
-                    'httponly' => true,
-                    'samesite' => 'lax'
-                ]);
-            }
         }
     }
 
@@ -271,6 +259,7 @@ class Session extends DBO {
         case "a":    // all
             $allow = true;
             break;
+        case "C":    // challenge (invalid for checkAccess)
         case "T":    // token authentication (invalid for checkAccess)
         case "u":    // authenticated user (invalid for checkAccess)
         case "U":    // local (not SSO) user (invalid for checkAccess)
