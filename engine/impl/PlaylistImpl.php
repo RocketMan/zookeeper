@@ -1100,7 +1100,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $date);
         $result = $stmt->iterate();
-        $nextShowStart = null;
+        $nextShow = null;
         while(($list = $result->fetch()) && $limit > 0 ) {
             if($list['showdate'] == $date && $list['showtime'] > $time)
                 continue;
@@ -1123,7 +1123,8 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 }
 
                 // if spin overlaps later playlist, skip it
-                if($nextShowStart && $track['track_time'] >= $nextShowStart) {
+                if($nextShow && $track['track_time'] >= $nextShow[0] &&
+                        $track['track_time'] <= $nextShow[1]) {
                     $limit++;
                     continue;
                 }
@@ -1134,11 +1135,19 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 $res[] = $track;
             }
 
-            if($prevLimit != $limit &&
-                    preg_match('/^(\d{2})(\d{2})\-\d{4}$/', $list['showtime'], $matches)) {
-                $matches[] = "00";
-                $nextShowStart = $list['showdate'] . " " .
-                    implode(':', array_slice($matches, 1));
+
+            if ($prevLimit != $limit) {
+                $showTime = array_map(
+                    fn(string $time): \DateTime => \DateTime::createFromFormat(IPlaylist::TIME_FORMAT, "{$list['showdate']} $time"),
+                    explode('-', $list['showtime']));
+
+                // if playlist spans midnight, end time is next day
+                if ($showTime[1] < $showTime[0])
+                    $showTime[1]->modify("+1 day");
+
+                $nextShow = array_map(
+                    fn(\DateTime $timestamp): string => $timestamp->format(IPlaylist::TIME_FORMAT_SQL),
+                    $showTime);
             }
         }
 
