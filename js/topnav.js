@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -38,7 +38,12 @@ $().ready(function() {
                 dataType: 'json',
                 type: 'GET',
                 accept: "application/json; charset=utf-8",
-                url: "?action=" + action + "&subaction=_"
+                url: "?action=" + action + "&subaction=_",
+                oxhr: null,
+                xhr: function() {
+                    this.oxhr = $.ajaxSettings.xhr();
+                    return this.oxhr;
+                }
             }).done(function(response) {
                 response.forEach(function(subitem) {
                     var li = $("<li>").append($("<a>", {
@@ -48,6 +53,15 @@ $().ready(function() {
                    
                 li.append(submenu).addClass("open");
                 submenu.slideToggle();
+            }).fail(function() {
+                if (this.oxhr && this.oxhr.responseURL
+                        && this.oxhr.responseURL.includes("turnstile")) {
+                    var targetUrl = this.oxhr.responseURL;
+                    const subactionIdx = targetUrl.indexOf("%26subaction");
+                    if (subactionIdx !== -1)
+                        targetUrl = targetUrl.substring(0, subactionIdx);
+                    location.href = targetUrl;
+                }
             });
             return;
         }
