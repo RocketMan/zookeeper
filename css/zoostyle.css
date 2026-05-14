@@ -2798,6 +2798,65 @@ a.listEdit {
     vertical-align: middle;
 }
 
+.contact {
+    font-size: 1rem;
+    max-width: 800px;
+    margin-right: 20px;
+}
+
+.contact h2 {
+    font-size: 1.3rem;
+}
+
+.contact h3 {
+    font-size: 1.1rem;
+    color: #555;
+    margin-block-start: 2rem;
+}
+
+.contact .sub {
+    font-size: 1rem;
+    color: #555;
+    padding-bottom: 10px;
+}
+
+.contact b {
+    font-size: 1rem;
+    color: #555;
+}
+
+.contact a {
+    font-size: 110%;
+}
+
+.contact a b {
+    color: inherit;
+}
+
+.contact .addresses,
+.contact .directors {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    padding-top: 10px;
+}
+
+.contact .directors {
+    margin-block-start: 2rem;
+    padding-bottom: 2rem;
+}
+
+.contact .directors > div {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.contact .directors b {
+    display: block;
+}
+
+
 /*@media (min-width: 9999px) {*/
 /* desktop */
 @media (min-width: 800px) {
