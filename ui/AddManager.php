@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -286,6 +286,10 @@ class AddManager extends MenuItem {
         $this->skipVar("album");
         $this->panelSetFocus("tag");
     }
+
+    private static function panelCatActive($cat) {
+        return $cat['name'] && $cat['code'];
+    }
     
     public function panelCats($validate) {
         $catlist = $_REQUEST["catlist"] ?? '';
@@ -306,19 +310,19 @@ class AddManager extends MenuItem {
         for($i=0; $i<4; $i++) {
             echo "        <TR><TD>";
             $selected = !empty($selcats[$i])?" CHECKED":"";
-            if($this->categoryMap[$i]["name"])
+            if(self::panelCatActive($this->categoryMap[$i]))
                 echo "<INPUT TYPE=CHECKBOX NAME=cat$i$selected>".htmlentities(stripslashes($this->categoryMap[$i]["name"]));
             echo "</TD><TD>";
             $selected = !empty($selcats[$i+4])?" CHECKED":"";
-            if($this->categoryMap[$i+4]["name"])
+            if(self::panelCatActive($this->categoryMap[$i+4]))
                 echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+4)."$selected>".htmlentities(stripslashes($this->categoryMap[$i+4]["name"]));
             echo "</TD><TD>";
             $selected = !empty($selcats[$i+8])?" CHECKED":"";
-            if($this->categoryMap[$i+8]["name"])
+            if(self::panelCatActive($this->categoryMap[$i+8]))
                 echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+8)."$selected>".htmlentities(stripslashes($this->categoryMap[$i+8]["name"]));
             echo "</TD><TD>";
             $selected = !empty($selcats[$i+12])?" CHECKED":"";
-            if($this->categoryMap[$i+12]["name"])
+            if(self::panelCatActive($this->categoryMap[$i+12]))
                 echo "<INPUT TYPE=CHECKBOX NAME=cat".($i+12)."$selected>".htmlentities(stripslashes($this->categoryMap[$i+12]["name"]));
             echo "</TD></TR>\n";
         }

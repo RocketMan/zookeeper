@@ -27,62 +27,21 @@
 
 <p><a href="?action=contactGuidelines"><b>PLEASE READ THESE GUIDELINES BEFORE SUBMITTING MUSIC</b></a></p>
 
+{% set mid = (genres | length / 2) | round %}
 <div class='directors'>
+{% for column in genres|batch(mid) %}
   <div>
+  {%~ for genre in column %}
     <div>
-      <b>Music Directors</b>
-      <a href="mailto:music@kzsu.stanford.edu">Juan Luna-Avin, Bill Cuevas</a>
+      <b>{{ genre.name }}</b>
+      <a href="mailto:{{ genre.email }}">{{ genre.director }}</a>
     </div>
-    <div>
-      <b>Hip-hop Directors</b>
-      <a href="mailto:hiphop@kzsu.stanford.edu">Mike McDowell, Johnathan Martin</a>
-    </div>
-    <div>
-      <b>Jazz Director</b>
-      <a href="mailto:jazz@kzsu.stanford.edu">Tom McCarter</a>
-    </div>
-    <div>
-      <b>Country/Bluegrass Director</b>
-      <a href="mailto:country@kzsu.stanford.edu">Joseph Hnilo</a>
-    </div>
-    <div>
-      <b>Electronic Director</b>
-      <a href="mailto:rpm@kzsu.stanford.edu">Johnathan Martin</a>
-    </div>
-    <div>
-      <b>Reggae Director</b>
-      <a href="mailto:reggae@kzsu.stanford.edu">Margy Kahn</a>
-    </div>
+  {%~ endfor %}
   </div>
-  <div>
-    <div>
-      <b>Classical Director</b>
-      <a href="mailto:classical@kzsu.stanford.edu">Larry Koran</a>
-    </div>
-    <div>
-      <b>World Director</b>
-      <a href="mailto:world@kzsu.stanford.edu">Margy Kahn</a>
-    </div>
-    <div>
-      <b>Blues Director</b>
-      <a href="mailto:blues@kzsu.stanford.edu">Byrd Hale</a>
-    </div>
-    <div>
-      <b>Vinyl/7&quot; Director</b>
-      <a href="mailto:seven@kzsu.stanford.edu">Juan Luna-Avin</a>
-    </div>
-    <div>
-      <b>Metal Director</b>
-      <a href="mailto:metal@kzsu.stanford.edu">Bill Cuevas</a>
-    </div>
-    <div>
-      <b>Noise/Experimental Director</b>
-      <a href="mailto:experimental@kzsu.stanford.edu">Abra Jeffers</a>
-    </div>
-  </div>
+{% endfor %}
 </div>
 
 <h2>Contact KZSU Radio</h2>
-<div><a class="nav" href="{{ app.urls.home }}contact/"><b>Additional contact information</b></a> for KZSU radio is available here.</div>
+<div><a href="{{ app.urls.home }}contact/"><b>Additional contact information</b></a> for KZSU radio is available here.</div>
 {% endif %}
 </div>

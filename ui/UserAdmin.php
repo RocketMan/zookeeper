@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -25,6 +25,7 @@
 namespace ZK\UI;
 
 use ZK\Engine\Engine;
+use ZK\Engine\IChart;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IUser;
@@ -68,6 +69,22 @@ class UserAdmin extends MenuItem {
     }
 
     public function contact() {
+        $cats = Engine::api(IChart::class)->getCategories();
+
+        $cats = array_filter($cats, fn($cat) => $cat['name']);
+        usort($cats, fn($a, $b) => $a['name'] <=> $b['name']);
+
+        $genres = array_map(function($cat) {
+            $director = explode(':', $cat['director']);
+            $isCompound = count($director) > 1;
+            return [
+                'name' => $isCompound ? $director[0] : "{$cat['name']} Director",
+                'director' => trim($director[$isCompound ? 1 : 0]),
+                'email' => $cat['email']
+            ];
+        }, $cats);
+
+        $this->addVar("genres", $genres);
         $this->setTemplate("contact.html");
     }
 
