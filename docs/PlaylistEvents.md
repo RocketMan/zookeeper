@@ -162,4 +162,4 @@ of the event.
 The server will automatically sequence events according to the `created`
 timestamp.
 
-![playlist](playlist.png)
+![playlist](../img/playlist.png)
