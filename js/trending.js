@@ -45,7 +45,7 @@ function reposition() {
     loading.addClass('tag-cloud').removeClass('invisible')
         .parent().css('overflow-x', 'clip');
 
-    $(".loading").remove();
+    $("div.loading").remove();
 
     loading = false;
 }
@@ -97,18 +97,11 @@ $().ready(function() {
         class: "loading"
     }).append($("<div>")));
 
-    $.ajax({
-        dataType: 'json',
-        type: 'GET',
-        accept: 'application/json; charset=utf-8',
-        url: '?action=viewRecent&subaction=trendingData'
-    }).done(function(response) {
-        trending = response;
-        loadCloud();
-    });
-
     window.addEventListener('resize', function(event) {
         clearTimeout(timeout);
         timeout = setTimeout(loadCloud, 100);
     });
+
+    trending = JSON.parse(document.getElementById("trending-data").textContent);
+    loadCloud();
 });

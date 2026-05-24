@@ -33,14 +33,16 @@ class PlaylistImpl extends DBO implements IPlaylist {
     const GRACE_END = "+30 minutes";
 
     public function getShowdates($year, $month) {
-        $yearMonth = sprintf("%04d-%02d", $year, $month) . "-%";
+        $start = (new \DateTime())->setDate($year, $month, 1);
+        $end = (clone $start)->modify("+1 month")->modify("-1 day");
     
         $query = "SELECT showdate FROM lists " .
                  "WHERE airname IS NOT NULL " .
-                 "AND showdate LIKE ? " .
+                 "AND showdate BETWEEN ? AND ? " .
                  "GROUP BY showdate ORDER BY showdate DESC";
         $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $yearMonth);
+        $stmt->bindValue(1, $start->format("Y-m-d"));
+        $stmt->bindValue(2, $end->format("Y-m-d"));
         return $stmt->iterate();
     }
     
@@ -968,7 +970,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
                  " FROM tracks t JOIN lists l ON t.list = l.id " .
                  " LEFT JOIN albumvol a ON a.tag = t.tag " .
                  " WHERE t.artist NOT LIKE '".IPlaylist::SPECIAL_TRACK."%' AND".
-                 " t.album <> '' AND t.label <> '' AND";
+                 " t.album <> '' AND";
         if($airname)
             $query .= "    l.airname = ? AND";
         if($days)
@@ -1080,7 +1082,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         }
 
         $entry['info_url'] = $infoUrl ?? null;
-        $entry['image_url'] = isset($imageUuid) ? $imageApi->getCachePath($imageUuid) : ($entry['info_url'] || $entry['track_tag'] ? "img/discogs.svg" : "img/blank.gif");
+        $entry['image_url'] = isset($imageUuid) ? $imageApi->getCachePath($imageUuid) : ($entry['track_tag'] ? "img/album-sleeve.svg" : null);
     }
 
     public function getPlaysBefore($timestamp, $limit) {
@@ -1098,10 +1100,13 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $date);
         $result = $stmt->iterate();
-        $nextShowStart = null;
-        while(($list = $result->fetch()) && $limit > 0 ) {
+        $nextShow = null;
+        $visited = 0;
+        while(($list = $result->fetch()) && (count($res) < $limit || $visited < 3)) {
             if($list['showdate'] == $date && $list['showtime'] > $time)
                 continue;
+
+            $visited++;
 
             $query = "SELECT id, artist track_artist, track track_title, album track_album, tag track_tag, created track_time " .
                  "FROM tracks WHERE list = ? " .
@@ -1112,17 +1117,15 @@ class PlaylistImpl extends DBO implements IPlaylist {
             $stmt->bindValue(1, $list['id']);
             $stmt->bindValue(2, $timestamp);
             $tracks = $stmt->iterate();
-            $prevLimit = $limit;
-            while(($track = $tracks->fetch()) && $limit-- > 0) {
+            while($track = $tracks->fetch()) {
                 if(preg_match('/(\.gov|\.org|GED|Literacy|NIH|Ad\ Council)/', implode(' ', $track)) || empty(trim($track['track_artist']))) {
                     // it's probably a PSA coded as a spin; let's skip it
-                    $limit++;
                     continue;
                 }
 
                 // if spin overlaps later playlist, skip it
-                if($nextShowStart && $track['track_time'] >= $nextShowStart) {
-                    $limit++;
+                if($nextShow && $track['track_time'] >= $nextShow[0] &&
+                        $track['track_time'] <= $nextShow[1]) {
                     continue;
                 }
 
@@ -1132,15 +1135,21 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 $res[] = $track;
             }
 
-            if($prevLimit != $limit &&
-                    preg_match('/^(\d{2})(\d{2})\-\d{4}$/', $list['showtime'], $matches)) {
-                $matches[] = "00";
-                $nextShowStart = $list['showdate'] . " " .
-                    implode(':', array_slice($matches, 1));
-            }
+            $showTime = array_map(
+                fn(string $time): \DateTime => \DateTime::createFromFormat(IPlaylist::TIME_FORMAT, "{$list['showdate']} $time"),
+                explode('-', $list['showtime']));
+
+            // if playlist spans midnight, end time is next day
+            if ($showTime[1] < $showTime[0])
+                $showTime[1]->modify("+1 day");
+
+            $nextShow = array_map(
+                fn(\DateTime $timestamp): string => $timestamp->format(IPlaylist::TIME_FORMAT_SQL),
+                $showTime);
         }
 
-        return $res;
+        uasort($res, fn($a, $b) => $b['track_time'] <=> $a['track_time']);
+        return array_slice($res, 0, $limit);
     }
 
     public function deletePlaylist($playlist, $permanent = false) {

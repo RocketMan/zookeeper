@@ -6,8 +6,5 @@ $().ready(function() {
 });
 // -->
 </script>
-<form>
-  <input id='showTag' type='hidden' value='{{ app.session.isAuth("u") ? 'true' : 'false' }}'>
-</form>
-<h2>{{ airname }}'s Album Reviews</h2>
+<h2 style='color: #555'>{{ airname }}'s Album Reviews</h2>
 <table class='searchTable' id='results'></table>

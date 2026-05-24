@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -44,7 +44,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   "LEFT JOIN publist ON albumvol.pubkey = publist.pubkey " .
                   "WHERE MATCH (artist,album) AGAINST(? IN BOOLEAN MODE) ".
                   "AND location != 'U' " .
-                  "ORDER BY artist, album, tag" ],
+                  "ORDER BY album, artist, tag" ],
          [ "artists", "albumrec", null, "artist",
                   "SELECT tag, artist, album, category, medium, " .
                   "created, updated, a.pubkey, location, bin, iscoll, " .
@@ -105,7 +105,7 @@ class LibraryImpl extends DBO implements ILibrary {
                   //"LEFT JOIN publist ON albumvol.pubkey = publist.pubkey ".
                   "WHERE MATCH (track) AGAINST(? IN BOOLEAN MODE) ".
                   "AND location != 'U' " .
-                  "ORDER BY artist, album, t.tag" ]
+                  "ORDER BY album, artist, t.tag" ]
     ];
 
     /**
@@ -142,6 +142,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $query = "ORDER BY a.created$desc, artist$desc ";
             break;
         case "date":
+        case "reviewed":
             $query = "ORDER BY r.created$desc ";
             break;
         case "track":
@@ -181,7 +182,7 @@ class LibraryImpl extends DBO implements ILibrary {
         $search = preg_replace('/([_%])/', '\\\\$1', $search);
       
         // remove semicolons to thwart injection attacks
-        $search = preg_replace('/([;])/', '_', $search);
+        $search = str_replace(';', '_', $search);
 
         if(substr($search, strlen($search)-1, 1) == "*") {
             $search = trim(substr($search, 0, strlen($search)-1))."%";
@@ -272,7 +273,7 @@ class LibraryImpl extends DBO implements ILibrary {
                 $search = substr($search, 0, -1);
       
             $query = "SELECT a.tag, track, artist, album, seq, ".
-                     "category, medium, size, location, bin, ".
+                     "category, medium, size, location, bin, created, ".
                      "a.pubkey, name, address, city, state, zip, iscoll, ".
                      "t.url, t.duration ".
                      "FROM tracknames t ".
@@ -280,7 +281,7 @@ class LibraryImpl extends DBO implements ILibrary {
                      "LEFT JOIN publist p ON a.pubkey = p.pubkey ".
                      "WHERE track LIKE ? ".
                      "UNION SELECT a.tag, track, c.artist, a.artist album, seq, ".
-                     "category, medium, size, location, bin, ".
+                     "category, medium, size, location, bin, created, ".
                      "a.pubkey, name, address, city, state, zip, iscoll, ".
                      "c.url, c.duration ".
                      "FROM colltracknames c ".
@@ -924,7 +925,8 @@ class LibraryImpl extends DBO implements ILibrary {
         $loggedIn = Engine::session()->isAuth("u");
 
         // nothing to return if search is null or trivial
-        if(!$key || strlen(trim($key)) < 3)
+        if(!$key ||
+                strlen(preg_replace('/[^\p{L}\p{N}]+/u', '', $tkey = trim($key))) < 3)
             return [ 0, $retVal ];
 
         // Limit maximum number of results
@@ -932,17 +934,24 @@ class LibraryImpl extends DBO implements ILibrary {
                             self::DEFAULT_FT_LIMIT;
 
         // Construct full text query string
-        if(substr($key, 0, 2) == "\\\"") {
-             $search = $key;
+        if(substr($tkey, 0, 1) == "\"") {
+            if(in_array(mb_strtolower(trim($tkey, " \"")), self::$ftExclude))
+                return [ 0, $retVal ];
+
+            $search = $tkey;
         } else {
-             $words = array_filter(preg_split('/\W+/u', $key, 0, PREG_SPLIT_NO_EMPTY), function($word) {
-                 return !in_array(mb_strtolower($word), self::$ftExclude);
-             });
-             $search = "+" . implode(" +", $words);
+            $words = array_filter(preg_split('/\W+/u', $key, 0, PREG_SPLIT_NO_EMPTY), function($word) {
+                return !in_array(mb_strtolower($word), self::$ftExclude);
+            });
+
+            if (strlen(implode('', $words)) < 3)
+                return [ 0, $retVal ];
+
+            $search = "+" . implode(" +", $words);
         }
     
         // JM 2010-09-26 remove semicolons to thwart injection attacks
-        $search = preg_replace('/([;])/', '', $search);
+        $search = str_replace(';', '', $search);
     
         // JM 2010-09-26 if search string includes 'union select', abort
         $searchl = strtolower($search);

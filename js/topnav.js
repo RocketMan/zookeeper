@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2023 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2026 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function() {
     $(".nav-items > li > a").on('click', function(e) {
@@ -38,7 +38,12 @@ $().ready(function() {
                 dataType: 'json',
                 type: 'GET',
                 accept: "application/json; charset=utf-8",
-                url: "?action=" + action + "&subaction=_"
+                url: "?action=" + action + "&subaction=_",
+                oxhr: null,
+                xhr: function() {
+                    this.oxhr = $.ajaxSettings.xhr();
+                    return this.oxhr;
+                }
             }).done(function(response) {
                 response.forEach(function(subitem) {
                     var li = $("<li>").append($("<a>", {
@@ -48,6 +53,15 @@ $().ready(function() {
                    
                 li.append(submenu).addClass("open");
                 submenu.slideToggle();
+            }).fail(function() {
+                if (this.oxhr && this.oxhr.responseURL
+                        && this.oxhr.responseURL.includes("turnstile")) {
+                    var targetUrl = this.oxhr.responseURL;
+                    const subactionIdx = targetUrl.indexOf("%26subaction");
+                    if (subactionIdx !== -1)
+                        targetUrl = targetUrl.substring(0, subactionIdx);
+                    location.href = targetUrl;
+                }
             });
             return;
         }
@@ -63,6 +77,7 @@ $().ready(function() {
         $(".nav-items").addClass("active");
         $(".search-icon").addClass("hide");
         $(".cancel-icon").addClass("show");
+        $("nav form").removeClass("active");
         window.scrollTo(0, 0);
         $("html").addClass("no-scroll");
         $(".nav-items > li.selected a").trigger('click');
@@ -83,6 +98,7 @@ $().ready(function() {
         $(this).addClass("hide");
         $("nav form").addClass("active");
         $(".cancel-icon").addClass("show");
+        $(".search-data").trigger('focus');
     });
 
     $(window).on('resize', function() {

@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -46,7 +46,7 @@ class SSOCommon {
         foreach ($params as $param) {
             $nameValue = explode("=", $param);
             $name = urldecode($nameValue[0]);
-            $value = urldecode($nameValue[1]);
+            $value = count($nameValue) > 1 ? urldecode($nameValue[1]) : '';
             $result[$name] = $value;
         }
         return $result;

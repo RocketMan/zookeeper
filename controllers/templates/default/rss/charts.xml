@@ -21,10 +21,11 @@
   {%~ autoescape 'html' %}
       <p>Rank. ARTIST <i>Album</i> (Label)</p>
       <p>
-    {%~ for album in chart.albums %}
-        {{ album.rank }}. {{ album.artist | upper }}
+    {%~ for rank, album in chart.albums %}
+        {%~ set label = album.label | replace({' Records': '', ' Recordings': ''}) %}
+        {{ rank+1 }}. {{ entry.swapNames(album.artist) | upper }}
         <i><a href="{{ app.baseUrl }}?s=byAlbumKey&amp;n={{ album.tag }}&amp;action=search">{{ album.album }}</a></i> {{ album.medium != 'C' ? MEDIA[album.medium] }}
-        ({{ album.label }})
+        ({{ label }})
         <br />
     {%~ endfor %}
       </p>

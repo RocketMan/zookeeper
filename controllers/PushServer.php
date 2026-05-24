@@ -428,7 +428,7 @@ class NowAiringServer implements MessageComponentInterface {
                 }
 
                 $entry['info_url'] = $infoUrl ?? null;
-                $entry['image_url'] = isset($imageUuid) ? $imageApi->getCachePath($imageUuid) : ($entry['info_url'] || $entry['track_tag'] ? "img/discogs.svg" : "img/blank.gif");
+                $entry['image_url'] = isset($imageUuid) ? $imageApi->getCachePath($imageUuid) : ($entry['track_tag'] ? "img/album-sleeve.svg" : null);
                 $msg = json_encode($entry);
 
                 DBO::release();

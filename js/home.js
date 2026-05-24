@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,7 +20,7 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2025 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2026 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     function localTime(date) {
@@ -59,16 +59,16 @@ $().ready(function(){
                 "?s=byAlbumKey&n=" +
                 encodeURIComponent(spin.track_tag) +
                 "&action=search" :
-                spin.info_url,
+                spin.image_url ? spin.info_url : null,
             target: spin.track_tag ? "_self" : "_blank"
         }).append($("<img>", {
             class: "artwork",
-            src: spin.image_url
+            src: spin.image_url ?? 'img/blank.gif'
         }).on('load', function() {
             this.style.opacity = 1;
         })));
 
-        if(spin.track_tag || spin.info_url)
+        if(spin.track_tag || spin.info_url && spin.image_url)
             img.find("a").attr('title', spin.track_tag ?
                                "View album in " + station_title :
                                "View artist in Discogs");
@@ -122,12 +122,14 @@ $().ready(function(){
         if(target.length == 0)
             return;
 
-        $("div.content").css("background-color", "#eee");
+        $("div.content").css("background-color", "#ebebeb");
 
         // hack to keep white body in sync
         const color = $("body").css("background-color");
-        if(color == "rgb(255, 255, 255)")
-            $("body").css("--theme-content-background-colour", "#eee");
+        if(color != "rgb(235, 235, 235)") {
+            $("body").css("--theme-content-background-colour", "#ebebeb")
+                .data("saved-background-colour", color);
+        }
 
         const count = getCount();
         const plays = JSON.parse(document.getElementById("recent-play-data").textContent).slice(0, count);
@@ -186,7 +188,11 @@ $().ready(function(){
     }
 
     function connect(last) {
-        var socket = new WebSocket($("#push-subscribe").val());
+        var endpoint = $("#push-subscribe").val();
+        if (endpoint === undefined)
+            return;
+
+        var socket = new WebSocket(endpoint);
         socket.last = last;
         socket.onmessage = function(message) {
             var onnow = JSON.parse(message.data);
@@ -209,7 +215,7 @@ $().ready(function(){
 
                     var time = $("#time").val();
                     var nowPlaying = $(".recently-played");
-                    if(time == 'now' &&
+                    if(time == 'now' && nowPlaying.length &&
                             nowPlaying.find("div[data-id='" + onnow.id + "']").length == 0) {
                         var card = makeCard(onnow);
                         nowPlaying.prepend(card);

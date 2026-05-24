@@ -23,9 +23,10 @@
 /*! Zookeeper Online (C) 1997-2026 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function() {
-const DEFAULT_CHUNKSIZE = 15;
+const DEFAULT_CHUNKSIZE = 10;
+const OPTS = { month: "short", year: "numeric" };
 
-var maxresults = 50, chunksize = DEFAULT_CHUNKSIZE;
+var maxresults = 20, chunksize = DEFAULT_CHUNKSIZE;
 
 function encobj(o, html) {
     // we're encoding for the URI fragment, which can contain ':' and ','
@@ -55,22 +56,18 @@ function header(title, sortable) {
     });
 
     if(sortable) {
-        var sortBy = $("#sortBy").val();
-        var action = title;
-        if(sortBy == action) {
-            title += "&nbsp;&#x25be;"; // down
-            action += "-";
-        } else if(sortBy == action + "-")
-            title += "&nbsp;&#x25b4;"; // up
-        var a = $("<A>", {
-            class: 'nav',
-            href: '#',
-        }).append(title).on('click', function() {
-            $("#sortBy").val(action);
+        th.attr('data-key', title).on('click', function() {
+            $("#sortBy").val(this.dataset.key +
+                             (this.classList.contains('desc') ? '' : '-'));
             search(maxresults, 0);
             return false;
-        });
-        th.html(a);
+        }).html(title);
+
+        var sortBy = $("#sortBy").val();
+        var isActive = sortBy.replace(/-$/, '') == title;
+        th.toggleClass('active', isActive)
+            .toggleClass('desc', !isActive || sortBy != title)
+            .toggleClass('sortable', true);
     } else
         th.html(title);
 
@@ -138,19 +135,49 @@ function getArtist(node) {
     return htmlify(name);
 }
 
+function openAlbum(e) {
+    var target = $(e.target);
+    if (target.is('a') || e.type == 'keydown' && e.which != 13)
+        return;
+
+    var row = target.closest('tr');
+    location.href = "?s=byAlbumKey&n=" +
+        encodeURIComponent(row.data('tag')) +
+        "&action=search";
+}
+
+function openLabel(e) {
+    var target = $(e.target);
+    if (target.is('a') || e.type == 'keydown' && e.which != 13)
+        return;
+
+    var row = target.closest('tr');
+    location.href = '#' + encobj({
+        type: 'albumsByPubkey',
+        fkey: row.data('pubkey'),
+        sortBy: '',
+        n: ''
+    }, true);
+}
+
 function emitAlbumsEx(table, data) {
+    var colgroup = $("<colgroup>");
+    colgroup.append($("<col>", { style: "width: 30%" }));
+    colgroup.append($("<col>", { style: "width: 20px" }));
+    colgroup.append($("<col>"));
+    colgroup.append($("<col>", { style: "width: 20%" }));
+    table.append(colgroup).removeClass('autoSize');
+
     var tr = $("<TR>");
     tr.append(header("Artist", true));
     tr.append(header("", false));
     tr.append(header("Album", true));
-    tr.append(header("Collection", false));
-    tr.append(header("Media", false).attr('colSpan', 2));
-    tr.append(header("Added", $("#type").val() == 'hashtags'));
     tr.append(header("Label", true));
     table.append($("<THEAD>").append(tr));
 
     data.data.forEach(function(entry) {
-        tr = $("<TR>");
+        tr = $("<TR>", { class: 'data', 'data-tag': entry.id, tabindex: 0 })
+            .on('click keydown', openAlbum);
         var td = $("<TD>");
         var attrs = entry.attributes;
         if(attrs.artist.match(/^\[coll\]/i)) {
@@ -176,22 +203,15 @@ function emitAlbumsEx(table, data) {
         }).append($("<DIV>", {
             class: reviewClass
         })));
+
+        var location = (attrs.location != "Library") ?
+            "<i>" + attrs.location + ( attrs.bin ? ' ' + attrs.bin : '' ) + "</i><span class='sep'></span>" : '';
         tr.append($("<TD>").html($("<A>", {
             href: "?s=byAlbumKey&n=" +
                 encodeURIComponent(entry.id) +
                 "&action=search"
-        }).html(htmlify(attrs.album))));
-        var collection = attrs.location;
-        collection = (collection == "Library")?attrs.category:
-            "<I>" + collection + "&nbsp;" + (attrs.bin?attrs.bin:'') + "</I>";
-        tr.append($("<TD>").html(collection));
-        tr.append($("<TD>").html(attrs.medium));
-        tr.append($("<TD>").html(attrs.size));
-        var created = attrs.created.split('-');
-        tr.append($("<TD>", {
-            align: 'center',
-            class: 'date'
-        }).html(created[1] + '/' + created[0].substring(2)));
+        }).html(htmlify(attrs.album))).append($("<div>", { class: 'meta' }).html(location + attrs.category + (attrs.medium != 'CD' ? ' ' + attrs.medium : '') + "<span class='sep'></span>" + new Date(attrs.created).toLocaleDateString(undefined, OPTS))));
+
         if(entry.relationships && entry.relationships.label) {
             var label = entry.relationships.label;
             tr.append($("<TD>").append(
@@ -238,19 +258,25 @@ var lists = {
     },
 
     tracks: function(table, data) {
+        var colgroup = $("<colgroup>");
+        colgroup.append($("<col>", { style: "width: 25%" }));
+        colgroup.append($("<col>", { style: "width: 25%" }));
+        colgroup.append($("<col>"));
+        colgroup.append($("<col>", { style: "width: 15%" }));
+        table.append(colgroup).removeClass('autoSize');
+
         var tr = $("<TR>");
         tr.append(header("Artist", true));
         tr.append(header("Album", true));
         tr.append(header("Track", true));
-        tr.append(header("Collection", false));
-        tr.append(header("Media", false).attr('colSpan', 2));
         tr.append(header("Label", true));
         table.append($("<THEAD>").append(tr));
 
         data.data.forEach(function(entry) {
             var attrs = entry.attributes;
             attrs.tracks.forEach(function(track) {
-                tr = $("<TR>");
+                tr = $("<TR>", { class: 'data', 'data-tag': entry.id, tabindex: 0 })
+                    .on('click keydown', openAlbum);
                 var td = $("<TD>");
                 var artist = track.artist != null?track.artist:attrs.artist;
                 td.append(
@@ -261,11 +287,15 @@ var lists = {
                         form: true
                     }, true) + "'>").append(htmlify(artist)));
                 tr.append(td);
+
+                var location = (attrs.location != "Library") ?
+                    "<i>" + attrs.location + ( attrs.bin ? ' ' + attrs.bin : '' ) + "</i><span class='sep'></span>" : '';
                 tr.append($("<TD>").html($("<A>", {
                     href: "?s=byAlbumKey&n=" +
                         encodeURIComponent(entry.id) +
                         "&action=search"
-                }).html(htmlify(attrs.album))));
+                }).html(htmlify(attrs.album))).append($("<div>", { class: 'meta' }).html(location + attrs.category + (attrs.medium != 'CD' ? ' ' + attrs.medium : '') + "<span class='sep'></span>" + new Date(attrs.created).toLocaleDateString(undefined, OPTS))));
+
                 tr.append($("<TD>").append(
                     $("<A href='#" + encobj({
                         type: 'tracks',
@@ -273,12 +303,7 @@ var lists = {
                         sortBy: 'Track',
                         form: true
                     }, true) + "'>").append(htmlify(track.track))));
-                var collection = attrs.location;
-                collection = (collection == "Library")?attrs.category:
-                    "<I>" + collection + "&nbsp;" + (attrs.bin?attrs.bin:'') + "</I>";
-                tr.append($("<TD>").html(collection));
-                tr.append($("<TD>").html(attrs.medium));
-                tr.append($("<TD>").html(attrs.size));
+
                 if(entry.relationships && entry.relationships.label) {
                     var label = entry.relationships.label;
                     tr.append($("<TD>").append(
@@ -303,10 +328,11 @@ var lists = {
         tr.append(header("Name", false));
         tr.append(header("Location", false).attr('colSpan', 2));
         tr.append(header("Last Updated", false));
-        table.append($("<THEAD>").append(tr));
+        table.append($("<THEAD>").append(tr)).addClass('autoSize');;
 
         data.data.forEach(function(entry) {
-            tr = $("<TR>");
+            tr = $("<TR>", { class: 'data', 'data-pubkey': entry.id, tabindex: 0 })
+                .on('click keydown', openLabel);
             var attrs = entry.attributes;
             tr.append($("<TD>").append(
                 $("<A href='#" + encobj({
@@ -325,18 +351,25 @@ var lists = {
     },
 
     reviews: function(table, data) {
-        var showTag = $("#showTag").val();
+        var colgroup = $("<colgroup>");
+        colgroup.append($("<col>", { style: "width: 30%" }));
+        colgroup.append($("<col>"));
+        colgroup.append($("<col>", { style: "width: 20%" }));
+        colgroup.append($("<col>", { style: "width: 120px" }));
+        table.append(colgroup).removeClass('autoSize');
+
         var tr = $("<TR>");
         tr.append(header("Artist", true));
         tr.append(header("Album", true));
         tr.append(header("Label", true));
-        tr.append(header("Date", true));
+        tr.append(header("Reviewed", true));
         table.append($("<THEAD>").append(tr));
 
         data.data.forEach(function(entry) {
             var td = $("<TD>");
             var attrs = entry.attributes;
-            tr = $("<TR>");
+            tr = $("<TR>", { class: 'data', 'data-tag': entry.id, tabindex: 0 })
+                .on('click keydown', openAlbum);
             if(attrs.artist.match(/^\[coll\]/i)) {
                 // It's a collection; HREF the album key
                 td.html($("<A>", {
@@ -352,12 +385,15 @@ var lists = {
                 }).html(getArtist(attrs)));
             }
             tr.append(td);
+
+            var location = (attrs.location != "Library") ?
+                "<i>" + attrs.location + ( attrs.bin ? ' ' + attrs.bin : '' ) + "</i><span class='sep'></span>" : '';
             tr.append($("<TD>").html($("<A>", {
-                href: "?s=byAlbumKey&n=" + encodeURIComponent(entry.id) +
+                href: "?s=byAlbumKey&n=" +
+                    encodeURIComponent(entry.id) +
                     "&action=search"
-            }).html(htmlify(attrs.album))).append(showTag == 'true'?
-                                         " <FONT CLASS='sub'>(Tag&nbsp;#" +
-                                         entry.id + ")<FONT>":""));
+            }).html(htmlify(attrs.album))).append($("<div>", { class: 'meta' }).html(location + attrs.category + (attrs.medium != 'CD' ? ' ' + attrs.medium : '') + "<span class='sep'></span>" + new Date(attrs.created).toLocaleDateString(undefined, OPTS))));
+
             if(entry.relationships && entry.relationships.label) {
                 var label = entry.relationships.label;
                 tr.append($("<TD>").html($("<A>", {
@@ -478,7 +514,12 @@ async function search(size, offset) {
                     ttype = type;
                     break;
                 }
-                rcount.html((total ? total : "No") + " " + ttype + " found");
+
+                if (type == "albumsByPubkey" || type == "hashtags")
+                    rcount.html((total ? total : "No") + " " + ttype + " found");
+                else
+                    rcount.html($("#fkey").val() + "<span style='padding-left: 20px; font-size: 0.9rem'>" + (total ? total : "No") + " " + ttype + " found</span>");
+
                 $(".nav-items li").removeClass("selected");
                 $(".breadcrumbs").hide();
                 $(".topnav-extra").hide();
@@ -491,7 +532,16 @@ async function search(size, offset) {
                     cellspacing: 0,
                     border: 0
                 });
-                $(".content").empty().append(results);
+
+                var body = $("body");
+                var content = $(".content");
+                var color = body.data("saved-background-colour");
+                if (color) {
+                    body.css("--theme-content-background-colour", color)
+                        .data("saved-background-colour", null);
+                    content.css("background-color", color)
+                }
+                content.empty().append(results);
             }
             results.empty();
             if(total > 0) {
@@ -508,14 +558,6 @@ async function search(size, offset) {
                     results.append('Hint: Uncheck "Exact match" box to broaden search.');
                 else
                     results.append("<p>Select 'All' in the Search bar to expand your search.</p>")
-            }
-
-            // set focus only for non-review, non-pubkey search
-            if(suffix) {
-                var field = $("input.search-data");
-                var val = field.val();
-                field.get(0).setSelectionRange(val.length, val.length);
-                field.trigger('focus');
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {

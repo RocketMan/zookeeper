@@ -9,32 +9,32 @@
 </div>
 {% endif %}
 {##  ALBUM TITLE  ##}
-<h1 style='font-size: 1.3rem; margin-bottom: 0'>
+<h1 class='title'>
   {{ album.album }}
 {% if app.session.isAuth("u") %}
-  <span style='font-weight: normal; font-size: 1rem; margin-left: 0.25em'>(Tag #{{ album.tag }})</span>
+  <span>(Tag #{{ album.tag }})</span>
   {%~ if app.session.isAuth("m") %}
-  <a style='font-weight: normal; font-size: 1rem; margin-left: 0.25em' href='?action=editor&amp;seltag={{ album.tag }}'>Edit album</a>
+  <a href='?action=editor&amp;seltag={{ album.tag }}'>Edit album</a>
   {%~ endif %}
 {% endif %}
 </h1>
 {##  ARTIST NAME  ##}
 {% set artist = album.iscoll ? 'Various Artists' : album.artist %}
-<div style='font-size: 1.1rem'>
+<div class='artist'>
 {% if album.iscoll %}
   {{ artist }}
 {% else %}
-  <a href="?action=search&amp;s=byArtist&amp;n={{ artist | e('url') }}" class="nav">{{ artist }}</a>
+  <a href="?action=search&amp;s=byArtist&amp;n={{ artist | e('url') }}">{{ artist }}</a>
 {% endif %}
 </div>
 {##  MUSIC LABEL  ##}
 {% if album.pubkey %}
-<div style='font-size: 1rem;'>
-  <a href="?action=search&amp;s=byLabelKey&amp;n={{ album.pubkey }}" class="nav">{{ album.name }}</a>
+<div class='label'>
+  <a href="?action=search&amp;s=byLabelKey&amp;n={{ album.pubkey }}">{{ album.name }}</a>
 </div>
 {% endif %}
 {##  ALBUM METADATA  ##}
-<div style='font-size: 1rem; margin-top: 10px'>
+<div class='meta'>
 {% set showMissing = 'missing' %}
 {% if album.location == 'G' %}
   <i>Deep Storage {{ album.bin }}</i> |
@@ -54,13 +54,13 @@
   {{ GENRES[album.category] }} {{ album.medium != 'C' ? MEDIA[album.medium] }}
   | {{ album.created | date('M Y') }}
 {% if app.session.isAuth('u') and showMissing %}
-  | <a href="{{ report_missing_url }}" class="nav" target="_blank">Report {{ showMissing }}...</a>
+  | <a href="{{ report_missing_url }}" target="_blank">Report {{ showMissing }}...</a>
 {% endif %}
 </div>
 {##  WRITE A REVIEW  ##}
 {% if app.session.isAuth('u') %}
-<div style='font-size: 1rem; margin-top: 20px'>
-  <a href="?action=searchReviewEdit&amp;tag={{ album.tag }}" class="nav"><b>Write a review of this album</b></a>
+<div class='write-review'>
+  <a href="?action=searchReviewEdit&amp;tag={{ album.tag }}">Write a review of this album</a>
 </div>
 {% endif %}
 {##  HASHTAGS  ##}

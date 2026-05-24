@@ -14,7 +14,6 @@ Credits:
       link: https://codepen.io/fainder/pen/qBwBeO
       website: https://www.creaticode.com/
 #}
-<link rel="stylesheet" type="text/css" href="{{ "css/topnav.css" | decorate }}" />
 <script src="{{ "js/topnav.js" | decorate }}"></script>
 <script src="{{ "js/pow.js" | decorate }}"></script>
 <script src="{{ "js/search.findit.js" | decorate }}"></script>
@@ -60,7 +59,7 @@ Credits:
       <a href="?action=login">Login</a>
 {% endif %}
     </div>
-    <form action="#">
+    <form action="#" {{~ app.session.isAuth("u") ? " class='logout'"}}>
       <input type="search" class="search-data" placeholder="Search" required>
       <select id="search-filter" style="display: none">
         <option value="all" data-default="true" selected>All</option>
