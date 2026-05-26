@@ -118,8 +118,8 @@ Content-Type: text/html; charset="UTF-8"
   <tr {{~ not album.body ? " class='noexcerpt'" }}>
     <td>{{ album.afile_number }}</td>
     <td class='minwidth-240'><a href='{{ baseUrl }}?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}' target='_blank'>{{ album.album }}</a></td>
-    <td>{{ album.iscoll ? 'Various Artists' : album.artist }} {{ medium | trim }} </td>
-    <td>{{ label }} </td>
+    <td>{{ album.iscoll ? 'Various Artists' : album.artist }} {{ medium | trim }}</td>
+    <td class='meta'>{{ label }}</td>
     <td class='meta'>{{ _self.catnames(CATMAP, album.afile_category) }}</td>
   </tr>
 {% if album.body %}
