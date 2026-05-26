@@ -109,7 +109,6 @@ Content-Type: text/html; charset="UTF-8"
     <col>
     <col style="width: 240px">
     <col style="width: 240px">
-    <col style="width: 120px">
   </colgroup>
   <tbody>
 {% for album in albums %}
@@ -117,8 +116,10 @@ Content-Type: text/html; charset="UTF-8"
   {%~ set label = album.label | replace({' Records': '', ' Recordings': ''}) %}
   <tr {{~ not album.body ? " class='noexcerpt'" }}>
     <td>{{ album.afile_number }}</td>
-    <td class='minwidth-240'><a href='{{ baseUrl }}?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}' target='_blank'>{{ album.album }}</a></td>
-    <td>{{ album.iscoll ? 'Various Artists' : album.artist }} {{ medium | trim }}</td>
+    <td class='minwidth-240'>
+      <a href='{{ baseUrl }}?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}' target='_blank'>{{ album.album }}</a> {{ medium | trim }}
+      <div>{{ album.iscoll ? 'Various Artists' : entry.swapNames(album.artist) }}</div>
+    </td>
     <td class='meta'>{{ label }}</td>
     <td class='meta'>{{ _self.catnames(CATMAP, album.afile_category) }}</td>
   </tr>
