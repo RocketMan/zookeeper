@@ -499,7 +499,7 @@ class LibraryImpl extends DBO implements ILibrary {
     // For a given $albums array, add 'reviewed' and 'reviewer' columns
     // for each album which has at least one music review.
     //
-    public function markAlbumsReviewed(&$albums, $loggedIn = 0) {
+    public function markAlbumsReviewed(&$albums, $loggedIn = 0, $includeReview = false) {
         $chain = [];
         $tags = [];
         for($i = 0; $albums != null && $i < sizeof($albums); $i++) {
@@ -515,7 +515,8 @@ class LibraryImpl extends DBO implements ILibrary {
         if(count($tags) == 0)
             return;
 
-        $query = "SELECT tag, a.airname, realname FROM reviews r " .
+        $query = "SELECT tag, a.airname, realname" .
+                 ($includeReview ? ", review" : "") . " FROM reviews r " .
                  "LEFT JOIN users u ON r.user = u.name " .
                  "LEFT JOIN airnames a ON r.airname = a.id WHERE " .
                  "tag IN (" . implode(',', array_keys($tags)) . ")";
@@ -528,6 +529,7 @@ class LibraryImpl extends DBO implements ILibrary {
             for($next = $tags[$row[0]]; $next >= 0; $next = array_key_exists($next, $chain)?$chain[$next]:-1) {
                 $albums[$next]["reviewed"] = 1;
                 $albums[$next]["reviewer"] = self::displayName($row[1], $row[2]);
+                $albums[$next]["review"] = $includeReview ? $row[3] : null;
             }
         }
     }

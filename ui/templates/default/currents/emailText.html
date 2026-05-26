@@ -1,0 +1,129 @@
+{% autoescape false %}
+{%- macro medium(album) %}
+  {%~ if album.medium == 'S' %}
+    7"
+  {%~ elseif album.medium == 'T' %}
+    10"
+  {%~ elseif album.medium == 'V' %}
+    12"
+  {%~ endif %}
+{%- endmacro -%}
+
+{%- macro catcodes(catmap, categories) %}
+    {%~ set names = [] %}
+    {%~ set cats = categories | split(',') %}
+    {%~ for cat in cats -%}
+        {%~ set index = cat|int - 1 %}
+        {%~ if not (catmap[index].name starts with '(') %}
+            {%~ set names = names | merge([ catmap[index].code ]) %}
+        {%~ endif %}
+    {%- endfor -%}
+    {{ names | join('') }}
+{%- endmacro -%}
+
+{%- macro catnames(catmap, categories) %}
+    {%~ set names = [] %}
+    {%~ set cats = categories | split(',') %}
+    {%~ for cat in cats -%}
+        {%~ set index = cat|int - 1 %}
+        {%~ if not (catmap[index].name starts with '(') %}
+            {%~ set names = names | merge([ catmap[index].name ]) %}
+        {%~ endif %}
+    {%- endfor -%}
+    {{ names | join(', ') }}
+{%- endmacro -%}
+
+--{{ boundary }}
+Content-Type: text/plain; charset="UTF-8"
+
+{% for album in albums %}
+{{ "%-2s %3d %-28s %-30s %-12s" | format(
+    _self.catcodes(CATMAP, album.afile_category),
+    album.afile_number,
+    album.artist | truncate(28, false, ''),
+    album.album | truncate(30, false, ''),
+    album.label | truncate(12, false, '')) }}
+{% endfor %}
+
+Post your music reviews online!
+{{ app.station_title }} Zookeeper Online: {{ baseUrl }}
+--{{ boundary }}
+Content-Type: text/html; charset="UTF-8"
+
+{% endautoescape %}
+{% autoescape 'html' %}
+<html lang='en'>
+<head>
+  <style type='text/css'>
+    body {
+	font-family: Helvetica, sans-serif;
+	font-size: 10pt;
+    }
+    table {
+	width: calc(100% - 5px);
+    }
+    td {
+	padding: 1rem 0;
+	text-align: left;
+	vertical-align: top;
+	border-bottom: 1px solid rgba(0,0,0,0.08);
+	font-size: 1rem;
+    }
+    td .excerpt {
+	font-size: 0.9rem;
+	color: #555;
+	margin-right: -450px; /* width of remaining columns */
+	margin-top: 20px;
+    }
+    td.meta {
+	font-size: 0.9rem;
+	color: #555;
+    }
+    td a {
+	font-size: 1.1rem;
+    }
+    p.footer {
+	font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+<h2>{{ app.station_title }} Adds for {{ date | date(dateSpec) }}</h2>
+<table>
+  <colgroup>
+    <col style="width: 50px">
+    <col>
+    <col style="width: 240px">
+    <col style="width: 240px">
+    <col style="width: 120px">
+  </colgroup>
+  <tbody>
+{% for album in albums %}
+  {%~ set medium = _self.medium(album) %}
+  {%~ set label = album.label | replace({' Records': '', ' Recordings': ''}) %}
+  <tr>
+    <td>{{ album.afile_number }}
+    </td>
+    <td><a href='?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}'>{{ album.album }}</a>
+{% if album.body %}
+      <div class='excerpt'>
+        {{ album.body }}
+      </div>
+{% endif %}
+    </td>
+    <td>{{ album.artist }} {{~ medium | trim }} </td>
+    <td>{{ label }} </td>
+    <td class='meta'>{{ _self.catnames(CATMAP, album.afile_category) }}</td>
+  </tr>
+  </tbody>
+{% endfor %}
+</table>
+<h3>For more information, visit
+  <a href='{{ baseUrl }}'>{{ app.station_title }}</a>.
+</h3>
+</body>
+</html>
+{% endautoescape %}
+{% autoescape false %}
+--{{ boundary }}
+{% endautoescape %}
