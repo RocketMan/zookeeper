@@ -26,6 +26,7 @@
 namespace ZK\UI;
 
 use ZK\Engine\Engine;
+use ZK\Engine\PlaylistEntry;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 
@@ -691,6 +692,7 @@ class AddManager extends MenuItem {
                 $vars = [];
                 $vars['albums'] = $albums;
                 $vars['baseUrl'] = Engine::getBaseURL();
+                $vars['entry'] = new PlaylistEntry();
                 $vars['CATMAP'] = $this->categoryMap;
                 $vars['date'] = $date;
                 $vars['dateSpec'] = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
