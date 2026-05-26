@@ -66,14 +66,16 @@ Content-Type: text/html; charset="UTF-8"
 	padding: 1rem 0;
 	text-align: left;
 	vertical-align: top;
-	border-bottom: 1px solid rgba(0,0,0,0.08);
 	font-size: 1rem;
     }
-    td .excerpt {
+    tr.noexcerpt td {
+	border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    tr.excerpt td {
+	padding-top: 0;
 	font-size: 0.9rem;
 	color: #555;
-	margin-right: -450px; /* width of remaining columns */
-	margin-top: 20px;
+	border-bottom: 1px solid rgba(0,0,0,0.08);
     }
     td.meta {
 	font-size: 0.9rem;
@@ -101,20 +103,21 @@ Content-Type: text/html; charset="UTF-8"
 {% for album in albums %}
   {%~ set medium = _self.medium(album) %}
   {%~ set label = album.label | replace({' Records': '', ' Recordings': ''}) %}
-  <tr>
-    <td>{{ album.afile_number }}
-    </td>
-    <td><a href='?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}'>{{ album.album }}</a>
-{% if album.body %}
-      <div class='excerpt'>
-        {{ album.body }}
-      </div>
-{% endif %}
-    </td>
-    <td>{{ album.artist }} {{~ medium | trim }} </td>
+  <tr {{~ not album.body ? " class='noexcerpt'" }}>
+    <td>{{ album.afile_number }}</td>
+    <td><a href='?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}'>{{ album.album }}</a></td>
+    <td>{{ album.artist }} {{ medium | trim }} </td>
     <td>{{ label }} </td>
     <td class='meta'>{{ _self.catnames(CATMAP, album.afile_category) }}</td>
   </tr>
+{% if album.body %}
+  <tr class='excerpt'>
+    <td></td>
+    <td colspan='4'>
+        {{ album.body }}
+    </td>
+  </tr>
+{% endif %}
   </tbody>
 {% endfor %}
 </table>
