@@ -116,7 +116,7 @@ Content-Type: text/html; charset="UTF-8"
   <tr class='excerpt'>
     <td></td>
     <td colspan='4'>
-        {{ album.body }}
+        {{ album.body | truncate(1000, true) | nl2br }}
     </td>
   </tr>
 {% endif %}
