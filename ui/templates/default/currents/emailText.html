@@ -37,12 +37,14 @@
 Content-Type: text/plain; charset="UTF-8"
 
 {% for album in albums %}
+{% set title = album.iscoll ? 'Various Artists' : album.album %}
+{% set label = album.label | replace({' Records': '', ' Recordings': ''}) %}
 {{ "%-2s %3d %-28s %-30s %-12s" | format(
     _self.catcodes(CATMAP, album.afile_category),
     album.afile_number,
     album.artist | truncate(28, false, ''),
-    album.album | truncate(30, false, ''),
-    album.label | truncate(12, false, '')) }}
+    title | truncate(30, false, ''),
+    label | truncate(12, false, '')) }}
 {% endfor %}
 
 Post your music reviews online!
@@ -106,7 +108,7 @@ Content-Type: text/html; charset="UTF-8"
   <tr {{~ not album.body ? " class='noexcerpt'" }}>
     <td>{{ album.afile_number }}</td>
     <td><a href='?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}'>{{ album.album }}</a></td>
-    <td>{{ album.artist }} {{ medium | trim }} </td>
+    <td>{{ album.iscoll ? 'Various Artists' : album.artist }} {{ medium | trim }} </td>
     <td>{{ label }} </td>
     <td class='meta'>{{ _self.catnames(CATMAP, album.afile_category) }}</td>
   </tr>
