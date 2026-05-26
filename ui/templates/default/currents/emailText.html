@@ -107,7 +107,7 @@ Content-Type: text/html; charset="UTF-8"
   {%~ set label = album.label | replace({' Records': '', ' Recordings': ''}) %}
   <tr {{~ not album.body ? " class='noexcerpt'" }}>
     <td>{{ album.afile_number }}</td>
-    <td><a href='?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}'>{{ album.album }}</a></td>
+    <td><a href='{{ baseUrl }}?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}' target='_blank'>{{ album.album }}</a></td>
     <td>{{ album.iscoll ? 'Various Artists' : album.artist }} {{ medium | trim }} </td>
     <td>{{ label }} </td>
     <td class='meta'>{{ _self.catnames(CATMAP, album.afile_category) }}</td>
@@ -123,8 +123,8 @@ Content-Type: text/html; charset="UTF-8"
   </tbody>
 {% endfor %}
 </table>
-<h3>For more information, visit
-  <a href='{{ baseUrl }}'>{{ app.station_title }}</a>.
+<h3>For more music reviews, charts, and playlists, visit
+  <a href='{{ baseUrl }}' target='_blank'>{{ app.station_title }}</a>!
 </h3>
 </body>
 </html>
