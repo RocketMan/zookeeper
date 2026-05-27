@@ -138,7 +138,7 @@ Content-Type: text/html; charset="UTF-8"
     <td colspan='3'>
       {{ review | nl2br }}
   {%~ set token = album.reviewer | lower | split(' ') | first %}
-  {%~ if token | length < 3 %}
+  {%~ if token | length < 4 %}
     {%~ set token = album.reviewer | lower %}
   {%~ endif %}
   {%~ if token not in review | lower %}
