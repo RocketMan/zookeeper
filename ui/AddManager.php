@@ -643,8 +643,8 @@ class AddManager extends MenuItem {
     public function addManagerEMail() {
         $instance_chartman = Engine::param('email')['chartman'];
         $date = $_REQUEST["date"];
-        $address = $_REQUEST["address"];
-        $format = $_REQUEST["format"];
+        $address = $_REQUEST["address"] ?? '';
+        $format = $_REQUEST["format"] ?? '';
     
     
         list($y,$m,$d) = explode("-", $date);
