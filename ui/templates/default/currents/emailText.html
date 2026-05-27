@@ -98,11 +98,6 @@ Content-Type: text/html; charset="UTF-8"
     tbody tr:first-child td {
 	padding-top: 0.25rem;
     }
-    div.meta {
-	display: none;
-	font-size: 0.9rem;
-	color: #555;
-    }
     td.minwidth-240 {
 	min-width: 240px;
     }
@@ -120,16 +115,6 @@ Content-Type: text/html; charset="UTF-8"
     p.footer {
 	font-size: 1rem;
     }
-    @media (max-width: 600px) {
-	th,
-	td.meta,
-	col.meta {
-	    display: none;
-	}
-	div.meta {
-	    display: block;
-	}
-    }
   </style>
 </head>
 <body>
@@ -138,8 +123,8 @@ Content-Type: text/html; charset="UTF-8"
   <colgroup>
     <col style="width: 50px">
     <col>
-    <col style="width: 120px" class='meta'>
-    <col style="width: 240px" class='meta'>
+    <col style="width: 120px">
+    <col style="width: 240px">
   </colgroup>
   <thead>
     <tr>
@@ -152,16 +137,14 @@ Content-Type: text/html; charset="UTF-8"
   <tbody>
 {% for album in albums %}
   {%~ set medium = _self.medium(album) %}
-  {%~ set category = _self.catnames(CATMAP, album.afile_category) ?: 'General' %}
   <tr {{~ not album.body ? " class='noexcerpt'" }}>
     <td>{{ album.afile_number }}</td>
     <td class='minwidth-240 album'>
       <a href='{{ baseUrl }}?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}' target='_blank'>{{ album.album }}</a> {{ medium | trim }}
       <div>{{ album.iscoll ? 'Various Artists' : entry.swapNames(album.artist) }}</div>
-      <div class='meta'>{{ category ~ (album.reviewer ? ' | ' ~ album.reviewer) }}</div>
     </td>
-    <td class='meta'>{{ category }}</td>
-    <td class='meta'>{{ album.reviewer }}</td>
+    <td>{{ _self.catnames(CATMAP, album.afile_category) ?: 'General' }}</td>
+    <td>{{ album.reviewer }}</td>
   </tr>
 {% if album.body %}
   {%~ set review = album.body | truncate(1000, true) %}
