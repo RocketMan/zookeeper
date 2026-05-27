@@ -58,7 +58,7 @@ Content-Type: text/html; charset="UTF-8"
 <head>
   <style type='text/css'>
     body {
-	font-family: Helvetica, sans-serif;
+	font-family: 'Roboto', Helvetica, sans-serif;
 	font-size: 10pt;
     }
     h2 {
@@ -72,7 +72,7 @@ Content-Type: text/html; charset="UTF-8"
     }
     td {
 	padding: 1rem 0;
-	padding-right: 5px;
+	padding-right: 10px;
 	text-align: left;
 	vertical-align: top;
 	font-size: 1rem;
@@ -92,6 +92,12 @@ Content-Type: text/html; charset="UTF-8"
     }
     td.minwidth-240 {
 	min-width: 240px;
+    }
+    .album {
+	white-space: nowrap;
+    }
+    div.author {
+	font-style: italic;
     }
     td a {
 	font-size: 1.1rem;
@@ -116,7 +122,7 @@ Content-Type: text/html; charset="UTF-8"
   {%~ set label = album.label | replace({' Records': '', ' Recordings': ''}) %}
   <tr {{~ not album.body ? " class='noexcerpt'" }}>
     <td>{{ album.afile_number }}</td>
-    <td class='minwidth-240'>
+    <td class='minwidth-240 album'>
       <a href='{{ baseUrl }}?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}' target='_blank'>{{ album.album }}</a> {{ medium | trim }}
       <div>{{ album.iscoll ? 'Various Artists' : entry.swapNames(album.artist) }}</div>
     </td>
@@ -126,8 +132,9 @@ Content-Type: text/html; charset="UTF-8"
 {% if album.body %}
   <tr class='excerpt'>
     <td></td>
-    <td colspan='4'>
-        {{ album.body | truncate(1000, true) | nl2br }}
+    <td colspan='3'>
+      {{ album.body | truncate(1000, true) | nl2br }}
+      <div class='author'>&mdash; {{ album.reviewer }}</div>
     </td>
   </tr>
 {% endif %}
