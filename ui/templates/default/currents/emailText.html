@@ -69,6 +69,7 @@ Content-Type: text/html; charset="UTF-8"
     }
     table {
 	width: calc(100% - 5px);
+	max-width: 1150px;
     }
     td {
 	padding: 1rem 0;
@@ -95,6 +96,10 @@ Content-Type: text/html; charset="UTF-8"
     }
     .album {
 	white-space: nowrap;
+    }
+    .author {
+	font-size: 0.9rem;
+	font-style: italic;
     }
     td a {
 	font-size: 1.1rem;
@@ -127,10 +132,18 @@ Content-Type: text/html; charset="UTF-8"
     <td class='meta'>{{ _self.catnames(CATMAP, album.afile_category) }}</td>
   </tr>
 {% if album.body %}
+  {%~ set review = album.body | truncate(1000, true) %}
   <tr class='excerpt'>
     <td></td>
     <td colspan='3'>
-      {{ album.body | truncate(1000, true) | nl2br }}
+      {{ review | nl2br }}
+  {%~ set token = album.reviewer | lower | split(' ') | first %}
+  {%~ if token | length < 3 %}
+    {%~ set token = album.reviewer | lower %}
+  {%~ endif %}
+  {%~ if token not in review | lower %}
+      <div class='author'>&mdash; {{ album.reviewer }}</div>
+  {%~ endif %}
     </td>
   </tr>
 {% endif %}
