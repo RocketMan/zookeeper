@@ -70,6 +70,14 @@ Content-Type: text/html; charset="UTF-8"
     table {
 	width: calc(100% - 5px);
 	max-width: 1150px;
+	border-spacing: 0;
+	border-collapse: collapse;
+    }
+    th {
+	font-size: 0.9rem;
+	text-align: left;
+	border-bottom: 2px solid grey;
+	padding-bottom: 0;
     }
     td {
 	padding: 1rem 0;
@@ -87,7 +95,11 @@ Content-Type: text/html; charset="UTF-8"
 	color: #555;
 	border-bottom: 1px solid rgba(0,0,0,0.08);
     }
-    td.meta {
+    tbody tr:first-child td {
+	padding-top: 0.25rem;
+    }
+    div.meta {
+	display: none;
 	font-size: 0.9rem;
 	color: #555;
     }
@@ -108,6 +120,16 @@ Content-Type: text/html; charset="UTF-8"
     p.footer {
 	font-size: 1rem;
     }
+    @media (max-width: 600px) {
+	th,
+	td.meta,
+	col.meta {
+	    display: none;
+	}
+	div.meta {
+	    display: block;
+	}
+    }
   </style>
 </head>
 <body>
@@ -116,21 +138,30 @@ Content-Type: text/html; charset="UTF-8"
   <colgroup>
     <col style="width: 50px">
     <col>
-    <col style="width: 240px">
-    <col style="width: 240px">
+    <col style="width: 120px" class='meta'>
+    <col style="width: 240px" class='meta'>
   </colgroup>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Album</th>
+      <th>Category</th>
+      <th>Reviewer</th>
+    </tr>
+  </thead>
   <tbody>
 {% for album in albums %}
   {%~ set medium = _self.medium(album) %}
-  {%~ set label = album.label | replace({' Records': '', ' Recordings': ''}) %}
+  {%~ set category = _self.catnames(CATMAP, album.afile_category) ?: 'General' %}
   <tr {{~ not album.body ? " class='noexcerpt'" }}>
     <td>{{ album.afile_number }}</td>
     <td class='minwidth-240 album'>
       <a href='{{ baseUrl }}?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}' target='_blank'>{{ album.album }}</a> {{ medium | trim }}
       <div>{{ album.iscoll ? 'Various Artists' : entry.swapNames(album.artist) }}</div>
+      <div class='meta'>{{ category ~ (album.reviewer ? ' | ' ~ album.reviewer) }}</div>
     </td>
-    <td class='meta'>{{ label }}</td>
-    <td class='meta'>{{ _self.catnames(CATMAP, album.afile_category) }}</td>
+    <td class='meta'>{{ category }}</td>
+    <td class='meta'>{{ album.reviewer }}</td>
   </tr>
 {% if album.body %}
   {%~ set review = album.body | truncate(1000, true) %}
@@ -138,18 +169,11 @@ Content-Type: text/html; charset="UTF-8"
     <td></td>
     <td colspan='3'>
       {{ review | nl2br }}
-  {%~ set token = album.reviewer | lower | split(' ') | first %}
-  {%~ if token | length < 4 %}
-    {%~ set token = album.reviewer | lower %}
-  {%~ endif %}
-  {%~ if token not in review | lower %}
-      <div class='author'>&mdash; {{ album.reviewer }}</div>
-  {%~ endif %}
     </td>
   </tr>
 {% endif %}
-  </tbody>
 {% endfor %}
+  </tbody>
 </table>
 <h3>For more music reviews, charts, and playlists, visit
   <a href='{{ baseUrl }}' target='_blank'>{{ app.station_title }}</a>!
