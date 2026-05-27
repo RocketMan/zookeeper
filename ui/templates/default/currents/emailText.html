@@ -96,9 +96,6 @@ Content-Type: text/html; charset="UTF-8"
     .album {
 	white-space: nowrap;
     }
-    div.author {
-	font-style: italic;
-    }
     td a {
 	font-size: 1.1rem;
     }
@@ -134,7 +131,6 @@ Content-Type: text/html; charset="UTF-8"
     <td></td>
     <td colspan='3'>
       {{ album.body | truncate(1000, true) | nl2br }}
-      <div class='author'>&mdash; {{ album.reviewer }}</div>
     </td>
   </tr>
 {% endif %}
