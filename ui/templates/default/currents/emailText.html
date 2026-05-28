@@ -54,6 +54,7 @@ Content-Type: text/html; charset="UTF-8"
 
 {% endautoescape %}
 {% autoescape 'html' %}
+<!DOCTYPE html>
 <html lang='en'>
 <head>
   <style type='text/css'>
@@ -105,6 +106,26 @@ Content-Type: text/html; charset="UTF-8"
     p.footer {
 	font-size: 1rem;
     }
+    @media (prefers-color-scheme: dark) {
+	body {
+	    background-color: #1a1a1a;
+	    color: #fff;
+	}
+	th {
+	    color: #ccc;
+	    border-bottom: 2px solid #a0a0a0;
+	}
+	tr.excerpt td {
+	    color: #ccc;
+	    border-bottom: 1px solid rgba(255,255,255,0.12);
+	}
+	tr.noexcerpt td {
+	    border-bottom: 1px solid rgba(255,255,255,0.12);
+	}
+	a {
+	    color: #bce;
+	}
+    }
   </style>
 </head>
 <body>
@@ -129,7 +150,7 @@ Content-Type: text/html; charset="UTF-8"
   {%~ set medium = _self.medium(album) %}
   <tr {{~ not album.body ? " class='noexcerpt'" }}>
     <td>{{ album.afile_number }}</td>
-    <td class='minwidth-240 album'>
+    <td class='minwidth-240'>
       <a href='{{ baseUrl }}?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}' target='_blank'>{{ album.album }}</a> {{ medium | trim }}
       <div>{{ album.iscoll ? 'Various Artists' : entry.swapNames(album.artist) }}</div>
     </td>
@@ -137,11 +158,10 @@ Content-Type: text/html; charset="UTF-8"
     <td>{{ album.reviewer }}</td>
   </tr>
 {% if album.body %}
-  {%~ set review = album.body | truncate(1000, true) %}
   <tr class='excerpt'>
     <td></td>
     <td colspan='3'>
-      {{ review | nl2br }}
+      {{ album.body | truncate(1000, true) | nl2br }}
     </td>
   </tr>
 {% endif %}
