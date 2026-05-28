@@ -676,9 +676,10 @@ class AddManager extends MenuItem {
                         $row['body'] = $matches[1];
                     }
                 }
-    
-                $from = Engine::param('application')." <$instance_chartman>";
-                $subject = Engine::param('station_title').": Adds for $date";
+
+                $station = Engine::param('station_title');
+                $from = "$station <$instance_chartman>";
+                $subject = "$station: Adds for $date";
 
                 $boundary = "zk-part-" . md5(uniqid(rand()));
                 $mime = "Content-Type: multipart/" .
@@ -700,8 +701,8 @@ class AddManager extends MenuItem {
 
                 $tf = new TemplateFactoryUI();
                 $t = $tf->load($format == 'tab' ?
-                                            'currents/emailCSV.txt' :
-                                            'currents/emailText.html');
+                                    'currents/emailCSV.txt' :
+                                    'currents/emailText.html');
                 $body = $t->render($vars);
 
                 // send the mail
