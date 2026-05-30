@@ -61,6 +61,7 @@ Content-Type: text/html; charset="UTF-8"
     table: 'width: calc(100% - 5px);max-width: 1000px;border-spacing: 0;border-collapse: collapse;',
     th: 'font-size: 0.9rem;text-align: left;padding-bottom: 0;color: #555;border-bottom: 2px solid grey;',
     td: 'padding: 1rem 0;padding-right: 2rem;text-align: left;vertical-align: top;font-size: 1rem;',
+    td_meta: 'line-height: 1.2;',
     td_noexcerpt: 'border-bottom: 1px solid rgba(0,0,0,0.08);',
     td_excerpt: 'padding-top: 0;font-size: 0.9rem;color: #555;line-height: 1;border-bottom: 1px solid rgba(0,0,0,0.08);',
     td_a: 'font-size: 1.1rem;',
@@ -86,7 +87,7 @@ Content-Type: text/html; charset="UTF-8"
   <tbody>
 {% for album in albums %}
   {%~ set medium = _self.medium(album) %}
-  {%~ set tdstyle = style.html ~ style.td ~ (not album.body ? style.td_noexcerpt) %}
+  {%~ set tdstyle = style.html ~ style.td ~ style.td_meta ~ (not album.body ? style.td_noexcerpt) %}
   <tr>
     <td style='{{ tdstyle }}'>{{ album.afile_number }}</td>
     <td style='min-width: 240px;{{ tdstyle }}'>
