@@ -55,38 +55,38 @@ Content-Type: text/html; charset="UTF-8"
 {% endautoescape %}
 {% autoescape 'html' %}
 {% set style = {
-    html: "font-family: 'Roboto', Helvetica, sans-serif;font-size: 16px;",
+    html: 'font-family: Helvetica, sans-serif;',
     h2: 'font-size: 1.25rem;',
     h3: 'font-size: 1.1rem;',
     table: 'width: calc(100% - 5px);max-width: 1000px;border-spacing: 0;border-collapse: collapse;',
     th: 'font-size: 0.9rem;text-align: left;padding-bottom: 0;color: #555;border-bottom: 2px solid grey;',
     td: 'padding: 1rem 0;padding-right: 2rem;text-align: left;vertical-align: top;font-size: 1rem;',
     td_noexcerpt: 'border-bottom: 1px solid rgba(0,0,0,0.08);',
-    td_excerpt: 'padding-top: 0;font-size: 0.9rem;color: #555;border-bottom: 1px solid rgba(0,0,0,0.08);',
+    td_excerpt: 'padding-top: 0;font-size: 0.9rem;color: #555;line-height:1;border-bottom: 1px solid rgba(0,0,0,0.08);',
     td_a: 'font-size: 1.1rem;',
   }
 %}
 {% set title = app.station_title ~ ' Adds for ' ~ date | date(dateSpec) %}
 <!DOCTYPE html>
-<html lang='en' style="{{ style.html | raw }}">
+<html lang='en'>
 <head>
   <title>{{ title }}</title>
 </head>
 <body>
-<h2 style='{{ style.h2 }}'>{{ title }}</h2>
+<h2 style='{{ style.html ~ style.h2 }}'>{{ title }}</h2>
 <table style='{{ style.table }}'>
   <thead>
     <tr>
-      <th style='width: 50px;{{ style.th }}'>ID</th>
-      <th style='{{ style.th }}'>Album</th>
-      <th style='width: 120px;{{ style.th }}'>Category</th>
-      <th style='width: 240px;{{ style.th }}'>Reviewer</th>
+      <th style='width: 50px;{{ style.html ~ style.th }}'>ID</th>
+      <th style='{{ style.html ~ style.th }}'>Album</th>
+      <th style='width: 120px;{{ style.html ~ style.th }}'>Category</th>
+      <th style='width: 240px;{{ style.html ~ style.th }}'>Reviewer</th>
     </tr>
   </thead>
   <tbody>
 {% for album in albums %}
   {%~ set medium = _self.medium(album) %}
-  {%~ set tdstyle = style.td ~ (not album.body ? style.td_noexcerpt) %}
+  {%~ set tdstyle = style.html ~ style.td ~ (not album.body ? style.td_noexcerpt) %}
   <tr>
     <td style='{{ tdstyle }}'>{{ album.afile_number }}</td>
     <td style='min-width: 240px;{{ tdstyle }}'>
@@ -98,8 +98,8 @@ Content-Type: text/html; charset="UTF-8"
   </tr>
 {% if album.body %}
   <tr>
-    <td style='{{ style.td ~ style.td_excerpt }}'></td>
-    <td style='{{ style.td ~ style.td_excerpt }}' colspan='3'>
+    <td style='{{ style.html ~ style.td ~ style.td_excerpt }}'></td>
+    <td style='{{ style.html ~ style.td ~ style.td_excerpt }}' colspan='3'>
       {{ album.body | truncate(1000, true) | nl2br }}
     </td>
   </tr>
@@ -107,7 +107,7 @@ Content-Type: text/html; charset="UTF-8"
 {% endfor %}
   </tbody>
 </table>
-<h3 style='{{ style.h3 }}'>For more music reviews, charts, and playlists, visit
+<h3 style='{{ style.html ~ style.h3 }}'>For more music reviews, charts, and playlists, visit
   <a href='{{ baseUrl }}' target='_blank'>{{ app.station_title }}</a>!
 </h3>
 </body>
