@@ -33,12 +33,6 @@
     {{ names | join(', ') }}
 {%- endmacro -%}
 
-{%- macro font(attribute = true) %}
-{{ attribute ? 'style="' -}}
-font-family: 'Roboto', Helvetica, sans-serif
-{{- attribute ? '"' }}
-{%- endmacro -%}
-
 --{{ boundary }}
 Content-Type: text/plain; charset="UTF-8"
 
@@ -65,7 +59,7 @@ Content-Type: text/html; charset="UTF-8"
 <head>
   <style type='text/css'>
     html {
-	{{ _self.font(false) }};
+	font-family: 'Roboto', Helvetica, sans-serif;
 	font-size: 16px;
     }
     h2 {
@@ -135,7 +129,7 @@ Content-Type: text/html; charset="UTF-8"
   </style>
 </head>
 <body>
-<h2 {{ _self.font() }}>{{ app.station_title }} Adds for {{ date | date(dateSpec) }}</h2>
+<h2>{{ app.station_title }} Adds for {{ date | date(dateSpec) }}</h2>
 <table>
   <colgroup>
     <col style='width: 50px'>
@@ -145,28 +139,28 @@ Content-Type: text/html; charset="UTF-8"
   </colgroup>
   <thead>
     <tr>
-      <th {{ _self.font() }}>ID</th>
-      <th {{ _self.font() }}>Album</th>
-      <th {{ _self.font() }}>Category</th>
-      <th {{ _self.font() }}>Reviewer</th>
+      <th>ID</th>
+      <th>Album</th>
+      <th>Category</th>
+      <th>Reviewer</th>
     </tr>
   </thead>
   <tbody>
 {% for album in albums %}
   {%~ set medium = _self.medium(album) %}
   <tr {{~ not album.body ? " class='noexcerpt'" }}>
-    <td {{ _self.font() }}>{{ album.afile_number }}</td>
-    <td {{ _self.font() }} class='minwidth-240'>
+    <td>{{ album.afile_number }}</td>
+    <td class='minwidth-240'>
       <a href='{{ baseUrl }}?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}' target='_blank'>{{ album.album }}</a> {{ medium | trim }}
       <div>{{ album.iscoll ? 'Various Artists' : entry.swapNames(album.artist) }}</div>
     </td>
-    <td {{ _self.font() }}>{{ _self.catnames(CATMAP, album.afile_category) ?: 'General' }}</td>
-    <td {{ _self.font() }}>{{ album.reviewer }}</td>
+    <td>{{ _self.catnames(CATMAP, album.afile_category) ?: 'General' }}</td>
+    <td>{{ album.reviewer }}</td>
   </tr>
 {% if album.body %}
   <tr class='excerpt'>
-    <td {{ _self.font() }}></td>
-    <td colspan='3' {{ _self.font() }}>
+    <td></td>
+    <td colspan='3'>
       {{ album.body | truncate(1000, true) | nl2br }}
     </td>
   </tr>
@@ -174,7 +168,7 @@ Content-Type: text/html; charset="UTF-8"
 {% endfor %}
   </tbody>
 </table>
-<h3 {{ _self.font() }}>For more music reviews, charts, and playlists, visit
+<h3>For more music reviews, charts, and playlists, visit
   <a href='{{ baseUrl }}' target='_blank'>{{ app.station_title }}</a>!
 </h3>
 </body>
