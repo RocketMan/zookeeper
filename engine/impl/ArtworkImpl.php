@@ -53,7 +53,8 @@ class ArtworkImpl extends DBO implements IArtwork {
                 file_put_contents($path, $data);
             } else {
                 $client = new Client([
-                    'timeout' => self::FETCH_IMAGE_TIMEOUT
+                    'timeout' => self::FETCH_IMAGE_TIMEOUT,
+                    'verify' => false
                 ]);
                 $client->get($url, [ 'sink' => $path ]);
             }
