@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -50,7 +50,9 @@ class ArtworkImpl extends DBO implements IArtwork {
                 $data = base64_decode(substr($url, strlen($matches[0])));
                 file_put_contents($path, $data);
             } else {
-                $client = new Client();
+                $client = new Client([
+                    'verify' => false
+                ]);
                 $client->get($url, [ 'sink' => $path ]);
             }
             switch($type = mime_content_type($path)) {
