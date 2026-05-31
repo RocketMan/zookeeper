@@ -134,6 +134,7 @@ class NowAiringServer implements MessageComponentInterface {
             if($apiKey || $clientId && $clientSecret) {
                 $this->discogs = new Client([
                     'base_uri' => self::DISCOGS_SEARCH,
+                    'verify' => false,
                     RequestOptions::HEADERS => [
                         'User-Agent' => Engine::UA,
                         'Authorization' => $apiKey ?
