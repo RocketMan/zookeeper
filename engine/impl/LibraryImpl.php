@@ -32,6 +32,7 @@ class LibraryImpl extends DBO implements ILibrary {
     const DEFAULT_FT_LIMIT = 35;
     const MAX_FT_LIMIT = 200;
     const ENHANCED_COLLATION = false;
+    const MIN_FT_LEN = 4;
 
     private static $ftSearch = [
          //   elt name   rec name    table    index    fields     query
@@ -928,7 +929,7 @@ class LibraryImpl extends DBO implements ILibrary {
 
         // nothing to return if search is null or trivial
         if(!$key ||
-                strlen(preg_replace('/[^\p{L}\p{N}]+/u', '', $tkey = trim($key))) < 3)
+                strlen(preg_replace('/[^\p{L}\p{N}]+/u', '', $tkey = trim($key))) < self::MIN_FT_LEN)
             return [ 0, $retVal ];
 
         // Limit maximum number of results
@@ -946,7 +947,7 @@ class LibraryImpl extends DBO implements ILibrary {
                 return !in_array(mb_strtolower($word), self::$ftExclude);
             });
 
-            if (strlen(implode('', $words)) < 3)
+            if (strlen(implode('', $words)) < self::MIN_FT_LEN)
                 return [ 0, $retVal ];
 
             $search = "+" . implode(" +", $words);
