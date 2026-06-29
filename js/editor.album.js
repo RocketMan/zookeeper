@@ -93,7 +93,7 @@ function paginateAlbums(op, url) {
         },
         error: function (jqXHR, textStatus, errorThrown) {
             // rate limited; silently ignore
-            if(jqXHR.status == 403)
+            if(jqXHR.status == 429)
                 return;
 
             var json = JSON.parse(jqXHR.responseText);
