@@ -114,7 +114,7 @@ $().ready(function(){
     }
 
     function getErrorMessage(jqXHR, defaultValue) {
-        if(jqXHR.status == 429
+        if(jqXHR.status == 429)
             return 'Server busy, try again...';
         else if(jqXHR.status == 401 &&
                 confirm('Your session is no longer active.  Select OK to sign in again and continue.')) {
