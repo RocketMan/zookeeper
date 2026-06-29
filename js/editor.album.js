@@ -96,7 +96,10 @@ function paginateAlbums(op, url) {
             if(jqXHR.status == 429)
                 return;
 
-            var json = JSON.parse(jqXHR.responseText);
+            var json;
+            try {
+                json = JSON.parse(jqXHR.responseText);
+            } catch (e) {}
             var status = json && json.errors ?
                     json.errors.map(error => error.title).join(', ') :
                     'There was a problem retrieving the data: ' + errorThrown;
