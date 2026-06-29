@@ -114,7 +114,7 @@ $().ready(function(){
     }
 
     function getErrorMessage(jqXHR, defaultValue) {
-        if(jqXHR.status == 403)
+        if(jqXHR.status == 429
             return 'Server busy, try again...';
         else if(jqXHR.status == 401 &&
                 confirm('Your session is no longer active.  Select OK to sign in again and continue.')) {
@@ -959,7 +959,7 @@ $().ready(function(){
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 // if not last request or rate limited, silently ignore
-                if(this.seq != seq || jqXHR.status == 403)
+                if(this.seq != seq || jqXHR.status == 429)
                     return;
 
                 var message = getErrorMessage(jqXHR,
@@ -986,7 +986,7 @@ $().ready(function(){
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 // if not last request, rate limited, or tag does not exist, silently ignore
-                if(this.seq != seq || [403,404].includes(jqXHR.status))
+                if(this.seq != seq || [429,404].includes(jqXHR.status))
                     return;
 
                 var message = getErrorMessage(jqXHR,
