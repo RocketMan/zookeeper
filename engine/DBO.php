@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -248,22 +248,27 @@ abstract class DBO {
     const DATABASE_MAIN = 'database';
     const DATABASE_LIBRARY = 'library';
 
+    const DB_DRIVER = 'driver';
+    const DB_PARAMS = [ 'host', 'port', 'unix_socket' ];
+
     private const CONNECT_RETRY = 5; // number of times to try connecting
     private const CONNECT_BACKOFF = 4; // delay retry up to CONNECT_BACKOFF seconds
 
     // we store these statically, as they are shared across all instances
     private static $dbConfig;
-    private static $pdo;
+    private static $pdo = [];
 
     private $locks = [];
+    private $dsn;
 
     /**
      * convenience method to retrieve a database configuration parameter
      *
-     * @param name parameter
-     * @return configuration value or null if does not exist
+     * @param string $name parameter
+     * @param string|null $default default value or null
+     * @return string|null configuration value or default if does not exist
      */
-    private function dbConfig($name) {
+    private function dbConfig(string $name, ?string $default = null): ?string {
         if(!self::$dbConfig) {
             self::$dbConfig = Engine::param('db');
 
@@ -275,23 +280,48 @@ abstract class DBO {
         }
 
         return array_key_exists($name, self::$dbConfig) ?
-                self::$dbConfig[$name] : null;
+                self::$dbConfig[$name] : $default;
     }
 
     /**
-     * instantiate a new PDO object from the config file db parameters
+     * construct the DSN for this PDO
      *
-     * instead of this method, use 'prepare' or 'getPDO' if possible.
-     *
-     * @param name config file database name key (optional)
-     * @return PDO
+     * @param string $name config file database name key
+     * @return string DSN
      */
-    protected function newPDO($name = DBO::DATABASE_MAIN) {
-        $dsn = $this->dbConfig('driver') .
-                ':host=' . $this->dbConfig('host') .
-                ';dbname=' . $this->dbConfig($name) .
-                ';charset=utf8mb4';
+    protected function getDSN(string $name): string {
+        $parts = [ $this->dbConfig(DBO::DB_DRIVER) . ':dbname=' . $this->dbConfig($name) ];
 
+        foreach (DBO::DB_PARAMS as $param) {
+            $value = $this->dbConfig($param);
+            if ($value)
+                $parts[] = "$param=$value";
+        }
+
+        return implode(';', $parts) . ";charset=utf8mb4";
+    }
+
+    /**
+     * construct a DSN for read-only access to this PDO
+     *
+     * if no read-only configuration is present, the usual DSN is returned
+     *
+     * @param string $name config file database name key
+     * @return string DSN
+     */
+    protected function getDSN_RO(string $name): string {
+        $parts = [ $this->dbConfig(DBO::DB_DRIVER) . ':dbname=' . $this->dbConfig($name) ];
+
+        foreach (DBO::DB_PARAMS as $param) {
+            $value = $this->dbConfig("ro_$param", $this->dbConfig($param));
+            if ($value)
+                $parts[] = "$param=$value";
+        }
+
+        return implode(';', $parts) . ";charset=utf8mb4";
+    }
+
+    private function newPDOwithDSN(string $dsn) {
         $retry = self::CONNECT_RETRY;
         while(true) {
             try {
@@ -306,9 +336,22 @@ abstract class DBO {
     }
 
     /**
+     * instantiate a new PDO object from the config file db parameters
+     *
+     * instead of this method, use 'prepare' or 'getPDO' if possible.
+     *
+     * @param string $name config file database name key (optional)
+     * @return PDO
+     */
+    protected function newPDO(string $name = DBO::DATABASE_MAIN) {
+        $dsn = $this->getDSN($name);
+        return $this->newPDOwithDSN($dsn);
+    }
+
+    /**
      * get singleton PDO for the default database
      *
-     * note the PDO is shared across all DBO instances
+     * note that each PDO per DSN is shared across all DBO instances
      *
      * this method is not normally directly invoked; instead the
      * convenience method 'prepare' is used to prepare a statement
@@ -317,10 +360,8 @@ abstract class DBO {
      * @return PDO
      */
     protected function getPDO() {
-        if(!self::$pdo)
-            self::$pdo = $this->newPDO();
-
-        return self::$pdo;
+        $this->dsn ??= $this->getDSN(DBO::DATABASE_MAIN);
+        return self::$pdo[$this->dsn] ??= $this->newPDOwithDSN($this->dsn);
     }
 
     /**
@@ -333,7 +374,7 @@ abstract class DBO {
      * until automatic database reconnection gets implemented
      */
     public static function release() {
-        self::$pdo = null;
+        self::$pdo = [];
     }
 
     /**

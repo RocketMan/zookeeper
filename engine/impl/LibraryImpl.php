@@ -29,6 +29,8 @@ namespace ZK\Engine;
  * Library operations
  */
 class LibraryImpl extends DBO implements ILibrary {
+    use ReadOnlyTrait;
+
     const DEFAULT_FT_LIMIT = 35;
     const MAX_FT_LIMIT = 200;
     const ENHANCED_COLLATION = false;
