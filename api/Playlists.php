@@ -165,7 +165,6 @@ class Playlists implements RequestHandlerInterface {
             $a->set("type", "spin");
             $attrs = $entry->asArray();
             unset($attrs["tag"]);
-            unset($attrs["id"]);
             $a->merge($attrs);
 
             $tag = $entry->getTag();
@@ -193,6 +192,7 @@ class Playlists implements RequestHandlerInterface {
                 if ($created &&
                         count($datetime = explode(' ', $created)) == 2)
                     $attrs->set("created", $datetime[1]);
+                $attrs->remove("id");
             }
         }
 
@@ -275,7 +275,6 @@ class Playlists implements RequestHandlerInterface {
                         $spin["xa:relationships"] = new Relationship("album", $res);
                     }
                     unset($spin["tag"]);
-                    unset($spin["id"]);
                     $events[] = $spin;
                 }));
 
@@ -286,6 +285,7 @@ class Playlists implements RequestHandlerInterface {
                     if ($created &&
                             count($datetime = explode(' ', $created)) == 2)
                         $event["created"] = $datetime[1];
+                    unset($event["id"]);
                     return $event;
                 }, $events);
             }
