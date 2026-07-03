@@ -143,7 +143,7 @@ class Playlists implements RequestHandlerInterface {
             $a = $e->attributes();
             $a->set("type", "comment");
             $a->set("comment", $entry->getComment());
-            $a->set("created", $entry->getCreatedTime());
+            $a->set("created", $entry->getCreated());
             $relations->set($e);
         })->onLogEvent(function($entry) use($relations) {
             $e = new JsonResource("event", $entry->getId());
@@ -151,13 +151,13 @@ class Playlists implements RequestHandlerInterface {
             $a->set("type", "logEvent");
             $a->set("event", $entry->getLogEventType());
             $a->set("code", $entry->getLogEventCode());
-            $a->set("created", $entry->getCreatedTime());
+            $a->set("created", $entry->getCreated());
             $relations->set($e);
         })->onSetSeparator(function($entry) use($relations) {
             $e = new JsonResource("event", $entry->getId());
             $a = $e->attributes();
             $a->set("type", "break");
-            $a->set("created", $entry->getCreatedTime());
+            $a->set("created", $entry->getCreated());
             $relations->set($e);
         })->onSpin(function($entry) use($relations, $aflags) {
             $e = new JsonResource("event", $entry->getId());
@@ -167,7 +167,6 @@ class Playlists implements RequestHandlerInterface {
             unset($attrs["tag"]);
             unset($attrs["id"]);
             $a->merge($attrs);
-            $a->set("created", $entry->getCreatedTime());
 
             $tag = $entry->getTag();
             if($tag) {
@@ -184,6 +183,18 @@ class Playlists implements RequestHandlerInterface {
 
             $relations->set($e);
         }));
+
+        $wantsTimestamp = $_GET["ts"] ?? false;
+        if (!$wantsTimestamp) {
+            $events = $relations->all();
+            foreach($events as $event) {
+                $attrs = $event->attributes();
+                $created = $attrs->getOptional("created", null);
+                if ($created &&
+                        count($datetime = explode(' ', $created)) == 2)
+                    $attrs->set("created", $datetime[1]);
+            }
+        }
 
         return $relations;
     }
@@ -237,21 +248,20 @@ class Playlists implements RequestHandlerInterface {
                 (new PlaylistObserver())->onComment(function($entry) use(&$events) {
                     $events[] = ["type" => "comment",
                                  "comment" => $entry->getComment(),
-                                 "created" => $entry->getCreatedTime()];
+                                 "created" => $entry->getCreated()];
                 })->onLogEvent(function($entry) use(&$events) {
                     $events[] = ["type" => "logEvent",
                                  "event" => $entry->getLogEventType(),
                                  "code" => $entry->getLogEventCode(),
-                                 "created" => $entry->getCreatedTime()];
+                                 "created" => $entry->getCreated()];
                 })->onSetSeparator(function($entry) use(&$events) {
                     $events[] = ["type" => "break",
-                                 "created" => $entry->getCreatedTime()];
+                                 "created" => $entry->getCreated()];
                 })->onSpin(function($entry) use(&$events, $relations, $flags) {
                     $spin = $entry->asArray();
                     $spin["type"] = "spin";
                     if($spin["tag"])
                         $spin["artist"] = PlaylistEntry::swapNames($spin["artist"]);
-                    $spin["created"] = $entry->getCreatedTime();
                     if($spin["tag"] && $flags & self::LINKS_ALBUMS) {
                         $tag = $spin["tag"];
                         if($flags & self::LINKS_ALBUMS_DETAILS &&
@@ -268,6 +278,17 @@ class Playlists implements RequestHandlerInterface {
                     unset($spin["id"]);
                     $events[] = $spin;
                 }));
+
+            $wantsTimestamp = $_GET["ts"] ?? false;
+            if (!$wantsTimestamp) {
+                $events = array_map(function($event) {
+                    $created = $event["created"];
+                    if ($created &&
+                            count($datetime = explode(' ', $created)) == 2)
+                        $event["created"] = $datetime[1];
+                    return $event;
+                }, $events);
+            }
 
             if(sizeof($events))
                 $res->attributes()->set("events", $events);
