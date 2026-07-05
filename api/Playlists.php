@@ -24,13 +24,13 @@
 
 namespace ZK\API;
 
-use ZK\Controllers\PushServer;
 use ZK\Engine\Engine;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
+use ZK\Service\PushServer;
 
 use ZK\UI\PlaylistBuilder;
 

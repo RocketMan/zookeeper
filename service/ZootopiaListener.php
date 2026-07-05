@@ -22,9 +22,8 @@
  *
  */
 
-namespace ZK\PushNotification;
+namespace ZK\Service;
 
-use ZK\Controllers\IPushProxy;
 use ZK\Engine\IArtwork;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\Engine;
@@ -75,7 +74,7 @@ use GuzzleHttp\RequestOptions;
  * See INSTALLATION.md for details on installing and configuring push
  * notifications.
  */
-class ZootopiaListener implements IPushProxy {
+class ZootopiaListener implements IService {
     protected $subscriber;
     protected $wsEndpoint;
     protected $handler;
@@ -146,8 +145,8 @@ class ZootopiaListener implements IPushProxy {
         });
     }
 
-    public function connect() {
-        $this->wsEndpoint = $this->config[IPushProxy::WS_ENDPOINT];
+    public function start() {
+        $this->wsEndpoint = $this->config[IService::WS_ENDPOINT];
         $this->zk = new Client([
             'handler' => HandlerStack::create($this->handler),
             'base_uri' => $this->config["base_url"],

@@ -26,6 +26,7 @@
 	    "ZK\\API\\": "api/",
 	    "ZK\\Controllers\\": "controllers/",
 	    "ZK\\Engine\\": [ "engine/", "engine/impl/" ],
+	    "ZK\\Service\\": "service/",
 	    "ZK\\UI\\": "ui/"
 	},
 	"classmap": [

@@ -22,10 +22,7 @@
  *
  */
 
-namespace ZK\PushNotification;
-
-use ZK\Controllers\IPushProxy;
-use ZK\Controllers\NowAiringServer;
+namespace ZK\Service;
 
 use Ratchet\RFC6455\Messaging\Frame;
 
@@ -70,7 +67,7 @@ use Ratchet\RFC6455\Messaging\Frame;
  * function (see above).
  */
 #[\AllowDynamicProperties]
-class PushHttpProxy implements IPushProxy {
+class PushHttpProxy implements IService {
     protected $subscriber;
     protected $httpClient;
     protected $wsEndpoint;
@@ -97,9 +94,9 @@ class PushHttpProxy implements IPushProxy {
         });
     }
 
-    public function connect() {
-        $this->wsEndpoint = $this->config[IPushProxy::WS_ENDPOINT];
-        $this->httpEndpoints = $this->config[IPushProxy::HTTP_ENDPOINTS];
+    public function start() {
+        $this->wsEndpoint = $this->config[IService::WS_ENDPOINT];
+        $this->httpEndpoints = $this->config[IService::HTTP_ENDPOINTS];
         $this->reconnect();
     }
 

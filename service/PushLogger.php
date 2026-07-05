@@ -22,7 +22,7 @@
  *
  */
 
-namespace ZK\PushNotification;
+namespace ZK\Service;
 
 /**
  * PushLogger logs playlist start and end events via stdout
