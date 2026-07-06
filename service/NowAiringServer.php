@@ -47,10 +47,13 @@ class NowAiringServer implements IService, MessageComponentInterface {
 
     const QUERY_DELAY = 5;  // in seconds
 
+    const TTL_SECONDS = 5;
+
     const FORM_POST = [ 'Content-Type' => 'application/x-www-form-urlencoded' ];
 
     protected $clients;
     protected $timer;
+    protected $secret;
 
     protected $current;
     protected $nextSpin;
@@ -114,6 +117,13 @@ class NowAiringServer implements IService, MessageComponentInterface {
     public function __construct(protected LoopInterface $loop) {
         $this->clients = new \SplObjectStorage;
         $this->imageQ = new \SplQueue;
+
+        $config = Engine::param('discogs');
+        if ($config) {
+            $apiKey = $config['apikey'] ?? null;
+            $clientSecret = $config['client_secret'] ?? null;
+            $this->secret = $apiKey ?: $clientSecret;
+        }
 
         $urls = Engine::param('urls');
         $browser = new Browser($loop);
@@ -238,13 +248,46 @@ class NowAiringServer implements IService, MessageComponentInterface {
         }
     }
 
+    protected function signMessage($msg) {
+        if (!$this->secret) return "{}";
+
+        $uuid = sha1(uniqid(rand()));
+        $expires = time() + self::TTL_SECONDS;
+        $payload = $msg . '|' . $uuid . '|' . $expires;
+        $sig = hash_hmac('sha256', $payload, $this->secret);
+        return json_encode([
+            'uuid' => $uuid,
+            'expires' => $expires,
+            'signature' => $sig
+        ]);
+    }
+
+    public static function validateSig($msg, $sig, $secret) {
+        try {
+            $data = json_decode($sig, false);
+            if (!$data) return false;
+            $expires = $data->expires ?? 0;
+            $payload = $msg . '|' . ($data->uuid ?? '') . '|' . $expires;
+            $signature = hash_hmac('sha256', $payload, $secret);
+            return time() < $expires &&
+                    hash_equals($signature, $data->signature ?? '');
+        } catch(\Throwable $t) {
+            error_log("NowAiringServer::validateSig: " . $t->getMessage());
+        }
+        return false;
+    }
+
     protected function processImageQueue() {
         if(!$this->imageQ->isEmpty()) {
             $entry = $this->imageQ->dequeue();
             $msg = self::toJson(null, $entry);
+            // side-effects db insertion of missing album and artist artwork
             $this->server->post('?target=push&action=injectImageData',
                     self::FORM_POST,
-                    http_build_query(['msg' => $msg]))->then(function(ResponseInterface $response) {
+                    http_build_query([
+                        'msg' => $msg,
+                        'sig' => $this->signMessage($msg)
+                    ]))->then(function(ResponseInterface $response) {
                         $this->scheduleNext();
                     }, function(\Exception $e) {
                         error_log("NowAiringServer::processImageQueue: " . $e->getMessage());
@@ -333,7 +376,10 @@ class NowAiringServer implements IService, MessageComponentInterface {
     protected function asyncInjectImageData(string $msg, ?ConnectionInterface $client) {
         $this->server->post('?target=push&action=injectImageData',
                 self::FORM_POST,
-                http_build_query(['msg' => $msg]))->then(function(ResponseInterface $response) use($client) {
+                http_build_query([
+                    'msg' => $msg,
+                    'sig' => $this->signMessage($msg)
+                ]))->then(function(ResponseInterface $response) use($client) {
                     $msg = $response->getBody();
 
                     if ($client)

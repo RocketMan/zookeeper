@@ -45,9 +45,9 @@ class ArtworkControl implements IController {
     protected function setupDiscogs() {
         $config = Engine::param('discogs');
         if($config) {
-            $apiKey = $config['apikey'];
-            $clientId = $config['client_id'];
-            $clientSecret = $config['client_secret'];
+            $apiKey = $config['apikey'] ?? null;
+            $clientId = $config['client_id'] ?? null;
+            $clientSecret = $config['client_secret'] ?? null;
 
             if($apiKey || $clientId && $clientSecret) {
                 $this->discogs = new Client([

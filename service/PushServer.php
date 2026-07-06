@@ -103,6 +103,7 @@ class PushServer extends CommandTarget implements IController {
     ];
 
     protected $discogs;
+    protected $secret;
 
     public static function sendAsyncNotification($show = null, $spin = null) {
         if(!Engine::param('push_enabled', true))
@@ -168,11 +169,12 @@ class PushServer extends CommandTarget implements IController {
     protected function setupDiscogs() {
         $config = Engine::param('discogs');
         if($config) {
-            $apiKey = $config['apikey'];
-            $clientId = $config['client_id'];
-            $clientSecret = $config['client_secret'];
+            $apiKey = $config['apikey'] ?? null;
+            $clientId = $config['client_id'] ?? null;
+            $clientSecret = $config['client_secret'] ?? null;
 
             if($apiKey || $clientId && $clientSecret) {
+                $this->secret = $apiKey ?: $clientSecret;
                 $this->discogs = new Client([
                     'base_uri' => self::DISCOGS_SEARCH,
                     RequestOptions::HEADERS => [
@@ -348,8 +350,10 @@ class PushServer extends CommandTarget implements IController {
 
     public function injectImageData() {
         $msg = $_POST['msg'] ?? '{}';
+        $sig = $_POST['sig'] ?? '{}';
 
-        if($this->discogs) {
+        if($this->discogs &&
+                NowAiringServer::validateSig($msg, $sig, $this->secret)) {
             $entry = json_decode($msg, true);
             if($entry['id']) {
                 $imageApi = Engine::api(IArtwork::class);
