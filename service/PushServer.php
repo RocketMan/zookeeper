@@ -77,7 +77,7 @@ class PushServerInstance {
 
             $this->loop->run();
         } catch(\Exception $e) {
-            error_log("PushServer: " . $e->getMessage());
+            error_log("PushServerInstance::run: " . $e->getMessage());
         }
     }
 }
@@ -278,7 +278,7 @@ class PushServer extends CommandTarget implements IController {
             }
         } catch(\Exception $e) {
             $success = false;
-            error_log("queryDiscogs: ".$e->getMessage());
+            error_log("PushServer::queryDiscogs: ".$e->getMessage());
         }
 
         return $success ? $retval : false;
@@ -338,7 +338,7 @@ class PushServer extends CommandTarget implements IController {
                     }
                 }
             } catch(\Exception $e) {
-                error_log("queryDiscogsArtistByAlbum: ".$e->getMessage());
+                error_log("PushServer::queryDiscogsArtistByAlbum: ".$e->getMessage());
             }
         }
         return $success ? $retval : false;

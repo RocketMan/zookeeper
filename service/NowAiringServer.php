@@ -241,7 +241,7 @@ class NowAiringServer implements IService, MessageComponentInterface {
                 try {
                     $this->processImageQueue();
                 } catch(\Exception $e) {
-                    error_log("processImageQueue: " . $e->getMessage());
+                    error_log("NowAiringServer::processImageQueue: " . $e->getMessage());
                     // TBD delay and retry
                 }
             });
