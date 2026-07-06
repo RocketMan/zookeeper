@@ -24,7 +24,6 @@
 
 namespace ZK\Service;
 
-use ZK\Engine\IArtwork;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\Engine;
 use ZK\Engine\PlaylistEntry;
@@ -435,8 +434,19 @@ class ZootopiaListener implements IService {
                 }
 
                 if($album && empty($album->attributes->albumart)
-                        && ($event['image_url'] ?? ''))
-                    Engine::api(IArtwork::class)->insertAlbumArt($album->id, $event['image_url'], null);
+                        && ($event['image_url'] ?? '')) {
+                    $this->zk->patchAsync("api/v1/album/{$album->id}", [
+                        RequestOptions::JSON => [
+                            'data' => [
+                                'type' => 'album',
+                                'id' => $album->id,
+                                'attributes' => [
+                                    'albumart' => $event['image_url']
+                                ]
+                            ]
+                        ]
+                    ]);
+                }
 
                 return $album;
             }, function($e) {
