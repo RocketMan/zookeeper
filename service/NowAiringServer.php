@@ -67,11 +67,11 @@ class NowAiringServer implements IService, MessageComponentInterface {
             $spin = (object)$spin;
             if ($show) {
                 if (isset($show->description))
-                    $show->name = $show->description;
+                    $attrs->name = $show->description;
                 if (isset($show->showdate))
-                    $show->date = $show->showdate;
+                    $attrs->date = $show->showdate;
                 if (isset($show->showtime))
-                    $show->time = $show->showtime;
+                    $attrs->time = $show->showtime;
             }
         } else
             $attrs = $show ? $show->attributes : null;
