@@ -92,7 +92,8 @@ $config = [
     'urls' => [
         'home' => 'https://www.example.com/',
         'listen' => 'https://www.example.com/listen',
-        'contact' => '?action=contact'
+        'contact' => '?action=contact',
+        'base_url' => 'https://zookeeper.example.com/'
     ],
 
     'contact' => [

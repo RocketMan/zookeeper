@@ -26,10 +26,6 @@
 namespace ZK\Service;
 
 use ZK\Engine\Engine;
-use ZK\Engine\IArtwork;
-use ZK\Engine\ILibrary;
-use ZK\Engine\IPlaylist;
-use ZK\Engine\PlaylistEntry;
 
 use Psr\Http\Message\ResponseInterface;
 use Ratchet\ConnectionInterface;
@@ -47,7 +43,7 @@ class NowAiringServer implements IService, MessageComponentInterface {
 
     const QUERY_DELAY = 5;  // in seconds
 
-    const TTL_SECONDS = 5;
+    const TTL_SECONDS = 5;  // validity in seconds for injectImageData request
 
     const FORM_POST = [ 'Content-Type' => 'application/x-www-form-urlencoded' ];
 
