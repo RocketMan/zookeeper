@@ -64,7 +64,8 @@ $config = [
         'listen' => 'https://kzsu.stanford.edu/live',
         'report_missing' => 'https://spreadsheets.google.com/a/kzsu.stanford.edu/viewform?hl=en&formkey=dGRuMW1GNFVQcXoxbmU3YWZHWlVna0E6MQ&$missingSelect&entry_2=%USERNAME%&entry_1=%ALBUMTAG%',
         //'old_charts' => 'http://kzsu.stanford.edu/charts/',
-        'contact' => '?action=contact'
+        'contact' => '?action=contact',
+        'base_url' => 'https://zookeeper.stanford.edu/'
     ],
 
     'contact' => [
@@ -194,7 +195,7 @@ $config = [
      */
     'push_proxy' => [
         [
-             'proxy' => ZK\PushNotification\PushHttpProxy::class,
+             'proxy' => ZK\Service\PushHttpProxy::class,
              'ws_endpoint' => 'ws://127.0.0.1:32080/push/onair',
              'http_endpoints' => [
                  "filter" => function($msg) {
@@ -221,7 +222,7 @@ $config = [
              ]
         ],
         [
-             'proxy' => ZK\PushNotification\ZootopiaListener::class,
+             'proxy' => ZK\Service\ZootopiaListener::class,
              'ws_endpoint' => 'ws://kzsu.stanford.edu/socket.io/?EIO=4&transport=websocket',
              'http_endpoints' => [
                  'apikey' => '',

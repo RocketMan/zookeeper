@@ -24,7 +24,6 @@
 
 namespace ZK\UI;
 
-use ZK\Controllers\PushServer;
 use ZK\Engine\Engine;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
@@ -33,6 +32,7 @@ use ZK\Engine\IReview;
 use ZK\Engine\IUser;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
+use ZK\Service\PushServer;
 
 use ZK\UI\UICommon as UI;
 

@@ -92,7 +92,8 @@ $config = [
     'urls' => [
         'home' => 'https://www.example.com/',
         'listen' => 'https://www.example.com/listen',
-        'contact' => '?action=contact'
+        'contact' => '?action=contact',
+        'base_url' => 'https://zookeeper.example.com/'
     ],
 
     'contact' => [
@@ -229,7 +230,7 @@ $config = [
      */
 //    'push_proxy' => [
 //        [
-//             'proxy' => ZK\PushNotification\PushHttpProxy::class,
+//             'proxy' => ZK\Service\PushHttpProxy::class,
 //             'ws_endpoint' => 'ws://127.0.0.1:32080/push/onair',
 //             'http_endpoints' => [ /* URLs here */ ]
 //        ]
