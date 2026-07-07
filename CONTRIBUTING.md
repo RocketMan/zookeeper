@@ -82,15 +82,6 @@ The following is an overview of the source code directory structure:
             CSS assets.  These files are automatically whitespace
             compressed upon delivery.
 
-        custom/
-            Instance-specific customizations that you wish to keep
-            separate from the standard installation.  For example,
-            if you have custom controllers, you can put them here.
-
-            TIP: If you add classes to this directory after installation,
-            run `composer dump-autoload` to regenerate the classmap.
-            See INSTALLATION.md for more information about Composer.
-
         engine/
             Business operations, configuration, and session
             management.

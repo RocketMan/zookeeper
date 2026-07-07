@@ -28,10 +28,7 @@
 	    "ZK\\Engine\\": [ "engine/", "engine/impl/" ],
 	    "ZK\\Service\\": "service/",
 	    "ZK\\UI\\": "ui/"
-	},
-	"classmap": [
-	    "custom/"
-	]
+	}
     },
     "require": {
 	"php": ">=8.2",
