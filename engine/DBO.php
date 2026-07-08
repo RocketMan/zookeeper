@@ -251,6 +251,8 @@ abstract class DBO {
     const DB_DRIVER = 'driver';
     const DB_PARAMS = [ 'host', 'port', 'unix_socket' ];
 
+    const READONLY = '_ZK_ENGINE_DBO_READONLY'; // avoid collision with PDO options
+
     private const CONNECT_RETRY = 5; // number of times to try connecting
     private const CONNECT_BACKOFF = 4; // delay retry up to CONNECT_BACKOFF seconds
 
@@ -260,6 +262,7 @@ abstract class DBO {
 
     private $locks = [];
     private $dsn;
+    private $dsnRO;
 
     /**
      * convenience method to retrieve a database configuration parameter
@@ -365,6 +368,22 @@ abstract class DBO {
     }
 
     /**
+     * get read-only singleton PDO for the default database
+     *
+     * note that each PDO per DSN is shared across all DBO instances
+     *
+     * this method is not normally directly invoked; instead the
+     * convenience method 'prepare' is used to prepare a statement
+     * on the default database.
+     *
+     * @return PDO
+     */
+    protected function getPDO_RO() {
+        $this->dsnRO ??= $this->getDSN_RO(DBO::DATABASE_MAIN);
+        return self::$pdo[$this->dsnRO] ??= $this->newPDOwithDSN($this->dsnRO);
+    }
+
+    /**
      * release the default database singleton
      *
      * this method has the effect of closing the underlying
@@ -385,6 +404,11 @@ abstract class DBO {
      * @return PDOStatement
      */
     protected function prepare($stmt, $options = []) {
+        if (!empty($options[DBO::READONLY])) {
+            unset($options[DBO::READONLY]);
+            return $this->getPDO_RO()->prepare($stmt, $options);
+        }
+
         return $this->getPDO()->prepare($stmt, $options);
     }
 

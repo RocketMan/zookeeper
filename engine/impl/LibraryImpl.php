@@ -29,8 +29,6 @@ namespace ZK\Engine;
  * Library operations
  */
 class LibraryImpl extends DBO implements ILibrary {
-    use ReadOnlyTrait;
-
     const DEFAULT_FT_LIMIT = 35;
     const MAX_FT_LIMIT = 200;
     const ENHANCED_COLLATION = false;
@@ -186,12 +184,16 @@ class LibraryImpl extends DBO implements ILibrary {
         // remove semicolons to thwart injection attacks
         $search = str_replace(';', '_', $search);
 
+        $readOnly = [];  // default use main database
+
         if(substr($search, strlen($search)-1, 1) == "*") {
             $search = trim(substr($search, 0, strlen($search)-1))."%";
 
             // return empty for degenerate search
             if ($tableIndex != ILibrary::PASSWD_NAME &&
                     strlen($search) < 4) return $count >= 0 ? $retVal : 0;
+
+            $readOnly = [ DBO::READONLY => true ];
         }
 
         switch($tableIndex) {
@@ -372,7 +374,7 @@ class LibraryImpl extends DBO implements ILibrary {
             if($rlike)
                 $query = "SELECT * FROM ( $query ) x WHERE $key RLIKE ?";
 
-            $stmt = $this->prepare($query);
+            $stmt = $this->prepare($query, $readOnly);
             switch($bindType) {
             case 1:
                 $stmt->bindValue(1, $search);
@@ -430,7 +432,7 @@ class LibraryImpl extends DBO implements ILibrary {
             if($rlike)
                 $query .= " WHERE $key RLIKE ?";
 
-            $stmt = $this->prepare($query);
+            $stmt = $this->prepare($query, $readOnly);
             switch($bindType) {
             case 1:
             case 3:
@@ -987,7 +989,7 @@ class LibraryImpl extends DBO implements ILibrary {
                 $paramCount = 1;
             }
 
-            $stmt = $this->prepare($query);
+            $stmt = $this->prepare($query, [ DBO::READONLY => true ]);
             $stmt->bindValue(1, $i?$search:$key);
             if($paramCount == 2)
                 $stmt->bindValue(2, $search);
@@ -1019,7 +1021,7 @@ class LibraryImpl extends DBO implements ILibrary {
                         $rsize[$i] -= $size;
                     }
                     $query = self::$ftSearch[$i][4].$l;
-                    $stmt = $this->prepare($query);
+                    $stmt = $this->prepare($query, [ DBO::READONLY => true ]);
                     $stmt->bindValue(1, $i?$search:$key);
                     if(strpos($query, " UNION SELECT "))
                         $stmt->bindValue(2, $search);
