@@ -404,12 +404,12 @@ abstract class DBO {
      * @return PDOStatement
      */
     protected function prepare($stmt, $options = []) {
-        if (!empty($options[DBO::READONLY])) {
-            unset($options[DBO::READONLY]);
-            return $this->getPDO_RO()->prepare($stmt, $options);
-        }
+        $readonly = !empty($options[DBO::READONLY]);
+        unset($options[DBO::READONLY]);
 
-        return $this->getPDO()->prepare($stmt, $options);
+        return $readonly ?
+            $this->getPDO_RO()->prepare($stmt, $options) :
+            $this->getPDO()->prepare($stmt, $options);
     }
 
     /**
