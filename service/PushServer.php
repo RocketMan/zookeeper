@@ -44,6 +44,16 @@ class ProxyFactory {
     ) {}
 
     public function create(string $className, array $config): IService {
+        // This supports a transitional regime where PushNotification
+        // services have been refactored to the new Service namespace.
+        if (!class_exists($className)) {
+            $fallback = str_replace("\\PushNotification\\", "\\Service\\", $className);
+            // We assign only if the refactored class exists, so that on
+            // failure, Container::make will report the original class name.
+            if (class_exists($fallback))
+                $className = $fallback;
+        }
+
         return $this->container->make($className, [
             'config' => $config
         ]);
