@@ -33,7 +33,7 @@
  * all copies or substantial portions of the Software.
  */
 
-namespace ZK\Service;
+namespace ZK\PushNotification;
 
 use Ratchet\Client\Connector;
 use Ratchet\RFC6455\Handshake\ClientNegotiator;

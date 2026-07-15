@@ -22,8 +22,10 @@
  *
  */
 
-namespace ZK\Service;
+namespace ZK\PushNotification;
 
+use ZK\Controllers\IPushProxy;
+use ZK\Engine\IArtwork;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\Engine;
 use ZK\Engine\PlaylistEntry;
@@ -73,7 +75,7 @@ use GuzzleHttp\RequestOptions;
  * See INSTALLATION.md for details on installing and configuring push
  * notifications.
  */
-class ZootopiaListener implements IService {
+class ZootopiaListener implements IPushProxy {
     protected $subscriber;
     protected $wsEndpoint;
     protected $handler;
@@ -144,8 +146,8 @@ class ZootopiaListener implements IService {
         });
     }
 
-    public function start() {
-        $this->wsEndpoint = $this->config[IService::WS_ENDPOINT];
+    public function connect() {
+        $this->wsEndpoint = $this->config[IPushProxy::WS_ENDPOINT];
         $this->zk = new Client([
             'handler' => HandlerStack::create($this->handler),
             'base_uri' => $this->config["base_url"],
@@ -434,19 +436,8 @@ class ZootopiaListener implements IService {
                 }
 
                 if($album && empty($album->attributes->albumart)
-                        && ($event['image_url'] ?? '')) {
-                    $this->zk->patchAsync("api/v1/album/{$album->id}", [
-                        RequestOptions::JSON => [
-                            'data' => [
-                                'type' => 'album',
-                                'id' => $album->id,
-                                'attributes' => [
-                                    'albumart' => $event['image_url']
-                                ]
-                            ]
-                        ]
-                    ]);
-                }
+                        && ($event['image_url'] ?? ''))
+                    Engine::api(IArtwork::class)->insertAlbumArt($album->id, $event['image_url'], null);
 
                 return $album;
             }, function($e) {

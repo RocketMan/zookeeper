@@ -26,135 +26,12 @@ namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
 use ZK\Engine\IArtwork;
-use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
-use ZK\Service\PushServer;
-
-use GuzzleHttp\Client;
-use GuzzleHttp\RequestOptions;
 
 class ArtworkControl implements IController {
-    private const DISCOGS_BASE = "https://www.discogs.com";
-    private const DISCOGS_SEARCH = "https://api.discogs.com/database/search";
-
-    protected $discogs;
     protected $verbose = false;
-
-    protected function setupDiscogs() {
-        $config = Engine::param('discogs');
-        if($config) {
-            $apiKey = $config['apikey'] ?? null;
-            $clientId = $config['client_id'] ?? null;
-            $clientSecret = $config['client_secret'] ?? null;
-
-            if($apiKey || $clientId && $clientSecret) {
-                $this->discogs = new Client([
-                    'base_uri' => self::DISCOGS_SEARCH,
-                    RequestOptions::HEADERS => [
-                        'User-Agent' => Engine::UA,
-                        'Authorization' => $apiKey ?
-                            "Discogs token=$apiKey" :
-                            "Discogs key=$clientId, secret=$clientSecret"
-                    ]
-                ]);
-            }
-        }
-    }
-
-    public function reloadAlbum($tag, $master, $skip) {
-        $this->setupDiscogs();
-
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
-        if(!count($albums)) {
-            echo "reloadAlbum($tag): tag not found\n";
-            return;
-        }
-
-        $album = $albums[0];
-
-        try {
-            switch($album["medium"] ?? null) {
-            case 'S':
-                $format = "Vinyl, 7\"";
-                break;
-            case 'T':
-            case 'V':
-                $format = "Vinyl";
-                break;
-            case 'M':
-                $format = "Cassette";
-                break;
-            default:
-                $format = "CD";
-                break;
-            }
-
-            $params = [
-                "artist" => $album["iscoll"] ?
-                    "Various" : PlaylistEntry::swapNames($album["artist"]),
-                "release_title" => $album["album"],
-                "per_page" => 20
-            ];
-
-            if($master)
-                $params["type"] = "master";
-            else
-                $params["format"] = $format;
-
-            $response = $this->discogs->get('', [
-                RequestOptions::QUERY => $params
-            ]);
-
-            $page = $response->getBody()->getContents();
-            $json = json_decode($page);
-            if($json->results && ($result2 = $json->results[0])) {
-                foreach($json->results as $r) {
-                    if($skip-- > 0)
-                        continue;
-
-                    // master releases are definitive
-                    if($r->type == "master") {
-                        $result2 = $r;
-                        break;
-                    }
-
-                    // ignore promos and limited/special editions
-                    if(array_reduce($r->format,
-                            function($carry, $item) {
-                                return $carry ||
-                                    $item == "Promo" ||
-                                    strpos($item, "Edition") !== false;
-                            }))
-                        continue;
-
-                    // prefer CD or vinyl
-                    switch($r->format[0]) {
-                    case "CD":
-                    case "Vinyl":
-                        $result2 = $r;
-                        break;
-                    }
-                }
-
-                $imageUrl = $result2->cover_image &&
-                        !preg_match('|/spacer.gif$|', $result2->cover_image) ?
-                    $result2->cover_image : null;
-                $infoUrl = self::DISCOGS_BASE . $result2->uri;
-            }
-
-            if(!empty($imageUrl)) {
-                $imageApi = Engine::api(IArtwork::class);
-                $imageApi->deleteAlbumArt($tag);
-                $uuid = $imageApi->insertAlbumArt($tag, $imageUrl, $infoUrl);
-                echo "reloadAlbum($tag): ".($master?'master':$format)." loaded $uuid\n";
-            } else
-                echo "reloadAlbum($tag): no image found\n";
-        } catch(\Exception $e) {
-            echo $e->getMessage() . "\n";
-        }
-    }
 
     protected function refreshList($playlist) {
         $count = 0;
@@ -209,7 +86,8 @@ class ArtworkControl implements IController {
             break;
         case "reload":
             if($tag = $_REQUEST["tag"] ?? null) {
-                $this->reloadAlbum($tag, $_REQUEST["master"] ?? 1, $_REQUEST["skip"] ?? 0);
+                echo "Album queued for reload (please wait)\n";
+                PushServer::lazyReloadAlbum($tag, $_REQUEST["master"] ?? 1, $_REQUEST["skip"] ?? 0);
                 break;
             } else if($list = $_REQUEST["list"] ?? null) {
                 $this->refreshList($list);

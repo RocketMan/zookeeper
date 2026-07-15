@@ -22,7 +22,7 @@
  *
  */
 
-namespace ZK\Service;
+namespace ZK\PushNotification;
 
 use ZK\Engine\Engine;
 use ZK\Controllers\IPushProxy;
@@ -61,7 +61,7 @@ use SPOA\Server\Connection;
  * See INSTALLATION.md for details on installing and configuring push
  * notifications.
  */
-class SpoaTurnstile implements IService {
+class SpoaTurnstile implements IPushProxy {
     const DEFAULT_SPOA_SERVER = "127.0.0.1:32082";
 
     const DEFAULT_RESOLVER = "8.8.8.8";  // google DNS
@@ -202,7 +202,7 @@ class SpoaTurnstile implements IService {
         return self::result(hash_equals($signature, $token->signature ?? ''));
     }
 
-    public function start() {
+    public function connect() {
         $this->config = Engine::param('turnstile');
 
         $dns = $this->config['resolver'] ?? self::DEFAULT_RESOLVER;

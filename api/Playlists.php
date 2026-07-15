@@ -24,13 +24,13 @@
 
 namespace ZK\API;
 
+use ZK\Controllers\PushServer;
 use ZK\Engine\Engine;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
-use ZK\Service\PushServer;
 
 use ZK\UI\PlaylistBuilder;
 
@@ -143,7 +143,7 @@ class Playlists implements RequestHandlerInterface {
             $a = $e->attributes();
             $a->set("type", "comment");
             $a->set("comment", $entry->getComment());
-            $a->set("created", $entry->getCreated());
+            $a->set("created", $entry->getCreatedTime());
             $relations->set($e);
         })->onLogEvent(function($entry) use($relations) {
             $e = new JsonResource("event", $entry->getId());
@@ -151,13 +151,13 @@ class Playlists implements RequestHandlerInterface {
             $a->set("type", "logEvent");
             $a->set("event", $entry->getLogEventType());
             $a->set("code", $entry->getLogEventCode());
-            $a->set("created", $entry->getCreated());
+            $a->set("created", $entry->getCreatedTime());
             $relations->set($e);
         })->onSetSeparator(function($entry) use($relations) {
             $e = new JsonResource("event", $entry->getId());
             $a = $e->attributes();
             $a->set("type", "break");
-            $a->set("created", $entry->getCreated());
+            $a->set("created", $entry->getCreatedTime());
             $relations->set($e);
         })->onSpin(function($entry) use($relations, $aflags) {
             $e = new JsonResource("event", $entry->getId());
@@ -165,7 +165,9 @@ class Playlists implements RequestHandlerInterface {
             $a->set("type", "spin");
             $attrs = $entry->asArray();
             unset($attrs["tag"]);
+            unset($attrs["id"]);
             $a->merge($attrs);
+            $a->set("created", $entry->getCreatedTime());
 
             $tag = $entry->getTag();
             if($tag) {
@@ -182,19 +184,6 @@ class Playlists implements RequestHandlerInterface {
 
             $relations->set($e);
         }));
-
-        $wantsTimestamp = $_GET["ts"] ?? false;
-        if (!$wantsTimestamp) {
-            $events = $relations->all();
-            foreach($events as $event) {
-                $attrs = $event->attributes();
-                $created = $attrs->getOptional("created", null);
-                if ($created &&
-                        count($datetime = explode(' ', $created)) == 2)
-                    $attrs->set("created", $datetime[1]);
-                $attrs->remove("id");
-            }
-        }
 
         return $relations;
     }
@@ -248,20 +237,21 @@ class Playlists implements RequestHandlerInterface {
                 (new PlaylistObserver())->onComment(function($entry) use(&$events) {
                     $events[] = ["type" => "comment",
                                  "comment" => $entry->getComment(),
-                                 "created" => $entry->getCreated()];
+                                 "created" => $entry->getCreatedTime()];
                 })->onLogEvent(function($entry) use(&$events) {
                     $events[] = ["type" => "logEvent",
                                  "event" => $entry->getLogEventType(),
                                  "code" => $entry->getLogEventCode(),
-                                 "created" => $entry->getCreated()];
+                                 "created" => $entry->getCreatedTime()];
                 })->onSetSeparator(function($entry) use(&$events) {
                     $events[] = ["type" => "break",
-                                 "created" => $entry->getCreated()];
+                                 "created" => $entry->getCreatedTime()];
                 })->onSpin(function($entry) use(&$events, $relations, $flags) {
                     $spin = $entry->asArray();
                     $spin["type"] = "spin";
                     if($spin["tag"])
                         $spin["artist"] = PlaylistEntry::swapNames($spin["artist"]);
+                    $spin["created"] = $entry->getCreatedTime();
                     if($spin["tag"] && $flags & self::LINKS_ALBUMS) {
                         $tag = $spin["tag"];
                         if($flags & self::LINKS_ALBUMS_DETAILS &&
@@ -275,20 +265,9 @@ class Playlists implements RequestHandlerInterface {
                         $spin["xa:relationships"] = new Relationship("album", $res);
                     }
                     unset($spin["tag"]);
+                    unset($spin["id"]);
                     $events[] = $spin;
                 }));
-
-            $wantsTimestamp = $_GET["ts"] ?? false;
-            if (!$wantsTimestamp) {
-                $events = array_map(function($event) {
-                    $created = $event["created"];
-                    if ($created &&
-                            count($datetime = explode(' ', $created)) == 2)
-                        $event["created"] = $datetime[1];
-                    unset($event["id"]);
-                    return $event;
-                }, $events);
-            }
 
             if(sizeof($events))
                 $res->attributes()->set("events", $events);

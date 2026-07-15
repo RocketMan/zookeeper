@@ -989,7 +989,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         if($proxies) {
             foreach($proxies as $proxy) {
                 if($proxy['proxy'] ==
-                        \ZK\Service\ZootopiaListener::class &&
+                        \ZK\PushNotification\ZootopiaListener::class &&
                         !($proxy['recent'] ?? false))
                     return $proxy['airname'] ?? null;
             }
