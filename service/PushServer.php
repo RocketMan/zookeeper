@@ -38,7 +38,7 @@ use React\Cache\ArrayCache;
 use React\Cache\CacheInterface;
 use React\EventLoop\LoopInterface;
 
-class ProxyFactory {
+class ServiceFactory {
     public function __construct(
         private \DI\Container $container,
     ) {}
@@ -65,7 +65,7 @@ class PushServerInstance {
         protected LoopInterface $loop,
         protected NowAiringServer $nas,
         protected DatagramServer $ds,
-        protected ProxyFactory $proxyFactory,
+        protected ServiceFactory $serviceFactory,
     ) {}
 
     public function run() {
@@ -76,11 +76,11 @@ class PushServerInstance {
             // datagram server for application
             $this->ds->start();
 
-            // push proxy servers, if configured
-            $config = Engine::param('push_proxy');
+            // setup hosted services, if configured
+            $config = Engine::param('hosted_services', Engine::param('push_proxy'));
             if($config) {
-                foreach($config as $proxy) {
-                    $app = $this->proxyFactory->create($proxy['proxy'], $proxy);
+                foreach($config as $service) {
+                    $app = $this->serviceFactory->create($service['class'] ?? $service['proxy'], $service);
                     $app->start();
                 }
             }
