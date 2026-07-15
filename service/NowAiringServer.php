@@ -93,7 +93,7 @@ class NowAiringServer implements IService, MessageComponentInterface {
             $val['show_start'] = '';
             $val['show_end'] = '';
         }
-        $val['id'] = $spin ? (int)($spin->id ?? 0) : 0;
+        $val['id'] = $spin ? (int)$spin->id : 0;
         $val['track_title'] = $spin ? $spin->track : '';
         $val['track_artist'] = $spin ? $spin->artist : '';
         $val['track_album'] = $spin ? $spin->album : '';
@@ -169,9 +169,7 @@ class NowAiringServer implements IService, MessageComponentInterface {
                 } catch (\Throwable $t) {
                     error_log("NowAiringServer::loadOnNow: " . $t->getMessage());
                 }
-            }, function(\Exception $e) {
-                error_log("NowAiringServer::loadOnNow: " . $e->getMessage());
-            });
+            }, function() {});
     }
 
     protected function worker() {
@@ -212,6 +210,8 @@ class NowAiringServer implements IService, MessageComponentInterface {
     public function onOpen(ConnectionInterface $conn) {
         $this->clients->attach($conn);
         if($this->clients->count() == 1) {
+            $this->loadOnNow();
+
             // start worker
             $this->scheduleWorker();
         } else
@@ -329,8 +329,6 @@ class NowAiringServer implements IService, MessageComponentInterface {
                     } catch(\Throwable $e) {
                         error_log("NowAiringServer::loadImages: " . $e->getMessage());
                     }
-                }, function(\Exception $e) {
-                    error_log("NowAiringServer::loadImages: " . $e->getMessage());
                 });
         } else {
             $this->server->get("api/v1/playlist/$playlist?ts=1")
@@ -367,8 +365,6 @@ class NowAiringServer implements IService, MessageComponentInterface {
                     } catch(\Throwable $e) {
                         error_log("NowAiringServer::loadImages: " . $e->getMessage());
                     }
-                }, function(\Exception $e) {
-                    error_log("NowAiringServer::loadImages: " . $e->getMessage());
                 });
         }
     }
