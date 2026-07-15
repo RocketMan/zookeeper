@@ -48,6 +48,8 @@ class DatagramServer {
 
     public function start() {
         $dgfact = new \React\Datagram\Factory($this->loop);
+        // This piggybacks on NowAiringServer's port assignment, but
+        // listens on the UDP port instead of TCP.
         $dgfact->createServer(PushServer::WSSERVER_HOST . ":" .
                               PushServer::WSSERVER_PORT)->then(
             function(\React\Datagram\Socket $client) {
