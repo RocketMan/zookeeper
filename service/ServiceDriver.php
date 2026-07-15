@@ -77,7 +77,7 @@ class ServiceDriverInstance {
             $this->ds->start();
 
             // setup hosted services, if configured
-            $config = Engine::param('hosted_services', Engine::param('push_proxy'));
+            $config = Engine::param('hosted_services') ?? Engine::param('push_proxy');
             if($config) {
                 foreach($config as $service) {
                     $app = $this->serviceFactory->create($service['class'] ?? $service['proxy'], $service);
