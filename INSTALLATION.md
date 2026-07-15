@@ -340,20 +340,20 @@ want to support the optional push notification service, you will need to:
    If you want to send push notifications via HTTP, add the following
    stanza to the `config/config.php` file:
 
-       'push_proxy' => [
+       'hosted_services' => [
            [
-               'proxy' => ZK\PushNotification\PushHttpProxy::class,
+               'class' => ZK\Service\PushHttpProxy::class,
                'ws_endpoint' => 'ws://127.0.0.1:32080/push/onair',
                'http_endpoints' => [ 'https://example/target/endpoint' ]
            ],
-           ...repeat for additional proxies...
+           ...repeat for additional hosted services...
        ],
 
    where:
 
-   * 'proxy' specifies the proxy implementation.  To send raw json
-     data, use `ZK\PushNotification\PushHttpProxy::class`.  To send
-     a FORM POST, use `ZK\PushNotification\PushFormPostProxy::class`.
+   * 'class' specifies the proxy implementation.  To send raw json
+     data, use `ZK\Service\PushHttpProxy::class`.  To send
+     a FORM POST, use `ZK\Service\PushFormPostProxy::class`.
    * 'ws_endpoint' is the ws push event stream to subscribe to.
      Set this value to 'ws://127.0.0.1:32080/push/onair' to subscribe
      to the default internal Zookeeper Online ws endpoint.

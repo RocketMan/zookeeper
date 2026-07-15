@@ -40,9 +40,9 @@ use GuzzleHttp\RequestOptions;
  *
  * To use, in the `config.php` configuration file, include the stanza:
  *
- *    'push_proxy' => [
+ *    'hosted_services' => [
  *        [
- *            'proxy' => ZK\PushNotification\ZootopiaListener::class,
+ *            'class' => ZK\Service\ZootopiaListener::class,
  *            'ws_endpoint' => 'wss://example/kzsu/socket.io/endpoint',
  *            'apikey' => 'apikey',
  *            'base_url' => 'base url',
@@ -52,11 +52,11 @@ use GuzzleHttp\RequestOptions;
  *             'tz' => 'tzName',
  *            'caption' => 'caption',
  *        ],
- *        ...more proxies...
+ *        ...more hosted services...
  *    ],
  *
  * where:
- *    'proxy' specifies this class or a derivative;
+ *    'class' specifies this class or a derivative;
  *    'ws_endpoint' is the socket.io event stream to subscribe to;
  *    'apikey' is the Zookeeper API key;
  *    'base_url' base URL of the Zookeeper server (must be slash-terminated);

@@ -32,17 +32,17 @@ use Ratchet\RFC6455\Messaging\Frame;
  *
  * To use, in the `config.php` configuration file, include the stanza:
  *
- *    'push_proxy' => [
+ *    'hosted_services' => [
  *        [
- *            'proxy' => ZK\PushNotification\PushHttpProxy::class,
+ *            'class' => ZK\Service\PushHttpProxy::class,
  *            'ws_endpoint' => 'wss://example/source/endpoint',
  *            'http_endpoints' => [ 'https://example/target/endpoint' ]
  *        ],
- *        ...repeat for additional proxies...
+ *        ...repeat for additional hosted services...
  *    ],
  *
  * where:
- *    'proxy' specifies this class or a derivative;
+ *    'class' specifies this class or a derivative;
  *    'ws_endpoint' is the ws push event stream to subscribe to
  *        generally, this will be your Zookeeper Online ws endpoint
  *        (e.g., wss://example.org/push/onair);

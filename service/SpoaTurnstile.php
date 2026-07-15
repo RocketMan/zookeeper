@@ -44,17 +44,17 @@ use SPOA\Server\Connection;
  *
  * To use, in the `config.php` configuration file, include the stanza:
  *
- *    'push_proxy' => [
+ *    'hosted_services' => [
  *        [
- *            'proxy' => ZK\PushNotification\SpoaTurnstile::class,
+ *            'class' => ZK\Service\SpoaTurnstile::class,
  *            'server' => '127.0.0.1:32082', // optional; default shown
  *            'debug' => false,              // optional; default shown
  *        ],
- *        ...more proxies...
+ *        ...more hosted services...
  *    ],
  *
  * where:
- *    'proxy' -- this class or a derivative;
+ *    'class' -- this class or a derivative;
  *    'server' -- server address and port (optional)
  *    'debug' -- enable SPOA protocol debugging (optional)
  *

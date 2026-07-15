@@ -134,7 +134,7 @@ The following is an overview of the source code directory structure:
         service/
             Daemon-style components that run independently of web
             requests, driven by a dedicated ReactPHP event loop.  Services
-            include On Now push notifications and Turnstile pre-clearance.
+            include push notifications and Turnstile pre-clearance.
 
             All components in this directory are strictly non-blocking.
 

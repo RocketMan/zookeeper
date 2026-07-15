@@ -29,13 +29,13 @@ namespace ZK\Service;
  *
  * To use, in the `config.php` configuration file, include the stanza:
  *
- *    'push_proxy' => [
+ *    'hosted_services' => [
  *        [
- *            'proxy' => ZK\PushNotification\PushLogger::class,
+ *            'class' => ZK\Service\PushLogger::class,
  *            'ws_endpoint' => 'ws://127.0.0.1:32080/push/onair',
  *            'http_endpoints' => []
  *        ],
- *        ...repeat for additional proxies...
+ *        ...repeat for additional hosted services...
  *    ],
  *
  * See INSTALLATION.md for details on installing and configuring push
