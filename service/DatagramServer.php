@@ -28,7 +28,7 @@ use React\Cache\CacheInterface;
 use React\EventLoop\LoopInterface;
 use React\Promise;
 
-class DatagramServer implements IService {
+class DatagramServer {
     public function __construct(
         protected LoopInterface $loop,
         protected CacheInterface $resolverCache,
