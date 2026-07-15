@@ -272,7 +272,9 @@ $().ready(function(){
             populateCards(false, last);
     });
 
-    $(".search-data").trigger('focus');
+    var touchDevice = 'ontouchstart' in document.documentElement;
+    if (!touchDevice)
+        $(".search-data").trigger('focus');
 
     populateInitial();
     connect({ open: false });
