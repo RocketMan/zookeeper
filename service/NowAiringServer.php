@@ -47,6 +47,8 @@ class NowAiringServer implements MessageComponentInterface {
 
     const FORM_POST = [ 'Content-Type' => 'application/x-www-form-urlencoded' ];
 
+    const DEFAULT_BASE = "http://127.0.0.1/";
+
     protected $clients;
     protected $timer;
     protected $secret;
@@ -121,10 +123,10 @@ class NowAiringServer implements MessageComponentInterface {
             $this->secret = $apiKey ?: $clientSecret;
         }
 
-        $urls = Engine::param('urls');
+        $baseUrl = Engine::param('base_url_internal', self::DEFAULT_BASE);
         $browser = new Browser($loop);
         $this->server = $browser->
-                withBase($urls['base_url'])->
+                withBase($baseUrl)->
                 withHeader('User-Agent', Engine::UA);
     }
 

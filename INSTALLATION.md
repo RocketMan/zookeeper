@@ -314,7 +314,14 @@ want to support the optional push notification service, you will need to:
    are on another OS, update your configuration to enable both modules,
    then restart Apache to pick up the change.
 
-2. Update your system to run the push notification server
+2. Update zookeeper configuration
+
+   In config.php, set the value of 'push_enabled' to true.  If your
+   webserver not available at the endpoint http://localhost/, then set
+   the appropriate value for its base by adding a key 'base_url_internal'
+   with the URL for your server (must be slash-terminated).
+
+3. Update your system to run the push notification server
 
    As a first step, ensure you can run the notification server manually
    from a shell:
@@ -335,7 +342,7 @@ want to support the optional push notification service, you will need to:
    Finally, run the command `sudo systemctl enable zkpush` to start
    the notification server automatically at boot time.
 
-3. (Optional) Configure the HTTP push notification proxy
+4. (Optional) Configure the HTTP push notification proxy
 
    If you want to send push notifications via HTTP, add the following
    stanza to the `config/config.php` file:
