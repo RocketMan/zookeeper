@@ -24,9 +24,23 @@
 
 namespace ZK\Service;
 
+/**
+ * Contract for a hosted service
+ *
+ * The constructor is dependency injected, including an array config
+ * parameter with configuration metadata.
+ *
+ * As the service runs on a ReactPHP event loop, it must never perform
+ * any operation which could block.
+ */
 interface IService {
     const WS_ENDPOINT = "ws_endpoint";
     const HTTP_ENDPOINTS = "http_endpoints";
 
+    /**
+     * Start the service
+     *
+     * This method is invoked prior to starting of the event loop
+     */
     function start();
 }
