@@ -95,6 +95,7 @@ class ServiceDriverInstance {
 class ServiceDriver extends CommandTarget implements IController {
     private const DISCOGS_BASE = "https://www.discogs.com";
     private const DISCOGS_SEARCH = "https://api.discogs.com/database/search";
+    private const DISCOGS_TIMEOUT = 10.0; // in seconds
 
     private static $actions = [
         [ "", "emitError" ],
@@ -134,6 +135,7 @@ class ServiceDriver extends CommandTarget implements IController {
                 $this->secret = $apiKey ?: $clientSecret;
                 $this->discogs = new Client([
                     'base_uri' => self::DISCOGS_SEARCH,
+                    'timeout' => self::DISCOGS_TIMEOUT,
                     RequestOptions::HEADERS => [
                         'User-Agent' => Engine::UA,
                         'Authorization' => $apiKey ?
