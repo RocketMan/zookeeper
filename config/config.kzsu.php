@@ -192,9 +192,9 @@ $config = [
      *
      * see INSTALLATION.md for details
      */
-    'hosted_services' => [
+    'push_proxy' => [
         [
-             'class' => ZK\Service\PushHttpProxy::class,
+             'proxy' => ZK\PushNotification\PushHttpProxy::class,
              'ws_endpoint' => 'ws://127.0.0.1:32080/push/onair',
              'http_endpoints' => [
                  "filter" => function($msg) {
@@ -221,7 +221,7 @@ $config = [
              ]
         ],
         [
-             'class' => ZK\Service\ZootopiaListener::class,
+             'proxy' => ZK\PushNotification\ZootopiaListener::class,
              'ws_endpoint' => 'ws://kzsu.stanford.edu/socket.io/?EIO=4&transport=websocket',
              'http_endpoints' => [
                  'apikey' => '',
