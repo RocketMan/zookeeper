@@ -223,7 +223,7 @@ $config = [
     'push_enabled' => true,
 
     /**
-     * push notification proxy
+     * hosted services
      *
      * see INSTALLATION.md for details
      */
