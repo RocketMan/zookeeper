@@ -95,7 +95,7 @@ class ServiceDriverInstance {
 class ServiceDriver extends CommandTarget implements IController {
     private const DISCOGS_BASE = "https://www.discogs.com";
     private const DISCOGS_SEARCH = "https://api.discogs.com/database/search";
-    private const DISCOGS_TIMEOUT = 10.0; // in seconds
+    private const DISCOGS_TIMEOUT = 5.0; // in seconds
 
     private static $actions = [
         [ "", "emitError" ],
