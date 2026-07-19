@@ -48,6 +48,7 @@ class NowAiringServer implements MessageComponentInterface {
     const FORM_POST = [ 'Content-Type' => 'application/x-www-form-urlencoded' ];
 
     const DEFAULT_BASE = "http://127.0.0.1/";
+    const SERVICE_TIMEOUT = 5.0; // service timeout (in seconds)
 
     protected $clients;
     protected $timer;
@@ -127,6 +128,7 @@ class NowAiringServer implements MessageComponentInterface {
         $browser = new Browser($loop);
         $this->server = $browser->
                 withBase($baseUrl)->
+                withTimeout(self::SERVICE_TIMEOUT)->
                 withHeader('User-Agent', Engine::UA);
     }
 
@@ -249,7 +251,7 @@ class NowAiringServer implements MessageComponentInterface {
     protected function signMessage($msg) {
         if (!$this->secret) return "{}";
 
-        $uuid = sha1(uniqid(rand()));
+        $uuid = bin2hex(random_bytes(20));
         $expires = time() + self::TTL_SECONDS;
         $payload = $msg . '|' . $uuid . '|' . $expires;
         $sig = hash_hmac('sha256', $payload, $this->secret);
