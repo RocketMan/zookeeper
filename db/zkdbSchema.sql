@@ -2,7 +2,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -234,16 +234,16 @@ CREATE TABLE IF NOT EXISTS `currents` (
 CREATE TABLE IF NOT EXISTS `lists` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `dj` varchar(8) NOT NULL,
-  `showdate` date NOT NULL DEFAULT '0000-00-00',
+  `showdate` date NOT NULL,
   `showtime` varchar(20) DEFAULT NULL,
   `description` varchar(80) DEFAULT NULL,
   `airname` int(11) DEFAULT NULL,
   `origin` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `dj` (`dj`),
-  KEY `showdate` (`showdate`),
   KEY `airname` (`airname`),
-  KEY `sa` (`showdate`, `airname`)
+  KEY `sa` (`showdate`, `airname`),
+  KEY `idx_playback_sort` (`showdate`, `showtime`, `id`, `airname`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- --------------------------------------------------------
