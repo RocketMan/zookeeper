@@ -49,6 +49,7 @@ class NowAiringServer implements MessageComponentInterface {
 
     const DEFAULT_BASE = "http://127.0.0.1/";
     const SERVICE_TIMEOUT = 5.0; // service timeout (in seconds)
+    const UA = "NowAiringServer/" . Engine::VERSION;
 
     protected $clients;
     protected $timer;
@@ -129,7 +130,7 @@ class NowAiringServer implements MessageComponentInterface {
         $this->server = $browser->
                 withBase($baseUrl)->
                 withTimeout(self::SERVICE_TIMEOUT)->
-                withHeader('User-Agent', Engine::UA);
+                withHeader('User-Agent', self::UA);
     }
 
     /*
