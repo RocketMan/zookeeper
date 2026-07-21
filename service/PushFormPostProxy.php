@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -22,11 +22,17 @@
  *
  */
 
-namespace ZK\Controllers;
+namespace ZK\Service;
 
-interface IPushProxy {
-    const WS_ENDPOINT = "ws_endpoint";
-    const HTTP_ENDPOINTS = "http_endpoints";
-
-    function connect();
+class PushFormPostProxy extends PushHttpProxy {
+    public function message(\Ratchet\RFC6455\Messaging\Message $msg) {
+        $val = json_decode($msg, true);
+        $qs = http_build_query($val);
+        foreach($this->httpEndpoints as $key => $endpoint)
+            if(!is_string($key))
+                $this->httpClient->post($endpoint,
+                    ['Content-Type' => 'application/x-www-form-urlencoded'], $qs)->then(null, function($e) {
+                        echo "PushFormPostProxy: " . $e->getMessage() . "\n";
+                    });
+    }
 }

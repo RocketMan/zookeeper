@@ -985,13 +985,13 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
     
     private function getZootopiaAirname() {
-        $proxies = Engine::param('push_proxy');
-        if($proxies) {
-            foreach($proxies as $proxy) {
-                if($proxy['proxy'] ==
-                        \ZK\PushNotification\ZootopiaListener::class &&
-                        !($proxy['recent'] ?? false))
-                    return $proxy['airname'] ?? null;
+        $config = Engine::param('hosted_services') ?? Engine::param('push_proxy');
+        if($config) {
+            foreach($config as $service) {
+                if(($service['class'] ?? $service['proxy']) ==
+                        \ZK\Service\ZootopiaListener::class &&
+                        !($service['recent'] ?? false))
+                    return $service['airname'] ?? null;
             }
         }
     }

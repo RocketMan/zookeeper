@@ -26,15 +26,12 @@
 	    "ZK\\API\\": "api/",
 	    "ZK\\Controllers\\": "controllers/",
 	    "ZK\\Engine\\": [ "engine/", "engine/impl/" ],
+	    "ZK\\Service\\": "service/",
 	    "ZK\\UI\\": "ui/"
-	},
-	"classmap": [
-	    "custom/"
-	]
+	}
     },
     "require": {
 	"php": ">=8.2",
-	"ext-curl": "*",
 	"ext-pdo": "*",
 	"ext-pdo_mysql": "*",
 	"axy/sourcemap": "^1.0",

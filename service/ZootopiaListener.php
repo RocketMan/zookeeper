@@ -22,29 +22,25 @@
  *
  */
 
-namespace ZK\PushNotification;
+namespace ZK\Service;
 
-use ZK\Controllers\IPushProxy;
-use ZK\Engine\IArtwork;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\Engine;
 use ZK\Engine\PlaylistEntry;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Handler\CurlMultiHandler;
-use GuzzleHttp\Promise;
-use GuzzleHttp\Promise\RejectedPromise;
-use GuzzleHttp\RequestOptions;
+use React\Http\Browser;
+use React\Promise;
+
+class ControlFlowRejection extends \Exception {}
 
 /**
  * ZootopiaListener creates playlists from a Zootopia event stream
  *
  * To use, in the `config.php` configuration file, include the stanza:
  *
- *    'push_proxy' => [
+ *    'hosted_services' => [
  *        [
- *            'proxy' => ZK\PushNotification\ZootopiaListener::class,
+ *            'class' => ZK\Service\ZootopiaListener::class,
  *            'ws_endpoint' => 'wss://example/kzsu/socket.io/endpoint',
  *            'apikey' => 'apikey',
  *            'base_url' => 'base url',
@@ -54,11 +50,11 @@ use GuzzleHttp\RequestOptions;
  *             'tz' => 'tzName',
  *            'caption' => 'caption',
  *        ],
- *        ...more proxies...
+ *        ...more hosted services...
  *    ],
  *
  * where:
- *    'proxy' specifies this class or a derivative;
+ *    'class' specifies this class or a derivative;
  *    'ws_endpoint' is the socket.io event stream to subscribe to;
  *    'apikey' is the Zookeeper API key;
  *    'base_url' base URL of the Zookeeper server (must be slash-terminated);
@@ -75,10 +71,9 @@ use GuzzleHttp\RequestOptions;
  * See INSTALLATION.md for details on installing and configuring push
  * notifications.
  */
-class ZootopiaListener implements IPushProxy {
+class ZootopiaListener implements IService {
     protected $subscriber;
     protected $wsEndpoint;
-    protected $handler;
     protected $zk;
     protected $lastPing;
     protected $onAir;
@@ -87,6 +82,11 @@ class ZootopiaListener implements IPushProxy {
     private const TIDY_START = 5; // number of minutes to round show start/end
 
     private const SYNTHETIC_LENGTH = 60; // show length in minutes when end time is unknown or invalid
+
+    private const JSON_POST = [ 'Content-Type' => 'application/json' ];
+
+    private const SERVICE_TIMEOUT = 5.0; // service timeout (in seconds)
+    private const UA = "ZootopiaListener/" . Engine::VERSION;
 
     /**
      * test zootopia artist name against zookeeper artist
@@ -105,6 +105,10 @@ class ZootopiaListener implements IPushProxy {
             strpos($trackArtist, '&') !== false &&
             ($i = stripos($swap, ' and ')) !== false &&
             !strcasecmp(substr_replace($swap, '&', $i + 1, 3), $trackArtist);
+    }
+
+    protected static function reject(string $message): Promise\PromiseInterface {
+        return Promise\reject(new ControlFlowRejection($message));
     }
 
     /**
@@ -126,7 +130,6 @@ class ZootopiaListener implements IPushProxy {
         protected array $config,
     ) {
         $this->subscriber = new Subscriber($loop);
-        $this->handler = new CurlMultiHandler();
     }
 
     protected function log($msg) {
@@ -146,29 +149,16 @@ class ZootopiaListener implements IPushProxy {
         });
     }
 
-    public function connect() {
-        $this->wsEndpoint = $this->config[IPushProxy::WS_ENDPOINT];
-        $this->zk = new Client([
-            'handler' => HandlerStack::create($this->handler),
-            'base_uri' => $this->config["base_url"],
-            RequestOptions::HEADERS => [
-                'Accept' => 'application/json',
-                'X-APIKEY' => $this->config["apikey"]
-            ]
-        ]);
+    public function start() {
+        $this->wsEndpoint = $this->config[IService::WS_ENDPOINT];
+        $browser = new Browser($this->loop);
+        $this->zk = $browser->
+            withBase($this->config["base_url"])->
+            withTimeout(self::SERVICE_TIMEOUT)->
+            withHeader('User-Agent', self::UA)->
+            withHeader('Accept', 'application/json')->
+            withHeader('X-APIKEY', $this->config["apikey"]);
         $this->reconnect();
-    }
-
-    /*
-     * run pending Guzzle promises on the React event loop
-     */
-    protected function unpackPromisesAsync() {
-        // we must use Closure, as handler->handles is private
-        $this->loop->addPeriodicTimer(0, \Closure::bind(function($timer) {
-            $this->tick();
-            if(empty($this->handles) && Promise\Utils::queue()->isEmpty())
-                \React\EventLoop\Loop::cancelTimer($timer);
-        }, $this->handler, $this->handler));
     }
 
     /**
@@ -176,9 +166,9 @@ class ZootopiaListener implements IPushProxy {
      *
      * @param $date string date in yyyy-MM-dd format
      * @param $time string time range in hhmm-hhmm format
-     * @return \GuzzleHttp\Promise\Promise
+     * @return \React\Promise\PromiseInterface;
      */
-    protected function createShow(string $date, string $time): Promise\Promise {
+    protected function createShow(string $date, string $time): Promise\PromiseInterface {
         // create new show
         $title = $this->config["title"];
         $airname = $this->config["airname"];
@@ -190,8 +180,9 @@ class ZootopiaListener implements IPushProxy {
         }
         $show = "$title with $airname $date $time";
 
-        return $this->zk->postAsync('api/v1/playlist', [
-            RequestOptions::JSON => [
+        return $this->zk->post("api/v1/playlist",
+            self::JSON_POST,
+            json_encode([
                 'data' => [
                     'type' => 'show',
                     'attributes' => [
@@ -201,16 +192,17 @@ class ZootopiaListener implements IPushProxy {
                         'airname' => $airname,
                     ]
                 ]
-            ]
-        ])->then(function($response) use($time, $show) {
+            ])
+        )->then(function($response) use($time, $show) {
             $this->log("created $show");
             $this->lastOn = $response->getHeader('Location')[0];
             $this->onAir = true;
 
             // add caption
             if(isset($this->config["caption"])) {
-                return $this->zk->postAsync($this->lastOn . '/events', [
-                    RequestOptions::JSON => [
+                return $this->zk->post("{$this->lastOn}/events",
+                    self::JSON_POST,
+                    json_encode([
                         'data' => [
                             'type' => 'event',
                             'attributes' => [
@@ -219,8 +211,8 @@ class ZootopiaListener implements IPushProxy {
                                 'created' => explode('-', $time)[0],
                             ]
                         ]
-                    ]
-                ])->then(null, function($e) use($show) {
+                    ])
+                )->then(null, function($e) use($show) {
                     $this->log("could not insert caption for $show");
                     // continue with remaining fulfilled callbacks
                 });
@@ -239,12 +231,12 @@ class ZootopiaListener implements IPushProxy {
         $trackName = null;
 
         // get 'on now'
-        $this->zk->getAsync('api/v1/playlist', [
-            RequestOptions::QUERY => [
+        $this->zk->get("api/v1/playlist?" .
+            http_build_query([
                 "filter[date]" => "onnow",
                 "fields[show]" => "-events"
-            ]
-        ])->then(function($response) use($event) {
+            ])
+        )->then(function($response) use($event) {
             $page = $response->getBody()->getContents();
             $json = json_decode($page);
             $count = sizeof($json->data);
@@ -254,7 +246,7 @@ class ZootopiaListener implements IPushProxy {
             case 0:
                 if(!$event["zootopia"]) {
                     $this->onAir = false;
-                    return new RejectedPromise("Zootopia signed off");
+                    return self::reject("Zootopia signed off");
                 }
 
                 // No show is currently on-air; create a new show
@@ -282,16 +274,16 @@ class ZootopiaListener implements IPushProxy {
                     if($min)
                         $end->modify("-$min minutes");
                 } else if($showLen < IPlaylist::MIN_SHOW_LEN * 60)
-                    return new RejectedPromise("show too short");
+                    return self::reject("show too short");
 
                 $time .= "-" . $end->format("Hi");
 
                 if($this->lastOn) {
-                    return $this->zk->getAsync($this->lastOn, [
-                        RequestOptions::QUERY => [
+                    return $this->zk->get("{$this->lastOn}?" .
+                        http_build_query([
                             "fields[show]" => "name,date,time"
-                        ]
-                    ])->then(function($response) use($time, $end) {
+                        ])
+                    )->then(function($response) use($time, $end) {
                         $page = $response->getBody()->getContents();
                         $json = json_decode($page);
                         $attrs = $json->data->attributes;
@@ -305,8 +297,9 @@ class ZootopiaListener implements IPushProxy {
                             // extend existing show
                             $time = $lastOn[0] . '-' . $end->format("Hi");
 
-                            return $this->zk->patchAsync($this->lastOn, [
-                                RequestOptions::JSON => [
+                            return $this->zk->patch($this->lastOn,
+                                self::JSON_POST,
+                                json_encode([
                                     'data' => [
                                         'type' => 'show',
                                         'id' => $json->data->id,
@@ -314,14 +307,14 @@ class ZootopiaListener implements IPushProxy {
                                             'time' => $time
                                         ]
                                     ]
-                                ]
-                            ])->then(function() use($attrs, $time) {
+                                ])
+                            )->then(function() use($attrs, $time) {
                                 $this->log("extended {$attrs->name} {$attrs->date} $time");
                                 $this->onAir = true;
                             });
                         } else {
                             // previous show cannot be extended
-                            return new RejectedPromise("extension failed");
+                            return self::reject("extension failed");
                         }
                     })->then(null, function($e) use($date, $time) {
                         // could not extend; create in the normal way
@@ -336,7 +329,7 @@ class ZootopiaListener implements IPushProxy {
                 if(!$this->testTitle($json->data[0]->attributes->name)) {
                     $this->lastOn = null;
                     $this->onAir = false;
-                    return new RejectedPromise("DJ On Air");
+                    return self::reject("DJ On Air");
                 }
 
                 if($event["zootopia"]) {
@@ -362,7 +355,7 @@ class ZootopiaListener implements IPushProxy {
                     // Multiple shows are on, but none of them ours.
                     $this->lastOn = null;
                     $this->onAir = false;
-                    return new RejectedPromise("DJ On Air");
+                    return self::reject("DJ On Air");
                 }
 
                 // End our show now
@@ -378,16 +371,17 @@ class ZootopiaListener implements IPushProxy {
                 $delete = $showLen < IPlaylist::MIN_SHOW_LEN * 60;
                 $id = $zootopia->id;
                 if($delete) {
-                    return $this->zk->deleteAsync('api/v1/playlist/' . $id)->then(function() {
+                    return $this->zk->delete("api/v1/playlist/$id")->then(function() {
                         $this->log("another show detected, deleting our show");
                         $this->lastOn = null;
                         $this->onAir = false;
-                        return new RejectedPromise("DJ On Air");
+                        return self::reject("DJ On Air");
                     });
                 } else {
                     $time[1] = $now->format("Hi");
-                    return $this->zk->patchAsync('api/v1/playlist/' . $id, [
-                        RequestOptions::JSON => [
+                    return $this->zk->patch("api/v1/playlist/$id",
+                        self::JSON_POST,
+                        json_encode([
                             'data' => [
                                 'type' => 'show',
                                 'id' => $id,
@@ -395,13 +389,13 @@ class ZootopiaListener implements IPushProxy {
                                     'time' => implode('-', $time)
                                 ]
                             ]
-                        ]
-                    ])->then(function() use($count) {
+                        ])
+                    )->then(function() use($count) {
                         $this->log("another show detected, ending our show");
                         if($count > 1)
                             $this->lastOn = null;
                         $this->onAir = false;
-                        return new RejectedPromise("DJ On Air");
+                        return self::reject("DJ On Air");
                     });
                 }
                 break;
@@ -410,12 +404,12 @@ class ZootopiaListener implements IPushProxy {
             // lookup album by track name
             $trackName = trim(preg_match("/^(.+)( \(\d+\))$/", $event["track_title"], $matches) ? $matches[1] : $event["track_title"]);
 
-            return $this->zk->getAsync('api/v1/album', [
-                RequestOptions::QUERY => [
+            return $this->zk->get("api/v1/album?" .
+                http_build_query([
                     "filter[track]" => $trackName,
                     "page[size]" => 200
-                ]
-            ])->then(function($response) use($event) {
+                ])
+            )->then(function($response) use($event) {
                 // filter by artist
                 $page = $response->getBody()->getContents();
                 $json = json_decode($page);
@@ -436,8 +430,27 @@ class ZootopiaListener implements IPushProxy {
                 }
 
                 if($album && empty($album->attributes->albumart)
-                        && ($event['image_url'] ?? ''))
-                    Engine::api(IArtwork::class)->insertAlbumArt($album->id, $event['image_url'], null);
+                        && ($event['image_url'] ?? '')) {
+                    return $this->zk->patch("api/v1/album/{$album->id}",
+                        self::JSON_POST,
+                        json_encode([
+                            'data' => [
+                                'type' => 'album',
+                                'id' => $album->id,
+                                'attributes' => [
+                                    'albumart' => $event['image_url']
+                                ]
+                            ]
+                        ])
+                    )->then(function() use($album) {
+                        return $album;
+                    }, function($e) use($album) {
+                        $this->log("patch album failed: " . $e->getMessage());
+
+                        // continue with the remaining fulfilled callbacks
+                        return $album;
+                    });
+                }
 
                 return $album;
             }, function($e) {
@@ -454,8 +467,9 @@ class ZootopiaListener implements IPushProxy {
 
             // add track
             if($album) {
-                return $this->zk->postAsync($this->lastOn . '/events', [
-                    RequestOptions::JSON => [
+                return $this->zk->post("{$this->lastOn}/events",
+                    self::JSON_POST,
+                    json_encode([
                         'data' => [
                             'type' => 'event',
                             'attributes' => [
@@ -476,11 +490,12 @@ class ZootopiaListener implements IPushProxy {
                                 ]
                             ]
                         ]
-                    ]
-                ]);
+                    ])
+                );
             } else {
-                return $this->zk->postAsync($this->lastOn . '/events', [
-                    RequestOptions::JSON => [
+                return $this->zk->post("{$this->lastOn}/events",
+                    self::JSON_POST,
+                    json_encode([
                         'data' => [
                             'type' => 'event',
                             'attributes' => [
@@ -491,15 +506,14 @@ class ZootopiaListener implements IPushProxy {
                                 'label' => ""
                             ]
                         ]
-                    ]
-                ]);
+                    ])
+                );
             }
-        })->then(null, function($e) {
-            if($e instanceof \Throwable)
-                $this->log($e->getMessage());
+        })->catch(function(ControlFlowRejection $e) {
+            // control flow rejections are expected; do not log
+        })->catch(function(\Throwable $e) {
+            $this->log($e->getMessage());
         });
-
-        $this->unpackPromisesAsync();
     }
 
     public function proxy(\Ratchet\Client\WebSocket $conn) {
