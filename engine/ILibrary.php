@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -106,7 +106,7 @@ interface ILibrary {
     function search($tableIndex, $pos, $count, $search, $sortBy = 0);
     function searchPos($tableIndex, &$pos, $count, $search, $sortBy = 0);
     function linkReviews(&$albums, $loggedIn = false, $includeBody = false);
-    function markAlbumsReviewed(&$albums, $loggedIn = 0);
+    function markAlbumsReviewed(&$albums, $loggedIn = 0, $includeReview = false);
     function markAlbumsPlayable(&$albums);
     function listAlbums($op, $key, $limit);
     function listLabels($op, $key, $limit);
