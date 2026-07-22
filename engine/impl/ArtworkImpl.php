@@ -32,6 +32,8 @@ use GuzzleHttp\Client;
 class ArtworkImpl extends DBO implements IArtwork {
     const CACHE_DIR = 'img/.cache/';  // must be slash-terminated
 
+    const FETCH_IMAGE_TIMEOUT = 5.0; // in seconds
+
     protected function fetchImage($url) {
         // realpath() won't work here if cacheDir doesn't already exist
         $cacheDir = dirname(__DIR__, 2);
@@ -51,7 +53,8 @@ class ArtworkImpl extends DBO implements IArtwork {
                 file_put_contents($path, $data);
             } else {
                 $client = new Client([
-                    'verify' => false
+                    'verify' => false,
+                    'timeout' => self::FETCH_IMAGE_TIMEOUT
                 ]);
                 $client->get($url, [ 'sink' => $path ]);
             }

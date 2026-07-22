@@ -22,10 +22,7 @@
  *
  */
 
-namespace ZK\PushNotification;
-
-use ZK\Controllers\IPushProxy;
-use ZK\Controllers\NowAiringServer;
+namespace ZK\Service;
 
 use Ratchet\RFC6455\Messaging\Frame;
 
@@ -35,17 +32,17 @@ use Ratchet\RFC6455\Messaging\Frame;
  *
  * To use, in the `config.php` configuration file, include the stanza:
  *
- *    'push_proxy' => [
+ *    'hosted_services' => [
  *        [
- *            'proxy' => ZK\PushNotification\PushHttpProxy::class,
+ *            'class' => ZK\Service\PushHttpProxy::class,
  *            'ws_endpoint' => 'wss://example/source/endpoint',
  *            'http_endpoints' => [ 'https://example/target/endpoint' ]
  *        ],
- *        ...repeat for additional proxies...
+ *        ...repeat for additional hosted services...
  *    ],
  *
  * where:
- *    'proxy' specifies this class or a derivative;
+ *    'class' specifies this class or a derivative;
  *    'ws_endpoint' is the ws push event stream to subscribe to
  *        generally, this will be your Zookeeper Online ws endpoint
  *        (e.g., wss://example.org/push/onair);
@@ -70,7 +67,7 @@ use Ratchet\RFC6455\Messaging\Frame;
  * function (see above).
  */
 #[\AllowDynamicProperties]
-class PushHttpProxy implements IPushProxy {
+class PushHttpProxy implements IService {
     protected $subscriber;
     protected $httpClient;
     protected $wsEndpoint;
@@ -97,9 +94,9 @@ class PushHttpProxy implements IPushProxy {
         });
     }
 
-    public function connect() {
-        $this->wsEndpoint = $this->config[IPushProxy::WS_ENDPOINT];
-        $this->httpEndpoints = $this->config[IPushProxy::HTTP_ENDPOINTS];
+    public function start() {
+        $this->wsEndpoint = $this->config[IService::WS_ENDPOINT];
+        $this->httpEndpoints = $this->config[IService::HTTP_ENDPOINTS];
         $this->reconnect();
     }
 

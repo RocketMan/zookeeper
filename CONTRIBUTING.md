@@ -82,15 +82,6 @@ The following is an overview of the source code directory structure:
             CSS assets.  These files are automatically whitespace
             compressed upon delivery.
 
-        custom/
-            Instance-specific customizations that you wish to keep
-            separate from the standard installation.  For example,
-            if you have custom controllers, you can put them here.
-
-            TIP: If you add classes to this directory after installation,
-            run `composer dump-autoload` to regenerate the classmap.
-            See INSTALLATION.md for more information about Composer.
-
         engine/
             Business operations, configuration, and session
             management.
@@ -140,6 +131,13 @@ The following is an overview of the source code directory structure:
             components of the UI.  The files are automatically minified
             and source maps generated upon delivery.
 
+        service/
+            Daemon-style components that run independently of web
+            requests, driven by a dedicated ReactPHP event loop.  Services
+            include push notifications and Turnstile pre-clearance.
+
+            All components in this directory are strictly non-blocking.
+
         ui/
             Server-generated UI.  Menu items are specified in metadata,
             via config/ui_config.php.
@@ -185,6 +183,7 @@ As you contribute code, please observe the following guidelines:
 * All access to the engine is mediated via the Engine::api pattern (see
   above for a discussion);
 * Code outside the engine must delegate all database access to the engine;
+* Code within the 'service' subdirectory must be asynchronous/non-blocking;
 * User inputs (UI elements as well as imports) must be scrubbed for validity,
   which includes limiting the input to the size of the respective database
   columns.  Size consts should be declared in the engine interfaces.

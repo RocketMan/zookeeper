@@ -314,7 +314,14 @@ want to support the optional push notification service, you will need to:
    are on another OS, update your configuration to enable both modules,
    then restart Apache to pick up the change.
 
-2. Update your system to run the push notification server
+2. Update zookeeper configuration
+
+   In config.php, set the value of 'push_enabled' to true.  If your
+   webserver not available at the endpoint http://localhost/, then set
+   the appropriate value for its base by adding a key 'base_url_internal'
+   with the URL for your server (must be slash-terminated).
+
+3. Update your system to run the push notification server
 
    As a first step, ensure you can run the notification server manually
    from a shell:
@@ -335,25 +342,25 @@ want to support the optional push notification service, you will need to:
    Finally, run the command `sudo systemctl enable zkpush` to start
    the notification server automatically at boot time.
 
-3. (Optional) Configure the HTTP push notification proxy
+4. (Optional) Configure the HTTP push notification proxy
 
    If you want to send push notifications via HTTP, add the following
    stanza to the `config/config.php` file:
 
-       'push_proxy' => [
+       'hosted_services' => [
            [
-               'proxy' => ZK\PushNotification\PushHttpProxy::class,
+               'class' => ZK\Service\PushHttpProxy::class,
                'ws_endpoint' => 'ws://127.0.0.1:32080/push/onair',
                'http_endpoints' => [ 'https://example/target/endpoint' ]
            ],
-           ...repeat for additional proxies...
+           ...repeat for additional hosted services...
        ],
 
    where:
 
-   * 'proxy' specifies the proxy implementation.  To send raw json
-     data, use `ZK\PushNotification\PushHttpProxy::class`.  To send
-     a FORM POST, use `ZK\PushNotification\PushFormPostProxy::class`.
+   * 'class' specifies the proxy implementation.  To send raw json
+     data, use `ZK\Service\PushHttpProxy::class`.  To send
+     a FORM POST, use `ZK\Service\PushFormPostProxy::class`.
    * 'ws_endpoint' is the ws push event stream to subscribe to.
      Set this value to 'ws://127.0.0.1:32080/push/onair' to subscribe
      to the default internal Zookeeper Online ws endpoint.

@@ -218,13 +218,13 @@ $config = [
     'push_enabled' => true,
 
     /**
-     * push notification proxy
+     * hosted services
      *
      * see INSTALLATION.md for details
      */
-//    'push_proxy' => [
+//    'hosted_services' => [
 //        [
-//             'proxy' => ZK\PushNotification\PushHttpProxy::class,
+//             'class' => ZK\Service\PushHttpProxy::class,
 //             'ws_endpoint' => 'ws://127.0.0.1:32080/push/onair',
 //             'http_endpoints' => [ /* URLs here */ ]
 //        ]
