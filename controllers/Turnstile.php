@@ -330,7 +330,7 @@ class Turnstile implements IController {
                     setcookie('testcookie', '', time() - 3600);
 
                     setcookie('turnstile', $cookie, [
-                        'expires' => 0,
+                        'expires' => $expires,
                         'path' => '/',
                         'domain' => $_SERVER['SERVER_NAME'],
                         'secure' => Engine::session()->isSecure(),

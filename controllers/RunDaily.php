@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -294,8 +294,7 @@ class RunDaily implements IController {
                          $genre["name"] . " monthly totals, " .
                          date("m/Y", mktime(0,0,0,$month,$d,$y));
                            
-            $headers = "From: ".Engine::param('station')." ".
-                           Engine::param('application')." <".
+            $headers = "From: ".Engine::param('station_title')." <".
                            Engine::param('email')['chartman'].">\r\n";
 
             // send the mail
@@ -361,8 +360,7 @@ class RunDaily implements IController {
                 // Setup the headers
                 $subject = Engine::param('station').": ".
                            date("Y-m-d", mktime(0,0,0,$m,$d,$y)) . " chart";
-                $headers = "From: ".Engine::param('station')." ".
-                                    Engine::param('application')." <".
+                $headers = "From: ".Engine::param('station_title')." <".
                                     Engine::param('email')['chartman'].">\r\n";
     
                 // send the mail
@@ -452,8 +450,7 @@ class RunDaily implements IController {
                 // Setup the headers
                 $subject = Engine::param('station').": ".
                            date("Y-m", mktime(0,0,0,$month,$d,$y)) . " chart";
-                $headers = "From: ".Engine::param('station')." ".
-                                    Engine::param('application')." <".
+                $headers = "From: ".Engine::param('station_title')." <".
                                     Engine::param('email')['chartman'].">\r\n";
     
                 // send the mail

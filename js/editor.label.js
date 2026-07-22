@@ -76,10 +76,13 @@ function paginateLabels(op, url) {
         },
         error: function (jqXHR, textStatus, errorThrown) {
             // rate limited; silently ignore
-            if(jqXHR.status == 403)
+            if(jqXHR.status == 429)
                 return;
 
-            var json = JSON.parse(jqXHR.responseText);
+            var json;
+            try {
+                json = JSON.parse(jqXHR.responseText);
+            } catch (e) {}
             var status = json && json.errors ?
                     json.errors.map(error => error.title).join(', ') :
                     'There was a problem retrieving the data: ' + errorThrown;

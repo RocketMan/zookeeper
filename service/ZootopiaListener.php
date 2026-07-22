@@ -273,7 +273,11 @@ class ZootopiaListener implements IService {
                     $min = intval($end->format("i"));
                     if($min)
                         $end->modify("-$min minutes");
-                } else if($showLen < IPlaylist::MIN_SHOW_LEN * 60)
+
+                    $showLen = $end->getTimestamp() - $now->getTimestamp();
+                }
+
+                if($showLen < IPlaylist::MIN_SHOW_LEN * 60)
                     return self::reject("show too short");
 
                 $time .= "-" . $end->format("Hi");

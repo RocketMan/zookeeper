@@ -26,6 +26,7 @@
 namespace ZK\UI;
 
 use ZK\Engine\Engine;
+use ZK\Engine\PlaylistEntry;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 
@@ -642,8 +643,8 @@ class AddManager extends MenuItem {
     public function addManagerEMail() {
         $instance_chartman = Engine::param('email')['chartman'];
         $date = $_REQUEST["date"];
-        $address = $_REQUEST["address"];
-        $format = $_REQUEST["format"];
+        $address = $_REQUEST["address"] ?? '';
+        $format = $_REQUEST["format"] ?? '';
     
     
         list($y,$m,$d) = explode("-", $date);
@@ -663,89 +664,55 @@ class AddManager extends MenuItem {
             } else {
                 // Fetch the add        
                 $albums = Engine::api(IChart::class)->getAdd($date)->asArray();
-    
-                $from = Engine::param('application')." <$instance_chartman>";
-                $subject = Engine::param('station_title').": Adds for $date";
-                $body = "";
-    
-                if($format == "tab") {
-                    $boundary = "zk-part-" . md5(uniqid(rand()));
-                    $mime = "Content-Type: multipart/mixed; boundary=\"";
-                    $mime .= $boundary . "\"\r\nMIME-Version: 1.0\r\n";
-    
-                    $body .= "--" . $boundary . "\r\n";
-                    $body .= "Content-Type: text/plain\r\n\r\n";
-                    $body .= "Zookeeper $subject are attached\r\n";
-    
-                    $body .= "--" . $boundary . "\r\n";
-                    $body .= "Content-Type: text/csv; charset=\"iso-8859-1\"\r\n";
-                    $body .= "Content-Disposition: attachment; filename=\"";
-                    $body .= $subject . ".csv\"\r\n\r\n";
+                Engine::api(ILibrary::class)->markAlbumsReviewed($albums, 0, true);
+
+                foreach($albums as &$row) {
+                    $row['body'] = $row['review'];
+                    $row['tracks'] = '';
+
+                    if($row['review'] && preg_match('/(.+?)(?=(\r?\n)[\p{P}\p{S}\s]*\d+[\p{P}\p{S}\d]*\s)/su',
+                            $row['review'], $matches) && $matches[1]) {
+                        $row['tracks'] = trim(mb_substr($row['review'], mb_strlen($matches[1])));
+                        $row['body'] = $matches[1];
+                    }
                 }
-    
+
+                $station = Engine::param('station_title');
+                $from = "$station <$instance_chartman>";
+                $subject = "$station: Adds for $date";
+
+                $boundary = "zk-part-" . md5(uniqid(rand()));
+                $mime = "Content-Type: multipart/" .
+                         ($format == "tab" ? "mixed" : "alternative") .
+                         "; boundary=\"";
+                $mime .= $boundary . "\"\r\nMIME-Version: 1.0\r\n";
+
                 // Setup the headers
                 $headers = "From: $from\r\n$mime";
-                // Emit the add
-                foreach($albums as $index => $row) {
-                    $ac = "";
-                    $catsx = explode(",", $row["afile_category"]);
-                    foreach($catsx as $index => $cat)
-                        if($cat)
-                            $ac .= $this->categoryMap[$cat-1]["code"];
-                    if($format == "tab") {
-                        $line = $row["adddate"] . "\t" . $row["pulldate"] . "\t" . $ac . "\t" .
-                              $row["afile_number"] . "\t";
-                        $artist = preg_match("/^\[coll\]/i", $row["artist"])?"COLL":$row["artist"];
-                        $label =  str_replace(" Records", "", $row["label"]);
-                        $label = str_replace(" Recordings", "", $label);
-    
-                        // Append 7", 10", or 12" to artist name, as appropriate
-                        switch($row["medium"]) {
-                        case "S":
-                            $artist .= " [7\\\"]";
-                            break;
-                        case "T":
-                            $artist .= " [10\\\"]";
-                            break;
-                        case "V":
-                            $artist .= " [12\\\"]";
-                            break;
-                        }
-    
-                        // Emit Artist/Album/Label names
-                        $line .= $artist . "\t" .
-                                 $row["album"] . "\t" .
-                                 $label . "\t" .
-                                 $row["tag"] . "\r\n";
-                    } else
-                        $line = sprintf("%-2s %3d %-28s %-30s %-12s\r\n",
-                              $ac, $row["afile_number"], substr(UI::deLatin1ify($row["artist"]), 0, 28),
-                              substr(UI::deLatin1ify($row["album"]), 0, 30),
-                              substr(UI::deLatin1ify($row["label"]), 0, 12));
-                    $body .= $line;
-                }
-                if($format == "tab")
-                    $body .= "\r\n--" . $boundary . "--\r\n";
-                else {
-                    // Emit the postamble
-                    $body .= "\n--\nPost your music reviews online!\r\n";
-                    $body .= Engine::param('station_title')." ".
-                             Engine::param('application').":  ".
-                             UI::getBaseUrl()."\r\n";
-                }
-    
+
+                $vars = [];
+                $vars['albums'] = $albums;
+                $vars['baseUrl'] = Engine::getBaseURL();
+                $vars['entry'] = new PlaylistEntry();
+                $vars['CATMAP'] = $this->categoryMap;
+                $vars['date'] = $date;
+                $vars['dateSpec'] = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
+                $vars['boundary'] = $boundary;
+
+                $tf = new TemplateFactoryUI();
+                $t = $tf->load($format == 'tab' ?
+                                    'currents/emailCSV.txt' :
+                                    'currents/emailText.html');
+                $body = $t->render($vars);
+
                 // send the mail
                 $stat = mail($address, $subject, $body, $headers);
-    
+
                 // Check for errors
                 if(!$stat) {
                     echo "  <P CLASS=\"header\">Possible Problem Sending E-Mail</P>\n";
                     echo "  <P>There may have been a problem sending your e-mail.  ";
                     echo "</P>\n";
-                    // no error messages from PHP mail() function
-                    //echo "The mailer reports the following error:</P>\n  <PRE>\n";
-                    //echo error_get_last()['message'];
-                    //echo "\n</PRE>\n";
                 } else {
                     echo "  <P CLASS=\"header\">E-Mail Sent!</P>\n";
                     echo "  <P>Please check to see whether your e-mail was ";
