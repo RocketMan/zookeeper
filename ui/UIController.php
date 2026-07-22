@@ -209,7 +209,7 @@ class UIController implements IController {
             $qs = "?action=search&s=all&n=".urlencode($_REQUEST["search"] ?? '');
             header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
-        case "viewDJReviews";
+        case "viewDJReviews":
             // redirect DJ review URLs from v2.x
             $qs = "?action=viewRecent&subaction=viewDJ&seq=selUser&viewuser=".urlencode($_REQUEST["n"] ?? '');
             header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently

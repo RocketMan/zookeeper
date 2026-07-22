@@ -995,7 +995,7 @@ class LibraryImpl extends DBO implements ILibrary {
             if(strpos(self::$ftSearch[$i][4], "GROUP BY"))
                 $num = sizeof($result);
             else
-                $num = (integer)$result[0][0];
+                $num = (int)$result[0][0];
             $total += $num;
             $rsize[$i] = $num;
         }
