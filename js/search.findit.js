@@ -465,7 +465,7 @@ async function search(type, url, size, offset) {
         },
         error: function(jqXHR, textStatus, errorThrown) {
             // rate limited; silently ignore
-            if(jqXHR.status == 403)
+            if(jqXHR.status == 429)
                 return;
 
             var json;

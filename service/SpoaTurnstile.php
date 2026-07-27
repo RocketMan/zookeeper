@@ -65,7 +65,7 @@ class SpoaTurnstile implements IService {
     const DEFAULT_SPOA_SERVER = "127.0.0.1:32082";
 
     const DEFAULT_RESOLVER = "8.8.8.8";  // google DNS
-    const RESOLVER_TIMEOUT = 0.5;        // in sec
+    const RESOLVER_TIMEOUT = 0.6;        // in sec
 
     private const REQUIRED_PARAMS = [ 'cookie', 'src' ];
 

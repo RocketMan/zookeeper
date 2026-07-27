@@ -214,7 +214,7 @@ $().ready(function() {
                 window.open(response.url, "_top");
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if(jqXHR.status == 422) return; // already handled above
-            var message = jqXHR.status == 403 ?
+            var message = jqXHR.status == 429 ?
                 'Server busy, try again...' :
                 'Error: ' + errorThrown;
             $("#error-msg").text(message);

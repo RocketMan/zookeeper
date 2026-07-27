@@ -1,0 +1,119 @@
+{% autoescape false %}
+{%- macro medium(album) %}
+  {%~ if album.medium == 'S' %}
+    7"
+  {%~ elseif album.medium == 'T' %}
+    10"
+  {%~ elseif album.medium == 'V' %}
+    12"
+  {%~ endif %}
+{%- endmacro -%}
+
+{%- macro catcodes(catmap, categories) %}
+    {%~ set names = [] %}
+    {%~ set cats = categories | split(',') %}
+    {%~ for cat in cats -%}
+        {%~ set index = cat|int - 1 %}
+        {%~ if not (catmap[index].name starts with '(') %}
+            {%~ set names = names | merge([ catmap[index].code ]) %}
+        {%~ endif %}
+    {%- endfor -%}
+    {{ names | join('') }}
+{%- endmacro -%}
+
+{%- macro catnames(catmap, categories) %}
+    {%~ set names = [] %}
+    {%~ set cats = categories | split(',') %}
+    {%~ for cat in cats -%}
+        {%~ set index = cat|int - 1 %}
+        {%~ if not (catmap[index].name starts with '(') %}
+            {%~ set names = names | merge([ catmap[index].name ]) %}
+        {%~ endif %}
+    {%- endfor -%}
+    {{ names | join(', ') }}
+{%- endmacro -%}
+
+--{{ boundary }}
+Content-Type: text/plain; charset="UTF-8"
+
+{% for album in albums %}
+{% set title = album.iscoll ? 'Various Artists' : album.album %}
+{% set label = album.label | replace({' Records': '', ' Recordings': ''}) %}
+{{ "%-2s %3d %-28s %-30s %-12s" | format(
+    _self.catcodes(CATMAP, album.afile_category),
+    album.afile_number,
+    album.artist | truncate(28, false, ''),
+    title | truncate(30, false, ''),
+    label | truncate(12, false, '')) }}
+{% endfor %}
+
+Post your music reviews online!
+{{ app.station_title }} Zookeeper Online: {{ baseUrl }}
+--{{ boundary }}
+Content-Type: text/html; charset="UTF-8"
+
+{% endautoescape %}
+{% autoescape 'html' %}
+{% set style = {
+    html: 'font-family: Helvetica, sans-serif;',
+    h2: 'font-size: 1.25rem;',
+    h3: 'font-size: 1.1rem;',
+    table: 'width: 100%;max-width: 1000px;border-spacing: 0;border-collapse: collapse;',
+    th: 'font-size: 0.9rem;text-align: left;padding-bottom: 0;color: #555;border-bottom: 2px solid grey;',
+    td: 'padding: 1rem 0;padding-right: 2rem;text-align: left;vertical-align: top;font-size: 1rem;',
+    td_meta: 'line-height: 1.2;',
+    td_noexcerpt: 'border-bottom: 1px solid rgba(0,0,0,0.08);',
+    td_excerpt: 'padding-top: 0;font-size: 0.9rem;color: #555;line-height: 1;border-bottom: 1px solid rgba(0,0,0,0.08);',
+    td_a: 'font-size: 1.1rem;',
+  }
+%}
+{% set title = app.station_title ~ ' Adds for ' ~ date | date(dateSpec) %}
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <title>{{ title }}</title>
+</head>
+<body>
+<h2 style='{{ style.html ~ style.h2 }}'>{{ title }}</h2>
+<table style='{{ style.table }}'>
+  <thead>
+    <tr>
+      <th style='width: 50px;{{ style.html ~ style.th }}'>ID</th>
+      <th style='{{ style.html ~ style.th }}'>Album</th>
+      <th style='width: 120px;{{ style.html ~ style.th }}'>Category</th>
+      <th style='width: 240px;{{ style.html ~ style.th }}'>Reviewer</th>
+    </tr>
+  </thead>
+  <tbody>
+{% for album in albums %}
+  {%~ set medium = _self.medium(album) %}
+  {%~ set tdstyle = style.html ~ style.td ~ style.td_meta ~ (not album.body ? style.td_noexcerpt) %}
+  <tr>
+    <td style='{{ tdstyle }}'>{{ album.afile_number }}</td>
+    <td style='min-width: 240px;{{ tdstyle }}'>
+      <a style='{{ style.td_a }}' href='{{ baseUrl }}?action=search&amp;s=byAlbumKey&amp;n={{ album.tag }}' target='_blank'>{{ album.album }}</a> {{ medium | trim }}
+      <div>{{ album.iscoll ? 'Various Artists' : entry.swapNames(album.artist) }}</div>
+    </td>
+    <td style='{{ tdstyle }}'>{{ _self.catnames(CATMAP, album.afile_category) ?: 'General' }}</td>
+    <td style='{{ tdstyle }}'>{{ album.reviewer }}</td>
+  </tr>
+{% if album.body %}
+  <tr>
+    <td style='{{ style.html ~ style.td ~ style.td_excerpt }}'></td>
+    <td style='{{ style.html ~ style.td ~ style.td_excerpt }}' colspan='3'>
+      {{ album.body | truncate(1000, true) | nl2br }}
+    </td>
+  </tr>
+{% endif %}
+{% endfor %}
+  </tbody>
+</table>
+<h3 style='{{ style.html ~ style.h3 }}'>For more music reviews, charts, and playlists, visit
+  <a href='{{ baseUrl }}' target='_blank'>{{ app.station_title }}</a>!
+</h3>
+</body>
+</html>
+{% endautoescape %}
+{% autoescape false %}
+--{{ boundary }}
+{% endautoescape %}

@@ -1,0 +1,36 @@
+{% autoescape false %}
+{%- macro catcodes(catmap, categories) %}
+    {%~ set names = [] %}
+    {%~ set cats = categories | split(',') %}
+    {%~ for cat in cats -%}
+        {%~ set index = cat|int - 1 %}
+        {%~ if not (catmap[index].name starts with '(') %}
+            {%~ set names = names | merge([ catmap[index].code ]) %}
+        {%~ endif %}
+    {%- endfor -%}
+    {{ names | join('') }}
+{%- endmacro -%}
+
+--{{ boundary }}
+Content-Type: text/plain; charset="UTF-8"
+
+{{ app.station_title }} Adds for {{ date | date(dateSpec) }} are attached
+--{{ boundary }}
+Content-Type: text/csv; charset="UTF-8"
+Content-Disposition: attachment; filename="{{ app.station_title }} Adds for {{ date | date(dateSpec) }}.csv"
+
+{% set tab = "\t" %}
+{% for album in albums %}
+{% set label = album.label | replace({' Records': '', ' Recordings': ''}) %}
+  {{~
+    album.adddate ~ tab ~
+    album.pulldate ~ tab ~
+    _self.catcodes(CATMAP, album.afile_category) ~ tab ~
+    album.afile_number ~ tab ~
+    album.artist ~ tab ~
+    album.album ~ tab ~
+    label
+  }}
+{% endfor %}
+--{{ boundary }}
+{% endautoescape %}

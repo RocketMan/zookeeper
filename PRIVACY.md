@@ -52,10 +52,9 @@ Policy](https://www.cloudflare.com/en-gb/turnstile-privacy-policy/).
 #### Session Cookies
 
 After a successful Turnstile challenge (or other security check), we
-store a short-lived session cookie (not persistent) to remember that
-your browser has been validated.  This allows you to continue browsing
-the site without repeating the Turnstile check on every page or
-action.  This cookie expires automatically when the session ends.
+store a short-lived cookie to remember that your browser has been
+validated.  This allows you to continue browsing the site without
+repeating the Turnstile check on every page or action.
 
 This cookie does **not** contain personal information (no name, e-mail,
 or account data), and is used only for security validation to confirm
@@ -87,7 +86,7 @@ information.
 ### What data do we collect and how do we collect it?
 
 For visitors who access Zookeeper Online without logging in, this
-website may rely on Turnstile and a session cookie to verify that the
+website may rely on Turnstile and a short-lived cookie to verify that the
 visitor is a real browser, but **we do not collect or store any
 personal data beyond the transient technical signals described above
 that are strictly necessary for security**.
@@ -105,10 +104,9 @@ third-parties.
 ### Cookies, web beacons, and local storage
 
 For visitors who access Zookeeper Online without logging in, we may
-use a transient session cookie as outlined above to remember that
+use a short-lived cookie as outlined above to remember that
 your browser has been validated.  **The cookie does not contain any
-personally identifiable information.**  The cookie expires automatically
-when the session ends.
+personally identifiable information.**
 
 For visitors who have a user account with us and who login to access
 additional content on the website, Zookeeper Online uses transient
@@ -137,7 +135,7 @@ issues that may arise.
 
 ### Changes to our Privacy Policy
 
-This Privacy Policy was last updated on 3 December 2025.
+This Privacy Policy was last updated on 30 May 2026.
 
 ### How to contact us
 

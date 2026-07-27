@@ -9,11 +9,6 @@
  */
 $config = [
     /**
-     * name of the application
-     */
-    'application' => 'Zookeeper Online',
-
-    /**
      * station name
      */
     'station' => 'Example Radio',

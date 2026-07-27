@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -105,6 +105,8 @@ class TemplateFactory {
         $this->twig->addGlobal('app', $this->app);
 
         $filter = new \Twig\TwigFilter('decorate', [ '\ZK\Engine\Engine', 'decorate' ]);
+        $this->twig->addFilter($filter);
+        $filter = new \Twig\TwigFilter('int', fn($val) => (int)$val);
         $this->twig->addFilter($filter);
         $filter = new \Twig\TwigFilter('truncate', function($value, $length = 80, $preserveWords = false, $ellipsis = '...') {
             if (mb_strlen($value) > $length) {
