@@ -98,14 +98,14 @@ class NowAiringServer implements MessageComponentInterface {
             $val['show_end'] = '';
         }
         $val['id'] = $spin ? (int)($spin->id ?? 0) : 0;
-        $val['track_title'] = $spin ? $spin->track : '';
-        $val['track_artist'] = $spin ? $spin->artist : '';
-        $val['track_album'] = $spin ? $spin->album : '';
+        $val['track_title'] = $spin ? ($spin->track ?? '') : '';
+        $val['track_artist'] = $spin ? ($spin->artist ?? '') : '';
+        $val['track_album'] = $spin ? ($spin->album ?? '') : '';
         $tag = $spin ? ($spin->{'xa:relationships'} ?? '') : '';
         $val['track_tag'] = $tag ? $tag->album->data->id : null; // null for empty/zero tag
         if ($spin && ($spin->tag ?? null))
             $val['track_tag'] = $spin->tag;
-        $created = $spin ? $spin->created : null;
+        $created = $spin ? ($spin->created ?? null) : null;
 
         $val['track_time'] = $created ? $created : '';
         $val['type'] = 'zookeeper';
