@@ -874,7 +874,7 @@ class Playlists implements RequestHandlerInterface {
                 } else
                     $spin = null;
 
-                PushServer::sendAsyncNotification($list, $spin);
+                PushServer::sendAsyncNotification();
             } else if($api->isNowWithinShow($list))
                 PushServer::sendAsyncNotification();
 
