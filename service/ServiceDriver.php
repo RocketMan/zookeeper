@@ -316,6 +316,9 @@ class ServiceDriver extends CommandTarget implements IController {
             $entry = json_decode($msg, true);
             if($entry['id']) {
                 $imageApi = Engine::api(IArtwork::class);
+                $imageApi->adviseLock($entry['id']);
+
+                try {
 
                 if($entry['track_tag']) {
                     // is the album already known to us?
@@ -362,6 +365,10 @@ class ServiceDriver extends CommandTarget implements IController {
                 $entry['info_url'] = $infoUrl ?? null;
                 $entry['image_url'] = isset($imageUuid) ? $imageApi->getCachePath($imageUuid) : ($entry['track_tag'] ? "img/album-sleeve.svg" : null);
                 $msg = json_encode($entry);
+
+                } finally {
+                    $imageApi->adviseUnlock($entry['id']);
+                }
             }
         }
 
