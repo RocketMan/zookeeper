@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -109,7 +109,7 @@ class UnifiedSearch implements RequestHandlerInterface {
             case "compilations":
                 // fall through...
             case "tracks":
-                $related = $this->fromTrackSearch($records);
+                $related = $this->fromTrackSearch($records, Albums::LINKS_NONE);
                 $rel = new Relationship("album", $related);
                 $filter = "album?filter%5Bmatch%28" .
                     ($type == "compilations" ? "artist," : "") .

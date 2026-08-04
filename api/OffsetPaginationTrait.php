@@ -25,6 +25,7 @@
 namespace ZK\API;
 
 use ZK\Engine\Engine;
+use ZK\Engine\IArtwork;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
 
@@ -48,9 +49,14 @@ trait OffsetPaginationTrait {
         return $result;
     }
 
-    protected function fromTrackSearch(array $records) {
+    protected function fromTrackSearch(array $records, $flags) {
         $result = [];
         $map = [];
+
+        // require authentication to prevent scraping of artwork
+        if($flags & Albums::LINKS_ARTWORK && Engine::session()->isAuth("u"))
+            Engine::api(IArtwork::class)->injectAlbumArt($records, Engine::getAppBasePath());
+
         foreach($records as $record) {
             $tag = $record["tag"] ?? null;
             if(!$tag) {
@@ -229,7 +235,7 @@ trait OffsetPaginationTrait {
             $result = $this->marshallReviews($records, $links);
             break;
         case ILibrary::TRACK_NAME:
-            $result = $this->fromTrackSearch($records);
+            $result = $this->fromTrackSearch($records, $links);
             break;
         case Playlists::PLAYLIST_SEARCH:
             $result = $this->fromPlaylistSearch($records);
