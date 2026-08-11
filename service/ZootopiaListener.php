@@ -433,6 +433,12 @@ class ZootopiaListener implements IService {
                     }
                 }
 
+/**
+ * For now, we'll avoid upstream image data, as it's low resolution and
+ * often wrong in the case of compilations.
+ *
+ * NowAiringServer will inject cover art from our primary image source.
+
                 if($album && empty($album->attributes->albumart)
                         && ($event['image_url'] ?? '')) {
                     return $this->zk->patch("api/v1/album/{$album->id}",
@@ -455,6 +461,8 @@ class ZootopiaListener implements IService {
                         return $album;
                     });
                 }
+
+*/
 
                 return $album;
             }, function($e) {
