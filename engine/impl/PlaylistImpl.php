@@ -988,8 +988,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         $config = Engine::param('hosted_services') ?? Engine::param('push_proxy');
         if($config) {
             foreach($config as $service) {
-                if(($service['class'] ?? $service['proxy']) ==
-                        \ZK\Service\ZootopiaListener::class &&
+                if(str_contains($service['class'] ?? $service['proxy'], 'ZootopiaListener') &&
                         !($service['recent'] ?? false))
                     return $service['airname'] ?? null;
             }
