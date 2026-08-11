@@ -28,8 +28,10 @@ use ZK\Engine\IPlaylist;
 use ZK\Engine\Engine;
 use ZK\Engine\PlaylistEntry;
 
+use Clue\React\Mq\Queue;
 use React\Http\Browser;
 use React\Promise;
+use React\Promise\PromiseInterface;
 
 class ControlFlowRejection extends \Exception {}
 
@@ -62,7 +64,8 @@ class ControlFlowRejection extends \Exception {}
  *    'title' title for playlists;
  *    'tz' specifies the timezone of the ws_endpoint, if different to
  *         the Zookeeper server, or null if they are the same;
- *    'caption' comment to lead the playlist, or null if none.
+ *    'caption' comment to lead the playlist, or null if none;
+ *    'use_upstream_coverart' (optional boolean; default false).
  *
  * If an array of titles and/or airnames are given, one will be selected
  * at random for each new show that is created.  Airnames pair to titles
@@ -73,6 +76,7 @@ class ControlFlowRejection extends \Exception {}
  */
 class ZootopiaListener implements IService {
     protected $subscriber;
+    protected $queue;
     protected $wsEndpoint;
     protected $zk;
     protected $lastPing;
@@ -107,7 +111,7 @@ class ZootopiaListener implements IService {
             !strcasecmp(substr_replace($swap, '&', $i + 1, 3), $trackArtist);
     }
 
-    protected static function reject(string $message): Promise\PromiseInterface {
+    protected static function reject(string $message): PromiseInterface {
         return Promise\reject(new ControlFlowRejection($message));
     }
 
@@ -127,6 +131,7 @@ class ZootopiaListener implements IService {
 
     public function __construct(
         protected \React\EventLoop\LoopInterface $loop,
+        protected NowAiringServer $nas,
         protected array $config,
     ) {
         $this->subscriber = new Subscriber($loop);
@@ -134,11 +139,11 @@ class ZootopiaListener implements IService {
 
     protected function log($msg) {
         $logName = (new \ReflectionClass($this))->getShortName();
-        echo "$logName: $msg\n";
+        error_log("$logName: $msg");
     }
 
     protected function reconnect() {
-        ($this->subscriber)($this->wsEndpoint)->then([$this, 'proxy'], function ($e) {
+        $this->subscriber->__invoke($this->wsEndpoint)->then([$this, 'proxy'], function ($e) {
             $firstLine = trim(strtok($e->getMessage(), "\n"));
             $this->log("Could not connect: $firstLine, retrying");
 
@@ -150,6 +155,11 @@ class ZootopiaListener implements IService {
     }
 
     public function start() {
+        // ensure each event runs to completion before starting another
+        $this->queue = new Queue(1, null, function($event) {
+            return $this->processEvent($event);
+        });
+
         $this->wsEndpoint = $this->config[IService::WS_ENDPOINT];
         $browser = new Browser($this->loop);
         $this->zk = $browser->
@@ -164,11 +174,11 @@ class ZootopiaListener implements IService {
     /**
      * return a promise to create a new show
      *
-     * @param $date string date in yyyy-MM-dd format
-     * @param $time string time range in hhmm-hhmm format
-     * @return \React\Promise\PromiseInterface;
+     * @param string $date string date in yyyy-MM-dd format
+     * @param string $time string time range in hhmm-hhmm format
+     * @return PromiseInterface;
      */
-    protected function createShow(string $date, string $time): Promise\PromiseInterface {
+    protected function createShow(string $date, string $time): PromiseInterface {
         // create new show
         $title = $this->config["title"];
         $airname = $this->config["airname"];
@@ -197,6 +207,7 @@ class ZootopiaListener implements IService {
             $this->log("created $show");
             $this->lastOn = $response->getHeader('Location')[0];
             $this->onAir = true;
+            $this->nas->invalidateOnNow();
 
             // add caption
             if(isset($this->config["caption"])) {
@@ -228,18 +239,24 @@ class ZootopiaListener implements IService {
         if(!$this->onAir && !$event["zootopia"])
             return;
 
+        $this->queue->__invoke($event)->then(null, function(\Throwable $e) {
+            $this->log($e->getMessage());
+        });
+    }
+
+    /**
+     * return a promise to process one websocket event
+     *
+     * @param array $event target event
+     * @return PromiseInterface resolves when processing complete
+     */
+    protected function processEvent(array $event): PromiseInterface {
         $trackName = null;
+        $previousOnAir = $this->onAir;
 
         // get 'on now'
-        $this->zk->get("api/v1/playlist?" .
-            http_build_query([
-                "filter[date]" => "onnow",
-                "fields[show]" => "-events"
-            ])
-        )->then(function($response) use($event) {
-            $page = $response->getBody()->getContents();
-            $json = json_decode($page);
-            $count = sizeof($json->data);
+        return $this->nas->getOnNow()->then(function($onNow) use($event) {
+            $count = sizeof($onNow);
             $now = new \DateTime();
 
             switch($count) {
@@ -330,7 +347,7 @@ class ZootopiaListener implements IService {
 
                 return $this->createShow($date, $time);
             case 1:
-                if(!$this->testTitle($json->data[0]->attributes->name)) {
+                if(!$this->testTitle($onNow[0]->attributes->name)) {
                     $this->lastOn = null;
                     $this->onAir = false;
                     return self::reject("DJ On Air");
@@ -338,7 +355,7 @@ class ZootopiaListener implements IService {
 
                 if($event["zootopia"]) {
                     // We are already on-air; use the existing show.
-                    $this->lastOn = $json->data[0]->links->self;
+                    $this->lastOn = $onNow[0]->links->self;
                     $this->onAir = true;
                     break;
                 }
@@ -348,7 +365,7 @@ class ZootopiaListener implements IService {
             default:
                 // Another show is also on-air
                 $zootopia = null;
-                foreach($json->data as $data) {
+                foreach($onNow as $data) {
                     if($this->testTitle($data->attributes->name)) {
                         $zootopia = $data;
                         break;
@@ -433,13 +450,8 @@ class ZootopiaListener implements IService {
                     }
                 }
 
-/**
- * For now, we'll avoid upstream image data, as it's low resolution and
- * often wrong in the case of compilations.
- *
- * NowAiringServer will inject cover art from our primary image source.
-
-                if($album && empty($album->attributes->albumart)
+                if (($this->config["use_upstream_coverart"] ?? false)
+                        && $album && empty($album->attributes->albumart)
                         && ($event['image_url'] ?? '')) {
                     return $this->zk->patch("api/v1/album/{$album->id}",
                         self::JSON_POST,
@@ -462,8 +474,6 @@ class ZootopiaListener implements IService {
                     });
                 }
 
-*/
-
                 return $album;
             }, function($e) {
                 $this->log("get tracks failed: " . $e->getMessage());
@@ -472,11 +482,6 @@ class ZootopiaListener implements IService {
                 return null;
             });
         })->then(function($album) use($event, &$trackName) {
-            // multiple events can queue, such that the show
-            // could have ended already when this callback runs
-            if(!$this->onAir)
-                return;
-
             // add track
             if($album) {
                 return $this->zk->post("{$this->lastOn}/events",
@@ -521,8 +526,12 @@ class ZootopiaListener implements IService {
                     ])
                 );
             }
-        })->catch(function(ControlFlowRejection $e) {
-            // control flow rejections are expected; do not log
+        })->catch(function(ControlFlowRejection $e) use($previousOnAir) {
+            // expected control flow
+
+            // if we've brought a show on or off air, let NowAiringServer know
+            if ($previousOnAir !== $this->onAir)
+                $this->nas->invalidateOnNow();
         })->catch(function(\Throwable $e) {
             $this->log($e->getMessage());
         });
