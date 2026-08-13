@@ -82,6 +82,7 @@ class ZootopiaListener implements IService {
     protected $lastPing;
     protected $onAir;
     protected $lastOn;
+    protected $lastEvent;
 
     private const TIDY_START = 5; // number of minutes to round show start/end
 
@@ -207,7 +208,6 @@ class ZootopiaListener implements IService {
             $this->log("created $show");
             $this->lastOn = $response->getHeader('Location')[0];
             $this->onAir = true;
-            $this->nas->invalidateOnNow();
 
             // add caption
             if(isset($this->config["caption"])) {
@@ -233,11 +233,14 @@ class ZootopiaListener implements IService {
 
     public function addTrack($event) {
         $event["zootopia"] = in_array($event["type"] ?? null, ["schedule", "zootopia"]) &&
-                preg_match("/zootopia/i", $event["name"]) &&
-                $event["track_title"];
+                preg_match("/zootopia/i", $event["name"]);
 
         if(!$this->onAir && !$event["zootopia"])
             return;
+
+        if ($this->lastEvent == $event)
+            return;
+        $this->lastEvent = $event;
 
         $this->queue->__invoke($event)->then(null, function(\Throwable $e) {
             $this->log($e->getMessage());
@@ -422,6 +425,9 @@ class ZootopiaListener implements IService {
                 break;
             }
         })->then(function() use($event, &$trackName) {
+            if (!$event["track_title"])
+                return self::reject("No track");
+
             // lookup album by track name
             $trackName = trim(preg_match("/^(.+)( \(\d+\))$/", $event["track_title"], $matches) ? $matches[1] : $event["track_title"]);
 
@@ -526,12 +532,8 @@ class ZootopiaListener implements IService {
                     ])
                 );
             }
-        })->catch(function(ControlFlowRejection $e) use($previousOnAir) {
+        })->catch(function(ControlFlowRejection $e) {
             // expected control flow
-
-            // if we've brought a show on or off air, let NowAiringServer know
-            if ($previousOnAir !== $this->onAir)
-                $this->nas->invalidateOnNow();
         })->catch(function(\Throwable $e) {
             $this->log($e->getMessage());
         });

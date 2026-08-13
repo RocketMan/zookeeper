@@ -147,7 +147,7 @@ class NowAiringServer implements MessageComponentInterface {
         if ($this->onNowRefresh)
             return $this->onNowRefresh;
 
-        return $this->onNow ?
+        return $this->onNow !== null ?
                 Promise\resolve($this->onNow) :
                 $this->refreshOnNow(false);
     }
@@ -158,6 +158,14 @@ class NowAiringServer implements MessageComponentInterface {
     public function invalidateOnNow(): void {
         $this->onNow = null;
         $this->onNowGeneration++;
+    }
+
+    /**
+     * Update the current on-air status from the service
+     */
+    public function invalidateAndRefresh(): PromiseInterface {
+        $this->invalidateOnNow();
+        return $this->refreshOnNow();
     }
 
     /*
@@ -209,7 +217,9 @@ class NowAiringServer implements MessageComponentInterface {
 
     protected function worker() {
         // echo "worker awake\n";
-        $this->refreshOnNow();
+        $this->refreshOnNow()->catch(function(\Throwable $t) {
+            error_log("NowAiringServer::worker: " . $t->getMessage());
+        });
     }
 
     protected function scheduleWorker() {
@@ -227,14 +237,22 @@ class NowAiringServer implements MessageComponentInterface {
                                     (61 - (int)$now->format("s"));
 
             $this->timer = $this->loop->addTimer($delta, function() {
-                try {
-                    $this->worker();
-                } catch(\Throwable $e) {
-                    error_log("NowAiringServer::worker: " . $e->getMessage());
-                }
+                $this->worker();
                 $this->scheduleWorker();
             });
         }
+    }
+
+    protected function doRefresh(bool $dispatch): PromiseInterface {
+        $generation = $this->onNowGeneration;
+
+        return $this->loadOnNow($dispatch)->then(function($onNow) use($dispatch, $generation) {
+            // if the state changed in-flight, chain a refresh
+            if ($generation !== $this->onNowGeneration)
+                return $this->doRefresh($dispatch);
+
+            return $onNow;
+        });
     }
 
     /**
@@ -243,26 +261,19 @@ class NowAiringServer implements MessageComponentInterface {
      * @param bool $dispatch notify listeners if status changes (default true)
      * @return PromiseInterface<array> on air shows
      */
-    public function refreshOnNow(bool $dispatch = true): PromiseInterface {
-        $generation = $this->onNowGeneration;
+    protected function refreshOnNow(bool $dispatch = true): PromiseInterface {
+        if ($this->onNowRefresh)
+            return $this->onNowRefresh;
 
-        $this->onNowRefresh = $this->loadOnNow($dispatch)->then(function($onNow) use($dispatch, $generation) {
-            // if the state changed in-flight, chain a refresh
-            if ($generation !== $this->onNowGeneration)
-                return $this->refreshOnNow($dispatch);
+        $promise = $this->doRefresh($dispatch);
 
-            // the cache is now authoritative; no refresh is outstanding
+        $this->onNowRefresh = $promise;
+
+        $promise->finally(function() {
             $this->onNowRefresh = null;
-
-            return $onNow;
-        }, function(\Throwable $t) {
-            $this->onNowRefresh = null;
-
-            error_log("NowAiringServer::refreshOnNow: " . $t->getMessage());
-            return Promise\reject($t);
         });
 
-        return $this->onNowRefresh;
+        return $promise;
     }
 
     public function onOpen(ConnectionInterface $conn) {
