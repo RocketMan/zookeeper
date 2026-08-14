@@ -255,7 +255,6 @@ class ZootopiaListener implements IService {
      */
     protected function processEvent(array $event): PromiseInterface {
         $trackName = null;
-        $previousOnAir = $this->onAir;
 
         // get 'on now'
         return $this->nas->getOnNow()->then(function($onNow) use($event) {
