@@ -47,6 +47,8 @@ class NowAiringServer implements MessageComponentInterface {
 
     const TTL_SECONDS = 5;  // validity in seconds for injectImageData request
 
+    const REFRESH_MIN = 15; // minimum worker refresh interval (in seconds)
+
     const FORM_POST = [ 'Content-Type' => 'application/x-www-form-urlencoded' ];
 
     const DEFAULT_BASE = "http://127.0.0.1/";
@@ -58,6 +60,7 @@ class NowAiringServer implements MessageComponentInterface {
     protected $secret;
 
     protected ?array $onNow = null;
+    protected int $onNowTime = 0;
     protected int $onNowGeneration = 0;
     protected ?PromiseInterface $onNowRefresh = null;
     protected $current;
@@ -157,6 +160,7 @@ class NowAiringServer implements MessageComponentInterface {
      */
     public function invalidateOnNow(): void {
         $this->onNow = null;
+        $this->onNowTime = 0;
         $this->onNowGeneration++;
     }
 
@@ -177,6 +181,7 @@ class NowAiringServer implements MessageComponentInterface {
                 try {
                     $r = json_decode($response->getBody(), false);
                     $this->onNow = $r->data;
+                    $this->onNowTime = time();
                     $show = $current = null;
                     if (count($this->onNow)) {
                         $show = $this->onNow[0];
@@ -217,6 +222,9 @@ class NowAiringServer implements MessageComponentInterface {
 
     protected function worker() {
         // echo "worker awake\n";
+        if (time() - $this->onNowTime < self::REFRESH_MIN)
+            return;
+
         $this->refreshOnNow()->catch(function(\Throwable $t) {
             error_log("NowAiringServer::worker: " . $t->getMessage());
         });
