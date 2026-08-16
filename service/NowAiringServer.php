@@ -33,6 +33,8 @@ use Ratchet\MessageComponentInterface;
 use Ratchet\Server\IoServer;
 use React\EventLoop\LoopInterface;
 use React\Http\Browser;
+use React\Promise;
+use React\Promise\PromiseInterface;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Route;
@@ -45,6 +47,8 @@ class NowAiringServer implements MessageComponentInterface {
 
     const TTL_SECONDS = 5;  // validity in seconds for injectImageData request
 
+    const REFRESH_MIN = 15; // minimum worker refresh interval (in seconds)
+
     const FORM_POST = [ 'Content-Type' => 'application/x-www-form-urlencoded' ];
 
     const DEFAULT_BASE = "http://127.0.0.1/";
@@ -55,6 +59,10 @@ class NowAiringServer implements MessageComponentInterface {
     protected $timer;
     protected $secret;
 
+    protected ?array $onNow = null;
+    protected int $onNowTime = 0;
+    protected int $onNowGeneration = 0;
+    protected ?PromiseInterface $onNowRefresh = null;
     protected $current;
     protected $nextSpin;
 
@@ -133,18 +141,50 @@ class NowAiringServer implements MessageComponentInterface {
                 withHeader('User-Agent', self::UA);
     }
 
+    /**
+     * Get currently on air show(s)
+     *
+     * @return PromiseInterface<array> on air shows
+     */
+    public function getOnNow(): PromiseInterface {
+        if ($this->onNowRefresh)
+            return $this->onNowRefresh;
+
+        return $this->onNow !== null ?
+                Promise\resolve($this->onNow) :
+                $this->refreshOnNow(false);
+    }
+
+    /**
+     * Mark on air show as possibly stale
+     */
+    public function invalidateOnNow(): void {
+        $this->onNow = null;
+        $this->onNowTime = 0;
+        $this->onNowGeneration++;
+    }
+
+    /**
+     * Update the current on-air status from the service
+     */
+    public function invalidateAndRefresh(): PromiseInterface {
+        $this->invalidateOnNow();
+        return $this->refreshOnNow();
+    }
+
     /*
      * fetch on-air track from service and dispatch notifications
      */
-    protected function loadOnNow() {
-        $this->server->get('api/v1/playlist?filter[date]=onnow&ts=1')
-            ->then(function(ResponseInterface $response) {
+    protected function loadOnNow($dispatch): PromiseInterface {
+        return $this->server->get('api/v1/playlist?filter[date]=onnow&ts=1')
+            ->then(function(ResponseInterface $response) use($dispatch) {
                 try {
                     $r = json_decode($response->getBody(), false);
-                    $data = $r->data;
+                    $this->onNow = $r->data;
+                    $this->onNowTime = time();
                     $show = $current = null;
-                    if (count($data)) {
-                        $show = $data[0];
+                    if (count($this->onNow)) {
+                        $show = $this->onNow[0];
                         $events = $show->attributes->events ?? [];
                         $spins = array_filter($events, function($event) {
                             return isset($event->type)
@@ -169,19 +209,25 @@ class NowAiringServer implements MessageComponentInterface {
                     $current = self::toJson($show, $current);
                     if ($this->current != $current) {
                         $this->current = $current;
-                        $this->sendNotification();
+                        if ($dispatch)
+                            $this->sendNotification();
                     }
+
+                    return $this->onNow;
                 } catch (\Throwable $t) {
-                    error_log("NowAiringServer::loadOnNow: " . $t->getMessage());
+                    return Promise\reject($t);
                 }
-            }, function(\Exception $e) {
-                error_log("NowAiringServer::loadOnNow: " . $e->getMessage());
             });
     }
 
     protected function worker() {
         // echo "worker awake\n";
-        $this->loadOnNow();
+        if (time() - $this->onNowTime < self::REFRESH_MIN)
+            return;
+
+        $this->refreshOnNow()->catch(function(\Throwable $t) {
+            error_log("NowAiringServer::worker: " . $t->getMessage());
+        });
     }
 
     protected function scheduleWorker() {
@@ -199,19 +245,43 @@ class NowAiringServer implements MessageComponentInterface {
                                     (61 - (int)$now->format("s"));
 
             $this->timer = $this->loop->addTimer($delta, function() {
-                try {
-                    $this->worker();
-                } catch(\Throwable $e) {
-                    error_log("NowAiringServer::worker: " . $e->getMessage());
-                }
+                $this->worker();
                 $this->scheduleWorker();
             });
         }
     }
 
-    public function refreshOnNow() {
-        if ($this->clients->count() > 0)
-            $this->loadOnNow();
+    protected function doRefresh(bool $dispatch): PromiseInterface {
+        $generation = $this->onNowGeneration;
+
+        return $this->loadOnNow($dispatch)->then(function($onNow) use($dispatch, $generation) {
+            // if the state changed in-flight, chain a refresh
+            if ($generation !== $this->onNowGeneration)
+                return $this->doRefresh($dispatch);
+
+            return $onNow;
+        });
+    }
+
+    /**
+     * refresh the current on-air status from the service
+     *
+     * @param bool $dispatch notify listeners if status changes (default true)
+     * @return PromiseInterface<array> on air shows
+     */
+    protected function refreshOnNow(bool $dispatch = true): PromiseInterface {
+        if ($this->onNowRefresh)
+            return $this->onNowRefresh;
+
+        $promise = $this->doRefresh($dispatch);
+
+        $this->onNowRefresh = $promise;
+
+        $promise->finally(function() {
+            $this->onNowRefresh = null;
+        });
+
+        return $promise;
     }
 
     public function onOpen(ConnectionInterface $conn) {

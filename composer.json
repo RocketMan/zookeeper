@@ -36,6 +36,7 @@
 	"ext-pdo_mysql": "*",
 	"axy/sourcemap": "^1.0",
 	"cboden/ratchet": "^0.4.3",
+	"clue/mq-react": "^1.7",
 	"components/jquery": "^3.6.0",
 	"components/jqueryui": "^1.12.1",
 	"guzzlehttp/guzzle": "^7.4",

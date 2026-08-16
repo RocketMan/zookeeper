@@ -63,7 +63,9 @@ class DatagramServer {
                     else if($message && $message[0] == '{')
                         $this->nas->sendNotification($message);
                     else // empty message means poll database
-                        $this->nas->refreshOnNow();
+                        $this->nas->invalidateAndRefresh()->catch(function(\Throwable $t) {
+                            error_log("DatagramServer::invalidateAndRefresh: " . $t->getMessage());
+                        });
             });
         });
     }

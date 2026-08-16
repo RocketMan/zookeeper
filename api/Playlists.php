@@ -877,8 +877,8 @@ class Playlists implements RequestHandlerInterface {
                 PushServer::sendAsyncNotification();
             } else if($api->isNowWithinShow($list))
                 PushServer::sendAsyncNotification();
-
-            if($list['airname'] && !$autoTimestamp && isset($stamp))
+            else if($list['airname'] && !$autoTimestamp &&
+                    isset($stamp) && $entry->isType(PlaylistEntry::TYPE_SPIN))
                 PushServer::lazyLoadImages($key, $entry->getId());
         }
 
@@ -982,11 +982,12 @@ class Playlists implements RequestHandlerInterface {
                 ($moveTo = $event->metaInformation()->getOptional("moveTo")))
             $success = $api->moveTrack($key, $id, $moveTo);
 
-        if($success && $list['airname'] && $api->isNowWithinShow($list))
-            PushServer::sendAsyncNotification();
-
-        if($success && $list['airname'] && isset($stamp))
-            PushServer::lazyLoadImages($key, $id);
+        if($success && $list['airname']) {
+            if ($api->isNowWithinShow($list))
+                PushServer::sendAsyncNotification();
+            else if (isset($stamp) && $entry->isType(PlaylistEntry::TYPE_SPIN))
+                PushServer::lazyLoadImages($key, $id);
+        }
 
         if($success && $event->metaInformation()->getOptional("wantMeta")) {
             $res = new JsonResource("event", $entry->getId());
