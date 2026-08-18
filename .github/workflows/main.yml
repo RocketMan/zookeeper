@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
 
       - name: Setup PHP 8.4 with increased memory
         uses: shivammathur/setup-php@v2
@@ -20,7 +20,7 @@ jobs:
           ini-values: memory_limit=256M
 
       - name: Install Composer dependencies (including dev)
-        uses: ramsey/composer-install@v2
+        uses: ramsey/composer-install@v4
 
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse api controllers engine service ui --no-progress --error-format=github
@@ -36,7 +36,7 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -52,7 +52,7 @@ jobs:
           http-port: 8080
 
       - name: Install Composer dependencies
-        uses: ramsey/composer-install@v2
+        uses: ramsey/composer-install@v4
         with:
           composer-options: "--no-dev"
 
