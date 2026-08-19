@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -384,6 +384,7 @@ class Albums implements RequestHandlerInterface {
 
         $album = $albums[0];
 
+        $res = null;
         switch($request->relationship()) {
         case "label":
             if($album["pubkey"])
