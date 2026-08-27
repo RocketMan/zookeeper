@@ -455,18 +455,11 @@ class NowAiringServer implements MessageComponentInterface {
                 http_build_query([
                     'msg' => $msg,
                     'sig' => $this->signMessage($msg)
-                ]))->then(function(ResponseInterface $response) use($client) {
+                ]))->then(function(ResponseInterface $response) use(&$msg) {
                     $msg = $response->getBody();
-
-                    if ($client)
-                        $client->send($msg);
-                    else {
-                        foreach ($this->clients as $client)
-                            $client->send($msg);
-                    }
-                }, function(\Exception $e) use($client, $msg) {
+                })->catch(function(\Throwable $e) {
                     error_log("NowAiringServer::asyncInjectImageData: " . $e->getMessage());
-
+                })->finally(function() use(&$msg, $client) {
                     if ($client)
                         $client->send($msg);
                     else {
