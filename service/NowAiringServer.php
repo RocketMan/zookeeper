@@ -192,7 +192,6 @@ class NowAiringServer implements MessageComponentInterface {
                         $events = $show->attributes->events ?? [];
                         $spins = array_filter($events, function($event) {
                             return isset($event->type)
-                                && $event->type === 'spin'
                                 && isset($event->created);
                         });
 
@@ -209,6 +208,9 @@ class NowAiringServer implements MessageComponentInterface {
                         $current = !empty($pastOrCurrentSpins) ? end($pastOrCurrentSpins) : null;
                         $this->nextSpin = !empty($futureSpins) ? reset($futureSpins) : null;
                     }
+
+                    if ($current && $current->type !== 'spin')
+                        $current = null;
 
                     $current = self::toJson($show, $current);
                     if ($this->current != $current) {
@@ -234,7 +236,7 @@ class NowAiringServer implements MessageComponentInterface {
         });
     }
 
-    protected function scheduleWorker() {
+    protected function scheduleWorker(int $timeToNext = 0) {
         if($this->clients->count() > 0) {
             $now = new \DateTime();
             if($this->nextSpin) {
@@ -242,8 +244,7 @@ class NowAiringServer implements MessageComponentInterface {
                 $timeToNext = $next->getTimestamp() - $now->getTimestamp();
                 if($timeToNext < 0 || $timeToNext > 60)
                     $timeToNext = 0;
-            } else
-                $timeToNext = 0;
+            }
 
             $delta = $timeToNext?($timeToNext + 1):
                                     (61 - (int)$now->format("s"));
@@ -292,7 +293,7 @@ class NowAiringServer implements MessageComponentInterface {
         $this->clients->attach($conn);
         if($this->clients->count() == 1) {
             // start worker
-            $this->scheduleWorker();
+            $this->scheduleWorker(1);
         } else
             $this->sendNotification(null, $conn);
 
