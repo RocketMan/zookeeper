@@ -294,7 +294,7 @@ class NowAiringServer implements MessageComponentInterface {
         $this->clients->attach($conn);
         if($this->clients->count() == 1) {
             // start worker
-            $this->scheduleWorker(1);
+            $this->scheduleWorker(-1);
         } else
             $this->sendNotification(null, $conn);
 
@@ -366,10 +366,9 @@ class NowAiringServer implements MessageComponentInterface {
                     'msg' => $msg,
                     'sig' => $this->signMessage($msg)
                 ])
-            )->then(function(ResponseInterface $response) {
-                $this->scheduleNext();
-            }, function(\Exception $e) {
+            )->catch(function(\Throwable $e) {
                 $this->logger->error($e->getMessage());
+            })->finally(function() {
                 $this->scheduleNext();
             });
         }
