@@ -41,6 +41,7 @@
 	"components/jqueryui": "^1.12.1",
 	"guzzlehttp/guzzle": "^7.4",
 	"league/commonmark": "^2.7",
+	"monolog/monolog": "^3.12",
 	"mottie/tablesorter": "^2.31.3",
 	"mrclay/jsmin-php": "^2.4.0",
 	"php-di/php-di": "^7.1",

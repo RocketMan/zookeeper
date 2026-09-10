@@ -28,6 +28,7 @@ use ZK\Engine\Engine;
 use ZK\Controllers\IPushProxy;
 use ZK\Controllers\Turnstile;
 
+use Psr\Log\LoggerInterface;
 use React\Cache\CacheInterface;
 use React\Dns\Model\Message;
 use React\Dns\Resolver;
@@ -81,6 +82,7 @@ class SpoaTurnstile implements IService {
 
     public function __construct(
         protected \React\EventLoop\LoopInterface $loop,
+        protected LoggerInterface $logger,
         protected CacheInterface $lruCache,
         array $config, // NOT the `config` property; this is used only in the ctor
     ) {
@@ -128,7 +130,7 @@ class SpoaTurnstile implements IService {
     public function onPreValidate(array $args): PromiseInterface|array {
         foreach (self::REQUIRED_PARAMS as $param) {
             if (!key_exists($param, $args)) {
-                error_log("pre-validate missing required argument");
+                $this->logger->critical("pre-validate missing required argument");
                 return [];
             }
         }
@@ -179,7 +181,7 @@ class SpoaTurnstile implements IService {
 
                     return $addrsPromise->then(function ($addrs) use ($addr, $domain) {
                         if (!$addrs || !in_array($addr, $addrs)) {
-                            error_log("DNS mismatch: $addr $domain");
+                            $this->logger->error("DNS mismatch: $addr $domain");
                             return self::result(false);
                         }
 

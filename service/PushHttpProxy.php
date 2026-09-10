@@ -24,6 +24,7 @@
 
 namespace ZK\Service;
 
+use Psr\Log\LoggerInterface;
 use Ratchet\RFC6455\Messaging\Frame;
 
 /**
@@ -76,6 +77,7 @@ class PushHttpProxy implements IService {
 
     public function __construct(
         protected \React\EventLoop\LoopInterface $loop,
+        protected LoggerInterface $logger,
         protected array $config,
     ) {
         $this->subscriber = new Subscriber($loop);
@@ -85,7 +87,7 @@ class PushHttpProxy implements IService {
     protected function reconnect() {
         ($this->subscriber)($this->wsEndpoint)->then([$this, 'proxy'], function ($e) {
             $firstLine = trim(strtok($e->getMessage(), "\n"));
-            echo "Could not connect: $firstLine, retrying\n";
+            $this->logger->error("Could not connect: $firstLine, retrying");
 
             // try again in 60 seconds
             $this->loop->addTimer(60, function () {
@@ -114,9 +116,10 @@ class PushHttpProxy implements IService {
         foreach($this->httpEndpoints as $key => $endpoint)
             if(!is_string($key))
                 $this->httpClient->post($endpoint,
-                            ['Content-Type' => 'application/json'], (string)$msg)->then(null, function($e) {
-                                echo "PushHttpProxy: " . $e->getMessage() . "\n";
-                            });
+                        [ 'Content-Type' => 'application/json' ],
+                        (string)$msg)->catch(function(\Throwable $e) {
+                    $this->logger->error($e->getMessage());
+                });
     }
 
     public function dispatch(\Ratchet\RFC6455\Messaging\Message $msg) {
@@ -134,7 +137,7 @@ class PushHttpProxy implements IService {
         $conn->on('message', $closure);
 
         $conn->on('close', function ($code = null, $reason = null) {
-            echo "Connection closed: $reason ($code), reconnecting\n";
+            $this->logger->error("Connection closed: $reason ($code), reconnecting");
 
             // try to reconnect in 10 seconds
             $this->loop->addTimer(10, function () {

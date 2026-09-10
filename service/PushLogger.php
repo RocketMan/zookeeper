@@ -47,8 +47,8 @@ class PushLogger extends PushHttpProxy {
     public function message(\Ratchet\RFC6455\Messaging\Message $msg) {
         $event = json_decode($msg, true);
         if($event && $event['show_id'] != $this->event['show_id']) {
-            echo "Now airing: " .
-                ($event['show_id'] ? $event['name'] . " with " . $event['airname'] : "[no playlist]") . "\n";
+            $this->logger->info("Now airing: " .
+                ($event['show_id'] ? $event['name'] . " with " . $event['airname'] : "[no playlist]"));
 
             $this->event = $event;
         }
