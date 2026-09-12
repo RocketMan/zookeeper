@@ -34,6 +34,10 @@ use ZK\Engine\IPlaylist;
 use DI\ContainerBuilder;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\ErrorLogHandler;
+use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 use React\Cache\ArrayCache;
 use React\Cache\CacheInterface;
 use React\EventLoop\LoopInterface;
@@ -63,6 +67,7 @@ class ServiceFactory {
 class ServiceDriverInstance {
     public function __construct(
         protected LoopInterface $loop,
+        protected LoggerInterface $logger,
         protected NowAiringServer $nas,
         protected DatagramServer $ds,
         protected ServiceFactory $serviceFactory,
@@ -86,8 +91,8 @@ class ServiceDriverInstance {
             }
 
             $this->loop->run();
-        } catch(\Exception $e) {
-            error_log("ServiceDriverInstance::run: " . $e->getMessage());
+        } catch(\Throwable $e) {
+            $this->logger->alert($e->getMessage());
         }
     }
 }
@@ -376,6 +381,18 @@ class ServiceDriver extends CommandTarget implements IController {
         echo $msg;
     }
 
+    protected function newLogger(): LoggerInterface {
+        $handler = new ErrorLogHandler();
+        $handler->setFormatter(new LineFormatter(
+            "[%extra.shortClass% %extra.method%] %message%",
+        ));
+
+        $logger = new Logger('zookeeper');
+        $logger->pushProcessor(new CallerProcessor());
+        $logger->pushHandler($handler);
+        return $logger;
+    }
+
     public function processLocal($action, $subaction) {
         $this->dispatchAction($action, self::$actions);
     }
@@ -403,6 +420,9 @@ class ServiceDriver extends CommandTarget implements IController {
             CacheInterface::class => \DI\create(ArrayCache::class)->constructor(PushServer::RESOLVER_CACHE_SIZE),
             LoopInterface::class => function() {
                 return \React\EventLoop\Loop::get();
+            },
+            LoggerInterface::class => function() {
+                return $this->newLogger();
             },
         ]);
 

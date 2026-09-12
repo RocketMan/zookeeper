@@ -29,6 +29,7 @@ use ZK\Engine\Engine;
 use ZK\Engine\PlaylistEntry;
 
 use Clue\React\Mq\Queue;
+use Psr\Log\LoggerInterface;
 use React\Http\Browser;
 use React\Promise;
 use React\Promise\PromiseInterface;
@@ -132,21 +133,17 @@ class ZootopiaListener implements IService {
 
     public function __construct(
         protected \React\EventLoop\LoopInterface $loop,
+        protected LoggerInterface $logger,
         protected NowAiringServer $nas,
         protected array $config,
     ) {
         $this->subscriber = new Subscriber($loop);
     }
 
-    protected function log($msg) {
-        $logName = (new \ReflectionClass($this))->getShortName();
-        error_log("$logName: $msg");
-    }
-
     protected function reconnect() {
         $this->subscriber->__invoke($this->wsEndpoint)->then([$this, 'proxy'], function ($e) {
             $firstLine = trim(strtok($e->getMessage(), "\n"));
-            $this->log("Could not connect: $firstLine, retrying");
+            $this->logger->error("Could not connect: $firstLine, retrying");
 
             // try again in 60 seconds
             $this->loop->addTimer(60, function () {
@@ -205,7 +202,7 @@ class ZootopiaListener implements IService {
                 ]
             ])
         )->then(function($response) use($time, $show) {
-            $this->log("created $show");
+            $this->logger->info("created $show");
             $this->lastOn = $response->getHeader('Location')[0];
             $this->onAir = true;
 
@@ -224,7 +221,7 @@ class ZootopiaListener implements IService {
                         ]
                     ])
                 )->then(null, function($e) use($show) {
-                    $this->log("could not insert caption for $show");
+                    $this->logger->error("could not insert caption for $show");
                     // continue with remaining fulfilled callbacks
                 });
             }
@@ -243,7 +240,7 @@ class ZootopiaListener implements IService {
         $this->lastEvent = $event;
 
         $this->queue->__invoke($event)->then(null, function(\Throwable $e) {
-            $this->log($e->getMessage());
+            $this->logger->error($e->getMessage());
         });
     }
 
@@ -332,7 +329,7 @@ class ZootopiaListener implements IService {
                                     ]
                                 ])
                             )->then(function() use($attrs, $time) {
-                                $this->log("extended {$attrs->name} {$attrs->date} $time");
+                                $this->logger->info("extended {$attrs->name} {$attrs->date} $time");
                                 $this->onAir = true;
                             });
                         } else {
@@ -341,7 +338,7 @@ class ZootopiaListener implements IService {
                         }
                     })->then(null, function($e) use($date, $time) {
                         // could not extend; create in the normal way
-                        $this->log("previous show cannot be extended; creating new show");
+                        $this->logger->info("previous show cannot be extended; creating new show");
                         $this->lastOn = null;
                         return $this->createShow($date, $time);
                     });
@@ -395,7 +392,7 @@ class ZootopiaListener implements IService {
                 $id = $zootopia->id;
                 if($delete) {
                     return $this->zk->delete("api/v1/playlist/$id")->then(function() {
-                        $this->log("another show detected, deleting our show");
+                        $this->logger->info("another show detected, deleting our show");
                         $this->lastOn = null;
                         $this->onAir = false;
                         return self::reject("DJ On Air");
@@ -414,7 +411,7 @@ class ZootopiaListener implements IService {
                             ]
                         ])
                     )->then(function() use($count) {
-                        $this->log("another show detected, ending our show");
+                        $this->logger->info("another show detected, ending our show");
                         if($count > 1)
                             $this->lastOn = null;
                         $this->onAir = false;
@@ -472,7 +469,7 @@ class ZootopiaListener implements IService {
                     )->then(function() use($album) {
                         return $album;
                     }, function($e) use($album) {
-                        $this->log("patch album failed: " . $e->getMessage());
+                        $this->logger->error("patch album failed: " . $e->getMessage());
 
                         // continue with the remaining fulfilled callbacks
                         return $album;
@@ -481,7 +478,7 @@ class ZootopiaListener implements IService {
 
                 return $album;
             }, function($e) {
-                $this->log("get tracks failed: " . $e->getMessage());
+                $this->logger->error("get tracks failed: " . $e->getMessage());
 
                 // continue with remaining fulfilled callbacks
                 return null;
@@ -534,7 +531,7 @@ class ZootopiaListener implements IService {
         })->catch(function(ControlFlowRejection $e) {
             // expected control flow
         })->catch(function(\Throwable $e) {
-            $this->log($e->getMessage());
+            $this->logger->error($e->getMessage());
         });
     }
 
@@ -584,7 +581,7 @@ class ZootopiaListener implements IService {
             $this->lastPing = null;
             $this->loop->cancelTimer($timer);
 
-            $this->log("Connection closed: $reason ($code), reconnecting");
+            $this->logger->error("Connection closed: $reason ($code), reconnecting");
 
             // try to reconnect in 10 seconds
             $this->loop->addTimer(10, function () {

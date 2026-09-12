@@ -28,6 +28,7 @@ namespace ZK\Service;
 use ZK\Engine\Engine;
 
 use Psr\Http\Message\ResponseInterface;
+use Psr\Log\LoggerInterface;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
 use Ratchet\Server\IoServer;
@@ -122,7 +123,10 @@ class NowAiringServer implements MessageComponentInterface {
         return json_encode($val);
     }
 
-    public function __construct(protected LoopInterface $loop) {
+    public function __construct(
+        protected LoopInterface $loop,
+        protected LoggerInterface $logger,
+    ) {
         $this->clients = new \SplObjectStorage;
         $this->imageQ = new \SplQueue;
 
@@ -226,7 +230,7 @@ class NowAiringServer implements MessageComponentInterface {
             return;
 
         $this->refreshOnNow()->catch(function(\Throwable $t) {
-            error_log("NowAiringServer::worker: " . $t->getMessage());
+            $this->logger->error($t->getMessage());
         });
     }
 
@@ -300,7 +304,7 @@ class NowAiringServer implements MessageComponentInterface {
             try {
                 $this->processImageQueue();
             } catch(\Exception $e) {
-                error_log("NowAiringServer::processImageQueue: " . $e->getMessage());
+                $this->logger->error($e->getMessage());
                 // TBD delay and retry
             }
         });
@@ -312,7 +316,7 @@ class NowAiringServer implements MessageComponentInterface {
                 try {
                     $this->processImageQueue();
                 } catch(\Exception $e) {
-                    error_log("NowAiringServer::processImageQueue: " . $e->getMessage());
+                    $this->logger->error($e->getMessage());
                     // TBD delay and retry
                 }
             });
@@ -361,7 +365,7 @@ class NowAiringServer implements MessageComponentInterface {
                     ]))->then(function(ResponseInterface $response) {
                         $this->scheduleNext();
                     }, function(\Exception $e) {
-                        error_log("NowAiringServer::processImageQueue: " . $e->getMessage());
+                        $this->logger->error($e->getMessage());
                         $this->scheduleNext();
                     });
         }
@@ -402,10 +406,10 @@ class NowAiringServer implements MessageComponentInterface {
                             }
                         }
                     } catch(\Throwable $e) {
-                        error_log("NowAiringServer::loadImages: " . $e->getMessage());
+                        $this->logger->error($e->getMessage());
                     }
                 }, function(\Exception $e) {
-                    error_log("NowAiringServer::loadImages: " . $e->getMessage());
+                    $this->logger->error($e->getMessage());
                 });
         } else {
             $this->server->get("api/v1/playlist/$playlist?ts=1")
@@ -440,10 +444,10 @@ class NowAiringServer implements MessageComponentInterface {
                                 $this->startQ();
                         }
                     } catch(\Throwable $e) {
-                        error_log("NowAiringServer::loadImages: " . $e->getMessage());
+                        $this->logger->error($e->getMessage());
                     }
                 }, function(\Exception $e) {
-                    error_log("NowAiringServer::loadImages: " . $e->getMessage());
+                    $this->logger->error($e->getMessage());
                 });
         }
     }
@@ -464,7 +468,7 @@ class NowAiringServer implements MessageComponentInterface {
                             $client->send($msg);
                     }
                 }, function(\Exception $e) use($client, $msg) {
-                    error_log("NowAiringServer::asyncInjectImageData: " . $e->getMessage());
+                    $this->logger->error($e->getMessage());
 
                     if ($client)
                         $client->send($msg);
@@ -503,7 +507,7 @@ class NowAiringServer implements MessageComponentInterface {
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e) {
-        error_log("NowAiringServer::onError: " . $e->getMessage());
+        $this->logger->error($e->getMessage());
         $conn->close();
     }
 
