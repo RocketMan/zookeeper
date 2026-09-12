@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -41,7 +41,6 @@ final class ApiRequest extends Request {
     public function __get($name) {
         $ref = new \ReflectionClass(parent::class);
         $prop = $ref->getProperty($name);
-        $prop->setAccessible(true);
         return $prop->getValue($this);
     }
 
