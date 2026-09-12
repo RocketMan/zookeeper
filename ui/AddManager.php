@@ -667,7 +667,7 @@ class AddManager extends MenuItem {
                 Engine::api(ILibrary::class)->markAlbumsReviewed($albums, 0, true);
 
                 foreach($albums as &$row) {
-                    $row['body'] = $row['review'];
+                    $row['body'] = $row['review'] ??= '';
                     $row['tracks'] = '';
 
                     if($row['review'] && preg_match('/(.+?)(?=(\r?\n)[\p{P}\p{S}\s]*\d+[\p{P}\p{S}\d]*\s)/su',

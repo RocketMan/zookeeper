@@ -180,48 +180,51 @@ class NowAiringServer implements MessageComponentInterface {
      * fetch on-air track from service and dispatch notifications
      */
     protected function loadOnNow($dispatch): PromiseInterface {
-        return $this->server->get('api/v1/playlist?filter[date]=onnow&ts=1')
-            ->then(function(ResponseInterface $response) use($dispatch) {
-                try {
-                    $r = json_decode($response->getBody(), false);
-                    $this->onNow = $r->data;
-                    $this->onNowTime = time();
-                    $show = $current = null;
-                    if (count($this->onNow)) {
-                        $show = $this->onNow[0];
-                        $events = $show->attributes->events ?? [];
-                        $spins = array_filter($events, function($event) {
-                            return isset($event->type)
-                                && $event->type === 'spin'
-                                && isset($event->created);
-                        });
+        return $this->server->get(
+            'api/v1/playlist?filter[date]=onnow&ts=1'
+        )->then(function(ResponseInterface $response) use($dispatch) {
+            try {
+                $r = json_decode($response->getBody(), false);
+                $this->onNow = $r->data;
+                $this->onNowTime = time();
+                $show = $current = null;
+                if (count($this->onNow)) {
+                    $show = $this->onNow[0];
+                    $events = $show->attributes->events ?? [];
+                    $spins = array_filter($events, function($event) {
+                        return isset($event->type)
+                            && isset($event->created);
+                    });
 
-                        $now = date('Y-m-d H:i:s');
+                    $now = date('Y-m-d H:i:s');
 
-                        $pastOrCurrentSpins = array_filter($spins, function($spin) use ($now) {
-                            return $spin->created <= $now;
-                        });
+                    $pastOrCurrentSpins = array_filter($spins, function($spin) use ($now) {
+                        return $spin->created <= $now;
+                    });
 
-                        $futureSpins = array_filter($spins, function($spin) use ($now) {
-                            return $spin->created > $now;
-                        });
+                    $futureSpins = array_filter($spins, function($spin) use ($now) {
+                        return $spin->created > $now;
+                    });
 
-                        $current = !empty($pastOrCurrentSpins) ? end($pastOrCurrentSpins) : null;
-                        $this->nextSpin = !empty($futureSpins) ? reset($futureSpins) : null;
-                    }
-
-                    $current = self::toJson($show, $current);
-                    if ($this->current != $current) {
-                        $this->current = $current;
-                        if ($dispatch)
-                            $this->sendNotification();
-                    }
-
-                    return $this->onNow;
-                } catch (\Throwable $t) {
-                    return Promise\reject($t);
+                    $current = !empty($pastOrCurrentSpins) ? end($pastOrCurrentSpins) : null;
+                    $this->nextSpin = !empty($futureSpins) ? reset($futureSpins) : null;
                 }
-            });
+
+                if ($current && $current->type !== 'spin')
+                    $current = null;
+
+                $current = self::toJson($show, $current);
+                if ($this->current != $current) {
+                    $this->current = $current;
+                    if ($dispatch)
+                        $this->sendNotification();
+                }
+
+                return $this->onNow;
+            } catch (\Throwable $t) {
+                return Promise\reject($t);
+            }
+        });
     }
 
     protected function worker() {
@@ -234,7 +237,7 @@ class NowAiringServer implements MessageComponentInterface {
         });
     }
 
-    protected function scheduleWorker() {
+    protected function scheduleWorker(int $timeToNext = 0) {
         if($this->clients->count() > 0) {
             $now = new \DateTime();
             if($this->nextSpin) {
@@ -242,8 +245,7 @@ class NowAiringServer implements MessageComponentInterface {
                 $timeToNext = $next->getTimestamp() - $now->getTimestamp();
                 if($timeToNext < 0 || $timeToNext > 60)
                     $timeToNext = 0;
-            } else
-                $timeToNext = 0;
+            }
 
             $delta = $timeToNext?($timeToNext + 1):
                                     (61 - (int)$now->format("s"));
@@ -292,7 +294,7 @@ class NowAiringServer implements MessageComponentInterface {
         $this->clients->attach($conn);
         if($this->clients->count() == 1) {
             // start worker
-            $this->scheduleWorker();
+            $this->scheduleWorker(-1);
         } else
             $this->sendNotification(null, $conn);
 
@@ -357,17 +359,18 @@ class NowAiringServer implements MessageComponentInterface {
             $entry = $this->imageQ->dequeue();
             $msg = self::toJson(null, $entry);
             // side-effects db insertion of missing album and artist artwork
-            $this->server->post('?target=push&action=injectImageData',
-                    self::FORM_POST,
-                    http_build_query([
-                        'msg' => $msg,
-                        'sig' => $this->signMessage($msg)
-                    ]))->then(function(ResponseInterface $response) {
-                        $this->scheduleNext();
-                    }, function(\Exception $e) {
-                        $this->logger->error($e->getMessage());
-                        $this->scheduleNext();
-                    });
+            $this->server->post(
+                '?target=push&action=injectImageData',
+                self::FORM_POST,
+                http_build_query([
+                    'msg' => $msg,
+                    'sig' => $this->signMessage($msg)
+                ])
+            )->catch(function(\Throwable $e) {
+                $this->logger->error($e->getMessage());
+            })->finally(function() {
+                $this->scheduleNext();
+            });
         }
     }
 
@@ -387,96 +390,93 @@ class NowAiringServer implements MessageComponentInterface {
 
     public function loadImages($playlist, $track) {
         if($track) {
-            $this->server->get("api/v2/playlist/$playlist/events?filter[event.id]=$track&ts=1")
-                ->then(function(ResponseInterface $response) {
-                    try {
-                        $r = json_decode($response->getBody(), false);
-                        $data = $r->data;
-                        if (count($data)) {
-                            $event = $data[0];
-                            if ($event->attributes->type == 'spin') {
-                                $tag = ($event->relationships ?? null)?->album->data->id ?? 0;
-                                if ($tag)
-                                    $event->attributes->tag = $tag;
-                                $event->attributes->id = $event->id;
-                                $this->enqueueEntry($event->attributes);
+            $this->server->get(
+                "api/v2/playlist/$playlist/events?filter[event.id]=$track&ts=1"
+            )->then(function(ResponseInterface $response) {
+                try {
+                    $r = json_decode($response->getBody(), false);
+                    $data = $r->data;
+                    if (count($data)) {
+                        $event = $data[0];
+                        if ($event->attributes->type == 'spin') {
+                            $tag = ($event->relationships ?? null)?->album->data->id ?? 0;
+                            if ($tag)
+                                $event->attributes->tag = $tag;
+                            $event->attributes->id = $event->id;
+                            $this->enqueueEntry($event->attributes);
 
-                                if($this->imageQ->count() == 1)
-                                    $this->startQ();
-                            }
-                        }
-                    } catch(\Throwable $e) {
-                        $this->logger->error($e->getMessage());
-                    }
-                }, function(\Exception $e) {
-                    $this->logger->error($e->getMessage());
-                });
-        } else {
-            $this->server->get("api/v1/playlist/$playlist?ts=1")
-                ->then(function(ResponseInterface $response) use($playlist, $track) {
-                    try {
-                        $r = json_decode($response->getBody(), false);
-                        $show = $r->data;
-                        $events = $show->attributes->events ?? [];
-                        $spins = array_filter($events, function($event) {
-                            return isset($event->type)
-                                && $event->type === 'spin';
-                        });
-
-                        $start = $this->imageQ->count();
-                        $visited = [];
-                        foreach ($spins as $spin) {
-                            $tag = ($spin->{'xa:relationships'} ?? null)?->album->data->id ?? 0;
-                            $key = $spin->artist . $tag;
-                            if (!key_exists($key, $visited)) {
-                                if ($tag)
-                                    $spin->tag = $tag;
-                                $this->enqueueEntry($spin);
-                                $visited[$key] = 1;
-                            }
-                        }
-
-                        $queued = $this->imageQ->count() - $start;
-                        if ($queued) {
-                            echo "NowAiringServer::loadImages($playlist, $track): $queued queued\n";
-
-                            if (!$start)
+                            if($this->imageQ->count() == 1)
                                 $this->startQ();
                         }
-                    } catch(\Throwable $e) {
-                        $this->logger->error($e->getMessage());
                     }
-                }, function(\Exception $e) {
+                } catch(\Throwable $e) {
                     $this->logger->error($e->getMessage());
-                });
+                }
+            }, function(\Exception $e) {
+                $this->logger->error($e->getMessage());
+            });
+        } else {
+            $this->server->get(
+                "api/v1/playlist/$playlist?ts=1"
+            )->then(function(ResponseInterface $response) use($playlist, $track) {
+                try {
+                    $r = json_decode($response->getBody(), false);
+                    $show = $r->data;
+                    $events = $show->attributes->events ?? [];
+                    $spins = array_filter($events, function($event) {
+                        return isset($event->type)
+                            && $event->type === 'spin';
+                    });
+
+                    $start = $this->imageQ->count();
+                    $visited = [];
+                    foreach ($spins as $spin) {
+                        $tag = ($spin->{'xa:relationships'} ?? null)?->album->data->id ?? 0;
+                        $key = $spin->artist . $tag;
+                        if (!key_exists($key, $visited)) {
+                            if ($tag)
+                                $spin->tag = $tag;
+                            $this->enqueueEntry($spin);
+                            $visited[$key] = 1;
+                        }
+                    }
+
+                    $queued = $this->imageQ->count() - $start;
+                    if ($queued) {
+                        echo "NowAiringServer::loadImages($playlist, $track): $queued queued\n";
+
+                        if (!$start)
+                            $this->startQ();
+                    }
+                } catch(\Throwable $e) {
+                    $this->logger->error($e->getMessage());
+                }
+            }, function(\Exception $e) {
+                $this->logger->error($e->getMessage());
+            });
         }
     }
 
     protected function asyncInjectImageData(string $msg, ?ConnectionInterface $client) {
-        $this->server->post('?target=push&action=injectImageData',
-                self::FORM_POST,
-                http_build_query([
-                    'msg' => $msg,
-                    'sig' => $this->signMessage($msg)
-                ]))->then(function(ResponseInterface $response) use($client) {
-                    $msg = $response->getBody();
-
-                    if ($client)
-                        $client->send($msg);
-                    else {
-                        foreach ($this->clients as $client)
-                            $client->send($msg);
-                    }
-                }, function(\Exception $e) use($client, $msg) {
-                    $this->logger->error($e->getMessage());
-
-                    if ($client)
-                        $client->send($msg);
-                    else {
-                        foreach ($this->clients as $client)
-                            $client->send($msg);
-                    }
-                });
+        $this->server->post(
+            '?target=push&action=injectImageData',
+            self::FORM_POST,
+            http_build_query([
+                'msg' => $msg,
+                'sig' => $this->signMessage($msg)
+            ])
+        )->then(function(ResponseInterface $response) use(&$msg) {
+            $msg = $response->getBody();
+        })->catch(function(\Throwable $e) {
+            $this->logger->error($e->getMessage());
+        })->finally(function() use(&$msg, $client) {
+            if ($client)
+                $client->send($msg);
+            else {
+                foreach ($this->clients as $client)
+                    $client->send($msg);
+            }
+        });
     }
 
     public function sendNotification(?string $msg = null, ?ConnectionInterface $client = null) {
