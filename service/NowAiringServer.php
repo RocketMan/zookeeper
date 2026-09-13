@@ -173,7 +173,9 @@ class NowAiringServer implements MessageComponentInterface {
      */
     public function invalidateAndRefresh(): PromiseInterface {
         $this->invalidateOnNow();
-        return $this->refreshOnNow();
+        return $this->refreshOnNow()->catch(function(\Throwable $t) {
+            $this->logger->error($t->getMessage());
+        });
     }
 
     /*
