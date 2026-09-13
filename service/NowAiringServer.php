@@ -279,9 +279,11 @@ class NowAiringServer implements MessageComponentInterface {
 
         $this->onNowRefresh = $promise;
 
+        // consume rejection on the finally side-chain, as
+        // the original rejection is returned to the caller
         $promise->finally(function() {
             $this->onNowRefresh = null;
-        });
+        })->catch(function(\Throwable $t) {});
 
         return $promise;
     }
