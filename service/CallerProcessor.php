@@ -44,7 +44,7 @@ class CallerProcessor extends IntrospectionProcessor {
             $method = $m[1];
         else if (is_string($method)
                 && str_contains($method, '{closure}'))
-            $method = '+';
+            $method = '-';
 
         return $record->with(
             extra: [
