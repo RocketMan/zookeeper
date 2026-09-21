@@ -156,7 +156,7 @@ class NowAiringServer implements MessageComponentInterface {
 
         return $this->onNow !== null ?
                 Promise\resolve($this->onNow) :
-                $this->refreshOnNow(false);
+                $this->refreshOnNow();
     }
 
     /**
@@ -179,10 +179,10 @@ class NowAiringServer implements MessageComponentInterface {
     /*
      * fetch on-air track from service and dispatch notifications
      */
-    protected function loadOnNow($dispatch): PromiseInterface {
+    protected function loadOnNow(): PromiseInterface {
         return $this->server->get(
             'api/v1/playlist?filter[date]=onnow&ts=1'
-        )->then(function(ResponseInterface $response) use($dispatch) {
+        )->then(function(ResponseInterface $response) {
             try {
                 $r = json_decode($response->getBody(), false);
                 $this->onNow = $r->data;
@@ -216,8 +216,7 @@ class NowAiringServer implements MessageComponentInterface {
                 $current = self::toJson($show, $current);
                 if ($this->current != $current) {
                     $this->current = $current;
-                    if ($dispatch)
-                        $this->sendNotification();
+                    $this->sendNotification();
                 }
 
                 return $this->onNow;
@@ -257,13 +256,13 @@ class NowAiringServer implements MessageComponentInterface {
         }
     }
 
-    protected function doRefresh(bool $dispatch): PromiseInterface {
+    protected function doRefresh(): PromiseInterface {
         $generation = $this->onNowGeneration;
 
-        return $this->loadOnNow($dispatch)->then(function($onNow) use($dispatch, $generation) {
+        return $this->loadOnNow()->then(function($onNow) use($generation) {
             // if the state changed in-flight, chain a refresh
             if ($generation !== $this->onNowGeneration)
-                return $this->doRefresh($dispatch);
+                return $this->doRefresh();
 
             return $onNow;
         });
@@ -272,14 +271,13 @@ class NowAiringServer implements MessageComponentInterface {
     /**
      * refresh the current on-air status from the service
      *
-     * @param bool $dispatch notify listeners if status changes (default true)
      * @return PromiseInterface<array> on air shows
      */
-    protected function refreshOnNow(bool $dispatch = true): PromiseInterface {
+    protected function refreshOnNow(): PromiseInterface {
         if ($this->onNowRefresh)
             return $this->onNowRefresh;
 
-        $promise = $this->doRefresh($dispatch);
+        $promise = $this->doRefresh();
 
         $this->onNowRefresh = $promise;
 
