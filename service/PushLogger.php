@@ -42,7 +42,7 @@ namespace ZK\Service;
  * notifications.
  */
 class PushLogger extends PushHttpProxy {
-    protected $event = [ "show_id" => 0 ];
+    protected $event = [ "show_id" => -1 ];
 
     public function message(\Ratchet\RFC6455\Messaging\Message $msg) {
         $event = json_decode($msg, true);
