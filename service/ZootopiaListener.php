@@ -76,7 +76,6 @@ class ControlFlowRejection extends \Exception {}
  * notifications.
  */
 class ZootopiaListener implements IService {
-    protected $subscriber;
     protected $queue;
     protected $wsEndpoint;
     protected $zk;
@@ -134,11 +133,11 @@ class ZootopiaListener implements IService {
     public function __construct(
         protected \React\EventLoop\LoopInterface $loop,
         protected LoggerInterface $logger,
+        protected Browser $browser,
+        protected Subscriber $subscriber,
         protected NowAiringServer $nas,
         protected array $config,
-    ) {
-        $this->subscriber = new Subscriber($loop);
-    }
+    ) {}
 
     protected function reconnect() {
         $this->subscriber->__invoke($this->wsEndpoint)->then([$this, 'proxy'], function ($e) {
@@ -159,8 +158,7 @@ class ZootopiaListener implements IService {
         });
 
         $this->wsEndpoint = $this->config[IService::WS_ENDPOINT];
-        $browser = new Browser($this->loop);
-        $this->zk = $browser->
+        $this->zk = $this->browser->
             withBase($this->config["base_url"])->
             withTimeout(self::SERVICE_TIMEOUT)->
             withHeader('User-Agent', self::UA)->

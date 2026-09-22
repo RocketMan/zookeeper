@@ -25,12 +25,15 @@
 namespace ZK\Service;
 
 use React\Cache\CacheInterface;
+use React\Datagram\Factory;
+use React\Datagram\Socket;
 use React\EventLoop\LoopInterface;
 use React\Promise;
 
 class DatagramServer {
     public function __construct(
         protected LoopInterface $loop,
+        protected Factory $dgfact,
         protected CacheInterface $resolverCache,
         protected NowAiringServer $nas,
     ) {}
@@ -47,12 +50,11 @@ class DatagramServer {
     }
 
     public function start() {
-        $dgfact = new \React\Datagram\Factory($this->loop);
         // This piggybacks on NowAiringServer's port assignment, but
         // listens on the UDP port instead of TCP.
-        $dgfact->createServer(PushServer::WSSERVER_HOST . ":" .
+        $this->dgfact->createServer(PushServer::WSSERVER_HOST . ":" .
                               PushServer::WSSERVER_PORT)->then(
-            function(\React\Datagram\Socket $client) {
+            function(Socket $client) {
                 $client->on('message', function($message, $addr, $client) {
                     // echo "received $message from $addr\n";
 

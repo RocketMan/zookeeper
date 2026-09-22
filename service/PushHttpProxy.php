@@ -25,6 +25,8 @@
 namespace ZK\Service;
 
 use Psr\Log\LoggerInterface;
+use React\EventLoop\LoopInterface;
+use React\Http\Browser;
 use Ratchet\RFC6455\Messaging\Frame;
 
 /**
@@ -69,20 +71,17 @@ use Ratchet\RFC6455\Messaging\Frame;
  */
 #[\AllowDynamicProperties]
 class PushHttpProxy implements IService {
-    protected $subscriber;
-    protected $httpClient;
     protected $wsEndpoint;
     protected $httpEndpoints;
     protected $current;
 
     public function __construct(
-        protected \React\EventLoop\LoopInterface $loop,
+        protected LoopInterface $loop,
         protected LoggerInterface $logger,
+        protected Browser $httpClient,
+        protected Subscriber $subscriber,
         protected array $config,
-    ) {
-        $this->subscriber = new Subscriber($loop);
-        $this->httpClient = new \React\Http\Browser($loop);
-    }
+    ) {}
 
     protected function reconnect() {
         ($this->subscriber)($this->wsEndpoint)->then([$this, 'proxy'], function ($e) {

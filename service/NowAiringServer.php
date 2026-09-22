@@ -126,6 +126,7 @@ class NowAiringServer implements MessageComponentInterface {
     public function __construct(
         protected LoopInterface $loop,
         protected LoggerInterface $logger,
+        protected Browser $browser,
     ) {
         $this->clients = new \SplObjectStorage;
         $this->imageQ = new \SplQueue;
@@ -138,7 +139,6 @@ class NowAiringServer implements MessageComponentInterface {
         }
 
         $baseUrl = Engine::param('base_url_internal', self::DEFAULT_BASE);
-        $browser = new Browser($loop);
         $this->server = $browser->
                 withBase($baseUrl)->
                 withTimeout(self::SERVICE_TIMEOUT)->

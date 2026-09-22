@@ -140,7 +140,7 @@ class ZootopiaPoller extends ZootopiaListener {
     }
 
     public function start() {
-        $browser = (new Browser($this->loop))->
+        $browser = $this->browser->
             withTimeout(static::SERVICE_TIMEOUT)->
             withHeader('User-Agent', self::UA)->
             withHeader('Accept', 'application/json');
