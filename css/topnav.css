@@ -463,6 +463,9 @@ nav .search-icon {
     right: 0;
     color: var(--theme-content-background-colour);
 }
+body.shade .breadcrumbs li::after {
+    color: var(--theme-content-shade-colour);
+}
 .breadcrumbs li:first-child {
     border-radius: 4px 0 0 4px;
 }

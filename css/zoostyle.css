@@ -23,6 +23,7 @@
 
     --theme-link-colour: #2530a7;
     --theme-content-background-colour: #fff;
+    --theme-content-shade-colour: #ebebeb;
 }
 
 /* Use a CSS reset to smooth out browser incongruities. */
@@ -93,6 +94,9 @@ body {
     font-family: 'Roboto', Helvetica, sans-serif;
     line-height: 1.2;
     background-color: var(--theme-content-background-colour);
+}
+body.shade {
+    background-color: var(--theme-content-shade-colour);
 }
 h1 {
     font-size: 16pt;
@@ -413,7 +417,7 @@ ul.chart-year-select {
 
 .top30 section,
 .findit section {
-    background: #fff;
+    background: var(--theme-content-background-colour);
     margin-bottom: 1.5rem;
     max-width: 1150px;
     vertical-align: top;

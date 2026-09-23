@@ -42,6 +42,9 @@ class CallerProcessor extends IntrospectionProcessor {
                 && str_starts_with($method, '{closure:')
                 && preg_match('/::(\w+)\(\)/', $method, $m))
             $method = $m[1];
+        else if (is_string($method)
+                && str_contains($method, '{closure}'))
+            $method = '-';
 
         return $record->with(
             extra: [

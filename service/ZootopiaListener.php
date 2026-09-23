@@ -76,7 +76,6 @@ class ControlFlowRejection extends \Exception {}
  * notifications.
  */
 class ZootopiaListener implements IService {
-    protected $subscriber;
     protected $queue;
     protected $wsEndpoint;
     protected $zk;
@@ -91,8 +90,8 @@ class ZootopiaListener implements IService {
 
     private const JSON_POST = [ 'Content-Type' => 'application/json' ];
 
-    private const SERVICE_TIMEOUT = 5.0; // service timeout (in seconds)
-    private const UA = "ZootopiaListener/" . Engine::VERSION;
+    protected const SERVICE_TIMEOUT = 5.0; // service timeout (in seconds)
+    protected const UA = "ZootopiaListener/" . Engine::VERSION;
 
     /**
      * test zootopia artist name against zookeeper artist
@@ -134,11 +133,11 @@ class ZootopiaListener implements IService {
     public function __construct(
         protected \React\EventLoop\LoopInterface $loop,
         protected LoggerInterface $logger,
+        protected Browser $browser,
+        protected Subscriber $subscriber,
         protected NowAiringServer $nas,
         protected array $config,
-    ) {
-        $this->subscriber = new Subscriber($loop);
-    }
+    ) {}
 
     protected function reconnect() {
         $this->subscriber->__invoke($this->wsEndpoint)->then([$this, 'proxy'], function ($e) {
@@ -159,8 +158,7 @@ class ZootopiaListener implements IService {
         });
 
         $this->wsEndpoint = $this->config[IService::WS_ENDPOINT];
-        $browser = new Browser($this->loop);
-        $this->zk = $browser->
+        $this->zk = $this->browser->
             withBase($this->config["base_url"])->
             withTimeout(self::SERVICE_TIMEOUT)->
             withHeader('User-Agent', self::UA)->
@@ -252,9 +250,10 @@ class ZootopiaListener implements IService {
      */
     protected function processEvent(array $event): PromiseInterface {
         $trackName = null;
+        $lastSpin = null;
 
         // get 'on now'
-        return $this->nas->getOnNow()->then(function($onNow) use($event) {
+        return $this->nas->getOnNow()->then(function($onNow) use($event, &$lastSpin) {
             $count = sizeof($onNow);
             $now = new \DateTime();
 
@@ -355,6 +354,7 @@ class ZootopiaListener implements IService {
                 if($event["zootopia"]) {
                     // We are already on-air; use the existing show.
                     $this->lastOn = $onNow[0]->links->self;
+                    $lastSpin = end($onNow[0]->attributes->events);
                     $this->onAir = true;
                     break;
                 }
@@ -420,13 +420,20 @@ class ZootopiaListener implements IService {
                 }
                 break;
             }
-        })->then(function() use($event, &$trackName) {
+        })->then(function() use($event, &$trackName, &$lastSpin) {
             if (!$event["track_title"])
                 return self::reject("No track");
 
-            // lookup album by track name
             $trackName = trim(preg_match("/^(.+)( \(\d+\))$/", $event["track_title"], $matches) ? $matches[1] : $event["track_title"]);
 
+            // Filter duplicate
+            if ($lastSpin
+                    && $lastSpin->type == 'spin'
+                    && $lastSpin->artist == $event['track_artist']
+                    && $lastSpin->track == $trackName)
+                return self::reject("duplicate track");
+
+            // lookup album by track name
             return $this->zk->get("api/v1/album?" .
                 http_build_query([
                     "filter[track]" => $trackName,

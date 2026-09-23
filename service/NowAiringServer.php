@@ -126,6 +126,7 @@ class NowAiringServer implements MessageComponentInterface {
     public function __construct(
         protected LoopInterface $loop,
         protected LoggerInterface $logger,
+        protected Browser $browser,
     ) {
         $this->clients = new \SplObjectStorage;
         $this->imageQ = new \SplQueue;
@@ -138,7 +139,6 @@ class NowAiringServer implements MessageComponentInterface {
         }
 
         $baseUrl = Engine::param('base_url_internal', self::DEFAULT_BASE);
-        $browser = new Browser($loop);
         $this->server = $browser->
                 withBase($baseUrl)->
                 withTimeout(self::SERVICE_TIMEOUT)->
@@ -156,7 +156,7 @@ class NowAiringServer implements MessageComponentInterface {
 
         return $this->onNow !== null ?
                 Promise\resolve($this->onNow) :
-                $this->refreshOnNow(false);
+                $this->refreshOnNow();
     }
 
     /**
@@ -173,18 +173,16 @@ class NowAiringServer implements MessageComponentInterface {
      */
     public function invalidateAndRefresh(): PromiseInterface {
         $this->invalidateOnNow();
-        return $this->refreshOnNow()->catch(function(\Throwable $t) {
-            $this->logger->error($t->getMessage());
-        });
+        return $this->refreshOnNow();
     }
 
     /*
      * fetch on-air track from service and dispatch notifications
      */
-    protected function loadOnNow($dispatch): PromiseInterface {
+    protected function loadOnNow(): PromiseInterface {
         return $this->server->get(
             'api/v1/playlist?filter[date]=onnow&ts=1'
-        )->then(function(ResponseInterface $response) use($dispatch) {
+        )->then(function(ResponseInterface $response) {
             try {
                 $r = json_decode($response->getBody(), false);
                 $this->onNow = $r->data;
@@ -218,8 +216,7 @@ class NowAiringServer implements MessageComponentInterface {
                 $current = self::toJson($show, $current);
                 if ($this->current != $current) {
                     $this->current = $current;
-                    if ($dispatch)
-                        $this->sendNotification();
+                    $this->sendNotification();
                 }
 
                 return $this->onNow;
@@ -259,13 +256,13 @@ class NowAiringServer implements MessageComponentInterface {
         }
     }
 
-    protected function doRefresh(bool $dispatch): PromiseInterface {
+    protected function doRefresh(): PromiseInterface {
         $generation = $this->onNowGeneration;
 
-        return $this->loadOnNow($dispatch)->then(function($onNow) use($dispatch, $generation) {
+        return $this->loadOnNow()->then(function($onNow) use($generation) {
             // if the state changed in-flight, chain a refresh
             if ($generation !== $this->onNowGeneration)
-                return $this->doRefresh($dispatch);
+                return $this->doRefresh();
 
             return $onNow;
         });
@@ -274,22 +271,22 @@ class NowAiringServer implements MessageComponentInterface {
     /**
      * refresh the current on-air status from the service
      *
-     * @param bool $dispatch notify listeners if status changes (default true)
      * @return PromiseInterface<array> on air shows
      */
-    protected function refreshOnNow(bool $dispatch = true): PromiseInterface {
+    protected function refreshOnNow(): PromiseInterface {
         if ($this->onNowRefresh)
             return $this->onNowRefresh;
 
-        $promise = $this->doRefresh($dispatch);
+        $promise = $this->doRefresh();
 
         $this->onNowRefresh = $promise;
 
-        // consume rejection on the finally side-chain, as
-        // the original rejection is returned to the caller
         $promise->finally(function() {
             $this->onNowRefresh = null;
-        })->catch(function(\Throwable $t) {});
+        })->catch(function(\Throwable $t) {
+            // consume rejection on the finally side-chain, as
+            // the original rejection is returned to the caller
+        });
 
         return $promise;
     }

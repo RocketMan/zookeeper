@@ -533,15 +533,8 @@ async function search(size, offset) {
                     border: 0
                 });
 
-                var body = $("body");
-                var content = $(".content");
-                var color = body.data("saved-background-colour");
-                if (color) {
-                    body.css("--theme-content-background-colour", color)
-                        .data("saved-background-colour", null);
-                    content.css("background-color", color)
-                }
-                content.empty().append(results);
+                $("body").removeClass("shade");
+                $(".content").empty().append(results);
             }
             results.empty();
             if(total > 0) {

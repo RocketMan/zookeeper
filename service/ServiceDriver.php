@@ -40,6 +40,7 @@ use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use React\Cache\ArrayCache;
 use React\Cache\CacheInterface;
+use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 
 class ServiceFactory {
@@ -418,12 +419,8 @@ class ServiceDriver extends CommandTarget implements IController {
         $builder = new ContainerBuilder();
         $builder->addDefinitions([
             CacheInterface::class => \DI\create(ArrayCache::class)->constructor(PushServer::RESOLVER_CACHE_SIZE),
-            LoopInterface::class => function() {
-                return \React\EventLoop\Loop::get();
-            },
-            LoggerInterface::class => function() {
-                return $this->newLogger();
-            },
+            LoopInterface::class => fn() => Loop::get(),
+            LoggerInterface::class => fn() => $this->newLogger(),
         ]);
 
         $container = $builder->build();
