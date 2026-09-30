@@ -179,9 +179,8 @@ The following is an overview of the source code directory structure:
 
 As you contribute code, please observe the following guidelines:
 
-* Code in `engine` may never reference other parts of the application;
-* All access to the engine is mediated via the Engine::api pattern (see
-  above for a discussion);
+* All access to the engine is mediated via constructor dependency injection
+  (see above for a discussion);
 * Code outside the engine must delegate all database access to the engine;
 * Code within the 'service' subdirectory must be asynchronous/non-blocking;
 * User inputs (UI elements as well as imports) must be scrubbed for validity,
