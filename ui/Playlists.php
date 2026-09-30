@@ -24,15 +24,19 @@
 
 namespace ZK\UI;
 
-use ZK\Engine\Engine;
+use ZK\Engine\Formatter;
+use ZK\Engine\IConfig;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IReview;
 use ZK\Engine\IUser;
 use ZK\Engine\PlaylistEntry;
+use ZK\Engine\PlaylistEntryFactory;
 use ZK\Engine\PlaylistObserver;
-use ZK\Service\PushServer;
+use ZK\Engine\ServiceConnector;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
@@ -59,6 +63,22 @@ class Playlists extends MenuItem {
     private $action;
     private $subaction;
     private $break;
+
+    public function __construct(
+        protected Formatter $formatter,
+        protected Request $request,
+        protected Session $session,
+        protected TemplateFactoryUI $templateFactory,
+        protected PlaylistEntryFactory $playlistEntryFactory,
+        protected ServiceConnector $service,
+        protected Home $home,
+        protected IConfig $config,
+        protected IDJ $djDBO,
+        protected IPlaylist $playlistDBO,
+        protected ILibrary $libraryDBO,
+    ) {
+        parent::__construct($session, $templateFactory);
+    }
 
     public function getSubactions($action) {
         return self::$subactions;
@@ -113,7 +133,7 @@ class Playlists extends MenuItem {
     }
 
     private function isOwner($playlistId) {
-        $p = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 0);
+        $p = $this->playlistDBO->getPlaylist($playlistId, 0);
         return $p && $p['dj'] == $this->session->getUser();
     }
 
@@ -124,7 +144,7 @@ class Playlists extends MenuItem {
      * Note that only timestamped entries are loaded.
      */
     protected function lazyLoadImages($playlistId, $trackId = 0) {
-        $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId);
+        $playlist = $this->playlistDBO->getPlaylist($playlistId);
 
         // unpublished playlist
         if(!$playlist['airname'])
@@ -145,58 +165,10 @@ class Playlists extends MenuItem {
         $now->modify("-7 day");
         if($showStart > $now) {
             // show is within the lookback period
-            PushServer::lazyLoadImages($playlistId, $trackId);
+            $this->service->lazyLoadImages($playlistId, $trackId);
         }
     }
     
-    private static function hourToLocale($hour, $full=0) {
-        // account for legacy, free-format time encoding
-        if(!is_numeric($hour) || !UI::isUsLocale())
-            return $hour;
-
-        $h = (int)floor($hour/100);
-        $m = (int)$hour % 100;
-        $min = $m || $full?(":" . sprintf("%02d", $m)):"";
-    
-        switch($h) {
-        case 0:
-            return $m?("12" . $min . "am"):"midnight";
-        case 12:
-            return $m?($h . $min . "pm"):"noon";
-        default:
-            if($h < 12)
-                return $h . $min . "am";
-            else
-                return ($h - 12) . $min . "pm";
-        }
-    }
-    
-    public static function timeToLocale($time) {
-        if(strlen($time) == 9 && $time[4] == '-') {
-            list($fromtime, $totime) = explode("-", $time);
-            return self::hourToLocale($fromtime) . " - " . self::hourToLocale($totime);
-        } else
-            return strtolower(htmlentities($time));
-    }
-
-    public static function timestampToDate($time) {
-        if ($time == null || $time == '') {
-            return "";
-        } else {
-            $dateSpec = UI::isUsLocale() ? 'D M d, Y ' : 'D d M Y ';
-            return date($dateSpec, strtotime($time));
-        }
-    }
-
-    public static function makeShowDateAndTime($row) {
-        return self::timestampToDate($row['showdate']) . " " .
-               self::timeToLocale($row['showtime']);
-    }
-
-    public static function makeShowTime($row) {
-        return self::timeToLocale($row['showtime']);
-    }
-
     public function listManagerGetHint() {
         $hint = null;
         $now = new \DateTime("now");
@@ -204,11 +176,10 @@ class Playlists extends MenuItem {
         $lastWeek = $now->modify("-7 day")->format("Y-m-d");
 
         // see if there is a PL on this day last week. if so use it.
-        $playlists = Engine::api(IPlaylist::class)->getPlaylists(1, 1, "", 1, $this->session->getUser(), 1, 10);
-        $djapi = Engine::api(IDJ::class);
+        $playlists = $this->playlistDBO->getPlaylists(1, 1, "", 1, $this->session->getUser(), 1, 10);
         while ($playlists && ($playlist = $playlists->fetch())) {
             // skip duplicated lists with foreign airnames
-            $aid = $djapi->getAirname($playlist['airname'], $this->session->getUser());
+            $aid = $this->djDBO->getAirname($playlist['airname'], $this->session->getUser());
             if(!$aid)
                 continue;
 
@@ -230,15 +201,15 @@ class Playlists extends MenuItem {
     }
 
     public function emitHome() {
-        $this->newEntity(Home::class)->emitHome();
+        $this->home->withContextFrom($this)->emitHome();
     }
 
     public function recentSpins() {
-        $this->newEntity(Home::class)->recentSpins();
+        $this->home->withContextFrom($this)->recentSpins();
     }
 
     public function getTimes() {
-        $this->newEntity(Home::class)->getTimes();
+        $this->home->withContextFrom($this)->getTimes();
     }
 
     public function emitListManager() {
@@ -251,7 +222,7 @@ class Playlists extends MenuItem {
     }
 
     private function getDJAirNames() {
-        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser(), 0, 1)->asArray();
+        $records = $this->djDBO->getAirnames($this->session->getUser(), 0, 1)->asArray();
 
         $airnames = array_map(function($row) {
             return $row['airname'];
@@ -262,15 +233,14 @@ class Playlists extends MenuItem {
     }
 
     private function emitPlaylistBody($playlist, $editMode) {
-        $api = Engine::api(IPlaylist::class);
-        $tracks = $api->getTracks($playlist['id'], $editMode)->asArray();
-        Engine::api(ILibrary::class)->markAlbumsReviewed($tracks);
+        $tracks = $this->playlistDBO->getTracks($playlist['id'], $editMode)->asArray();
+        $this->libraryDBO->markAlbumsReviewed($tracks);
 
         $params = [
             "action" => $this->subaction,
             "editMode" => $editMode,
             "authUser" => $this->session->isAuth("u"),
-            "usLocale" => UI::isUsLocale()
+            "usLocale" => $this->request->isUsLocale()
         ];
 
         $entries = array_map(function($track) {
@@ -280,7 +250,7 @@ class Playlists extends MenuItem {
         $this->addVar("params", $params);
         $this->addVar("entries", $entries);
         $this->addVar("editMode", $editMode);
-        $this->addVar("isLive", $api->isNowWithinShow($playlist));
+        $this->addVar("isLive", $this->playlistDBO->isNowWithinShow($playlist));
 
         if($editMode) {
             $this->addVar('airnames', $this->getDJAirNames());
@@ -293,11 +263,11 @@ class Playlists extends MenuItem {
         $playlistId = $playlist['id'];
         $showName = $playlist['description'];
         $djName = $playlist['airname'] ?? "None";
-        $showDateTime = self::makeShowDateAndTime($playlist);
+        $showDateTime = $this->formatter->makeShowDateAndTime($playlist);
 
-        $this->title = "$showName with $djName " . self::timestampToDate($playlist['showdate']);
+        $this->title = "$showName with $djName " . $this->formatter->timestampToDate($playlist['showdate']);
 
-        $this->extra = "<span class='sub'><b>Share Playlist:</b></span> <a class='nav share-link' data-link='".Engine::getBaseURL()."?subaction=viewListById&amp;playlist=$playlistId'><span class='fas fa-link'></span></a></span>";
+        $this->extra = "<span class='sub'><b>Share Playlist:</b></span> <a class='nav share-link' data-link='".$this->request->getBaseUrl()."?subaction=viewListById&amp;playlist=$playlistId'><span class='fas fa-link'></span></a></span>";
 
         $this->addVar("showDateTime", $showDateTime);
     }
@@ -309,14 +279,12 @@ class Playlists extends MenuItem {
     }
     
     private function emitTrackAdder($playlist, $editTrack = false) {
-        $api = Engine::api(IPlaylist::class);
-
         $playlistId = $playlist['id'];
 
-        $playlist['hash'] = $api->hashPlaylist($playlistId);
+        $playlist['hash'] = $this->playlistDBO->hashPlaylist($playlistId);
 
         $this->addVar('NME_PREFIX', self::NME_PREFIX);
-        $this->addVar('BASE_URL', Engine::getBaseURL());
+        $this->addVar('BASE_URL', $this->request->getBaseUrl());
 
         /* TZO is server equivalent of javascript Date.getTimezoneOffset() */
         $this->addVar('TZO', round(date('Z')/-60, 2));
@@ -326,9 +294,9 @@ class Playlists extends MenuItem {
         $this->addVar('MAX_FIELD_LENGTH', PlaylistEntry::MAX_FIELD_LENGTH);
         $this->addVar('MAX_COMMENT_LENGTH', PlaylistEntry::MAX_COMMENT_LENGTH);
 
-        $window = $api->getTimestampWindow($playlistId);
+        $window = $this->playlistDBO->getTimestampWindow($playlistId);
         $time = null;
-        $api->getTracksWithObserver($playlistId,
+        $this->playlistDBO->getTracksWithObserver($playlistId,
             (new PlaylistObserver())->on('comment logEvent setSeparator spin', function($entry) use(&$time, $editTrack) {
                 $created = $entry->getCreatedTime();
                 if($created) $time = $created;
@@ -336,7 +304,7 @@ class Playlists extends MenuItem {
             })
         );
         if(!$time) {
-            $startTime = $api->getTimestampWindow($playlistId, false)['start'];
+            $startTime = $this->playlistDBO->getTimestampWindow($playlistId, false)['start'];
             $time = $startTime->format('H:i:s');
         }
         $this->addVar('time', $time);
@@ -351,7 +319,7 @@ class Playlists extends MenuItem {
 
         // colon is included in 24hr format for symmetry with fxtime,
         // which it is referencing
-        $timeSpec = UI::isUsLocale() ? 'g:i a' : 'H:i';
+        $timeSpec = $this->request->isUsLocale() ? 'g:i a' : 'H:i';
         $startAMPM = $window['start']->format($timeSpec);
         $endAMPM = $window['end']->format($timeSpec);
         $timeMsg = "($startAMPM - $endAMPM)";
@@ -368,7 +336,7 @@ class Playlists extends MenuItem {
             return;
         }
 
-        $playlist = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
+        $playlist = $this->playlistDBO->getPlaylist($playlistId, 1);
 
         $this->emitAddForm($playlist);
 
@@ -385,14 +353,14 @@ class Playlists extends MenuItem {
                 if($spinTime)
                     $entry->setCreated($spinTime->format(IPlaylist::TIME_FORMAT_SQL));
                 $status = '';
-                Engine::api(IPlaylist::class)->insertTrackEntry($playlistId, $entry, $status);
+                $this->playlistDBO->insertTrackEntry($playlistId, $entry, $status);
                 $this->break = true;
             }
             return;
         }
 
         if(!$tag && $track && $artist && $album) {
-            $tracks = Engine::api(ILibrary::class)->search(ILibrary::TRACK_NAME, 0, 200, $track);
+            $tracks = $this->libraryDBO->search(ILibrary::TRACK_NAME, 0, 200, $track);
             foreach($tracks as $t) {
                 if(mb_strtolower(PlaylistEntry::swapNames($t['artist'])) == mb_strtolower(PlaylistEntry::swapNames($artist)) &&
                         // ILibrary::TRACK_NAME encodes compilation album title as '[coll]: title'
@@ -406,7 +374,7 @@ class Playlists extends MenuItem {
         $id = 0;
         $status = '';
         // Run the query
-        $success = Engine::api(IPlaylist::class)->insertTrack($playlistId,
+        $success = $this->playlistDBO->insertTrack($playlistId,
                      $tag, $artist, $track, $album, $label, $spinTime, $id, $status);
 
         if($success)
@@ -420,7 +388,7 @@ class Playlists extends MenuItem {
         $enclosure = $_REQUEST["enclosure"] ?? "\"";
 
         if(!$validate) {
-            $this->addVar('dateformat', UI::isUsLocale() ? "mm/dd/yy" : "dd-mm-yy");
+            $this->addVar('dateformat', $this->request->isUsLocale() ? "mm/dd/yy" : "dd-mm-yy");
             $this->addVar('airnames', $this->getDJAirNames());
             $this->addVar('format', $format);
             $this->addVar('delimiter', $delimiter);
@@ -434,8 +402,6 @@ class Playlists extends MenuItem {
         $response = [ 'success' => false, 'message' => '' ];
 
         $userfile = $_FILES['userfile']['tmp_name'] ?? null;
-
-        $papi = Engine::api(IPlaylist::class);
 
         if($format == "csv") {
             $description = mb_substr(trim($_REQUEST["description"]), 0, IPlaylist::MAX_DESCRIPTION_LENGTH);
@@ -457,14 +423,13 @@ class Playlists extends MenuItem {
             $aid = null;
             $airname = $_REQUEST["airname"];
             if($airname && strcasecmp($airname, "none")) {
-                $djapi = Engine::api(IDJ::class);
-                $aid = $djapi->getAirname($airname, $this->session->getUser());
+                $aid = $this->djDBO->getAirname($airname, $this->session->getUser());
                 if(!$aid) {
                     // airname does not exist; try to create it
-                    $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $this->session->getUser());
+                    $success = $this->djDBO->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $this->session->getUser());
                     if($success > 0) {
                         // success!
-                        $aid = $djapi->lastInsertId();
+                        $aid = $this->djDBO->lastInsertId();
                     } else {
                         $response['message'] = "Airname '$airname' is invalid or already exists.";
                         $airname = "";
@@ -474,7 +439,7 @@ class Playlists extends MenuItem {
             }
 
             if(!$response['message'] && $_REQUEST['require-usual-slot'] &&
-                    !$papi->checkUsualSlot($date, $time, $this->session->getUser())) {
+                    !$this->playlistDBO->checkUsualSlot($date, $time, $this->session->getUser())) {
                 header('HTTP/1.1 422 Unusual Date and Time');
                 return;
             }
@@ -511,14 +476,13 @@ class Playlists extends MenuItem {
 
                 // lookup the airname
                 if($valid && strcasecmp($attrs->airname, "none")) {
-                    $djapi = Engine::api(IDJ::class);
-                    $airname = $djapi->getAirname($attrs->airname, $this->session->getUser());
+                    $airname = $this->djDBO->getAirname($attrs->airname, $this->session->getUser());
                     if(!$airname) {
                         // airname does not exist; try to create it
-                        $success = $djapi->insertAirname(mb_substr($attrs->airname, 0, IDJ::MAX_AIRNAME_LENGTH), $this->session->getUser());
+                        $success = $this->djDBO->insertAirname(mb_substr($attrs->airname, 0, IDJ::MAX_AIRNAME_LENGTH), $this->session->getUser());
                         if($success > 0) {
                             // success!
-                            $airname = $djapi->lastInsertId();
+                            $airname = $this->djDBO->lastInsertId();
                         } else
                             $valid = false;
                     }
@@ -526,7 +490,7 @@ class Playlists extends MenuItem {
                     $airname = null;
 
                 if($valid && $_REQUEST['require-usual-slot'] &&
-                        !Engine::api(IPlaylist::class)->checkUsualSlot($attrs->date, $attrs->time, $this->session->getUser())) {
+                        !$this->playlistDBO->checkUsualSlot($attrs->date, $attrs->time, $this->session->getUser())) {
                     header('HTTP/1.1 422 Unusual Date and Time');
 
                     // client doesn't already have date/time for json import
@@ -538,16 +502,16 @@ class Playlists extends MenuItem {
 
                 // create the playlist
                 if($valid) {
-                    $papi->insertPlaylist($this->session->getUser(), $attrs->date, $attrs->time, mb_substr($attrs->name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $airname);
-                    $playlist = $papi->lastInsertId();
+                    $this->playlistDBO->insertPlaylist($this->session->getUser(), $attrs->date, $attrs->time, mb_substr($attrs->name, 0, IPlaylist::MAX_DESCRIPTION_LENGTH), $airname);
+                    $playlist = $this->playlistDBO->lastInsertId();
 
                     // insert the tracks
                     $count = 0;
                     $status = '';
-                    $window = $papi->getTimestampWindow($playlist);
+                    $window = $this->playlistDBO->getTimestampWindow($playlist);
                     $data = isset($json->attributes)?$attrs->events:$json->data;
                     foreach($data as $pentry) {
-                        $entry = PlaylistEntry::fromJSON($pentry);
+                        $entry = $this->playlistEntryFactory->fromJSON($pentry);
                         $created = $entry->getCreated();
                         if($created) {
                             try {
@@ -558,12 +522,12 @@ class Playlists extends MenuItem {
                                 $entry->setCreated(null);
                             }
                         }
-                        $success = $papi->insertTrackEntry($playlist, $entry, $status);
+                        $success = $this->playlistDBO->insertTrackEntry($playlist, $entry, $status);
                         $count++;
                     }
 
                     if($count == 0) {
-                        $papi->deletePlaylist($playlist);
+                        $this->playlistDBO->deletePlaylist($playlist);
                         $response['message'] = "Import file contains no entries.";
                     } else {
                         // success
@@ -587,8 +551,8 @@ class Playlists extends MenuItem {
                 $response['message'] = "Ensure fields are not blank and date is valid.";
         } else if($format == "csv") {
             // Create the playlist
-            $success = $papi->insertPlaylist($this->session->getUser(), $date, $time, $description, $aid);
-            $playlist = $papi->lastInsertId();
+            $success = $this->playlistDBO->insertPlaylist($this->session->getUser(), $date, $time, $description, $aid);
+            $playlist = $this->playlistDBO->lastInsertId();
 
             // empty delimiter is tab
             if(strlen(trim($delimiter)) == 0)
@@ -597,7 +561,7 @@ class Playlists extends MenuItem {
             // Insert the tracks
             $count = 0;
             $fd = new \SplFileObject($userfile, "r");
-            $window = $papi->getTimestampWindow($playlist);
+            $window = $this->playlistDBO->getTimestampWindow($playlist);
             while($fd->valid()) {
                 // Allow only RFC 4180 escaping (double enclosure character)
                 $line = $fd->fgetcsv($delimiter, $enclosure, "");
@@ -617,7 +581,7 @@ class Playlists extends MenuItem {
                     // artist track album tag label
                     if($line[3]) {
                         // Lookup tag
-                        $albumrec = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $line[3]);
+                        $albumrec = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $line[3]);
                         if(sizeof($albumrec) == 0) {
                             // invalid tag
                             $line[3] = "";
@@ -665,7 +629,7 @@ class Playlists extends MenuItem {
             $fd = null; // close
 
             if($count == 0) {
-                $papi->deletePlaylist($playlist);
+                $this->playlistDBO->deletePlaylist($playlist);
                 $response['message'] = "Import file contains no data.  Check the format and try again.";
             } else {
                 // success
@@ -685,7 +649,7 @@ class Playlists extends MenuItem {
     }
 
     private function viewList($playlistId) {
-        $row = Engine::api(IPlaylist::class)->getPlaylist($playlistId, 1);
+        $row = $this->playlistDBO->getPlaylist($playlistId, 1);
         if(!$row ||
                 !$row['airname'] && $this->session->getUser() != $row['dj']) {
             echo "<B>Sorry, the playlist you have requested does not exist.</B>";
@@ -719,7 +683,7 @@ class Playlists extends MenuItem {
 
             if(!$viewuser) $viewuser = -1;
 
-            $dj = Engine::api(IDJ::class)->getAirnames(0, $viewuser)->fetch();
+            $dj = $this->djDBO->getAirnames(0, $viewuser)->fetch();
             if(!$dj) {
                 echo "<b>Sorry, the DJ you have requested does not exist.</b>";
                 return;
@@ -745,9 +709,9 @@ class Playlists extends MenuItem {
                 $this->extra = $extra;
             }
     
-            $topPlays = Engine::api(IPlaylist::class)->getTopPlays($viewuser, $weeks * 7, $limit);
+            $topPlays = $this->playlistDBO->getTopPlays($viewuser, $weeks * 7, $limit);
             $pos = 0;
-            $recentReviews = Engine::api(ILibrary::class)->searchPos(ILibrary::ALBUM_AIRNAME, $pos, $count, $viewuser, "Date-");
+            $recentReviews = $this->libraryDBO->searchPos(ILibrary::ALBUM_AIRNAME, $pos, $count, $viewuser, "Date-");
 
             $this->addVar('topPlays', $topPlays);
             $this->addVar('recentReviews', $recentReviews);
@@ -770,7 +734,7 @@ class Playlists extends MenuItem {
         $viewAll = $this->subaction == "viewDJAll";
 
         // Run the query
-        $records = Engine::api(IDJ::class)->getActiveAirnames($viewAll)->asArray();
+        $records = $this->djDBO->getActiveAirnames($viewAll)->asArray();
         $djs = array_map(function($row) {
             $row["sort"] = preg_match("/^(the|dj)\s+(.+)/i", $row[1], $matches) ? $matches[2] : $row[1];
             // sort symbols beyond Z with the numerics and other special chars
@@ -796,7 +760,7 @@ class Playlists extends MenuItem {
     public function handlePlaylistDaysByDate() {
         $date = $_REQUEST["viewdate"];
         $dateAr = explode('-', $date);
-        $records = Engine::api(IPlaylist::class)->getShowdates($dateAr[0], $dateAr[1])->asArray();
+        $records = $this->playlistDBO->getShowdates($dateAr[0], $dateAr[1])->asArray();
         $showdates = array_map(function($row) {
             return explode('-', $row['showdate'])[2];
         }, $records);
@@ -806,14 +770,14 @@ class Playlists extends MenuItem {
 
     // emit page for picking playlists for a given month.
     public function emitPlaylistPicker() {
-        $startDate = Engine::param('playlist_start_date');
+        $startDate = $this->config->get('playlist_start_date');
         $this->setTemplate("list/bydate.html");
         $this->addVar("startDate", $startDate);
     }
 
     public function handlePlaylistsByDate() {
         $viewdate = $_REQUEST["viewdate"];
-        $lists = Engine::api(IPlaylist::class)->getPlaylists(1, 1, $viewdate, 0, 0, 0)->asArray();
+        $lists = $this->playlistDBO->getPlaylists(1, 1, $viewdate, 0, 0, 0)->asArray();
         $count = count($lists);
 
         foreach($lists as &$list) {
@@ -823,7 +787,7 @@ class Playlists extends MenuItem {
                 $list['showtime'] = "0000-$totime";
             }
 
-            $list['timerange'] = self::timeToLocale($list['showtime']);
+            $list['timerange'] = $this->formatter->timeToLocale($list['showtime']);
         }
 
         $this->setTemplate('list/bydate.html');

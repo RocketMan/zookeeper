@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -24,11 +24,14 @@
 
 namespace ZK\UI;
 
-use ZK\Engine\Engine;
+use ZK\Engine\Formatter;
 use ZK\Engine\IChart;
+use ZK\Engine\IConfig;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
 class Home extends MenuItem {
     private const DEFAULT_COUNT = 12;
@@ -39,12 +42,25 @@ class Home extends MenuItem {
         [ "times", "getTimes" ],
     ];
 
+    public function __construct(
+        protected Formatter $formatter,
+        protected Request $request,
+        protected Session $session,
+        protected TemplateFactoryUI $templateFactory,
+        protected IConfig $config,
+        protected IPlaylist $playlistDBO,
+        protected IChart $chartDBO,
+        protected ILibrary $libraryDBO,
+    ) {
+        parent::__construct($session, $templateFactory);
+    }
+
     public function processLocal($action, $subaction) {
         return $this->dispatchAction($subaction, self::$subactions);
     }
 
     public function recentSpins() {
-        $plays = Engine::api(IPlaylist::class)->getPlaysBefore($_REQUEST["before"] ?? null, $_REQUEST["count"] ?? self::DEFAULT_COUNT);
+        $plays = $this->playlistDBO->getPlaysBefore($_REQUEST["before"] ?? null, $_REQUEST["count"] ?? self::DEFAULT_COUNT);
         echo json_encode($plays);
     }
 
@@ -83,9 +99,9 @@ class Home extends MenuItem {
     public function emitHome() {
         $this->setTemplate("onnow.html");
         $this->emitWhatsOnNow();
-        if(($config = Engine::param('discogs')) &&
+        if(($config = $this->config->get('discogs')) &&
                 ($config['apikey'] || $config['client_id']) &&
-                Engine::param('push_enabled', true))
+                $this->config->get('push_enabled', true))
             $this->emitRecentlyPlayed();
         else
             $this->emitTopPlays();
@@ -96,13 +112,13 @@ class Home extends MenuItem {
         $this->makeDatePicker();
         $this->makeTimePicker();
 
-        $plays = Engine::api(IPlaylist::class)->getPlaysBefore(null, self::DEFAULT_COUNT);
+        $plays = $this->playlistDBO->getPlaysBefore(null, self::DEFAULT_COUNT);
         $this->addVar('plays', $plays);
     }
 
     private function emitTopPlays($numweeks=1, $limit=10) {
        // Determine last chart date
-       $weeks = Engine::api(IChart::class)->getChartDates(1);
+       $weeks = $this->chartDBO->getChartDates(1);
        if($weeks && ($lastWeek = $weeks->fetch()))
           list($y,$m,$d) = explode("-", $lastWeek["week"]);
     
@@ -111,7 +127,7 @@ class Home extends MenuItem {
 
        $topPlays = [];
        if(!$numweeks || $numweeks == 1)
-          Engine::api(IChart::class)->getChart($topPlays, "", $lastWeek["week"], $limit);
+          $this->chartDBO->getChart($topPlays, "", $lastWeek["week"], $limit);
        else {
           // Determine start chart date that will yield $numweeks worth of charts
           $startDate = date("Y-m-d", mktime(0,0,0,
@@ -119,10 +135,10 @@ class Home extends MenuItem {
                                           $d-(($numweeks-1)*7),
                                           $y));
     
-          Engine::api(IChart::class)->getChart($topPlays, $startDate, "", $limit);
+          $this->chartDBO->getChart($topPlays, $startDate, "", $limit);
        }
     
-       Engine::api(ILibrary::class)->markAlbumsReviewed($topPlays);
+       $this->libraryDBO->markAlbumsReviewed($topPlays);
        if(sizeof($topPlays)) {
           $formatEndDate = date("l, j F Y", mktime(0,0,0,$m,$d,$y));
           for($i=0; $i < sizeof($topPlays); $i++) {
@@ -147,14 +163,14 @@ class Home extends MenuItem {
     private function emitWhatsOnNow() {
         $tz = date("T");
         $this->addVar('tz', $tz);
-        $record = Engine::api(IPlaylist::class)->getWhatsOnNow();
+        $record = $this->playlistDBO->getWhatsOnNow();
         if($record && ($row = $record->fetch())) {
-            $row['showtime'] = Playlists::makeShowTime($row);
+            $row['showtime'] = $this->formatter->makeShowTime($row);
             $this->addVar('onnow', $row);
         }
 
-        if(Engine::param('push_enabled', true)) {
-            $push = preg_replace("/^(http)/", "ws", Engine::getBaseUrl()) . "push/onair";
+        if($this->config->get('push_enabled', true)) {
+            $push = preg_replace("/^(http)/", "ws", $this->request->getBaseUrl()) . "push/onair";
             $this->addVar('push', $push);
         }
     }

@@ -25,9 +25,12 @@
 namespace ZK\API;
 
 use ZK\Engine\Engine;
+use ZK\Engine\IArtwork;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
 use Enm\JsonApi\Exception\BadRequestException;
 use Enm\JsonApi\Exception\JsonApiException;
@@ -64,9 +67,26 @@ class Reviews implements RequestHandlerInterface {
         "match(review)" => [ -1, "reviews" ],
     ];
 
-    public static function fromRecord($rec) {
+    public function __construct(
+        protected Request $request,
+        protected Session $session,
+        protected Albums $albums,
+        protected Labels $labels,
+        protected IArtwork $imageDBO,
+        protected ILibrary $libraryDBO,
+        protected IDJ $djDBO,
+        protected IReview $reviewDBO,
+    ) {}
+
+    /*
+     * This method is static to avoid a circular dependency, as
+     * Albums references this method.
+     *
+     * This necessitates the caller's passing in baseUrl.
+     */
+    public static function fromRecord($rec, $baseUrl) {
         $res = new JsonResource("review", $rec["id"]);
-        $res->links()->set(new Link("self", Engine::getBaseUrl()."review/".$rec["id"]));
+        $res->links()->set(new Link("self", "{$baseUrl}review/{$rec['id']}"));
         foreach(self::FIELDS as $field) {
             switch($field) {
             case "date":
@@ -89,32 +109,32 @@ class Reviews implements RequestHandlerInterface {
         return $res;
     }
 
-    public static function fromArray(array $records, $flags = self::LINKS_NONE) {
+    public function fromArray(array $records, $flags = self::LINKS_NONE) {
         $result = [];
         $wantsAlbum = $flags & self::LINKS_ALBUM;
         $wantsReview = $flags & self::LINKS_REVIEW_BODY;
         foreach($records as $record) {
             if(empty($record["review"]) && $wantsReview) {
-                $reviews = Engine::api(IReview::class)->getReviews($record["id"], 1, "", Engine::session()->isAuth("u"), 1);
+                $reviews = $this->reviewDBO->getReviews($record["id"], 1, "", $this->session->isAuth("u"), 1);
                 $record["review"] = $reviews[0]["review"];
             }
-            $resource = self::fromRecord($record);
+            $resource = self::fromRecord($record, $this->request->getBaseUrl());
             $result[] = $resource;
 
             if($wantsAlbum) {
                 // full text reviews album info is incomplete;
                 // fetch if the caller has requested it
-                $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $record["tag"]);
+                $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $record["tag"]);
                 $aflags = Albums::LINKS_LABEL;
                 if($flags & self::LINKS_ALBUM_TRACKS)
                     $aflags |= Albums::LINKS_TRACKS;
-                $res = Albums::fromArray($albums, $aflags)[0];
+                $res = $this->albums->fromArray($albums, $aflags)[0];
             } else
-                $res = Albums::fromRecord($record, false);
+                $res = $this->albums->fromRecord($record, false);
 
             $relation = new Relationship("album", $res);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."review/{$record["id"]}/album"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."review/{$record["id"]}/relationships/album"));
+            $relation->links()->set(new Link("related", $this->request->getBaseUrl()."review/{$record["id"]}/album"));
+            $relation->links()->set(new Link("self", $this->request->getBaseUrl()."review/{$record["id"]}/relationships/album"));
             $relation->metaInformation()->set("album", $res->attributes()->getOptional("album"));
             $relation->metaInformation()->set("artist", $res->attributes()->getOptional("artist"));
             $resource->relationships()->set($relation);
@@ -124,7 +144,7 @@ class Reviews implements RequestHandlerInterface {
 
     public function fetchResource(RequestInterface $request): ResponseInterface {
         $key = $request->id();
-        $reviews = Engine::api(IReview::class)->getReviews($key, 1, "", Engine::session()->isAuth("u"), 1);
+        $reviews = $this->reviewDBO->getReviews($key, 1, "", $this->session->isAuth("u"), 1);
 
         if(sizeof($reviews) == 0)
             throw new ResourceNotFoundException("review", $key);
@@ -134,7 +154,7 @@ class Reviews implements RequestHandlerInterface {
                 $request->requestsField("album", "tracks"))
             $flags |= self::LINKS_ALBUM_TRACKS;
 
-        $resource = self::fromArray($reviews, $flags)[0];
+        $resource = $this->fromArray($reviews, $flags)[0];
 
         $document = new Document($resource);
 
@@ -155,19 +175,19 @@ class Reviews implements RequestHandlerInterface {
 
     public function fetchRelationship(RequestInterface $request): ResponseInterface {
         $key = $request->id();
-        $reviews = Engine::api(IReview::class)->getReviews($key, 1, "", Engine::session()->isAuth("u"), 1);
+        $reviews = $this->reviewDBO->getReviews($key, 1, "", $this->session->isAuth("u"), 1);
 
         if(sizeof($reviews) == 0)
             throw new ResourceNotFoundException("review", $key);
 
         switch($request->relationship()) {
         case "album":
-            $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $reviews[0]['tag']);
+            $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $reviews[0]['tag']);
             if(sizeof($albums)) {
                 $aflags = Albums::LINKS_LABEL;
                 if($request->requestsField("album", "tracks"))
                     $aflags |= Albums::LINKS_TRACKS;
-                $res = Albums::fromArray($albums, $aflags)[0];
+                $res = $this->albums->fromArray($albums, $aflags)[0];
             }
             break;
         case "relationships":
@@ -178,10 +198,10 @@ class Reviews implements RequestHandlerInterface {
 
         $document = new Document($res);
         if($request->requestsAttributes())
-            $document->links()->set(new Link("self", Engine::getBaseUrl()."review/$key/".$request->relationship()));
+            $document->links()->set(new Link("self", $this->request->getBaseUrl()."review/$key/".$request->relationship()));
         else {
-            $document->links()->set(new Link("self", Engine::getBaseUrl()."review/$key/relationships/".$request->relationship()));
-            $document->links()->set(new Link("related", Engine::getBaseUrl()."review/$key/".$request->relationship()));
+            $document->links()->set(new Link("self", $this->request->getBaseUrl()."review/$key/relationships/".$request->relationship()));
+            $document->links()->set(new Link("related", $this->request->getBaseUrl()."review/$key/".$request->relationship()));
         }
 
         $response = new DocumentResponse($document);
@@ -191,34 +211,32 @@ class Reviews implements RequestHandlerInterface {
     public function createResource(RequestInterface $request): ResponseInterface {
         $review = $request->requestBody()->data()->first("review");
         $tag = $review->relationships()->get("album")->related()->first("album")->id();
-        $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        $album = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
         if(sizeof($album) == 0)
             throw new ResourceNotFoundException("album", $tag);
 
-        $djapi = Engine::api(IDJ::class);
-        $user = Engine::session()->getUser();
+        $user = $this->session->getUser();
         $attrs = $review->attributes();
         $an = $attrs->getRequired("airname");
-        $airname = $djapi->getAirname($an);
+        $airname = $this->djDBO->getAirname($an);
         if(!$airname) {
             // airname does not exist; try to create it
-            $success = $djapi->insertAirname(mb_substr($an, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
+            $success = $this->djDBO->insertAirname(mb_substr($an, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
             if(!$success)
                 throw new JsonApiException("Cannot create airname $an");
 
-            $airname = $djapi->lastInsertId();
+            $airname = $this->djDBO->lastInsertId();
         }
 
         $private = $attrs->getOptional("published", true) ? 0 : 1;
         $review = $attrs->getRequired("review");
 
-        $revapi = Engine::api(IReview::class);
-        $reviews = $revapi->getReviews($tag, 1, $user, 0);
+        $reviews = $this->reviewDBO->getReviews($tag, 1, $user, 0);
         if(sizeof($reviews))
             throw new NotAllowedException("review already exists, use PATCH");
 
-        if($revapi->insertReview($tag, $private, $airname, $review, $user))
-            return new CreatedResponse(Engine::getBaseUrl()."review/{$revapi->lastInsertId()}");
+        if($this->reviewDBO->insertReview($tag, $private, $airname, $review, $user))
+            return new CreatedResponse($this->request->getBaseUrl()."review/{$this->reviewDBO->lastInsertId()}");
 
         throw new \Exception("creation failed");
     }
@@ -226,46 +244,43 @@ class Reviews implements RequestHandlerInterface {
     public function patchResource(RequestInterface $request): ResponseInterface {
         $review = $request->requestBody()->data()->first("review");
         $tag = $review->relationships()->get("album")->related()->first("album")->id();
-        $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        $album = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
         if(sizeof($album) == 0)
             throw new ResourceNotFoundException("album", $tag);
 
-        $djapi = Engine::api(IDJ::class);
-        $user = Engine::session()->getUser();
+        $user = $this->session->getUser();
         $attrs = $review->attributes();
         $an = $attrs->getRequired("airname");
-        $airname = $djapi->getAirname($an);
+        $airname = $this->djDBO->getAirname($an);
         if(!$airname) {
             // airname does not exist; try to create it
-            $success = $djapi->insertAirname(mb_substr($an, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
+            $success = $this->djDBO->insertAirname(mb_substr($an, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
             if(!$success)
                 throw new JsonApiException("Cannot create airname $an");
 
-            $airname = $djapi->lastInsertId();
+            $airname = $this->djDBO->lastInsertId();
         }
 
         $private = $attrs->getOptional("published", true) ? 0 : 1;
         $review = $attrs->getRequired("review");
 
-        $revapi = Engine::api(IReview::class);
-        $reviews = $revapi->getReviews($tag, 1, $user, 0);
+        $reviews = $this->reviewDBO->getReviews($tag, 1, $user, 0);
         if(!sizeof($reviews))
             throw new NotAllowedException("review does not exist, use POST");
 
-        if($revapi->updateReview($tag, $private, $airname, $review, $user))
+        if($this->reviewDBO->updateReview($tag, $private, $airname, $review, $user))
             return new EmptyResponse();
 
         throw new \Exception("update failed");
     }
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
-        $session = Engine::session();
+        $session = $this->session;
         if(!$session->isAuth("u"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
-        $revapi = Engine::api(IReview::class);
-        $reviews = $revapi->getReviews($key, 1, "", Engine::session()->isAuth("u"), 1);
+        $reviews = $this->reviewDBO->getReviews($key, 1, "", $this->session->isAuth("u"), 1);
 
         if(sizeof($reviews) == 0)
             throw new ResourceNotFoundException("review", $key);
@@ -274,7 +289,7 @@ class Reviews implements RequestHandlerInterface {
         if($user != $reviews[0]["user"])
             throw new NotAllowedException("only review owner may delete");
 
-        $revapi->deleteReview($reviews[0]["tag"], $user);
+        $this->reviewDBO->deleteReview($reviews[0]["tag"], $user);
 
         return new EmptyResponse();
     }

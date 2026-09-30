@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -26,7 +26,7 @@ namespace ZK\UI;
 
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
-use ZK\UI\UICommon as UI;
+use ZK\Engine\Request;
 
 class PlaylistBuilder extends PlaylistObserver {
     private const PARAMS = [ "action", "editMode", "authUser" ];
@@ -35,7 +35,14 @@ class PlaylistBuilder extends PlaylistObserver {
     protected $params;
     protected $break;
 
-    public static function newInstance(array $params) {
+    public function __construct(
+        protected Request $request,
+        TemplateFactoryUI $templateFact,
+    ) {
+        $this->template = $templateFact->load('list/body.html');
+    }
+
+    public function newInstance(array $params) {
         // validate all parameters are present
         // TBD: when we require PHP 8, replace with named params
         $missing = [];
@@ -46,24 +53,10 @@ class PlaylistBuilder extends PlaylistObserver {
         if(sizeof($missing))
             throw new \InvalidArgumentException("missing required parameter(s): " . implode(", ", $missing));
 
-        return new PlaylistBuilder($params);
-    }
-
-    protected function renderBlock($block, $entry) {
-        return $this->template->renderBlock($block, [
-            "params" => $this->params,
-            "break" => $this->break,
-            "entry" => $entry
-        ]);
-    }
-
-    protected function __construct(array $params) {
-        $templateFact = new TemplateFactoryUI();
-        $this->template = $templateFact->load('list/body.html');
         $this->params = $params;
-        $this->params['usLocale'] = UI::isUsLocale();
+        $this->params['usLocale'] = $this->request->isUsLocale();
         $this->break = false;
-        $this->on('comment', function($entry) {
+        $this->off()->on('comment', function($entry) {
             $fragment = $this->renderBlock('comment', $entry);
             $this->break = false;
             return $fragment;
@@ -80,5 +73,15 @@ class PlaylistBuilder extends PlaylistObserver {
             $this->break = false;
             return $fragment;
         });
+
+        return clone $this;
+    }
+
+    protected function renderBlock($block, $entry) {
+        return $this->template->renderBlock($block, [
+            "params" => $this->params,
+            "break" => $this->break,
+            "entry" => $entry
+        ]);
     }
 }

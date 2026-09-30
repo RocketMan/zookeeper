@@ -26,7 +26,7 @@ require_once __DIR__."/vendor/autoload.php";
 
 use League\CommonMark\GithubFlavoredMarkdownConverter;
 
-use ZK\Engine\Engine;
+use ZK\Engine\Decorator;
 
 $stylesheet = "css/zoostyle.css";
 
@@ -55,7 +55,7 @@ if($_SERVER['REQUEST_METHOD'] == "HEAD")
     return;
 
 $depth = substr_count($_GET['asset'], '/', 1);
-$stylesheet = str_repeat("../", $depth) . Engine::decorate($stylesheet);
+$stylesheet = str_repeat("../", $depth) . Decorator::decorateAsset($stylesheet);
 
 ob_start("ob_gzhandler");
 

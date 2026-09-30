@@ -28,10 +28,12 @@ use ZK\Engine\Engine;
 use ZK\UI\AddManager;
 
 class ExportAfile implements IController {
+    public function __construct(
+        protected AddManager $addmgr,
+    ) {}
+
     public function processRequest() {
-        $addmgr = new AddManager();
-        $addmgr->session = Engine::session();
-        $addmgr->emitPrintableCurrentFile();
-        echo $addmgr->render();
+        $this->addmgr->emitPrintableCurrentFile();
+        echo $this->addmgr->render();
     }
 }

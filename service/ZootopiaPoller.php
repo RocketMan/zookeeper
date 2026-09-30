@@ -24,7 +24,7 @@
 
 namespace ZK\Service;
 
-use ZK\Engine\Engine;
+use ZK\Engine\Zookeeper;
 
 use Psr\Http\Message\ResponseInterface;
 use React\Http\Browser;
@@ -76,7 +76,7 @@ class ZootopiaPoller extends ZootopiaListener {
     private const POLLING_INTERVAL_DEFAULT = 60; // in seconds
     private const POLLING_INTERVAL_ONAIR = 15;   // in seconds
 
-    protected const UA = "ZootopiaPoller/" . Engine::VERSION;
+    protected const UA = "ZootopiaPoller/" . Zookeeper::VERSION;
 
     protected $service;
 

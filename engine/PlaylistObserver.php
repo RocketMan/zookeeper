@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -90,10 +90,18 @@ class PlaylistObserver {
     /**
      * install lambda function to handle one or more entry types
      */
-    public function on(string $types, \Closure $fn) {
+    public function on(string $types, \Closure $fn): static {
         foreach(explode(' ', $types) as $type)
             $this->closures[$type] = $fn;
 
+        return $this;
+    }
+
+    /**
+     * remove all installed handlers
+     */
+    public function off(): static {
+        $this->closures = [];
         return $this;
     }
 

@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -25,9 +25,11 @@
 namespace ZK\Engine;
 
 /**
- * Access configuration data
+ * Configuration data
+ *
+ * NOTE: Do not instantiate this class directly; instead inject IConfig.
  */
-class Config {
+class Config implements IConfig {
     private $config;
 
     /**
@@ -36,38 +38,37 @@ class Config {
      * @param string $file base filename of configuration file (without extension)
      * @param string $variable variable name in config file (default 'config')
      */
-    public function __construct(string $file, string $variable = 'config') {
-        $path = dirname(__DIR__) . "/config/{$file}.php";
+    public function __construct(string $file = 'config', string $variable = 'config') {
+        $this->internalLoad($file, $variable);
+    }
+
+    private function internalLoad(string $file, string $variable, bool $merge = false) {
+        $path = dirname(__DIR__, 2) . "/config/{$file}.php";
         if(!is_file($path))
             throw new \Exception("Config file not found: $file");
 
         // populate the configuration from the given file and variable
         include $path;
         if(isset($$variable) && is_array($$variable))
-            $this->config = $$variable;
+            $this->config = $merge
+                ? array_merge($this->config, $$variable)
+                : $$variable;
         else
             throw new \Exception("Error parsing configuration: file={$file}.php, variable={$variable}");
     }
 
-    /**
-     * merge an array of entries into this configuration
-     *
-     * @param array $config array to merge
-     */
-    public function merge(array $config): void {
-        $this->config = array_merge($this->config, $config);
+    public function withConfigFrom(string $file, string $variable = 'config', bool $merge = false): static {
+        $obj = clone $this;
+        $obj->internalLoad($file, $variable, $merge);
+        return $obj;
     }
 
-    /**
-     * iterate over the entries in the configuration
-     *
-     * calls user-supplied callback for each entry.
-     * iteration ceases upon first non-null return value from the callback
-     *
-     * @param \Closure $fn callback to invoke for each entry.  Must accept 1 or 2 parameters
-     * @return mixed first non-null value returned by a callback, or null if none
-     * @throws \InvalidArgumentException if the callback does not accept 1 or 2 arguments
-     */
+    public function merge(array $config): static {
+        $obj = clone $this;
+        $obj->config = array_merge($obj->config, $config);
+        return $obj;
+    }
+
     public function iterate(\Closure $fn): mixed {
         switch((new \ReflectionFunction($fn))->getNumberOfParameters()) {
         case 1:
@@ -87,34 +88,27 @@ class Config {
         return null;
     }
 
-    /**
-     * return the default (first) configuration entry
-     *
-     * @return mixed default entry
-     */
     public function default(): mixed {
-        return $this->config[array_keys($this->config)[0]];
+        return reset($this->config);
     }
 
-    /**
-     * determine whether the specified configuration param exists
-     *
-     * @param string $key name of param to test
-     * @return bool true if exists, false otherwise
-     */
-    public function hasParam(string $key): bool {
+    public function has(string $key): bool {
         return array_key_exists($key, $this->config);
     }
 
-    /**
-     * get a configuration value from the configuration file
-     *
-     * @param string $key name of param
-     * @param mixed $default value if param is not set (optional)
-     * @return mixed value or null if not set and no default specified
-     */
-    public function getParam(string $key, mixed $default = null): mixed {
-        return array_key_exists($key, $this->config)?
-                   $this->config[$key]:$default;
+    public function get(string $key, mixed $default = null): mixed {
+        $value = $this->config;
+
+        foreach (explode('.', $key) as $part) {
+            if (!is_array($value) || !array_key_exists($part, $value))
+                return $default;
+            $value = $value[$part];
+        }
+
+        return $value;
+    }
+
+    public function asArray(): array {
+        return $this->config;
     }
 }

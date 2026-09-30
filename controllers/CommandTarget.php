@@ -25,12 +25,9 @@
 namespace ZK\Controllers;
 
 abstract class CommandTarget {
-    public $session;
-
     abstract public function processLocal($action, $subaction);
 
-    public function process($action, $subaction, $session) {
-        $this->session = $session;
+    public function process($action, $subaction) {
         $this->processLocal($action, $subaction);
     }
 
@@ -45,11 +42,5 @@ abstract class CommandTarget {
 
         if(!$processed)
             $this->{$actions[0][1]}();
-    }
-
-    public function newEntity($entityClass) {
-        $obj = new $entityClass();
-        $obj->session = $this->session;
-        return $obj;
     }
 }

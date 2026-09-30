@@ -24,16 +24,26 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\Engine;
 use ZK\Engine\IArtwork;
 use ZK\Engine\IChart;
+use ZK\Engine\IConfig;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IUser;
+use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
 class RunDaily implements IController {
     private $catCodes;
+
+    public function __construct(
+        protected IArtwork $imageDBO,
+        protected IConfig $config,
+        protected IChart $chartDBO,
+        protected IPlaylist $playlistDBO,
+        protected IUser $userDBO,
+        protected Session $session,
+    ) {}
     
     public function processRequest() {
         if(php_sapi_name() != "cli") {
@@ -58,7 +68,7 @@ class RunDaily implements IController {
         echo "Running charts: ";
         
         $today = date("Y-m-d");
-        $config = Engine::param('chart');
+        $config = $this->config->get('chart');
         if(array_key_exists('suspend_until', $config) &&
                 strtotime($config['suspend_until']) > strtotime($today)) {
             echo "No (charting suspended until ".$config['suspend_until'].")\n";
@@ -74,7 +84,7 @@ class RunDaily implements IController {
         }
 
         // check whether this chart has already been generated
-        $weeks = Engine::api(IChart::class)->getChartDates(6);
+        $weeks = $this->chartDBO->getChartDates(6);
         while($weeks && $week = $weeks->fetch()) {
             if($week["week"] == $date) {
                 // chart already exists; exit
@@ -84,9 +94,9 @@ class RunDaily implements IController {
         }
 
         // run the chart
-        $ok = Engine::api(IChart::class)->doChart($date,
-                                            $config['max_spins'],
-                                            $config['apply_limit_per_dj']);
+        $ok = $this->chartDBO->doChart($date,
+                                    $config['max_spins'],
+                                    $config['apply_limit_per_dj']);
         echo $ok?"OK\n":"FAILED!\n";
 
         if($ok) {
@@ -105,24 +115,23 @@ class RunDaily implements IController {
 
     private function retireCurrents() {
         $today = date("Y-m-d");
-        $success = Engine::api(IChart::class)->retireAlbums($today);
+        $success = $this->chartDBO->retireAlbums($today);
         echo "Retiring currents: ".($success === false ? "FAILED!" : "OK ($success albums)")."\n";
     }
 
     private function purgeDeletedPlaylists() {
-        $ok = Engine::api(IPlaylist::class)->purgeDeletedPlaylists();
+        $ok = $this->playlistDBO->purgeDeletedPlaylists();
         echo "Purging deleted playlists: ".($ok?"OK":"FAILED!")."\n";
     }
 
     private function purgeOldSessions() {
-        $ok = Engine::session()->purgeOldSessions();
+        $ok = $this->session->purgeOldSessions();
         echo "Purging old sessions: ".($ok?"OK":"FAILED!")."\n";
     }
 
     private function purgeArtworkCache() {
-        $api = Engine::api(IArtwork::class);
-        $count = $api->expireCache();
-        $empty = $api->expireEmpty();
+        $count = $this->imageDBO->expireCache();
+        $empty = $this->imageDBO->expireEmpty();
         echo "Purging artwork cache: " .
             ($count !== false && $empty !== false ?
                 "OK ($count artists + $empty empty)" : "FAILED!") . "\n";
@@ -180,7 +189,7 @@ class RunDaily implements IController {
 
     private function getAddresses() {
         $addresses = array();
-        $results = Engine::api(IChart::class)->getChartEMail();
+        $results = $this->chartDBO->getChartEMail();
         while($results && ($row = $results->fetch()))
             $addresses[strtolower($row["chart"])] = $row["address"];
         return $addresses;
@@ -189,8 +198,7 @@ class RunDaily implements IController {
     private function buildChart($start, $end, $limit="", $category="", $cmj=0, $crd=0) {
         $result = "";
         $chart = [];
-        $chartApi = Engine::api(IChart::class);
-        $chartApi->getChart($chart, $start, $end, $limit, $category);
+        $this->chartDBO->getChart($chart, $start, $end, $limit, $category);
         if(sizeof($chart)) {
             if($category) {
                 if($crd)
@@ -290,12 +298,12 @@ class RunDaily implements IController {
             $chart = $this->buildChart($start, $date, 0, $genre["id"], 1);
     
             // Setup the headers
-            $subject = Engine::param('station').": ".
+            $subject = $this->config->get('station').": ".
                          $genre["name"] . " monthly totals, " .
                          date("m/Y", mktime(0,0,0,$month,$d,$y));
                            
-            $headers = "From: ".Engine::param('station_title')." <".
-                           Engine::param('email')['chartman'].">\r\n";
+            $headers = "From: ".$this->config->get('station_title')." <".
+                           $this->config->get('email.chartman').">\r\n";
 
             // send the mail
             $stat = mail($address, $subject, $chart, $headers);
@@ -322,7 +330,7 @@ class RunDaily implements IController {
                 echo "Skipping ".($cmj?"cmj":"weekly")." e-mail due to invalid address: $address\n";
             } else {
                 // get the chart categories
-                $this->catCodes = Engine::api(IChart::class)->getCategories();
+                $this->catCodes = $this->chartDBO->getCategories();
     
                 // Build the charts
                 $charts = $this->buildChart("", $date, 100, "", $cmj);
@@ -338,30 +346,30 @@ class RunDaily implements IController {
                 $charts .= $this->buildChart("", $date, 20, 3, $cmj); // dance
     
                 // Compose the message body
-                $contact = Engine::param('contact');
+                $contact = $this->config->get('contact');
                 $fancyDate = date("j F Y", mktime(0,0,0,$m,$d,$y));
                 $body = self::rule("Chart for the Week ending $fancyDate",
                                    0,
-                                   Engine::param('station_medium'));
-                $body .= self::rule("Music Director: ".Engine::param('md_name'),
+                                   $this->config->get('station_medium'));
+                $body .= self::rule("Music Director: ".$this->config->get('md_name'),
                                    0)."\n";
                 $body .= self::rule($contact['addr'], -1, "",
                                    "Vox: ".$contact['phone']);
                 $body .= self::rule($contact['city'], -1, "",
                                    "Fax: ".$contact['fax']);
-                $body .= self::rule(Engine::param('email')['md'], -1, "",
-                                   Engine::param('urls')['home'])."\n\n";
+                $body .= self::rule($this->config->get('email.md'), -1, "",
+                                   $this->config->get('urls.home'))."\n\n";
 
                 $body .= $charts;
 
                 if(!$cmj)
-                    $body .= Engine::param('chart')['weekly_footer'];
+                    $body .= $this->config->get('chart.weekly_footer');
     
                 // Setup the headers
-                $subject = Engine::param('station').": ".
+                $subject = $this->config->get('station').": ".
                            date("Y-m-d", mktime(0,0,0,$m,$d,$y)) . " chart";
-                $headers = "From: ".Engine::param('station_title')." <".
-                                    Engine::param('email')['chartman'].">\r\n";
+                $headers = "From: ".$this->config->get('station_title')." <".
+                                    $this->config->get('email.chartman').">\r\n";
     
                 // send the mail
                 $stat = mail($address, $subject, $body, $headers);
@@ -375,14 +383,13 @@ class RunDaily implements IController {
     private function chartMonthly($date, $address, $crd=0) {
         list($y,$m,$d) = explode("-", $date);
 
-        $chartAPI = Engine::api(IChart::class);
-        $chartEnd1 = $chartAPI->getMonthlyChartEnd($m, $y);
-        $chartEnd2 = $chartAPI->getMonthlyChartEnd((int)$m - 1, $y);
+        $chartEnd1 = $this->chartDBO->getMonthlyChartEnd($m, $y);
+        $chartEnd2 = $this->chartDBO->getMonthlyChartEnd((int)$m - 1, $y);
     
         if($date == $chartEnd1 || $date == $chartEnd2) {
             // This week is the end of a monthly chart; send it!
             $month = ($date == $chartEnd1)?$m:(int)$m - 1;
-            $start = $chartAPI->getMonthlyChartStart($month, $y);
+            $start = $this->chartDBO->getMonthlyChartStart($month, $y);
         } else
             return;
     
@@ -401,7 +408,7 @@ class RunDaily implements IController {
                 echo "Skipping ".($crd?"crossroads":"monthly")." e-mail due to invalid address: $address\n";
             } else {
                 // get the chart categories
-                $this->catCodes = Engine::api(IChart::class)->getCategories();
+                $this->catCodes = $this->chartDBO->getCategories();
     
                 // Build the charts
                 $charts = "";
@@ -420,38 +427,38 @@ class RunDaily implements IController {
                 }
                 
                 // Compose the message body
-                $contact = Engine::param('contact');
+                $contact = $this->config->get('contact');
                 if($crd) {
-                    $body = Engine::param('station_medium')."\n";
+                    $body = $this->config->get('station_medium')."\n";
                     $body .= $contact['city']."\n";
-                    $body .= Engine::param('md_name').", Music Director\n";
+                    $body .= $this->config->get('md_name').", Music Director\n";
                     $body .= "P: ".$contact['phone']."\n";
                     $body .= "F: ".$contact['fax']."\n";
-                    $body .= "E: ".Engine::param('email')['md']."\n\n";
+                    $body .= "E: ".$this->config->get('email.md')."\n\n";
                 }
                 $fancyDate = date("F Y", mktime(0,0,0,$month,$d,$y));
                 $body = self::rule("Chart for the Month of $fancyDate",
                                    0,
-                                   Engine::param('station_medium'));
-                $body .= self::rule("Music Director: ".Engine::param('md_name'),
+                                   $this->config->get('station_medium'));
+                $body .= self::rule("Music Director: ".$this->config->get('md_name'),
                                    0)."\n";
                 $body .= self::rule($contact['addr'], -1, "",
                                    "Vox: ".$contact['phone']);
                 $body .= self::rule($contact['city'], -1, "",
                                    "Fax: ".$contact['fax']);
-                $body .= self::rule(Engine::param('email')['md'], -1, "",
-                                   Engine::param('urls')['home'])."\n\n";
+                $body .= self::rule($this->config->get('email.md'), -1, "",
+                                   $this->config->get('urls.home'))."\n\n";
                 
                 $body .= $charts;
 
                 if(!$crd)
-                    $body .= Engine::param('chart')['monthly_footer'];
+                    $body .= $this->config->get('chart.monthly_footer');
     
                 // Setup the headers
-                $subject = Engine::param('station').": ".
+                $subject = $this->config->get('station').": ".
                            date("Y-m", mktime(0,0,0,$month,$d,$y)) . " chart";
-                $headers = "From: ".Engine::param('station_title')." <".
-                                    Engine::param('email')['chartman'].">\r\n";
+                $headers = "From: ".$this->config->get('station_title')." <".
+                                    $this->config->get('email.chartman').">\r\n";
     
                 // send the mail
                 $stat = mail($address, $subject, $body, $headers);

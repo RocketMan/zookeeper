@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -26,9 +26,12 @@ namespace ZK\Controllers;
 
 
 class OpenSearch implements IController {
+    public function __construct(
+        protected TemplateFactoryXML $templateFactory,
+    ) {}
+
     public function processRequest() {
-        $templateFactory = new TemplateFactoryXML();
-        $template = $templateFactory->load('opensearch.xml');
+        $template = $this->templateFactory->load('opensearch.xml');
         header("Content-type: text/xml; charset=UTF-8");
         echo $template->render();
     }

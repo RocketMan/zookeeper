@@ -24,19 +24,18 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\Engine;
 use ZK\Engine\IChart;
 use ZK\Engine\IDJ;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IUser;
 use ZK\Engine\PlaylistEntry;
+use ZK\Engine\Session;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 
 class Validate implements IController {
     private $success = true;
-    private $session;
     private $testUser;
     private $testPass;
     private $client;
@@ -86,6 +85,13 @@ class Validate implements IController {
         ini_set('error_log', $mask ? null : '/dev/null');
     }
 
+    public function __construct(
+        protected Session $session,
+        protected IChart $chartDBO,
+        protected IPlaylist $playlistDBO,
+        protected IUser $userDBO,
+    ) {}
+
     public function processRequest() {
         if(php_sapi_name() != "cli") {
             http_response_code(400);
@@ -97,7 +103,6 @@ class Validate implements IController {
             exit(1);
         }
 
-        $this->session = Engine::session();
         echo "\nStarting Validation...\n\n";
         try {
             $this->validateCreateUser();
@@ -118,7 +123,7 @@ class Validate implements IController {
     }
 
     public function validateCreateUser() {
-        $api = Engine::api(IUser::class);
+        $api = $this->userDBO;
 
         $this->doTest("create user");
         $this->testUser = "_0".substr(md5(uniqid(rand())), 0, 6);
@@ -148,7 +153,7 @@ class Validate implements IController {
         $access = '';
         if($this->doTest("validate signon")) {
             $this->showSuccess(
-                Engine::api(IUser::class)->validatePassword(
+                $this->userDBO->validatePassword(
                     $this->testUser, $this->testPass, 1, $access));
         }
 
@@ -169,9 +174,9 @@ class Validate implements IController {
 
         if($this->doTest("create api key")) {
             $apiKey = sha1(uniqid(rand()));
-            $success = Engine::api(IUser::class)->addAPIKey($this->testUser, $apiKey);
+            $success = $this->userDBO->addAPIKey($this->testUser, $apiKey);
             if($success) {
-                $this->apiKeyId = Engine::api(IUser::class)->lastInsertId();
+                $this->apiKeyId = $this->userDBO->lastInsertId();
 
                 $this->client = new Client([
                     'base_uri' => $_REQUEST["url"],
@@ -393,7 +398,7 @@ class Validate implements IController {
         }
 
         if($this->doTest("purge playlists", $success)) {
-            $success = Engine::api(IPlaylist::class)->purgeDeletedPlaylists(0);
+            $success = $this->playlistDBO->purgeDeletedPlaylists(0);
             $this->showSuccess($success);
         }
     }
@@ -608,7 +613,7 @@ class Validate implements IController {
 
     public function validateCategories() {
         if($this->doTest("validate categories", isset($this->testUser))) {
-            $cats = Engine::api(IChart::class)->getCategories();
+            $cats = $this->chartDBO->getCategories();
             $success = sizeof($cats) == 16;
             $this->showSuccess($success);
         }
@@ -616,7 +621,7 @@ class Validate implements IController {
 
     public function validateDeleteUser() {
         if($this->doTest("release api key", isset($this->apiKeyId))) {
-            $success = Engine::api(IUser::class)->deleteAPIKeys($this->testUser, [ $this->apiKeyId ]);
+            $success = $this->userDBO->deleteAPIKeys($this->testUser, [ $this->apiKeyId ]);
             $this->showSuccess($success);
         }
 
@@ -625,7 +630,7 @@ class Validate implements IController {
             $this->session->invalidate();
 
             $this->errorReporting(0);
-            $success = Engine::api(IUser::class)->deleteUser($this->testUser);
+            $success = $this->userDBO->deleteUser($this->testUser);
             $this->errorReporting(E_ALL & ~E_NOTICE);
             $this->showSuccess($success);
         }

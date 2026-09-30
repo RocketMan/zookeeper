@@ -24,10 +24,13 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\Engine;
 use ZK\Engine\IChart;
 
 class ExportAdd implements IController {
+    public function __construct(
+        protected IChart $chartDBO,
+    ) {}
+
     public function processRequest() {
         // Ensure there's a date
         $date = $_REQUEST["date"];
@@ -53,10 +56,10 @@ class ExportAdd implements IController {
         header("Content-disposition: attachment; filename=add.csv");
         
         // Get the chart categories
-        $cats = Engine::api(IChart::class)->getCategories();
+        $cats = $this->chartDBO->getCategories();
         
         // Get the add records
-        $albums = Engine::api(IChart::class)->getAdd($date)->asArray();
+        $albums = $this->chartDBO->getAdd($date)->asArray();
         
         // Emit the albums
         foreach($albums as $row) {

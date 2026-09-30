@@ -232,12 +232,6 @@ class BasePDO {
     }
 }
 
-enum AuditAction {
-    case Insert;
-    case Update;
-    case Delete;
-}
-
 /**
  * DBO is the superclass for all engine objects which require database access
  *
@@ -258,22 +252,25 @@ abstract class DBO {
     private $locks = [];
 
     /**
+     * called by the container to initialise the configuration
+     */
+    public static function configure(array $dbConfig): void {
+        self::$dbConfig = $dbConfig;
+
+        // setup translation if library database is different to main
+        if(array_key_exists(DBO::DATABASE_LIBRARY, self::$dbConfig) &&
+                ($library = self::$dbConfig[DBO::DATABASE_LIBRARY]) !=
+                self::$dbConfig[DBO::DATABASE_MAIN])
+            BasePDO::setLibrary($library);
+    }
+
+    /**
      * convenience method to retrieve a database configuration parameter
      *
      * @param name parameter
      * @return configuration value or null if does not exist
      */
     private function dbConfig($name) {
-        if(!self::$dbConfig) {
-            self::$dbConfig = Engine::param('db');
-
-            // setup translation if library database is different to main
-            if(array_key_exists(DBO::DATABASE_LIBRARY, self::$dbConfig) &&
-                    ($library = self::$dbConfig[DBO::DATABASE_LIBRARY]) !=
-                    self::$dbConfig[DBO::DATABASE_MAIN])
-                BasePDO::setLibrary($library);
-        }
-
         return array_key_exists($name, self::$dbConfig) ?
                 self::$dbConfig[$name] : null;
     }
@@ -357,25 +354,7 @@ abstract class DBO {
         return $this->getPDO()->exec($stmt);
     }
 
-    /**
-     * audit an action
-     *
-     * @param AuditAction $op the action
-     * @param int $id identifier
-     * @param string|null $message optional message
-     */
-    protected function audit(AuditAction $op, int $id, ?string $message = null) {
-        $banner = implode(' | ', [
-            $this->getAdvisoryLockName($id),
-            strtoupper($op->name),
-            Engine::session()->getDN(),
-            $message ?? ''
-        ]);
-
-        error_log("AUDIT $banner");
-    }
-
-    private function getAdvisoryLockName(int $id): string {
+    protected function getAdvisoryLockName(int $id): string {
         // as advisory locks are global, we qualify with the db name
         return implode('-', [
             $this->dbConfig(DBO::DATABASE_MAIN),

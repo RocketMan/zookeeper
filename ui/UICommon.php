@@ -24,7 +24,7 @@
 
 namespace ZK\UI;
 
-use ZK\Engine\Engine;
+use ZK\Engine\Decorator;
 
 use League\CommonMark\GithubFlavoredMarkdownConverter;
 
@@ -179,14 +179,6 @@ class UICommon {
     }
 
     /**
-     * return the URL of the current request, less leaf filename, if any
-     * @deprecated use Engine::getBaseUrl()
-     */
-    public static function getBaseUrl() {
-        return Engine::getBaseUrl();
-    }
-
-    /**
      * encode the specified argument for inclusion in a URL
      *
      * semantics of urlencode, but also encodes double quotes (")
@@ -267,49 +259,13 @@ class UICommon {
     }
 
     /**
-     * polyfill for intl `Locale::acceptFromHttp`
-     *
-     * @param $header HTTP Accept-Language header
-     * @return best available locale from the header
-     */
-    public static function acceptFromHttp($header) {
-        $locales = array_map(function($locale) {
-            // parse /(.+)(;.+=(.+))?/
-            $lang = strtok($locale, ';');
-            $weight = strtok('=') ? (strtok('') ?: 1) : 1;
-            return [ $lang, $weight ];
-        }, explode(',', $header));
-
-        usort($locales, function($a, $b) {
-            return $b[1] <=> $a[1];
-        });
-
-        // Accept-Language encodes locales with a hyphen (RFC 4646),
-        // whilst PHP Locale functions return an underscore
-        return str_replace('-', '_', $locales[0][0]);
-    }
-
-    /**
-     * convenience method to get best locale from the current request
-     */
-    public static function getClientLocale() {
-        return self::getSingleton('clientLocale', function() {
-            return self::acceptFromHttp($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en-US');
-        });
-    }
-
-    public static function isUsLocale() : bool {
-        return !strcasecmp(self::getClientLocale(), 'en_US');
-    }
-
-    /**
      * emit a decorated LINK to the specified stylesheet
      *
      * @param asset path to target stylesheet
      */
     public static function emitCSS($asset) {
         echo "<link rel=\"stylesheet\" href=\"" .
-             Engine::decorate($asset) . "\">\n";
+             Decorator::decorateAsset($asset) . "\">\n";
     }
 
     /**
@@ -319,7 +275,7 @@ class UICommon {
      */
     public static function emitJS($asset) {
         echo "<script src=\"" .
-             Engine::decorate($asset) . "\"></script>\n";
+             Decorator::decorateAsset($asset) . "\"></script>\n";
     }
 
     /**

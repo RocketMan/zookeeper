@@ -24,13 +24,14 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\Engine;
 use ZK\Engine\IArtwork;
+use ZK\Engine\IConfig;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
-use ZK\Service\PushServer;
+use ZK\Engine\ServiceConnector;
+use ZK\Engine\Zookeeper;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
@@ -42,8 +43,16 @@ class ArtworkControl implements IController {
     protected $discogs;
     protected $verbose = false;
 
+    public function __construct(
+        protected IConfig $config,
+        protected IArtwork $imageDBO,
+        protected ILibrary $libraryDBO,
+        protected IPlaylist $playlistDBO,
+        protected ServiceConnector $service,
+    ) {}
+
     protected function setupDiscogs() {
-        $config = Engine::param('discogs');
+        $config = $this->config->get('discogs');
         if($config) {
             $apiKey = $config['apikey'] ?? null;
             $clientId = $config['client_id'] ?? null;
@@ -53,7 +62,7 @@ class ArtworkControl implements IController {
                 $this->discogs = new Client([
                     'base_uri' => self::DISCOGS_SEARCH,
                     RequestOptions::HEADERS => [
-                        'User-Agent' => Engine::UA,
+                        'User-Agent' => Zookeeper::UA,
                         'Authorization' => $apiKey ?
                             "Discogs token=$apiKey" :
                             "Discogs key=$clientId, secret=$clientSecret"
@@ -66,7 +75,7 @@ class ArtworkControl implements IController {
     public function reloadAlbum($tag, $master, $skip) {
         $this->setupDiscogs();
 
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
         if(!count($albums)) {
             echo "reloadAlbum($tag): tag not found\n";
             return;
@@ -145,9 +154,8 @@ class ArtworkControl implements IController {
             }
 
             if(!empty($imageUrl)) {
-                $imageApi = Engine::api(IArtwork::class);
-                $imageApi->deleteAlbumArt($tag);
-                $uuid = $imageApi->insertAlbumArt($tag, $imageUrl, $infoUrl);
+                $this->imageDBO->deleteAlbumArt($tag);
+                $uuid = $this->imageDBO->insertAlbumArt($tag, $imageUrl, $infoUrl);
                 echo "reloadAlbum($tag): ".($master?'master':$format)." loaded $uuid\n";
             } else
                 echo "reloadAlbum($tag): no image found\n";
@@ -158,14 +166,13 @@ class ArtworkControl implements IController {
 
     protected function refreshList($playlist) {
         $count = 0;
-        $imageApi = Engine::api(IArtwork::class);
-        Engine::api(IPlaylist::class)->getTracksWithObserver($playlist,
-            (new PlaylistObserver())->on('spin', function($entry) use($imageApi, &$count) {
+        $this->playlistDBO->getTracksWithObserver($playlist,
+            (new PlaylistObserver())->on('spin', function($entry) use(&$count) {
                 if(!$entry->getTag() && $entry->getCreated()) {
                     $artist = $entry->getArtist();
                     if($this->verbose)
                         echo "    deleting $artist\n";
-                    $imageApi->deleteArtistArt($artist);
+                    $this->imageDBO->deleteArtistArt($artist);
                     $count++;
                 }
             })
@@ -173,7 +180,7 @@ class ArtworkControl implements IController {
 
         if($count) {
             echo "$count images queued for reload (please wait)\n";
-            PushServer::lazyLoadImages($playlist);
+            $this->service->lazyLoadImages($playlist);
         } else
             echo "No artist artwork found.  No change.\n";
     }
@@ -186,7 +193,7 @@ class ArtworkControl implements IController {
 
         // The heavy lifting is done by the push notification server.
         // If it is not enabled, there is no point in proceeding.
-        if(!Engine::param('push_enabled', true)) {
+        if(!$this->config->get('push_enabled', true)) {
             echo "Push notification is disabled.  No change.\n";
             return;
         }
@@ -195,13 +202,12 @@ class ArtworkControl implements IController {
 
         switch($_REQUEST["action"] ?? "") {
         case "delete":
-            $imageApi = Engine::api(IArtwork::class);
             if($tag = $_REQUEST["tag"] ?? null) {
-                $success = $imageApi->deleteAlbumArt($tag);
+                $success = $this->imageDBO->deleteAlbumArt($tag);
                 echo $success ? "Deleted album art\n" : "Album not found\n";
                 break;
             } else if($artist = $_REQUEST["artist"] ?? null) {
-                $success = $imageApi->deleteArtistArt($artist);
+                $success = $this->imageDBO->deleteArtistArt($artist);
                 echo $success ? "Deleted artist art\n" : "Artist not found\n";
                 break;
             }

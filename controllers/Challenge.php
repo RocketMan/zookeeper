@@ -24,16 +24,20 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\Engine;
+use ZK\Engine\IConfig;
 
 class Challenge implements IController {
     const DIFFICULTY = 10;    // leading zero bits required
     const TTL_SECONDS = 180;  // challenge expires in 3 minutes
     const INCLUDE_CLIENT_ADDR = true;
 
-    public static function validate($challenge) {
+    public function __construct(
+        protected IConfig $config,
+    ) {}
+
+    public function validate($challenge) {
         // Nothing to do if challenge is disabled
-        $secret = Engine::param('challenge_secret');
+        $secret = $this->config->get('challenge_secret');
         if (!$secret)
             return true;
 
@@ -83,7 +87,7 @@ class Challenge implements IController {
         $challenge = bin2hex(random_bytes(8));
         $expires   = time() + self::TTL_SECONDS;
 
-        $secret = Engine::param('challenge_secret');
+        $secret = $this->config->get('challenge_secret');
         $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDR'] ?? '') : '';
         $payload = $challenge . '|' . $expires . '|' . self::DIFFICULTY . $addr;
         $signature = hash_hmac('sha256', $payload, $secret);

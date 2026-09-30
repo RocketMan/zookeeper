@@ -11,4 +11,6 @@ $config = [
     ZK\Engine\IPlaylist::class =>       ZK\Engine\PlaylistImpl::class,
     ZK\Engine\IReview::class =>         ZK\Engine\ReviewImpl::class,
     ZK\Engine\IUser::class =>           ZK\Engine\UserImpl::class,
+    ZK\Engine\IUserAuth::class =>       ZK\Engine\UserAuthImpl::class,
+    ZK\Engine\Session::class =>         ZK\Engine\SessionImpl::class,
 ];

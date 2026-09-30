@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -32,7 +32,7 @@ if(!file_exists(__DIR__."/vendor/autoload.php")) {
 
 require_once __DIR__."/vendor/autoload.php";
 
-use ZK\Controllers\Dispatcher;
+use ZK\Engine\Dispatcher;
 
 $dispatcher = new Dispatcher();
 $dispatcher->processRequest($_REQUEST["target"] ?? '');

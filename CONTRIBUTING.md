@@ -24,10 +24,9 @@
 
 ### Tour
 
-Zookeeper follows the MVC (Model-View-Controller) pattern.  There are
-clear architectural boundaries between the busienss logic / model
-(in `engine`), the presentation, which is contained in `js` and `ui`,
-and the controllers, which are in `controllers`.
+Zookeeper is organized into distinct components for request handling,
+application/runtime infrastructure, database/domain objects, presentation,
+and external services.
 
 Zookeeper APIs follow the JSON:API standard.  More information about
 [Zookeeper JSON:API](docs/API.md) is available here.
@@ -39,18 +38,20 @@ The following is an overview of the source code directory structure:
             JSON:API implementation.
 
         config/
+            Application configuration data.
+
             config.php
                  This is the main configuration file.  It includes
                  settings for the database, SSO setup (if any),
                  e-mail, hyperlinks, branding, etc.
 
             controller_config.php
-                 Controller configuration.  Here we map request targets
+                 Controller configuration.  This maps request targets
                  onto controllers.
 
             engine_config.php
-                 Model configuration.  This maps the model interfaces
-                 onto concrete implementations.
+                 This maps the DBO model interfaces onto concrete
+                 implementations.
 
             ui_config.php
                  User interface configuration.  This defines menu items,
@@ -82,21 +83,20 @@ The following is an overview of the source code directory structure:
             CSS assets.  These files are automatically whitespace
             compressed upon delivery.
 
+        db/
+            Database schema and deployment SQL.  These files are used
+            to create or update the database and are not application
+            runtime code.
+
         engine/
-            Business operations, configuration, and session
-            management.
+            Application runtime infrastructure
 
-            Business operations are defined by interfaces.
-            Each interface represents a logic grouping of
-            operations.  The pattern is to call Engine::api
-            for the interface you want to use.  Engine::api is
-            a factory which instantiates a concrete
-            implementation for a given interface.  You can
-            then invoke the methods on the object instance returned
-            by Engine::api.  The interface to concrete implementation
-            bindings are metadata driven, via config/engine_config.php.
+            This includes configuration and request dispatch,
+            database object interfaces, and access to application
+            services.  Runtime components receive their dependencies
+            through constructor dependency injection.
 
-            The Engine::api interfaces are:
+            The database object (DBO) interfaces are:
               • IArtwork - album and artist artwork
               • IChart - rotation and charting
               • IDJ - DJ airname management
@@ -106,19 +106,19 @@ The following is an overview of the source code directory structure:
               • IReview - music review operations
               • IUser - user management
 
-            Session state is application-managed; access the
-            current session state through the singleton
-            Engine::session.
+            Other noteworthy interfaces in engine:
+              • IConfig - application configuration
+              • Session - session state
 
-            Configuration file data is accessible through
-            various methods on the Engine class.
+            Application components receive the interfaces they
+            need through constructor dependency injection.
 
         engine/impl/
-            Concrete implementations of the business operations.
+            Concrete implementations of the engine interfaces.
+
             Classes in this directory should never be referenced
             nor accessed directly; all access should be mediated
-            through the respective interfaces.  See 'engine',
-            above, for a discussion of the Engine::api pattern.
+            through dependency injection of the respective interfaces.
 
         fonts/
             TrueType fonts for label printing

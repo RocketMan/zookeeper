@@ -24,8 +24,11 @@
 
 namespace ZK\API;
 
-use ZK\Engine\Engine;
+use ZK\Engine\IArtwork;
 use ZK\Engine\ILibrary;
+use ZK\Engine\IReview;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
 use Enm\JsonApi\Exception\BadRequestException;
 use Enm\JsonApi\Model\Document\Document;
@@ -50,8 +53,20 @@ class UnifiedSearch implements RequestHandlerInterface {
     use NoResourceFetchTrait;
     use NoResourceModificationTrait;
 
+    public function __construct(
+        protected Request $request,
+        protected Session $session,
+        protected Albums $albums,
+        protected Labels $labels,
+        protected Playlists $playlists,
+        protected Reviews $reviews,
+        protected ILibrary $libraryDBO,
+        protected IArtwork $imageDBO,
+        protected IReview $reviewDBO,
+    ) {}
+
     // unused stub to hide OffsetPaginationTrait::fromArray
-    public static function fromArray(array $records, $flags = 0) {
+    public function fromArray(array $records, $flags = 0) {
         return [];
     }
 
@@ -61,14 +76,14 @@ class UnifiedSearch implements RequestHandlerInterface {
         } else
             throw new BadRequestException("Must specify filter.  May be one of: *");
 
-        if(!Engine::session()->isAuth('C'))
+        if(!$this->session->isAuth('C'))
             throw new BadRequestException("Operation requires challenge");
 
         $limit = $request->hasPagination("size") ?
                 min($request->paginationValue("size"), ApiServer::MAX_LIMIT) :
                 ApiServer::DEFAULT_LIMIT;
 
-        $results = Engine::api(ILibrary::class)->searchFullText("", $key, $limit, "");
+        $results = $this->libraryDBO->searchFullText("", $key, $limit, "");
         $total = $results[0];
         $rres = [];
         foreach($results[1] as $result) {
@@ -86,13 +101,13 @@ class UnifiedSearch implements RequestHandlerInterface {
                 // fall through...
             case "albums":
             case "artists":
-                $related = Albums::fromArray($records, Albums::LINKS_LABEL);
+                $related = $this->albums->fromArray($records, Albums::LINKS_LABEL);
                 $rel = new Relationship("album", $related);
                 $filter = $type == "tags" ? "album/" :
                             "album?filter%5Bmatch%28artist,album%29%5D=";
                 break;
             case "labels":
-                $related = Labels::fromArray($records);
+                $related = $this->labels->fromArray($records);
                 $rel = new Relationship("label", $related);
                 $filter = "label?filter%5Bmatch%28name%29%5D=";
                 break;
@@ -102,7 +117,7 @@ class UnifiedSearch implements RequestHandlerInterface {
                 $filter = "playlist?filter%5Bmatch%28event%29%5D=";
                 break;
             case "reviews":
-                $related = Reviews::fromArray($records);
+                $related = $this->reviews->fromArray($records);
                 $rel = new Relationship("review", $related);
                 $filter = "review?filter%5Bmatch%28review%29%5D=";
                 break;
@@ -117,7 +132,7 @@ class UnifiedSearch implements RequestHandlerInterface {
                 break;
             }
 
-            $base = Engine::getBaseUrl().$filter.urlencode($key);
+            $base = $this->request->getBaseUrl().$filter.urlencode($key);
             $first = new Link("first", $base);
             $first->metaInformation()->set("total", $more + sizeof($records));
             $first->metaInformation()->set("more", $more);
@@ -128,7 +143,7 @@ class UnifiedSearch implements RequestHandlerInterface {
         }
 
         $document = new Document($rres);
-        $base = Engine::getBaseUrl().$request->type()."?filter%5B%2A%5D=".
+        $base = $this->request->getBaseUrl().$request->type()."?filter%5B%2A%5D=".
                 urlencode($key)."&page%5Bsize%5D=".$limit;
         $first = new Link("first", $base);
         $first->metaInformation()->set("total", $total);

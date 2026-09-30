@@ -24,23 +24,30 @@
 
 namespace ZK\UI;
 
-use ZK\Engine\Engine;
 use ZK\Engine\IUser;
+use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
 class ChangePass extends MenuItem {
+    public function __construct(
+        protected Session $session,
+        protected TemplateFactoryUI $templateFactory,
+        protected IUser $userDBO,
+    ) {
+        parent::__construct($session, $templateFactory);
+    }
+
     public function processLocal($action, $subaction) {
         $message = "Change Password";
         $form = true;
         if(isset($_POST["validate"])) {
-            $userAPI = Engine::api(IUser::class);
-            if($userAPI->validatePassword($this->session->getUser(), $_REQUEST["oldPass"], 0)) {
+            if($this->userDBO->validatePassword($this->session->getUser(), $_REQUEST["oldPass"], 0)) {
                 $newPass = $_REQUEST["newPass"];
                 if($newPass != "") {
                     if($newPass == $_REQUEST["newPass2"]) {
                         // Update password
-                        if($userAPI->updateUser($this->session->getUser(), $newPass)) {
+                        if($this->userDBO->updateUser($this->session->getUser(), $newPass)) {
                             $message = "<B>Your password has been changed.</B>\n";
                             $form = false;
                         } else

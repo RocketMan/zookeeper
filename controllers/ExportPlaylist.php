@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -24,13 +24,14 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\Engine;
+use ZK\Engine\Formatter;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
-use ZK\UI\Playlists;
 use ZK\UI\UICommon as UI;
 
 class ExportPlaylist extends CommandTarget implements IController {
@@ -49,6 +50,14 @@ class ExportPlaylist extends CommandTarget implements IController {
     private $time;
     private $records;
 
+    public function __construct(
+        protected Formatter $formatter,
+        protected Request $request,
+        protected Session $session,
+        protected ILibrary $libraryDBO,
+        protected IPlaylist $playlistDBO,
+    ) {}
+
     public function processRequest() {
         // Ensure user has selected a playlist
         $playlist = intval($_REQUEST["playlist"]);
@@ -60,14 +69,14 @@ class ExportPlaylist extends CommandTarget implements IController {
         }
         
         // Get the show and DJ information
-        $row = Engine::api(IPlaylist::class)->getPlaylist($playlist, 1);
+        $row = $this->playlistDBO->getPlaylist($playlist, 1);
         if($row) {
             $this->airname = $row[4];
             $this->user = $row[5];
             if($row[4]) {
                 $this->dj = $row[4];
             } else {
-                $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $row[5]);
+                $user = $this->libraryDBO->search(ILibrary::PASSWD_NAME, 0, 1, $row[5]);
                 $this->dj = $user[0]["realname"];
             }
         
@@ -76,11 +85,11 @@ class ExportPlaylist extends CommandTarget implements IController {
             $this->time = $row[2];
 
             // Run the query to get the tracks
-            $this->records = Engine::api(IPlaylist::class)->getTracks($playlist);
+            $this->records = $this->playlistDBO->getTracks($playlist);
         }
 
         // Emit the result in the requested format
-        $this->process($_REQUEST["format"], null, Engine::session());
+        $this->process($_REQUEST["format"], null);
     }
 
     public function processLocal($action, $subaction) {
@@ -88,7 +97,7 @@ class ExportPlaylist extends CommandTarget implements IController {
     }
 
     public function emitJSON() {
-        header("Location: ".Engine::getBaseUrl().
+        header("Location: ".$this->request->getBaseUrl().
                "api/v1/playlist/".$_REQUEST["playlist"]);
     }
 
@@ -191,10 +200,10 @@ class ExportPlaylist extends CommandTarget implements IController {
     
     public function emitHTML() {
         list($y,$m,$d) = explode("-", $this->date);
-        $usLocale = UI::getClientLocale() == 'en_US';
+        $usLocale = $this->request->isUsLocale();
         $dateSpec = $usLocale ? 'D M d, Y ' : 'D d M Y ';
         $displayDate = date($dateSpec, mktime(0,0,0,$m,$d,$y));
-        $displayTime = Playlists::timeToLocale($this->time);
+        $displayTime = $this->formatter->timeToLocale($this->time);
     ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>

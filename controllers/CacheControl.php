@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -25,12 +25,15 @@
 namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
+use ZK\Engine\Dispatcher;
+use ZK\Engine\IConfig;
 use ZK\Engine\TemplateFactory;
+use ZK\UI\TemplateFactoryUI;
 
 class CacheControl implements IController {
     protected const TEMPLATE_ROOTS = [
-        'ui/templates' => '\ZK\UI\TemplateFactoryUI',
-        'controllers/templates' => '\ZK\Controllers\TemplateFactoryXML',
+        'ui/templates' => 'templateFactoryUI',
+        'controllers/templates' => 'templateFactoryXML',
     ];
     protected const VALID_EXTENSIONS = ['html', 'xml'];
 
@@ -118,7 +121,9 @@ class CacheControl implements IController {
         echo "checking $dir:\n";
         $this->stale = $this->fresh = $this->uncached = 0;
         $path = $this->base . $dir;
-        $factory = new TemplateFactory($path);
+        $factory = $this->dispatcher->make(TemplateFactory::class, [
+            'templateRoot' => $path,
+        ]);
         $this->visitTemplateDir($path . "/default", function($template) use($factory) {
             $stale = $factory->isCacheStale($template);
             if($stale) {
@@ -131,13 +136,20 @@ class CacheControl implements IController {
         echo "  {$this->stale} stale, {$this->fresh} fresh, {$this->uncached} uncached templates\n";
     }
 
+    public function __construct(
+        protected TemplateFactoryXML $templateFactoryXML,
+        protected TemplateFactoryUI $templateFactoryUI,
+        protected Dispatcher $dispatcher,
+        protected IConfig $config,
+    ) {}
+
     public function processRequest() {
         if(php_sapi_name() != "cli") {
             http_response_code(400);
             return;
         }
 
-        if(!Engine::param('template_cache_enabled')) {
+        if(!$this->config->get('template_cache_enabled')) {
             echo "Template cache is disabled.  No change.\n";
             return;
         }
@@ -158,7 +170,7 @@ class CacheControl implements IController {
             break;
         case "warmup":
             foreach(self::TEMPLATE_ROOTS as $root => $factory)
-                $this->warmCache($root, new $factory());
+                $this->warmCache($root, $this->$factory);
             break;
         default:
             echo "Usage: zk cache:{check|clear|warmup} [verbose=1]\n";

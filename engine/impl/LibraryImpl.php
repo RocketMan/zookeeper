@@ -156,6 +156,11 @@ class LibraryImpl extends DBO implements ILibrary {
         return $query;
     }
 
+    public function __construct(
+        protected IConfig $config,
+        protected Session $session,
+    ) {}
+
     public function search($tableIndex, $pos, $count, $search, $sortBy = 0) {
         return $this->searchPos($tableIndex, $pos, $count, $search, $sortBy);
     }
@@ -301,7 +306,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $query .= is_numeric($search) ?
                      ($search ? "WHERE r.airname = ? " : "WHERE ? = 0 ") :
                      "WHERE r.user = ? AND r.airname IS NULL ";
-            if(!Engine::session()->isAuth("u"))
+            if(!$this->session->isAuth("u"))
                 $query .= "AND r.private = 0 ";
             $query .= self::orderBy($sortBy);
             $query .= "LIMIT ?, ?";
@@ -538,8 +543,8 @@ class LibraryImpl extends DBO implements ILibrary {
     // for each album which has at least one playable track.
     //
     public function markAlbumsPlayable(&$albums) {
-        $enableExternalLinks = Engine::param('external_links_enabled');
-        $internalLinks = Engine::param('internal_links');
+        $enableExternalLinks = $this->config->get('external_links_enabled');
+        $internalLinks = $this->config->get('internal_links');
 
         if(!$enableExternalLinks && !$internalLinks)
             return;
@@ -924,7 +929,7 @@ class LibraryImpl extends DBO implements ILibrary {
 
     public function searchFullText($type, $key, $size, $offset) {
         $retVal = array();
-        $loggedIn = Engine::session()->isAuth("u");
+        $loggedIn = $this->session->isAuth("u");
 
         // nothing to return if search is null or trivial
         if(!$key ||

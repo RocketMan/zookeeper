@@ -29,6 +29,7 @@ use ZK\Engine\IChart;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IUser;
+use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
@@ -50,6 +51,18 @@ class UserAdmin extends MenuItem {
     private $action;
     private $subaction;
 
+    public function __construct(
+        protected Session $session,
+        protected TemplateFactoryUI $templateFactory,
+        protected ChangePass $changePass,
+        protected IChart $chartDBO,
+        protected IDJ $djDBO,
+        protected IUser $userDBO,
+        protected ILibrary $libraryDBO,
+    ) {
+        parent::__construct($session, $templateFactory);
+    }
+
     public function getSubactions($action) {
         return self::$subactions;
     }
@@ -69,7 +82,7 @@ class UserAdmin extends MenuItem {
     }
 
     public function contact() {
-        $cats = Engine::api(IChart::class)->getCategories();
+        $cats = $this->chartDBO->getCategories();
 
         $cats = array_filter($cats, fn($cat) => $cat['name']);
         usort($cats, fn($a, $b) => $a['name'] <=> $b['name']);
@@ -100,7 +113,7 @@ class UserAdmin extends MenuItem {
 
         if($validate && $airname) {
             // Update DJ info
-            $success = Engine::api(IDJ::class)->updateAirname($name,
+            $success = $this->djDBO->updateAirname($name,
                      $this->session->getUser(), $url, $email,
                      $multi?0:$airname);
             if($success) {
@@ -110,7 +123,7 @@ class UserAdmin extends MenuItem {
                 echo "<B><FONT CLASS=\"error\">'$name' is invalid or already exists.</FONT></B>";
             // fall through...
         }
-        $airnames = Engine::api(IDJ::class)->getAirnames(
+        $airnames = $this->djDBO->getAirnames(
                      $this->session->getUser(), $airname)->asArray();
 
         switch(sizeof($airnames)) {
@@ -182,10 +195,9 @@ class UserAdmin extends MenuItem {
     }
 
     public function manageKeys() {
-        $api = Engine::api(IUser::class);
         if($_POST["newKey"] ?? false) {
             $newKey = sha1(uniqid(rand()));
-            $api->addAPIKey($this->session->getUser(), $newKey);
+            $this->userDBO->addAPIKey($this->session->getUser(), $newKey);
         } else if($_POST["deleteKey"] ?? false) {
             $selKeys = [];
             foreach($_POST as $key => $value) {
@@ -193,16 +205,16 @@ class UserAdmin extends MenuItem {
                     $selKeys[] = substr($key, 2);
             }
             if(sizeof($selKeys))
-                $api->deleteAPIKeys($this->session->getUser(), $selKeys);
+                $this->userDBO->deleteAPIKeys($this->session->getUser(), $selKeys);
         }
 
-        $keys = $api->getAPIKeys($this->session->getUser())->asArray();
+        $keys = $this->userDBO->getAPIKeys($this->session->getUser())->asArray();
         $this->setTemplate("apikeys.html");
         $this->addVar("keys", $keys);
     }
 
     public function changePass() {
-        $this->newEntity(ChangePass::class)->processLocal("adminUsers", "changePass");
+        $this->changePass->withContextFrom($this)->processLocal("adminUsers", "changePass");
     }
 
     private function emitColumnHeader($header, $selected = false) {
@@ -224,9 +236,9 @@ class UserAdmin extends MenuItem {
 
         if($seq == "editUser" && $_SERVER['REQUEST_METHOD'] == 'POST') {
             // Commit the changes
-            $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $uid);
+            $user = $this->libraryDBO->search(ILibrary::PASSWD_NAME, 0, 1, $uid);
             if(sizeof($user)) {
-                if(Engine::api(IUser::class)->updateUser($uid, $auPass, $auName, $auGroups, $auExpire))
+                if($this->userDBO->updateUser($uid, $auPass, $auName, $auGroups, $auExpire))
                     echo "<B><FONT CLASS=\"subhead2\">$uid successfully updated</FONT></B>\n";
                 else
                     echo "<B><FONT COLOR=\"#ff0000\">Update user failed.  Try again later.</FONT></B>\n";
@@ -237,7 +249,7 @@ class UserAdmin extends MenuItem {
              // force dummy password for new user if none supplied
              if(!strlen(trim($auPass)))
                  $auPass = md5(uniqid(rand()));
-             if(Engine::api(IUser::class)->insertUser($uid, $auPass, $auName, $auGroups, $auExpire))
+             if($this->userDBO->insertUser($uid, $auPass, $auName, $auGroups, $auExpire))
                echo "<B><FONT CLASS=\"subhead2\">$uid successfully added</FONT></B>\n";
              else
                echo "<B><FONT COLOR=\"#ff0000\">Add user failed.  Try again later.</FONT></B>\n";
@@ -287,7 +299,7 @@ class UserAdmin extends MenuItem {
     <?php
             return;
         } else if($seq == "selUser") {
-            $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $uid);
+            $user = $this->libraryDBO->search(ILibrary::PASSWD_NAME, 0, 1, $uid);
             if(sizeof($user)) {
                 // Emit edit user form
     ?>
@@ -358,7 +370,7 @@ class UserAdmin extends MenuItem {
         echo "  </TR></THEAD>\n";
     
         // Get and sort the user list
-        $users = Engine::api(IUser::class)->getUsers()->asArray();
+        $users = $this->userDBO->getUsers()->asArray();
     
         // Emit the user list
         foreach($users as $user) {
@@ -385,11 +397,11 @@ class UserAdmin extends MenuItem {
         if($seq == "editAirname" && $_SERVER['REQUEST_METHOD'] == 'POST') {
            if($uid) {
               // Get the airname
-              $result = Engine::api(IDJ::class)->getAirnames(0, $aid);
+              $result = $this->djDBO->getAirnames(0, $aid);
               $row = $result->fetch();
     
               // Reassign the airname, playlists, and reviews
-              $success = Engine::api(IDJ::class)->reassignAirname($aid, $row['name'], $uid) > 0;
+              $success = $this->djDBO->reassignAirname($aid, $row['name'], $uid) > 0;
     
               if($success) {
                   echo "<B><FONT CLASS=\"subhead2\">".$row["airname"]." successfully updated</FONT></B>\n";
@@ -399,7 +411,7 @@ class UserAdmin extends MenuItem {
               $seq = "selAirname";
         }
         if($seq == "selAirname") {
-            $result = Engine::api(IDJ::class)->getAirnames(0, $aid);
+            $result = $this->djDBO->getAirnames(0, $aid);
             $row = $result->fetch();
     ?>
     <FORM ACTION="?" METHOD=POST>
@@ -418,7 +430,7 @@ class UserAdmin extends MenuItem {
         <TD>
           <ul tabindex='0' class='selector listbox no-text-select' data-name='uid'>
     <?php
-            $result = Engine::api(IUser::class)->getUsers();
+            $result = $this->userDBO->getUsers();
             while($row = $result->fetch()) {
                 echo "        <li data-value=\"".$row["name"]."\">".$row["name"].
                      " (".$row["realname"].")</li>\n";
@@ -455,7 +467,7 @@ class UserAdmin extends MenuItem {
         echo "  </TR></THEAD>\n";
     
         // Get and sort the airname list
-        $users = Engine::api(IDJ::class)->getAirnames()->asArray();
+        $users = $this->djDBO->getAirnames()->asArray();
     
         // Emit the airnames list
         foreach($users as $user) {

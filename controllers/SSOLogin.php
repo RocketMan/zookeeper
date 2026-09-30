@@ -25,22 +25,32 @@
 namespace ZK\Controllers;
 
 use ZK\Engine\Engine;
-use ZK\Engine\Session;
+use ZK\Engine\IConfig;
 use ZK\Engine\IUser;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
 class SSOLogin implements IController {
     private $action;
     private $ssoOptions;
 
+    public function __construct(
+        protected IConfig $config,
+        protected Request $request,
+        protected Session $session,
+        protected IUser $userDBO,
+        protected SSOCommon $ssoCommon,
+    ) {}
+
     public function processRequest() {
-        $params = SSOCommon::zkQSParams();
+        $params = $this->request->getQSParams();
         $state = $params["state"] ?? false;
         if($state) {
             // process assertion
         
             // get and invalidate the state token
             // returns false if state invalid, string (possibly empty) on success
-            $location = Engine::api(IUser::class)->getSsoRedirect($state);
+            $location = $this->userDBO->getSsoRedirect($state);
         
             if($location !== false)
                 $this->doSSOLogin($params);
@@ -57,7 +67,7 @@ class SSOLogin implements IController {
                     "action" => $this->action,
                     "ssoOptions" => $this->ssoOptions
                 ];
-                $target = Engine::getBaseUrl();
+                $target = $this->request->getBaseUrl();
             }
         } else {
             // check that cookies are enabled
@@ -69,10 +79,10 @@ class SSOLogin implements IController {
                     setcookie("testcookie", "", time() - 3600);
 
                     // generate the SSO state token
-                    $token = Engine::api(IUser::class)->setupSsoRedirect($params["location"] ?? '');
+                    $token = $this->userDBO->setupSsoRedirect($params["location"] ?? '');
         
                     // redirect to the Google auth page
-                    $configParams = Engine::param('sso');
+                    $configParams = $this->config->get('sso');
                     $rq = [
                         "client_id" => $configParams['client_id'],
                         "response_type" => "code",
@@ -83,22 +93,22 @@ class SSOLogin implements IController {
                     ];
 
                     // force account selection on shared local machine
-                    if (Session::checkLocal())
+                    if ($this->session->checkLocal())
                         $rq["prompt"] = "select_account";
         
                     $target = $configParams['oauth_auth_uri'];
                 } else {
                     // cookies are not enabled; alert user
                     $rq = [ "action" => "cookiesDisabled" ];
-                    $target = Engine::getBaseUrl();
+                    $target = $this->request->getBaseUrl();
                 }
-            } else if(empty(Engine::param('sso')['client_id'])) {
+            } else if(empty($this->config->get('sso.client_id'))) {
                 // not SSO; redirect to legacy login
                 $rq = [
                     "action" => "login",
                     "location" => $params["location"] ?? '',
                 ];
-                $target = Engine::getBaseUrl();
+                $target = $this->request->getBaseUrl();
             } else {
                 // send a test cookie
                 setcookie("testcookie", "testcookie");
@@ -107,24 +117,24 @@ class SSOLogin implements IController {
                     "checkCookie" => 1,
                     "location" => $params["location"] ?? '',
                 ];
-                $target = Engine::getBaseUrl();
+                $target = $this->request->getBaseUrl();
             }
         }
         
         // do the redirection
-        SSOCommon::zkHttpRedirect($target, $rq);
+        $this->request->doHttpRedirect($target, $rq);
     }
     
     public function doSSOLogin($params) {
         $error = '';
-        $profile = SSOCommon::ssoCheckAssertion($params, $error);
+        $profile = $this->ssoCommon->ssoCheckAssertion($params, $error);
         if($profile) {
             $email = $profile["email"];
             $i = strrpos($email, "@");
             if($i) {
                 $account = substr($email, 0, $i);
                 $domain = substr($email, $i+1);
-                if($domain != Engine::param('sso')['domain']) {
+                if($domain != $this->config->get('sso.domain')) {
                     // invalid domain
                     $this->action = "ssoInvalidDomain";
                     return;
@@ -138,11 +148,11 @@ class SSOLogin implements IController {
             $fullname = $profile["name"];
     
             // try setting up the session by account or name
-            if(!SSOCommon::setupSSOByAccount($account) &&
-                    !SSOCommon::setupSSOByName($account, $fullname)) {
+            if(!$this->ssoCommon->setupSSOByAccount($account) &&
+                    !$this->ssoCommon->setupSSOByName($account, $fullname)) {
                 // no joy; query user what he wants to do
-                $location = Engine::api(IUser::class)->getSsoRedirect($params['state']);
-                $this->ssoOptions = Engine::api(IUser::class)->setupSsoOptions($account, $fullname, $location);
+                $location = $this->userDBO->getSsoRedirect($params['state']);
+                $this->ssoOptions = $this->userDBO->setupSsoOptions($account, $fullname, $location);
                 $this->action = "ssoOptions";
             } else
                 // success!  show the login succeeded page
