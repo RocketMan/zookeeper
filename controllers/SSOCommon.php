@@ -34,6 +34,7 @@ use GuzzleHttp\RequestOptions;
 
 class SSOCommon {
     public function __construct(
+        protected Request $request,
         protected Session $session,
         protected IConfig $config,
         protected IUser $userDBO,
@@ -113,7 +114,7 @@ class SSOCommon {
             $access = $row["groups"] . "s";
             $session = md5(uniqid(rand()));
 
-            if($this->session->checkLocal())
+            if($this->request->checkLocal())
                 $access .= 'l';
     
             // Restrict guest accounts to local subnet only
