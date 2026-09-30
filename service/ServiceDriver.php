@@ -26,7 +26,6 @@ namespace ZK\Service;
 
 use ZK\Controllers\CommandTarget;
 use ZK\Controllers\IController;
-use ZK\Engine\Config;
 use ZK\Engine\IArtwork;
 use ZK\Engine\IConfig;
 use ZK\Engine\ILibrary;
@@ -439,7 +438,7 @@ class ServiceDriver extends CommandTarget implements IController {
             CacheInterface::class => \DI\create(ArrayCache::class)->constructor(self::RESOLVER_CACHE_SIZE),
             LoopInterface::class => fn() => Loop::get(),
             LoggerInterface::class => fn() => $this->newLogger(),
-            IConfig::class => \DI\create(Config::class)->constructor('config'),
+            IConfig::class => $this->config,
         ]);
 
         $container = $builder->build();
