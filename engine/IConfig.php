@@ -46,7 +46,7 @@ interface IConfig {
      * the original configuration remains unchanged
      *
      * @param array $config array to merge
-     * @return IConfig new array with merged entries
+     * @return IConfig new configuration with merged entries
      */
     function merge(array $config): static;
 
