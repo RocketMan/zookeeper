@@ -532,7 +532,7 @@ class LibraryImpl extends DBO implements ILibrary {
         $stmt->execute();
         while($row = $stmt->fetch()) {
             for($next = $tags[$row[0]]; $next >= 0; $next = array_key_exists($next, $chain)?$chain[$next]:-1) {
-                $albums[$next]["reviewed"] = 1;
+                $albums[$next]["reviewed"] = true;
                 $albums[$next]["reviewer"] = self::displayName($row[1], $row[2]);
                 $albums[$next]["review"] = $includeReview ? $row[3] : null;
             }
