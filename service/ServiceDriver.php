@@ -26,10 +26,12 @@ namespace ZK\Service;
 
 use ZK\Controllers\CommandTarget;
 use ZK\Controllers\IController;
-use ZK\Engine\Engine;
+use ZK\Engine\Config;
 use ZK\Engine\IArtwork;
+use ZK\Engine\IConfig;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
+use ZK\Engine\Zookeeper;
 
 use DI\ContainerBuilder;
 use GuzzleHttp\Client;
@@ -67,6 +69,7 @@ class ServiceFactory {
 
 class ServiceDriverInstance {
     public function __construct(
+        protected IConfig $appConfig,
         protected LoopInterface $loop,
         protected LoggerInterface $logger,
         protected NowAiringServer $nas,
@@ -83,7 +86,7 @@ class ServiceDriverInstance {
             $this->ds->start();
 
             // setup hosted services, if configured
-            $config = Engine::param('hosted_services') ?? Engine::param('push_proxy');
+            $config = $this->appConfig->get('hosted_services') ?? $this->appConfig->get('push_proxy');
             if($config) {
                 foreach($config as $service) {
                     $app = $this->serviceFactory->create($service['class'] ?? $service['proxy'], $service);
@@ -99,6 +102,16 @@ class ServiceDriverInstance {
 }
 
 class ServiceDriver extends CommandTarget implements IController {
+    /**
+     * This is an endpoint for internal use only.  There should be
+     * no need to change it, but if you do, you must also update the
+     * corresponding URI in .htaccess in the project root directory.
+     */
+    public const DEFAULT_WSSERVER = "127.0.0.1:32080";
+
+    public const RESOLVER_CACHE_SIZE = 500;
+    public const RESOLVER_CACHE_TIMEOUT = 20000; // in usec
+
     private const DISCOGS_BASE = "https://www.discogs.com";
     private const DISCOGS_SEARCH = "https://api.discogs.com/database/search";
     private const DISCOGS_TIMEOUT = 5.0; // in seconds
@@ -110,6 +123,12 @@ class ServiceDriver extends CommandTarget implements IController {
 
     protected $discogs;
     protected $secret;
+
+    public function __construct(
+        protected IArtwork $imageDBO,
+        protected IConfig $config,
+        protected ILibrary $libraryDBO,
+    ) {}
 
     /**
      * perform artist name comparison, accounting for use of ampersand
@@ -131,7 +150,7 @@ class ServiceDriver extends CommandTarget implements IController {
     }
 
     protected function setupDiscogs() {
-        $config = Engine::param('discogs');
+        $config = $this->config->get('discogs');
         if($config) {
             $apiKey = $config['apikey'] ?? null;
             $clientId = $config['client_id'] ?? null;
@@ -143,7 +162,7 @@ class ServiceDriver extends CommandTarget implements IController {
                     'base_uri' => self::DISCOGS_SEARCH,
                     'timeout' => self::DISCOGS_TIMEOUT,
                     RequestOptions::HEADERS => [
-                        'User-Agent' => Engine::UA,
+                        'User-Agent' => Zookeeper::UA,
                         'Authorization' => $apiKey ?
                             "Discogs token=$apiKey" :
                             "Discogs key=$clientId, secret=$clientSecret"
@@ -321,26 +340,25 @@ class ServiceDriver extends CommandTarget implements IController {
                 NowAiringServer::validateSig($msg, $sig, $this->secret)) {
             $entry = json_decode($msg, true);
             if($entry['id']) {
-                $imageApi = Engine::api(IArtwork::class);
-                $imageApi->adviseLock($entry['id']);
+                $this->imageDBO->adviseLock($entry['id']);
 
                 try {
 
                 if($entry['track_tag']) {
                     // is the album already known to us?
-                    $image = $imageApi->getAlbumArt($entry['track_tag'], true);
+                    $image = $this->imageDBO->getAlbumArt($entry['track_tag'], true);
                     if($image) {
                         // if yes, reuse it...
                         $imageUuid = $image['image_uuid'];
                         $infoUrl = $image['info_url'];
                     } else {
                         // otherwise, query Discogs
-                        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $entry['track_tag']);
+                        $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $entry['track_tag']);
                         $iscoll = count($albums) ? $albums[0]["iscoll"] : false;
                         $result = $this->queryDiscogs($iscoll ? "Various" : $entry['track_artist'], $entry['track_album']);
 
                         if($result) {
-                            $imageUuid = $imageApi->insertAlbumArt($entry['track_tag'], $result->imageUrl, $result->infoUrl);
+                            $imageUuid = $this->imageDBO->insertAlbumArt($entry['track_tag'], $result->imageUrl, $result->infoUrl);
                             $infoUrl = $result->infoUrl;
                         }
                     }
@@ -349,7 +367,7 @@ class ServiceDriver extends CommandTarget implements IController {
                 if(!isset($imageUuid) &&
                         strlen(trim($entry['track_artist']))) {
                     // is the artist already known to us?
-                    $image = $imageApi->getArtistArt($entry['track_artist'], true);
+                    $image = $this->imageDBO->getArtistArt($entry['track_artist'], true);
                     if($image) {
                         // if yes, reuse it...
                         $imageUuid = $image['image_uuid'];
@@ -362,18 +380,18 @@ class ServiceDriver extends CommandTarget implements IController {
                             $result = $this->queryDiscogs($entry['track_artist']);
 
                         if($result) {
-                            $imageUuid = $imageApi->insertArtistArt($entry['track_artist'], $result->imageUrl, $result->infoUrl);
+                            $imageUuid = $this->imageDBO->insertArtistArt($entry['track_artist'], $result->imageUrl, $result->infoUrl);
                             $infoUrl = $result->infoUrl;
                         }
                     }
                 }
 
                 $entry['info_url'] = $infoUrl ?? null;
-                $entry['image_url'] = isset($imageUuid) ? $imageApi->getCachePath($imageUuid) : ($entry['track_tag'] ? "img/album-sleeve.svg" : null);
+                $entry['image_url'] = isset($imageUuid) ? $this->imageDBO->getCachePath($imageUuid) : ($entry['track_tag'] ? "img/album-sleeve.svg" : null);
                 $msg = json_encode($entry);
 
                 } finally {
-                    $imageApi->adviseUnlock($entry['id']);
+                    $this->imageDBO->adviseUnlock($entry['id']);
                 }
             }
         }
@@ -399,7 +417,7 @@ class ServiceDriver extends CommandTarget implements IController {
     }
 
     public function processRequest() {
-        if (!Engine::param('push_enabled', true)) {
+        if (!$this->config->get('push_enabled', true)) {
             if (php_sapi_name() != "cli") {
                 error_log("Push notification is disabled");
                 http_response_code(500); // 500 Internal Server Error
@@ -418,9 +436,10 @@ class ServiceDriver extends CommandTarget implements IController {
 
         $builder = new ContainerBuilder();
         $builder->addDefinitions([
-            CacheInterface::class => \DI\create(ArrayCache::class)->constructor(PushServer::RESOLVER_CACHE_SIZE),
+            CacheInterface::class => \DI\create(ArrayCache::class)->constructor(self::RESOLVER_CACHE_SIZE),
             LoopInterface::class => fn() => Loop::get(),
             LoggerInterface::class => fn() => $this->newLogger(),
+            IConfig::class => \DI\create(Config::class)->constructor('config'),
         ]);
 
         $container = $builder->build();

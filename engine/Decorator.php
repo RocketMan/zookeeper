@@ -22,17 +22,20 @@
  *
  */
 
-namespace ZK\Controllers;
+namespace ZK\Engine;
 
-
-class OpenSearch implements IController {
-    public function __construct(
-        protected TemplateFactoryXML $templateFactory,
-    ) {}
-
-    public function processRequest() {
-        $template = $this->templateFactory->load('opensearch.xml');
-        header("Content-type: text/xml; charset=UTF-8");
-        echo $template->render();
+class Decorator {
+    /**
+     * decorate the specified asset for cache control
+     *
+     * @param string $asset application-relative path to target asset
+     * @return string HTML-encoded URI of decorated asset
+     */
+    public static function decorateAsset(string $asset): string {
+        $mtime = filemtime(dirname(__DIR__) . '/' . $asset);
+        $ext = strrpos($asset, '.');
+        return htmlspecialchars($mtime && $ext !== false
+            ? substr($asset, 0, $ext) . '-' . $mtime . substr($asset, $ext)
+            : $asset, ENT_QUOTES, 'UTF-8');
     }
 }

@@ -24,9 +24,12 @@
 
 namespace ZK\API;
 
-use ZK\Engine\Engine;
+use ZK\Engine\IArtwork;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
+use ZK\Engine\IReview;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
 use Enm\JsonApi\Exception\BadRequestException;
 use Enm\JsonApi\Exception\JsonApiException;
@@ -59,9 +62,18 @@ class Labels implements RequestHandlerInterface {
         "match(name)" => [ -1, "labels" ],
     ];
 
-    public static function fromRecord($rec) {
+    public function __construct(
+        protected Request $request,
+        protected Session $session,
+        protected ILibrary $libraryDBO,
+        protected IArtwork $imageDBO,
+        protected IEditor $editorDBO,
+        protected IReview $reviewDBO,
+    ) {}
+
+    public function fromRecord($rec) {
         $res = new JsonResource("label", $rec["pubkey"]);
-        $res->links()->set(new Link("self", Engine::getBaseUrl()."label/".$rec["pubkey"]));
+        $res->links()->set(new Link("self", $this->request->getBaseUrl()."label/".$rec["pubkey"]));
         foreach(self::FIELDS as $field) {
             if(!key_exists($field, $rec))
                 continue;
@@ -79,7 +91,7 @@ class Labels implements RequestHandlerInterface {
         return $res;
     }
 
-    public static function fromAttrs($attrs) {
+    public function fromAttrs($attrs) {
         $label = [];
 
         foreach(Labels::FIELDS as $field)
@@ -97,12 +109,12 @@ class Labels implements RequestHandlerInterface {
 
     public function fetchResource(RequestInterface $request): ResponseInterface {
         $key = $request->id();
-        $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $key);
+        $labels = $this->libraryDBO->search(ILibrary::LABEL_PUBKEY, 0, 1, $key);
         if(sizeof($labels) == 0)
             throw new ResourceNotFoundException("label", $key);
 
         $label = $labels[0];
-        $resource = self::fromRecord($label);
+        $resource = $this->fromRecord($label);
 
         $document = new Document($resource);
 
@@ -143,19 +155,19 @@ class Labels implements RequestHandlerInterface {
                 min($request->paginationValue("size"), ApiServer::MAX_LIMIT) :
                 ApiServer::DEFAULT_LIMIT;
 
-        if(!Engine::session()->isAuth('C'))
+        if(!$this->session->isAuth('C'))
             throw new BadRequestException("Operation requires challenge");
 
-        $records = Engine::api(ILibrary::class)->listLabels($op, $key, $limit);
+        $records = $this->libraryDBO->listLabels($op, $key, $limit);
         $result = [];
         foreach($records as $record) {
-            $resource = self::fromRecord($record);
+            $resource = $this->fromRecord($record);
             $result[] = $resource;
         }
 
         $document = new Document($result);
 
-        $base = Engine::getBaseUrl()."label?";
+        $base = $this->request->getBaseUrl()."label?";
         $size = "&page%5Bprofile%5D=cursor&page%5Bsize%5D=$limit";
 
         $obj = $records[0];
@@ -190,7 +202,7 @@ class Labels implements RequestHandlerInterface {
     }
 
     public function createResource(RequestInterface $request): ResponseInterface {
-        if(!Engine::session()->isAuth("m"))
+        if(!$this->session->isAuth("m"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
         $lr = $request->requestBody()->data()->first("label");
@@ -198,29 +210,29 @@ class Labels implements RequestHandlerInterface {
 
         // try to find by name
         $name = Albums::zkAlpha($attrs->getRequired("name"), true);
-        $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_NAME, 0, 1, $name);
+        $rec = $this->libraryDBO->search(ILibrary::LABEL_NAME, 0, 1, $name);
         if(sizeof($rec))
             throw new JsonApiException("label with this name already exists");
 
-        $label = self::fromAttrs($attrs);
+        $label = $this->fromAttrs($attrs);
         $label["pubkey"] = 0;
         $label["foreign"] = $label["international"] ?? false;
 
-        if(Engine::api(IEditor::class)->insertUpdateLabel($label))
-            return new CreatedResponse(Engine::getBaseUrl()."label/{$label['pubkey']}");
+        if($this->editorDBO->insertUpdateLabel($label))
+            return new CreatedResponse($this->request->getBaseUrl()."label/{$label['pubkey']}");
 
         throw new \Exception("creation failed");
     }
 
     public function patchResource(RequestInterface $request): ResponseInterface {
-        if(!Engine::session()->isAuth("m"))
+        if(!$this->session->isAuth("m"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
             throw new BadRequestException("must specify id");
 
-        $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $key);
+        $rec = $this->libraryDBO->search(ILibrary::LABEL_PUBKEY, 0, 1, $key);
         if(sizeof($rec) == 0)
             throw new ResourceNotFoundException("label", $key);
         $label = $rec[0];
@@ -231,29 +243,29 @@ class Labels implements RequestHandlerInterface {
         if($attrs->has("name")) {
             // check for duplicate name
             $name = Albums::zkAlpha($attrs->getRequired("name"), true);
-            $alt = Engine::api(ILibrary::class)->search(ILibrary::LABEL_NAME, 0, 10, $name);
+            $alt = $this->libraryDBO->search(ILibrary::LABEL_NAME, 0, 10, $name);
             if(sizeof($alt) > 1 || sizeof($alt) && $alt[0]["pubkey"] != $key)
                 throw new JsonApiException("label with this name already exists");
         }
 
-        $label = array_merge($label, self::fromAttrs($attrs));
+        $label = array_merge($label, $this->fromAttrs($attrs));
         $label["foreign"] = $label["international"];
 
-        if(Engine::api(IEditor::class)->insertUpdateLabel($label))
+        if($this->editorDBO->insertUpdateLabel($label))
             return new EmptyResponse();
 
         throw new \Exception("update failed");
     }
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
-        if(!Engine::session()->isAuth("m"))
+        if(!$this->session->isAuth("m"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
             throw new BadRequestException("must specify id");
 
-        Engine::api(IEditor::class)->deleteLabel($key);
+        $this->editorDBO->deleteLabel($key);
 
         return new EmptyResponse();
     }

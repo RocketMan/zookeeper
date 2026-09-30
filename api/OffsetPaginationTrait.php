@@ -24,7 +24,6 @@
 
 namespace ZK\API;
 
-use ZK\Engine\Engine;
 use ZK\Engine\IArtwork;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
@@ -40,10 +39,10 @@ use Enm\JsonApi\Model\Response\DocumentResponse;
 use Enm\JsonApi\Model\Response\ResponseInterface;
 
 trait OffsetPaginationTrait {
-    public static function fromArray(array $records, $flags = 0) {
+    public function fromArray(array $records, $flags = 0) {
         $result = [];
         foreach($records as $record) {
-            $resource = self::fromRecord($record);
+            $resource = $this->fromRecord($record);
             $result[] = $resource;
         }
         return $result;
@@ -53,9 +52,13 @@ trait OffsetPaginationTrait {
         $result = [];
         $map = [];
 
+        if (!($this instanceof Albums)
+                && !($this instanceof UnifiedSearch))
+            return $result;
+
         // require authentication to prevent scraping of artwork
-        if($flags & Albums::LINKS_ARTWORK && Engine::session()->isAuth("u"))
-            Engine::api(IArtwork::class)->injectAlbumArt($records, Engine::getAppBasePath());
+        if($flags & Albums::LINKS_ARTWORK && $this->session->isAuth("u"))
+            $this->imageDBO->injectAlbumArt($records, $this->request->getAppBasePath());
 
         foreach($records as $record) {
             $tag = $record["tag"] ?? null;
@@ -75,7 +78,9 @@ trait OffsetPaginationTrait {
                     $artist = $record["artist"];
                     $record["artist"] = $record["album"];
                 }
-                $resource = $map[$tag] = Albums::fromRecord($record, false);
+                $resource = $map[$tag] = $this instanceof Albums
+                    ? $this->fromRecord($record, false)
+                    : $this->albums->fromRecord($record, false);
                 // we need to put this back so it is available for the track
                 if($record["iscoll"])
                     $record["artist"] = $artist;
@@ -87,14 +92,14 @@ trait OffsetPaginationTrait {
                     // optionally backfill the name for now; we may get rid
                     // of this if there is a perceptable performance hit
                     if(!isset($record["name"])) {
-                        $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $record["pubkey"]);
+                        $labels = $this->libraryDBO->search(ILibrary::LABEL_PUBKEY, 0, 1, $record["pubkey"]);
                         if(sizeof($labels))
                             $record["name"] = $labels[0]["name"];
                     }
-                    $res = Labels::fromRecord($record);
+                    $res = $this->labels->fromRecord($record);
                     $relation = new Relationship("label", $res);
-                    $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
-                    $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
+                    $relation->links()->set(new Link("related", $this->request->getBaseUrl()."album/{$record["tag"]}/label"));
+                    $relation->links()->set(new Link("self", $this->request->getBaseUrl()."album/{$record["tag"]}/relationships/label"));
                     $relation->metaInformation()->set("name", $record["name"] ?? "(Unknown)");
                     $resource->relationships()->set($relation);
                 }
@@ -116,13 +121,20 @@ trait OffsetPaginationTrait {
     protected function fromPlaylistSearch(array $records) {
         $result = [];
         $map = [];
+
+        if (!($this instanceof Playlists)
+                && !($this instanceof UnifiedSearch))
+            return $result;
+
         foreach($records as $record) {
             $list = $record["list"];
             if(array_key_exists($list, $map)) {
                 $resource = $map[$list];
                 $events = $resource->attributes()->getOptional("events");
             } else {
-                $resource = $map[$list] = Playlists::fromRecord($record, Playlists::LINKS_NONE);
+                $resource = $map[$list] = $this instanceof Playlists
+                    ? $this->fromRecord($record, Playlists::LINKS_NONE)
+                    : $this->playlists->fromRecord($record, Playlists::LINKS_NONE);
                 $result[] = $resource;
                 $events = [];
             }
@@ -136,35 +148,6 @@ trait OffsetPaginationTrait {
             $events[] = $r;
             $resource->attributes()->set("events", $events);
         }
-        return $result;
-    }
-
-    protected function marshallReviews(array $records, $flags) {
-        $result = [];
-        foreach($records as $record) {
-            $resource = Albums::fromRecord($record, $flags & Albums::LINKS_TRACKS);
-            $result[] = $resource;
-
-            $relations = new ResourceCollection();
-            $relation = new Relationship("reviews", $relations);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/reviews"));
-            $resource->relationships()->set($relation);
-            if($flags & Albums::LINKS_REVIEWS_WITH_BODY) {
-                $review = Engine::api(IReview::class)->getReviews($record["id"], 1, "", Engine::session()->isAuth("u"), 1)[0];
-                $res = Reviews::fromRecord($review);
-            } else
-                $res = new JsonResource("review", $record["id"]);
-            $res->metaInformation()->set("date", $record["reviewed"]);
-            $relations->set($res);
-
-            $res = Labels::fromRecord($record);
-            $relation = new Relationship("label", $res);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
-            $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
-            $relation->metaInformation()->set("name", $record["name"] ?? "(Unknown)");
-            $resource->relationships()->set($relation);
-        }
-
         return $result;
     }
 
@@ -183,7 +166,7 @@ trait OffsetPaginationTrait {
 
         if($ops[0] == ILibrary::ALBUM_LOCATION) {
             // require authentication to prevent database scraping
-            if(!Engine::session()->isAuth("u"))
+            if(!$this->session->isAuth("u"))
                 throw new UnauthorizedRequestException("Operation requires authentication");
             $locations = array_values(ILibrary::LOCATIONS);
             $locationMap = array_combine(
@@ -210,29 +193,28 @@ trait OffsetPaginationTrait {
 
         $sort = $_GET["sort"] ?? "";
 
-        $libraryAPI = Engine::api(ILibrary::class);
         if(!is_array($ops)) {
-            [$total, $records] = self::$ops($request, $type, $key, $offset, $limit);
+            [$total, $records] = $this->$ops($request, $type, $key, $offset, $limit);
             $ops = [ -1, null ];
         } else if($ops[1]) {
-            if (!Engine::session()->isAuth('C'))
+            if (!$this->session->isAuth('C'))
                 throw new BadRequestException("Operation requires challenge");
-            [$total, $retval] = $libraryAPI->searchFullText($ops[1], $key, $limit, $offset);
+            [$total, $retval] = $this->libraryDBO->searchFullText($ops[1], $key, $limit, $offset);
             $records = $total ? $retval[0]["result"] : [];
             $offset += $limit;
             if($offset >= $total)
                 $offset = 0;
         } else {
-            if (str_ends_with($key, '*') && !Engine::session()->isAuth('C'))
+            if (str_ends_with($key, '*') && !$this->session->isAuth('C'))
                 throw new BadRequestException("Operation requires challenge");
 
-            $total = (int)$libraryAPI->searchPos($ops[0], $offset, -1, $key);
-            $records = $libraryAPI->searchPos($ops[0], $offset, $limit, $key, $sort);
+            $total = (int)$this->libraryDBO->searchPos($ops[0], $offset, -1, $key);
+            $records = $this->libraryDBO->searchPos($ops[0], $offset, $limit, $key, $sort);
         }
 
         switch($ops[0]) {
-        case ILibrary::ALBUM_AIRNAME:
-            $result = $this->marshallReviews($records, $links);
+        case ILibrary::ALBUM_AIRNAME: // referenced only from Albums
+            $result = $this instanceof Albums ? $this->marshallReviews($records, $links) : null;
             break;
         case ILibrary::TRACK_NAME:
             $result = $this->fromTrackSearch($records, $links);
@@ -241,14 +223,14 @@ trait OffsetPaginationTrait {
             $result = $this->fromPlaylistSearch($records);
             break;
         default:
-            $result = self::fromArray($records, $links);
+            $result = $this->fromArray($records, $links);
             break;
         }
         $document = new Document($result);
 
         $filter = http_build_query(['filter' => $request->filter]);
 
-        $base = Engine::getBaseUrl().$request->type()."?{$filter}";
+        $base = $this->request->getBaseUrl().$request->type()."?{$filter}";
         $size = "&page%5Bsize%5D=$limit";
 
         if($offset)

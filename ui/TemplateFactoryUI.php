@@ -25,10 +25,13 @@
 namespace ZK\UI;
 
 use ZK\Engine\TemplateFactory;
+use ZK\Engine\TemplateFactoryContext;
 
 class TemplateFactoryUI extends TemplateFactory {
-    public function __construct() {
-        parent::__construct(__DIR__ . '/templates');
+    public function __construct(
+        TemplateFactoryContext $context,
+    ) {
+        parent::__construct(__DIR__ . '/templates', $context);
         $this->app->content = new \stdClass();
 
         $filter = new \Twig\TwigFilter('smartURL', [ '\ZK\UI\UICommon', 'smartURL' ], [ 'is_safe' => [ 'html' ] ]);

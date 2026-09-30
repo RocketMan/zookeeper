@@ -52,8 +52,7 @@ class DatagramServer {
     public function start() {
         // This piggybacks on NowAiringServer's port assignment, but
         // listens on the UDP port instead of TCP.
-        $this->dgfact->createServer(PushServer::WSSERVER_HOST . ":" .
-                              PushServer::WSSERVER_PORT)->then(
+        $this->dgfact->createServer(ServiceDriver::DEFAULT_WSSERVER)->then(
             function(Socket $client) {
                 $client->on('message', function($message, $addr, $client) {
                     // echo "received $message from $addr\n";

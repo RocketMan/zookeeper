@@ -27,8 +27,7 @@ namespace ZK\Engine;
 /**
  * User operations
  */
-interface IUser {
-    function getUser($user);
+interface IUser extends IUserAuth {
     function getUsers();
     function getUserByAccount($account);
     function getUserByFullname($fullname);
@@ -47,5 +46,4 @@ interface IUser {
     function getAPIKeys($user);
     function addAPIKey($user, $apikey);
     function deleteAPIKeys($user, array $ids);
-    function lookupAPIKey($apikey);
 }

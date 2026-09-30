@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -26,12 +26,14 @@ namespace ZK\UI;
 
 use ZK\Controllers\API;
 
-use ZK\Engine\Engine;
 use ZK\Engine\IArtwork;
+use ZK\Engine\IConfig;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\PlaylistEntry;
+use ZK\Engine\Request;
 use ZK\Engine\Session;
+use ZK\Engine\Zookeeper;
 
 use ZK\UI\UICommon as UI;
 
@@ -162,8 +164,8 @@ class Editor extends MenuItem {
     private $printConfig;
     private $discogsConfig;
 
-    public static function emitQueueHook($session) {
-        if(Engine::api(IEditor::class)->getNumQueuedTags($session->getUser()))
+    public function emitQueueHook($session) {
+        if($this->editorDBO->getNumQueuedTags($session->getUser()))
             echo "<P>You have <A HREF=\"?action=editor&amp;subaction=tagq\" CLASS=\"nav\">tags queued for printing</A>.</P>";
     }
 
@@ -171,15 +173,28 @@ class Editor extends MenuItem {
         return !isset($var) || strlen(trim($var)) === 0;
     }
 
+    public function __construct(
+        protected Request $request,
+        protected Session $session,
+        protected TemplateFactoryUI $templateFactory,
+        protected IConfig $config,
+        protected DeepStorage $deepStorage,
+        protected IEditor $editorDBO,
+        protected IArtwork $imageDBO,
+        protected ILibrary $libraryDBO,
+    ) {
+        parent::__construct($session, $templateFactory);
+    }
+
     public function getSubactions($action) {
         $subactions = self::$subactions;
-        if(Engine::api(IEditor::class)->getNumQueuedTags($this->session->getUser()))
+        if($this->editorDBO->getNumQueuedTags($this->session->getUser()))
             $subactions = array_merge($subactions, self::$subactions_tagq);
         return $subactions;
     }
     
     public function processLocal($action, $subaction) {
-        $this->printConfig = Engine::param('label_printer');
+        $this->printConfig = $this->config->get('label_printer');
         if($this->session->isAuth("m")) {
             switch($subaction) {
             case "prefill":
@@ -198,7 +213,7 @@ class Editor extends MenuItem {
     }
 
     public function deepStorage() {
-        $this->newEntity(DeepStorage::class)->processLocal("editor", "deepStorage");
+        $this->deepStorage->withContextFrom($this)->processLocal("editor", "deepStorage");
     }
 
     /**
@@ -206,7 +221,7 @@ class Editor extends MenuItem {
      */
     private function getDiscogsConfig() {
         return $this->discogsConfig ??=
-            (($config = Engine::param('discogs'))
+            (($config = $this->config->get('discogs'))
                 && !empty($config['apikey']) ? $config['apikey'] :
             ($config
                 && !empty($config['client_id'])
@@ -214,7 +229,7 @@ class Editor extends MenuItem {
     }
 
     private function getUrlAutofill() {
-        return Engine::param('external_links_enabled')
+        return $this->config->get('external_links_enabled')
                 && $this->session->isAuth("p");
     }
 
@@ -233,7 +248,7 @@ class Editor extends MenuItem {
         if($config) {
             $discogs = new Client([
                 RequestOptions::HEADERS => [
-                    'User-Agent' => Engine::UA,
+                    'User-Agent' => Zookeeper::UA,
                     'Authorization' => is_string($config) ?
                         "Discogs token=$config" :
                         "Discogs key={$config['client_id']}, secret={$config['client_secret']}"
@@ -421,7 +436,7 @@ class Editor extends MenuItem {
 
     private static function addrInSubnets($addr, $subnets) {
         foreach(is_array($subnets) ? $subnets : [ $subnets ] as $subnet) {
-            if(Session::addrInSubnet($addr, $subnet))
+            if(Request::addrInSubnet($addr, $subnet))
                 return true;
         }
         return false;
@@ -581,20 +596,20 @@ class Editor extends MenuItem {
                      $tag = substr($key, 3);
                      if($_REQUEST["print"] ?? false)
                          $this->printTag($tag);
-                     Engine::api(IEditor::class)->dequeueTag($tag, $this->session->getUser());
+                     $this->editorDBO->dequeueTag($tag, $this->session->getUser());
                      $this->skipVar("tag".$tag);
                  }
               }
               return true;
          }
-         if(!Engine::api(IEditor::class)->getNumQueuedTags($this->session->getUser())) {
+         if(!$this->editorDBO->getNumQueuedTags($this->session->getUser())) {
               echo "  <P>There are no queued tags.</P>\n";
               return;
          }
          echo "<P><B>Tags queued for printing:</B>\n";
          echo "</P>\n";
          echo "    <TABLE BORDER=0>\n      <TR><TH><INPUT NAME=all id='all' TYPE=checkbox></TH><TH ALIGN=RIGHT>Tag&nbsp;&nbsp;</TH><TH ALIGN=left>Artist</TH><TH>&nbsp;</TH><TH ALIGN=left>Album</TH></TR>\n";
-         if($result = Engine::api(IEditor::class)->getQueuedTags($this->session->getUser())) {
+         if($result = $this->editorDBO->getQueuedTags($this->session->getUser())) {
               while($row = $result->fetch()) {
                    echo "      <TR><TD><INPUT NAME=tag".$row["tag"]." TYPE=checkbox".(($_POST["tag".$row["tag"]] ?? '') == "on"?" checked":"")."></TD>";
                    echo "<TD ALIGN=RIGHT>".$row["tag"]."&nbsp;&nbsp;</TD><TD>".htmlentities($row["artist"])."</TD><TD></TD><TD>".htmlentities($row["album"])."</TD></TR>\n";
@@ -705,7 +720,7 @@ class Editor extends MenuItem {
                 $selCount = $_REQUEST["selcount"];
                 foreach(explode(",", $_REQUEST["seltags"]) as $tag)
                     if($selCount-- > 0)
-                        Engine::api(IEditor::class)->dequeueTag($tag, $this->session->getUser());
+                        $this->editorDBO->dequeueTag($tag, $this->session->getUser());
                     else
                         $this->emitHidden("tag".$tag, "on");
             }
@@ -944,14 +959,14 @@ class Editor extends MenuItem {
 
         $album = $this->getAlbum();
         $tracks = $this->getTracks();
-        $result = Engine::api(IEditor::class)->insertUpdateAlbum($album, $tracks, $this->getLabel());
+        $result = $this->editorDBO->insertUpdateAlbum($album, $tracks, $this->getLabel());
 
         if($result) {
             if(!empty($_REQUEST["new"])) {
                 $_REQUEST["seltag"] = $album["tag"];
                 $infoUrl = $_REQUEST["infoUrl"] ?? null;
                 if($infoUrl) {
-                    Engine::api(IArtwork::class)->insertAlbumArt(
+                    $this->imageDBO->insertAlbumArt(
                         $_REQUEST["seltag"],
                         $_REQUEST["imageUrl"] ?? null,
                         $infoUrl);
@@ -962,7 +977,7 @@ class Editor extends MenuItem {
                     $this->printTag($_REQUEST["seltag"]);
             } else {
                 // album update
-                $aapi = Engine::api(IArtwork::class);
+                $aapi = $this->imageDBO;
                 $tag = $_REQUEST["seltag"];
                 $art = $aapi->getAlbumArt($tag);
                 $aart = $_REQUEST["aart"]; // 1 to enable, 0 to disable
@@ -998,7 +1013,7 @@ class Editor extends MenuItem {
             return false;
 
         $label = $this->getLabel();
-        $result = Engine::api(IEditor::class)->insertUpdateLabel($label);
+        $result = $this->editorDBO->insertUpdateLabel($label);
         if($result) {
             $this->albumAdded = $_REQUEST["lnew"] ?? false;
             $this->albumUpdated = !$this->albumAdded;
@@ -1169,7 +1184,7 @@ class Editor extends MenuItem {
             $this->skipVar("seltag");
             $this->skipVar("selpubkey");
         } else {
-            $row = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["seltag"])[0];
+            $row = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["seltag"])[0];
             $artist = stripslashes($row["artist"]);
             $album = stripslashes($row["album"]);
             $agenre = $row["category"];
@@ -1181,7 +1196,7 @@ class Editor extends MenuItem {
             $name = $_REQUEST["name"] ?? '';
             if(!$name) {
                 if(!empty($_REQUEST["selpubkey"])) {
-                    $row = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $_REQUEST["selpubkey"])[0];
+                    $row = $this->libraryDBO->search(ILibrary::LABEL_PUBKEY, 0, 1, $_REQUEST["selpubkey"])[0];
                     $name = $row["name"] ?? "(Unknown)";
                     $address = $row["address"];
                     $city = $row["city"];
@@ -1241,7 +1256,7 @@ class Editor extends MenuItem {
                     </SELECT>&nbsp;&nbsp;<SPAN ID=lbin STYLE="visibility:<?php echo ($alocation == ILibrary::LOCATION_STORAGE) ? "visible" : "hidden"; ?>">Bin:&nbsp;</SPAN><INPUT NAME=bin TYPE=text CLASS=text SIZE=10 maxlength='8' VALUE="<?php echo $bin;?>" STYLE="visibility:<?php echo ($alocation == ILibrary::LOCATION_STORAGE) ? "visible" : "hidden"; ?>"></TD></TR>
     <?php 
         if(!$new) {
-            $art = Engine::api(IArtwork::class)->getAlbumArt($_REQUEST["seltag"]);
+            $art = $this->imageDBO->getAlbumArt($_REQUEST["seltag"]);
             $isDisabled = $art && $art['image_id'] === 0;
             $hasArt = $art && $art['image_uuid'];
     ?>
@@ -1263,7 +1278,7 @@ class Editor extends MenuItem {
               Drag&hairsp;&amp;&hairsp;Drop<br>file here or<br>
               <div class='pseudo-button'>Browse Files</div>
             </div>
-            <div class='success'><img id='albumart' src='<?php echo $hasArt ? Engine::api(IArtwork::class)->getCachePath($art['image_uuid']) : 'img/blank.gif'; ?>'></div>
+            <div class='success'><img id='albumart' src='<?php echo $hasArt ? $this->imageDBO->getCachePath($art['image_uuid']) : 'img/blank.gif'; ?>'></div>
             <div class='delete'><a href='#' title='Delete album artwork'><span class='fas fa-trash'></span></a></div>
             <input type='hidden' name='adel' value='0'>
             <input type='hidden' name='aimg' value=''>
@@ -1336,7 +1351,7 @@ class Editor extends MenuItem {
             $row = [];
             $foreign = false;
         } else {
-            $row = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $_REQUEST["selpubkey"])[0];
+            $row = $this->libraryDBO->search(ILibrary::LABEL_PUBKEY, 0, 1, $_REQUEST["selpubkey"])[0];
             $foreign = $row["international"] == "T";
             echo "  <TR><TD></TD><TD>&nbsp;</TD></TR>\n";
             echo "  <TR><TD ALIGN=RIGHT>Label&nbsp;ID:</TD><TH ALIGN=LEFT ID=\"pubkey\">".$row["pubkey"]."</TH></TR>\n";
@@ -1448,7 +1463,7 @@ class Editor extends MenuItem {
         $isCollection = $_REQUEST["coll"] ?? false;
 
         if(!empty($_REQUEST["seltag"]) && empty($_REQUEST["tdb"])) {
-            $tracks = Engine::api(ILibrary::class)->search($isCollection?ILibrary::COLL_KEY:ILibrary::TRACK_KEY, 0, 2000, $_REQUEST["seltag"]);
+            $tracks = $this->libraryDBO->search($isCollection?ILibrary::COLL_KEY:ILibrary::TRACK_KEY, 0, 2000, $_REQUEST["seltag"]);
             foreach($tracks as $row) {
                 $this->emitHidden("track".$row["seq"], $row["track"]);
                 $_POST["track".$row["seq"]] = $row["track"];
@@ -1499,9 +1514,9 @@ class Editor extends MenuItem {
     <?php
     }
 
-    public static function makeLabel($tag, $charset, $dark=1,
+    public function makeLabel($tag, $charset, $dark=1,
                                         $boxEscape="", $textEscape="") {
-        $al = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)[0];
+        $al = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag)[0];
         $digits = array_map('intval', str_split(strrev((string)$tag)));
 
         $output = $boxEscape."\r";
@@ -1551,7 +1566,7 @@ class Editor extends MenuItem {
     private function enqueueTag($tag) {
         if(!empty($this->printConfig['print_methods'])) {
             // Enqueue tag for later printing
-            Engine::api(IEditor::class)->enqueueTag($tag, $this->session->getUser());
+            $this->editorDBO->enqueueTag($tag, $this->session->getUser());
             $this->tagPrinted = -1;
         }
     }
@@ -1573,13 +1588,13 @@ class Editor extends MenuItem {
 
         $template = $info('use_template');
         if($template) {
-            $inst = urlencode(Engine::getBaseUrl());
+            $inst = urlencode($this->request->getBaseUrl());
             $pdf = popen(dirname(__DIR__) .
                                   "/zk print form=$template tags=$tag inst=$inst", "r");
             $output = stream_get_contents($pdf);
             pclose($pdf);
         } else
-            $output = self::makeLabel($tag, $charset,
+            $output = $this->makeLabel($tag, $charset,
                                   $info('darkness'),
                                   $info('box_mode'),
                                   $info('text_mode'));

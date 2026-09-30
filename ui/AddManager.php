@@ -27,8 +27,11 @@ namespace ZK\UI;
 
 use ZK\Engine\Engine;
 use ZK\Engine\PlaylistEntry;
+use ZK\Engine\IConfig;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
@@ -77,11 +80,22 @@ class AddManager extends MenuItem {
     private $nextMessage;
     private $categoryMapCache; // cache for virtual property 'categoryMap'
 
+    public function __construct(
+        protected Request $request,
+        protected Session $session,
+        protected TemplateFactoryUI $templateFactory,
+        protected IConfig $config,
+        protected IChart $chartDBO,
+        protected ILibrary $libraryDBO,
+    ) {
+        parent::__construct($session, $templateFactory);
+    }
+
     public function __get($var) {
         // lazy load the chart categoryMap
         if($var == 'categoryMap') {
             if(!isset($this->categoryMapCache))
-                $this->categoryMapCache = Engine::api(IChart::class)->getCategories(self::MAX_CAT_COUNT);
+                $this->categoryMapCache = $this->chartDBO->getCategories(self::MAX_CAT_COUNT);
             return $this->categoryMapCache;
         }
     }
@@ -101,7 +115,7 @@ class AddManager extends MenuItem {
     }
 
     public function addManagerEmitAlbums(&$records, $subaction, $static=0, $sort=0) {
-        $this->addVar('catmap', Engine::api(IChart::class)->getCategories());
+        $this->addVar('catmap', $this->chartDBO->getCategories());
 
         // Get albums into an array
         $albums = $records->asArray();
@@ -121,7 +135,7 @@ class AddManager extends MenuItem {
             });
 
         // Mark reviewed albums
-        $libraryAPI = Engine::api(ILibrary::class);
+        $libraryAPI = $this->libraryDBO;
         $libraryAPI->markAlbumsReviewed($albums);
         if(!$static && $this->session->isAuth("u"))
             $libraryAPI->markAlbumsPlayable($albums);
@@ -141,9 +155,9 @@ class AddManager extends MenuItem {
             break;
         default:
             if($this->session->isAuth("u"))
-                $results = Engine::api(IChart::class)->getCurrentsWithPlays(date("Y-m-d"));
+                $results = $this->chartDBO->getCurrentsWithPlays(date("Y-m-d"));
             else
-                $results = Engine::api(IChart::class)->getCurrents(date("Y-m-d"));
+                $results = $this->chartDBO->getCurrents(date("Y-m-d"));
 
             $this->addManagerEmitAlbums($results, "", false, true);
         }
@@ -151,7 +165,7 @@ class AddManager extends MenuItem {
     
     public function addManagerShowAdd() {
         $date = $_REQUEST["date"] ?? "";
-        $records = Engine::api(IChart::class)->getAddDates(52)->asArray();
+        $records = $this->chartDBO->getAddDates(52)->asArray();
         $this->addVar('adddates', $records);
 
         if(count($records) && !array_reduce($records, function($carry, $item) use($date) {
@@ -160,14 +174,14 @@ class AddManager extends MenuItem {
             $_REQUEST['date'] = $date = $records[0]['adddate'];
 
         if($date) {
-            $records = Engine::api(IChart::class)->getAdd($date);
+            $records = $this->chartDBO->getAdd($date);
             $this->addManagerEmitAlbums($records, "adds");
             $this->setTemplate('currents/adds.html');
         }
     }
     
     public function panelInfo($validate) {
-        $libraryAPI = Engine::api(ILibrary::class);
+        $libraryAPI = $this->libraryDBO;
         if($validate)
             return true;
     
@@ -246,7 +260,7 @@ class AddManager extends MenuItem {
     
         // Setup default
         if(!$aid)
-            $aid = Engine::api(IChart::class)->getNextAID();
+            $aid = $this->chartDBO->getNextAID();
     ?>
           <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>
             <TR><TD COLSPAN=2>&nbsp;</TD></TR>
@@ -267,7 +281,7 @@ class AddManager extends MenuItem {
         if($validate) {
             if($tag && $temp == $tag) {
                 // Lookup tag
-                $albumrec = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+                $albumrec = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
                 if(sizeof($albumrec) != 0) {
                     return true;
                 }
@@ -350,7 +364,7 @@ class AddManager extends MenuItem {
                     $catstr .= (string)($i+1);
                     $emitted = true;
                 }
-            if(Engine::api(IChart::class)->addAlbum($aid, $tag, $adddate, $pulldate, $catstr)) {
+            if($this->chartDBO->addAlbum($aid, $tag, $adddate, $pulldate, $catstr)) {
                 // Clear the form data
                 $this->skipVar("aid");
                 $this->skipVar("tag");
@@ -506,7 +520,7 @@ class AddManager extends MenuItem {
                     $catstr .= (string)($i+1);
                     $emitted = true;
                 }
-            if(Engine::api(IChart::class)->updateAlbum($id, $aid, $tag, $adddate, $pulldate, $catstr))
+            if($this->chartDBO->updateAlbum($id, $aid, $tag, $adddate, $pulldate, $catstr))
                 return true;
             else {
                 $this->errorMessage = "Update failed";
@@ -567,7 +581,7 @@ class AddManager extends MenuItem {
                 $seq = "";
     
                 // Pull in the values for this album
-                $row = Engine::api(IChart::class)->getAlbum($id);
+                $row = $this->chartDBO->getAlbum($id);
                 if($row) {
                     $_REQUEST["aid"] = $row["afile_number"];
                     $_REQUEST["tag"] = $row["tag"];
@@ -610,13 +624,13 @@ class AddManager extends MenuItem {
         $id = $_REQUEST["id"];
     
         // Setup the date for AddManagerShowAdd() redisplay
-        $row = Engine::api(IChart::class)->getAlbum($id);
+        $row = $this->chartDBO->getAlbum($id);
         if($row) {
             $_REQUEST["date"] = $row["adddate"];
         }
     
         if($id && $_SERVER['REQUEST_METHOD'] == 'POST')
-            Engine::api(IChart::class)->deleteAlbum($id);
+            $this->chartDBO->deleteAlbum($id);
         $this->addManagerShowAdd();
     }
     
@@ -631,7 +645,7 @@ class AddManager extends MenuItem {
                 $code = $_POST["code".$i];
                 $dir = $_POST["dir".$i];
                 $email = $_POST["email".$i];
-                $success &= Engine::api(IChart::class)->updateCategory($i, $name, $code, $dir, $email);
+                $success &= $this->chartDBO->updateCategory($i, $name, $code, $dir, $email);
             }
             $this->addVar('success', $success);
         }
@@ -641,7 +655,7 @@ class AddManager extends MenuItem {
     }
     
     public function addManagerEMail() {
-        $instance_chartman = Engine::param('email')['chartman'];
+        $instance_chartman = $this->config->get('email.chartman');
         $date = $_REQUEST["date"];
         $address = $_REQUEST["address"] ?? '';
         $format = $_REQUEST["format"] ?? '';
@@ -663,8 +677,8 @@ class AddManager extends MenuItem {
                 echo "  <P CLASS=\"header\">E-Mail address is invalid.</P>\n";
             } else {
                 // Fetch the add        
-                $albums = Engine::api(IChart::class)->getAdd($date)->asArray();
-                Engine::api(ILibrary::class)->markAlbumsReviewed($albums, 0, true);
+                $albums = $this->chartDBO->getAdd($date)->asArray();
+                $this->libraryDBO->markAlbumsReviewed($albums, 0, true);
 
                 foreach($albums as &$row) {
                     $row['body'] = $row['review'] ??= '';
@@ -677,7 +691,7 @@ class AddManager extends MenuItem {
                     }
                 }
 
-                $station = Engine::param('station_title');
+                $station = $this->config->get('station_title');
                 $from = "$station <$instance_chartman>";
                 $subject = "$station: Adds for $date";
 
@@ -692,15 +706,14 @@ class AddManager extends MenuItem {
 
                 $vars = [];
                 $vars['albums'] = $albums;
-                $vars['baseUrl'] = Engine::getBaseURL();
+                $vars['baseUrl'] = $this->request->getBaseUrl();
                 $vars['entry'] = new PlaylistEntry();
                 $vars['CATMAP'] = $this->categoryMap;
                 $vars['date'] = $date;
-                $vars['dateSpec'] = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
+                $vars['dateSpec'] = $this->request->isUsLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
                 $vars['boundary'] = $boundary;
 
-                $tf = new TemplateFactoryUI();
-                $t = $tf->load($format == 'tab' ?
+                $t = $this->templateFactoryUI->load($format == 'tab' ?
                                     'currents/emailCSV.txt' :
                                     'currents/emailText.html');
                 $body = $t->render($vars);
@@ -739,7 +752,7 @@ class AddManager extends MenuItem {
     
     private function aFileActivityGetReport(&$records, &$albums) {
         while($row = $records->fetch()) {
-            $userName = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $row["dj"]);
+            $userName = $this->libraryDBO->search(ILibrary::PASSWD_NAME, 0, 1, $row["dj"]);
             if(sizeof($userName) && $userName[0]["realname"])
                 $row["name"] = $userName[0]["realname"];
             else
@@ -827,7 +840,7 @@ class AddManager extends MenuItem {
     }
     
     public function aFileActivityShowWeekly() {
-        $dates = Engine::api(IChart::class)->getChartDates(52)->asArray();
+        $dates = $this->chartDBO->getChartDates(52)->asArray();
         $this->addVar('dates', $dates);
         $first = count($dates) ? $dates[0]['week'] : null;
         $date = $_REQUEST["date"] ?? $first;
@@ -835,13 +848,13 @@ class AddManager extends MenuItem {
         $this->setTemplate('currents/activity.html');
 
         if($date) {
-            $records = Engine::api(IChart::class)->getWeeklyActivity($date);
+            $records = $this->chartDBO->getWeeklyActivity($date);
             $this->aFileActivityEmitReport($records, "activity");
         }
     }
 
     public function emitPrintableCurrentFile() {
-        $results = Engine::api(IChart::class)->getCurrents(date("Y-m-d"));
+        $results = $this->chartDBO->getCurrents(date("Y-m-d"));
         $this->addManagerEmitAlbums($results, "", true, true);
         $this->setTemplate('currents/export.html');
     }

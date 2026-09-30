@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -22,17 +22,23 @@
  *
  */
 
-namespace ZK\Controllers;
+namespace ZK\Engine;
 
 
-class OpenSearch implements IController {
-    public function __construct(
-        protected TemplateFactoryXML $templateFactory,
-    ) {}
+class UserAuthImpl extends DBO implements IUserAuth {
+    public function getUser($user) {
+        $query = "SELECT * FROM users WHERE name = ?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $user);
+        return $stmt->executeAndFetch();
+    }
 
-    public function processRequest() {
-        $template = $this->templateFactory->load('opensearch.xml');
-        header("Content-type: text/xml; charset=UTF-8");
-        echo $template->render();
+    public function lookupAPIKey($apikey) {
+        $query = "SELECT user, `groups`, realname FROM apikeys a ".
+                 "LEFT JOIN users u ON a.user = u.name ".
+                 "WHERE apikey=?";
+        $stmt = $this->prepare($query);
+        $stmt->bindValue(1, $apikey);
+        return $stmt->executeAndFetch();
     }
 }

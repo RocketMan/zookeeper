@@ -28,13 +28,14 @@ namespace ZK\Engine;
 /**
  * User operations
  */
-class UserImpl extends DBO implements IUser {
-    public function getUser($user) {
-        $query = "SELECT * FROM users WHERE name = ?";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $user);
-        return $stmt->executeAndFetch();
-    }
+class UserImpl extends UserAuthImpl implements IUser {
+    use AuditTrait;
+
+    public function __construct(
+        protected IConfig $config,
+        protected Session $session,
+        protected IDJ $djDBO,
+    ) {}
 
     public function getUsers() {
         $query = "SELECT * FROM users ORDER BY name";
@@ -260,7 +261,7 @@ class UserImpl extends DBO implements IUser {
             return false;
 
         // remove any airnames
-        Engine::api(IDJ::class)->getAirnames($user);
+        $this->djDBO->getAirnames($user);
 
         // remove any api keys
         $query = "DELETE FROM apikeys WHERE user = ?";
@@ -295,14 +296,5 @@ class UserImpl extends DBO implements IUser {
         $stmt = $this->prepare($query);
         $params = array_merge([$user], $ids);
         return $stmt->execute($params);
-    }
-
-    public function lookupAPIKey($apikey) {
-        $query = "SELECT user, `groups`, realname FROM apikeys a ".
-                 "LEFT JOIN users u ON a.user = u.name ".
-                 "WHERE apikey=?";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $apikey);
-        return $stmt->executeAndFetch();
     }
 }

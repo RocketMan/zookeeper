@@ -32,6 +32,12 @@ class PlaylistImpl extends DBO implements IPlaylist {
     const GRACE_START = "-15 minutes";
     const GRACE_END = "+30 minutes";
 
+    public function __construct(
+        protected IConfig $config,
+        protected Session $session,
+        protected IArtwork $imageDBO,
+    ) {}
+
     public function getShowdates($year, $month) {
         $start = (new \DateTime())->setDate($year, $month, 1);
         $end = (clone $start)->modify("+1 month")->modify("-1 day");
@@ -985,7 +991,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
     }
     
     private function getZootopiaAirname() {
-        $config = Engine::param('hosted_services') ?? Engine::param('push_proxy');
+        $config = $this->config->get('hosted_services') ?? $this->config->get('push_proxy');
         if($config) {
             foreach($config as $service) {
                 if(str_contains($service['class'] ?? $service['proxy'], 'ZootopiaListener') &&
@@ -1059,10 +1065,9 @@ class PlaylistImpl extends DBO implements IPlaylist {
      * and moreover, discogs imposes limits on rapid, sucessive queries.
      */
     protected function injectImageData(&$entry) {
-        $imageApi = Engine::api(IArtwork::class);
         if($entry['track_tag']) {
             // is the album already known to us?
-            $image = $imageApi->getAlbumArt($entry['track_tag']);
+            $image = $this->imageDBO->getAlbumArt($entry['track_tag']);
             if($image) {
                 // if yes, reuse it...
                 $imageUuid = $image['image_uuid'];
@@ -1072,7 +1077,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
 
         if(!isset($imageUuid)) {
             // is the artist already known to us?
-            $image = $imageApi->getArtistArt($entry['track_artist']);
+            $image = $this->imageDBO->getArtistArt($entry['track_artist']);
             if($image) {
                 // if yes, reuse it...
                 $imageUuid = $image['image_uuid'];
@@ -1081,7 +1086,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         }
 
         $entry['info_url'] = $infoUrl ?? null;
-        $entry['image_url'] = isset($imageUuid) ? $imageApi->getCachePath($imageUuid) : ($entry['track_tag'] ? "img/album-sleeve.svg" : null);
+        $entry['image_url'] = isset($imageUuid) ? $this->imageDBO->getCachePath($imageUuid) : ($entry['track_tag'] ? "img/album-sleeve.svg" : null);
     }
 
     public function getPlaysBefore($timestamp, $limit) {

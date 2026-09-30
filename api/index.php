@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2022 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -22,82 +22,114 @@
  *
  */
 
+namespace ZK\API;
+
 require_once __DIR__."/../vendor/autoload.php";
 
-use ZK\API\ApiRequest;
-use ZK\API\ApiServer;
-use ZK\API\XADeserializer;
-use ZK\API\XASerializer;
 use ZK\Engine\Config;
-use ZK\Engine\Engine;
+use ZK\Engine\DBO;
+use ZK\Engine\IConfig;
+use ZK\Engine\Zookeeper;
 
+use DI\Container;
+use DI\ContainerBuilder;
 use GuzzleHttp\Psr7\Uri;
 
-const CORS_METHODS = "GET, HEAD, POST, PATCH, DELETE";
-const CORS_MAX_AGE = 3600;
+class Dispatcher {
+    private const CORS_METHODS = "GET, HEAD, POST, PATCH, DELETE";
+    private const CORS_MAX_AGE = 3600;
 
-function isPreflight() {
-    $preflight = ($_SERVER['REQUEST_METHOD'] ?? null) == "OPTIONS";
-    if($preflight)
-        http_response_code(204); // 204 No Content
+    private IConfig $config;
+    private Container $container;
 
-    $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
-    if($origin) {
-        foreach(Engine::param('allowed_domains') as $domain) {
-            if(preg_match("/" . preg_quote($domain) . "$/", $origin)) {
-                header("Access-Control-Allow-Origin: $origin");
-                header("Access-Control-Allow-Credentials: true");
-                break;
+    public function __construct() {
+        $this->config = new Config();
+
+        $dbConfig = $this->config->get('db');
+        DBO::configure($dbConfig);
+
+        $engineConfig = $this->config->withConfigFrom('engine_config');
+
+        $builder = new ContainerBuilder();
+        $builder->addDefinitions(array_map(
+            fn($impl) => \DI\autowire($impl),
+            $engineConfig->asArray()
+        ));
+
+        $builder->addDefinitions([
+            IConfig::class => $this->config,
+        ]);
+
+        $this->container = $builder->build();
+    }
+
+    protected function isPreflight() {
+        $preflight = ($_SERVER['REQUEST_METHOD'] ?? null) == "OPTIONS";
+        if ($preflight)
+            http_response_code(204); // 204 No Content
+
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
+        if ($origin) {
+            foreach ($this->config->get('allowed_domains') as $domain) {
+                if (preg_match("/" . preg_quote($domain) . "$/", $origin)) {
+                    header("Access-Control-Allow-Origin: $origin");
+                    header("Access-Control-Allow-Credentials: true");
+                    break;
+                }
+            }
+
+            if ($preflight) {
+                header("Access-Control-Allow-Methods: " . self::CORS_METHODS);
+                header("Access-Control-Max-Age: " . self::CORS_MAX_AGE);
             }
         }
 
-        if($preflight) {
-            header("Access-Control-Allow-Methods: " . CORS_METHODS);
-            header("Access-Control-Max-Age: " . CORS_MAX_AGE);
+        return $preflight;
+    }
+
+    protected function serveRequest() {
+        $apiServer = new ApiServer(new XADeserializer(), new XASerializer());
+
+        $config = $this->config->withConfigFrom('controller_config', 'apiControllers');
+        $config->iterate(fn($type, $handler) =>
+            $apiServer->addHandler($type, $this->container->get($handler)));
+
+        try {
+            // Remove the uri prefix manually, as Request's api prefix removal
+            // is broken for multilevel prefixes.
+            //
+            // assert(strpos($_SERVER["REQUEST_URI"],
+            //           $_SERVER["REDIRECT_PREFIX"]) === 0);
+            $uri = substr($_SERVER["REQUEST_URI"],
+                            strlen($_SERVER["REDIRECT_PREFIX"] ?? ""));
+
+            $request = new ApiRequest(
+                $_SERVER["REQUEST_METHOD"],
+                new Uri($uri),
+                $apiServer->createRequestBody(file_get_contents('php://input')),
+                null);
+
+            $response = $apiServer->handleRequest($request);
+        } catch(\Exception $e) {
+            $response = $apiServer->handleException($e);
         }
+
+        header("HTTP/1.1 " . $response->status());
+        header("X-Powered-By: " . Zookeeper::UA);
+        foreach ($response->headers()->all() as $header => $value)
+            header("$header: $value");
+
+        ob_start("ob_gzhandler");
+        echo $apiServer->createResponseBody($response);
+        ob_end_flush();
     }
 
-    return $preflight;
-}
-
-function serveRequest() {
-    $apiServer = new ApiServer(new XADeserializer(), new XASerializer());
-
-    $config = new Config('controller_config', 'apiControllers');
-    $config->iterate(function($type, $handler) use($apiServer) {
-        $apiServer->addHandler($type, new $handler());
-    });
-
-    try {
-        // Remove the uri prefix manually, as Request's api prefix removal
-        // is broken for multilevel prefixes.
-        //
-        // assert(strpos($_SERVER["REQUEST_URI"],
-        //           $_SERVER["REDIRECT_PREFIX"]) === 0);
-        $uri = substr($_SERVER["REQUEST_URI"],
-                        strlen($_SERVER["REDIRECT_PREFIX"] ?? ""));
-
-        $request = new ApiRequest(
-            $_SERVER["REQUEST_METHOD"],
-            new Uri($uri),
-            $apiServer->createRequestBody(file_get_contents('php://input')),
-            null);
-
-        $response = $apiServer->handleRequest($request);
-    } catch(\Exception $e) {
-        $response = $apiServer->handleException($e);
+    public function processRequest() {
+        if (!$this->isPreflight())
+            $this->serveRequest();
     }
-
-    header("HTTP/1.1 ".$response->status());
-    header("X-Powered-By: " . Engine::UA);
-    foreach($response->headers()->all() as $header => $value)
-        header("$header: $value");
-
-    ob_start("ob_gzhandler");
-    echo $apiServer->createResponseBody($response);
-    ob_end_flush();
 }
 
 // BEGIN MAINLINE
-if(!isPreflight())
-    serveRequest();
+$dispatcher = new Dispatcher();
+$dispatcher->processRequest();

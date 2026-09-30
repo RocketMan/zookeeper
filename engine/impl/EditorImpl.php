@@ -29,6 +29,15 @@ namespace ZK\Engine;
  * Library Editor operations
  */
 class EditorImpl extends DBO implements IEditor {
+    use AuditTrait;
+
+    public function __construct(
+        protected IConfig $config,
+        protected Session $session,
+        protected IArtwork $imageDBO,
+        protected ILibrary $libraryDBO,
+    ) {}
+
     private function getNextTag() {
         $query = "SELECT MAX(tag) FROM albumvol";
         $stmt = $this->prepare($query);
@@ -54,8 +63,8 @@ class EditorImpl extends DBO implements IEditor {
         case ILibrary::LOCATION_STORAGE:
             break;
         case ILibrary::LOCATION_IN_REVIEW:
-            $oa = $album['tag'] ? Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $album['tag']) : [];
-            $album['bin'] = count($oa) && $oa[0]['location'] == ILibrary::LOCATION_IN_REVIEW ? $oa[0]['bin'] : Engine::session()->getUser();
+            $oa = $album['tag'] ? $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $album['tag']) : [];
+            $album['bin'] = count($oa) && $oa[0]['location'] == ILibrary::LOCATION_IN_REVIEW ? $oa[0]['bin'] : $this->session->getUser();
             break;
         default:
             $album['bin'] = '';
@@ -356,7 +365,7 @@ class EditorImpl extends DBO implements IEditor {
             $stmt->bindValue(1, $tag);
             $stmt->execute();
 
-            Engine::api(IArtwork::class)->deleteAlbumArt($tag);
+            $this->imageDBO->deleteAlbumArt($tag);
 
             // any spins which reference this album will already have
             // a private copy of the artist/album/label name; all that

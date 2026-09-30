@@ -27,10 +27,20 @@ namespace ZK\UI;
 use ZK\Engine\Engine;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
+use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
 class DeepStorage extends MenuItem {
+    public function __construct(
+        protected Session $session,
+        protected TemplateFactoryUI $templateFactory,
+        protected IEditor $editorDBO,
+        protected ILibrary $libraryDBO,
+    ) {
+        parent::__construct($session, $templateFactory);
+    }
+
     public function processLocal($action, $subaction) {
         $userfile = $_FILES['userfile']['tmp_name'] ?? '';
         if(!$userfile || $_SERVER['REQUEST_METHOD'] != 'POST') {
@@ -60,7 +70,7 @@ class DeepStorage extends MenuItem {
             while(!feof($fd)) {
               $line = explode("\t", fgets($fd, 1024));
               if(count($line) >= $column) {
-                  $album = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $line[$column]);
+                  $album = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $line[$column]);
                   if(sizeof($album)) {
                       if($_REQUEST['test'])
                          echo "  <TR><TD>" . $line[$column] . "</TD><TD>" .
@@ -68,10 +78,10 @@ class DeepStorage extends MenuItem {
                                $album[0]["album"] . "</TD></TR>\n";
                       else if($_REQUEST['deacc']) {
                          // Change status to "Deaccessioned" (U) or "Missing" (M)
-                         Engine::api(IEditor::class)->setLocation($line[$column], $_REQUEST['deacc']);
+                         $this->editorDBO->setLocation($line[$column], $_REQUEST['deacc']);
                       } else {
                          // Change status to "Deep Storage" (G) and set box number
-                         Engine::api(IEditor::class)->setLocation($line[$column], ILibrary::LOCATION_STORAGE, $_REQUEST['bin']);
+                         $this->editorDBO->setLocation($line[$column], ILibrary::LOCATION_STORAGE, $_REQUEST['bin']);
                       }
                       $count++;
                   }

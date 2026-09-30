@@ -24,67 +24,23 @@
 
 namespace ZK\Engine;
 
-class SafeSession {
-    public function getDN() { return Engine::session()->getDN(); }
-    public function getUser() { return Engine::session()->getUser(); }
-    public function isUser($user) { return !strcasecmp($this->getUser() ?? '', $user); }
-
-    public function isAuth($mode) {
-        return Engine::session()->isAuth($mode);
-    }
-}
-
-class LazyLoadParams {
-    /**
-     * list of Engine::params safe for templates
-     */
-    private const TEMPLATE_SAFE_PARAMS = [
-        'copyright',
-        'email',
-        'favicon',
-        'logo',
-        'nme',
-        'station',
-        'station_full',
-        'station_slogan',
-        'station_title',
-        'stylesheet',
-        'urls',
-    ];
-
-    public $request; // explicit, as we assign by reference later
-    private $params = [];
-
-    public function __isset($name) {
-        return key_exists($name, $this->params) ||
-            in_array($name, self::TEMPLATE_SAFE_PARAMS);
-    }
-
-    public function __get($name) {
-        return $this->params[$name] ??=
-            in_array($name, self::TEMPLATE_SAFE_PARAMS) ?
-                Engine::param($name) : null;
-    }
-
-    public function __set($name, $value) {
-        $this->params[$name] = $value;
-    }
-}
-
 class TemplateFactory {
     protected $twig;
     protected $app;
 
-    public function __construct(string $templateRoot) {
-        $this->app = new LazyLoadParams();
+    public function __construct(
+        string $templateRoot,
+        TemplateFactoryContext $context,
+    ) {
+        $this->app = $context->lazyLoadParams;
         $this->app->request = &$_REQUEST;
-        $this->app->session = new SafeSession();
-        $this->app->sso = !empty(Engine::param('sso')['client_id']);
-        $this->app->version = Engine::VERSION;
+        $this->app->session = $context->safeSession;
+        $this->app->sso = !empty($context->config->get('sso.client_id'));
+        $this->app->version = Zookeeper::VERSION;
 
         $path = [];
         foreach([
-            Engine::param('custom_template_dir', 'custom'),
+            $context->config->get('custom_template_dir', 'custom'),
             'default',
             ''
         ] as $dir) {
@@ -93,7 +49,7 @@ class TemplateFactory {
                 $path[] = $rpath;
         }
 
-        $cacheDir = Engine::param('template_cache_enabled') ?
+        $cacheDir = $context->config->get('template_cache_enabled') ?
                         $templateRoot . '/.cache' : false;
         if($cacheDir && !is_dir($cacheDir) && !mkdir($cacheDir)) {
             error_log("TemplateFactory: cannot create $cacheDir");
@@ -104,7 +60,7 @@ class TemplateFactory {
         $this->twig = new \Twig\Environment($loader, [ 'cache' => $cacheDir ]);
         $this->twig->addGlobal('app', $this->app);
 
-        $filter = new \Twig\TwigFilter('decorate', [ '\ZK\Engine\Engine', 'decorate' ]);
+        $filter = new \Twig\TwigFilter('decorate', [ '\ZK\Engine\Decorator', 'decorateAsset' ]);
         $this->twig->addFilter($filter);
         $filter = new \Twig\TwigFilter('int', fn($val) => (int)$val);
         $this->twig->addFilter($filter);

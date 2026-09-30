@@ -22,17 +22,30 @@
  *
  */
 
-namespace ZK\Controllers;
+namespace ZK\Engine;
 
+enum AuditAction {
+    case Insert;
+    case Update;
+    case Delete;
+}
 
-class OpenSearch implements IController {
-    public function __construct(
-        protected TemplateFactoryXML $templateFactory,
-    ) {}
+trait AuditTrait {
+    /**
+     * audit an action
+     *
+     * @param AuditAction $op the action
+     * @param int $id identifier
+     * @param string|null $message optional message
+     */
+    protected function audit(AuditAction $op, int $id, ?string $message = null) {
+        $banner = implode(' | ', [
+            $this->getAdvisoryLockName($id),
+            strtoupper($op->name),
+            $this->session->getDN(),
+            $message ?? ''
+        ]);
 
-    public function processRequest() {
-        $template = $this->templateFactory->load('opensearch.xml');
-        header("Content-type: text/xml; charset=UTF-8");
-        echo $template->render();
+        error_log("AUDIT $banner");
     }
 }

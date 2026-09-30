@@ -24,280 +24,78 @@
 
 namespace ZK\Engine;
 
-use ZK\Controllers\Challenge;
-
-class Session extends DBO {
-    private const TOKEN_AUTH = "apikey";
-
-    private $user;
-    private $displayName;
-    private $access = null;
-    private $sessionID = null;
-    private $sessionCookieName = "session";
-    private $clientScheme;
-    private $secure;
-    private $challenge;
-
-    public function __construct() {
-        // Cookies are shared between all instances on the same server.
-        //
-        // As the state they represent may differ between instances,
-        // we must scope the session cookie to each instance.
-        if(!empty($_SERVER['SERVER_PORT'])) {
-            $port = $_SERVER['SERVER_PORT'];
-            switch($port) {
-            case 80:
-            case 443:
-               // standard port, no suffix
-               break;
-            default:
-               // non-standard port, apply suffix
-               $this->sessionCookieName .= "-" . $port;
-               break;
-            }
-        }
-
-        // $this->clientScheme is a synthetic value set to
-        // the protocol that is used by the frontend client.
-        //
-        // Caution: $_SERVER['REQUEST_SCHEME'] reflects the *backend*
-        // protocol, which may not be the same as the frontend
-        // when a proxy or load balancer is used.
-        //
-        // Per the doc, PHP sets $_SERVER['HTTPS'] on frontend https.
-        $this->clientScheme = !empty($_SERVER['HTTPS']) ? 'https' :
-                $_SERVER['REQUEST_SCHEME'] ?? 'http';
-
-        $this->secure = $this->clientScheme == 'https';
-
-        // we no longer accept the session ID as a request parameter;
-        // it must be delievered in the request header as a cookie.
-        if(!empty($_COOKIE[$this->sessionCookieName]))
-            $this->validate($_COOKIE[$this->sessionCookieName]);
-        else if(!empty($_SERVER['HTTP_X_APIKEY']))
-            $this->authorizeApiKey($_SERVER['HTTP_X_APIKEY']);
-        else if(!empty($_SERVER['HTTP_X_CHALLENGE']))
-            $this->challenge = Challenge::validate($_SERVER['HTTP_X_CHALLENGE']);
-    }
-
-    public function getDN() { return $this->displayName; }
-    public function getUser() { return $this->user; }
-    public function getClientScheme(): string { return $this->clientScheme; }
-    public function isSecure(): bool { return $this->secure; }
-
-    private function setSessionCookie($session) {
-        // help prevent CSRF attacks with SameSite cookie flag
-        // 'SameSite=Lax' omits the cookie in cross-site POST requests
-        // see https://portswigger.net/web-security/csrf/samesite-cookies
-        setcookie($this->sessionCookieName, $session, [
-            'expires' => 0,
-            'path' => '/',
-            'domain' => $_SERVER['SERVER_NAME'],
-            'secure' => $this->secure,
-            'httponly' => true,
-            'samesite' => 'lax'
-        ]);
-    }
-
-    private function clearSessionCookie() {
-        // Clear the session cookie, if any
-        if(isset($_COOKIE[$this->sessionCookieName])) {
-            setcookie($this->sessionCookieName, "", [
-                'expires' => time() - 3600,
-                'path' => '/',
-                'domain' => $_SERVER['SERVER_NAME'],
-                'secure' => $this->secure,
-                'httponly' => true,
-                'samesite' => 'lax'
-            ]);
-        }
-    }
-
-    private function dbQuery($session) {
-        $query = "SELECT user, access, realname FROM sessions WHERE sessionkey=?";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $session);
-        $stmt->execute();
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
-    }
-
-    private function dbCreate($sessionID, $user, $access, $realname) {
-        $query = "INSERT INTO sessions " .
-                     "(sessionkey, user, access, realname, logon) " .
-                     "VALUES (?, ?, ?, ?, now())";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $sessionID);
-        $stmt->bindValue(2, $user);
-        $stmt->bindValue(3, $access);
-        $stmt->bindValue(4, $realname);
-        return $stmt->execute();
-    }
-
-    private function dbDelete($session) {
-        $query = "DELETE FROM sessions WHERE sessionkey= ?";
-        $stmt = $this->prepare($query);
-        $stmt->bindValue(1, $session);
-        return $stmt->execute();
-    }
-
-    public function purgeOldSessions() {
-        $query = "DELETE FROM ssoredirect WHERE ".
-                 "DATE_ADD(created, INTERVAL 1 DAY) < NOW()";
-        $stmt = $this->prepare($query);
-        $success = $stmt->execute();
-
-        $query = "DELETE FROM ssosetup WHERE ".
-                 "DATE_ADD(created, INTERVAL 1 DAY) < NOW()";
-        $stmt = $this->prepare($query);
-        $success &= $stmt->execute();
-
-        $query = "DELETE FROM sessions WHERE ".
-                 "DATE_ADD(logon, INTERVAL 2 DAY) < NOW()";
-        $stmt = $this->prepare($query);
-        $success &= $stmt->execute();
-
-        return $success;
-    }
-
-    public function create($sessionID, $user, $auth) {
-        $row = Engine::api(IUser::class)->getUser($user);
-        if($row)
-            $this->displayName = $row['realname'];
-
-        $success = $this->dbCreate($sessionID, $user, $auth, $this->displayName);
-        if ($success) {
-            $this->user = $user;
-            $this->access = $auth;
-            $this->sessionID = $sessionID;
-            $this->setSessionCookie($sessionID);
-        }
-    }
-
-    public function authorizeApiKey($apikey) {
-        // invalidate apikey with invalid characters (injection control)
-        $user = preg_match("/^[0-9a-f]+$/", $apikey) ?
-                    Engine::api(IUser::class)->lookupAPIKey($apikey) : null;
-        if($user) {
-            $access = $user['groups'] . (self::checkLocal()?'l':'');
-
-            // Reject disabled and non-local guest accounts
-            if(self::checkAccess('d', $access) ||
-                   self::checkAccess('g', $access) &&
-                       !self::checkAccess('l', $access))
-                return;
-
-            $this->user = $user['user'];
-            $this->access = $access;
-            $this->displayName = $user['realname'];
-            $this->sessionID = self::TOKEN_AUTH;
-        }
-    }
-
-    public function validate($sessionID) {
-        // invalidate session with invalid characters (injection control)
-        $row = preg_match("/^[0-9a-f]+$/", $sessionID) ?
-                $this->dbQuery($sessionID) : null;
-
-        if($row) {
-            // Session found
-            $this->user = $row['user'];
-            $this->access = $row['access'];
-            $this->displayName = $row['realname'];
-            $this->sessionID = $sessionID;
-        } else {
-            // Failure
-            $this->sessionID = null;
-            $this->access = null;
-            $this->clearSessionCookie();
-        }
-    }
-
-    public function invalidate() {
-        if($this->sessionID) {
-            $this->dbDelete($this->sessionID);
-            $this->clearSessionCookie();
-            $this->sessionID = null;
-            $this->access = null;
-        }
-    }
-
-    public function isAuth($mode) {
-        switch($mode) {
-        case "a":    // all
-            $allow = true;
-            break;
-        case "C":    // challenge (auth user or successful challenge)
-            $allow = !empty($this->sessionID) || $this->challenge;
-            break;
-        case "T":    // token authentication
-            $allow = $this->sessionID == self::TOKEN_AUTH;
-            break;
-        case "u":    // authenticated users only
-            $allow = !empty($this->sessionID);
-            break;
-        case "U":    // local (not SSO) user
-            $allow = $this->sessionID &&
-                             !preg_match("/s/i", $this->access);
-            break;
-        case "":     // empty mode is invalid
-            $allow = false;
-            break;
-        default:     // specific user mode
-            $allow = $this->access &&
-                               preg_match("/".$mode."/i", $this->access);
-            break;
-        }
-        return $allow;
-    }
-
-    public function isLocal() {
-        return $this->isAuth('l');
-    }
-
-    public static function checkAccess($mode, $access) {
-        switch($mode) {
-        case "a":    // all
-            $allow = true;
-            break;
-        case "C":    // challenge (invalid for checkAccess)
-        case "T":    // token authentication (invalid for checkAccess)
-        case "u":    // authenticated user (invalid for checkAccess)
-        case "U":    // local (not SSO) user (invalid for checkAccess)
-        case "":     // empty mode is invalid
-            $allow = false;
-            break;
-        default:     // specific user mode
-            $allow = $access &&
-                               preg_match("/".$mode."/i", $access);
-            break;
-        }
-        return $allow;
-    }
-
-    /*
-     * test if an IP address is in a subnet
+interface Session {
+    /**
+     * get display name for the currently authenticated user
      *
-     * subnet may be specified in CIDR notation (e.g., 192.168.0.0/24)
-     * or as a fragment (e.g., 192.168.0), in which case the
-     * number of network bits is inferred from the fragment length.
-     *
-     * @param $addr dotted quad address string (e.g., 192.168.0.1)
-     * @param $subnet CIDR subnet or address fragment string
-     * @return true if and only if the address is in the subnet
+     * @return string|null display name
      */
-    public static function addrInSubnet($addr, $subnet) {
-        $subnet = rtrim($subnet, '.');
-        $segCount = substr_count($subnet, '.');
-        if(strpos($subnet, '/') === false)
-            $subnet .= str_repeat('.0', 3 - $segCount) . '/' . ++$segCount * 8;
-        $parts = explode('/', $subnet);
-        $netmask = ~(pow(2, 32 - $parts[1]) - 1);
-        return (ip2long($addr) & $netmask) == (ip2long($parts[0]) & $netmask);
-    }
+    function getDN(): ?string;
 
-    public static function checkLocal() {
-        $local_subnet = Engine::param('local_subnet');
-        return !$local_subnet ||
-                    self::addrInSubnet($_SERVER['REMOTE_ADDR'], $local_subnet);
-    }
+    /**
+     * get internal user name for the currently authenticated user
+     *
+     * @return string|null internal user name
+     */
+    function getUser(): ?string;
+
+    /**
+     * check whether the client session is over a secure protocol
+     *
+     * @return bool true if client connection is secure, false otherwise
+     */
+    function isSecure(): bool;
+
+    /**
+     * purge sessions that have exceeded their maximum time to live
+     *
+     * @return bool true on success, false otherwise
+     */
+    function purgeOldSessions(): bool;
+
+    /**
+     * create a new session
+     *
+     * @param string $sessionID target session ID
+     * @param string $user internal user name
+     * @param string $auth authorisations
+     */
+    function create(string $sessionID, string $user, string $auth): void;
+
+    /**
+     * validate a session ID
+     *
+     * This is used by CI.
+     */
+    function validate(string $sessionID): void;
+
+    /**
+     * invalidate (logout) the current session
+     */
+    function invalidate(): void;
+
+    /**
+     * check whether the currently authenticated user is authorised
+     * for the specified mode
+     *
+     * @param string $mode mode to test
+     * @return bool true if authorised, false otherwise
+     */
+    function isAuth(string $mode): bool;
+
+    /**
+     * check whether the user is logged in from the local subnet
+     *
+     * @return bool true if local subnet
+     */
+    function isLocal(): bool;
+
+    /**
+     * check whether a mode is allowed by specific access rights
+     *
+     * @param string $mode mode to test
+     * @param string $access access rights to test against
+     * @param bool true if and only if `access` grants authorisation to `mode`
+     */
+    function checkAccess(string $mode, string $access): bool;
 }

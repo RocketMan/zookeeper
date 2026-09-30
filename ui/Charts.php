@@ -24,12 +24,12 @@
 
 namespace ZK\UI;
 
-use ZK\Engine\Engine;
 use ZK\Engine\IChart;
+use ZK\Engine\IConfig;
 use ZK\Engine\ILibrary;
 use ZK\Engine\PlaylistEntry;
-
-use ZK\UI\UICommon as UI;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
 class Charts extends MenuItem {
     const DECENNIUM_CHART = false;
@@ -44,6 +44,17 @@ class Charts extends MenuItem {
         [ "a", "subscribe", "Subscribe", "emitSubscribe" ],
         [ "n", "chartemail", "E-Mail", "chartEMail" ],
     ];
+
+    public function __construct(
+        protected Request $request,
+        protected Session $session,
+        protected TemplateFactoryUI $templateFactory,
+        protected Home $home,
+        protected IConfig $config,
+        protected IChart $chartDBO,
+    ) {
+        parent::__construct($session, $templateFactory);
+    }
 
     public function getSubactions($action) { return self::$subactions; }
 
@@ -70,14 +81,13 @@ class Charts extends MenuItem {
             'genre' => self::TOP_GENRE
         ]);
 
-        $chartAPI = Engine::api(IChart::class);
-        $cats = $chartAPI->getCategories();
+        $cats = $this->chartDBO->getCategories();
         $this->addVar('categories', $cats);
 
-        $dateSpec = UI::getClientLocale() == 'en_US' ? 'l, F j, Y' : 'l, j F Y';
+        $dateSpec = $this->request->isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
         $this->addVar('dateSpec', $dateSpec);
 
-        $weeks = $chartAPI->getChartDates(2)->asArray();
+        $weeks = $this->chartDBO->getChartDates(2)->asArray();
         if (count($weeks) < 1) {
             $this->setTemplate('charts/nocharts.html');
             return;
@@ -88,13 +98,13 @@ class Charts extends MenuItem {
 
         // top 30
         $chart = [];
-        $chartAPI->getChart($chart, '', $thisWeek, self::TOP_MAIN, '');
+        $this->chartDBO->getChart($chart, '', $thisWeek, self::TOP_MAIN, '');
 
         $charts = [];
 
         if ($lastWeek) {
             $last = [];
-            $chartAPI->getChart($last, '', $lastWeek, self::TOP_MAIN, '');
+            $this->chartDBO->getChart($last, '', $lastWeek, self::TOP_MAIN, '');
             $this->mergeLast($chart, $last);
             $charts[$thisWeek] = [];
             $charts[$lastWeek][0] = $last;
@@ -119,11 +129,11 @@ class Charts extends MenuItem {
 
         foreach ($genres as $genre) {
             $chart = [];
-            $chartAPI->getChart($chart, '', $thisWeek, self::TOP_GENRE, $genre);
+            $this->chartDBO->getChart($chart, '', $thisWeek, self::TOP_GENRE, $genre);
 
             if ($lastWeek) {
                 $last = [];
-                $chartAPI->getChart($last, '', $lastWeek, self::TOP_GENRE, $genre);
+                $this->chartDBO->getChart($last, '', $lastWeek, self::TOP_GENRE, $genre);
                 $this->mergeLast($chart, $last);
                 $charts[$lastWeek][$genre] = $last;
             }
@@ -138,27 +148,26 @@ class Charts extends MenuItem {
     }
     
     public function chartWeekly() {
-        $station = Engine::param('station');
+        $station = $this->config->get('station');
     
-        $chartAPI = Engine::api(IChart::class);
         $year = (int)($_REQUEST["year"] ?? 0);
         $month = (int)($_REQUEST["month"] ?? 0);
         $day = (int)($_REQUEST["day"] ?? 0);
 
-        $check = $chartAPI->getChartDates(1)->asArray();
+        $check = $this->chartDBO->getChartDates(1)->asArray();
         if (count($check) != 1) {
             $this->setTemplate('charts/nocharts.html');
             return;
         }
 
-        $dateSpec = UI::getClientLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
+        $dateSpec = $this->request->isUsLocale() ? 'F j, Y' : 'j F Y';
         $this->addVar('dateSpec', $dateSpec);
 
         if(!$month) {
             if(!$year) {
                 // current year
                 $today = getdate(time());
-                $years = $chartAPI->getChartYears();
+                $years = $this->chartDBO->getChartYears();
                 if($years) {
                     $yearrec = $years->fetch();
                     $year = $yearrec[0];
@@ -168,10 +177,10 @@ class Charts extends MenuItem {
             }
     
             $this->addVar('currentYear', $year);
-            $years = $chartAPI->getChartYears();
+            $years = $this->chartDBO->getChartYears();
             $this->addVar('years', array_column($years->asArray(), 'year'));
 
-            $weeks = $chartAPI->getChartDatesByYear($year);
+            $weeks = $this->chartDBO->getChartDatesByYear($year);
             $this->addVar('weeks', array_column($weeks->asArray(), 'week'));
 
             $this->title = "Weekly charts for $year";
@@ -190,7 +199,7 @@ class Charts extends MenuItem {
         $displayDate = date($dateSpec, mktime(0,0,0,$month,$day,$year));
         $this->title = "Chart for $displayDate";
     
-        $cats = $chartAPI->getCategories();
+        $cats = $this->chartDBO->getCategories();
         $this->addVar('categories', $cats);
 
     // weekly = hip hop, reggae/world, jazz, heavy shit, dance, classical/exp
@@ -201,7 +210,7 @@ class Charts extends MenuItem {
         $mainLimit = $catLimit = "";
     
         $chart = [];
-        $chartAPI->getChart($chart, '', $endDate, $mainLimit, '');
+        $this->chartDBO->getChart($chart, '', $endDate, $mainLimit, '');
 
         $charts = [];
         $charts[0] = $chart;
@@ -223,7 +232,7 @@ class Charts extends MenuItem {
 
         foreach ($genres as $genre) {
             $chart = [];
-            $chartAPI->getChart($chart, '', $endDate, $catLimit, $genre);
+            $this->chartDBO->getChart($chart, '', $endDate, $catLimit, $genre);
             $charts[$genre] = $chart;
         }
 
@@ -233,20 +242,19 @@ class Charts extends MenuItem {
     }
     
     public function chartMonthly() {
-        $station = Engine::param('station');
+        $station = $this->config->get('station');
     
-        $chartAPI = Engine::api(IChart::class);
         $year = (int)($_REQUEST["year"] ?? 0);
         $month = (int)($_REQUEST["month"] ?? 0);
         $day = (int)($_REQUEST["day"] ?? 0);
         $cyear = (int)($_REQUEST["cyear"] ?? 0);
         $dnum = (int)($_REQUEST["dnum"] ?? 0);
 
-        $config = Engine::param('chart');
+        $config = $this->config->get('chart');
         $earliestYear = array_key_exists('earliest_chart_year', $config)?
             (int)$config['earliest_chart_year']:2003;
 
-        $check = $chartAPI->getChartDates(1)->asArray();
+        $check = $this->chartDBO->getChartDates(1)->asArray();
         if (count($check) != 1) {
             $this->setTemplate('charts/nocharts.html');
             return;
@@ -263,14 +271,14 @@ class Charts extends MenuItem {
                 $month = $today["mon"];
     
                 // Determine if we need to include the current month
-                $weeks = $chartAPI->getChartDates(1);
+                $weeks = $this->chartDBO->getChartDates(1);
                 if($weeks && ($curWeek = $weeks->fetch())) {
                     list($y, $m, $d) = explode("-", $curWeek["week"]);
-                    $chartEnd = $chartAPI->getMonthlyChartEnd($m, $y);
+                    $chartEnd = $this->chartDBO->getMonthlyChartEnd($m, $y);
                     $skipCurMonth = strcmp($curWeek["week"], $chartEnd) != 0;
                 }
 
-                $weeks = $chartAPI->getChartMonths()->asArray();
+                $weeks = $this->chartDBO->getChartMonths()->asArray();
                 if ($skipCurMonth)
                     array_shift($weeks);
 
@@ -291,8 +299,8 @@ class Charts extends MenuItem {
                 return;
             }
 
-            $startDate = $chartAPI->getMonthlyChartStart(1, $dstart);
-            $endDate = $chartAPI->getMonthlyChartEnd(12, $dend);
+            $startDate = $this->chartDBO->getMonthlyChartStart(1, $dstart);
+            $endDate = $this->chartDBO->getMonthlyChartEnd(12, $dend);
             $name = "$dstart - $dend";
             if($dend - $earliestYear < 10)
                 $name .= " (based on available data)";
@@ -305,8 +313,8 @@ class Charts extends MenuItem {
                 return;
             }
 
-            $startDate = $chartAPI->getMonthlyChartStart(1, $cyear);
-            $endDate = $chartAPI->getMonthlyChartEnd(12, $cyear);
+            $startDate = $this->chartDBO->getMonthlyChartStart(1, $cyear);
+            $endDate = $this->chartDBO->getMonthlyChartEnd(12, $cyear);
             $this->addVar('title', "Top 100 for the year $cyear");
             $this->title = "Chart for $cyear";
             $monthly = 0;
@@ -316,14 +324,14 @@ class Charts extends MenuItem {
                 return;
             }
 
-            $startDate = $chartAPI->getMonthlyChartStart($month, $year);
-            $endDate = $chartAPI->getMonthlyChartEnd($month, $year);
+            $startDate = $this->chartDBO->getMonthlyChartStart($month, $year);
+            $endDate = $this->chartDBO->getMonthlyChartEnd($month, $year);
             $displayDate = date("F Y", mktime(0,0,0,$month,1,$year));
             $this->addVar('title', "chart for $displayDate");
             $this->title = "Chart for $displayDate";
         }
     
-        $cats = $chartAPI->getCategories();
+        $cats = $this->chartDBO->getCategories();
         $this->addVar('categories', $cats);
 
     // weekly = hip hop, reggae/world, jazz, heavy shit, dance, classical/exp
@@ -340,7 +348,7 @@ class Charts extends MenuItem {
         }
 
         $chart = [];
-        $chartAPI->getChart($chart, $startDate, $endDate, $mainLimit, '');
+        $this->chartDBO->getChart($chart, $startDate, $endDate, $mainLimit, '');
 
         $charts = [];
         $charts[0] = $chart;
@@ -366,7 +374,7 @@ class Charts extends MenuItem {
 
         foreach ($genres as $genre) {
             $chart = [];
-            $chartAPI->getChart($chart, $startDate, $endDate, $catLimit, $genre);
+            $this->chartDBO->getChart($chart, $startDate, $endDate, $catLimit, $genre);
             $charts[$genre] = $chart;
         }
 
@@ -376,18 +384,17 @@ class Charts extends MenuItem {
     }
 
     public function chartEMail() {
-        $chartAPI = Engine::api(IChart::class);
         if(($_REQUEST["seq"] ?? '') == "update") {
             $success = true;
             for($i=1; $success && $i<=16; $i++) {
                 if(isset($_POST["email".$i])) {
                     $email = $_POST["email".$i];
-                    $success &= $chartAPI->updateChartEMail($i, $email);
+                    $success &= $this->chartDBO->updateChartEMail($i, $email);
                 }
             }
         }
 
-        $addresses = $chartAPI->getChartEMail()->asArray();
+        $addresses = $this->chartDBO->getChartEMail()->asArray();
         $this->addVar('addresses', $addresses);
 
         if(($_REQUEST["seq"] ?? '') == "update")
@@ -397,7 +404,7 @@ class Charts extends MenuItem {
     }
     
     public function emitSubscribe() {
-        $chart = Engine::param('chart');
+        $chart = $this->config->get('chart');
         $weeklyPage = array_key_exists('weekly_subscribe', $chart)?
             $chart['weekly_subscribe']:false;
         $monthlyPage = array_key_exists('monthly_subscribe', $chart)?

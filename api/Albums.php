@@ -24,11 +24,12 @@
 
 namespace ZK\API;
 
-use ZK\Engine\Engine;
 use ZK\Engine\IArtwork;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
 use Enm\JsonApi\Exception\BadRequestException;
 use Enm\JsonApi\Exception\ResourceNotFoundException;
@@ -119,9 +120,19 @@ class Albums implements RequestHandlerInterface {
         ];
     }
 
-    public static function fromRecord($rec, $wantTracks = true) {
+    public function __construct(
+        protected Request $request,
+        protected Session $session,
+        protected Labels $labels,
+        protected ILibrary $libraryDBO,
+        protected IArtwork $imageDBO,
+        protected IEditor $editorDBO,
+        protected IReview $reviewDBO,
+    ) {}
+
+    public function fromRecord($rec, $wantTracks = true) {
         $res = new JsonResource("album", $rec["tag"]);
-        $res->links()->set(new Link("self", Engine::getBaseUrl()."album/".$rec["tag"]));
+        $res->links()->set(new Link("self", $this->request->getBaseUrl()."album/".$rec["tag"]));
         foreach(self::FIELDS as $field) {
             $tfield = $field == "coll" ? "iscoll" : $field;
             if(!array_key_exists($tfield, $rec))
@@ -164,7 +175,7 @@ class Albums implements RequestHandlerInterface {
                 $key = ILibrary::TRACK_KEY;
                 $fields = array_diff($fields, ["artist"]);
             }
-            $tracks = Engine::api(ILibrary::class)->search($key, 0, 200, $rec["tag"]);
+            $tracks = $this->libraryDBO->search($key, 0, 200, $rec["tag"]);
 
             $albumTracks = [];
             foreach($tracks as $track) {
@@ -178,7 +189,7 @@ class Albums implements RequestHandlerInterface {
         return $res;
     }
 
-    public static function fromArray(array $records, $flags = self::LINKS_NONE) {
+    public function fromArray(array $records, $flags = self::LINKS_NONE) {
         $result = [];
         $labelMap = [];
 
@@ -187,23 +198,23 @@ class Albums implements RequestHandlerInterface {
         // review body retrieval is expensive, so unless
         // it will appear in the response, we avoid it.
         if($flags & self::LINKS_REVIEWS)
-            Engine::api(ILibrary::class)->linkReviews($records, Engine::session()->isAuth("u"), $flags & self::LINKS_REVIEWS_WITH_BODY);
+            $this->libraryDBO->linkReviews($records, $this->session->isAuth("u"), $flags & self::LINKS_REVIEWS_WITH_BODY);
 
         // require authentication to prevent scraping of artwork
-        if($flags & self::LINKS_ARTWORK && Engine::session()->isAuth("u"))
-            Engine::api(IArtwork::class)->injectAlbumArt($records, Engine::getAppBasePath());
+        if($flags & self::LINKS_ARTWORK && $this->session->isAuth("u"))
+            $this->imageDBO->injectAlbumArt($records, $this->request->getAppBasePath());
 
         foreach($records as $record) {
-            $resource = self::fromRecord($record, $flags & self::LINKS_TRACKS);
+            $resource = $this->fromRecord($record, $flags & self::LINKS_TRACKS);
             $result[] = $resource;
 
             if($flags & self::LINKS_REVIEWS && isset($record["reviews"])) {
                 $relations = new ResourceCollection();
                 $relation = new Relationship("reviews", $relations);
-                $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/reviews"));
+                $relation->links()->set(new Link("related", $this->request->getBaseUrl()."album/{$record["tag"]}/reviews"));
                 $resource->relationships()->set($relation);
                 foreach($record["reviews"] as $review) {
-                    $res = Reviews::fromRecord($review);
+                    $res = Reviews::fromRecord($review, $this->request->getBaseUrl());
                     $relations->set($res);
                 }
             }
@@ -213,15 +224,15 @@ class Albums implements RequestHandlerInterface {
                     $res = $labelMap[$record["pubkey"]];
                 else {
                     if($record["pubkey"]) {
-                        $res = Labels::fromRecord($record);
+                        $res = $this->labels->fromRecord($record);
                         $labelMap[$record["pubkey"]] = $res;
                     } else
                         continue;
                 }
 
                 $relation = new Relationship("label", $res);
-                $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/{$record["tag"]}/label"));
-                $relation->links()->set(new Link("self", Engine::getBaseUrl()."album/{$record["tag"]}/relationships/label"));
+                $relation->links()->set(new Link("related", $this->request->getBaseUrl()."album/{$record["tag"]}/label"));
+                $relation->links()->set(new Link("self", $this->request->getBaseUrl()."album/{$record["tag"]}/relationships/label"));
                 $relation->metaInformation()->set("name", $res->attributes()->getOptional("name"));
                 $resource->relationships()->set($relation);
             }
@@ -230,7 +241,7 @@ class Albums implements RequestHandlerInterface {
         return $result;
     }
 
-    public static function fromAttrs($attrs, $required = false) {
+    public function fromAttrs($attrs, $required = false) {
         $album = [];
 
         foreach(self::FIELDS as $field) {
@@ -275,16 +286,45 @@ class Albums implements RequestHandlerInterface {
         return [$album, $tracks];
     }
 
+    protected function marshallReviews(array $records, $flags) {
+        $result = [];
+        foreach($records as $record) {
+            $resource = $this->fromRecord($record, $flags & Albums::LINKS_TRACKS);
+            $result[] = $resource;
+
+            $relations = new ResourceCollection();
+            $relation = new Relationship("reviews", $relations);
+            $relation->links()->set(new Link("related", $this->request->getBaseUrl()."album/{$record["tag"]}/reviews"));
+            $resource->relationships()->set($relation);
+            if($flags & Albums::LINKS_REVIEWS_WITH_BODY) {
+                $review = $this->reviewDBO->getReviews($record["id"], 1, "", $this->session->isAuth("u"), 1)[0];
+                $res = Reviews::fromRecord($review, $this->request->getBaseUrl());
+            } else
+                $res = new JsonResource("review", $record["id"]);
+            $res->metaInformation()->set("date", $record["reviewed"]);
+            $relations->set($res);
+
+            $res = $this->labels->fromRecord($record);
+            $relation = new Relationship("label", $res);
+            $relation->links()->set(new Link("related", $this->request->getBaseUrl()."album/{$record["tag"]}/label"));
+            $relation->links()->set(new Link("self", $this->request->getBaseUrl()."album/{$record["tag"]}/relationships/label"));
+            $relation->metaInformation()->set("name", $record["name"] ?? "(Unknown)");
+            $resource->relationships()->set($relation);
+        }
+
+        return $result;
+    }
+
     public function fetchResource(RequestInterface $request): ResponseInterface {
         $id = $request->id();
-        $printq = $id == "printq" && Engine::session()->isAuth("m");
+        $printq = $id == "printq" && $this->session->isAuth("m");
         $albums = $printq ?
-            Engine::api(IEditor::class)->getQueuedTags(Engine::session()->getUser())->asArray() :
-            Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $id);
+            $this->editorDBO->getQueuedTags($this->session->getUser())->asArray() :
+            $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $id);
         if(sizeof($albums) == 0 && !$printq)
             throw new ResourceNotFoundException("album", $request->id());
 
-        $resource = self::fromArray($albums, self::LINKS_ALL);
+        $resource = $this->fromArray($albums, self::LINKS_ALL);
         $document = new Document($printq ? $resource : $resource[0]);
         $response = new DocumentResponse($document);
         return $response;
@@ -323,17 +363,17 @@ class Albums implements RequestHandlerInterface {
                 min($request->paginationValue("size"), ApiServer::MAX_LIMIT) :
                 ApiServer::DEFAULT_LIMIT;
 
-        if(!Engine::session()->isAuth('C'))
+        if(!$this->session->isAuth('C'))
             throw new BadRequestException("Operation requires challenge");
 
-        $records = Engine::api(ILibrary::class)->listAlbums($op, $key, $limit);
+        $records = $this->libraryDBO->listAlbums($op, $key, $limit);
         $links = self::LINKS_LABEL;
         $links |= $request->requestsField("album", "tracks") ? self::LINKS_TRACKS : 0;
         $links |= $request->requestsField("album", "albumart") ? self::LINKS_ARTWORK : 0;
-        $result = self::fromArray($records, $links);
+        $result = $this->fromArray($records, $links);
         $document = new Document($result);
 
-        $base = Engine::getBaseUrl()."album?";
+        $base = $this->request->getBaseUrl()."album?";
         $size = "&page%5Bprofile%5D=cursor&page%5Bsize%5D=$limit";
 
         $obj = $records[0];
@@ -378,7 +418,7 @@ class Albums implements RequestHandlerInterface {
 
     public function fetchRelationship(RequestInterface $request): ResponseInterface {
         $key = $request->id();
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $key);
+        $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $key);
         if(sizeof($albums) == 0)
             throw new ResourceNotFoundException("album", $key);
 
@@ -388,14 +428,14 @@ class Albums implements RequestHandlerInterface {
         switch($request->relationship()) {
         case "label":
             if($album["pubkey"])
-                $res = Labels::fromRecord($album);
+                $res = $this->labels->fromRecord($album);
             break;
         case "reviews":
-            $reviews = Engine::api(IReview::class)->getReviews($key);
+            $reviews = $this->reviewDBO->getReviews($key);
             if(sizeof($reviews)) {
                 $res = new ResourceCollection();
                 foreach($reviews as $review) {
-                    $r = Reviews::fromRecord($review);
+                    $r = Reviews::fromRecord($review, $this->request->getBaseUrl());
                     $res->set($r);
                 }
             }
@@ -408,10 +448,10 @@ class Albums implements RequestHandlerInterface {
 
         $document = new Document($res);
         if($request->requestsAttributes())
-            $document->links()->set(new Link("self", Engine::getBaseUrl()."album/$key/".$request->relationship()));
+            $document->links()->set(new Link("self", $this->request->getBaseUrl()."album/$key/".$request->relationship()));
         else {
-            $document->links()->set(new Link("self", Engine::getBaseUrl()."album/$key/relationships/".$request->relationship()));
-            $document->links()->set(new Link("related", Engine::getBaseUrl()."album/$key/".$request->relationship()));
+            $document->links()->set(new Link("self", $this->request->getBaseUrl()."album/$key/relationships/".$request->relationship()));
+            $document->links()->set(new Link("related", $this->request->getBaseUrl()."album/$key/".$request->relationship()));
         }
 
         $response = new DocumentResponse($document);
@@ -419,7 +459,7 @@ class Albums implements RequestHandlerInterface {
     }
 
     public function createResource(RequestInterface $request): ResponseInterface {
-        if(!Engine::session()->isAuth("m"))
+        if(!$this->session->isAuth("m"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
         $album = $request->requestBody()->data()->first("album");
@@ -427,11 +467,11 @@ class Albums implements RequestHandlerInterface {
 
         $attrs->getRequired("artist");
         $attrs->getRequired("album");
-        [$a, $tracks] = self::fromAttrs($attrs, true);
+        [$a, $tracks] = $this->fromAttrs($attrs, true);
 
         // try to resolve the label by pubkey
         $id = $album->relationships()->get("label")->related()->first("label")->id();
-        $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $id);
+        $rec = $this->libraryDBO->search(ILibrary::LABEL_PUBKEY, 0, 1, $id);
         if(sizeof($rec)) {
             $a["pubkey"] = $id;
             $label = null;
@@ -440,7 +480,7 @@ class Albums implements RequestHandlerInterface {
             $lr = $request->requestBody()->included()->get("label", $id);
 
             // try to find by name
-            $rec = Engine::api(ILibrary::class)->search(ILibrary::LABEL_NAME, 0, 1, $lr->attributes()->getRequired("name"));
+            $rec = $this->libraryDBO->search(ILibrary::LABEL_NAME, 0, 1, $lr->attributes()->getRequired("name"));
             if(sizeof($rec)) {
                 $a["pubkey"] = $rec[0]["pubkey"];
                 $label = null;
@@ -464,74 +504,73 @@ class Albums implements RequestHandlerInterface {
 
         $a["tag"] = 0;
         $a["format"] = $a["size"];
-        if(Engine::api(IEditor::class)->insertUpdateAlbum($a, $tracks, $label)) {
+        if($this->editorDBO->insertUpdateAlbum($a, $tracks, $label)) {
             if($attrs->has('albumart'))
-                Engine::api(IArtwork::class)->insertAlbumArt($a['tag'], $attrs->getRequired('albumart'), null);
+                $this->imageDBO->insertAlbumArt($a['tag'], $attrs->getRequired('albumart'), null);
 
-            return new CreatedResponse(Engine::getBaseUrl()."album/{$a['tag']}");
+            return new CreatedResponse($this->request->getBaseUrl()."album/{$a['tag']}");
         }
         throw new \Exception("creation failed");
     }
 
     public function patchResource(RequestInterface $request): ResponseInterface {
-        if(!Engine::session()->isAuth("m"))
+        if(!$this->session->isAuth("m"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
             throw new BadRequestException("must specify id");
 
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $key);
+        $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $key);
         if(sizeof($albums) == 0)
             throw new ResourceNotFoundException("album", $key);
 
         $attrs = $request->requestBody()->data()->first("album")->attributes();
-        [$album, $tracks] = self::fromAttrs($attrs);
+        [$album, $tracks] = $this->fromAttrs($attrs);
         $albums[0]["coll"] = $albums[0]["iscoll"]; // pre-merge
         $albums[0] = array_merge($albums[0], $album);
         if (array_key_exists("size", $albums[0]))
             $albums[0]["format"] = $albums[0]["size"]; // post-merge
-        Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], $tracks, null);
+        $this->editorDBO->insertUpdateAlbum($albums[0], $tracks, null);
         if($attrs->has('albumart')) {
-            $aapi = Engine::api(IArtwork::class);
-            $aapi->deleteAlbumArt($key);
-            $aapi->insertAlbumArt($key, $attrs->getRequired('albumart'), null);
+            $this->imageDBO->deleteAlbumArt($key);
+            $this->imageDBO->insertAlbumArt($key, $attrs->getRequired('albumart'), null);
         }
 
         return new EmptyResponse();
     }
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
-        if(!Engine::session()->isAuth("m"))
+        if(!$this->session->isAuth("m"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
             throw new BadRequestException("must specify id");
 
-        Engine::api(IEditor::class)->deleteAlbum($key);
+        $this->editorDBO->deleteAlbum($key);
 
         return new EmptyResponse();
     }
 
     public function addRelatedResources(RequestInterface $request): ResponseInterface {
-        if($request->relationship() != "printq" || !Engine::session()->isAuth("m"))
+        if($request->relationship() != "printq" || !$this->session->isAuth("m"))
             throw new BadRequestException('You are not allowed to modify the relationship ' . $request->relationship());
 
         $tag = $request->id();
-        $user = Engine::session()->getUser();
-        if(Engine::api(IEditor::class)->enqueueTag($tag, $user))
+        $user = $this->session->getUser();
+        if($this->editorDBO->enqueueTag($tag, $user))
             return new EmptyResponse();
 
         throw new \Exception("enqueue failed");
     }
 
     public function removeRelatedResources(RequestInterface $request): ResponseInterface {
-        if($request->relationship() != "printq" || !Engine::session()->isAuth("m"))
+        if($request->relationship() != "printq" || !$this->session->isAuth("m"))
             throw new BadRequestException('You are not allowed to modify the relationship ' . $request->relationship());
 
         $tag = $request->id();
-        if(Engine::api(IEditor::class)->dequeueTag($tag, Engine::session()->getUser()))
+        if($this->editorDBO->dequeueTag($tag, $this->session->getUser()))
             return new EmptyResponse();
 
         throw new \Exception("dequeue failed");
@@ -541,21 +580,21 @@ class Albums implements RequestHandlerInterface {
         if($request->relationship() != "label")
             throw new BadRequestException('You are not allowed to modify the relationship ' . $request->relationship());
 
-        if(!Engine::session()->isAuth("m"))
+        if(!$this->session->isAuth("m"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
         $pubkey = $request->requestBody()->data()->first("label")->id();
-        $labels = Engine::api(ILibrary::class)->search(ILibrary::LABEL_PUBKEY, 0, 1, $pubkey);
+        $labels = $this->libraryDBO->search(ILibrary::LABEL_PUBKEY, 0, 1, $pubkey);
         if(sizeof($labels) == 0)
             throw new ResourceNotFoundException("label", $pubkey);
 
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $request->id());
+        $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $request->id());
         if(sizeof($albums) == 0)
             throw new ResourceNotFoundException("album", $request->id());
 
         $albums[0]["format"] = $albums[0]["size"];
         $albums[0]["pubkey"] = $pubkey;
-        Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], null, null);
+        $this->editorDBO->insertUpdateAlbum($albums[0], null, null);
 
         return new EmptyResponse();
     }

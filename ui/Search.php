@@ -24,12 +24,14 @@
 
 namespace ZK\UI;
 
-use ZK\Engine\Engine;
+use ZK\Engine\IConfig;
 use ZK\Engine\IArtwork;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IReview;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
@@ -54,6 +56,20 @@ class Search extends MenuItem {
 
     public $searchType;
 
+    public function __construct(
+        protected Request $request,
+        protected Session $session,
+        protected TemplateFactoryUI $templateFactory,
+        protected IConfig $config,
+        protected ILibrary $libraryDBO,
+        protected IArtwork $imageDBO,
+        protected IChart $chartDBO,
+        protected IPlaylist $playlistDBO,
+        protected IReview $reviewDBO,
+    ) {
+        parent::__construct($session, $templateFactory);
+    }
+
     public function processLocal($action, $subaction) {
         if(array_key_exists('n', $_REQUEST))
             $this->searchText = stripslashes($_REQUEST['n']);
@@ -66,8 +82,7 @@ class Search extends MenuItem {
     public function searchByAlbumKey($key = null) {
         $tag = $key ?? $this->searchText;
 
-        $libraryApi = Engine::api(ILibrary::class);
-        $albums = $libraryApi->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
 
         $this->setTemplate("album/view.html");
 
@@ -79,20 +94,19 @@ class Search extends MenuItem {
         $this->addVar("album", $albums[0]);
         $this->addVar("GENRES", ILibrary::GENRES);
         $this->addVar("MEDIA", ILibrary::MEDIA);
-        $this->addVar("DATE_FORMAT_FULL", UI::isUsLocale() ? 'M d, Y' : 'd M Y');
-        $this->addVar("DATE_FORMAT_SHORT", UI::isUsLocale() ? 'M j' : 'j M');
+        $this->addVar("DATE_FORMAT_FULL", $this->request->isUsLocale() ? 'M d, Y' : 'd M Y');
+        $this->addVar("DATE_FORMAT_SHORT", $this->request->isUsLocale() ? 'M j' : 'j M');
 
         // album art
-        $imageApi = Engine::api(IArtwork::class);
-        $image = $imageApi->getAlbumArt($tag);
+        $image = $this->imageDBO->getAlbumArt($tag);
         if($image && ($uuid = $image["image_uuid"])) {
-            $this->addVar("image_url", $imageApi->getCachePath($uuid));
+            $this->addVar("image_url", $this->imageDBO->getCachePath($uuid));
             $this->addVar("info_url", $image["info_url"]);
         }
 
         // report missing
         if($loggedIn = $this->session->isAuth("u")) {
-            $urls = Engine::param('urls');
+            $urls = $this->config->get('urls');
             if(array_key_exists('report_missing', $urls)) {
                 $url = str_replace('%USERNAME%', UI::URLify($this->session->getDN()), $urls['report_missing']);
                 $url = str_replace('%ALBUMTAG%', $tag, $url);
@@ -101,8 +115,7 @@ class Search extends MenuItem {
         }
 
         // currents
-        $chartApi = Engine::api(IChart::class);
-        $rows = $chartApi->getAlbumByTag($tag);
+        $rows = $this->chartDBO->getAlbumByTag($tag);
         $accepted = [];
         foreach($rows as &$row) {
             // suppress overlapping charting periods
@@ -115,19 +128,19 @@ class Search extends MenuItem {
                     continue 2;
                 }
             }
-            $plays = $chartApi->getAlbumPlays($tag, $row["adddate"], $row["pulldate"], 8)->asArray();
+            $plays = $this->chartDBO->getAlbumPlays($tag, $row["adddate"], $row["pulldate"], 8)->asArray();
             $row['spins'] = $plays;
             $accepted[] = $row;
         }
         $this->addVar("currents", $accepted);
-        $this->addVar("CATMAP", $chartApi->getCategories());
+        $this->addVar("CATMAP", $this->chartDBO->getCategories());
 
         // recent airplay
-        $plays = Engine::api(IPlaylist::class)->getLastPlays($tag, 6);
+        $plays = $this->playlistDBO->getLastPlays($tag, 6);
         $this->addVar("recent", $plays);
 
         // reviews
-        $reviews = Engine::api(IReview::class)->getReviews($tag, 1, "", $loggedIn);
+        $reviews = $this->reviewDBO->getReviews($tag, 1, "", $loggedIn);
         $this->addVar("reviews", $reviews);
 
         // hashtags
@@ -145,11 +158,11 @@ class Search extends MenuItem {
         }, $hashtags, $index));
 
         // tracks
-        $tracks = $libraryApi->search($albums[0]['iscoll'] ? ILibrary::COLL_KEY : ILibrary::TRACK_KEY, 0, 200, $tag);
+        $tracks = $this->libraryDBO->search($albums[0]['iscoll'] ? ILibrary::COLL_KEY : ILibrary::TRACK_KEY, 0, 200, $tag);
 
         $isAuth = $this->session->isAuth('u');
-        $internalLinks = Engine::param('internal_links');
-        $enableExternalLinks = Engine::param('external_links_enabled');
+        $internalLinks = $this->config->get('internal_links');
+        $enableExternalLinks = $this->config->get('external_links_enabled');
         foreach($tracks as &$track) {
             if($track["duration"])
                 $track["duration"] = preg_replace("/^0(0:0?)?/", "", $track["duration"]);

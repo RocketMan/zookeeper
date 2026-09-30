@@ -24,8 +24,12 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\Engine;
-use ZK\Service\PushServer;
+use ZK\Engine\Dispatcher;
+use ZK\Engine\IConfig;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
+use ZK\Engine\SharedCache;
+use ZK\Engine\Zookeeper;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
@@ -217,11 +221,11 @@ class Turnstile implements IController {
         return false;
     }
 
-    public static function validate() {
+    public function validate() {
         // Nothing to do if turnstile is disabled or authenticated user
-        $config = Engine::param('turnstile');
+        $config = $this->config->get('turnstile');
         if (!$config || !isset($config['secret']) ||
-                Engine::session()->isAuth('u'))
+                $this->session->isAuth('u'))
             return true;
 
         // Nothing to do if edge prevalidation has already run
@@ -233,13 +237,13 @@ class Turnstile implements IController {
         if (!$cookie) {
             // allow whitelisted traffic through
             $addr = explode(',', $_SERVER['REMOTE_ADDR'])[0];
-            $domain = PushServer::lruCache($addr);
+            $domain = $this->cache->get($addr);
             if (!$domain) {
                 $domain = self::dnslookup($addr,
                             $config['resolver'] ?? self::DEFAULT_RESOLVER,
                             self::RESOLVER_TIMEOUT);
                 if ($domain)
-                    PushServer::lruCache($addr, $domain);
+                    $this->cache->put($addr, $domain);
             }
 
             $allowed = $domain ? array_filter($config['whitelist'] ?? [],
@@ -248,7 +252,7 @@ class Turnstile implements IController {
 
             // forward-confirm the reverse DNS (FCrDNS)
             if ($whitelisted) {
-                $addrs = PushServer::lruCache($domain);
+                $addrs = $this->cache->get($domain);
                 if ($addrs)
                     $addrs = explode(',', $addrs);
                 else {
@@ -256,7 +260,7 @@ class Turnstile implements IController {
                                 $config['resolver'] ?? self::DEFAULT_RESOLVER,
                                 self::RESOLVER_TIMEOUT);
                     if ($addrs)
-                        PushServer::lruCache($domain, implode(',', $addrs));
+                        $this->cache->put($domain, implode(',', $addrs));
                 }
 
                 // discard if forward lookup does not return the address
@@ -285,12 +289,20 @@ class Turnstile implements IController {
         return hash_equals($signature, $token->signature ?? '');
     }
 
+    public function __construct(
+        protected Dispatcher $dispatcher,
+        protected IConfig $config,
+        protected Request $request,
+        protected Session $session,
+        protected SharedCache $cache,
+    ) {}
+
     public function processRequest() {
-        $config = Engine::param('turnstile');
+        $config = $this->config->get('turnstile');
         if (!$config || !isset($config['sitekey']))
             return;
 
-        $qs = SSOCommon::zkQSParams();
+        $qs = $this->request->getQSParams();
         $token = $qs['token'] ?? false;
 
         if($token) {
@@ -299,7 +311,7 @@ class Turnstile implements IController {
             try {
                 $client = new Client([
                     RequestOptions::HEADERS => [
-                        'User-Agent' => Engine::UA
+                        'User-Agent' => Zookeeper::UA
                     ]
                 ]);
                 $response = $client->post($config['siteverify_uri'], [
@@ -333,7 +345,7 @@ class Turnstile implements IController {
                         'expires' => $expires,
                         'path' => '/',
                         'domain' => $_SERVER['SERVER_NAME'],
-                        'secure' => Engine::session()->isSecure(),
+                        'secure' => $this->session->isSecure(),
                         'httponly' => true,
                         'samesite' => 'lax'
                     ]);
@@ -341,8 +353,8 @@ class Turnstile implements IController {
                     if(!$json->success)
                         error_log("Turnstile validation warning: " . implode(', ', $codes));
 
-                    $location = ($qs['location'] ?? '') ?: Engine::getBaseUrl();
-                    SSOCommon::zkHttpRedirect($location, []);
+                    $location = ($qs['location'] ?? '') ?: $this->request->getBaseUrl();
+                    $this->request->doHttpRedirect($location, []);
                     exit;
                 } else {
                     error_log("Turnstile validation failed: " . implode(', ', $codes));
@@ -381,13 +393,15 @@ class Turnstile implements IController {
                     'checkCookie' => 1,
                     'location' => $qs['location'] ?? '',
                 ];
-                $target = Engine::getBaseUrl();
-                SSOCommon::zkHttpRedirect($target, $rq);
+                $target = $this->request->getBaseUrl();
+                $this->request->doHttpRedirect($target, $rq);
                 exit;
             }
         }
 
-        $templateFactory = new TemplateFactoryXML('html');
+        $templateFactory = $this->dispatcher->make(TemplateFactoryXML::class, [
+            'default' => 'html',
+        ]);
         $template = $templateFactory->load($templateName);
         header("Content-type: text/html; charset=UTF-8");
         echo $template->render($params);

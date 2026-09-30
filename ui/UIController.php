@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -28,10 +28,13 @@ use ZK\Controllers\IController;
 use ZK\Controllers\SSOCommon;
 use ZK\Controllers\Turnstile;
 use ZK\Engine\Config;
-use ZK\Engine\Engine;
+use ZK\Engine\Dispatcher;
+use ZK\Engine\IConfig;
 use ZK\Engine\IUser;
+use ZK\Engine\Request;
 use ZK\Engine\Session;
 use ZK\Engine\TemplateFactory;
+use ZK\Engine\Zookeeper;
 
 use ZK\UI\UICommon as UI;
 
@@ -55,10 +58,21 @@ class MenuEntry {
 class UIController implements IController {
     protected $ssoUser;
     protected $dn;
-    protected $session;
     protected $menu;
 
     protected $menuItem;
+
+    public function __construct(
+        protected Request $request,
+        protected Session $session,
+        protected TemplateFactoryUI $templateFact,
+        protected SSOCommon $ssoCommon,
+        protected Dispatcher $dispatcher,
+        protected Turnstile $turnstile,
+        protected Editor $editor,
+        protected IConfig $config,
+        protected IUser $userDBO,
+    ) {}
 
     /**
      * return menu item that matches the specified action
@@ -85,9 +99,10 @@ class UIController implements IController {
             $item = new MenuEntry($this->menu->default());
 
         $implClass = $item->implementation;
-        $this->menuItem = new $implClass();
+        $this->menuItem = $this->dispatcher->get($implClass);
+
         if($this->menuItem instanceof MenuItem)
-            $this->menuItem->process($action, $subaction, $this->session);
+            $this->menuItem->process($action, $subaction);
     }
 
     /**
@@ -130,13 +145,11 @@ class UIController implements IController {
     }
 
     public function processRequest() {
-        $this->session = Engine::session();
-
         // UI configuration file
-        $this->menu = new Config('ui_config', 'menu');
-        $customMenu = Engine::param('custom_menu');
+        $this->menu = $this->config->withConfigFrom('ui_config', 'menu');
+        $customMenu = $this->config->get('custom_menu');
         if($customMenu)
-            $this->menu->merge($customMenu);
+            $this->menu = $this->menu->merge($customMenu);
 
         $this->preProcessRequest();
 
@@ -145,7 +158,7 @@ class UIController implements IController {
         $isJson = isset($_SERVER["HTTP_ACCEPT"]) &&
                 substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
         ob_start("ob_gzhandler");
-        header("X-Powered-By: " . Engine::UA);
+        header("X-Powered-By: " . Zookeeper::UA);
         if ($isJson) {
             header("Content-Type: application/json");
             $this->dispatch($action, $subaction);
@@ -155,9 +168,8 @@ class UIController implements IController {
             $data = ob_get_contents();
             ob_end_clean();
 
-            $templateFact = new TemplateFactoryUI();
-            $templateFact->setContext($this->composeMenu($_REQUEST['action'] ?? ''), $this->menuItem, $data);
-            $template = $templateFact->load('index.html');
+            $this->templateFact->setContext($this->composeMenu($_REQUEST['action'] ?? ''), $this->menuItem, $data);
+            $template = $this->templateFact->load('index.html');
             echo $template->render($this->menuItem ? $this->menuItem->getTemplateVars() : []);
         }
         ob_end_flush(); // ob_gzhandler
@@ -173,7 +185,7 @@ class UIController implements IController {
         }
 
         // Turnstile validation
-        if(!Turnstile::validate()) {
+        if(!$this->turnstile->validate()) {
             // preset the test cookie to avoid an additional redirect
             setcookie('testcookie', 'testcookie');
             $rq = [
@@ -181,7 +193,7 @@ class UIController implements IController {
                 'checkCookie' => 1,
                 'location' => $_SERVER['REQUEST_URI'],
             ];
-            SSOCommon::zkHttpRedirect(Engine::getBaseURL(), $rq);
+            $this->request->doHttpRedirect($this->request->getBaseUrl(), $rq);
             exit;
         }
 
@@ -207,12 +219,12 @@ class UIController implements IController {
         case "find":
             // redirect full-text search URLs from v2.x
             $qs = "?action=search&s=all&n=".urlencode($_REQUEST["search"] ?? '');
-            header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            header("Location: ".$this->request->getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
         case "viewDJReviews":
             // redirect DJ review URLs from v2.x
             $qs = "?action=viewRecent&subaction=viewDJ&seq=selUser&viewuser=".urlencode($_REQUEST["n"] ?? '');
-            header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            header("Location: ".$this->request->getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
         case "viewList":
         case "viewListById":
@@ -222,12 +234,12 @@ class UIController implements IController {
             $params["subaction"] = $params["action"];
             $params["action"] = "";
             $qs = "?" . http_build_query($params);
-            header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            header("Location: ".$this->request->getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
         case "viewDate":
             // redirect playlist URLs from the legacy date picker
             $qs = isset($_REQUEST["playlist"])?"?subaction=viewListById&playlist=".urlencode($_REQUEST["playlist"]):"?subaction=viewList";
-            header("Location: ".Engine::getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            header("Location: ".$this->request->getBaseUrl().$qs, true, 301); // 301 Moved Permanently
             exit;
         }
     }
@@ -280,7 +292,7 @@ class UIController implements IController {
             if($this->session->isAuth("g"))
                 echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">This login can be used only at the station.</FONT></B></TD></TR>\n";
             else if($this->session->isAuth("d"))
-                echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">This login is disabled.  Please contact the <A HREF=\"mailto:".Engine::param('email')['md']."\">Music Director</A>.</FONT></B></TD></TR>\n";
+                echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">This login is disabled.  Please contact the <A HREF=\"mailto:".$this->config->get('email.md')."\">Music Director</A>.</FONT></B></TD></TR>\n";
             else
                 echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Invalid User or Password</FONT></B></TD></TR>\n";
             $displayLoginForm = true;
@@ -289,7 +301,7 @@ class UIController implements IController {
             echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Your session has expired.  You must login again.</FONT></B></TD></TR>\n";
             break;
         case "ssoInvalidDomain":
-            echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Google login is supported only for ".htmlentities(Engine::param('station'))." accounts.</FONT></B></TD></TR>\n";
+            echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Google login is supported only for ".htmlentities($this->config->get('station'))." accounts.</FONT></B></TD></TR>\n";
             break;
         case "ssoInvalidAssertion":
             echo "  <TR><TD>&nbsp;</TD><TD><B><FONT CLASS=\"error\">Google authentication was not successful.</FONT></B></TD></TR>\n";
@@ -324,7 +336,7 @@ class UIController implements IController {
           <TD><INPUT TYPE=PASSWORD NAME=password CLASS=input></TD></TR>
       <TR><TD>&nbsp;</TD>
           <TD><INPUT TYPE=SUBMIT class="submit" VALUE="  OK  "></TD></TR>
-<?php if(!empty(Engine::param('sso')['client_id'])) { ?>
+<?php if(!empty($this->config->get('sso.client_id'))) { ?>
       <TR><TD>&nbsp;</TD>
           <TD><DIV STYLE="margin-left:50px;margin-top:10px;">&mdash; or &mdash;</DIV></TD></TR>
       <TR><TD>&nbsp;</TD>
@@ -339,7 +351,7 @@ class UIController implements IController {
     }
     
     protected function emitLoginHelp() {
-        $station = htmlentities(Engine::param('station'));
+        $station = htmlentities($this->config->get('station'));
     ?>
     <h2>login help</h2>
     <P>Google single sign-on provides integrated access to your existing
@@ -347,7 +359,7 @@ class UIController implements IController {
     and enter your <?php echo $station; ?> Google account credentials
     if challenged.</P>
     <P>If you do not yet have a <?php echo $station; ?> Google account, contact the
-    <A HREF="mailto:<?php echo Engine::param('email')['pd']; ?>">Program Director</A>.</P>
+    <A HREF="mailto:<?php echo $this->config->get('email.pd'); ?>">Program Director</A>.</P>
     <h2>classic login</h2>
     <P>If you need immediate access but do not yet have a <?php echo $station; ?> Google account,
     go to the <A HREF="?action=login">classic login</A> page and enter your
@@ -360,7 +372,7 @@ class UIController implements IController {
         if($this->session->isAuth("u")) {
             if($this->session->isAuth("g"))
                 echo "   <P><B>IMPORTANT:  This login can be used ONLY at the station.</B></P>\n";
-            Editor::emitQueueHook($this->session);
+            $this->editor->emitQueueHook($this->session);
         } else if(isset($_REQUEST['user'])) {
             $this->emitLogin("badCredentials");
             return false;
@@ -373,8 +385,8 @@ class UIController implements IController {
         echo "<h2>$dn logged out</h2>\n";
 
         if($this->ssoUser) {
-            $logoutURI = Engine::param('sso')['logout_uri'];
-            $logoutURI = str_replace("{base_url}", urlencode(Engine::getBaseUrl()."?action=logout"), $logoutURI);
+            $logoutURI = $this->config->get('sso.logout_uri');
+            $logoutURI = str_replace("{base_url}", urlencode($this->request->getBaseUrl()."?action=logout"), $logoutURI);
 
             echo "<script><!--\n";
             echo "\$().ready(function(){";
@@ -406,20 +418,20 @@ class UIController implements IController {
         }
 
         // do the redirection
-        SSOCommon::zkHttpRedirect(Engine::getBaseURL(), $rq);
+        $this->request->doHttpRedirect($this->request->getBaseUrl(), $rq);
         return true;
     }
 
     protected function doLogin($user, $password) {
         $access = '';
-        if(Engine::api(IUser::class)->validatePassword($user, $password, 1, $access)) {
-            if(Session::checkLocal())
+        if($this->userDBO->validatePassword($user, $password, 1, $access)) {
+            if($this->request->checkLocal())
                 $access .= 'l';
 
             // Restrict guest accounts to local subnet only
-            if(Session::checkAccess('d', $access) ||
-                   Session::checkAccess('g', $access) &&
-                        !Session::checkAccess('l', $access)) {
+            if($this->session->checkAccess('d', $access) ||
+                   $this->session->checkAccess('g', $access) &&
+                        !$this->session->checkAccess('l', $access)) {
                 return;
             }
     
@@ -455,24 +467,24 @@ class UIController implements IController {
         $access = '';
         switch($_REQUEST["account"]) {
         case "old":
-            if(Engine::api(IUser::class)->validatePassword($_REQUEST["user"], $_REQUEST["password"], 0, $access) &&
-                    !Session::checkAccess('d', $access) &&
-                    !Session::checkAccess('g', $access)) {
-                $row = Engine::api(IUser::class)->getSsoOptions($_REQUEST["ssoOptions"]);
+            if($this->userDBO->validatePassword($_REQUEST["user"], $_REQUEST["password"], 0, $access) &&
+                    !$this->session->checkAccess('d', $access) &&
+                    !$this->session->checkAccess('g', $access)) {
+                $row = $this->userDBO->getSsoOptions($_REQUEST["ssoOptions"]);
                 if($row) {
                     $account = $row['account'];
                     $location = $row['url'];
-                    Engine::api(IUser::class)->assignAccount($_REQUEST["user"], $account);
+                    $this->userDBO->assignAccount($_REQUEST["user"], $account);
                     $success = true;
                 }
             }
             break;
         case "new":
-            $row = Engine::api(IUser::class)->getSsoOptions($_REQUEST["ssoOptions"]);
+            $row = $this->userDBO->getSsoOptions($_REQUEST["ssoOptions"]);
             if($row) {
                 $account = $row['account'];
                 $location = $row['url'];
-                $user = Engine::api(IUser::class)->createNewAccount($row['fullname'], $account);
+                $user = $this->userDBO->createNewAccount($row['fullname'], $account);
                 $success = true;
             }
             break;
@@ -482,15 +494,15 @@ class UIController implements IController {
     
         if($success) {
             // show the login succeeded page
-            Engine::api(IUser::class)->teardownSsoOptions($_REQUEST["ssoOptions"]);
-            SSOCommon::setupSSOByAccount($account);
+            $this->userDBO->teardownSsoOptions($_REQUEST["ssoOptions"]);
+            $this->ssoCommon->setupSSOByAccount($account);
             $_REQUEST["action"] = "loginValidate";
             if($location) {
                 $rq = array(
                     "action" => '',
                     "access" => $access
                 );
-                SSOCommon::zkHttpRedirect($location, $rq);
+                $this->request->doHttpRedirect($location, $rq);
                 return true;
             }
         }
@@ -500,7 +512,7 @@ class UIController implements IController {
     
     protected function doSSOOptionsPage() {
         $success = false;
-        $row = Engine::api(IUser::class)->getSsoOptions($_REQUEST["ssoOptions"]);
+        $row = $this->userDBO->getSsoOptions($_REQUEST["ssoOptions"]);
         if($row)
             $success = true;
         if(!$success) {

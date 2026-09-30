@@ -24,12 +24,15 @@
 
 namespace ZK\UI;
 
-use ZK\Engine\Engine;
 use ZK\Engine\IArtwork;
+use ZK\Engine\IConfig;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
 use ZK\Engine\IUser;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
+use ZK\Engine\Zookeeper;
 
 use ZK\UI\UICommon as UI;
 
@@ -69,6 +72,22 @@ class Reviews extends MenuItem {
         }, ILibrary::GENRES);
     }
 
+    public function __construct(
+        protected Request $request,
+        protected Session $session,
+        protected TemplateFactoryUI $templateFactory,
+        protected Home $home,
+        protected Search $search,
+        protected IConfig $config,
+        protected IReview $reviewDBO,
+        protected IDJ $djDBO,
+        protected IUser $userDBO,
+        protected ILibrary $libraryDBO,
+        protected IArtwork $imageDBO,
+    ) {
+        parent::__construct($session, $templateFactory);
+    }
+
     public function processLocal($action, $subaction) {
         $this->subaction = $subaction;
         $this->dispatchAction($action, self::$actions);
@@ -87,7 +106,7 @@ class Reviews extends MenuItem {
         $isAuthorized = $this->session->isAuth('u');
 
         // Run the query
-        $records = Engine::api(IReview::class)->getActiveReviewers($viewAll, $isAuthorized);
+        $records = $this->reviewDBO->getActiveReviewers($viewAll, $isAuthorized);
         $dj = [];
         while($records && ($row = $records->fetch())) {
             $row["sort"] = preg_match("/^(the|dj)\s+(.+)/i", $row[1], $matches) ? $matches[2] : $row[1];
@@ -116,13 +135,13 @@ class Reviews extends MenuItem {
         if($seq == "selUser" && $viewuser) {
             $airname = null;
             if(is_numeric($viewuser)) {
-                $results = Engine::api(IDJ::class)->getAirnames(0, $viewuser);
+                $results = $this->djDBO->getAirnames(0, $viewuser);
                 if($results) {
                     $row = $results->fetch();
                     $airname = $row['airname'];
                 }
             } else {
-                $row = Engine::api(IUser::class)->getUser($viewuser);
+                $row = $this->userDBO->getUser($viewuser);
                 if($row)
                     $airname = $row['realname'];
             }
@@ -147,7 +166,7 @@ class Reviews extends MenuItem {
     public function getTrendingData() {
         $limit = 50;
         $scale = $limit / 5;
-        $trending = Engine::api(IReview::class)->getTrending($limit);
+        $trending = $this->reviewDBO->getTrending($limit);
         $data = array_map(function($entry) use(&$limit, $scale) {
             return [
                 'text' => $entry['hashtag'],
@@ -160,8 +179,8 @@ class Reviews extends MenuItem {
     }
 
     public function viewReviewShelf() {
-        $albums = Engine::api(IReview::class)->getReviewShelf();
-        Engine::api(ILibrary::class)->markAlbumsPlayable($albums);
+        $albums = $this->reviewDBO->getReviewShelf();
+        $this->libraryDBO->markAlbumsPlayable($albums);
         $this->addVar('GENRES', self::getGenres());
         $this->addVar('albums', $albums);
         $this->setTemplate("review/shelf.html");
@@ -177,22 +196,21 @@ class Reviews extends MenuItem {
 
         switch($op) {
         case 'claim':
-            Engine::api(IReview::class)->updateReviewShelf($tag, $this->session->getUser());
+            $this->reviewDBO->updateReviewShelf($tag, $this->session->getUser());
             break;
         case 'release':
             // fall through...
         case 'dtm':
-            Engine::api(IReview::class)->updateReviewShelf($tag, null);
+            $this->reviewDBO->updateReviewShelf($tag, null);
             break;
         }
 
-        $api = Engine::api(ILibrary::class);
-        $albums = $api->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
-        $api->markAlbumsPlayable($albums);
+        $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        $this->libraryDBO->markAlbumsPlayable($albums);
         $album = $albums[0];
 
         if($album['bin']) {
-            $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $album['bin']);
+            $user = $this->libraryDBO->search(ILibrary::PASSWD_NAME, 0, 1, $album['bin']);
             if(count($user))
                 $album['realname'] = $user[0]['realname'];
         }
@@ -215,14 +233,14 @@ class Reviews extends MenuItem {
         $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <a type='application/rss+xml' href='zkrss.php?feed=reviews&amp;fmt=1'><img src='img/rss.png' alt='rss'></a>";
         $this->addVar("GENRES", self::getGenres());
 
-        $results = Engine::api(IReview::class)->getRecentReviews($author, 0, 200, $isAuthorized, 1);
+        $results = $this->reviewDBO->getRecentReviews($author, 0, 200, $isAuthorized, 1);
 
         // coalesce albums into one array for artwork injection
         // use foreach, as reference passing does not work with array_map
         $albums = [];
         foreach($results as &$review)
             $albums[] = &$review["album"];
-        Engine::api(IArtwork::class)->injectAlbumArt($albums);
+        $this->imageDBO->injectAlbumArt($albums);
         foreach($results as &$row) {
             $row['body'] = $row['review'];
             $row['tracks'] = '';
@@ -252,12 +270,12 @@ class Reviews extends MenuItem {
     }
 
     public function viewReview() {
-        $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"] ?? 0);
+        $this->search->withContextFrom($this)->searchByAlbumKey($_REQUEST["tag"] ?? 0);
     }
     
     private function claimReview($tag, $op) {
         // nothing to do if Slack is not configured
-        $config = Engine::param('slack');
+        $config = $this->config->get('slack');
         if($op == 'dtm' ||
                 !$config || !($token = $config['token']) ||
                 !($channel = $config['review_channel'])) {
@@ -265,15 +283,14 @@ class Reviews extends MenuItem {
         }
 
         // find the album
-        $libAPI = Engine::api(ILibrary::class);
-        $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
         if(!count($albums))
             return;
 
         $artist = $albums[0]["iscoll"] ? "Various Artists" : $albums[0]["artist"];
         $album = $albums[0]["album"];
 
-        $user = $libAPI->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
+        $user = $this->libraryDBO->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
         if(!count($user))
             return;
 
@@ -282,8 +299,8 @@ class Reviews extends MenuItem {
         $action = $unclaim ? "has returned" : "is reviewing";
         $verb = $unclaim ? "returned" : "claimed";
 
-        $base = Engine::getBaseUrl();
-        $title = Engine::param('station_title');
+        $base = $this->request->getBaseUrl();
+        $title = $this->config->get('station_title');
 
         // compose the message
         $body = [
@@ -297,7 +314,7 @@ class Reviews extends MenuItem {
         $client = new Client([
             'base_uri' => self::SLACK_BASE,
             RequestOptions::HEADERS => [
-                'User-Agent' => Engine::UA,
+                'User-Agent' => Zookeeper::UA,
                 'Authorization' => 'Bearer ' . $token
             ]
         ]);
@@ -329,27 +346,26 @@ class Reviews extends MenuItem {
 
     private function postReview($tag) {
         // nothing to do if Slack is not configured
-        $config = Engine::param('slack');
+        $config = $this->config->get('slack');
         if(!$config || !($token = $config['token']) ||
                 !($channel = $config['review_channel'])) {
             return;
         }
 
         // find the album
-        $libAPI = Engine::api(ILibrary::class);
-        $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+        $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
         if(!count($albums))
             return;
 
         // get the album art, if any
-        $imageApi = Engine::api(IArtwork::class);
+        $imageApi = $this->imageDBO;
         $image = $imageApi->getAlbumArt($tag);
         $albumArt = $image && ($uuid = $image["image_uuid"]) ?
                         $imageApi->getCachePath($uuid) : null;
 
         // find the review
         $user = $this->session->getUser();
-        $reviewApi = Engine::api(IReview::class);
+        $reviewApi = $this->reviewDBO;
         $reviews = $reviewApi->getReviews($tag, true, $user, true);
         if(!count($reviews))
             return;
@@ -370,8 +386,8 @@ class Reviews extends MenuItem {
         if(preg_match('/(.+?)(?=(\r?\n)[\p{P}\p{S}\s]*\d+[\p{P}\p{S}\d]*\s)/su', $review, $matches) && $matches[1])
             $review = $matches[1];
 
-        $base = Engine::getBaseUrl();
-        $title = Engine::param('station_title');
+        $base = $this->request->getBaseUrl();
+        $title = $this->config->get('station_title');
 
         // compose the message
         $header = [
@@ -409,7 +425,7 @@ class Reviews extends MenuItem {
         $client = new Client([
             'base_uri' => self::SLACK_BASE,
             RequestOptions::HEADERS => [
-                'User-Agent' => Engine::UA,
+                'User-Agent' => Zookeeper::UA,
                 'Authorization' => 'Bearer ' . $token
             ]
         ]);
@@ -452,7 +468,7 @@ class Reviews extends MenuItem {
 
     private function unpostReview($exportId) {
         // nothing to do if not exported or Slack is not configured
-        $config = Engine::param('slack');
+        $config = $this->config->get('slack');
         if(!$exportId || !$config || !($token = $config['token']) ||
                 !($channel = $config['review_channel'])) {
             return;
@@ -461,7 +477,7 @@ class Reviews extends MenuItem {
         $client = new Client([
             'base_uri' => self::SLACK_BASE,
             RequestOptions::HEADERS => [
-                'User-Agent' => Engine::UA,
+                'User-Agent' => Zookeeper::UA,
                 'Authorization' => 'Bearer ' . $token
             ]
         ]);
@@ -485,16 +501,14 @@ class Reviews extends MenuItem {
     }
 
     private function eMailReview($tag) {
-        $instance_nobody = Engine::param('email')['nobody'];
-        $address = Engine::param('email')['reviewlist'];
+        $instance_nobody = $this->config->get('email.nobody');
+        $address = $this->config->get('email.reviewlist');
 
         if(!isset($address)) {
             return;
         }
 
-        $libAPI = Engine::api(ILibrary::class);
-        $revAPI = Engine::api(IReview::class);
-        $records = $revAPI->getReviews($tag, false, $this->session->getUser(), true);
+        $records = $this->reviewDBO->getReviews($tag, false, $this->session->getUser(), true);
         if(sizeof($records) && ($row = $records[0])) {
             $name = $row["realname"];
     
@@ -503,7 +517,7 @@ class Reviews extends MenuItem {
        
             $from = "$name <$email>";
     
-            $albums = $libAPI->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+            $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
             $artist = strcmp(substr($albums[0]["artist"], 0, 8), "[coll]: ")?
                           UI::deLatin1ify($albums[0]["artist"]):"Various Artists";
             $album = UI::deLatin1ify($albums[0]["album"]);
@@ -531,7 +545,7 @@ class Reviews extends MenuItem {
     
             // Emit the postamble
             $body .= "\r\n\r\n--\r\nPost your music reviews online!\r\n";
-            $body .= Engine::param('station')." Zookeeper Online:  ".UI::getBaseUrl()."\r\n";
+            $body .= $this->config->get('station')." Zookeeper Online:  ".$this->request->getBaseUrl()."\r\n";
     
             // send the mail
             $stat = mail($address, $subject, $body, $headers);
@@ -540,13 +554,13 @@ class Reviews extends MenuItem {
     
     public function editReview() {
         if(!$this->session->isAuth("u")) {
-            $this->newEntity(Home::class)->emitHome();
+            $this->home->withContextFrom($this)->emitHome();
             return;
         }
 
         $airname = mb_substr(trim($_REQUEST["airname"] ?? ''), 0, IDJ::MAX_AIRNAME_LENGTH);
 
-        $user = Engine::api(ILibrary::class)->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
+        $user = $this->libraryDBO->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
         $self = "(" . $user[0]["realname"] . ")";
         $errorMessage = "";
         if($_POST["validate"] ?? false) {
@@ -555,7 +569,7 @@ class Reviews extends MenuItem {
             // lookup the airname
             $aid = null;
             if($airname && strcasecmp($airname, $self)) {
-                $djapi = Engine::api(IDJ::class);
+                $djapi = $this->djDBO;
                 $aid = $djapi->getAirname($airname, $this->session->getUser());
                 if(!$aid) {
                     // airname does not exist; try to create it
@@ -574,35 +588,35 @@ class Reviews extends MenuItem {
 
             switch($_REQUEST["button"]) {
             case "post-review":
-                Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
-                $success = Engine::api(IReview::class)->insertReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
+                $this->reviewDBO->deleteReview($_REQUEST["tag"], $this->session->getUser());
+                $success = $this->reviewDBO->insertReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
                 if($success >= 1) {
                     if($_REQUEST["noise"] ?? 0)
                         $this->postReview($_REQUEST["tag"]);
-                    $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
+                    $this->search->withContextFrom($this)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
                 $errorMessage = "<h4 class='error'>Review not posted.  Try again later.</h4>\n";
                 break;
             case "edit-save":
                 $review = mb_substr(trim($_REQUEST["review"]), 0, IReview::MAX_REVIEW_LENGTH);
-                $success = Engine::api(IReview::class)->updateReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
+                $success = $this->reviewDBO->updateReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
                 if($success >= 0) {
                     if($_REQUEST["noise"] ?? false)
                         $this->postReview($_REQUEST["tag"]);
-                    $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
+                    $this->search->withContextFrom($this)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
                 $errorMessage = "<h4 class='error'>Review not updated.  Try again later.</h4>\n";
                 break;
             case "edit-delete":
-                $reviews = Engine::api(IReview::class)->getReviews($_REQUEST["tag"], false, $this->session->getUser(), true);
-                $success = Engine::api(IReview::class)->deleteReview($_REQUEST["tag"], $this->session->getUser());
+                $reviews = $this->reviewDBO->getReviews($_REQUEST["tag"], false, $this->session->getUser(), true);
+                $success = $this->reviewDBO->deleteReview($_REQUEST["tag"], $this->session->getUser());
                 if($success >= 1) {
                     if(count($reviews))
                         $this->unpostReview($reviews[0]['exportid']);
 
-                    $this->newEntity(Search::class)->searchByAlbumKey($_REQUEST["tag"]);
+                    $this->search->withContextFrom($this)->searchByAlbumKey($_REQUEST["tag"]);
                     return;
                 }
                 $errorMessage = "<h4 class='error'>Delete failed.  Try again later.</h4>\n";
@@ -610,7 +624,7 @@ class Reviews extends MenuItem {
             }
         }
         $_REQUEST["private"] = 0;
-        $results = Engine::api(IReview::class)->getReviews($_REQUEST["tag"], 1, $this->session->getUser(), 1);
+        $results = $this->reviewDBO->getReviews($_REQUEST["tag"], 1, $this->session->getUser(), 1);
         if(sizeof($results)) {
             $saveAirname = $airname;
             extract($results[0]);
@@ -619,15 +633,15 @@ class Reviews extends MenuItem {
             $_REQUEST["private"] = $private;
         }
         
-        $albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["tag"]);
+        $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["tag"]);
 
         $airnames = [];
-        $records = Engine::api(IDJ::class)->getAirnames($this->session->getUser());
+        $records = $this->djDBO->getAirnames($this->session->getUser());
         while ($row = $records->fetch())
            $airnames[] = $row['airname'];
         $airnames[] = $self;
 
-        $slack = Engine::param('slack');
+        $slack = $this->config->get('slack');
         $export = $slack && $slack['token'] && $slack['review_channel'];
 
         $this->setTemplate("review/edit.html");

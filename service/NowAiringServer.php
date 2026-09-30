@@ -25,7 +25,8 @@
 
 namespace ZK\Service;
 
-use ZK\Engine\Engine;
+use ZK\Engine\IConfig;
+use ZK\Engine\Zookeeper;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -54,7 +55,7 @@ class NowAiringServer implements MessageComponentInterface {
 
     const DEFAULT_BASE = "http://127.0.0.1/";
     const SERVICE_TIMEOUT = 5.0; // service timeout (in seconds)
-    const UA = "NowAiringServer/" . Engine::VERSION;
+    const UA = "NowAiringServer/" . Zookeeper::VERSION;
 
     protected $clients;
     protected $timer;
@@ -127,18 +128,19 @@ class NowAiringServer implements MessageComponentInterface {
         protected LoopInterface $loop,
         protected LoggerInterface $logger,
         protected Browser $browser,
+        protected IConfig $appConfig,
     ) {
         $this->clients = new \SplObjectStorage;
         $this->imageQ = new \SplQueue;
 
-        $config = Engine::param('discogs');
+        $config = $appConfig->get('discogs');
         if ($config) {
             $apiKey = $config['apikey'] ?? null;
             $clientSecret = $config['client_secret'] ?? null;
             $this->secret = $apiKey ?: $clientSecret;
         }
 
-        $baseUrl = Engine::param('base_url_internal', self::DEFAULT_BASE);
+        $baseUrl = $appConfig->get('base_url_internal', self::DEFAULT_BASE);
         $this->server = $browser->
                 withBase($baseUrl)->
                 withTimeout(self::SERVICE_TIMEOUT)->
@@ -522,7 +524,6 @@ class NowAiringServer implements MessageComponentInterface {
         $router = new \Ratchet\Http\Router(
             new UrlMatcher($routes, new RequestContext()));
         new IoServer(new \Ratchet\Http\HttpServer($router),
-            new \React\Socket\Server(PushServer::WSSERVER_HOST . ":" .
-                                     PushServer::WSSERVER_PORT, $this->loop));
+            new \React\Socket\Server(ServiceDriver::DEFAULT_WSSERVER, $this->loop));
     }
 }

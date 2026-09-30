@@ -30,8 +30,8 @@ use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
 use ZK\Engine\PlaylistEntry;
-
-use ZK\UI\UICommon as UI;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
 class RSS extends CommandTarget implements IController {
     private static $actions = [
@@ -43,11 +43,18 @@ class RSS extends CommandTarget implements IController {
 
     private $params = [];
 
+    public function __construct(
+        protected TemplateFactoryXML $templateFactory,
+        protected Request $request,
+        protected IArtwork $imageDBO,
+        protected IChart $chartDBO,
+        protected IReview $reviewDBO,
+    ) {}
+
     public function processRequest() {
         header("Content-type: text/xml; charset=UTF-8");
         ob_start("ob_gzhandler");
-        $templateFactory = new TemplateFactoryXML();
-        $template = $templateFactory->load('rss.xml');
+        $template = $this->templateFactory->load('rss.xml');
         $this->params['feeds'] = [];
 
         $this->processLocal($_REQUEST['feed'] ?? '', null);
@@ -62,7 +69,7 @@ class RSS extends CommandTarget implements IController {
 
     public function composeChartRSS($endDate, $limit="", $category="") {
         $chart = [];
-        Engine::api(IChart::class)->getChart($chart, "", $endDate, $limit, $category);
+        $this->chartDBO->getChart($chart, "", $endDate, $limit, $category);
         return $chart;
     }
     
@@ -71,10 +78,10 @@ class RSS extends CommandTarget implements IController {
         $weeks = $_REQUEST["weeks"] ?? 10;
 
         $this->params['limit'] = $top;
-        $this->params['dateSpec'] = UI::isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
+        $this->params['dateSpec'] = $this->request->isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
         $this->params['MEDIA'] = ILibrary::MEDIA;
         $this->params['entry'] = new PlaylistEntry();
-        $weeks = Engine::api(IChart::class)->getChartDates($weeks)->asArray();
+        $weeks = $this->chartDBO->getChartDates($weeks)->asArray();
         $charts = array_map(function($week) use ($top) {
             return [
                 'endDate' => $week['week'],
@@ -86,19 +93,19 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function recentReviews() {
-        $dateSpec = UI::isUsLocale() ? 'F j, Y' : 'j F Y';
+        $dateSpec = $this->request->isUsLocale() ? 'F j, Y' : 'j F Y';
         $this->params['dateSpec'] = $dateSpec;
         $this->params['GENRES'] = ILibrary::GENRES;
         $this->params['feeds'][] = 'reviews';
 
         $limit = $_REQUEST['limit'] ?? 50;
-        $results = Engine::api(IReview::class)->getRecentReviews('', 0, $limit, 0, 1);
+        $results = $this->reviewDBO->getRecentReviews('', 0, $limit, 0, 1);
         // coalesce albums into one array for artwork injection
         // use foreach, as reference passing does not work with array_map
         $albums = [];
         foreach($results as &$review)
             $albums[] = &$review["album"];
-        Engine::api(IArtwork::class)->injectAlbumArt($albums, Engine::getBaseUrl());
+        $this->imageDBO->injectAlbumArt($albums, $this->request->getBaseUrl());
         foreach($results as &$row) {
             $row['body'] = $row['review'];
             $row['tracks'] = '';
@@ -115,7 +122,7 @@ class RSS extends CommandTarget implements IController {
     
     public function composeAddRSS($addDate, $cats) {
         $albums = [];
-        $results = Engine::api(IChart::class)->getAdd($addDate);
+        $results = $this->chartDBO->getAdd($addDate);
         if($results) {
             while($row = $results->fetch()) {
                 // Categories
@@ -137,10 +144,10 @@ class RSS extends CommandTarget implements IController {
     public function recentAdds() {
         $weeks = $_REQUEST["weeks"] ?? 4;
 
-        $this->params['dateSpec'] = UI::isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
+        $this->params['dateSpec'] = $this->request->isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
         $this->params['MEDIA'] = ILibrary::MEDIA;
-        $weeks = Engine::api(IChart::class)->getAddDates($weeks)->asArray();
-        $cats = Engine::api(IChart::class)->getCategories();
+        $weeks = $this->chartDBO->getAddDates($weeks)->asArray();
+        $cats = $this->chartDBO->getCategories();
         $adds = array_map(function($week) use ($cats) {
             return [
                 'addDate' => $week["adddate"],

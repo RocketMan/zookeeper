@@ -25,8 +25,8 @@
 namespace ZK\Service;
 
 use ZK\Engine\IPlaylist;
-use ZK\Engine\Engine;
 use ZK\Engine\PlaylistEntry;
+use ZK\Engine\Zookeeper;
 
 use Clue\React\Mq\Queue;
 use Psr\Log\LoggerInterface;
@@ -91,7 +91,7 @@ class ZootopiaListener implements IService {
     private const JSON_POST = [ 'Content-Type' => 'application/json' ];
 
     protected const SERVICE_TIMEOUT = 5.0; // service timeout (in seconds)
-    protected const UA = "ZootopiaListener/" . Engine::VERSION;
+    protected const UA = "ZootopiaListener/" . Zookeeper::VERSION;
 
     /**
      * test zootopia artist name against zookeeper artist

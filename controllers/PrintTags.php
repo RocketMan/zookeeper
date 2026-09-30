@@ -24,8 +24,9 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\Engine;
 use ZK\Engine\ILibrary;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
 define("_SYSTEM_TTFONTS", dirname(__DIR__)."/fonts/");
 
@@ -61,13 +62,19 @@ class PrintTags implements IController {
 
     protected $albums = [];
 
+    public function __construct(
+        protected ILibrary $libraryDBO,
+        protected Request $request,
+        protected Session $session,
+    ) {}
+
     protected function loadTags($tags) {
         $special = false;
         foreach($tags as $tag) {
             if(!$tag)
                 continue;
 
-            $result = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+            $result = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
             if(count($result) == 0)
                 continue;
 
@@ -116,7 +123,7 @@ class PrintTags implements IController {
         if(array_key_exists($form, self::ADDITIONAL_FORMS))
             $form = self::ADDITIONAL_FORMS[$form];
 
-        $inst = $_REQUEST["inst"] ?? Engine::getBaseUrl();
+        $inst = $_REQUEST["inst"] ?? $this->request->getBaseUrl();
         $url = $inst . self::LINK;
 
         $pdf = new \PDF_Label($form);

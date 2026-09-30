@@ -24,37 +24,24 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\Engine;
+use ZK\Engine\IConfig;
 use ZK\Engine\IUser;
 use ZK\Engine\Session;
+use ZK\Engine\Zookeeper;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 
 class SSOCommon {
-    public static function zkHttpRedirect($url, $params) {
-        $qs = http_build_query($params);
-        if (strlen($qs))
-            $url .= '?' . $qs;
-        header("Location: " . $url, true, 307);
-    }
-    
-    // alternative to $_GET[] that does not munge dots in qs param names
-    public static function zkQSParams() {
-        $result = array();
-        $params = explode("&", $_SERVER["QUERY_STRING"]);
-        foreach ($params as $param) {
-            $nameValue = explode("=", $param);
-            $name = urldecode($nameValue[0]);
-            $value = count($nameValue) > 1 ? urldecode($nameValue[1]) : '';
-            $result[$name] = $value;
-        }
-        return $result;
-    }
-    
+    public function __construct(
+        protected Session $session,
+        protected IConfig $config,
+        protected IUser $userDBO,
+    ) {}
+
     // validate the assertion
-    public static function ssoCheckAssertion($params, &$error) {
-        $configParams = Engine::param('sso');
+    public function ssoCheckAssertion($params, &$error) {
+        $configParams = $this->config->get('sso');
         $OAuth_token_uri = $configParams['oauth_token_uri'];
         $OAuth_tokeninfo_uri = $configParams['oauth_tokeninfo_uri'];
         $OAuth_userinfo_uri = $configParams['oauth_userinfo_uri'];
@@ -69,7 +56,7 @@ class SSOCommon {
                 // positive authorization received; get the access token
                 $client = new Client([
                     RequestOptions::HEADERS => [
-                        'User-Agent' => Engine::UA
+                        'User-Agent' => Zookeeper::UA
                     ]
                 ]);
 
@@ -118,40 +105,39 @@ class SSOCommon {
         }
     }
     
-    public static function setupSSOByAccount($account) {
+    public function setupSSOByAccount($account) {
         $retval = false;
-        $row = Engine::api(IUser::class)->getUserByAccount($account);
+        $row = $this->userDBO->getUserByAccount($account);
         if($row) {
             $user = $row["name"];
             $access = $row["groups"] . "s";
             $session = md5(uniqid(rand()));
 
-            if(Session::checkLocal())
+            if($this->session->checkLocal())
                 $access .= 'l';
     
             // Restrict guest accounts to local subnet only
-            if(Session::checkAccess('d', $access) ||
-                   Session::checkAccess('g', $access) &&
-                       !Session::checkAccess('l', $access)) {
+            if($this->session->checkAccess('d', $access) ||
+                   $this->session->checkAccess('g', $access) &&
+                       !$this->session->checkAccess('l', $access)) {
                 $session = "";
             } else {
                 // Create a session
-                Engine::api(IUser::class)->updateLastLogin($row["id"]);
-                Engine::session()->create($session, $row["name"], $access);
+                $this->userDBO->updateLastLogin($row["id"]);
+                $this->session->create($session, $row["name"], $access);
             }
             $retval = true;
         }
         return $retval;
     }
 
-    public static function setupSSOByName($account, $name) {
-        $api = Engine::api(IUser::class);
-        $row = $api->getUserByFullname($name);
+    public function setupSSOByName($account, $name) {
+        $row = $this->userDBO->getUserByFullname($name);
         if($row)
-            $api->assignAccount($row["name"], $account);
+            $this->userDBO->assignAccount($row["name"], $account);
         else
-            $api->createNewAccount($name, $account);
+            $this->userDBO->createNewAccount($name, $account);
 
-        return self::setupSSOByAccount($account);
+        return $this->setupSSOByAccount($account);
     }
 }

@@ -22,17 +22,9 @@
  *
  */
 
-namespace ZK\Controllers;
+namespace ZK\Engine;
 
-
-class OpenSearch implements IController {
-    public function __construct(
-        protected TemplateFactoryXML $templateFactory,
-    ) {}
-
-    public function processRequest() {
-        $template = $this->templateFactory->load('opensearch.xml');
-        header("Content-type: text/xml; charset=UTF-8");
-        echo $template->render();
-    }
+interface IUserAuth {
+    function getUser($user);
+    function lookupAPIKey($apikey);
 }

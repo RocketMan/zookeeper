@@ -22,17 +22,10 @@
  *
  */
 
-namespace ZK\Controllers;
+namespace ZK\Engine;
 
+class Zookeeper {
+    const VERSION = "3.3.2";
 
-class OpenSearch implements IController {
-    public function __construct(
-        protected TemplateFactoryXML $templateFactory,
-    ) {}
-
-    public function processRequest() {
-        $template = $this->templateFactory->load('opensearch.xml');
-        header("Content-type: text/xml; charset=UTF-8");
-        echo $template->render();
-    }
+    const UA = "Zookeeper/2.0; (+https://zookeeper.ibinx.com/)";
 }

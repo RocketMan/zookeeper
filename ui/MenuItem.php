@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2024 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -25,6 +25,7 @@
 namespace ZK\UI;
 
 use ZK\Controllers\CommandTarget;
+use ZK\Engine\Session;
 
 abstract class MenuItem extends CommandTarget {
     protected $title;
@@ -39,6 +40,11 @@ abstract class MenuItem extends CommandTarget {
     public function getExtra() { return $this->extra; }
     public function getTertiary() { return $this->tertiary; }
 
+    public function __construct(
+        protected Session $session,
+        protected TemplateFactoryUI $templateFactory,
+    ) {}
+
     protected function setTemplate($template) {
         $this->template = $template;
     }
@@ -47,16 +53,16 @@ abstract class MenuItem extends CommandTarget {
         $this->templateVars[$key] = $value;
     }
 
-    public function newEntity($entityClass) {
-        $obj = parent::newEntity($entityClass);
-        if($obj) {
-            $obj->title = &$this->title;
-            $obj->template = &$this->template;
-            $obj->templateVars = &$this->templateVars;
-            $obj->extra = &$this->extra;
-            $obj->tertiary = &$this->tertiary;
-        }
-        return $obj;
+    public function withContextFrom(self $obj): static {
+        $copy = clone $this;
+
+        $copy->title = &$obj->title;
+        $copy->template = &$obj->template;
+        $copy->templateVars = &$obj->templateVars;
+        $copy->extra = &$obj->extra;
+        $copy->tertiary = &$obj->tertiary;
+
+        return $copy;
     }
 
     public function getSubactions($action) { return []; }
@@ -124,8 +130,7 @@ abstract class MenuItem extends CommandTarget {
     }
 
     public function render($block = null) {
-        $templateFact = new TemplateFactoryUI();
-        $template = $templateFact->load($this->getTemplate());
+        $template = $this->templateFactory->load($this->getTemplate());
         return $block ?
             $template->renderBlock($block, $this->getTemplateVars()) :
             $template->render($this->getTemplateVars());

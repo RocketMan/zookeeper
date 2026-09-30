@@ -24,13 +24,18 @@
 
 namespace ZK\API;
 
-use ZK\Engine\Engine;
+use ZK\Engine\IArtwork;
 use ZK\Engine\IDJ;
+use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
+use ZK\Engine\IReview;
 use ZK\Engine\PlaylistEntry;
+use ZK\Engine\PlaylistEntryFactory;
 use ZK\Engine\PlaylistObserver;
-use ZK\Service\PushServer;
+use ZK\Engine\ServiceConnector;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 
 use ZK\UI\PlaylistBuilder;
 
@@ -73,17 +78,33 @@ class Playlists implements RequestHandlerInterface {
         "match(event)" => [ self::PLAYLIST_SEARCH, "playlists" ],
     ];
 
-    private static function paginate(RequestInterface $request, $type, $key, &$offset, $limit): array {
+    public function __construct(
+        protected Session $session,
+        protected PlaylistBuilder $playlistBuilder,
+        protected PlaylistEntryFactory $playlistEntryFactory,
+        protected Request $request,
+        protected ServiceConnector $service,
+        protected Albums $albums,
+        protected Labels $labels,
+        protected ILibrary $libraryDBO,
+        protected IArtwork $imageDBO,
+        protected IDJ $djDBO,
+        protected IEditor $editorDBO,
+        protected IPlaylist $playlistDBO,
+        protected IReview $reviewDBO,
+    ) {}
+
+    private function paginate(RequestInterface $request, $type, $key, &$offset, $limit): array {
         switch($type) {
         case "date":
             if(strtolower($key) == "onnow") {
-                $result = Engine::api(IPlaylist::class)->getWhatsOnNow()->asArray();
+                $result = $this->playlistDBO->getWhatsOnNow()->asArray();
                 break;
             }
             $result = [];
             $keys = explode(",", $key);
             foreach($keys as $key) {
-                $rows = Engine::api(IPlaylist::class)->getPlaylistsByDate($key)->asArray();
+                $rows = $this->playlistDBO->getPlaylistsByDate($key)->asArray();
                 if(sizeof($rows))
                     $result = array_merge($result, $rows);
             }
@@ -92,28 +113,27 @@ class Playlists implements RequestHandlerInterface {
             $result = [];
             $keys = explode(",", $key);
             foreach($keys as $key) {
-                $row = Engine::api(IPlaylist::class)->getPlaylist($key, 1);
+                $row = $this->playlistDBO->getPlaylist($key, 1);
                 if(!$row)
                     throw new ResourceNotFoundException("show", $key);
                 $row["list"] = $key;
-                $published = $row['airname'] || $row['dj'] == Engine::session()->getUser();
+                $published = $row['airname'] || $row['dj'] == $this->session->getUser();
                 if($published)
                     $result[] = $row;
             }
             break;
         case "user":
             if(!$key || $key == "self")
-                $key = Engine::session()->getUser();
+                $key = $this->session->getUser();
             if(!$key)
                 throw new \InvalidArgumentException("Must supply value for user filter");
-            $api = Engine::api(IPlaylist::class);
             if($request->hasFilter("deleted") &&
                     $request->filterValue("deleted")) {
-                $rows = $api->getListsSelDeleted($key, $offset, $limit);
-                $count = $api->getDeletedPlaylistCount($key);
+                $rows = $this->playlistDBO->getListsSelDeleted($key, $offset, $limit);
+                $count = $this->playlistDBO->getDeletedPlaylistCount($key);
             } else {
-                $rows = $api->getListsSelNormal($key, $offset, $limit);
-                $count = $api->getNormalPlaylistCount($key);
+                $rows = $this->playlistDBO->getListsSelNormal($key, $offset, $limit);
+                $count = $this->playlistDBO->getNormalPlaylistCount($key);
             }
             $result = $rows->asArray();
             $offset += sizeof($result);
@@ -121,9 +141,8 @@ class Playlists implements RequestHandlerInterface {
         case "airname.id":
             if(!$key)
                 throw new \InvalidArgumentException("Must supply value for airname.id filter");
-            $api = Engine::api(IPlaylist::class);
-            $rows = $api->getPlaylistsByAirname($key, $offset, $limit);
-            $count = $api->getPlaylistsByAirnameCount($key);
+            $rows = $this->playlistDBO->getPlaylistsByAirname($key, $offset, $limit);
+            $count = $this->playlistDBO->getPlaylistsByAirnameCount($key);
             $result = $rows->asArray();
             $offset += sizeof($result);
             return [ $count, $result ];
@@ -134,10 +153,10 @@ class Playlists implements RequestHandlerInterface {
         return [$size, $result];
     }
 
-    private static function fetchEvents($playlist, $aflags) {
+    private function fetchEvents($playlist, $aflags) {
         $relations = new ResourceCollection();
 
-        Engine::api(IPlaylist::class)->getTracksWithObserver($playlist,
+        $this->playlistDBO->getTracksWithObserver($playlist,
         (new PlaylistObserver())->onComment(function($entry) use($relations) {
             $e = new JsonResource("event", $entry->getId());
             $a = $e->attributes();
@@ -170,13 +189,13 @@ class Playlists implements RequestHandlerInterface {
             $tag = $entry->getTag();
             if($tag) {
                 $a->set("artist", $entry->getArtist());
-                if($aflags && sizeof($albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
-                    $res = Albums::fromArray($albums, $aflags)[0];
+                if($aflags && sizeof($albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
+                    $res = $this->albums->fromArray($albums, $aflags)[0];
                 else
                     $res = new JsonResource("album", $tag);
 
                 $relation = new Relationship("album", $res);
-                $relation->links()->set(new Link("related", Engine::getBaseUrl()."album/$tag"));
+                $relation->links()->set(new Link("related", $this->request->getBaseUrl()."album/$tag"));
                 $e->relationships()->set($relation);
             }
 
@@ -199,10 +218,10 @@ class Playlists implements RequestHandlerInterface {
         return $relations;
     }
 
-    public static function fromRecord($rec, $flags) {
+    public function fromRecord($rec, $flags) {
         $id = $rec["list"] ?? $rec["id"];
         $res = new JsonResource("show", $id);
-        $res->links()->set(new Link("self", Engine::getBaseUrl()."playlist/".$id));
+        $res->links()->set(new Link("self", $this->request->getBaseUrl()."playlist/".$id));
         $attrs = $res->attributes();
         $attrs->set("name", $rec["description"]);
         $attrs->set("date", $rec["showdate"]);
@@ -215,28 +234,28 @@ class Playlists implements RequestHandlerInterface {
         $attrs->set("rebroadcast", $origin || preg_match(IPlaylist::DUPLICATE_REGEX, $rec["description"]));
         if($origin) {
             if($flags & self::LINKS_ORIGIN) {
-                $row = Engine::api(IPlaylist::class)->getPlaylist($origin, 1);
+                $row = $this->playlistDBO->getPlaylist($origin, 1);
                 $row['list'] = $origin;
-                $rel = self::fromRecord($row, $flags);
+                $rel = $this->fromRecord($row, $flags);
             } else
                 $rel = new JsonResource("show", $origin);
 
             $relation = new Relationship("origin", $rel);
-            $relation->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/origin"));
+            $relation->links()->set(new Link("related", $this->request->getBaseUrl()."playlist/$id/origin"));
             $res->relationships()->set($relation);
         }
 
         if($flags & self::LINKS_EVENTS) {
-            if(Engine::getApiVer() >= 2) {
+            if($this->request->getApiVer() >= 2) {
                 $aflags = $flags & self::LINKS_ALBUMS_DETAILS ?
                             Albums::LINKS_ALL : Albums::LINKS_NONE;
 
                 if(!($flags & self::LINKS_REVIEWS_WITH_BODY))
                     $aflags &= ~Albums::LINKS_REVIEWS_WITH_BODY;
 
-                $relations = self::fetchEvents($id, $aflags);
+                $relations = $this->fetchEvents($id, $aflags);
                 $relation = new Relationship("events", $relations);
-                $relation->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/events"));
+                $relation->links()->set(new Link("related", $this->request->getBaseUrl()."playlist/$id/events"));
                 $res->relationships()->set($relation);
                 return $res;
             }
@@ -244,7 +263,7 @@ class Playlists implements RequestHandlerInterface {
             $relations = new ResourceCollection();
 
             $events = [];
-            Engine::api(IPlaylist::class)->getTracksWithObserver($id,
+            $this->playlistDBO->getTracksWithObserver($id,
                 (new PlaylistObserver())->onComment(function($entry) use(&$events) {
                     $events[] = ["type" => "comment",
                                  "comment" => $entry->getComment(),
@@ -265,8 +284,8 @@ class Playlists implements RequestHandlerInterface {
                     if($spin["tag"] && $flags & self::LINKS_ALBUMS) {
                         $tag = $spin["tag"];
                         if($flags & self::LINKS_ALBUMS_DETAILS &&
-                                sizeof($albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
-                            $res = Albums::fromArray($albums, Albums::LINKS_ALL)[0];
+                                sizeof($albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
+                            $res = $this->albums->fromArray($albums, Albums::LINKS_ALL)[0];
                         else
                             $res = new JsonResource("album", $tag);
                         $relations->set($res);
@@ -295,7 +314,7 @@ class Playlists implements RequestHandlerInterface {
 
             if(!$relations->isEmpty()) {
                 $relation = new Relationship("albums", $relations);
-                $relation->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/albums"));
+                $relation->links()->set(new Link("related", $this->request->getBaseUrl()."playlist/$id/albums"));
                 $res->relationships()->set($relation);
             }
         }
@@ -303,10 +322,10 @@ class Playlists implements RequestHandlerInterface {
         return $res;
     }
 
-    public static function fromArray(array $records, $flags = self::LINKS_NONE) {
+    public function fromArray(array $records, $flags = self::LINKS_NONE) {
         $result = [];
         foreach($records as $record) {
-            $resource = self::fromRecord($record, $flags);
+            $resource = $this->fromRecord($record, $flags);
             $result[] = $resource;
         }
         return $result;
@@ -314,18 +333,17 @@ class Playlists implements RequestHandlerInterface {
 
     public function fetchResource(RequestInterface $request): ResponseInterface {
         $key = $request->id();
-        $api = Engine::api(IPlaylist::class);
-        $row = $api->getPlaylist($key, 1);
-        if(!$row || $api->isListDeleted($key))
+        $row = $this->playlistDBO->getPlaylist($key, 1);
+        if(!$row || $this->playlistDBO->isListDeleted($key))
             throw new ResourceNotFoundException("show", $key);
 
         // unpublished playlists are visible to owner only
-        if(!$row["airname"] && $row["dj"] != Engine::session()->getUser())
+        if(!$row["airname"] && $row["dj"] != $this->session->getUser())
             throw new ResourceNotFoundException("show", $key);
 
         $row["list"] = $key;
         $flags = self::LINKS_NONE;
-        $apiver = Engine::getApiVer();
+        $apiver = $this->request->getApiVer();
         if($apiver >= 2 || $request->requestsField("show", "events"))
             $flags |= self::LINKS_EVENTS | self::LINKS_ALBUMS;
         if($request->requestsInclude("events.album") ||
@@ -337,18 +355,18 @@ class Playlists implements RequestHandlerInterface {
                 $apiver < 2 && $request->requestsInclude("albums.reviews"))
             $flags |= self::LINKS_REVIEWS_WITH_BODY;
 
-        $resource = self::fromRecord($row, $flags);
+        $resource = $this->fromRecord($row, $flags);
 
         $document = new Document($resource);
         $response = new DocumentResponse($document);
-        if(Engine::getApiVer() < 2)
+        if($this->request->getApiVer() < 2)
             $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
         return $response;
     }
 
     public function fetchResources(RequestInterface $request): ResponseInterface {
         $flags = self::LINKS_NONE;
-        $apiver = Engine::getApiVer();
+        $apiver = $this->request->getApiVer();
         if($apiver >= 2 || $request->requestsField("show", "events"))
             $flags |= self::LINKS_EVENTS | self::LINKS_ALBUMS;
         if($request->requestsInclude("events.album") ||
@@ -358,7 +376,7 @@ class Playlists implements RequestHandlerInterface {
             $flags |= self::LINKS_ORIGIN;
 
         $response = $this->paginateOffset($request, self::$paginateOps, $flags);
-        if(Engine::getApiVer() < 2)
+        if($this->request->getApiVer() < 2)
             $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
         return $response;
     }
@@ -370,31 +388,30 @@ class Playlists implements RequestHandlerInterface {
 
         $id = $request->id();
 
-        $api = Engine::api(IPlaylist::class);
-        $list = $api->getPlaylist($id);
-        if(!$list || $api->isListDeleted($id))
+        $list = $this->playlistDBO->getPlaylist($id);
+        if(!$list || $this->playlistDBO->isListDeleted($id))
             throw new ResourceNotFoundException("show", $id);
 
         // unpublished playlists are visible to owner only
-        if(!$list["airname"] && $list["dj"] != Engine::session()->getUser())
+        if(!$list["airname"] && $list["dj"] != $this->session->getUser())
             throw new UnauthorizedRequestException("Operation requires authentication");
 
         $relations = new ResourceCollection();
 
         switch($request->relationship()) {
         case "albums":
-            if(Engine::getApiVer() >= 2)
+            if($this->request->getApiVer() >= 2)
                 throw new BadRequestException('You are not allowed to fetch the  relationship ' . $request->relationship());
 
             if(!$request->requestsInclude("reviews"))
                 $flags &= ~Albums::LINKS_REVIEWS_WITH_BODY;
 
-            $api->getTracksWithObserver($id,
+            $this->playlistDBO->getTracksWithObserver($id,
             (new PlaylistObserver())->onSpin(function($entry) use($relations, $flags) {
                 $tag = $entry->getTag();
                 if($tag) {
-                    if(sizeof($albums = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
-                        $res = Albums::fromArray($albums, $flags)[0];
+                    if(sizeof($albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag)))
+                        $res = $this->albums->fromArray($albums, $flags)[0];
                     else
                         $res = new JsonResource("album", $tag);
 
@@ -408,7 +425,7 @@ class Playlists implements RequestHandlerInterface {
             if(!$request->requestsInclude("album.reviews"))
                 $flags &= ~Albums::LINKS_REVIEWS_WITH_BODY;
 
-            $relations = self::fetchEvents($id, $flags);
+            $relations = $this->fetchEvents($id, $flags);
 
             if($request->hasFilter("event.id")) {
                 $eventId = $request->filterValue("event.id");
@@ -421,10 +438,10 @@ class Playlists implements RequestHandlerInterface {
         case "origin":
             $origin = $list['origin'];
             if($origin) {
-                $row = $api->getPlaylist($origin, 1);
+                $row = $this->playlistDBO->getPlaylist($origin, 1);
                 if($row) {
                     $row['list'] = $origin;
-                    $rel = self::fromRecord($row, self::LINKS_ALL);
+                    $rel = $this->fromRecord($row, self::LINKS_ALL);
                     $relations->set($rel);
                 }
             }
@@ -437,14 +454,14 @@ class Playlists implements RequestHandlerInterface {
 
         $document = new Document($relations);
         if($request->requestsAttributes())
-            $document->links()->set(new Link("self", Engine::getBaseUrl()."playlist/$id/".$request->relationship()));
+            $document->links()->set(new Link("self", $this->request->getBaseUrl()."playlist/$id/".$request->relationship()));
         else {
-            $document->links()->set(new Link("self", Engine::getBaseUrl()."playlist/$id/relationships/".$request->relationship()));
-            $document->links()->set(new Link("related", Engine::getBaseUrl()."playlist/$id/".$request->relationship()));
+            $document->links()->set(new Link("self", $this->request->getBaseUrl()."playlist/$id/relationships/".$request->relationship()));
+            $document->links()->set(new Link("related", $this->request->getBaseUrl()."playlist/$id/".$request->relationship()));
         }
 
         $response = new DocumentResponse($document);
-        if(Engine::getApiVer() < 2)
+        if($this->request->getApiVer() < 2)
             $response->headers()->set('Content-Type', ApiServer::CONTENT_TYPE);
         return $response;
     }
@@ -466,12 +483,12 @@ class Playlists implements RequestHandlerInterface {
     }
 
     private function validateUsualSlot($date, $time) {
-        if(!Engine::api(IPlaylist::class)->checkUsualSlot($date, $time, Engine::session()->getUser()))
+        if(!$this->playlistDBO->checkUsualSlot($date, $time, $this->session->getUser()))
             throw new HttpException(422, 'Unusual Date and Time');
     }
 
     public function createResource(RequestInterface $request): ResponseInterface {
-        $session = Engine::session();
+        $session = $this->session;
         if(!$session->isAuth("u"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
@@ -481,7 +498,7 @@ class Playlists implements RequestHandlerInterface {
         $attrs = $show->attributes();
 
         // validate the show's properties
-        $papi = Engine::api(IPlaylist::class);
+        $papi = $this->playlistDBO;
         $dup = $attrs->getOptional("rebroadcast", false);
         $airname = $dup ? $attrs->getOptional("airname") : $attrs->getRequired("airname");
         if($dup) {
@@ -497,7 +514,7 @@ class Playlists implements RequestHandlerInterface {
 
             // if root origin does not exist, infer owner from airname
             if(!$topOrigin && $list['airname'])
-                $topOrigin = Engine::api(IDJ::class)->getAirnames(0, $list['airname'])->fetch();
+                $topOrigin = $this->djDBO->getAirnames(0, $list['airname'])->fetch();
         }
         $foreign = $dup && $topOrigin && $topOrigin['dj'] != $user;
         $time = $attrs->getRequired("time");
@@ -513,16 +530,15 @@ class Playlists implements RequestHandlerInterface {
         // lookup the airname
         $aid = null;
         if($airname && strcasecmp($airname, "none") && !$foreign) {
-            $djapi = Engine::api(IDJ::class);
-            $aid = $djapi->getAirname($airname, $user);
+            $aid = $this->djDBO->getAirname($airname, $user);
             if(!$aid) {
                 // airname does not exist; try to create it
-                $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
+                $success = $this->djDBO->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
                 if($success > 0) {
                     // success!
-                    $aid = $djapi->lastInsertId();
+                    $aid = $this->djDBO->lastInsertId();
                 } else {
-                    $aid = $djapi->getAirname($airname);
+                    $aid = $this->djDBO->getAirname($airname);
                     throw new \InvalidArgumentException($aid ? "DJ name is already in use by another DJ" : "DJ name is invalid");
                 }
             }
@@ -565,11 +581,11 @@ class Playlists implements RequestHandlerInterface {
 
         // insert the tracks
         $events = $attrs->getOptional("events");
-        if($events && Engine::getApiVer() < 2) {
+        if($events && $this->request->getApiVer() < 2) {
             $status = '';
             $window = $papi->getTimestampWindow($playlist);
             foreach($events as $pentry) {
-                $entry = PlaylistEntry::fromArray($pentry);
+                $entry = $this->playlistEntryFactory->fromArray($pentry);
                 $created = $entry->getCreated();
                 if($created) {
                     try {
@@ -590,7 +606,7 @@ class Playlists implements RequestHandlerInterface {
             foreach($show->relationships()->get("events")->related()->all() as $er) {
                 $event = $included->get("event", $er->id());
                 $pentry = $event->attributes()->all();
-                $entry = PlaylistEntry::fromArray($pentry);
+                $entry = $this->playlistEntryFactory->fromArray($pentry);
                 $created = $entry->getCreated();
                 if($created == "auto") {
                     $autoTimestamp = $papi->isNowWithinShow(
@@ -613,19 +629,19 @@ class Playlists implements RequestHandlerInterface {
         if($playlist) {
             if($aid && $papi->isNowWithinShow(
                     ["showdate" => $date, "showtime" => $time]))
-                PushServer::sendAsyncNotification();
+                $this->service->sendAsyncNotification();
 
             if($aid && ($events || $dup))
-                PushServer::lazyLoadImages($playlist);
+                $this->service->lazyLoadImages($playlist);
 
-            return new CreatedResponse(Engine::getBaseUrl()."playlist/$playlist");
+            return new CreatedResponse($this->request->getBaseUrl()."playlist/$playlist");
         }
 
         throw new \Exception("creation failed");
     }
 
     public function patchResource(RequestInterface $request): ResponseInterface {
-        $session = Engine::session();
+        $session = $this->session;
         if(!$session->isAuth("u"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
@@ -633,8 +649,7 @@ class Playlists implements RequestHandlerInterface {
         if(empty($key))
             throw new BadRequestException("must specify id");
 
-        $api = Engine::api(IPlaylist::class);
-        $list = $api->getPlaylist($key);
+        $list = $this->playlistDBO->getPlaylist($key);
         if(!$list)
             throw new ResourceNotFoundException("show", $key);
 
@@ -664,22 +679,21 @@ class Playlists implements RequestHandlerInterface {
             $airname = $attrs->getRequired("airname");
             $aid = null;
             if(!empty($airname) && strcasecmp($airname, "none")) {
-                $djapi = Engine::api(IDJ::class);
                 $user = $session->getUser();
-                $aid = $djapi->getAirname($airname, $user);
+                $aid = $this->djDBO->getAirname($airname, $user);
                 if(!$aid) {
                     // if foreign and unchanged, keep it
                     if($list['airname'] &&
-                            $djapi->getAirname($airname, "") == $list['airname'])
+                            $this->djDBO->getAirname($airname, "") == $list['airname'])
                         $aid = $list['airname'];
                     else {
                         // airname does not exist; try to create it
-                        $success = $djapi->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
+                        $success = $this->djDBO->insertAirname(mb_substr($airname, 0, IDJ::MAX_AIRNAME_LENGTH), $user);
                         if($success > 0) {
                             // success!
-                            $aid = $djapi->lastInsertId();
+                            $aid = $this->djDBO->lastInsertId();
                         } else {
-                            $aid = $djapi->getAirname($airname);
+                            $aid = $this->djDBO->getAirname($airname);
                             throw new \InvalidArgumentException($aid ? "DJ name is already in use by another DJ" : "DJ name is invalid");
                         }
                     }
@@ -688,22 +702,22 @@ class Playlists implements RequestHandlerInterface {
         } else
             $aid = $list['airname'];
 
-        if($api->isListDeleted($key)) {
-            $api->restorePlaylist($key);
+        if($this->playlistDBO->isListDeleted($key)) {
+            $this->playlistDBO->restorePlaylist($key);
 
             // if caller is doing a restore AND update, and has not
             // specified the airname, we must fetch it after the restore
             if(!$attrs->isEmpty() && !$aid) {
-                $list = $api->getPlaylist($key);
+                $list = $this->playlistDBO->getPlaylist($key);
                 $aid = $list['airname'];
             }
         }
 
         $success = $attrs->isEmpty() ? true :
-                        $api->updatePlaylist($key, $date, $time, $name, $aid, true);
+                        $this->playlistDBO->updatePlaylist($key, $date, $time, $name, $aid, true);
 
         if($success) {
-            PushServer::sendAsyncNotification();
+            $this->service->sendAsyncNotification();
             return new EmptyResponse();
         }
 
@@ -711,31 +725,30 @@ class Playlists implements RequestHandlerInterface {
     }
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
-        if(!Engine::session()->isAuth("u"))
+        if(!$this->session->isAuth("u"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
             throw new BadRequestException("must specify id");
 
-        $api = Engine::api(IPlaylist::class);
-        $list = $api->getPlaylist($key);
-        if(!$list || $api->isListDeleted($key))
+        $list = $this->playlistDBO->getPlaylist($key);
+        if(!$list || $this->playlistDBO->isListDeleted($key))
             throw new ResourceNotFoundException("show", $key);
 
-        if($list['dj'] != Engine::session()->getUser())
+        if($list['dj'] != $this->session->getUser())
             throw new NotAllowedException("not owner");
     
-        $api->deletePlaylist($key);
+        $this->playlistDBO->deletePlaylist($key);
 
-        PushServer::sendAsyncNotification();
+        $this->service->sendAsyncNotification();
 
         return new EmptyResponse();
     }
 
-    private function injectMetadata($api, $rqMeta, $rsMeta, $listId, $hashStatus, $entry) {
+    private function injectMetadata($rqMeta, $rsMeta, $listId, $hashStatus, $entry) {
         $action = $rqMeta->getOptional("action", "");
-        $fragment = PlaylistBuilder::newInstance([
+        $fragment = $this->playlistBuilder->newInstance([
             "action" => $action,
             "editMode" => true,
             "authUser" => true
@@ -746,14 +759,14 @@ class Playlists implements RequestHandlerInterface {
         //   -1     client playlist is out of sync with the service
         //   0      playlist is in natural order
         //   > 0    ordinal of inserted entry
-        $rsMeta->set("seq", $hashStatus ?: $api->getSeq(0, $entry->getId()));
+        $rsMeta->set("seq", $hashStatus ?: $this->playlistDBO->getSeq(0, $entry->getId()));
 
         // return hash code only if playlist is in sync
         if(!$hashStatus)
-            $rsMeta->set("hash", $api->hashPlaylist($listId));
+            $rsMeta->set("hash", $this->playlistDBO->hashPlaylist($listId));
 
         // track is in the grace period?
-        $window = $api->getTimestampWindow($listId, false);
+        $window = $this->playlistDBO->getTimestampWindow($listId, false);
         $rsMeta->set("runsover", $entry->getCreated() &&
                 new \DateTime($entry->getCreated()) >= $window['end']);
     }
@@ -763,35 +776,34 @@ class Playlists implements RequestHandlerInterface {
             throw new BadRequestException('You are not allowed to modify the relationship ' . $request->relationship());
         }
 
-        if(!Engine::session()->isAuth("u"))
+        if(!$this->session->isAuth("u"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
             throw new BadRequestException("must specify id");
 
-        $api = Engine::api(IPlaylist::class);
-        $list = $api->getPlaylist($key, 1);
-        if(!$list || $api->isListDeleted($key))
+        $list = $this->playlistDBO->getPlaylist($key, 1);
+        if(!$list || $this->playlistDBO->isListDeleted($key))
             throw new ResourceNotFoundException("show", $key);
 
-        if($list['dj'] != Engine::session()->getUser())
+        if($list['dj'] != $this->session->getUser())
             throw new NotAllowedException("not owner");
 
         $event = $request->requestBody()->data()->first("event");
-        $entry = PlaylistEntry::fromArray($event->attributes()->all());
+        $entry = $this->playlistEntryFactory->fromArray($event->attributes()->all());
 
-        $api->adviseLock($key);
+        $this->playlistDBO->adviseLock($key);
         try {
 
         // set to 0 (in sync) else -1 (out of sync)
         $hashStatus = $event->metaInformation()->getOptional("hash");
         if(!is_null($hashStatus))
-            $hashStatus = $hashStatus == $api->hashPlaylist($key) ? 0 : -1;
+            $hashStatus = $hashStatus == $this->playlistDBO->hashPlaylist($key) ? 0 : -1;
 
         try {
             $album = $event->relationships()->get("album")->related()->first("album");
-            $albumrec = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $album->id());
+            $albumrec = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $album->id());
             if(sizeof($albumrec)) {
                 // don't allow modification of album info if tag is set
                 $entry->setTag($album->id());
@@ -799,6 +811,9 @@ class Playlists implements RequestHandlerInterface {
                     $entry->setArtist($albumrec[0]["artist"]);
                 $entry->setAlbum($albumrec[0]["album"]);
                 $entry->setLabel($albumrec[0]["name"]);
+
+                $this->libraryDBO->markAlbumsReviewed($albumrec);
+                $entry->setReviewed($albumrec[0]["reviewed"] ?? false);
             }
         } catch(\Exception $e) {}
 
@@ -821,13 +836,13 @@ class Playlists implements RequestHandlerInterface {
 
         $autoTimestamp = false;
         $created = $entry->getCreated();
-        if($created == "auto" || !$created && Engine::getApiVer() < 1.1) {
-            $autoTimestamp = $api->isNowWithinShow($list);
+        if($created == "auto" || !$created && $this->request->getApiVer() < 1.1) {
+            $autoTimestamp = $this->playlistDBO->isNowWithinShow($list);
             $created = $autoTimestamp ? (new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL) : null;
         }
 
         if($created) {
-            $window = $api->getTimestampWindow($key);
+            $window = $this->playlistDBO->getTimestampWindow($key);
             try {
                 $stamp = PlaylistEntry::scrubTimestamp(new \DateTime($created), $window);
                 if($stamp)
@@ -848,19 +863,19 @@ class Playlists implements RequestHandlerInterface {
             $entry->setCreated(null);
 
         $status = '';
-        $success = $api->insertTrackEntry($key, $entry, $status);
+        $success = $this->playlistDBO->insertTrackEntry($key, $entry, $status);
 
         if($success && $moveTo) {
-            $success = $api->moveTrack($key, $entry->getId(), $moveTo);
+            $success = $this->playlistDBO->moveTrack($key, $entry->getId(), $moveTo);
             if(!$success) {
-                $api->deleteTrack($entry->getId());
+                $this->playlistDBO->deleteTrack($entry->getId());
                 $status = 'moveTo failed';
             }
 
             // resequence if timestamp is inappropriate for the current position
             if($success && $created) {
                 $entry->setCreated($created);
-                $api->updateTrackEntry($key, $entry);
+                $this->playlistDBO->updateTrackEntry($key, $entry);
             }
         }
 
@@ -874,23 +889,23 @@ class Playlists implements RequestHandlerInterface {
                 } else
                     $spin = null;
 
-                PushServer::sendAsyncNotification();
-            } else if($api->isNowWithinShow($list))
-                PushServer::sendAsyncNotification();
+                $this->service->sendAsyncNotification();
+            } else if($this->playlistDBO->isNowWithinShow($list))
+                $this->service->sendAsyncNotification();
             else if($list['airname'] && !$autoTimestamp &&
                     isset($stamp) && $entry->isType(PlaylistEntry::TYPE_SPIN))
-                PushServer::lazyLoadImages($key, $entry->getId());
+                $this->service->lazyLoadImages($key, $entry->getId());
         }
 
         if($success) {
             $res = new JsonResource("event", $entry->getId());
             if($event->metaInformation()->getOptional("wantMeta"))
-                $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $hashStatus, $entry);
+                $this->injectMetadata($event->metaInformation(), $res->metaInformation(), $key, $hashStatus, $entry);
             return new DocumentResponse(new Document($res));
         }
 
         } finally {
-            $api->adviseUnlock($key);
+            $this->playlistDBO->adviseUnlock($key);
         }
 
         throw new JsonApiException($status ?? "DB update error");
@@ -901,43 +916,42 @@ class Playlists implements RequestHandlerInterface {
             throw new BadRequestException('You are not allowed to modify the relationship ' . $request->relationship());
         }
 
-        if(!Engine::session()->isAuth("u"))
+        if(!$this->session->isAuth("u"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
             throw new BadRequestException("must specify id");
 
-        $api = Engine::api(IPlaylist::class);
-        $list = $api->getPlaylist($key);
-        if(!$list || $api->isListDeleted($key))
+        $list = $this->playlistDBO->getPlaylist($key);
+        if(!$list || $this->playlistDBO->isListDeleted($key))
             throw new ResourceNotFoundException("show", $key);
 
-        if($list['dj'] != Engine::session()->getUser())
+        if($list['dj'] != $this->session->getUser())
             throw new NotAllowedException("not owner");
 
         $event = $request->requestBody()->data()->first("event");
 
-        $api->adviseLock($key);
+        $this->playlistDBO->adviseLock($key);
         try {
 
         $id = $event->id();
-        $track = $api->getTrack($id);
+        $track = $this->playlistDBO->getTrack($id);
         if(!$track || $track['list'] != $key)
             throw new NotAllowedException("event not in list");
 
         // set to 0 (in sync) else -1 (out of sync)
         $hashStatus = $event->metaInformation()->getOptional("hash");
         if(!is_null($hashStatus))
-            $hashStatus = $hashStatus == $api->hashPlaylist($key) ? 0 : -1;
+            $hashStatus = $hashStatus == $this->playlistDBO->hashPlaylist($key) ? 0 : -1;
 
         // TBD allow changes instead of complete relacement
         $entry = $event->attributes()->getOptional("type") ?
-            PlaylistEntry::fromArray($event->attributes()->all()) :
+            $this->playlistEntryFactory->fromArray($event->attributes()->all()) :
             new PlaylistEntry($track);
 
         if($event->attributes()->getOptional("created") == "auto") {
-            $created = $api->isNowWithinShow($list) ? (new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL) : null;
+            $created = $this->playlistDBO->isNowWithinShow($list) ? (new \DateTime("now"))->format(IPlaylist::TIME_FORMAT_SQL) : null;
             $entry->setCreated($created);
         }
 
@@ -945,7 +959,7 @@ class Playlists implements RequestHandlerInterface {
 
         try {
             $album = $event->relationships()->get("album")->related()->first("album");
-            $albumrec = Engine::api(ILibrary::class)->search(ILibrary::ALBUM_KEY, 0, 1, $album->id());
+            $albumrec = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $album->id());
             if(sizeof($albumrec)) {
                 // don't allow modification of album info if tag is set
                 $entry->setTag($album->id());
@@ -953,12 +967,15 @@ class Playlists implements RequestHandlerInterface {
                     $entry->setArtist($albumrec[0]["artist"]);
                 $entry->setAlbum($albumrec[0]["album"]);
                 $entry->setLabel($albumrec[0]["name"]);
+
+                $this->libraryDBO->markAlbumsReviewed($albumrec);
+                $entry->setReviewed($albumrec[0]["reviewed"] ?? false);
             }
         } catch(\Exception $e) {}
 
         $created = $entry->getCreated();
         if($created && $created != "clear") {
-            $window = $api->getTimestampWindow($key);
+            $window = $this->playlistDBO->getTimestampWindow($key);
             try {
                 $stamp = PlaylistEntry::scrubTimestamp(new \DateTime($created), $window);
                 if($stamp)
@@ -973,30 +990,30 @@ class Playlists implements RequestHandlerInterface {
         }
 
         $success = $event->attributes()->isEmpty() ?
-                        true : $api->updateTrackEntry($key, $entry);
+                        true : $this->playlistDBO->updateTrackEntry($key, $entry);
 
         if($success && $created == "clear")
             $entry->setCreated(null);
 
         if($success &&
                 ($moveTo = $event->metaInformation()->getOptional("moveTo")))
-            $success = $api->moveTrack($key, $id, $moveTo);
+            $success = $this->playlistDBO->moveTrack($key, $id, $moveTo);
 
         if($success && $list['airname']) {
-            if ($api->isNowWithinShow($list))
-                PushServer::sendAsyncNotification();
+            if ($this->playlistDBO->isNowWithinShow($list))
+                $this->service->sendAsyncNotification();
             else if (isset($stamp) && $entry->isType(PlaylistEntry::TYPE_SPIN))
-                PushServer::lazyLoadImages($key, $id);
+                $this->service->lazyLoadImages($key, $id);
         }
 
         if($success && $event->metaInformation()->getOptional("wantMeta")) {
             $res = new JsonResource("event", $entry->getId());
-            $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $hashStatus, $entry);
+            $this->injectMetadata($event->metaInformation(), $res->metaInformation(), $key, $hashStatus, $entry);
             return new DocumentResponse(new Document($res));
         }
 
         } finally {
-            $api->adviseUnlock($key);
+            $this->playlistDBO->adviseUnlock($key);
         }
 
         if($success)
@@ -1010,46 +1027,45 @@ class Playlists implements RequestHandlerInterface {
             throw new BadRequestException('You are not allowed to modify the relationship ' . $request->relationship());
         }
 
-        if(!Engine::session()->isAuth("u"))
+        if(!$this->session->isAuth("u"))
             throw new UnauthorizedRequestException("Operation requires authentication");
 
         $key = $request->id();
         if(empty($key))
             throw new BadRequestException("must specify id");
 
-        $api = Engine::api(IPlaylist::class);
-        $list = $api->getPlaylist($key);
-        if(!$list || $api->isListDeleted($key))
+        $list = $this->playlistDBO->getPlaylist($key);
+        if(!$list || $this->playlistDBO->isListDeleted($key))
             throw new ResourceNotFoundException("show", $key);
 
-        if($list['dj'] != Engine::session()->getUser())
+        if($list['dj'] != $this->session->getUser())
             throw new NotAllowedException("not owner");
 
         $event = $request->requestBody()->data()->first("event");
 
         $id = $event->id();
-        $track = $api->getTrack($id);
+        $track = $this->playlistDBO->getTrack($id);
         if(!$track || $track['list'] != $key)
             throw new NotAllowedException("event not in list");
 
-        $api->adviseLock($key);
+        $this->playlistDBO->adviseLock($key);
         try {
 
         $hashStatus = $event->metaInformation()->getOptional("hash");
         if(!is_null($hashStatus))
-            $hashStatus = $hashStatus == $api->hashPlaylist($key) ? 0 : -1;
+            $hashStatus = $hashStatus == $this->playlistDBO->hashPlaylist($key) ? 0 : -1;
 
-        $success = $api->deleteTrack($id);
+        $success = $this->playlistDBO->deleteTrack($id);
 
         if($success && $event->metaInformation()->getOptional("wantMeta")) {
             $entry = new PlaylistEntry($track);
             $res = new JsonResource("event", $entry->getId());
-            $this->injectMetadata($api, $event->metaInformation(), $res->metaInformation(), $key, $hashStatus, $entry);
+            $this->injectMetadata($event->metaInformation(), $res->metaInformation(), $key, $hashStatus, $entry);
             return new DocumentResponse(new Document($res));
         }
 
         } finally {
-            $api->adviseUnlock($key);
+            $this->playlistDBO->adviseUnlock($key);
         }
 
         if($success)

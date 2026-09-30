@@ -24,15 +24,24 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\Engine;
+use ZK\Engine\IConfig;
+use ZK\Engine\Request;
+use ZK\Engine\Session;
 use ZK\Engine\TemplateFactory;
+use ZK\Engine\TemplateFactoryContext;
+use ZK\Engine\Zookeeper;
 
 class TemplateFactoryXML extends TemplateFactory {
     /**
      * @param string $default default escaper (optional; default 'xml')
      */
-    public function __construct(string $default = 'xml') {
-        parent::__construct(__DIR__ . '/templates');
+    public function __construct(
+        TemplateFactoryContext $context,
+        Request $request,
+        Session $session,
+        string $default = 'xml',
+    ) {
+        parent::__construct(__DIR__ . '/templates', $context);
 
         // setup an xml escaper
         $escaper = $this->twig->getExtension(\Twig\Extension\EscaperExtension::class);
@@ -42,7 +51,7 @@ class TemplateFactoryXML extends TemplateFactory {
         });
         $escaper->setDefaultStrategy($default);
 
-        $this->app->baseUrl = Engine::getBaseUrl();
-        $this->app->UA = Engine::UA;
+        $this->app->baseUrl = $request->getBaseUrl();
+        $this->app->UA = Zookeeper::UA;
     }
 }
