@@ -243,7 +243,7 @@ class Turnstile implements IController {
                             $config['resolver'] ?? self::DEFAULT_RESOLVER,
                             self::RESOLVER_TIMEOUT);
                 if ($domain)
-                    $this->cache->put($addr, $domain);
+                    $this->cache->set($addr, $domain);
             }
 
             $allowed = $domain ? array_filter($config['whitelist'] ?? [],
@@ -260,7 +260,7 @@ class Turnstile implements IController {
                                 $config['resolver'] ?? self::DEFAULT_RESOLVER,
                                 self::RESOLVER_TIMEOUT);
                     if ($addrs)
-                        $this->cache->put($domain, implode(',', $addrs));
+                        $this->cache->set($domain, implode(',', $addrs));
                 }
 
                 // discard if forward lookup does not return the address
