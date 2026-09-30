@@ -26,6 +26,7 @@ namespace ZK\Controllers;
 
 use ZK\Engine\IConfig;
 use ZK\Engine\IUser;
+use ZK\Engine\Request;
 use ZK\Engine\Session;
 use ZK\Engine\Zookeeper;
 
