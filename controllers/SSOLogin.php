@@ -93,7 +93,7 @@ class SSOLogin implements IController {
                     ];
 
                     // force account selection on shared local machine
-                    if ($this->session->checkLocal())
+                    if ($this->request->checkLocal())
                         $rq["prompt"] = "select_account";
         
                     $target = $configParams['oauth_auth_uri'];
