@@ -26,7 +26,6 @@ namespace ZK\Controllers;
 
 use ZK\Engine\IConfig;
 use ZK\Engine\Request;
-use ZK\Engine\Session;
 use ZK\Engine\TemplateFactory;
 use ZK\Engine\TemplateFactoryContext;
 use ZK\Engine\Zookeeper;
@@ -38,7 +37,6 @@ class TemplateFactoryXML extends TemplateFactory {
     public function __construct(
         TemplateFactoryContext $context,
         Request $request,
-        Session $session,
         string $default = 'xml',
     ) {
         parent::__construct(__DIR__ . '/templates', $context);
