@@ -133,12 +133,8 @@ class NowAiringServer implements MessageComponentInterface {
         $this->clients = new \SplObjectStorage;
         $this->imageQ = new \SplQueue;
 
-        $config = $appConfig->get('discogs');
-        if ($config) {
-            $apiKey = $config['apikey'] ?? null;
-            $clientSecret = $config['client_secret'] ?? null;
-            $this->secret = $apiKey ?: $clientSecret;
-        }
+        $this->secret = $appConfig->get('discogs.apikey')
+                ?? $appConfig->get('discogs.client_secret');
 
         $baseUrl = $appConfig->get('base_url_internal', self::DEFAULT_BASE);
         $this->server = $browser->
