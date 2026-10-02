@@ -159,7 +159,10 @@ class LibraryImpl extends DBO implements ILibrary {
     public function __construct(
         protected IConfig $config,
         protected Session $session,
-    ) {}
+        protected PDO $pdo,
+    ) {
+        parent::__construct($pdo);
+    }
 
     public function search($tableIndex, $pos, $count, $search, $sortBy = 0) {
         return $this->searchPos($tableIndex, $pos, $count, $search, $sortBy);

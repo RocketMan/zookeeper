@@ -35,7 +35,10 @@ class UserImpl extends UserAuthImpl implements IUser {
         protected IConfig $config,
         protected Session $session,
         protected IDJ $djDBO,
-    ) {}
+        protected PDO $pdo,
+    ) {
+        parent::__construct($pdo);
+    }
 
     public function getUsers() {
         $query = "SELECT * FROM users ORDER BY name";
