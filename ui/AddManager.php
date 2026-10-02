@@ -135,10 +135,9 @@ class AddManager extends MenuItem {
             });
 
         // Mark reviewed albums
-        $libraryAPI = $this->libraryDBO;
-        $libraryAPI->markAlbumsReviewed($albums);
+        $this->libraryDBO->markAlbumsReviewed($albums);
         if(!$static && $this->session->isAuth("u"))
-            $libraryAPI->markAlbumsPlayable($albums);
+            $this->libraryDBO->markAlbumsPlayable($albums);
 
         $this->setTemplate('currents/albums.html');
         $this->addVar('albums', $albums);
@@ -181,14 +180,13 @@ class AddManager extends MenuItem {
     }
     
     public function panelInfo($validate) {
-        $libraryAPI = $this->libraryDBO;
         if($validate)
             return true;
     
         echo "        <TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>\n";
     
         // Artist and Album names
-        $albumrec = $libraryAPI->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["tag"]);
+        $albumrec = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["tag"]);
         if(sizeof($albumrec) > 0) {
             echo "          <TR><TD ALIGN=RIGHT>Artist:</TD><TH>" . htmlentities($albumrec[0]["artist"]) . "&nbsp;&nbsp;</TH></TR>\n";
             echo "          <TR><TD ALIGN=RIGHT>Album:</TD><TH>" . htmlentities($albumrec[0]["album"]) . "&nbsp;&nbsp;</TH></TR>\n";
@@ -713,10 +711,10 @@ class AddManager extends MenuItem {
                 $vars['dateSpec'] = $this->request->isUsLocale() == 'en_US' ? 'F j, Y' : 'j F Y';
                 $vars['boundary'] = $boundary;
 
-                $t = $this->templateFactoryUI->load($format == 'tab' ?
+                $template = $this->templateFactory->load($format == 'tab' ?
                                     'currents/emailCSV.txt' :
                                     'currents/emailText.html');
-                $body = $t->render($vars);
+                $body = $template->render($vars);
 
                 // send the mail
                 $stat = mail($address, $subject, $body, $headers);
