@@ -36,7 +36,11 @@ class PlaylistImpl extends DBO implements IPlaylist {
         protected IConfig $config,
         protected Session $session,
         protected IArtwork $imageDBO,
-    ) {}
+        protected PDO $pdo,
+        protected PDOFactory $pdoFactory,
+    ) {
+        parent::__construct($pdo);
+    }
 
     public function getShowdates($year, $month) {
         $start = (new \DateTime())->setDate($year, $month, 1);
@@ -445,7 +449,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
     protected function slicePlaylist($playlist, $time) {
         // use a fresh connection so we don't adversely affect
         // anything else by changing the attributes, etc.
-        $pdo = $this->newPDO();
+        $pdo = $this->pdoFactory->create();
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
         $pdo->exec("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");

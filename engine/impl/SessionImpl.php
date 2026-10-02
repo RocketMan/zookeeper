@@ -40,8 +40,11 @@ class SessionImpl extends DBO implements Session {
     public function __construct(
         protected IUserAuth $userDBO,
         protected Challenge $challenger,
+        protected PDO $pdo,
         protected Request $request,
     ) {
+        parent::__construct($pdo);
+
         // Cookies are shared between all instances on the same server.
         //
         // As the state they represent may differ between instances,

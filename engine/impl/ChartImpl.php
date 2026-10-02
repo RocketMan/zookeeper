@@ -29,6 +29,13 @@ namespace ZK\Engine;
  * Chart operations
  */
 class ChartImpl extends DBO implements IChart {
+    public function __construct(
+        protected PDO $pdo,
+        protected PDOFactory $pdoFactory,
+    ) {
+        parent::__construct($pdo);
+    }
+
     public function getCategories($limit = false) {
         $query = "SELECT id, name, code, director, email " .
                  "FROM categories ORDER BY id";
@@ -598,7 +605,7 @@ class ChartImpl extends DBO implements IChart {
 
         // use a fresh connection so we don't adversely affect
         // anything else by changing the attributes, etc.
-        $pdo = $this->newPDO();
+        $pdo = $this->pdoFactory->create();
         $pdo->setAttribute(\PDO::ATTR_ERRMODE,
                                         \PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES,

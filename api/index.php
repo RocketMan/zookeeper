@@ -29,6 +29,8 @@ require_once __DIR__."/../vendor/autoload.php";
 use ZK\Engine\Config;
 use ZK\Engine\DBO;
 use ZK\Engine\IConfig;
+use ZK\Engine\PDO;
+use ZK\Engine\PDOFactory;
 use ZK\Engine\Zookeeper;
 
 use DI\Container;
@@ -45,9 +47,6 @@ class Dispatcher {
     public function __construct() {
         $this->config = new Config();
 
-        $dbConfig = $this->config->get('db');
-        DBO::configure($dbConfig);
-
         $engineConfig = $this->config->withConfigFrom('engine_config');
 
         $builder = new ContainerBuilder();
@@ -58,6 +57,7 @@ class Dispatcher {
 
         $builder->addDefinitions([
             IConfig::class => $this->config,
+            PDO::class => \DI\factory(fn(PDOFactory $fact) => $fact->create()),
         ]);
 
         $this->container = $builder->build();

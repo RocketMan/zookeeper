@@ -36,9 +36,6 @@ class Dispatcher {
     public function __construct() {
         $config = new Config();
 
-        $dbConfig = $config->get('db');
-        DBO::configure($dbConfig);
-
         $controllerConfig = $config->withConfigFrom('controller_config', 'controllers');
 
         $customControllers = $config->get('custom_controllers');
@@ -58,6 +55,7 @@ class Dispatcher {
         $builder->addDefinitions([
             IConfig::class => $config,
             Dispatcher::class => $this,
+            PDO::class => \DI\factory(fn(PDOFactory $fact) => $fact->create()),
         ]);
 
         $this->container = $builder->build();

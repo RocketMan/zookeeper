@@ -36,7 +36,11 @@ class EditorImpl extends DBO implements IEditor {
         protected Session $session,
         protected IArtwork $imageDBO,
         protected ILibrary $libraryDBO,
-    ) {}
+        protected PDO $pdo,
+        protected PDOFactory $pdoFactory,
+    ) {
+        parent::__construct($pdo);
+    }
 
     private function getNextTag() {
         $query = "SELECT MAX(tag) FROM albumvol";
@@ -309,7 +313,7 @@ class EditorImpl extends DBO implements IEditor {
     public function deleteAlbum($tag) {
         // use a fresh connection so we don't adversely affect
         // anything else by changing the attributes, etc.
-        $pdo = $this->newPDO();
+        $pdo = $this->pdoFactory->create();
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
         $pdo->beginTransaction();
