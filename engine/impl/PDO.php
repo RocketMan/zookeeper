@@ -36,7 +36,7 @@ class PDO {
     ];
 
     private \PDO $delegate;
-    private ?string $library;
+    private ?array $libraryTables = null;
     private bool $legacyGroupBy = false;
 
     /**
@@ -59,7 +59,11 @@ class PDO {
             \PDO::ERRMODE_SILENT
         );
 
-        $this->library = $library;
+        if ($library) {
+            $this->libraryTables = [];
+            foreach (self::LIBRARY_TABLES as $table)
+                $this->libraryTables[" $table"] = " $library.$table";
+        }
     }
 
     public function __call(string $method, array $args): mixed {
@@ -113,12 +117,8 @@ class PDO {
 
         // if library database is different to the main database, qualify
         // library table references with the library database name
-        if ($this->library) {
-            $replace = [];
-            foreach (self::LIBRARY_TABLES as $table)
-                $replace[" $table"] = " {$this->library}.$table";
-            $stmt = strtr($stmt, $replace);
-        }
+        if ($this->libraryTables)
+            $stmt = strtr($stmt, $this->libraryTables);
 
         $ret = $this->__call('prepare', [$stmt, $options]);
 
