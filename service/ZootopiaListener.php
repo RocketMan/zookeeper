@@ -354,7 +354,8 @@ class ZootopiaListener implements IService {
                 if($event["zootopia"]) {
                     // We are already on-air; use the existing show.
                     $this->lastOn = $onNow[0]->links->self;
-                    $lastSpin = end($onNow[0]->attributes->events);
+                    if (isset($onNow[0]->attributes->events))
+                        $lastSpin = end($onNow[0]->attributes->events);
                     $this->onAir = true;
                     break;
                 }
