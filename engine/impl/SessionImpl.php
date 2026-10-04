@@ -107,7 +107,7 @@ class SessionImpl extends DBO implements Session {
         }
     }
 
-    private function dbQuery(string $session): array {
+    private function dbQuery(string $session): array|false {
         $query = "SELECT user, access, realname FROM sessions WHERE sessionkey=?";
         $stmt = $this->prepare($query);
         $stmt->bindValue(1, $session);
