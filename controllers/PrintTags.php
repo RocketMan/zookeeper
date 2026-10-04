@@ -26,7 +26,6 @@ namespace ZK\Controllers;
 
 use ZK\Engine\ILibrary;
 use ZK\Engine\Request;
-use ZK\Engine\Session;
 
 define("_SYSTEM_TTFONTS", dirname(__DIR__)."/fonts/");
 
@@ -65,7 +64,6 @@ class PrintTags implements IController {
     public function __construct(
         protected ILibrary $libraryDBO,
         protected Request $request,
-        protected Session $session,
     ) {}
 
     protected function loadTags($tags) {
