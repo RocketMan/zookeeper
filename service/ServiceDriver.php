@@ -205,7 +205,7 @@ class ServiceDriver extends CommandTarget implements IController {
             ]);
 
             $page = $response->getBody()->getContents();
-            $json = json_decode($page);
+            $json = json_decode($page, flags: JSON_THROW_ON_ERROR);
 
             if($json->results && ($result = $json->results[0])) {
                 if($album) foreach($json->results as $r) {
