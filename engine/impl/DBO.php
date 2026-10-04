@@ -43,7 +43,7 @@ class RowIterator {
      *
      * @return row or false if none or error
      */
-    public function fetch() {
+    public function fetch(): array|false {
         if($this->stmt) {
             $result = $this->stmt->fetch($this->style);
             if(!$result)
@@ -58,7 +58,7 @@ class RowIterator {
      *
      * @return result set array or empty array if none or error
      */
-    public function asArray() {
+    public function asArray(): array {
         $result = $this->stmt ? $this->stmt->fetchAll($this->style) : false;
         return $result ?: [];
     }
@@ -71,11 +71,11 @@ class ArrayRowIterator extends RowIterator {
         $this->rows = $rows;
     }
 
-    public function fetch() {
+    public function fetch(): array|false {
         return count($this->rows) ? array_shift($this->rows) : false;
     }
 
-    public function asArray() {
+    public function asArray(): array {
         $result = $this->rows;
         $this->rows = [];
         return $result;
@@ -116,7 +116,7 @@ class BaseStatement {
      * @param style result set style
      * @return iterable result set (empty if none or error)
      */
-    public function iterate($style=\PDO::FETCH_ASSOC) {
+    public function iterate($style=\PDO::FETCH_ASSOC): RowIterator {
         return new RowIterator($this->execute() ? $this : null, $style);
     }
 
@@ -126,7 +126,7 @@ class BaseStatement {
      * @param style result set style
      * @return single row result or false if none or error
      */
-    public function executeAndFetch($style=\PDO::FETCH_ASSOC) {
+    public function executeAndFetch($style=\PDO::FETCH_ASSOC): array|false {
         return $this->execute() ? $this->fetch($style) : false;
     }
 
@@ -136,7 +136,7 @@ class BaseStatement {
      * @param style result set style
      * @return result set array or empty array if none or error
      */
-    public function executeAndFetchAll($style=\PDO::FETCH_ASSOC) {
+    public function executeAndFetchAll($style=\PDO::FETCH_ASSOC): array {
         $result = $this->execute() ? $this->fetchAll($style) : false;
         return $result ?: [];
     }
