@@ -182,7 +182,7 @@ class NowAiringServer implements MessageComponentInterface {
             'api/v1/playlist?filter[date]=onnow&ts=1'
         )->then(function(ResponseInterface $response) {
             try {
-                $r = json_decode($response->getBody(), false);
+                $r = json_decode($response->getBody(), false, flags: JSON_THROW_ON_ERROR);
                 $this->onNow = $r->data;
                 $this->onNowTime = time();
                 $show = $current = null;
@@ -393,7 +393,7 @@ class NowAiringServer implements MessageComponentInterface {
                 "api/v2/playlist/$playlist/events?filter[event.id]=$track&ts=1"
             )->then(function(ResponseInterface $response) {
                 try {
-                    $r = json_decode($response->getBody(), false);
+                    $r = json_decode($response->getBody(), false, flags: JSON_THROW_ON_ERROR);
                     $data = $r->data;
                     if (count($data)) {
                         $event = $data[0];
@@ -419,7 +419,7 @@ class NowAiringServer implements MessageComponentInterface {
                 "api/v1/playlist/$playlist?ts=1"
             )->then(function(ResponseInterface $response) use($playlist, $track) {
                 try {
-                    $r = json_decode($response->getBody(), false);
+                    $r = json_decode($response->getBody(), false, flags: JSON_THROW_ON_ERROR);
                     $show = $r->data;
                     $events = $show->attributes->events ?? [];
                     $spins = array_filter($events, function($event) {
