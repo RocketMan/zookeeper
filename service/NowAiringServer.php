@@ -442,7 +442,7 @@ class NowAiringServer implements MessageComponentInterface {
 
                     $queued = $this->imageQ->count() - $start;
                     if ($queued) {
-                        echo "NowAiringServer::loadImages($playlist, $track): $queued queued\n";
+                        $this->logger->info("pid=$playlist, tid=$track: $queued queued");
 
                         if (!$start)
                             $this->startQ();

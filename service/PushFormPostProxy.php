@@ -32,7 +32,7 @@ class PushFormPostProxy extends PushHttpProxy {
             if(!is_string($key))
                 $this->httpClient->post($endpoint,
                     ['Content-Type' => 'application/x-www-form-urlencoded'], $qs)->then(null, function($e) {
-                        echo "PushFormPostProxy: " . $e->getMessage() . "\n";
+                        $this->logger->error($e->getMessage());
                     });
     }
 }
