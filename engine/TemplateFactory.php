@@ -52,7 +52,7 @@ class TemplateFactory {
         $cacheDir = $context->config->get('template_cache_enabled') ?
                         $templateRoot . '/.cache' : false;
         if($cacheDir && !is_dir($cacheDir) && !mkdir($cacheDir)) {
-            error_log("TemplateFactory: cannot create $cacheDir");
+            $context->logger->error("cannot create $cacheDir");
             $cacheDir = false; // disable cache
         }
 

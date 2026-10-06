@@ -24,6 +24,8 @@
 
 namespace ZK\Engine;
 
+use Psr\Log\LoggerInterface;
+
 class SafeSession {
     public function __construct(
         private Session $session,
@@ -84,5 +86,6 @@ class TemplateFactoryContext {
         public SafeSession $safeSession,
         public LazyLoadParams $lazyLoadParams,
         public ConfigInterface $config,
+        public LoggerInterface $logger,
     ) {}
 }
