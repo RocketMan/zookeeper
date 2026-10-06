@@ -35,7 +35,7 @@ class Challenge implements IController {
         protected ConfigInterface $config,
     ) {}
 
-    public function validate($challenge) {
+    public function validate($challenge): bool {
         // Nothing to do if challenge is disabled
         $secret = $this->config->get('challenge_secret');
         if (!$secret)

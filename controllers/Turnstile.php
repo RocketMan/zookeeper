@@ -221,7 +221,7 @@ class Turnstile implements IController {
         return false;
     }
 
-    public function validate() {
+    public function validate(): bool {
         // Nothing to do if turnstile is disabled or authenticated user
         $config = $this->config->get('turnstile');
         if (!$config || !isset($config['secret']) ||
