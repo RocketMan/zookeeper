@@ -26,6 +26,7 @@ namespace ZK\API;
 
 use ZK\Engine\Config;
 use ZK\Engine\IConfig;
+use ZK\Engine\LoggerFactory;
 use ZK\Engine\PDO;
 use ZK\Engine\PDOFactory;
 use ZK\Engine\Zookeeper;
@@ -33,6 +34,7 @@ use ZK\Engine\Zookeeper;
 use DI\Container;
 use DI\ContainerBuilder;
 use GuzzleHttp\Psr7\Uri;
+use Psr\Log\LoggerInterface;
 
 class ApiDispatcher {
     private const CORS_METHODS = "GET, HEAD, POST, PATCH, DELETE";
@@ -54,6 +56,7 @@ class ApiDispatcher {
 
         $builder->addDefinitions([
             IConfig::class => $this->config,
+            LoggerInterface::class => \DI\factory(fn(LoggerFactory $fact) => $fact->create()),
             PDO::class => \DI\factory(fn(PDOFactory $fact) => $fact->create()),
         ]);
 

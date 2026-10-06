@@ -35,9 +35,6 @@ use ZK\Engine\Zookeeper;
 use DI\ContainerBuilder;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
-use Monolog\Formatter\LineFormatter;
-use Monolog\Handler\ErrorLogHandler;
-use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use React\Cache\ArrayCache;
 use React\Cache\CacheInterface;
@@ -127,6 +124,7 @@ class ServiceDriver extends CommandTarget implements IController {
         protected IArtwork $imageDBO,
         protected IConfig $config,
         protected ILibrary $libraryDBO,
+        protected LoggerInterface $logger,
     ) {}
 
     /**
@@ -261,7 +259,7 @@ class ServiceDriver extends CommandTarget implements IController {
             }
         } catch(\Exception $e) {
             $success = false;
-            error_log("ServiceDriver::queryDiscogs: ".$e->getMessage());
+            $this->logger->error($e->getMessage());
         }
 
         return $success ? $retval : false;
@@ -321,7 +319,7 @@ class ServiceDriver extends CommandTarget implements IController {
                     }
                 }
             } catch(\Exception $e) {
-                error_log("ServiceDriver::queryDiscogsArtistByAlbum: ".$e->getMessage());
+                $this->logger->error($e->getMessage());
             }
         }
         return $success ? $retval : false;
@@ -399,18 +397,6 @@ class ServiceDriver extends CommandTarget implements IController {
         echo $msg;
     }
 
-    protected function newLogger(): LoggerInterface {
-        $handler = new ErrorLogHandler();
-        $handler->setFormatter(new LineFormatter(
-            "[%extra.shortClass% %extra.method%] %message%",
-        ));
-
-        $logger = new Logger('zookeeper');
-        $logger->pushProcessor(new CallerProcessor());
-        $logger->pushHandler($handler);
-        return $logger;
-    }
-
     public function processLocal($action, $subaction) {
         $this->dispatchAction($action, self::$actions);
     }
@@ -437,7 +423,7 @@ class ServiceDriver extends CommandTarget implements IController {
         $builder->addDefinitions([
             CacheInterface::class => \DI\create(ArrayCache::class)->constructor(self::RESOLVER_CACHE_SIZE),
             LoopInterface::class => fn() => Loop::get(),
-            LoggerInterface::class => fn() => $this->newLogger(),
+            LoggerInterface::class => $this->logger,
             IConfig::class => $this->config,
         ]);
 
