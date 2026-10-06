@@ -22,10 +22,14 @@
  *
  */
 
-namespace ZK\Service;
+namespace ZK\Engine;
 
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\ErrorLogHandler;
+use Monolog\Logger;
 use Monolog\LogRecord;
 use Monolog\Processor\IntrospectionProcessor;
+use Psr\Log\LoggerInterface;
 
 class CallerProcessor extends IntrospectionProcessor {
     public function __invoke(LogRecord $record): LogRecord {
@@ -53,5 +57,21 @@ class CallerProcessor extends IntrospectionProcessor {
                 'method' => $method,
             ]
         );
+    }
+}
+
+class LoggerFactory {
+    private const DEFAULT_NAME = "zookeeper";
+
+    public function create(?string $name = null): LoggerInterface {
+        $handler = new ErrorLogHandler();
+        $handler->setFormatter(new LineFormatter(
+            "[%extra.shortClass% %extra.method%] %message%",
+        ));
+
+        $logger = new Logger($name ?? self::DEFAULT_NAME);
+        $logger->pushProcessor(new CallerProcessor());
+        $logger->pushHandler($handler);
+        return $logger;
     }
 }

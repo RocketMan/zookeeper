@@ -24,6 +24,7 @@
 
 namespace ZK\Service;
 
+use Psr\Log\LoggerInterface;
 use React\Cache\CacheInterface;
 use React\Datagram\Factory;
 use React\Datagram\Socket;
@@ -33,6 +34,7 @@ use React\Promise;
 class DatagramServer {
     public function __construct(
         protected LoopInterface $loop,
+        protected LoggerInterface $logger,
         protected Factory $dgfact,
         protected CacheInterface $resolverCache,
         protected NowAiringServer $nas,
@@ -46,6 +48,12 @@ class DatagramServer {
 
         Promise\resolve($value)->then(function($result) use ($server, $addr) {
             $server->send($result ?? "null", $addr);
+        });
+    }
+
+    protected function invalidateAndRefresh() {
+        $this->nas->invalidateAndRefresh()->catch(function(\Throwable $t) {
+            $this->logger->error($t->getMessage());
         });
     }
 
@@ -64,9 +72,7 @@ class DatagramServer {
                     else if($message && $message[0] == '{')
                         $this->nas->sendNotification($message);
                     else // empty message means poll database
-                        $this->nas->invalidateAndRefresh()->catch(function(\Throwable $t) {
-                            error_log("DatagramServer::invalidateAndRefresh: " . $t->getMessage());
-                        });
+                        $this->invalidateAndRefresh();
             });
         });
     }

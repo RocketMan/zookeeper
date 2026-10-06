@@ -28,6 +28,7 @@ use ZK\Controllers\IController;
 
 use DI\Container;
 use DI\ContainerBuilder;
+use Psr\Log\LoggerInterface;
 
 class Dispatcher {
     private Container $container;
@@ -55,6 +56,7 @@ class Dispatcher {
         $builder->addDefinitions([
             IConfig::class => $config,
             Dispatcher::class => $this,
+            LoggerInterface::class => \DI\factory(fn(LoggerFactory $fact) => $fact->create()),
             PDO::class => \DI\factory(fn(PDOFactory $fact) => $fact->create()),
         ]);
 
