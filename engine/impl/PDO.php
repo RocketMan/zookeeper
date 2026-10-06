@@ -88,14 +88,14 @@ class PDO {
         return $ret;
     }
 
-    public function commit(): mixed {
+    public function commit(): bool {
         // restore pre-PHP 8 semantics after implicit commit
         // see https://www.php.net/manual/en/migration80.incompatible.php#migration80.incompatible.pdo-mysql
         return $this->delegate->inTransaction() ?
             $this->__call('commit', []) : true;
     }
 
-    public function rollBack(): mixed {
+    public function rollBack(): bool {
         // restore pre-PHP 8 semantics after implicit commit
         // see https://www.php.net/manual/en/migration80.incompatible.php#migration80.incompatible.pdo-mysql
         return $this->delegate->inTransaction() ?
