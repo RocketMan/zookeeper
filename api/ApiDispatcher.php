@@ -25,7 +25,7 @@
 namespace ZK\API;
 
 use ZK\Engine\Config;
-use ZK\Engine\IConfig;
+use ZK\Engine\ConfigInterface;
 use ZK\Engine\LoggerFactory;
 use ZK\Engine\PDO;
 use ZK\Engine\PDOFactory;
@@ -40,7 +40,7 @@ class ApiDispatcher {
     private const CORS_METHODS = "GET, HEAD, POST, PATCH, DELETE";
     private const CORS_MAX_AGE = 3600;
 
-    private IConfig $config;
+    private ConfigInterface $config;
     private Container $container;
 
     public function __construct() {
@@ -55,7 +55,7 @@ class ApiDispatcher {
         ));
 
         $builder->addDefinitions([
-            IConfig::class => $this->config,
+            ConfigInterface::class => $this->config,
             LoggerInterface::class => \DI\factory(fn(LoggerFactory $fact) => $fact->create()),
             PDO::class => \DI\factory(fn(PDOFactory $fact) => $fact->create()),
         ]);

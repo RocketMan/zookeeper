@@ -24,8 +24,8 @@
 
 namespace ZK\Controllers;
 
+use ZK\Engine\ConfigInterface;
 use ZK\Engine\Dispatcher;
-use ZK\Engine\IConfig;
 use ZK\Engine\Request;
 use ZK\Engine\Session;
 use ZK\Engine\SharedCache;
@@ -290,8 +290,8 @@ class Turnstile implements IController {
     }
 
     public function __construct(
+        protected ConfigInterface $config,
         protected Dispatcher $dispatcher,
-        protected IConfig $config,
         protected Request $request,
         protected Session $session,
         protected SharedCache $cache,

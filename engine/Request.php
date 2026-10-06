@@ -28,7 +28,7 @@ class Request {
     protected ?string $locale = null;
 
     public function __construct(
-        protected IConfig $config,
+        protected ConfigInterface $config,
     ) {}
 
     /**

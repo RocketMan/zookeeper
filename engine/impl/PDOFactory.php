@@ -29,7 +29,7 @@ class PDOFactory {
     private const CONNECT_BACKOFF = 4;
 
     public function __construct(
-        private IConfig $config
+        private ConfigInterface $config
     ) {}
 
     public function create(

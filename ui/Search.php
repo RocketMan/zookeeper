@@ -24,7 +24,7 @@
 
 namespace ZK\UI;
 
-use ZK\Engine\IConfig;
+use ZK\Engine\ConfigInterface;
 use ZK\Engine\IArtwork;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
@@ -57,10 +57,10 @@ class Search extends MenuItem {
     public $searchType;
 
     public function __construct(
+        protected ConfigInterface $config,
         protected Request $request,
         protected Session $session,
         protected TemplateFactoryUI $templateFactory,
-        protected IConfig $config,
         protected ILibrary $libraryDBO,
         protected IArtwork $imageDBO,
         protected IChart $chartDBO,

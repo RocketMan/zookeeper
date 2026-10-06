@@ -54,7 +54,7 @@ class Dispatcher {
         ));
 
         $builder->addDefinitions([
-            IConfig::class => $config,
+            ConfigInterface::class => $config,
             Dispatcher::class => $this,
             LoggerInterface::class => \DI\factory(fn(LoggerFactory $fact) => $fact->create()),
             PDO::class => \DI\factory(fn(PDOFactory $fact) => $fact->create()),

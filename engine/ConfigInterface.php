@@ -29,7 +29,7 @@ namespace ZK\Engine;
  *
  * Mutator methods return a *new* instance; the original instance is unchanged
  */
-interface IConfig {
+interface ConfigInterface {
     /**
      * return a new configuration from the specified file and variable;
      * the original configuration remains unchanged
@@ -37,7 +37,7 @@ interface IConfig {
      * @param string $file configuration file name
      * @param string $variable variable name (default 'config')
      * @param bool $merge true to include existing (default false)
-     * @return IConfig new configuration
+     * @return ConfigInterface new configuration
      */
     function withConfigFrom(string $file, string $variable = 'config', bool $merge = false): static;
     
@@ -46,7 +46,7 @@ interface IConfig {
      * the original configuration remains unchanged
      *
      * @param array $config array to merge
-     * @return IConfig new configuration with merged entries
+     * @return ConfigInterface new configuration with merged entries
      */
     function merge(array $config): static;
 

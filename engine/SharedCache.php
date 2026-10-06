@@ -28,7 +28,7 @@ use ZK\Service\ServiceDriver;
 
 class SharedCache {
     public function __construct(
-        protected IConfig $config,
+        protected ConfigInterface $config,
     ) {}
 
     public function get(string $key, ?string $default = null): ?string {

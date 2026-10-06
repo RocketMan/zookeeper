@@ -24,7 +24,7 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\IConfig;
+use ZK\Engine\ConfigInterface;
 use ZK\Engine\IUser;
 use ZK\Engine\Request;
 use ZK\Engine\Session;
@@ -35,9 +35,9 @@ use GuzzleHttp\RequestOptions;
 
 class SSOCommon {
     public function __construct(
+        protected ConfigInterface $config,
         protected Request $request,
         protected Session $session,
-        protected IConfig $config,
         protected IUser $userDBO,
     ) {}
 

@@ -24,7 +24,7 @@
 
 namespace ZK\Service;
 
-use ZK\Engine\IConfig;
+use ZK\Engine\ConfigInterface;
 use ZK\Controllers\IPushProxy;
 use ZK\Controllers\Turnstile;
 
@@ -84,7 +84,7 @@ class SpoaTurnstile implements IService {
         protected \React\EventLoop\LoopInterface $loop,
         protected LoggerInterface $logger,
         protected CacheInterface $lruCache,
-        protected IConfig $appConfig,
+        protected ConfigInterface $appConfig,
         array $config, // NOT the `config` property; this is used only in the ctor
     ) {
         $server = new \React\Socket\Server($config['server'] ?? self::DEFAULT_SPOA_SERVER, $loop);

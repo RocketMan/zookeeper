@@ -27,7 +27,7 @@ namespace ZK\UI;
 
 use ZK\Engine\Engine;
 use ZK\Engine\PlaylistEntry;
-use ZK\Engine\IConfig;
+use ZK\Engine\ConfigInterface;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\Request;
@@ -84,7 +84,7 @@ class AddManager extends MenuItem {
         protected Request $request,
         protected Session $session,
         protected TemplateFactoryUI $templateFactory,
-        protected IConfig $config,
+        protected ConfigInterface $config,
         protected IChart $chartDBO,
         protected ILibrary $libraryDBO,
     ) {
