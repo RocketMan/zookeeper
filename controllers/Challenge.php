@@ -24,7 +24,7 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\IConfig;
+use ZK\Engine\ConfigInterface;
 
 class Challenge implements IController {
     const DIFFICULTY = 10;    // leading zero bits required
@@ -32,7 +32,7 @@ class Challenge implements IController {
     const INCLUDE_CLIENT_ADDR = true;
 
     public function __construct(
-        protected IConfig $config,
+        protected ConfigInterface $config,
     ) {}
 
     public function validate($challenge) {

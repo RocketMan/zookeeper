@@ -25,7 +25,7 @@
 namespace ZK\UI;
 
 use ZK\Engine\Formatter;
-use ZK\Engine\IConfig;
+use ZK\Engine\ConfigInterface;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
@@ -65,6 +65,7 @@ class Playlists extends MenuItem {
     private $break;
 
     public function __construct(
+        protected ConfigInterface $config,
         protected Formatter $formatter,
         protected Request $request,
         protected Session $session,
@@ -72,7 +73,6 @@ class Playlists extends MenuItem {
         protected PlaylistEntryFactory $playlistEntryFactory,
         protected ServiceConnector $service,
         protected Home $home,
-        protected IConfig $config,
         protected IDJ $djDBO,
         protected IPlaylist $playlistDBO,
         protected ILibrary $libraryDBO,

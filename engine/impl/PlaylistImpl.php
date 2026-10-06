@@ -33,7 +33,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
     const GRACE_END = "+30 minutes";
 
     public function __construct(
-        protected IConfig $config,
+        protected ConfigInterface $config,
         protected Session $session,
         protected IArtwork $imageDBO,
         protected PDO $pdo,

@@ -27,10 +27,10 @@ namespace ZK\UI;
 use ZK\Controllers\API;
 
 use ZK\Engine\IArtwork;
-use ZK\Engine\IConfig;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\PlaylistEntry;
+use ZK\Engine\ConfigInterface;
 use ZK\Engine\Request;
 use ZK\Engine\Session;
 use ZK\Engine\Zookeeper;
@@ -174,10 +174,10 @@ class Editor extends MenuItem {
     }
 
     public function __construct(
+        protected ConfigInterface $config,
         protected Request $request,
         protected Session $session,
         protected TemplateFactoryUI $templateFactory,
-        protected IConfig $config,
         protected DeepStorage $deepStorage,
         protected IEditor $editorDBO,
         protected IArtwork $imageDBO,

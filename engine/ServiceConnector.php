@@ -29,7 +29,7 @@ use ZK\Service\ServiceDriver;
 
 class ServiceConnector {
     public function __construct(
-        protected IConfig $config,
+        protected ConfigInterface $config,
     ) {}
 
     public function sendAsyncNotification($show = null, $spin = null):void {

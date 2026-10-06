@@ -25,11 +25,11 @@
 namespace ZK\UI;
 
 use ZK\Engine\IArtwork;
-use ZK\Engine\IConfig;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
 use ZK\Engine\IUser;
+use ZK\Engine\ConfigInterface;
 use ZK\Engine\Request;
 use ZK\Engine\Session;
 use ZK\Engine\Zookeeper;
@@ -73,12 +73,12 @@ class Reviews extends MenuItem {
     }
 
     public function __construct(
+        protected ConfigInterface $config,
         protected Request $request,
         protected Session $session,
         protected TemplateFactoryUI $templateFactory,
         protected Home $home,
         protected Search $search,
-        protected IConfig $config,
         protected IReview $reviewDBO,
         protected IDJ $djDBO,
         protected IUser $userDBO,

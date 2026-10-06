@@ -32,7 +32,7 @@ class EditorImpl extends DBO implements IEditor {
     use AuditTrait;
 
     public function __construct(
-        protected IConfig $config,
+        protected ConfigInterface $config,
         protected Session $session,
         protected IArtwork $imageDBO,
         protected ILibrary $libraryDBO,

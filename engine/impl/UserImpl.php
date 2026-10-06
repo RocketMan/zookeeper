@@ -32,7 +32,7 @@ class UserImpl extends UserAuthImpl implements IUser {
     use AuditTrait;
 
     public function __construct(
-        protected IConfig $config,
+        protected ConfigInterface $config,
         protected Session $session,
         protected IDJ $djDBO,
         protected PDO $pdo,

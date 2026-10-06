@@ -24,9 +24,8 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\Engine;
+use ZK\Engine\ConfigInterface;
 use ZK\Engine\Dispatcher;
-use ZK\Engine\IConfig;
 use ZK\Engine\TemplateFactory;
 use ZK\UI\TemplateFactoryUI;
 
@@ -137,10 +136,10 @@ class CacheControl implements IController {
     }
 
     public function __construct(
+        protected ConfigInterface $config,
+        protected Dispatcher $dispatcher,
         protected TemplateFactoryXML $templateFactoryXML,
         protected TemplateFactoryUI $templateFactoryUI,
-        protected Dispatcher $dispatcher,
-        protected IConfig $config,
     ) {}
 
     public function processRequest() {

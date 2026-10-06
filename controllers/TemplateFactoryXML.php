@@ -24,7 +24,6 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\IConfig;
 use ZK\Engine\Request;
 use ZK\Engine\TemplateFactory;
 use ZK\Engine\TemplateFactoryContext;

@@ -27,9 +27,9 @@ namespace ZK\Engine;
 /**
  * Configuration data
  *
- * NOTE: Do not instantiate this class directly; instead inject IConfig.
+ * NOTE: Do not instantiate this class directly; instead inject ConfigInterface
  */
-class Config implements IConfig {
+class Config implements ConfigInterface {
     private $config;
 
     /**

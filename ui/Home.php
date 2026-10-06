@@ -24,9 +24,9 @@
 
 namespace ZK\UI;
 
+use ZK\Engine\ConfigInterface;
 use ZK\Engine\Formatter;
 use ZK\Engine\IChart;
-use ZK\Engine\IConfig;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
@@ -47,7 +47,7 @@ class Home extends MenuItem {
         protected Request $request,
         protected Session $session,
         protected TemplateFactoryUI $templateFactory,
-        protected IConfig $config,
+        protected ConfigInterface $config,
         protected IPlaylist $playlistDBO,
         protected IChart $chartDBO,
         protected ILibrary $libraryDBO,
