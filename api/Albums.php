@@ -471,8 +471,8 @@ class Albums implements RequestHandlerInterface {
 
         // try to resolve the label by pubkey
         $id = $album->relationships()->get("label")->related()->first("label")->id();
-        $rec = $this->libraryDBO->search(ILibrary::LABEL_PUBKEY, 0, 1, $id);
-        if(sizeof($rec)) {
+        if (is_numeric($id) &&
+                sizeof($rec = $this->libraryDBO->search(ILibrary::LABEL_PUBKEY, 0, 1, $id))) {
             $a["pubkey"] = $id;
             $label = null;
         } else {
