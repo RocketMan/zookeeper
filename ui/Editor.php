@@ -944,9 +944,9 @@ class Editor extends MenuItem {
 
         $album = $this->getAlbum();
         $tracks = $this->getTracks();
-        $result = Engine::api(IEditor::class)->insertUpdateAlbum($album, $tracks, $this->getLabel());
+        try {
+            Engine::api(IEditor::class)->insertUpdateAlbum($album, $tracks, $this->getLabel()); // raises exception on error
 
-        if($result) {
             if(!empty($_REQUEST["new"])) {
                 $_REQUEST["seltag"] = $album["tag"];
                 $infoUrl = $_REQUEST["infoUrl"] ?? null;
@@ -988,9 +988,12 @@ class Editor extends MenuItem {
             $this->skipVar("name");
             $this->skipVar("imageUrl");
             $this->skipVar("infoUrl");
+        } catch (\Throwable $t) {
+            error_log(t->getMessage());
+            return false;
         }
 
-        return $result;
+        return true;
     }
 
     private function insertUpdateLabel() {
@@ -998,16 +1001,20 @@ class Editor extends MenuItem {
             return false;
 
         $label = $this->getLabel();
-        $result = Engine::api(IEditor::class)->insertUpdateLabel($label);
-        if($result) {
+        try {
+            Engine::api(IEditor::class)->insertUpdateLabel($label); // raises exception on error
+
             $this->albumAdded = $_REQUEST["lnew"] ?? false;
             $this->albumUpdated = !$this->albumAdded;
             if($this->albumAdded)
                 $_REQUEST["selpubkey"] = $label["pubkey"];
             $_REQUEST["search"] = $_REQUEST["name"] ?? '';
+        } catch (\Throwable $t) {
+            error_log(t->getMessage());
+            return false;
         }
 
-        return $result;
+        return true;
     }
 
     private function getAlbum() {
