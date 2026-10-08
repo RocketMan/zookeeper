@@ -504,13 +504,11 @@ class Albums implements RequestHandlerInterface {
 
         $a["tag"] = 0;
         $a["format"] = $a["size"];
-        if($this->editorDBO->insertUpdateAlbum($a, $tracks, $label)) {
-            if($attrs->has('albumart'))
-                $this->imageDBO->insertAlbumArt($a['tag'], $attrs->getRequired('albumart'), null);
+        $this->editorDBO->insertUpdateAlbum($a, $tracks, $label); // raises exception on error
+        if($attrs->has('albumart'))
+            $this->imageDBO->insertAlbumArt($a['tag'], $attrs->getRequired('albumart'), null);
 
-            return new CreatedResponse($this->request->getBaseUrl()."album/{$a['tag']}");
-        }
-        throw new \Exception("creation failed");
+        return new CreatedResponse($this->request->getBaseUrl()."album/{$a['tag']}");
     }
 
     public function patchResource(RequestInterface $request): ResponseInterface {
@@ -531,7 +529,7 @@ class Albums implements RequestHandlerInterface {
         $albums[0] = array_merge($albums[0], $album);
         if (array_key_exists("size", $albums[0]))
             $albums[0]["format"] = $albums[0]["size"]; // post-merge
-        $this->editorDBO->insertUpdateAlbum($albums[0], $tracks, null);
+        $this->editorDBO->insertUpdateAlbum($albums[0], $tracks, null); // raises exception on error
         if($attrs->has('albumart')) {
             $this->imageDBO->deleteAlbumArt($key);
             $this->imageDBO->insertAlbumArt($key, $attrs->getRequired('albumart'), null);
@@ -594,7 +592,7 @@ class Albums implements RequestHandlerInterface {
 
         $albums[0]["format"] = $albums[0]["size"];
         $albums[0]["pubkey"] = $pubkey;
-        $this->editorDBO->insertUpdateAlbum($albums[0], null, null);
+        $this->editorDBO->insertUpdateAlbum($albums[0], null, null); // raises exception on error
 
         return new EmptyResponse();
     }

@@ -78,10 +78,12 @@ class EditorImpl extends DBO implements IEditor {
         $name = $label && array_key_exists("name", $label) ?
             mb_substr(trim($label["name"]), 0, PlaylistEntry::MAX_FIELD_LENGTH) : null;
 
-        $newLabel = $name && !$label["pubkey"];
+        $newLabel = $name && empty($label["pubkey"]);
+
 
         // Label
-        do {
+        $this->adviseLock(1); // lock labels
+        try {
             if($newLabel) {
                 $label["pubkey"] = $this->getNextPubkey();
                 $query = "INSERT INTO publist " .
@@ -126,26 +128,32 @@ class EditorImpl extends DBO implements IEditor {
                 $stmt->bindValue(12, (int)$label["mailcount"]);
                 $stmt->bindValue(13, $label["maillist"]);
                 $stmt->bindValue(14, $label["pubkey"]);
-            } else if(!$album["tag"]) {
+            } else if(empty($album["tag"])) {
                 $query = "UPDATE publist SET modified=now() WHERE pubkey=?";
                 $stmt = $this->prepare($query);
                 $stmt->bindValue(1, $album["pubkey"]);
             }
-    
+
             //echo "DEBUG: query=$query<BR>";
+
             if(isset($query)) {
-                $stmt->execute();
-                if(!$album["pubkey"])
+                if (!$stmt->execute())
+                    throw new \Exception("label "
+                            . ($newLabel ? "creation" : "update")
+                            . " failed");
+
+                if(empty($album["pubkey"]))
                     $album["pubkey"] = $label["pubkey"];
             }
-        } while ($newLabel && $stmt->rowCount() == 0 &&
-                           $label["pubkey"] != $this->getNextPubkey());
-       
+        } finally {
+            $this->adviseUnlock(1); // unlock labels
+        }
+
         // Album
         $title = trim($album["album"]);
         $artist = trim($album["artist"]);
         $iscoll = "0";
-        if(!$album["location"])
+        if(empty($album["location"]))
             $album["location"] = "L";
         if(array_key_exists("coll", $album) && $album["coll"]) {
             $artist = "[coll]: $title";
@@ -155,9 +163,10 @@ class EditorImpl extends DBO implements IEditor {
         $title = mb_substr($title, 0, PlaylistEntry::MAX_FIELD_LENGTH);
         $artist = mb_substr($artist, 0, PlaylistEntry::MAX_FIELD_LENGTH);
     
-        $newAlbum = !$album["tag"];
+        $newAlbum = empty($album["tag"]);
     
-        do {
+        $this->adviseLock(2); // lock albums
+        try {
             if($newAlbum) {
                 $album["tag"] = $this->getNextTag();
                 $query = "INSERT INTO albumvol (tag, artist, " .
@@ -197,10 +206,14 @@ class EditorImpl extends DBO implements IEditor {
                 $stmt->bindValue($i++, $album["tag"]);
             }
             //echo "DEBUG: query=$query, pubkey=".$album["pubkey"]."<BR>\n";
-            $stmt->execute();
-        } while ($newAlbum && $stmt->rowCount() == 0 &&
-                                     $album["tag"] != $this->getNextTag());
-    
+            if (!$stmt->execute())
+                throw new \Exception("album "
+                        . ($newAlbum ? "creation" : "update")
+                        . " failed");
+        } finally {
+            $this->adviseUnlock(2); // unlock albums
+        }
+
         // Tracks
         if(!is_null($tracks)) {
             // We delete from both tracknames and colltracknames
@@ -246,15 +259,14 @@ class EditorImpl extends DBO implements IEditor {
         $this->audit($newAlbum ? AuditAction::Insert : AuditAction::Update,
                         $album["tag"],
                         "tag={$album["tag"]}, title=\"{$album["album"]}\"");
-
-        return true;
     }
     
     public function insertUpdateLabel(&$label) {
         $newLabel = $label && !$label["pubkey"];
-    
+
         // Label
-        do {
+        $this->adviseLock(1); // lock labels
+        try {
             if($newLabel) {
                 $label["pubkey"] = $this->getNextPubkey();
                 $query = "INSERT INTO publist " .
@@ -302,12 +314,13 @@ class EditorImpl extends DBO implements IEditor {
             }
     
             //echo "DEBUG: query=$query<BR>";
-            if(isset($query))
-                $stmt->execute();
-        } while ($newLabel && $stmt->rowCount() == 0 &&
-                           $label["pubkey"] != $this->getNextPubkey());
-    
-        return true;
+            if(isset($query) && !$stmt->execute())
+                throw new \Exception("label "
+                        . ($newLabel ? "creation" : "update")
+                        . " failed");
+        } finally {
+            $this->adviseUnlock(1); // unlock labels
+        }
     }
 
     public function deleteAlbum($tag) {

@@ -218,10 +218,8 @@ class Labels implements RequestHandlerInterface {
         $label["pubkey"] = 0;
         $label["foreign"] = $label["international"] ?? false;
 
-        if($this->editorDBO->insertUpdateLabel($label))
-            return new CreatedResponse($this->request->getBaseUrl()."label/{$label['pubkey']}");
-
-        throw new \Exception("creation failed");
+        $this->editorDBO->insertUpdateLabel($label); // raises exception on error
+        return new CreatedResponse($this->request->getBaseUrl()."label/{$label['pubkey']}");
     }
 
     public function patchResource(RequestInterface $request): ResponseInterface {
@@ -251,10 +249,8 @@ class Labels implements RequestHandlerInterface {
         $label = array_merge($label, $this->fromAttrs($attrs));
         $label["foreign"] = $label["international"];
 
-        if($this->editorDBO->insertUpdateLabel($label))
-            return new EmptyResponse();
-
-        throw new \Exception("update failed");
+        $this->editorDBO->insertUpdateLabel($label); // raises exception on error
+        return new EmptyResponse();
     }
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
