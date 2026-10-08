@@ -464,13 +464,11 @@ class Albums implements RequestHandlerInterface {
 
         $a["tag"] = 0;
         $a["format"] = $a["size"];
-        if(Engine::api(IEditor::class)->insertUpdateAlbum($a, $tracks, $label)) {
-            if($attrs->has('albumart'))
-                Engine::api(IArtwork::class)->insertAlbumArt($a['tag'], $attrs->getRequired('albumart'), null);
+        Engine::api(IEditor::class)->insertUpdateAlbum($a, $tracks, $label); // raises exception on error;
+        if($attrs->has('albumart'))
+            Engine::api(IArtwork::class)->insertAlbumArt($a['tag'], $attrs->getRequired('albumart'), null);
 
-            return new CreatedResponse(Engine::getBaseUrl()."album/{$a['tag']}");
-        }
-        throw new \Exception("creation failed");
+        return new CreatedResponse(Engine::getBaseUrl()."album/{$a['tag']}");
     }
 
     public function patchResource(RequestInterface $request): ResponseInterface {
@@ -491,7 +489,7 @@ class Albums implements RequestHandlerInterface {
         $albums[0] = array_merge($albums[0], $album);
         if (array_key_exists("size", $albums[0]))
             $albums[0]["format"] = $albums[0]["size"]; // post-merge
-        Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], $tracks, null);
+        Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], $tracks, null); // raises exception on error
         if($attrs->has('albumart')) {
             $aapi = Engine::api(IArtwork::class);
             $aapi->deleteAlbumArt($key);
@@ -555,7 +553,7 @@ class Albums implements RequestHandlerInterface {
 
         $albums[0]["format"] = $albums[0]["size"];
         $albums[0]["pubkey"] = $pubkey;
-        Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], null, null);
+        Engine::api(IEditor::class)->insertUpdateAlbum($albums[0], null, null); // raises exception on error
 
         return new EmptyResponse();
     }

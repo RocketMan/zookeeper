@@ -206,10 +206,8 @@ class Labels implements RequestHandlerInterface {
         $label["pubkey"] = 0;
         $label["foreign"] = $label["international"] ?? false;
 
-        if(Engine::api(IEditor::class)->insertUpdateLabel($label))
-            return new CreatedResponse(Engine::getBaseUrl()."label/{$label['pubkey']}");
-
-        throw new \Exception("creation failed");
+        Engine::api(IEditor::class)->insertUpdateLabel($label); // raises exception on error
+        return new CreatedResponse(Engine::getBaseUrl()."label/{$label['pubkey']}");
     }
 
     public function patchResource(RequestInterface $request): ResponseInterface {
@@ -239,10 +237,8 @@ class Labels implements RequestHandlerInterface {
         $label = array_merge($label, self::fromAttrs($attrs));
         $label["foreign"] = $label["international"];
 
-        if(Engine::api(IEditor::class)->insertUpdateLabel($label))
-            return new EmptyResponse();
-
-        throw new \Exception("update failed");
+        Engine::api(IEditor::class)->insertUpdateLabel($label); // raises exception on error
+        return new EmptyResponse();
     }
 
     public function deleteResource(RequestInterface $request): ResponseInterface {
