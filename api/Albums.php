@@ -504,13 +504,11 @@ class Albums implements RequestHandlerInterface {
 
         $a["tag"] = 0;
         $a["format"] = $a["size"];
-        $this->editorDBO->insertUpdateAlbum($a, $tracks, $label); // raises exception on error;
+        $this->editorDBO->insertUpdateAlbum($a, $tracks, $label); // raises exception on error
         if($attrs->has('albumart'))
             $this->imageDBO->insertAlbumArt($a['tag'], $attrs->getRequired('albumart'), null);
 
-            return new CreatedResponse($this->request->getBaseUrl()."album/{$a['tag']}");
-        }
-        throw new \Exception("creation failed");
+        return new CreatedResponse($this->request->getBaseUrl()."album/{$a['tag']}");
     }
 
     public function patchResource(RequestInterface $request): ResponseInterface {
