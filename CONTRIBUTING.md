@@ -50,8 +50,7 @@ The following is an overview of the source code directory structure:
                  onto controllers.
 
             engine_config.php
-                 This maps the DBO model interfaces onto concrete
-                 implementations.
+                 Configuration for routing and DBOs
 
             ui_config.php
                  User interface configuration.  This defines menu items,
@@ -107,7 +106,7 @@ The following is an overview of the source code directory structure:
               • IUser - user management
 
             Other noteworthy interfaces in engine:
-              • IConfig - application configuration
+              • ConfigInterface - application configuration
               • Session - session state
 
             Application components receive the interfaces they
