@@ -230,13 +230,13 @@ class Turnstile implements IController {
 
         // Nothing to do if edge prevalidation has already run
         if (($config['prevalidate'] ?? false) &&
-                ($_SERVER[strtoupper($config['prevalidate'])] ?? false))
+                ($this->request->getServerParam(strtoupper($config['prevalidate'])) ?? false))
             return true;
 
-        $cookie = $_COOKIE['turnstile'] ?? '';
+        $cookie = $this->request->getCookie('turnstile');
         if (!$cookie) {
             // allow whitelisted traffic through
-            $addr = explode(',', $_SERVER['REMOTE_ADDR'])[0];
+            $addr = explode(',', $this->request->getServerParam('REMOTE_ADDR'))[0];
             $domain = $this->cache->get($addr);
             if (!$domain) {
                 $domain = self::dnslookup($addr,
@@ -283,7 +283,7 @@ class Turnstile implements IController {
         }
 
         // validate the signature
-        $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDR'] ?? '') : '';
+        $addr = self::INCLUDE_CLIENT_ADDR ? '|' . $this->request->getServerParam('REMOTE_ADDR', '') : '';
         $payload = ($token->uuid ?? '') . '|' . $expires . $addr;
         $signature = hash_hmac('sha256', $payload, $config['secret']);
         return hash_equals($signature, $token->signature ?? '');
@@ -302,7 +302,7 @@ class Turnstile implements IController {
         if (!$config || !isset($config['sitekey']))
             return;
 
-        $qs = $this->request->getQSParams();
+        $qs = $this->request->getQueryParams();
         $token = $qs['token'] ?? false;
 
         if($token) {
@@ -329,7 +329,7 @@ class Turnstile implements IController {
                         && in_array('invalid-input-response', $codes)) {
                     // create cookie and redirect
                     $expires = time() + self::TTL_SECONDS;
-                    $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDR'] ?? '') : '';
+                    $addr = self::INCLUDE_CLIENT_ADDR ? '|' . $this->request->getServerParam('REMOTE_ADDR', '') : '';
                     $payload = $uuid . '|' . $expires . $addr;
                     $signature = hash_hmac('sha256', $payload, $config['secret']);
                     $cookie = base64_encode(json_encode([
@@ -344,7 +344,7 @@ class Turnstile implements IController {
                     setcookie('turnstile', $cookie, [
                         'expires' => $expires,
                         'path' => '/',
-                        'domain' => $_SERVER['SERVER_NAME'],
+                        'domain' => $this->request->getServerParam('SERVER_NAME'),
                         'secure' => $this->session->isSecure(),
                         'httponly' => true,
                         'samesite' => 'lax'
@@ -372,7 +372,7 @@ class Turnstile implements IController {
         } else {
             // check that cookies are enabled
             if($qs["checkCookie"] ?? false) {
-                if(isset($_COOKIE["testcookie"])) {
+                if($this->request->getCookie("testcookie")) {
                     // the cookie test was successful!
 
                     // do the Turnstile challenge

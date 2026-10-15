@@ -29,7 +29,6 @@ use ZK\Engine\IArtwork;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
-use ZK\Engine\Request;
 use ZK\Engine\Session;
 
 use Enm\JsonApi\Exception\BadRequestException;
@@ -55,6 +54,8 @@ class Reviews implements RequestHandlerInterface {
     use OffsetPaginationTrait;
     use NoRelationshipModificationTrait;
 
+    const API_VERSION = 1;
+
     const FIELDS = [ "airname", "published", "date", "review" ];
 
     const LINKS_NONE = 0;
@@ -68,7 +69,7 @@ class Reviews implements RequestHandlerInterface {
     ];
 
     public function __construct(
-        protected Request $request,
+        protected ClientRequest $request,
         protected Session $session,
         protected Albums $albums,
         protected Labels $labels,
@@ -118,7 +119,7 @@ class Reviews implements RequestHandlerInterface {
                 $reviews = $this->reviewDBO->getReviews($record["id"], 1, "", $this->session->isAuth("u"), 1);
                 $record["review"] = $reviews[0]["review"];
             }
-            $resource = self::fromRecord($record, $this->request->getBaseUrl());
+            $resource = self::fromRecord($record, $this->request->getBaseUrl(Reviews::class));
             $result[] = $resource;
 
             if($wantsAlbum) {
@@ -133,8 +134,8 @@ class Reviews implements RequestHandlerInterface {
                 $res = $this->albums->fromRecord($record, false);
 
             $relation = new Relationship("album", $res);
-            $relation->links()->set(new Link("related", $this->request->getBaseUrl()."review/{$record["id"]}/album"));
-            $relation->links()->set(new Link("self", $this->request->getBaseUrl()."review/{$record["id"]}/relationships/album"));
+            $relation->links()->set(new Link("related", $this->request->getBaseUrl(Reviews::class)."review/{$record["id"]}/album"));
+            $relation->links()->set(new Link("self", $this->request->getBaseUrl(Reviews::class)."review/{$record["id"]}/relationships/album"));
             $relation->metaInformation()->set("album", $res->attributes()->getOptional("album"));
             $relation->metaInformation()->set("artist", $res->attributes()->getOptional("artist"));
             $resource->relationships()->set($relation);
@@ -198,10 +199,10 @@ class Reviews implements RequestHandlerInterface {
 
         $document = new Document($res);
         if($request->requestsAttributes())
-            $document->links()->set(new Link("self", $this->request->getBaseUrl()."review/$key/".$request->relationship()));
+            $document->links()->set(new Link("self", $this->request->getBaseUrl(Reviews::class)."review/$key/".$request->relationship()));
         else {
-            $document->links()->set(new Link("self", $this->request->getBaseUrl()."review/$key/relationships/".$request->relationship()));
-            $document->links()->set(new Link("related", $this->request->getBaseUrl()."review/$key/".$request->relationship()));
+            $document->links()->set(new Link("self", $this->request->getBaseUrl(Reviews::class)."review/$key/relationships/".$request->relationship()));
+            $document->links()->set(new Link("related", $this->request->getBaseUrl(Reviews::class)."review/$key/".$request->relationship()));
         }
 
         $response = new DocumentResponse($document);
@@ -236,7 +237,7 @@ class Reviews implements RequestHandlerInterface {
             throw new NotAllowedException("review already exists, use PATCH");
 
         if($this->reviewDBO->insertReview($tag, $private, $airname, $review, $user))
-            return new CreatedResponse($this->request->getBaseUrl()."review/{$this->reviewDBO->lastInsertId()}");
+            return new CreatedResponse($this->request->getBaseUrl(Reviews::class)."review/{$this->reviewDBO->lastInsertId()}");
 
         throw new \Exception("creation failed");
     }

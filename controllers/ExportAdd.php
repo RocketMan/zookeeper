@@ -25,22 +25,24 @@
 namespace ZK\Controllers;
 
 use ZK\Engine\IChart;
+use ZK\Engine\Request;
 
 class ExportAdd implements IController {
     public function __construct(
         protected IChart $chartDBO,
+        protected Request $request,
     ) {}
 
     public function processRequest() {
         // Ensure there's a date
-        $date = $_REQUEST["date"];
+        $date = $this->request->getRequestParam("date");
         if(strlen($date) != 10 ||
                         substr($date, 4, 1) != "-" ||
                         substr($date, 7, 1) != "-")
             exit;
         
         // Setup the EOL sequence
-        switch($_REQUEST["os"]) {
+        switch($this->request->getRequestParam("os")) {
             case "win":
                 $eol = "\r\n";
                 break;

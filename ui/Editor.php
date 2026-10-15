@@ -434,9 +434,9 @@ class Editor extends MenuItem {
         };
     }
 
-    private static function addrInSubnets($addr, $subnets) {
+    private function addrInSubnets($addr, $subnets) {
         foreach(is_array($subnets) ? $subnets : [ $subnets ] as $subnet) {
-            if(Request::addrInSubnet($addr, $subnet))
+            if($this->request->addrInSubnet($addr, $subnet))
                 return true;
         }
         return false;
@@ -447,12 +447,12 @@ class Editor extends MenuItem {
         if(!is_array($printers) || sizeof($printers) < 2)
             return;
 
-        $clientIP = $_SERVER['REMOTE_ADDR'];
+        $clientIP = $this->request->getRemoteAddr();
 
         $options = "";
         $haveSelected = "";
         foreach($printers as $printer) {
-            $haveSelected |= $selected = !$haveSelected && self::addrInSubnets($clientIP, $printer['preferred'] ?? "0") ? " selected" : "";
+            $haveSelected |= $selected = !$haveSelected && $this->request->addrInSubnets($clientIP, $printer['preferred'] ?? "0") ? " selected" : "";
             $options .= "<option value='".htmlentities($printer['queue'], ENT_QUOTES)."'$selected>".htmlentities($printer['description'], ENT_QUOTES, 'UTF-8');
         }
 
@@ -937,7 +937,7 @@ class Editor extends MenuItem {
     }
     
     private function emitHidden($name, $value) {
-        $post = $_SERVER["REQUEST_METHOD"] == "POST";
+        $post = $this->request->getMethod() == "POST";
     
         if($post)
             $_POST[$name] = $value;
@@ -946,7 +946,7 @@ class Editor extends MenuItem {
     }
     
     private function emitVars() {
-        $post = $_SERVER["REQUEST_METHOD"] == "POST";
+        $post = $this->request->getMethod() == "POST";
     
         foreach($post?$_POST:$_GET as $key => $value)
             if(!array_key_exists($key, $this->emitted))
@@ -954,7 +954,7 @@ class Editor extends MenuItem {
     }
 
     private function insertUpdateAlbum() {
-        if($_SERVER['REQUEST_METHOD'] != 'POST')
+        if($this->request->getMethod() != 'POST')
             return false;
 
         $album = $this->getAlbum();
@@ -1011,7 +1011,7 @@ class Editor extends MenuItem {
     }
 
     private function insertUpdateLabel() {
-        if($_SERVER['REQUEST_METHOD'] != 'POST')
+        if($this->request->getMethod() != 'POST')
             return false;
 
         $label = $this->getLabel();

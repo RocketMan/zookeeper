@@ -24,11 +24,7 @@
 
 namespace ZK\API;
 
-use ZK\Engine\Config;
-use ZK\Engine\ConfigInterface;
-use ZK\Engine\LoggerFactory;
-use ZK\Engine\PDO;
-use ZK\Engine\PDOFactory;
+use ZK\Engine\Request;
 use ZK\Engine\Zookeeper;
 
 use DI\Container;
@@ -40,37 +36,20 @@ class ApiDispatcher {
     private const CORS_METHODS = "GET, HEAD, POST, PATCH, DELETE";
     private const CORS_MAX_AGE = 3600;
 
-    private ConfigInterface $config;
-    private Container $container;
-
-    public function __construct() {
-        $this->config = new Config();
-
-        $engineConfig = $this->config->withConfigFrom('engine_config');
-
-        $builder = new ContainerBuilder();
-        $builder->addDefinitions(array_map(
-            fn($impl) => \DI\autowire($impl),
-            $engineConfig->asArray()
-        ));
-
-        $builder->addDefinitions([
-            ConfigInterface::class => $this->config,
-            LoggerInterface::class => \DI\factory(fn(LoggerFactory $fact) => $fact->create()),
-            PDO::class => \DI\factory(fn(PDOFactory $fact) => $fact->create()),
-        ]);
-
-        $this->container = $builder->build();
-    }
+    public function __construct(
+        protected LazyApiConfig $config,
+        protected Container $container,
+        protected Request $request,
+    ) {}
 
     protected function isPreflight() {
-        $preflight = ($_SERVER['REQUEST_METHOD'] ?? null) == "OPTIONS";
+        $preflight = $this->request->getMethod() == "OPTIONS";
         if ($preflight)
             http_response_code(204); // 204 No Content
 
-        $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
+        $origin = $this->request->getServerParam('HTTP_ORIGIN');
         if ($origin) {
-            foreach ($this->config->get('allowed_domains') as $domain) {
+            foreach ($this->config->getAppConfig()->get('allowed_domains') as $domain) {
                 if (preg_match("/" . preg_quote($domain) . "$/", $origin)) {
                     header("Access-Control-Allow-Origin: $origin");
                     header("Access-Control-Allow-Credentials: true");
@@ -90,23 +69,21 @@ class ApiDispatcher {
     protected function serveRequest() {
         $apiServer = new ApiServer(new XADeserializer(), new XASerializer());
 
-        $config = $this->config->withConfigFrom('controller_config', 'apiControllers');
-        $config->iterate(fn($type, $handler) =>
+        $apiConfig = $this->config->getApiConfig();
+
+        $apiConfig->iterate(fn($type, $handler) =>
             $apiServer->addHandler($type, $this->container->get($handler)));
 
         try {
-            // Remove the uri prefix manually, as Request's api prefix removal
-            // is broken for multilevel prefixes.
-            //
-            // assert(strpos($_SERVER["REQUEST_URI"],
-            //           $_SERVER["REDIRECT_PREFIX"]) === 0);
-            $uri = substr($_SERVER["REQUEST_URI"],
-                            strlen($_SERVER["REDIRECT_PREFIX"] ?? ""));
+            // Construct the uri prefix manually, as Request's api prefix
+            // removal is broken for multilevel prefixes.
+            $uri = $this->request->getAttribute('path')
+                    . '?' . $this->request->getUri()->getQuery();
 
             $request = new ApiRequest(
-                $_SERVER["REQUEST_METHOD"],
+                $this->request->getMethod(),
                 new Uri($uri),
-                $apiServer->createRequestBody(file_get_contents('php://input')),
+                $apiServer->createRequestBody($this->request->getBody()),
                 null);
 
             $response = $apiServer->handleRequest($request);

@@ -352,7 +352,7 @@ class AddManager extends MenuItem {
         $artist = $_REQUEST["artist"];
         $album = $_REQUEST["album"];
     
-        if($validate && $_SERVER['REQUEST_METHOD'] == 'POST') {
+        if($validate && $this->request->getMethod() == 'POST') {
             // Add the album
             $emitted = false;
             $catstr = "";
@@ -407,7 +407,7 @@ class AddManager extends MenuItem {
     }
     
     private function emitHidden($name, $value) {
-        $post = $_SERVER["REQUEST_METHOD"] == "POST";
+        $post = $this->request->getMethod() == "POST";
     
         if($post)
             $_POST[$name] = $value;
@@ -416,7 +416,7 @@ class AddManager extends MenuItem {
     }
     
     private function emitVars() {
-        $post = $_SERVER["REQUEST_METHOD"] == "POST";
+        $post = $this->request->getMethod() == "POST";
     
         foreach($post?$_POST:$_GET as $key => $value)
             if(empty($this->emitted[$key]))
@@ -508,7 +508,7 @@ class AddManager extends MenuItem {
         $artist = $_REQUEST["artist"];
         $album = $_REQUEST["album"];
     
-        if($validate && $_SERVER['REQUEST_METHOD'] == 'POST') {
+        if($validate && $this->request->getMethod() == 'POST') {
             // Add the album
             $emitted = false;
             $catstr = "";
@@ -627,7 +627,7 @@ class AddManager extends MenuItem {
             $_REQUEST["date"] = $row["adddate"];
         }
     
-        if($id && $_SERVER['REQUEST_METHOD'] == 'POST')
+        if($id && $this->request->getMethod() == 'POST')
             $this->chartDBO->deleteAlbum($id);
         $this->addManagerShowAdd();
     }
@@ -636,7 +636,7 @@ class AddManager extends MenuItem {
         $seq = $_REQUEST["seq"] ?? '';
         $this->addVar('seq', $seq);
 
-        if($seq == "update" && $_SERVER['REQUEST_METHOD'] == 'POST') {
+        if($seq == "update" && $this->request->getMethod() == 'POST') {
             $success = true;
             for($i=1; $success && $i<=self::MAX_CAT_COUNT; $i++) {
                 $name = $_POST["name".$i];

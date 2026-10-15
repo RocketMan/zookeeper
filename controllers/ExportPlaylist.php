@@ -60,9 +60,9 @@ class ExportPlaylist extends CommandTarget implements IController {
 
     public function processRequest() {
         // Ensure user has selected a playlist
-        $playlist = intval($_REQUEST["playlist"]);
+        $playlist = intval($this->request->getRequestParam("playlist"));
         if($playlist == 0) {
-            $referer = $_SERVER["HTTP_REFERER"];
+            $referer = $this->request->getServerParam("HTTP_REFERER");
             if($referer)
                 header("Location: $referer");
             exit;
@@ -89,7 +89,7 @@ class ExportPlaylist extends CommandTarget implements IController {
         }
 
         // Emit the result in the requested format
-        $this->process($_REQUEST["format"], null);
+        $this->process($this->request->getRequestParam("format"), null);
     }
 
     public function processLocal($action, $subaction) {
@@ -98,7 +98,7 @@ class ExportPlaylist extends CommandTarget implements IController {
 
     public function emitJSON() {
         header("Location: ".$this->request->getBaseUrl().
-               "api/v1/playlist/".$_REQUEST["playlist"]);
+               "api/v1/playlist/".$this->request->getRequestParam("playlist"));
     }
 
     public function emitXML() {

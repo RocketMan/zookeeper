@@ -314,7 +314,7 @@ class Playlists extends MenuItem {
         // deal with the lack of keyDown support in mobile input
         // type=text, we'll include 'tel' only for mobile devices...
         $ttype = preg_match('/tablet|mobile|android/i',
-                $_SERVER['HTTP_USER_AGENT'] ?? '') ? "tel" : "text";
+                $this->request->getServerParam('HTTP_USER_AGENT', '')) ? "tel" : "text";
         $this->addVar("ttype", $ttype);
 
         // colon is included in 24hr format for symmetry with fxtime,

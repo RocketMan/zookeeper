@@ -24,100 +24,178 @@
 
 namespace ZK\Engine;
 
-class Request {
-    protected ?string $locale = null;
+use GuzzleHttp\Psr7\Uri;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UriInterface;
 
-    public function __construct(
-        protected ConfigInterface $config,
-    ) {}
+interface Request {
+    /**
+     * get whether request was initiated from the command line
+     *
+     * @return bool true if command line, false otherwise
+     */
+    public function isCli(): bool;
 
     /**
-     * return the URL of the current request, less leaf filename, if any
+     * get the client's address
+     *
+     * @return string|null ip address of client or null if cli
      */
-    public function getBaseUrl(): string  {
-        // api gets path only
-        // must be absolute path for FILTER_VALIDATE_URL
-        if(isset($_SERVER['REDIRECT_APIVER']))
-            return $_SERVER['REDIRECT_PREFIX'] ?? "/";
+    public function getRemoteAddr(): ?string;
 
-        if(php_sapi_name() == "cli")
-            return "";
+    /**
+     * get the HTTP method of the request
+     *
+     * @return string request method
+     */
+    public function getMethod(): string;
 
-        $port = ":" . $_SERVER['SERVER_PORT'];
-        if($port == ":443" || $port == ":80")
-            $port = "";
-
-        // compose the URL
-        return $this->getClientScheme() . "://" .
-               $_SERVER['SERVER_NAME'] . $port .
-               $this->getAppBasePath();
-    }
+    /**
+     * get the URI of the request
+     *
+     * @return UriInterface URI
+     */
+    public function getUri(): UriInterface;
 
     /**
      * get protocol used by the frontend client
      *
      * @return string frontend protocol ('http' or 'https')
      */
-    public function getClientScheme(): string {
-        // Caution: $_SERVER['REQUEST_SCHEME'] reflects the *backend*
-        // protocol, which may not be the same as the frontend
-        // when a proxy or load balancer is used.
-        //
-        // Per the doc, PHP sets $_SERVER['HTTPS'] on frontend https.
-        return !empty($_SERVER['HTTPS'])
-                ? 'https'
-                : $_SERVER['REQUEST_SCHEME'] ?? 'http';
-    }
-
-    public function getAppBasePath(): string {
-        $uri = isset($_SERVER['REDIRECT_APIVER']) ?
-                       ($_SERVER['REDIRECT_BASE'] ?? '/') :
-                        $_SERVER['REQUEST_URI'];
-
-        // strip the query string, if any
-        $qpos = strpos($uri, "?");
-        if($qpos !== false)
-            $uri = substr($uri, 0, $qpos);
-
-        return preg_replace("{/[^/]+$}", "/", $uri);
-    }
+    public function getClientScheme(): string;
 
     /**
-     * alternative to $_GET[] that does not munge dots in qs param names
+     * return the URL of the current request, less leaf filename, if any
+     */
+    public function getBaseUrl(): string;
+
+    /**
+     * get the base path of the request
+     *
+     * this excludes any request-specific path components
+     *
+     * @return string base path
+     */
+    public function getAppBasePath(): string;
+
+    /**
+     * get path and query string
+     *
+     * @return string path and query string
+     */
+    public function getRequestTarget(): string;
+
+    /**
+     * get the specified query string parameter
+     *
+     * this method correctly observes dots in parameter name
+     *
+     * @param string $key parameter name
+     * @param string $default value if no such parameter (default null)
+     * @return string|null parameter value or default
+     */
+    public function getQueryParam(string $key, ?string $default = null): ?string;
+
+    /**
+     * get the specified form-post parameter
+     *
+     * @param string $key parameter name
+     * @param string $default value if no such parameter (default null)
+     * @return string|null parameter value or default
+     */
+    public function getPostParam(string $key, ?string $default = null): ?string;
+
+    /**
+     * get the specified request parameter
+     *
+     * obtains parameter from either the query string or form
+     * post.  if present in both, chooses the query string.
+     *
+     * @param string $key parameter name
+     * @param string $default value if no such parameter (default null)
+     * @return string|null parameter value or default
+     */
+    public function getRequestParam(string $key, ?string $default = null): ?string;
+
+    /**
+     * get request target
+     *
+     * request target from router configuration or request parameter
+     *
+     * @return request target or empty string if none
+     */
+    public function getTarget(): string;
+
+    /**
+     * get request action
+     *
+     * request action from router configuration or request parameter
+     *
+     * @return request action or empty string if none
+     */
+    public function getAction(): string;
+
+    /**
+     * get request subaction
+     *
+     * request subaction from router configuration or request parameter
+     *
+     *
+     * @return request subaction or empty string if none
+     */
+    public function getSubaction(): string;
+
+    /**
+     * get the specified cookie
+     *
+     * @param string $key cookie name
+     * @param string $default value if no cookie (default null)
+     * @return string|null cookie value or null
+     */
+    public function getCookie(string $key, ?string $default = null): ?string;
+
+    /**
+     * return query string parameters
+     *
+     * parameters returned by this method correctly observe dots in names
      *
      * @return array query string parameters
      */
-    public function getQSParams() {
-        $result = [];
-        $params = explode("&", $_SERVER["QUERY_STRING"]);
-        foreach ($params as $param) {
-            $nameValue = explode("=", $param);
-            $name = urldecode($nameValue[0]);
-            $value = count($nameValue) > 1 ? urldecode($nameValue[1]) : '';
-            $result[$name] = $value;
-        }
-        return $result;
-    }
+    public function getQueryParams(): array;
 
+    /**
+     * get the body of the message
+     *
+     * @return StreamInterface request body
+     */
+    public function getBody(): StreamInterface;
+    
     /**
      * generate an HTTP redirect
      *
      * @param string $url target URL
      * @param array query string key-value pairs
      */
-    public function doHttpRedirect(string $url, array $params): void {
-        $qs = http_build_query($params);
-        if (strlen($qs))
-            $url .= '?' . $qs;
-        header("Location: " . $url, true, 307);
-    }
-    
+    public function doHttpRedirect(string $url, array $params): void;
+
     /**
-     * return the API version
+     * get data from the request environment, typically derived from the
+     * $_SERVER superglobal
+     *
+     * @param string $key parameter name
+     * @param string $default value if data does not exist (default null)
+     * @return string|null data
      */
-    public function getApiVer() : float {
-        return floatval($_SERVER['REDIRECT_APIVER'] ?? 1);
-    }
+    public function getServerParam(string $key, ?string $default = null): ?string;
+
+    /**
+     * get data from the request environment, typically derived from the
+     * $_SERVER superglobal
+     *
+     * @return array
+     */
+    public function getServerParams(): array;
 
     /*
      * test if an IP address is in a subnet
@@ -126,19 +204,11 @@ class Request {
      * or as a fragment (e.g., 192.168.0), in which case the
      * number of network bits is inferred from the fragment length.
      *
-     * @param $addr dotted quad address string (e.g., 192.168.0.1)
-     * @param $subnet CIDR subnet or address fragment string
+     * @param string $addr dotted quad address string (e.g., 192.168.0.1)
+     * @param string $subnet CIDR subnet or address fragment string
      * @return bool true if and only if the address is in the subnet
      */
-    public static function addrInSubnet($addr, $subnet): bool {
-        $subnet = rtrim($subnet, '.');
-        $segCount = substr_count($subnet, '.');
-        if(strpos($subnet, '/') === false)
-            $subnet .= str_repeat('.0', 3 - $segCount) . '/' . ++$segCount * 8;
-        $parts = explode('/', $subnet);
-        $netmask = ~(pow(2, 32 - $parts[1]) - 1);
-        return (ip2long($addr) & $netmask) == (ip2long($parts[0]) & $netmask);
-    }
+    public function addrInSubnet(string $addr, string $subnet): bool;
 
     /**
      * test whether this request originated from the local subnet
@@ -147,43 +217,42 @@ class Request {
      *
      * @return bool true if this request originates from the local subnet
      */
-    public function checkLocal(): bool {
-        $local_subnet = $this->config->get('local_subnet');
-        return !$local_subnet ||
-                    self::addrInSubnet($_SERVER['REMOTE_ADDR'], $local_subnet);
-    }
+    public function checkLocal(): bool;
 
     /**
      * polyfill for intl `Locale::acceptFromHttp`
      *
-     * @param $header HTTP Accept-Language header
-     * @return best available locale from the header
+     * @param string $header HTTP Accept-Language header
+     * @return string best available locale from the header
      */
-    public function acceptFromHttp(string $header): string {
-        $locales = array_map(function($locale) {
-            // parse /(.+)(;.+=(.+))?/
-            $lang = strtok($locale, ';');
-            $weight = strtok('=') ? (strtok('') ?: 1) : 1;
-            return [ $lang, $weight ];
-        }, explode(',', $header));
-
-        usort($locales, function($a, $b) {
-            return $b[1] <=> $a[1];
-        });
-
-        // Accept-Language encodes locales with a hyphen (RFC 4646),
-        // whilst PHP Locale functions return an underscore
-        return str_replace('-', '_', $locales[0][0]);
-    }
+    public function acceptFromHttp(string $header): string;
 
     /**
-     * convenience method to get best locale from the current request
+     * get best locale from the current request
      */
-    public function getClientLocale(): string {
-        return $this->locale ??= $this->acceptFromHttp($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en-US');
-    }
+    public function getClientLocale(): string;
 
-    public function isUsLocale(): bool {
-        return !strcasecmp($this->getClientLocale(), 'en_US');
-    }
+    /**
+     * determine whether current requests uses US locale
+     *
+     * @return bool true if en_US locale, false otherwise
+     */
+    public function isUsLocale(): bool;
+
+    /**
+     * check for existence of request metadata
+     *
+     * @param string $key key name to test
+     * @return bool true if key exists, false otherwise
+     */
+    public function hasAttribute(string $key): bool;
+
+    /**
+     * get request metadata
+     *
+     * @param string $key key name to retrieve
+     * @param mixed $default value if metadata does not exist (default null)
+     * @return mixed metadata
+     */
+    public function getAttribute(string $key, mixed $default = null): mixed;
 }

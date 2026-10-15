@@ -153,10 +153,9 @@ class UIController implements IController {
 
         $this->preProcessRequest();
 
-        $action = $_REQUEST["action"] ?? '';
-        $subaction = $_REQUEST["subaction"] ?? '';
-        $isJson = isset($_SERVER["HTTP_ACCEPT"]) &&
-                substr($_SERVER["HTTP_ACCEPT"], 0, 16) === 'application/json';
+        $action = $this->request->getAction();
+        $subaction = $this->request->getSubaction();
+        $isJson = substr($this->request->getServerParam('HTTP_ACCEPT', ''), 0, 16) === 'application/json';
         ob_start("ob_gzhandler");
         header("X-Powered-By: " . Zookeeper::UA);
         if ($isJson) {
@@ -191,7 +190,7 @@ class UIController implements IController {
             $rq = [
                 'target' => 'turnstile',
                 'checkCookie' => 1,
-                'location' => $_SERVER['REQUEST_URI'],
+                'location' => $this->request->getRequestTarget(),
             ];
             $this->request->doHttpRedirect($this->request->getBaseUrl(), $rq);
             exit;
@@ -312,7 +311,7 @@ class UIController implements IController {
         case "cookiesDisabled":
             echo "  <TR><TD>&nbsp;</TD><TD><P><B><FONT CLASS=\"error\">You must enable cookies to login to Zookeeper Online.</FONT></B></P>".
             "<P>Enable cookies in your browser for the website '".
-            $this->session->getClientScheme()."://".$_SERVER['SERVER_NAME'].
+            $this->session->getClientScheme()."://".$this->request->getUri()->getHost().
             "/' and try again.</P>".
             "<P>For information on how we use cookies, see the ".
             "<A HREF='PRIVACY.md' TARGET='_blank'>Privacy Policy</A>.</TD></TR>\n";
@@ -451,11 +450,12 @@ class UIController implements IController {
         $this->ssoUser = $this->session->isAuth("u") &&
             !$this->session->isAuth("U");
 
+        $host = $this->request->getUri()->getHost();
         if($this->ssoUser)
-            setcookie("dn", base64_encode($this->session->getDN()), 0, "/", $_SERVER['SERVER_NAME']);
+            setcookie("dn", base64_encode($this->session->getDN()), 0, "/", $host);
         else if(isset($_COOKIE["dn"])) {
             $this->dn = base64_decode($_COOKIE["dn"]);
-            setcookie("dn", "", time() - 3600, "/", $_SERVER['SERVER_NAME']);
+            setcookie("dn", "", time() - 3600, "/", $host);
         }
     
         // Kill the session

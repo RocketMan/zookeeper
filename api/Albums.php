@@ -28,7 +28,6 @@ use ZK\Engine\IArtwork;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
-use ZK\Engine\Request;
 use ZK\Engine\Session;
 
 use Enm\JsonApi\Exception\BadRequestException;
@@ -48,6 +47,8 @@ use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
 
 class Albums implements RequestHandlerInterface {
     use OffsetPaginationTrait;
+
+    const API_VERSION = 1;
 
     const FIELDS = [ "artist", "album", "category", "medium", "size",
                      "created", "updated", "location", "bin", "coll",
@@ -121,7 +122,7 @@ class Albums implements RequestHandlerInterface {
     }
 
     public function __construct(
-        protected Request $request,
+        protected ClientRequest $request,
         protected Session $session,
         protected Labels $labels,
         protected ILibrary $libraryDBO,
@@ -132,7 +133,7 @@ class Albums implements RequestHandlerInterface {
 
     public function fromRecord($rec, $wantTracks = true) {
         $res = new JsonResource("album", $rec["tag"]);
-        $res->links()->set(new Link("self", $this->request->getBaseUrl()."album/".$rec["tag"]));
+        $res->links()->set(new Link("self", $this->request->getBaseUrl(Albums::class)."album/".$rec["tag"]));
         foreach(self::FIELDS as $field) {
             $tfield = $field == "coll" ? "iscoll" : $field;
             if(!array_key_exists($tfield, $rec))
@@ -211,10 +212,10 @@ class Albums implements RequestHandlerInterface {
             if($flags & self::LINKS_REVIEWS && isset($record["reviews"])) {
                 $relations = new ResourceCollection();
                 $relation = new Relationship("reviews", $relations);
-                $relation->links()->set(new Link("related", $this->request->getBaseUrl()."album/{$record["tag"]}/reviews"));
+                $relation->links()->set(new Link("related", $this->request->getBaseUrl(Albums::class)."album/{$record["tag"]}/reviews"));
                 $resource->relationships()->set($relation);
                 foreach($record["reviews"] as $review) {
-                    $res = Reviews::fromRecord($review, $this->request->getBaseUrl());
+                    $res = Reviews::fromRecord($review, $this->request->getBaseUrl(Reviews::class));
                     $relations->set($res);
                 }
             }
@@ -231,8 +232,8 @@ class Albums implements RequestHandlerInterface {
                 }
 
                 $relation = new Relationship("label", $res);
-                $relation->links()->set(new Link("related", $this->request->getBaseUrl()."album/{$record["tag"]}/label"));
-                $relation->links()->set(new Link("self", $this->request->getBaseUrl()."album/{$record["tag"]}/relationships/label"));
+                $relation->links()->set(new Link("related", $this->request->getBaseUrl(Albums::class)."album/{$record["tag"]}/label"));
+                $relation->links()->set(new Link("self", $this->request->getBaseUrl(Albums::class)."album/{$record["tag"]}/relationships/label"));
                 $relation->metaInformation()->set("name", $res->attributes()->getOptional("name"));
                 $resource->relationships()->set($relation);
             }
@@ -294,11 +295,11 @@ class Albums implements RequestHandlerInterface {
 
             $relations = new ResourceCollection();
             $relation = new Relationship("reviews", $relations);
-            $relation->links()->set(new Link("related", $this->request->getBaseUrl()."album/{$record["tag"]}/reviews"));
+            $relation->links()->set(new Link("related", $this->request->getBaseUrl(Albums::class)."album/{$record["tag"]}/reviews"));
             $resource->relationships()->set($relation);
             if($flags & Albums::LINKS_REVIEWS_WITH_BODY) {
                 $review = $this->reviewDBO->getReviews($record["id"], 1, "", $this->session->isAuth("u"), 1)[0];
-                $res = Reviews::fromRecord($review, $this->request->getBaseUrl());
+                $res = Reviews::fromRecord($review, $this->request->getBaseUrl(Reviews::class));
             } else
                 $res = new JsonResource("review", $record["id"]);
             $res->metaInformation()->set("date", $record["reviewed"]);
@@ -306,8 +307,8 @@ class Albums implements RequestHandlerInterface {
 
             $res = $this->labels->fromRecord($record);
             $relation = new Relationship("label", $res);
-            $relation->links()->set(new Link("related", $this->request->getBaseUrl()."album/{$record["tag"]}/label"));
-            $relation->links()->set(new Link("self", $this->request->getBaseUrl()."album/{$record["tag"]}/relationships/label"));
+            $relation->links()->set(new Link("related", $this->request->getBaseUrl(Albums::class)."album/{$record["tag"]}/label"));
+            $relation->links()->set(new Link("self", $this->request->getBaseUrl(Albums::class)."album/{$record["tag"]}/relationships/label"));
             $relation->metaInformation()->set("name", $record["name"] ?? "(Unknown)");
             $resource->relationships()->set($relation);
         }
@@ -373,7 +374,7 @@ class Albums implements RequestHandlerInterface {
         $result = $this->fromArray($records, $links);
         $document = new Document($result);
 
-        $base = $this->request->getBaseUrl()."album?";
+        $base = $this->request->getBaseUrl(Albums::class)."album?";
         $size = "&page%5Bprofile%5D=cursor&page%5Bsize%5D=$limit";
 
         $obj = $records[0];
@@ -435,7 +436,7 @@ class Albums implements RequestHandlerInterface {
             if(sizeof($reviews)) {
                 $res = new ResourceCollection();
                 foreach($reviews as $review) {
-                    $r = Reviews::fromRecord($review, $this->request->getBaseUrl());
+                    $r = Reviews::fromRecord($review, $this->request->getBaseUrl(Reviews::class));
                     $res->set($r);
                 }
             }
@@ -448,10 +449,10 @@ class Albums implements RequestHandlerInterface {
 
         $document = new Document($res);
         if($request->requestsAttributes())
-            $document->links()->set(new Link("self", $this->request->getBaseUrl()."album/$key/".$request->relationship()));
+            $document->links()->set(new Link("self", $this->request->getBaseUrl(Albums::class)."album/$key/".$request->relationship()));
         else {
-            $document->links()->set(new Link("self", $this->request->getBaseUrl()."album/$key/relationships/".$request->relationship()));
-            $document->links()->set(new Link("related", $this->request->getBaseUrl()."album/$key/".$request->relationship()));
+            $document->links()->set(new Link("self", $this->request->getBaseUrl(Albums::class)."album/$key/relationships/".$request->relationship()));
+            $document->links()->set(new Link("related", $this->request->getBaseUrl(Albums::class)."album/$key/".$request->relationship()));
         }
 
         $response = new DocumentResponse($document);
@@ -508,7 +509,7 @@ class Albums implements RequestHandlerInterface {
         if($attrs->has('albumart'))
             $this->imageDBO->insertAlbumArt($a['tag'], $attrs->getRequired('albumart'), null);
 
-        return new CreatedResponse($this->request->getBaseUrl()."album/{$a['tag']}");
+        return new CreatedResponse($this->request->getBaseUrl(Albums::class)."album/{$a['tag']}");
     }
 
     public function patchResource(RequestInterface $request): ResponseInterface {

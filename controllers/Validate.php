@@ -29,6 +29,7 @@ use ZK\Engine\IDJ;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\IUser;
 use ZK\Engine\PlaylistEntry;
+use ZK\Engine\Request;
 use ZK\Engine\Session;
 
 use GuzzleHttp\Client;
@@ -86,6 +87,7 @@ class Validate implements IController {
     }
 
     public function __construct(
+        protected Request $request,
         protected Session $session,
         protected IChart $chartDBO,
         protected IPlaylist $playlistDBO,
@@ -98,7 +100,8 @@ class Validate implements IController {
             return;
         }
 
-        if(!isset($_REQUEST["url"])) {
+        $url = $this->request->getRequestParam('url');
+        if(!$url) {
             echo "Usage: zk validate url=__path to zookeeper__\n";
             exit(1);
         }
@@ -179,7 +182,7 @@ class Validate implements IController {
                 $this->apiKeyId = $this->userDBO->lastInsertId();
 
                 $this->client = new Client([
-                    'base_uri' => $_REQUEST["url"],
+                    'base_uri' => $this->request->getRequestParam('url'),
                     RequestOptions::HEADERS => [
                         'Accept' => 'application/json',
                         'X-APIKEY' => $apiKey
