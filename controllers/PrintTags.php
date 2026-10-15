@@ -117,17 +117,17 @@ class PrintTags implements IController {
     public function processRequest() {
         header("Content-type: application/pdf");
 
-        $form = empty($_REQUEST["form"])?self::LABEL_FORM:$_REQUEST["form"];
+        $form = $this->request->getRequestParam("form", self::LABEL_FORM);
         if(array_key_exists($form, self::ADDITIONAL_FORMS))
             $form = self::ADDITIONAL_FORMS[$form];
 
-        $inst = $_REQUEST["inst"] ?? $this->request->getBaseUrl();
+        $inst = $this->request->getRequestParam("inst", $this->request->getBaseUrl());
         $url = $inst . self::LINK;
 
         $pdf = new \PDF_Label($form);
         $pdf->AddFont(self::FONT_FACE_TAG, '', self::FONT_FILE_TAG, true);
         $pdf->AddFont(self::FONT_FACE, '', self::FONT_FILE, true);
-        $tags = explode(",", $_REQUEST["tags"] ?? '');
+        $tags = explode(",", $this->request->getRequestParam("tags", ''));
         if($this->loadTags($tags))
             $pdf->AddFont(self::FONT_FACE_Z, '', self::FONT_FILE_Z, true);
         $pdf->SetCreator("Zookeeper Online");

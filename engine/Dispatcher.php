@@ -28,15 +28,18 @@ use ZK\Controllers\IController;
 
 use DI\Container;
 use DI\ContainerBuilder;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 
 class Dispatcher {
     private Container $container;
     private string $default;
 
-    public function __construct() {
-        $config = new Config();
-
+    public function __construct(
+        ConfigInterface $config,
+        Container $bootstrapContainer,
+        private Request $request,
+    ) {
         $controllerConfig = $config->withConfigFrom('controller_config', 'controllers');
 
         $customControllers = $config->get('custom_controllers');
@@ -45,19 +48,15 @@ class Dispatcher {
 
         $this->default = $controllerConfig->default();
 
-        $controllerAndEngineConfig = $controllerConfig->withConfigFrom('engine_config', 'config', true);
-
         $builder = new ContainerBuilder();
+        $builder->wrapContainer($bootstrapContainer);
         $builder->addDefinitions(array_map(
             fn($impl) => \DI\autowire($impl),
-            $controllerAndEngineConfig->asArray()
+            $controllerConfig->asArray()
         ));
 
         $builder->addDefinitions([
-            ConfigInterface::class => $config,
             Dispatcher::class => $this,
-            LoggerInterface::class => \DI\factory(fn(LoggerFactory $fact) => $fact->create()),
-            PDO::class => \DI\factory(fn(PDOFactory $fact) => $fact->create()),
         ]);
 
         $this->container = $builder->build();
@@ -87,12 +86,12 @@ class Dispatcher {
     /**
      * dispatch request to the specified controller
      */
-    public function processRequest(string $controller = '') {
+    public function processRequest() {
+        $controller = $this->request->getTarget();
         $controller = empty($controller) ||
                         !$this->container->has($controller)
                 ? $this->default
                 : $controller;
-
         $impl = $this->container->get($controller);
         if($impl instanceof IController)
             return $impl->processRequest();

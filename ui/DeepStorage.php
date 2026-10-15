@@ -27,12 +27,14 @@ namespace ZK\UI;
 use ZK\Engine\Engine;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
+use ZK\Engine\Request;
 use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
 class DeepStorage extends MenuItem {
     public function __construct(
+        protected Request $request,
         protected Session $session,
         protected TemplateFactoryUI $templateFactory,
         protected IEditor $editorDBO,
@@ -43,7 +45,7 @@ class DeepStorage extends MenuItem {
 
     public function processLocal($action, $subaction) {
         $userfile = $_FILES['userfile']['tmp_name'] ?? '';
-        if(!$userfile || $_SERVER['REQUEST_METHOD'] != 'POST') {
+        if(!$userfile || $this->request->getMethod() != 'POST') {
     ?>
       <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
         <INPUT TYPE=hidden name=action value="editor">

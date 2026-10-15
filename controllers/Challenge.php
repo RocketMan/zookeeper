@@ -25,6 +25,7 @@
 namespace ZK\Controllers;
 
 use ZK\Engine\ConfigInterface;
+use ZK\Engine\Request;
 
 class Challenge implements IController {
     const DIFFICULTY = 10;    // leading zero bits required
@@ -33,6 +34,7 @@ class Challenge implements IController {
 
     public function __construct(
         protected ConfigInterface $config,
+        protected Request $request,
     ) {}
 
     public function validate($challenge): bool {
@@ -51,7 +53,7 @@ class Challenge implements IController {
         // 2. Verify signature
         $challenge = $pow['challenge'] ?? '';
         $difficulty = $pow['difficulty'] ?? self::DIFFICULTY;
-        $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDR'] ?? '') : '';
+        $addr = self::INCLUDE_CLIENT_ADDR ? '|' . $this->request->getServerParam('REMOTE_ADDR', '') : '';
         $payload = $challenge . '|' . $expires . '|' . $difficulty . $addr;
         $sig = hash_hmac('sha256', $payload, $secret);
 
@@ -88,7 +90,7 @@ class Challenge implements IController {
         $expires   = time() + self::TTL_SECONDS;
 
         $secret = $this->config->get('challenge_secret');
-        $addr = self::INCLUDE_CLIENT_ADDR ? '|' . ($_SERVER['REMOTE_ADDR'] ?? '') : '';
+        $addr = self::INCLUDE_CLIENT_ADDR ? '|' . $this->request->getServerParam('REMOTE_ADDR', '') : '';
         $payload = $challenge . '|' . $expires . '|' . self::DIFFICULTY . $addr;
         $signature = hash_hmac('sha256', $payload, $secret);
 

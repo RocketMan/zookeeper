@@ -33,21 +33,21 @@ if($argc == 1) {
 /**
  * parse out zero or more NAME=VALUE pairs from the argument list
  */
-$_REQUEST = [];
+$_POST = [];
 foreach($argv as $arg) {
     $tuple = explode('=', $arg);
     if(count($tuple) == 2)
-        $_REQUEST[$tuple[0]] = urldecode($tuple[1]);
+        $_POST[$tuple[0]] = urldecode($tuple[1]);
 }
 
 /**
  * by default, TARGET is the first argument, unless explicitly specified
  */
-if(!array_key_exists('target', $_REQUEST)) {
+if(!array_key_exists('target', $_POST)) {
     $tuple = explode(':', $argv[1]);
-    $_REQUEST['target'] = $tuple[0];
-    if(count($tuple) > 1 && !array_key_exists('action', $_REQUEST))
-        $_REQUEST['action'] = $tuple[1];
+    $_POST['target'] = $tuple[0];
+    if(count($tuple) > 1 && !array_key_exists('action', $_POST))
+        $_POST['action'] = $tuple[1];
 }
 
 require('index.php');

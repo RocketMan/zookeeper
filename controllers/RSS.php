@@ -57,7 +57,7 @@ class RSS extends CommandTarget implements IController {
         $template = $this->templateFactory->load('rss.xml');
         $this->params['feeds'] = [];
 
-        $this->processLocal($_REQUEST['feed'] ?? '', null);
+        $this->processLocal($this->request->getRequestParam('feed', ''), null);
 
         echo $template->render($this->params);
         ob_end_flush(); // ob_gzhandler
@@ -74,8 +74,8 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function recentCharts() {
-        $top = $_REQUEST["top"] ?? 30;
-        $weeks = $_REQUEST["weeks"] ?? 10;
+        $top = $this->request->getRequestParam('top', 30);
+        $weeks = $this->request->getRequestParam('weeks', 10);
 
         $this->params['limit'] = $top;
         $this->params['dateSpec'] = $this->request->isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
@@ -98,7 +98,7 @@ class RSS extends CommandTarget implements IController {
         $this->params['GENRES'] = ILibrary::GENRES;
         $this->params['feeds'][] = 'reviews';
 
-        $limit = $_REQUEST['limit'] ?? 50;
+        $limit = $this->request->getRequestParam('limit', 50);
         $results = $this->reviewDBO->getRecentReviews('', 0, $limit, 0, 1);
         // coalesce albums into one array for artwork injection
         // use foreach, as reference passing does not work with array_map
@@ -142,7 +142,7 @@ class RSS extends CommandTarget implements IController {
     }
     
     public function recentAdds() {
-        $weeks = $_REQUEST["weeks"] ?? 4;
+        $weeks = $this->request->getRequestParam('weeks', 4);
 
         $this->params['dateSpec'] = $this->request->isUsLocale() ? 'l, F j, Y' : 'l, j F Y';
         $this->params['MEDIA'] = ILibrary::MEDIA;

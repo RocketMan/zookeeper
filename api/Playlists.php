@@ -34,7 +34,6 @@ use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistEntryFactory;
 use ZK\Engine\PlaylistObserver;
 use ZK\Engine\ServiceConnector;
-use ZK\Engine\Request;
 use ZK\Engine\Session;
 
 use ZK\UI\PlaylistBuilder;
@@ -60,6 +59,8 @@ use Enm\JsonApi\Server\RequestHandler\RequestHandlerInterface;
 class Playlists implements RequestHandlerInterface {
     use OffsetPaginationTrait;
 
+    const API_VERSION = 2;
+
     const PLAYLIST_SEARCH = 1000;
 
     const LINKS_NONE = 0;
@@ -79,11 +80,11 @@ class Playlists implements RequestHandlerInterface {
     ];
 
     public function __construct(
-        protected Session $session,
+        protected ClientRequest $request,
         protected PlaylistBuilder $playlistBuilder,
         protected PlaylistEntryFactory $playlistEntryFactory,
-        protected Request $request,
         protected ServiceConnector $service,
+        protected Session $session,
         protected Albums $albums,
         protected Labels $labels,
         protected ILibrary $libraryDBO,
@@ -195,14 +196,14 @@ class Playlists implements RequestHandlerInterface {
                     $res = new JsonResource("album", $tag);
 
                 $relation = new Relationship("album", $res);
-                $relation->links()->set(new Link("related", $this->request->getBaseUrl()."album/$tag"));
+                $relation->links()->set(new Link("related", $this->request->getBaseUrl(Albums::class)."album/$tag"));
                 $e->relationships()->set($relation);
             }
 
             $relations->set($e);
         }));
 
-        $wantsTimestamp = $_GET["ts"] ?? false;
+        $wantsTimestamp = $this->request->getQueryParam('ts', false);
         if (!$wantsTimestamp) {
             $events = $relations->all();
             foreach($events as $event) {
@@ -221,7 +222,7 @@ class Playlists implements RequestHandlerInterface {
     public function fromRecord($rec, $flags) {
         $id = $rec["list"] ?? $rec["id"];
         $res = new JsonResource("show", $id);
-        $res->links()->set(new Link("self", $this->request->getBaseUrl()."playlist/".$id));
+        $res->links()->set(new Link("self", $this->request->getBaseUrl(Playlists::class)."playlist/".$id));
         $attrs = $res->attributes();
         $attrs->set("name", $rec["description"]);
         $attrs->set("date", $rec["showdate"]);
@@ -241,7 +242,7 @@ class Playlists implements RequestHandlerInterface {
                 $rel = new JsonResource("show", $origin);
 
             $relation = new Relationship("origin", $rel);
-            $relation->links()->set(new Link("related", $this->request->getBaseUrl()."playlist/$id/origin"));
+            $relation->links()->set(new Link("related", $this->request->getBaseUrl(Playlists::class)."playlist/$id/origin"));
             $res->relationships()->set($relation);
         }
 
@@ -255,7 +256,7 @@ class Playlists implements RequestHandlerInterface {
 
                 $relations = $this->fetchEvents($id, $aflags);
                 $relation = new Relationship("events", $relations);
-                $relation->links()->set(new Link("related", $this->request->getBaseUrl()."playlist/$id/events"));
+                $relation->links()->set(new Link("related", $this->request->getBaseUrl(Playlists::class)."playlist/$id/events"));
                 $res->relationships()->set($relation);
                 return $res;
             }
@@ -297,7 +298,7 @@ class Playlists implements RequestHandlerInterface {
                     $events[] = $spin;
                 }));
 
-            $wantsTimestamp = $_GET["ts"] ?? false;
+            $wantsTimestamp = $this->request->getQueryParam('ts', false);
             if (!$wantsTimestamp) {
                 $events = array_map(function($event) {
                     $created = $event["created"];
@@ -314,7 +315,7 @@ class Playlists implements RequestHandlerInterface {
 
             if(!$relations->isEmpty()) {
                 $relation = new Relationship("albums", $relations);
-                $relation->links()->set(new Link("related", $this->request->getBaseUrl()."playlist/$id/albums"));
+                $relation->links()->set(new Link("related", $this->request->getBaseUrl(Playlists::class)."playlist/$id/albums"));
                 $res->relationships()->set($relation);
             }
         }
@@ -454,10 +455,10 @@ class Playlists implements RequestHandlerInterface {
 
         $document = new Document($relations);
         if($request->requestsAttributes())
-            $document->links()->set(new Link("self", $this->request->getBaseUrl()."playlist/$id/".$request->relationship()));
+            $document->links()->set(new Link("self", $this->request->getBaseUrl(Playlists::class)."playlist/$id/".$request->relationship()));
         else {
-            $document->links()->set(new Link("self", $this->request->getBaseUrl()."playlist/$id/relationships/".$request->relationship()));
-            $document->links()->set(new Link("related", $this->request->getBaseUrl()."playlist/$id/".$request->relationship()));
+            $document->links()->set(new Link("self", $this->request->getBaseUrl(Playlists::class)."playlist/$id/relationships/".$request->relationship()));
+            $document->links()->set(new Link("related", $this->request->getBaseUrl(Playlists::class)."playlist/$id/".$request->relationship()));
         }
 
         $response = new DocumentResponse($document);
@@ -634,7 +635,7 @@ class Playlists implements RequestHandlerInterface {
             if($aid && ($events || $dup))
                 $this->service->lazyLoadImages($playlist);
 
-            return new CreatedResponse($this->request->getBaseUrl()."playlist/$playlist");
+            return new CreatedResponse($this->request->getBaseUrl(Playlists::class)."playlist/$playlist");
         }
 
         throw new \Exception("creation failed");

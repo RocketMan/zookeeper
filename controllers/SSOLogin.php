@@ -42,7 +42,7 @@ class SSOLogin implements IController {
     ) {}
 
     public function processRequest() {
-        $params = $this->request->getQSParams();
+        $params = $this->request->getQueryParams();
         $state = $params["state"] ?? false;
         if($state) {
             // process assertion
@@ -71,7 +71,7 @@ class SSOLogin implements IController {
         } else {
             // check that cookies are enabled
             if($params["checkCookie"] ?? false) {
-                if(isset($_COOKIE["testcookie"])) {
+                if($this->request->getCookie('testcookie')) {
                     // the cookie test was successful!
 
                     // clear the test cookie

@@ -30,6 +30,7 @@ use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\PlaylistEntry;
 use ZK\Engine\PlaylistObserver;
+use ZK\Engine\Request;
 use ZK\Engine\ServiceConnector;
 use ZK\Engine\Zookeeper;
 
@@ -48,6 +49,7 @@ class ArtworkControl implements IController {
         protected IArtwork $imageDBO,
         protected ILibrary $libraryDBO,
         protected IPlaylist $playlistDBO,
+        protected Request $request,
         protected ServiceConnector $service,
     ) {}
 
@@ -198,15 +200,15 @@ class ArtworkControl implements IController {
             return;
         }
 
-        $this->verbose = $_REQUEST["verbose"] ?? false;
+        $this->verbose = $this->request->getRequestParam("verbose", false);
 
-        switch($_REQUEST["action"] ?? "") {
+        switch($this->request->getRequestParam("action", "")) {
         case "delete":
-            if($tag = $_REQUEST["tag"] ?? null) {
+            if($tag = $this->request->getRequestParam("tag")) {
                 $success = $this->imageDBO->deleteAlbumArt($tag);
                 echo $success ? "Deleted album art\n" : "Album not found\n";
                 break;
-            } else if($artist = $_REQUEST["artist"] ?? null) {
+            } else if($artist = $this->request->getRequestParam("artist")) {
                 $success = $this->imageDBO->deleteArtistArt($artist);
                 echo $success ? "Deleted artist art\n" : "Artist not found\n";
                 break;
@@ -214,10 +216,10 @@ class ArtworkControl implements IController {
             echo "Usage: zk artwork:delete {tag|artist}=id|name\n";
             break;
         case "reload":
-            if($tag = $_REQUEST["tag"] ?? null) {
-                $this->reloadAlbum($tag, $_REQUEST["master"] ?? 1, $_REQUEST["skip"] ?? 0);
+            if($tag = $this->request->getRequestParam("tag")) {
+                $this->reloadAlbum($tag, $this->request->getRequestParam("master", 1), $this->request->getRequestParam("skip", 0));
                 break;
-            } else if($list = $_REQUEST["list"] ?? null) {
+            } else if($list = $this->request->getRequestParam("list")) {
                 $this->refreshList($list);
                 break;
             }

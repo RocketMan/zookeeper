@@ -49,8 +49,9 @@ class SessionImpl extends DBO implements Session {
         //
         // As the state they represent may differ between instances,
         // we must scope the session cookie to each instance.
-        if(!empty($_SERVER['SERVER_PORT'])) {
-            $port = $_SERVER['SERVER_PORT'];
+        $uri = $request->getUri();
+        if(!empty($uri->getPort())) {
+            $port = $uri->getPort();
             switch($port) {
             case 80:
             case 443:
@@ -69,10 +70,10 @@ class SessionImpl extends DBO implements Session {
         // it must be delievered in the request header as a cookie.
         if(!empty($_COOKIE[$this->sessionCookieName]))
             $this->validate($_COOKIE[$this->sessionCookieName]);
-        else if(!empty($_SERVER['HTTP_X_APIKEY']))
-            $this->authorizeApiKey($_SERVER['HTTP_X_APIKEY']);
-        else if(!empty($_SERVER['HTTP_X_CHALLENGE']))
-            $this->challenge = $this->challenger->validate($_SERVER['HTTP_X_CHALLENGE']);
+        else if(!empty($this->request->getServerParam('HTTP_X_APIKEY')))
+            $this->authorizeApiKey($this->request->getServerParam('HTTP_X_APIKEY'));
+        else if(!empty($this->request->getServerParam('HTTP_X_CHALLENGE')))
+            $this->challenge = $this->challenger->validate($this->request->getServerParam('HTTP_X_CHALLENGE'));
     }
 
     public function getDN(): ?string { return $this->displayName; }
@@ -86,7 +87,7 @@ class SessionImpl extends DBO implements Session {
         setcookie($this->sessionCookieName, $session, [
             'expires' => 0,
             'path' => '/',
-            'domain' => $_SERVER['SERVER_NAME'],
+            'domain' => $this->request->getUri()->getHost(),
             'secure' => $this->secure,
             'httponly' => true,
             'samesite' => 'lax'
@@ -95,11 +96,11 @@ class SessionImpl extends DBO implements Session {
 
     private function clearSessionCookie(): void {
         // Clear the session cookie, if any
-        if(isset($_COOKIE[$this->sessionCookieName])) {
+        if(!empty($this->request->getCookie($this->sessionCookieName))) {
             setcookie($this->sessionCookieName, "", [
                 'expires' => time() - 3600,
                 'path' => '/',
-                'domain' => $_SERVER['SERVER_NAME'],
+                'domain' => $this->request->getUri()->getHost(),
                 'secure' => $this->secure,
                 'httponly' => true,
                 'samesite' => 'lax'

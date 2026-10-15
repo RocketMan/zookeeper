@@ -28,7 +28,6 @@ use ZK\Engine\IArtwork;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
-use ZK\Engine\Request;
 use ZK\Engine\Session;
 
 use Enm\JsonApi\Exception\BadRequestException;
@@ -52,6 +51,8 @@ class Labels implements RequestHandlerInterface {
     use NoRelationshipFetchTrait;
     use NoRelationshipModificationTrait;
 
+    const API_VERSION = 1;
+
     const FIELDS = [ "name", "attention", "address", "city", "state",
                      "zip", "phone", "fax", "mailcount", "maillist",
                      "international", "pcreated", "modified", "url",
@@ -63,7 +64,7 @@ class Labels implements RequestHandlerInterface {
     ];
 
     public function __construct(
-        protected Request $request,
+        protected ClientRequest $request,
         protected Session $session,
         protected ILibrary $libraryDBO,
         protected IArtwork $imageDBO,
@@ -73,7 +74,7 @@ class Labels implements RequestHandlerInterface {
 
     public function fromRecord($rec) {
         $res = new JsonResource("label", $rec["pubkey"]);
-        $res->links()->set(new Link("self", $this->request->getBaseUrl()."label/".$rec["pubkey"]));
+        $res->links()->set(new Link("self", $this->request->getBaseUrl(Labels::class)."label/".$rec["pubkey"]));
         foreach(self::FIELDS as $field) {
             if(!key_exists($field, $rec))
                 continue;
@@ -167,7 +168,7 @@ class Labels implements RequestHandlerInterface {
 
         $document = new Document($result);
 
-        $base = $this->request->getBaseUrl()."label?";
+        $base = $this->request->getBaseUrl(Labels::class)."label?";
         $size = "&page%5Bprofile%5D=cursor&page%5Bsize%5D=$limit";
 
         $obj = $records[0];
@@ -219,7 +220,7 @@ class Labels implements RequestHandlerInterface {
         $label["foreign"] = $label["international"] ?? false;
 
         $this->editorDBO->insertUpdateLabel($label); // raises exception on error
-        return new CreatedResponse($this->request->getBaseUrl()."label/{$label['pubkey']}");
+        return new CreatedResponse($this->request->getBaseUrl(Labels::class)."label/{$label['pubkey']}");
     }
 
     public function patchResource(RequestInterface $request): ResponseInterface {

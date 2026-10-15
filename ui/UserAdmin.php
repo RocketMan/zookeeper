@@ -29,6 +29,7 @@ use ZK\Engine\IChart;
 use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IUser;
+use ZK\Engine\Request;
 use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
@@ -52,6 +53,7 @@ class UserAdmin extends MenuItem {
     private $subaction;
 
     public function __construct(
+        protected Request $request,
         protected Session $session,
         protected TemplateFactoryUI $templateFactory,
         protected ChangePass $changePass,
@@ -234,7 +236,7 @@ class UserAdmin extends MenuItem {
         $auGroups = $_REQUEST["auGroups"] ?? '';
         $auExpire = $_REQUEST["auExpire"] ?? '';
 
-        if($seq == "editUser" && $_SERVER['REQUEST_METHOD'] == 'POST') {
+        if($seq == "editUser" && $this->request->getMethod() == 'POST') {
             // Commit the changes
             $user = $this->libraryDBO->search(ILibrary::PASSWD_NAME, 0, 1, $uid);
             if(sizeof($user)) {
@@ -244,7 +246,7 @@ class UserAdmin extends MenuItem {
                     echo "<B><FONT COLOR=\"#ff0000\">Update user failed.  Try again later.</FONT></B>\n";
             } else
                 echo "<B><FONT COLOR=\"#ff0000\">Invalid user.  Update failed.</FONT></B>\n";
-        } else if($seq == "addUser" && $_SERVER['REQUEST_METHOD'] == 'POST') {
+        } else if($seq == "addUser" && $this->request->getMethod() == 'POST') {
           if($uid) {
              // force dummy password for new user if none supplied
              if(!strlen(trim($auPass)))
@@ -394,7 +396,7 @@ class UserAdmin extends MenuItem {
         $uid = $_REQUEST["uid"] ?? 0;
         $aid = $_REQUEST["aid"] ?? 0;
     
-        if($seq == "editAirname" && $_SERVER['REQUEST_METHOD'] == 'POST') {
+        if($seq == "editAirname" && $this->request->getMethod() == 'POST') {
            if($uid) {
               // Get the airname
               $result = $this->djDBO->getAirnames(0, $aid);

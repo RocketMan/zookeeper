@@ -26,6 +26,7 @@ namespace ZK\Controllers;
 
 use ZK\Engine\ConfigInterface;
 use ZK\Engine\Dispatcher;
+use ZK\Engine\Request;
 use ZK\Engine\TemplateFactory;
 use ZK\UI\TemplateFactoryUI;
 
@@ -138,12 +139,13 @@ class CacheControl implements IController {
     public function __construct(
         protected ConfigInterface $config,
         protected Dispatcher $dispatcher,
+        protected Request $request,
         protected TemplateFactoryXML $templateFactoryXML,
         protected TemplateFactoryUI $templateFactoryUI,
     ) {}
 
     public function processRequest() {
-        if(php_sapi_name() != "cli") {
+        if(!$this->request->isCli()) {
             http_response_code(400);
             return;
         }
@@ -153,10 +155,10 @@ class CacheControl implements IController {
             return;
         }
 
-        $this->verbose = $_REQUEST["verbose"] ?? false;
+        $this->verbose = $this->request->getRequestParam("verbose", false);
         $this->base = dirname(__DIR__) . '/';
 
-        switch($_REQUEST["action"] ?? "") {
+        switch($this->request->getRequestParam("action", "")) {
         case "clean":
         case "clear":
             foreach(self::TEMPLATE_ROOTS as $root => $factory)

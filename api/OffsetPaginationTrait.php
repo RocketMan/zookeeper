@@ -191,7 +191,7 @@ trait OffsetPaginationTrait {
                 min($request->paginationValue("size"), ApiServer::MAX_LIMIT) :
                 ApiServer::DEFAULT_LIMIT;
 
-        $sort = $_GET["sort"] ?? "";
+        $sort = $this->request->getQueryParam('sort', '');
 
         if(!is_array($ops)) {
             [$total, $records] = $this->$ops($request, $type, $key, $offset, $limit);
