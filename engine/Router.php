@@ -24,9 +24,6 @@
 
 namespace ZK\Engine;
 
-use GuzzleHttp\Psr7\ServerRequest;
-use Psr\Http\Message\ServerRequestInterface;
-
 class RouteException extends \Exception {}
 
 class Router {

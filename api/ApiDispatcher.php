@@ -28,9 +28,7 @@ use ZK\Engine\Request;
 use ZK\Engine\Zookeeper;
 
 use DI\Container;
-use DI\ContainerBuilder;
 use GuzzleHttp\Psr7\Uri;
-use Psr\Log\LoggerInterface;
 
 class ApiDispatcher {
     private const CORS_METHODS = "GET, HEAD, POST, PATCH, DELETE";
