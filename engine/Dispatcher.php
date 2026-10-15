@@ -28,8 +28,6 @@ use ZK\Controllers\IController;
 
 use DI\Container;
 use DI\ContainerBuilder;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Log\LoggerInterface;
 
 class Dispatcher {
     private Container $container;
