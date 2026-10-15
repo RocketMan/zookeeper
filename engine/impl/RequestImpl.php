@@ -78,7 +78,7 @@ class RequestImpl implements Request {
 
         // basepath is set by the router
         $basepath = $this->getAttribute('basepath', '/');
-        $path = $this->getAppBasePath() . $basepath;
+        $path = rtrim($this->getAppBasePath(), '/') . $basepath;
 
         // api gets path only
         if ($this->hasAttribute('version'))
@@ -97,7 +97,7 @@ class RequestImpl implements Request {
 
     public function getAppBasePath(): string {
         // mountpath is set by the router
-        return $this->getAttribute('mountpath', '');
+        return $this->getAttribute('mountpath', '/');
     }
 
     public function getRequestTarget(): string {

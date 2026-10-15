@@ -49,7 +49,7 @@ class Router {
             if ($basePath !== '/') {
                 $this->request->setAttribute(
                     'mountpath',
-                    substr($path, 0, strlen($basePath))
+                    substr($path, 0, strlen($basePath) + 1)
                 );
                 $path = substr($path, strlen($basePath));
             }
