@@ -199,7 +199,7 @@ class SpoaTurnstile implements IService {
         if (time() > $expires)
             return self::result(false);
 
-        $addrSuffix = Turnstile::INCLUDE_CLIENT_ADDR ? '|' . $addr : '';
+        $addrSuffix = ($this->config['remoteip'] ?? Turnstile::INCLUDE_CLIENT_ADDR) ? '|' . $addr : '';
         $payload = ($token->uuid ?? '') . '|' . $expires . $addrSuffix;
         $signature = hash_hmac('sha256', $payload, $this->config['secret']);
         return self::result(hash_equals($signature, $token->signature ?? ''));

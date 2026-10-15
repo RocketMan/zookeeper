@@ -283,7 +283,7 @@ class Turnstile implements IController {
         }
 
         // validate the signature
-        $addr = self::INCLUDE_CLIENT_ADDR ? '|' . $this->request->getServerParam('REMOTE_ADDR', '') : '';
+        $addr = ($config['remoteip'] ?? self::INCLUDE_CLIENT_ADDR) ? '|' . $this->request->getServerParam('REMOTE_ADDR', '') : '';
         $payload = ($token->uuid ?? '') . '|' . $expires . $addr;
         $signature = hash_hmac('sha256', $payload, $config['secret']);
         return hash_equals($signature, $token->signature ?? '');
@@ -329,7 +329,7 @@ class Turnstile implements IController {
                         && in_array('invalid-input-response', $codes)) {
                     // create cookie and redirect
                     $expires = time() + self::TTL_SECONDS;
-                    $addr = self::INCLUDE_CLIENT_ADDR ? '|' . $this->request->getServerParam('REMOTE_ADDR', '') : '';
+                    $addr = ($config['remoteip'] ?? self::INCLUDE_CLIENT_ADDR) ? '|' . $this->request->getServerParam('REMOTE_ADDR', '') : '';
                     $payload = $uuid . '|' . $expires . $addr;
                     $signature = hash_hmac('sha256', $payload, $config['secret']);
                     $cookie = base64_encode(json_encode([
