@@ -74,6 +74,9 @@ class Zookeeper {
         } catch(RouteException $e) {
             // requested resource does not match any of our routes
             http_response_code(404);
+
+            if (php_sapi_name() === 'cli')
+                fwrite(STDERR, $e->getMessage() . PHP_EOL);
         }
     }
 }
