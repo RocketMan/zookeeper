@@ -68,7 +68,7 @@ class ClientRequest {
         if ($type === $requestType)
             return $url;
 
-        $pattern = $this->request->getAttribute('replace');
+        $pattern = $this->request->getAttribute('versionRegexp');
         return preg_replace($pattern, $handler::API_VERSION, $url);
     }
 
