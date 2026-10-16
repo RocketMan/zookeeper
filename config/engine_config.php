@@ -22,7 +22,7 @@ $config = [
             [
                 'pattern' => '#^(?<basepath>/api/v(?<version>\d+(?:\.\d+)*)/)(?<path>(?<type>\w+).*)$#',
                 'dispatcher' => ZK\API\ApiDispatcher::class,
-                'attributes' => [ 'replace' => '#(?<=/api/v)\d+(?:\.\d+)*(?=/)#' ],
+                'attributes' => [ 'versionRegexp' => '#(?<=/api/v)\d+(?:\.\d+)*(?=/)#' ],
             ],
             [
                 'pattern' => '#^/zkrss\.php$#',
