@@ -24,7 +24,7 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\ConfigInterface;
+use ZK\Engine\Config;
 use ZK\Engine\Request;
 
 class Challenge implements IController {
@@ -33,7 +33,7 @@ class Challenge implements IController {
     const INCLUDE_CLIENT_ADDR = true;
 
     public function __construct(
-        protected ConfigInterface $config,
+        protected Config $config,
         protected Request $request,
     ) {}
 

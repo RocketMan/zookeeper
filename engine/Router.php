@@ -28,7 +28,7 @@ class RouteException extends \Exception {}
 
 class Router {
     public function __construct(
-        private ConfigInterface $config,
+        private Config $config,
         private Request $request,
     ) {}
 

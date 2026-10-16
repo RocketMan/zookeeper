@@ -35,7 +35,7 @@ class RequestImpl implements Request {
     protected array $queryParams = [];
 
     public function __construct(
-        protected ConfigInterface $config,
+        protected Config $config,
         protected ServerRequestInterface $delegate,
     ) {
         // alternative to $_GET that does not munge dots in parameter names

@@ -24,7 +24,7 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\ConfigInterface;
+use ZK\Engine\Config;
 use ZK\Engine\IArtwork;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
@@ -45,7 +45,7 @@ class ArtworkControl implements IController {
     protected $verbose = false;
 
     public function __construct(
-        protected ConfigInterface $config,
+        protected Config $config,
         protected IArtwork $imageDBO,
         protected ILibrary $libraryDBO,
         protected IPlaylist $playlistDBO,

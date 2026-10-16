@@ -42,7 +42,7 @@ class SafeSession {
 
 class LazyLoadParams {
     /**
-     * list of ConfigInterface keys safe for templates
+     * list of Config keys safe for templates
      */
     private const TEMPLATE_SAFE_PARAMS = [
         'copyright',
@@ -62,7 +62,7 @@ class LazyLoadParams {
     private $params = [];
 
     public function __construct(
-        protected ConfigInterface $config,
+        protected Config $config,
     ) {}
 
     public function __isset($name) {
@@ -85,7 +85,7 @@ class TemplateFactoryContext {
     public function __construct(
         public SafeSession $safeSession,
         public LazyLoadParams $lazyLoadParams,
-        public ConfigInterface $config,
+        public Config $config,
         public LoggerInterface $logger,
     ) {}
 }

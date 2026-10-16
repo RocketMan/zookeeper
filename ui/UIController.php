@@ -29,7 +29,6 @@ use ZK\Controllers\SSOCommon;
 use ZK\Controllers\Turnstile;
 use ZK\Engine\Config;
 use ZK\Engine\Dispatcher;
-use ZK\Engine\ConfigInterface;
 use ZK\Engine\IUser;
 use ZK\Engine\Request;
 use ZK\Engine\Session;
@@ -70,7 +69,7 @@ class UIController implements IController {
         protected Dispatcher $dispatcher,
         protected Turnstile $turnstile,
         protected Editor $editor,
-        protected ConfigInterface $config,
+        protected Config $config,
         protected IUser $userDBO,
     ) {}
 

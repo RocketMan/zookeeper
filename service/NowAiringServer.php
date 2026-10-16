@@ -25,7 +25,7 @@
 
 namespace ZK\Service;
 
-use ZK\Engine\ConfigInterface;
+use ZK\Engine\Config;
 use ZK\Engine\Zookeeper;
 
 use Psr\Http\Message\ResponseInterface;
@@ -128,7 +128,7 @@ class NowAiringServer implements MessageComponentInterface {
         protected LoopInterface $loop,
         protected LoggerInterface $logger,
         protected Browser $browser,
-        protected ConfigInterface $appConfig,
+        protected Config $appConfig,
     ) {
         $this->clients = new \SplObjectStorage;
         $this->imageQ = new \SplQueue;

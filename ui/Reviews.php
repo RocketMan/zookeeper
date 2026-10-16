@@ -29,7 +29,7 @@ use ZK\Engine\IDJ;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IReview;
 use ZK\Engine\IUser;
-use ZK\Engine\ConfigInterface;
+use ZK\Engine\Config;
 use ZK\Engine\Request;
 use ZK\Engine\Session;
 use ZK\Engine\Zookeeper;
@@ -73,7 +73,7 @@ class Reviews extends MenuItem {
     }
 
     public function __construct(
-        protected ConfigInterface $config,
+        protected Config $config,
         protected Request $request,
         protected Session $session,
         protected TemplateFactoryUI $templateFactory,

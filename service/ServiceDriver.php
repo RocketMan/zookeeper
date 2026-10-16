@@ -29,7 +29,7 @@ use ZK\Controllers\IController;
 use ZK\Engine\IArtwork;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
-use ZK\Engine\ConfigInterface;
+use ZK\Engine\Config;
 use ZK\Engine\Zookeeper;
 
 use DI\ContainerBuilder;
@@ -65,7 +65,7 @@ class ServiceFactory {
 
 class ServiceDriverInstance {
     public function __construct(
-        protected ConfigInterface $appConfig,
+        protected Config $appConfig,
         protected LoopInterface $loop,
         protected LoggerInterface $logger,
         protected NowAiringServer $nas,
@@ -123,7 +123,7 @@ class ServiceDriver extends CommandTarget implements IController {
     public function __construct(
         protected IArtwork $imageDBO,
         protected ILibrary $libraryDBO,
-        protected ConfigInterface $config,
+        protected Config $config,
         protected LoggerInterface $logger,
     ) {}
 
@@ -424,7 +424,7 @@ class ServiceDriver extends CommandTarget implements IController {
             CacheInterface::class => \DI\create(ArrayCache::class)->constructor(self::RESOLVER_CACHE_SIZE),
             LoopInterface::class => fn() => Loop::get(),
             LoggerInterface::class => $this->logger,
-            ConfigInterface::class => $this->config,
+            Config::class => $this->config,
         ]);
 
         $container = $builder->build();
