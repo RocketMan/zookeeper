@@ -34,7 +34,7 @@ class Dispatcher {
     private string $default;
 
     public function __construct(
-        ConfigInterface $config,
+        Config $config,
         Container $bootstrapContainer,
         private Request $request,
     ) {

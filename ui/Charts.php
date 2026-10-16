@@ -24,7 +24,7 @@
 
 namespace ZK\UI;
 
-use ZK\Engine\ConfigInterface;
+use ZK\Engine\Config;
 use ZK\Engine\IChart;
 use ZK\Engine\ILibrary;
 use ZK\Engine\PlaylistEntry;
@@ -48,7 +48,7 @@ class Charts extends MenuItem {
     public function __construct(
         protected Request $request,
         protected Session $session,
-        protected ConfigInterface $config,
+        protected Config $config,
         protected TemplateFactoryUI $templateFactory,
         protected Home $home,
         protected IChart $chartDBO,

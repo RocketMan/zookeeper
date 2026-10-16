@@ -24,7 +24,7 @@
 
 namespace ZK\API;
 
-use ZK\Engine\ConfigInterface;
+use ZK\Engine\Config;
 
 /**
  * configuration loader
@@ -32,17 +32,17 @@ use ZK\Engine\ConfigInterface;
  * lazy loads and caches the api configuration
  */
 class LazyApiConfig {
-    protected ConfigInterface $apiConfig;
+    protected Config $apiConfig;
 
     public function __construct(
-        protected ConfigInterface $config,
+        protected Config $config,
     ) {}
 
-    public function getAppConfig(): ConfigInterface {
+    public function getAppConfig(): Config {
         return $this->config;
     }
 
-    public function getApiConfig(): ConfigInterface {
+    public function getApiConfig(): Config {
         return $this->apiConfig ??= $this->config->withConfigFrom('controller_config', 'apiControllers');
     }
 }

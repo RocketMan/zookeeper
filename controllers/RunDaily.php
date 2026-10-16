@@ -24,7 +24,7 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\ConfigInterface;
+use ZK\Engine\Config;
 use ZK\Engine\IArtwork;
 use ZK\Engine\IChart;
 use ZK\Engine\IPlaylist;
@@ -37,7 +37,7 @@ class RunDaily implements IController {
     private $catCodes;
 
     public function __construct(
-        protected ConfigInterface $config,
+        protected Config $config,
         protected IArtwork $imageDBO,
         protected IChart $chartDBO,
         protected IPlaylist $playlistDBO,

@@ -24,7 +24,7 @@
 
 namespace ZK\Controllers;
 
-use ZK\Engine\ConfigInterface;
+use ZK\Engine\Config;
 use ZK\Engine\IUser;
 use ZK\Engine\Request;
 use ZK\Engine\Session;
@@ -34,7 +34,7 @@ class SSOLogin implements IController {
     private $ssoOptions;
 
     public function __construct(
-        protected ConfigInterface $config,
+        protected Config $config,
         protected Request $request,
         protected Session $session,
         protected IUser $userDBO,

@@ -157,7 +157,7 @@ class LibraryImpl extends DBO implements ILibrary {
     }
 
     public function __construct(
-        protected ConfigInterface $config,
+        protected Config $config,
         protected Session $session,
         protected PDO $pdo,
     ) {

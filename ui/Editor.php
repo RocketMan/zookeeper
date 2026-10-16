@@ -30,7 +30,7 @@ use ZK\Engine\IArtwork;
 use ZK\Engine\IEditor;
 use ZK\Engine\ILibrary;
 use ZK\Engine\PlaylistEntry;
-use ZK\Engine\ConfigInterface;
+use ZK\Engine\Config;
 use ZK\Engine\Request;
 use ZK\Engine\Session;
 use ZK\Engine\Zookeeper;
@@ -174,7 +174,7 @@ class Editor extends MenuItem {
     }
 
     public function __construct(
-        protected ConfigInterface $config,
+        protected Config $config,
         protected Request $request,
         protected Session $session,
         protected TemplateFactoryUI $templateFactory,

@@ -35,11 +35,11 @@ class Zookeeper {
 
     const UA = "Zookeeper/2.0; (+https://zookeeper.ibinx.com/)";
 
-    private ConfigInterface $engineConfig;
+    private Config $engineConfig;
     private Container $container;
 
     public function __construct() {
-        $config = new Config();
+        $config = new DefaultConfig();
 
         $this->engineConfig = $config->withConfigFrom('engine_config');
         $builder = new ContainerBuilder();
@@ -49,7 +49,7 @@ class Zookeeper {
         ));
 
         $builder->addDefinitions([
-            ConfigInterface::class => $config,
+            Config::class => $config,
             LoggerInterface::class => \DI\factory(fn(LoggerFactory $fact) => $fact->create()),
             PDO::class => \DI\factory(fn(PDOFactory $fact) => $fact->create()),
             ServerRequestInterface::class => fn() => ServerRequest::fromGlobals(),
