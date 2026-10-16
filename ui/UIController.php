@@ -24,7 +24,7 @@
 
 namespace ZK\UI;
 
-use ZK\Controllers\IController;
+use ZK\Controllers\Controller;
 use ZK\Controllers\SSOCommon;
 use ZK\Controllers\Turnstile;
 use ZK\Engine\Config;
@@ -54,7 +54,7 @@ class MenuEntry {
     }
 }
 
-class UIController implements IController {
+class UIController implements Controller {
     protected $ssoUser;
     protected $dn;
     protected $menu;

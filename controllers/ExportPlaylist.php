@@ -34,7 +34,7 @@ use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
-class ExportPlaylist extends CommandTarget implements IController {
+class ExportPlaylist extends CommandTarget implements Controller {
     private static $actions = [
         [ "html", "emitHTML" ],
         [ "xml", "emitXML" ],

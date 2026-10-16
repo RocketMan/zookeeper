@@ -27,7 +27,7 @@ namespace ZK\Controllers;
 use ZK\Engine\Config;
 use ZK\Engine\Request;
 
-class Challenge implements IController {
+class Challenge implements Controller {
     const DIFFICULTY = 10;    // leading zero bits required
     const TTL_SECONDS = 180;  // challenge expires in 3 minutes
     const INCLUDE_CLIENT_ADDR = true;

@@ -24,7 +24,7 @@
 
 namespace ZK\Engine;
 
-use ZK\Controllers\IController;
+use ZK\Controllers\Controller;
 
 use DI\Container;
 use DI\ContainerBuilder;
@@ -91,7 +91,7 @@ class Dispatcher {
                 ? $this->default
                 : $controller;
         $impl = $this->container->get($controller);
-        if($impl instanceof IController)
+        if($impl instanceof Controller)
             return $impl->processRequest();
 
         throw new \Exception("Invalid target '$controller'");

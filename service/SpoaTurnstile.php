@@ -62,7 +62,7 @@ use SPOA\Server\Connection;
  * See INSTALLATION.md for details on installing and configuring push
  * notifications.
  */
-class SpoaTurnstile implements IService {
+class SpoaTurnstile implements Service {
     const DEFAULT_SPOA_SERVER = "127.0.0.1:32082";
 
     const DEFAULT_RESOLVER = "8.8.8.8";  // google DNS

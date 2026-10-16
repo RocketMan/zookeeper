@@ -75,7 +75,7 @@ class ControlFlowRejection extends \Exception {}
  * See INSTALLATION.md for details on installing and configuring push
  * notifications.
  */
-class ZootopiaListener implements IService {
+class ZootopiaListener implements Service {
     protected $queue;
     protected $wsEndpoint;
     protected $zk;
@@ -157,7 +157,7 @@ class ZootopiaListener implements IService {
             return $this->processEvent($event);
         });
 
-        $this->wsEndpoint = $this->config[IService::WS_ENDPOINT];
+        $this->wsEndpoint = $this->config[Service::WS_ENDPOINT];
         $this->zk = $this->browser->
             withBase($this->config["base_url"])->
             withTimeout(self::SERVICE_TIMEOUT)->

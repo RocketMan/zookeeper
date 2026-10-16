@@ -34,7 +34,7 @@ use ZK\Engine\Zookeeper;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 
-class Turnstile implements IController {
+class Turnstile implements Controller {
     const TTL_SECONDS = 8 * 60 * 60;  // 8 hour token validation
     const INCLUDE_CLIENT_ADDR = true;
 

@@ -25,7 +25,7 @@
 namespace ZK\Controllers;
 
 
-class OpenSearch implements IController {
+class OpenSearch implements Controller {
     public function __construct(
         protected TemplateFactoryXML $templateFactory,
     ) {}

@@ -29,7 +29,7 @@ use ZK\Engine\Request;
 
 define("_SYSTEM_TTFONTS", dirname(__DIR__)."/fonts/");
 
-class PrintTags implements IController {
+class PrintTags implements Controller {
     const FONT_FACE="Montserrat-Bold";
     const FONT_FILE="Montserrat-Bold.ttf";
     const FONT_FACE_Z="MontserratZ-Bold";
