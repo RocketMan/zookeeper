@@ -27,7 +27,7 @@ namespace ZK\Controllers;
 use ZK\Engine\IChart;
 use ZK\Engine\Request;
 
-class ExportAdd implements IController {
+class ExportAdd implements Controller {
     public function __construct(
         protected IChart $chartDBO,
         protected Request $request,

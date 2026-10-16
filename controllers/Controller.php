@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2021 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -22,25 +22,8 @@
  *
  */
 
-namespace ZK\Service;
+namespace ZK\Controllers;
 
-/**
- * Contract for a hosted service
- *
- * The constructor is dependency injected, including an array config
- * parameter with configuration metadata.
- *
- * As the service runs on a ReactPHP event loop, it must never perform
- * any operation which could block.
- */
-interface IService {
-    const WS_ENDPOINT = "ws_endpoint";
-    const HTTP_ENDPOINTS = "http_endpoints";
-
-    /**
-     * Start the service
-     *
-     * This method is invoked prior to starting of the event loop
-     */
-    function start();
+interface Controller {
+    public function processRequest();
 }

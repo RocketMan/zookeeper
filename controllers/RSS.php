@@ -33,7 +33,7 @@ use ZK\Engine\PlaylistEntry;
 use ZK\Engine\Request;
 use ZK\Engine\Session;
 
-class RSS extends CommandTarget implements IController {
+class RSS extends CommandTarget implements Controller {
     private static $actions = [
         [ "", "emitError" ],
         [ "reviews", "recentReviews" ],

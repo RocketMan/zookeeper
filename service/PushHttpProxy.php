@@ -70,7 +70,7 @@ use Ratchet\RFC6455\Messaging\Frame;
  * function (see above).
  */
 #[\AllowDynamicProperties]
-class PushHttpProxy implements IService {
+class PushHttpProxy implements Service {
     protected $wsEndpoint;
     protected $httpEndpoints;
     protected $current;
@@ -96,8 +96,8 @@ class PushHttpProxy implements IService {
     }
 
     public function start() {
-        $this->wsEndpoint = $this->config[IService::WS_ENDPOINT];
-        $this->httpEndpoints = $this->config[IService::HTTP_ENDPOINTS];
+        $this->wsEndpoint = $this->config[Service::WS_ENDPOINT];
+        $this->httpEndpoints = $this->config[Service::HTTP_ENDPOINTS];
         $this->reconnect();
     }
 

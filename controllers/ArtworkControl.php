@@ -37,7 +37,7 @@ use ZK\Engine\Zookeeper;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 
-class ArtworkControl implements IController {
+class ArtworkControl implements Controller {
     private const DISCOGS_BASE = "https://www.discogs.com";
     private const DISCOGS_SEARCH = "https://api.discogs.com/database/search";
 

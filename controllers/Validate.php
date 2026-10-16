@@ -35,7 +35,7 @@ use ZK\Engine\Session;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 
-class Validate implements IController {
+class Validate implements Controller {
     private $success = true;
     private $testUser;
     private $testPass;

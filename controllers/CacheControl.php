@@ -30,7 +30,7 @@ use ZK\Engine\Request;
 use ZK\Engine\TemplateFactory;
 use ZK\UI\TemplateFactoryUI;
 
-class CacheControl implements IController {
+class CacheControl implements Controller {
     protected const TEMPLATE_ROOTS = [
         'ui/templates' => 'templateFactoryUI',
         'controllers/templates' => 'templateFactoryXML',

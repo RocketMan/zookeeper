@@ -27,7 +27,7 @@ namespace ZK\Controllers;
 use ZK\Engine\Engine;
 use ZK\UI\AddManager;
 
-class ExportAfile implements IController {
+class ExportAfile implements Controller {
     public function __construct(
         protected AddManager $addmgr,
     ) {}

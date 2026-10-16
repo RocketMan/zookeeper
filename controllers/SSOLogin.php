@@ -29,7 +29,7 @@ use ZK\Engine\IUser;
 use ZK\Engine\Request;
 use ZK\Engine\Session;
 
-class SSOLogin implements IController {
+class SSOLogin implements Controller {
     private $action;
     private $ssoOptions;
 

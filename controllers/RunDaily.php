@@ -33,7 +33,7 @@ use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
-class RunDaily implements IController {
+class RunDaily implements Controller {
     private $catCodes;
 
     public function __construct(

@@ -25,7 +25,7 @@
 namespace ZK\Service;
 
 use ZK\Controllers\CommandTarget;
-use ZK\Controllers\IController;
+use ZK\Controllers\Controller;
 use ZK\Engine\IArtwork;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
@@ -46,7 +46,7 @@ class ServiceFactory {
         private \DI\Container $container,
     ) {}
 
-    public function create(string $className, array $config): IService {
+    public function create(string $className, array $config): Service {
         // This supports a transitional regime where PushNotification
         // services have been refactored to the new Service namespace.
         if (!class_exists($className)) {
@@ -97,7 +97,7 @@ class ServiceDriverInstance {
     }
 }
 
-class ServiceDriver extends CommandTarget implements IController {
+class ServiceDriver extends CommandTarget implements Controller {
     /**
      * This is an endpoint for internal use only.  There should be
      * no need to change it, but if you do, you must also update the
