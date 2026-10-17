@@ -53,7 +53,6 @@ class Zookeeper {
             LoggerInterface::class => \DI\factory(fn(LoggerFactory $fact) => $fact->create()),
             PDO::class => \DI\factory(fn(PDOFactory $fact) => $fact->create()),
             ServerRequestInterface::class => fn() => ServerRequest::fromGlobals(),
-            Zookeeper::class => $this,
         ]);
 
         $this->container = $builder->build();
