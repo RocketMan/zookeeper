@@ -118,6 +118,7 @@ $config = [
         'oauth_token_uri' => 'https://accounts.google.com/o/oauth2/token',
         'oauth_tokeninfo_uri' => 'https://www.googleapis.com/oauth2/v1/tokeninfo',
         'oauth_userinfo_uri' => 'https://www.googleapis.com/oauth2/v3/userinfo',
+        'query_new_user' => false, // ask new user if new or existing account
     ],
 
     /**
