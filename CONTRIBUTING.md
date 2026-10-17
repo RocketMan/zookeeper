@@ -106,7 +106,8 @@ The following is an overview of the source code directory structure:
               • IUser - user management
 
             Other noteworthy interfaces in engine:
-              • ConfigInterface - application configuration
+              • Config - application configuration
+              • Request - current request state
               • Session - session state
 
             Application components receive the interfaces they
