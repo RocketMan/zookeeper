@@ -137,8 +137,11 @@ class SSOCommon {
         $row = $this->userDBO->getUserByFullname($name);
         if($row)
             $this->userDBO->assignAccount($row["name"], $account);
-        else
+        else {
+            if ($this->config->get('sso.query_new_user', false))
+                return false;
             $this->userDBO->createNewAccount($name, $account);
+        }
 
         return $this->setupSSOByAccount($account);
     }
