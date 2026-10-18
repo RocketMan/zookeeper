@@ -164,6 +164,13 @@ interface Request {
     public function getQueryParams(): array;
 
     /**
+     * return form post parameters
+     *
+     * @return array post parameters
+     */
+    public function getPostParams(): array;
+
+    /**
      * get the body of the message
      *
      * @return StreamInterface request body
@@ -175,8 +182,9 @@ interface Request {
      *
      * @param string $url target URL
      * @param array query string key-value pairs
+     * @param int|null redirect code (optional; default 307)
      */
-    public function doHttpRedirect(string $url, array $params): void;
+    public function doHttpRedirect(string $url, array $params, ?int $code = null): void;
 
     /**
      * get data from the request environment, typically derived from the

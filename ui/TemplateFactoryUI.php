@@ -41,12 +41,12 @@ class TemplateFactoryUI extends TemplateFactory {
         $this->twig->addFilter($filter);
     }
 
-    public function setContext($menu = null, $menuItem = null, $html = null) {
+    public function setContext($menu = null, $menuItem = null, $html = null, $action = null, $subaction = null) {
         $this->app->content->data = $html;
         $this->app->content->template = $menuItem ? $menuItem->getTemplate() : null;
         $this->app->content->title = $menuItem ? $menuItem->getTitle() : null;
         $this->app->menu = $menu ?? [];
-        $this->app->submenu = $menuItem ? $menuItem->composeSubmenu($_REQUEST['action'] ?? '', $_REQUEST['subaction'] ?? '') : [];
+        $this->app->submenu = $menuItem ? $menuItem->composeSubmenu($action ?? '', $subaction ?? '') : [];
         $this->app->tertiary = $menuItem ? $menuItem->getTertiary() : null;
         $this->app->extra = $menuItem ? $menuItem->getExtra() : null;
     }

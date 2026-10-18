@@ -150,9 +150,9 @@ class Charts extends MenuItem {
     public function chartWeekly() {
         $station = $this->config->get('station');
     
-        $year = (int)($_REQUEST["year"] ?? 0);
-        $month = (int)($_REQUEST["month"] ?? 0);
-        $day = (int)($_REQUEST["day"] ?? 0);
+        $year = (int)$this->request->getRequestParam("year", 0);
+        $month = (int)$this->request->getRequestParam("month", 0);
+        $day = (int)$this->request->getRequestParam("day", 0);
 
         $check = $this->chartDBO->getChartDates(1)->asArray();
         if (count($check) != 1) {
@@ -244,11 +244,11 @@ class Charts extends MenuItem {
     public function chartMonthly() {
         $station = $this->config->get('station');
     
-        $year = (int)($_REQUEST["year"] ?? 0);
-        $month = (int)($_REQUEST["month"] ?? 0);
-        $day = (int)($_REQUEST["day"] ?? 0);
-        $cyear = (int)($_REQUEST["cyear"] ?? 0);
-        $dnum = (int)($_REQUEST["dnum"] ?? 0);
+        $year = (int)$this->request->getRequestParam("year", 0);
+        $month = (int)$this->request->getRequestParam("month", 0);
+        $day = (int)$this->request->getRequestParam("day", 0);
+        $cyear = (int)$this->request->getRequestParam("cyear", 0);
+        $dnum = (int)$this->request->getRequestParam("dnum", 0);
 
         $config = $this->config->get('chart');
         $earliestYear = array_key_exists('earliest_chart_year', $config)?
@@ -384,20 +384,19 @@ class Charts extends MenuItem {
     }
 
     public function chartEMail() {
-        if(($_REQUEST["seq"] ?? '') == "update") {
+        if ($this->request->getRequestParam("seq") == "update") {
             $success = true;
             for($i=1; $success && $i<=16; $i++) {
-                if(isset($_POST["email".$i])) {
-                    $email = $_POST["email".$i];
+                $email = $this->request->getPostParam("email$i");
+                if ($email !== null)
                     $success &= $this->chartDBO->updateChartEMail($i, $email);
-                }
             }
         }
 
         $addresses = $this->chartDBO->getChartEMail()->asArray();
         $this->addVar('addresses', $addresses);
 
-        if(($_REQUEST["seq"] ?? '') == "update")
+        if ($this->request->getRequestParam("seq") == "update")
             $this->addVar($success ? 'success' : 'failure', true);
 
         $this->setTemplate('charts/email.html');

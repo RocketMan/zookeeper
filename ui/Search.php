@@ -71,11 +71,11 @@ class Search extends MenuItem {
     }
 
     public function processLocal($action, $subaction) {
-        if(array_key_exists('n', $_REQUEST))
-            $this->searchText = stripslashes($_REQUEST['n']);
+        $text = $this->request->getRequestParam('n');
+        if($text !== null)
+            $this->searchText = stripslashes($text);
 
-        $this->searchType =
-                array_key_exists('s', $_REQUEST)?$_REQUEST['s']:"";
+        $this->searchType = $this->request->getRequestParam('s', '');
         $this->dispatchAction($this->searchType, self::$legacySearchActions);
     }
 

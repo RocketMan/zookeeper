@@ -156,15 +156,19 @@ class RequestImpl implements Request {
         return $this->queryParams;
     }
 
+    public function getPostParams(): array {
+        return $this->delegate->getParsedBody();
+    }
+
     public function getBody(): StreamInterface {
         return $this->delegate->getBody();
     }
 
-    public function doHttpRedirect(string $url, array $params): void {
+    public function doHttpRedirect(string $url, array $params, ?int $code = null): void {
         $qs = http_build_query($params);
         if (strlen($qs))
             $url .= '?' . $qs;
-        header("Location: " . $url, true, 307);
+        header("Location: " . $url, true, $code ?? 307);
     }
 
     public function getServerParam(string $key, ?string $default = null): ?string {
