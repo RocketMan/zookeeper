@@ -58,6 +58,8 @@ class UIController implements Controller {
     protected $ssoUser;
     protected $dn;
     protected $menu;
+    protected $action;
+    protected $subaction;
 
     protected $menuItem;
 
@@ -89,8 +91,8 @@ class UIController implements Controller {
     /**
      * dispatch action to the appropriate menu item/command target
      */
-    public function dispatch($action, $subaction) {
-        $item = $this->match($action);
+    public function dispatch() {
+        $item = $this->match($this->action);
 
         // If no action was selected or if action is unauthorized,
         // default to the first one
@@ -101,7 +103,7 @@ class UIController implements Controller {
         $this->menuItem = $this->dispatcher->get($implClass);
 
         if($this->menuItem instanceof MenuItem)
-            $this->menuItem->process($action, $subaction);
+            $this->menuItem->process($this->action, $this->subaction);
     }
 
     /**
@@ -150,23 +152,24 @@ class UIController implements Controller {
         if($customMenu)
             $this->menu = $this->menu->merge($customMenu);
 
+        $this->action = $this->request->getAction();
+        $this->subaction = $this->request->getSubaction();
+
         $this->preProcessRequest();
 
-        $action = $this->request->getAction();
-        $subaction = $this->request->getSubaction();
         $isJson = substr($this->request->getServerParam('HTTP_ACCEPT', ''), 0, 16) === 'application/json';
         ob_start("ob_gzhandler");
         header("X-Powered-By: " . Zookeeper::UA);
         if ($isJson) {
             header("Content-Type: application/json");
-            $this->dispatch($action, $subaction);
+            $this->dispatch();
         } else {
             ob_start();
-            $this->emitMain($action, $subaction);
+            $this->emitMain();
             $data = ob_get_contents();
             ob_end_clean();
 
-            $this->templateFact->setContext($this->composeMenu($_REQUEST['action'] ?? ''), $this->menuItem, $data);
+            $this->templateFact->setContext($this->composeMenu($this->action), $this->menuItem, $data, $this->action, $this->subaction);
             $template = $this->templateFact->load('index.html');
             echo $template->render($this->menuItem ? $this->menuItem->getTemplateVars() : []);
         }
@@ -175,11 +178,11 @@ class UIController implements Controller {
 
     protected function preProcessRequest() {
         // Validate the requested action is authorized
-        if(!empty($_REQUEST["action"]) &&
-                !$this->isActionAuth($_REQUEST["action"]) &&
-                $_REQUEST["action"] != "loginValidate" &&
-                $_REQUEST["action"] != "logout") {
-            $_REQUEST["action"] = "invalidAction";
+        if(!empty($this->action) &&
+                !$this->isActionAuth($this->action) &&
+                $this->action != "loginValidate" &&
+                $this->action != "logout") {
+            $this->action = "invalidAction";
         }
 
         // Turnstile validation
@@ -196,12 +199,12 @@ class UIController implements Controller {
         }
 
         // Setup/teardown a session
-        switch($_REQUEST["action"] ?? '') {
+        switch($this->action) {
         case "loginValidate":
             if(!$this->session->isAuth("u") &&
-                    isset($_REQUEST["user"]) &&
-                    isset($_REQUEST["password"]))
-                $this->doLogin($_REQUEST["user"], $_REQUEST["password"]);
+                    ($user = $this->request->getRequestParam("user")) &&
+                    ($pass = $this->request->getRequestParam("password")))
+                $this->doLogin($user, $pass);
             break;
         case "ssoOptions":
             if($this->doSSOOptions())
@@ -216,34 +219,74 @@ class UIController implements Controller {
             break;
         case "find":
             // redirect full-text search URLs from v2.x
-            $qs = "?action=search&s=all&n=".urlencode($_REQUEST["search"] ?? '');
-            header("Location: ".$this->request->getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            $params = [
+                'action' => 'search',
+                's' => 'all',
+                'n' => $this->request->getRequestParam('search', ''),
+            ];
+
+            $this->request->doHttpRedirect(
+                $this->request->getBaseUrl(),
+                $params,
+                301, // 301 Moved Permanently
+            );
+
             exit;
         case "viewDJReviews":
             // redirect DJ review URLs from v2.x
-            $qs = "?action=viewRecent&subaction=viewDJ&seq=selUser&viewuser=".urlencode($_REQUEST["n"] ?? '');
-            header("Location: ".$this->request->getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            $params = [
+                'action' => 'viewRecent',
+                'subaction' => 'viewDJ',
+                'seq' => 'selUser',
+                'viewuser' => $this->request->getRequestParam('n', ''),
+            ];
+
+            $this->request->doHttpRedirect(
+                $this->request->getBaseUrl(),
+                $params,
+                301, // 301 Moved Permanently
+            );
+
             exit;
         case "viewList":
         case "viewListById":
         case "viewDJ":
             // redirect playlist URLs from v2.x
-            $params = array_merge($_GET, $_POST); // avoid _REQUEST to exclude cookies
+            $params = array_merge(
+                $this->request->getQueryParams(),
+                $this->request->getPostParams()
+            );
             $params["subaction"] = $params["action"];
             $params["action"] = "";
-            $qs = "?" . http_build_query($params);
-            header("Location: ".$this->request->getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+
+            $this->request->doHttpRedirect(
+                $this->request->getBaseUrl(),
+                $params,
+                301, // 301 Moved Permanently
+            );
+
             exit;
         case "viewDate":
             // redirect playlist URLs from the legacy date picker
-            $qs = isset($_REQUEST["playlist"])?"?subaction=viewListById&playlist=".urlencode($_REQUEST["playlist"]):"?subaction=viewList";
-            header("Location: ".$this->request->getBaseUrl().$qs, true, 301); // 301 Moved Permanently
+            $pid = $this->request->getRequestParam("playlist");
+            $params = [
+                'subaction' => $pid ? 'viewListById' : 'viewList',
+            ];
+            if ($pid)
+                $params['playlist'] = $pid;
+
+            $this->request->doHttpRedirect(
+                $this->request->getBaseUrl(),
+                $params,
+                301, // 301 Moved Permanently
+            );
+
             exit;
         }
     }
 
-    protected function emitMain($action, $subaction) {
-        switch($action) {
+    protected function emitMain() {
+        switch($this->action) {
         case "login":
             $this->emitLogin();
             break;
@@ -255,7 +298,7 @@ class UIController implements Controller {
         case "ssoInvalidAssertion":
         case "ssoError":
         case "cookiesDisabled":
-            $this->emitLogin($action);
+            $this->emitLogin($this->action);
             break;
         case "ssoOptions":
             $this->doSSOOptionsPage();
@@ -274,7 +317,7 @@ class UIController implements Controller {
             // fall through...
         default:
             // dispatch action
-            $this->dispatch($action, $subaction);
+            $this->dispatch();
             break;
         }
     }
@@ -342,7 +385,7 @@ class UIController implements Controller {
 <?php } ?>
     </TABLE>
     <INPUT TYPE=HIDDEN NAME=action VALUE="loginValidate">
-    <INPUT TYPE=HIDDEN NAME=location VALUE="<?php echo $_REQUEST["location"] ?? ''; ?>">
+    <INPUT TYPE=HIDDEN NAME=location VALUE="<?php echo $this->request->getRequestParam('location', ''); ?>">
     </FORM>
 <?php
         UI::setFocus("user");
@@ -371,7 +414,7 @@ class UIController implements Controller {
             if($this->session->isAuth("g"))
                 echo "   <P><B>IMPORTANT:  This login can be used ONLY at the station.</B></P>\n";
             $this->editor->emitQueueHook($this->session);
-        } else if(isset($_REQUEST['user'])) {
+        } else if($this->request->getRequestParam('user')) {
             $this->emitLogin("badCredentials");
             return false;
         }
@@ -394,8 +437,8 @@ class UIController implements Controller {
     }
 
     protected function checkCookiesEnabled() {
-        if($_REQUEST["checkCookie"] ?? 0) {
-            if(isset($_COOKIE["testcookie"])) {
+        if ($this->request->getRequestParam("checkCookie", 0)) {
+            if ($this->request->getCookie("testcookie")) {
                 // the cookie test was successful!
 
                 // clear the test cookie
@@ -411,7 +454,7 @@ class UIController implements Controller {
             $rq = [
                 "action" => "login",
                 "checkCookie" => 1,
-                "location" => $_REQUEST['location'] ?? '',
+                "location" => $this->request->getRequestParam('location', ''),
             ];
         }
 
@@ -437,7 +480,7 @@ class UIController implements Controller {
             $sessionID = md5(uniqid(rand()));
             $this->session->create($sessionID, $user, $access);
 
-            $location = $_REQUEST['location'] ?? '';
+            $location = $this->request->getRequestParam('location', '');
             if ($location) {
                 header("Location: " . $location, true, 307);
                 exit;
@@ -450,10 +493,10 @@ class UIController implements Controller {
             !$this->session->isAuth("U");
 
         $host = $this->request->getUri()->getHost();
-        if($this->ssoUser)
+        if ($this->ssoUser)
             setcookie("dn", base64_encode($this->session->getDN()), 0, "/", $host);
-        else if(isset($_COOKIE["dn"])) {
-            $this->dn = base64_decode($_COOKIE["dn"]);
+        else if ($dn = $this->request->getCookie("dn")) {
+            $this->dn = base64_decode($dn);
             setcookie("dn", "", time() - 3600, "/", $host);
         }
     
@@ -464,22 +507,27 @@ class UIController implements Controller {
     protected function doSSOOptions() {
         $success = false;
         $access = '';
-        switch($_REQUEST["account"]) {
+        switch($this->request->getRequestParam("account")) {
         case "old":
-            if($this->userDBO->validatePassword($_REQUEST["user"], $_REQUEST["password"], 0, $access) &&
-                    !$this->session->checkAccess('d', $access) &&
-                    !$this->session->checkAccess('g', $access)) {
-                $row = $this->userDBO->getSsoOptions($_REQUEST["ssoOptions"]);
-                if($row) {
+            if ($this->userDBO->validatePassword(
+                    $this->request->getRequestParam("user"),
+                    $this->request->getRequestParam("password"),
+                    0,
+                    $access
+                ) && !$this->session->checkAccess('d', $access)
+                  && !$this->session->checkAccess('g', $access)
+            ) {
+                $row = $this->userDBO->getSsoOptions($this->request->getRequestParam("ssoOptions"));
+                if ($row) {
                     $account = $row['account'];
                     $location = $row['url'];
-                    $this->userDBO->assignAccount($_REQUEST["user"], $account);
+                    $this->userDBO->assignAccount($this->request->getRequestParam("user"), $account);
                     $success = true;
                 }
             }
             break;
         case "new":
-            $row = $this->userDBO->getSsoOptions($_REQUEST["ssoOptions"]);
+            $row = $this->userDBO->getSsoOptions($this->request->getRequestParam("ssoOptions"));
             if($row) {
                 $account = $row['account'];
                 $location = $row['url'];
@@ -493,9 +541,9 @@ class UIController implements Controller {
     
         if($success) {
             // show the login succeeded page
-            $this->userDBO->teardownSsoOptions($_REQUEST["ssoOptions"]);
+            $this->userDBO->teardownSsoOptions($this->request->getRequestParam("ssoOptions"));
             $this->ssoCommon->setupSSOByAccount($account);
-            $_REQUEST["action"] = "loginValidate";
+            $this->action = "loginValidate";
             if($location) {
                 $rq = array(
                     "action" => '',
@@ -511,7 +559,7 @@ class UIController implements Controller {
     
     protected function doSSOOptionsPage() {
         $success = false;
-        $row = $this->userDBO->getSsoOptions($_REQUEST["ssoOptions"]);
+        $row = $this->userDBO->getSsoOptions($this->request->getRequestParam("ssoOptions"));
         if($row)
             $success = true;
         if(!$success) {
@@ -524,7 +572,7 @@ class UIController implements Controller {
     <FORM ACTION="?" METHOD=POST>
       <P><INPUT TYPE="radio" NAME="account" VALUE="old" ID="oldRadio" onClick="showOld();">I already have a Zookeeper account and wish to use it</P>
       <DIV ID="oldSect" style="display:none;margin-left:50px;">
-<?php if($_REQUEST["user"]) { ?>
+<?php if($this->request->getRequestParam("user")) { ?>
           <P><FONT CLASS="error">Invalid user or password</FONT></P>
 <?php } ?>
           <P>Enter your existing Zookeeper login</P>
@@ -542,7 +590,7 @@ class UIController implements Controller {
          <INPUT TYPE=SUBMIT class="submit" VALUE="  Continue  ">
       </DIV>
       <INPUT TYPE="hidden" NAME="action" VALUE="ssoOptions">
-      <INPUT TYPE="hidden" NAME="ssoOptions" VALUE="<?php echo $_REQUEST["ssoOptions"]; ?>">
+      <INPUT TYPE="hidden" NAME="ssoOptions" VALUE="<?php echo $this->request->getRequestParam("ssoOptions"); ?>">
     </FORM>
     </DIV>
     <SCRIPT><!--
@@ -553,7 +601,7 @@ class UIController implements Controller {
     function showNew() {
         document.getElementById("oldSect").style.display = "none";
         document.getElementById("newSect").style.display = "block"; }
-<?php if($_REQUEST["user"]) { ?>
+<?php if($this->request->getRequestParam("user")) { ?>
     $().ready(function() {
         document.getElementById("oldRadio").checked = true;
         showOld();

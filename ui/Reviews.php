@@ -130,8 +130,8 @@ class Reviews extends MenuItem {
     }
 
     public function reviewsByDJ() {
-        $seq = $_REQUEST["seq"] ?? '';
-        $viewuser = $_REQUEST["viewuser"] ?? null;
+        $seq = $this->request->getRequestParam("seq", "");
+        $viewuser = $this->request->getRequestParam("viewuser");
         if($seq == "selUser" && $viewuser) {
             $airname = null;
             if(is_numeric($viewuser)) {
@@ -187,8 +187,8 @@ class Reviews extends MenuItem {
     }
 
     public function updateReviewShelf() {
-        $op = $_REQUEST['op'] ?? false;
-        $tag = $_REQUEST['tag'] ?? false;
+        $op = $this->request->getRequestParam("op", false);
+        $tag = $this->request->getRequestParam("tag", false);
         if(!$op || !$tag) {
             http_response_code(400); // bad request
             return;
@@ -227,7 +227,7 @@ class Reviews extends MenuItem {
 
     public function viewRecentReviews() {
         $isAuthorized = $this->session->isAuth('u');
-        $author = $isAuthorized && ($_GET['dj'] ?? '') == 'Me' ? $this->session->getUser() : '';
+        $author = $isAuthorized && $this->request->getQueryParam('dj', '') == 'Me' ? $this->session->getUser() : '';
 
         $this->setTemplate("review/recent.html");
         $this->extra = "<span class='sub'><b>Reviews Feed:</b></span> <a type='application/rss+xml' href='zkrss.php?feed=reviews&amp;fmt=1'><img src='img/rss.png' alt='rss'></a>";
@@ -270,7 +270,7 @@ class Reviews extends MenuItem {
     }
 
     public function viewReview() {
-        $this->search->withContextFrom($this)->searchByAlbumKey($_REQUEST["tag"] ?? 0);
+        $this->search->withContextFrom($this)->searchByAlbumKey($this->request->getRequestParam("tag", 0));
     }
     
     private function claimReview($tag, $op) {
@@ -558,17 +558,26 @@ class Reviews extends MenuItem {
             return;
         }
 
-        $airname = mb_substr(trim($_REQUEST["airname"] ?? ''), 0, IDJ::MAX_AIRNAME_LENGTH);
+        $airname = mb_substr(trim($this->request->getRequestParam("airname", '')), 0, IDJ::MAX_AIRNAME_LENGTH);
 
         $user = $this->libraryDBO->search(ILibrary::PASSWD_NAME, 0, 1, $this->session->getUser());
         $self = "(" . $user[0]["realname"] . ")";
         $errorMessage = "";
-        if($_POST["validate"] ?? false) {
-            $review = mb_substr(trim($_REQUEST["review"]), 0, IReview::MAX_REVIEW_LENGTH);
+        $private = $this->request->getRequestParam("private");
+        if ($this->request->getPostParam("validate", false)) {
+            $button = $this->request->getRequestParam("button");
+            $review = mb_substr(trim($this->request->getRequestParam("review")), 0, IReview::MAX_REVIEW_LENGTH);
+
+            if ($button != "edit-delete" && mb_strlen($review) == 0) {
+                $errorMessage = $button == "post-review"
+                    ? "<h4 class='error'>Review may not be empty.  If you do not wish to submit a review, select Cancel.</h4>\n"
+                    : "<h4 class='error'>Review may not be empty.  To delete your review, select Delete.</h4>\n";
+                $button = "";
+            }
 
             // lookup the airname
             $aid = null;
-            if($airname && strcasecmp($airname, $self)) {
+            if(!$errorMessage && $airname && strcasecmp($airname, $self)) {
                 $djapi = $this->djDBO;
                 $aid = $djapi->getAirname($airname, $this->session->getUser());
                 if(!$aid) {
@@ -581,59 +590,59 @@ class Reviews extends MenuItem {
                         $errorMessage = "<p><b><font class='error'>Airname '$airname' is invalid or already exists.</font></b></p>";
                         $airname = "";
                         $aid = false;
-                        $_REQUEST["button"] = "";
+                        $button = "";
                     }
                 }
             }
 
-            switch($_REQUEST["button"]) {
+            switch ($button) {
             case "post-review":
-                $this->reviewDBO->deleteReview($_REQUEST["tag"], $this->session->getUser());
-                $success = $this->reviewDBO->insertReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
+                $this->reviewDBO->deleteReview($this->request->getRequestParam("tag"), $this->session->getUser());
+                $success = $this->reviewDBO->insertReview($this->request->getRequestParam("tag"), $private, $aid, $review, $this->session->getUser());
                 if($success >= 1) {
-                    if($_REQUEST["noise"] ?? 0)
-                        $this->postReview($_REQUEST["tag"]);
-                    $this->search->withContextFrom($this)->searchByAlbumKey($_REQUEST["tag"]);
+                    if($this->request->getRequestParam("noise", false))
+                        $this->postReview($this->request->getRequestParam("tag"));
+                    $this->search->withContextFrom($this)->searchByAlbumKey($this->request->getRequestParam("tag"));
                     return;
                 }
                 $errorMessage = "<h4 class='error'>Review not posted.  Try again later.</h4>\n";
                 break;
             case "edit-save":
-                $review = mb_substr(trim($_REQUEST["review"]), 0, IReview::MAX_REVIEW_LENGTH);
-                $success = $this->reviewDBO->updateReview($_REQUEST["tag"], $_REQUEST["private"], $aid, $review, $this->session->getUser());
+                $review = mb_substr(trim($this->request->getRequestParam("review")), 0, IReview::MAX_REVIEW_LENGTH);
+                $success = $this->reviewDBO->updateReview($this->request->getRequestParam("tag"), $private, $aid, $review, $this->session->getUser());
                 if($success >= 0) {
-                    if($_REQUEST["noise"] ?? false)
-                        $this->postReview($_REQUEST["tag"]);
-                    $this->search->withContextFrom($this)->searchByAlbumKey($_REQUEST["tag"]);
+                    if($this->request->getRequestParam("noise", false))
+                        $this->postReview($this->request->getRequestParam("tag"));
+                    $this->search->withContextFrom($this)->searchByAlbumKey($this->request->getRequestParam("tag"));
                     return;
                 }
                 $errorMessage = "<h4 class='error'>Review not updated.  Try again later.</h4>\n";
                 break;
             case "edit-delete":
-                $reviews = $this->reviewDBO->getReviews($_REQUEST["tag"], false, $this->session->getUser(), true);
-                $success = $this->reviewDBO->deleteReview($_REQUEST["tag"], $this->session->getUser());
+                $reviews = $this->reviewDBO->getReviews($this->request->getRequestParam("tag"), false, $this->session->getUser(), true);
+                $success = $this->reviewDBO->deleteReview($this->request->getRequestParam("tag"), $this->session->getUser());
                 if($success >= 1) {
                     if(count($reviews))
                         $this->unpostReview($reviews[0]['exportid']);
 
-                    $this->search->withContextFrom($this)->searchByAlbumKey($_REQUEST["tag"]);
+                    $this->search->withContextFrom($this)->searchByAlbumKey($this->request->getRequestParam("tag"));
                     return;
                 }
                 $errorMessage = "<h4 class='error'>Delete failed.  Try again later.</h4>\n";
                 break;
             }
         }
-        $_REQUEST["private"] = 0;
-        $results = $this->reviewDBO->getReviews($_REQUEST["tag"], 1, $this->session->getUser(), 1);
+
+        $private = 0;
+        $results = $this->reviewDBO->getReviews($this->request->getRequestParam("tag"), 1, $this->session->getUser(), 1);
         if(sizeof($results)) {
             $saveAirname = $airname;
             extract($results[0]);
             if($saveAirname)
                 $airname = $saveAirname;
-            $_REQUEST["private"] = $private;
         }
         
-        $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $_REQUEST["tag"]);
+        $albums = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $this->request->getRequestParam("tag"));
 
         $airnames = [];
         $records = $this->djDBO->getAirnames($this->session->getUser());
@@ -652,7 +661,7 @@ class Reviews extends MenuItem {
         $this->addVar("airname", $airname);
         $this->addVar("self", $self);
         $this->addVar("review", $review ?? '');
-        $this->addVar("private", $_REQUEST["private"] ?? 0);
+        $this->addVar("private", $private ?? 0);
         $this->addVar("exported", !$export || isset($exportid));
         $this->addVar("MAX_AIRNAME_LENGTH", IDJ::MAX_AIRNAME_LENGTH);
         $this->addVar("MAX_REVIEW_LENGTH", IReview::MAX_REVIEW_LENGTH);

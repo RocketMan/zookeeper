@@ -30,6 +30,7 @@ use ZK\Engine\IArtwork;
 use ZK\Engine\ILibrary;
 use ZK\Engine\IPlaylist;
 use ZK\Engine\Config;
+use ZK\Engine\Request;
 use ZK\Engine\Zookeeper;
 
 use DI\ContainerBuilder;
@@ -125,6 +126,7 @@ class ServiceDriver extends CommandTarget implements Controller {
         protected ILibrary $libraryDBO,
         protected Config $config,
         protected LoggerInterface $logger,
+        protected Request $request,
     ) {}
 
     /**
@@ -330,8 +332,8 @@ class ServiceDriver extends CommandTarget implements Controller {
     }
 
     public function injectImageData() {
-        $msg = $_POST['msg'] ?? '{}';
-        $sig = $_POST['sig'] ?? '{}';
+        $msg = $this->request->getPostParam('msg', '{}');
+        $sig = $this->request->getPostParam('sig', '{}');
 
         if($this->discogs &&
                 NowAiringServer::validateSig($msg, $sig, $this->secret)) {
@@ -415,7 +417,7 @@ class ServiceDriver extends CommandTarget implements Controller {
 
         if(php_sapi_name() != "cli") {
             $this->setupDiscogs();
-            $this->processLocal($_REQUEST['action'] ?? '', null);
+            $this->processLocal($this->request->getAction(), null);
             return;
         }
 

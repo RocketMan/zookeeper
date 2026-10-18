@@ -60,7 +60,7 @@ class Home extends MenuItem {
     }
 
     public function recentSpins() {
-        $plays = $this->playlistDBO->getPlaysBefore($_REQUEST["before"] ?? null, $_REQUEST["count"] ?? self::DEFAULT_COUNT);
+        $plays = $this->playlistDBO->getPlaysBefore($this->request->getRequestParam("before"), $this->request->getRequestParam("count", self::DEFAULT_COUNT));
         echo json_encode($plays);
     }
 
@@ -92,7 +92,7 @@ class Home extends MenuItem {
 
     public function getTimes() {
         $this->setTemplate('onnow.html');
-        $this->makeTimePicker($_REQUEST["date"] ?? null);
+        $this->makeTimePicker($this->request->getRequestParam("date"));
         echo json_encode([ "times" => $this->render('time') ]);
     }
 
