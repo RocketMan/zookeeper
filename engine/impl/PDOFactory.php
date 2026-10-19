@@ -24,12 +24,16 @@
 
 namespace ZK\Engine;
 
+use Psr\Log\LoggerInterface;
+
+
 class PDOFactory {
     private const CONNECT_RETRY = 5;
     private const CONNECT_BACKOFF = 4;
 
     public function __construct(
-        private Config $config
+        private Config $config,
+        private LoggerInterface $logger,
     ) {}
 
     public function create(
@@ -60,11 +64,12 @@ class PDOFactory {
         while (true) {
             try {
                 return new PDO(
+                    $this->logger,
                     $dsn,
                     $this->config->get('db.user'),
                     $this->config->get('db.pass'),
                     $db,
-                    $library
+                    $library,
                 );
             } catch(\PDOException $e) {
                 if (!$retry--)

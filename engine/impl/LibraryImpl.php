@@ -24,6 +24,8 @@
 
 namespace ZK\Engine;
 
+use Psr\Log\LoggerInterface;
+
 
 /**
  * Library operations
@@ -158,6 +160,7 @@ class LibraryImpl extends DBO implements ILibrary {
 
     public function __construct(
         protected Config $config,
+        protected LoggerInterface $logger,
         protected Session $session,
         protected PDO $pdo,
     ) {
@@ -338,7 +341,7 @@ class LibraryImpl extends DBO implements ILibrary {
             $bindType = 3;
             break;
         default:
-            error_log("searchPos: unknown key '$tableIndex'");
+            $this->logger->error("unknown key '$tableIndex'");
             return;
         }
 
@@ -753,7 +756,7 @@ class LibraryImpl extends DBO implements ILibrary {
             }
             break;
         default:
-            error_log("listAlbums: unknown operation '$op'");
+            $this->logger->error("unknown operation '$op'");
             return;
         }
         $stmt->execute();
@@ -896,7 +899,7 @@ class LibraryImpl extends DBO implements ILibrary {
             }
             break;
         default:
-            error_log("listLabels: unknown operation '$op'");
+            $this->logger->error("unknown operation '$op'");
             return;
         }
         $stmt->execute();

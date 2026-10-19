@@ -24,6 +24,8 @@
 
 namespace ZK\Engine;
 
+use Psr\Log\LoggerInterface;
+
 
 /**
  * User operations
@@ -35,9 +37,14 @@ class UserImpl extends UserAuthImpl implements IUser {
         protected Config $config,
         protected Session $session,
         protected IDJ $djDBO,
+        protected LoggerInterface $logger,
         protected PDO $pdo,
     ) {
         parent::__construct($pdo);
+    }
+
+    protected function getLogger(): LoggerInterface {
+        return $this->logger;
     }
 
     public function getUsers() {

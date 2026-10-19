@@ -24,12 +24,15 @@
 
 namespace ZK\Engine;
 
+use Psr\Log\LoggerInterface;
+
 
 /**
  * Chart operations
  */
 class ChartImpl extends DBO implements IChart {
     public function __construct(
+        protected LoggerInterface $logger,
         protected PDO $pdo,
         protected PDOFactory $pdoFactory,
     ) {
@@ -644,7 +647,7 @@ class ChartImpl extends DBO implements IChart {
             return true;
         } catch(\Exception $e) {
             $pdo->rollBack();
-            error_log("doChart: " . $e->getMessage());
+            $this->logger->error($e->getMessage());
             return false;
         }
     }

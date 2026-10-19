@@ -24,6 +24,9 @@
 
 namespace ZK\Engine;
 
+use Psr\Log\LoggerInterface;
+
+
 /**
  * \PDO decorator that logs errors, as well as provides pre-MySQL 5.7.5
  * semantics for GROUP BY queries, and pre-PHP 8 semantics for commit/rollBack
@@ -47,6 +50,7 @@ class PDO {
      * @param string|null $library database name of library if different
      */
     public function __construct(
+        private LoggerInterface $logger,
         string $dsn,
         string $user,
         string $pass,
@@ -78,7 +82,7 @@ class PDO {
                 break;
 
             default:
-                error_log(
+                $this->logger->error(
                     "PDO::$method: " .
                     $this->delegate->errorInfo()[2]
                 );
@@ -122,7 +126,7 @@ class PDO {
 
         $ret = $this->__call('prepare', [$stmt, $options]);
 
-        return $ret ? new BaseStatement($ret) : false;
+        return $ret ? new BaseStatement($this->logger, $ret) : false;
     }
 
     public function getDatabaseName(): string {
