@@ -24,6 +24,9 @@
 
 namespace ZK\Engine;
 
+use Psr\Log\LoggerInterface;
+
+
 /**
  * Row iterator
  *
@@ -87,11 +90,10 @@ class ArrayRowIterator extends RowIterator {
  * as well, it provides several additional utility methods.
  */
 class BaseStatement {
-    private $delegate;
-
-    public function __construct($delegate) {
-        $this->delegate = $delegate;
-    }
+    public function __construct(
+        private LoggerInterface $logger,
+        private \PDOStatement $delegate,
+    ) {}
 
     public function __call($method, $args) {
         $ret = call_user_func_array([$this->delegate, $method], $args);
@@ -99,7 +101,7 @@ class BaseStatement {
         // several methods can return 'false' in a non-error situation,
         // but the most common/only one we use is 'fetch'
         if($ret === false && $method != "fetch")
-            error_log("PDOStatement::$method: " .
+            $this->logger->error("PDOStatement::$method: " .
                       $this->delegate->errorInfo()[2]);
 
         return $ret;

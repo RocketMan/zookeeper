@@ -24,6 +24,8 @@
 
 namespace ZK\Engine;
 
+use Psr\Log\LoggerInterface;
+
 
 /**
  * Playlist operations
@@ -36,6 +38,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
         protected Config $config,
         protected Session $session,
         protected IArtwork $imageDBO,
+        protected LoggerInterface $logger,
         protected PDO $pdo,
         protected PDOFactory $pdoFactory,
     ) {
@@ -522,7 +525,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
             // if we made it this far, success!
             $pdo->commit();
         } catch(\Exception $e) {
-            error_log("slicePlaylist: " . $e->getMessage());
+            $this->logger->error($e->getMessage());
             $pdo->rollBack();
             throw $e;
         }
@@ -658,7 +661,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
                 $stmt->bindValue(2, $id);
                 return $stmt->execute();
             } else {
-                error_log("moveTrack: " . print_r($stmt->errorInfo(), true));
+                $this->logger->error(print_r($stmt->errorInfo(), true));
             }
         }
         return false;
@@ -855,7 +858,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
 
         $updateStatus = $stmt->execute()?1:0;
         if(!$updateStatus)
-            error_log("insertTrack: " . print_r($stmt->errorInfo(), true));
+            $this->logger->error(print_r($stmt->errorInfo(), true));
 
         $id = $this->lastInsertId();
 
@@ -911,7 +914,7 @@ class PlaylistImpl extends DBO implements IPlaylist {
 
         $success = $stmt->execute();
         if(!$success)
-            error_log("updateTrack: " . print_r($stmt->errorInfo(), true));
+            $this->logger->error(print_r($stmt->errorInfo(), true));
 
         if($success && $timeChanged)
             $success = $this->reorderForTime($playlistId, $id, $timestamp);

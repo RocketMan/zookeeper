@@ -24,6 +24,9 @@
 
 namespace ZK\Engine;
 
+use Psr\Log\LoggerInterface;
+
+
 enum AuditAction {
     case Insert;
     case Update;
@@ -31,6 +34,8 @@ enum AuditAction {
 }
 
 trait AuditTrait {
+    abstract protected function getLogger(): LoggerInterface;
+
     /**
      * audit an action
      *
@@ -46,6 +51,6 @@ trait AuditTrait {
             $message ?? ''
         ]);
 
-        error_log("AUDIT $banner");
+        $this->getLogger()->info("AUDIT $banner");
     }
 }

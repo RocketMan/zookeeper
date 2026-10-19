@@ -25,6 +25,7 @@
 namespace ZK\Engine;
 
 use GuzzleHttp\Client;
+use Psr\Log\LoggerInterface;
 
 /**
  * Artwork operations
@@ -34,6 +35,13 @@ class ArtworkImpl extends DBO implements IArtwork {
 
     const FETCH_IMAGE_TIMEOUT = 5.0; // in seconds
 
+    public function __construct(
+        protected LoggerInterface $logger,
+        protected PDO $pdo,
+    ) {
+        parent::__construct($pdo);
+    }
+
     protected function fetchImage($url) {
         // realpath() won't work here if cacheDir doesn't already exist
         $cacheDir = dirname(__DIR__, 2);
@@ -41,7 +49,7 @@ class ArtworkImpl extends DBO implements IArtwork {
             $cacheDir .= DIRECTORY_SEPARATOR . $dir;
 
         if(!is_dir($cacheDir) && !mkdir($cacheDir)) {
-            error_log("fetchImage: cannot create $cacheDir");
+            $this->logger->error("cannot create $cacheDir");
             return null;
         }
 
@@ -87,12 +95,12 @@ class ArtworkImpl extends DBO implements IArtwork {
             $target .= DIRECTORY_SEPARATOR . substr($file, 4);
 
             if(!rename($path, $target)) {
-                error_log("fetchImage: rename failed src=$path, target=$target.");
+                $this->logger->error("rename failed src=$path, target=$target.");
                 unlink($path);
                 $file = null;
             }
         } catch(\Exception $e) {
-            error_log("fetchImage: " . $e->getMessage());
+            $this->logger->error($e->getMessage());
             if(is_file($path))
                 unlink($path);
             $file = null;

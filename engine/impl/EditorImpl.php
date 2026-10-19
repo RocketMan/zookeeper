@@ -24,6 +24,8 @@
 
 namespace ZK\Engine;
 
+use Psr\Log\LoggerInterface;
+
 
 /**
  * Library Editor operations
@@ -36,10 +38,15 @@ class EditorImpl extends DBO implements IEditor {
         protected Session $session,
         protected IArtwork $imageDBO,
         protected ILibrary $libraryDBO,
+        protected LoggerInterface $logger,
         protected PDO $pdo,
         protected PDOFactory $pdoFactory,
     ) {
         parent::__construct($pdo);
+    }
+
+    protected function getLogger(): LoggerInterface {
+        return $this->logger;
     }
 
     private function getNextTag() {
