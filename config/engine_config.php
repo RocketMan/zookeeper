@@ -25,6 +25,10 @@ $config = [
                 'attributes' => [ 'versionRegexp' => '#(?<=/api/v)\d+(?:\.\d+)*(?=/)#' ],
             ],
             [
+                'pattern' => '#^(?<basepath>/(css|js)/[^-]+)\-\d+\.(?<type>(css|js|map|src\.js))$#',
+                'dispatcher' => ZK\Engine\AssetMinifier::class,
+            ],
+            [
                 'pattern' => '#^/zkrss\.php$#',
                 'dispatcher' => ZK\Engine\Dispatcher::class,
                 'attributes' => [ 'target' => 'rss' ],
