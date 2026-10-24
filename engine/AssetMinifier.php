@@ -65,7 +65,7 @@ class AssetMinifier {
         $target = realpath("{$home}{$basePath}.{$rtype}");
 
         // ensure file exists and is not outside project root
-        if (strncmp($target, $home.DIRECTORY_SEPARATOR, strlen($home)+1) ||
+        if (!str_starts_with($target, $home . DIRECTORY_SEPARATOR) ||
                 !file_exists($target)) {
             http_response_code(404);
             return;
