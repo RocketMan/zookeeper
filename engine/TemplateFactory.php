@@ -60,7 +60,7 @@ class TemplateFactory {
         $this->twig = new \Twig\Environment($loader, [ 'cache' => $cacheDir ]);
         $this->twig->addGlobal('app', $this->app);
 
-        $filter = new \Twig\TwigFilter('decorate', [ '\ZK\Engine\Decorator', 'decorateAsset' ]);
+        $filter = new \Twig\TwigFilter('decorate', [ '\ZK\Engine\AssetMinifier', 'decorateAsset' ]);
         $this->twig->addFilter($filter);
         $filter = new \Twig\TwigFilter('int', fn($val) => (int)$val);
         $this->twig->addFilter($filter);

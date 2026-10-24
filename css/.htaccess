@@ -1,6 +1,0 @@
-<IfModule mod_rewrite.c>
-RewriteEngine on
-# rewrite asset-numericStamp.ext to asset.ext and minify
-RewriteCond $1 !^\..*$
-RewriteRule ^([^-]+)(-[0-9]+)?\.(.+)$ .csshandler.php?asset=/$1.$3 [L]
-</IfModule>
