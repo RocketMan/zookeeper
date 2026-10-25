@@ -33,26 +33,26 @@ class Decorator {
      */
     public static function decorateAsset(string $asset): string {
         $file = dirname(__DIR__) . '/' . $asset;
+        $isFile = is_file($file);
+        $isReadable = $isFile && is_readable($file);
         $ext = strrpos($asset, '.');
 
-        if (is_file($file) && is_readable($file) && $ext !== false) {
-            $mtime = filemtime($file);
-            $size = filesize($file);
+        if (!$isReadable || $ext === false) {
+            error_log("Unable to decorate asset '{$asset}': "
+                . (!$isReadable
+                    ? "file not found or inaccessible ({$file})"
+                    : "no file extension"));
+        } else {
+            $hash = hash_file('xxh128', $file);
 
-            if ($mtime !== false && $size !== false) {
+            if ($hash !== false) {
                 $asset = substr($asset, 0, $ext)
-                    . '-' . dechex($mtime)
-                    . '-' . dechex($size)
+                    . '-' . $hash
                     . substr($asset, $ext);
             } else {
                 error_log("Unable to decorate asset '{$asset}': "
-                    . "could not retrieve file metadata ({$file})");
+                    . "could not hash file ({$file})");
             }
-        } else {
-            error_log("Unable to decorate asset '{$asset}': "
-                . (!is_file($file) || !is_readable($file)
-                    ? "file not found or inaccessible ({$file})"
-                    : "no file extension"));
         }
 
         return htmlspecialchars($asset, ENT_QUOTES, 'UTF-8');

@@ -160,6 +160,7 @@ class UIController implements Controller {
         $isJson = substr($this->request->getServerParam('HTTP_ACCEPT', ''), 0, 16) === 'application/json';
         ob_start("ob_gzhandler");
         header("X-Powered-By: " . Zookeeper::UA);
+        header("Cache-Control: no-cache");
         if ($isJson) {
             header("Content-Type: application/json");
             $this->dispatch();
