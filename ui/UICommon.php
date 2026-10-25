@@ -24,7 +24,7 @@
 
 namespace ZK\UI;
 
-use ZK\Engine\AssetMinifier;
+use ZK\Engine\Decorator;
 
 use League\CommonMark\GithubFlavoredMarkdownConverter;
 
@@ -265,7 +265,7 @@ class UICommon {
      */
     public static function emitCSS($asset) {
         echo "<link rel=\"stylesheet\" href=\"" .
-             AssetMinifier::decorateAsset($asset) . "\">\n";
+             Decorator::decorateAsset($asset) . "\">\n";
     }
 
     /**
@@ -275,7 +275,7 @@ class UICommon {
      */
     public static function emitJS($asset) {
         echo "<script src=\"" .
-             AssetMinifier::decorateAsset($asset) . "\"></script>\n";
+             Decorator::decorateAsset($asset) . "\"></script>\n";
     }
 
     /**

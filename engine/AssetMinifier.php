@@ -28,23 +28,62 @@ use axy\sourcemap\SourceMap;
 use JSMin\JSMin;
 
 class AssetMinifier {
-    /**
-     * decorate the specified asset for cache control
-     *
-     * @param string $asset application-relative path to target asset
-     * @return string HTML-encoded URI of decorated asset
-     */
-    public static function decorateAsset(string $asset): string {
-        $mtime = filemtime(dirname(__DIR__) . '/' . $asset);
-        $ext = strrpos($asset, '.');
-        return htmlspecialchars($mtime && $ext !== false
-            ? substr($asset, 0, $ext) . '-' . $mtime . substr($asset, $ext)
-            : $asset, ENT_QUOTES, 'UTF-8');
-    }
-
     public function __construct(
         private Request $request,
     ) {}
+
+    protected function ifNoneMatchMatches(string $header, string $etag): bool {
+        $header = trim($header);
+
+        // wildcard matches any existing representation
+        if ($header === '*') {
+            return true;
+        }
+
+        // extract entity tags from a comma-separated list;
+        // commas inside the quoted opaque tag are allowed
+        if (!preg_match_all(
+            '/(?:^|,)\s*(?:W\/)?"([^"]*)"\s*(?=,|$)/',
+            $header,
+            $matches
+        )) {
+            return false;
+        }
+
+        // If-None-Match uses weak comparison for GET and HEAD:
+        // W/"abc" matches "abc".
+        $opaqueTag = substr($etag, 1, -1);
+
+        foreach ($matches[1] as $candidate) {
+            if ($candidate === $opaqueTag) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function isNotModified(string $etag, int $mtime): bool {
+        $noneMatch = $this->request->getServerParam('HTTP_IF_NONE_MATCH');
+
+        // If-None-Match takes precedence over If-Modified-Since.
+        if ($noneMatch !== null) {
+            return $this->ifNoneMatchMatches($noneMatch, $etag);
+        }
+
+        $modifiedSince = $this->request->getServerParam(
+            'HTTP_IF_MODIFIED_SINCE'
+        );
+
+        if ($modifiedSince === null) {
+            return false;
+        }
+
+        $since = strtotime($modifiedSince);
+
+        // ignore an invalid HTTP dates
+        return $since !== false && $mtime <= $since;
+    }
 
     public function processRequest() {
         $basePath = $this->request->getAttribute('basepath');
@@ -65,23 +104,27 @@ class AssetMinifier {
         $target = realpath("{$home}{$basePath}.{$rtype}");
 
         // ensure file exists and is not outside project root
-        if (!str_starts_with($target, $home . DIRECTORY_SEPARATOR) ||
-                !file_exists($target)) {
+        if ($target === false ||
+                !str_starts_with($target, $home . DIRECTORY_SEPARATOR) ||
+                !is_file($target) ||
+                !is_readable($target)) {
             http_response_code(404);
             return;
         }
 
         $mtime = filemtime($target);
-        header("ETag: \"{$mtime}\""); // RFC 2616 requires ETag in 304 response
-        $noneMatch = $this->request->getServerParam('HTTP_IF_NONE_MATCH');
-        $modifiedSince = $this->request->getServerParam('HTTP_IF_MODIFIED_SINCE');
-        if ($noneMatch && strstr($noneMatch, "\"{$mtime}\"") !== false
-                || $modifiedSince && strtotime($modifiedSince) >= $mtime) {
+        $size = filesize($target);
+        $etag = '"' . dechex($mtime) . '-' . dechex($size) . '"';
+
+        header("ETag: {$etag}"); // RFC 2616 requires ETag in 304 response
+        header("Last-Modified: " . gmdate('D, d M Y H:i:s', $mtime) . " GMT");
+        //header("Cache-Control: public, max-age=31536000, immutable");
+
+        if ($this->isNotModified($etag, $mtime)) {
             http_response_code(304); // Not Modified
             return;
         }
 
-        header("Last-Modified: " . gmdate('D, d M Y H:i:s', $mtime) . " GMT");
 
         switch ($type) {
         case "css":
@@ -226,7 +269,7 @@ class AssetMinifier {
     }
 
     protected function emitSource(string $target): void {
-        header("Content-Type: application/json");
+        header("Content-Type: application/javascript");
 
         // for HEAD requests, there is nothing more to do
         if ($this->request->getMethod() == "HEAD")
