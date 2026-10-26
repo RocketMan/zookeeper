@@ -192,6 +192,143 @@ class AssetMinifier {
         ob_end_flush(); // ob_gzhandler
     }
 
+    /**
+     * find JavaScript identifiers and their line/column positions
+     *
+     * comments, whitespace, and string/template literals are skipped
+     *
+     * @param string $text JavaScript text to parse
+     * @return array token-line-column tuples (positions are zero-based)
+     */
+    private function jsIdentifiers(string $text): array {
+        $tokens = [];
+        $length = strlen($text);
+        $i = 0;
+        $line = 0;
+        $col = 0;
+
+        while ($i < $length) {
+            $c = $text[$i];
+            $next = ($i + 1 < $length) ? $text[$i + 1] : '';
+
+            // line comment
+            if ($c === '/' && $next === '/') {
+                while ($i < $length && $text[$i] !== "\n") {
+                    $i++;
+                    $col++;
+                }
+
+                continue;
+            }
+
+            // block comment
+            if ($c === '/' && $next === '*') {
+                $i += 2;
+                $col += 2;
+
+                while ($i < $length) {
+                    if ($text[$i] === '*' &&
+                        $i + 1 < $length &&
+                        $text[$i + 1] === '/') {
+                        $i += 2;
+                        $col += 2;
+                        break;
+                    }
+
+                    if ($text[$i] === "\n") {
+                        $line++;
+                        $col = 0;
+                    } else {
+                        $col++;
+                    }
+
+                    $i++;
+                }
+
+                continue;
+            }
+
+            // quoted strings and template literals
+            if ($c === "'" || $c === '"' || $c === '`') {
+                $quote = $c;
+
+                $i++;
+                $col++;
+
+                while ($i < $length) {
+                    $c = $text[$i];
+
+                    if ($c === '\\') {
+                        $i++;
+                        $col++;
+
+                        if ($i < $length) {
+                            if ($text[$i] === "\n") {
+                                $line++;
+                                $col = 0;
+                            } else {
+                                $col++;
+                            }
+                            $i++;
+                        }
+
+                        continue;
+                    }
+
+                    if ($c === $quote) {
+                        $i++;
+                        $col++;
+                        break;
+                    }
+
+                    if ($c === "\n") {
+                        $line++;
+                        $col = 0;
+                    } else {
+                        $col++;
+                    }
+
+                    $i++;
+                }
+
+                continue;
+            }
+
+            // JavaScript identifier: $, _, letters, and Unicode-free
+            // ASCII alphanumeric characters.
+            if (preg_match('/[a-z_$]/i', $c)) {
+                $start = $i;
+                $startLine = $line;
+                $startCol = $col;
+
+                while ($i < $length &&
+                        preg_match('/[a-z0-9_$]/i', $text[$i])) {
+                    $i++;
+                    $col++;
+                }
+
+                $tokens[] = [
+                    'token' => substr($text, $start, $i - $start),
+                    'line' => $startLine,
+                    'column' => $startCol,
+                ];
+
+                continue;
+            }
+
+            if ($c === "\n") {
+                $line++;
+                $col = 0;
+            } else {
+                $col++;
+            }
+
+            $i++;
+        }
+
+        return $tokens;
+    }
+
     protected function emitMap(string $target): void {
         header("Content-Type: application/json");
 
@@ -202,66 +339,51 @@ class AssetMinifier {
         // get (possibly decorated) resource basename
         $uri = $this->request->getUri()->getPath();
         $i = strrpos($uri, ".");
-        $base = ($i !== false)?substr($uri, 0, $i):$uri;
+        $base = ($i !== false) ? substr($uri, 0, $i) : $uri;
+
+        $source = file_get_contents($target);
 
         // generate the destination (minified) contents...
         // this must be the same algorithm used in minifyJS
-        $minified = explode("\n", JSMIN::minify(file_get_contents($target)));
+        $minified = JSMIN::minify($source);
 
-        // open the source
-        $source = fopen($target, "r");
-        $stext = fgets($source);
-        $scol = 0;
-        $sline = 0;
+        $sourceTokens = $this->jsIdentifiers($source);
+        $generatedTokens = $this->jsIdentifiers($minified);
 
-        // generate the dest => src mappings
         $map = new SourceMap();
-        foreach ($minified as $dline => $dtext) {
-            // skip comments
-            $lead = substr($dtext, 0, 2);
-            if ($lead == "/*" || $lead == "//")
-                continue;
+        $sourceIndex = 0;
+        $sourceCount = count($sourceTokens);
 
-            $dcol = 0;
-            foreach (preg_split("/[^a-z]/i", $dtext, 0, PREG_SPLIT_NO_EMPTY) as $token) {
-                // token position in the minified file
-                $dcol = strpos($dtext, $token, $dcol);
+        foreach ($generatedTokens as $generated) {
+            $token = $generated['token'];
 
-                // locate corresponding token position in the source file
-                $scol = strpos($stext, $token, $scol);
-                while ($scol === false && !feof($source)) {
-                    $sline++;
-                    $scol = 0;
-                    $stext = fgets($source);
-                    $scol = strpos($stext, $token, $scol);
-                }
-
-                if ($scol === false) {
-                    // should never get here...
-                    // it means we reached eof on the source
-                    // without finding the token
-                    break 2;
-                }
-
-                // add dest => src mapping
-                $map->addPosition([
-                    'generated' => [
-                        'line' => $dline,
-                        'column' => $dcol
-                    ],
-                    'source' => [
-                        'fileName' => "{$base}.src.js",
-                        'line' => $sline,
-                        'column' => $scol
-                    ],
-                ]);
-
-                $scol++;
-                $dcol++;
+            // find the next occurrence of this identifier in the source
+            while ($sourceIndex < $sourceCount &&
+                    $sourceTokens[$sourceIndex]['token'] !== $token) {
+                $sourceIndex++;
             }
-        }
 
-        fclose($source);
+            if ($sourceIndex >= $sourceCount) {
+                // should never get here...
+                // it means we reached eof on the source
+                // without finding the token
+                break;
+            }
+
+            $original = $sourceTokens[$sourceIndex++];
+
+            $map->addPosition([
+                'generated' => [
+                    'line' => $generated['line'],
+                    'column' => $generated['column'],
+                ],
+                'source' => [
+                    'fileName' => "{$base}.src.js",
+                    'line' => $original['line'],
+                    'column' => $original['column'],
+                ],
+            ]);
+        }
 
         // generate the source map JSON
         $map->file = "{$base}.js";
