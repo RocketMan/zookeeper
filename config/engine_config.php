@@ -25,7 +25,7 @@ $config = [
                 'attributes' => [ 'versionRegexp' => '#(?<=/api/v)\d+(?:\.\d+)*(?=/)#' ],
             ],
             [
-                'pattern' => '#^(?<basepath>/(?:css|js)/.+)-[0-9a-f]{32}\.(?<type>css|js|map|src\.js)$#',
+                'pattern' => '#^(?<basepath>/(?:css|js)/.+)-[0-9a-f]+-[0-9a-f]+\.(?<type>css|js|map|src\.js)$#',
                 'dispatcher' => ZK\Engine\AssetMinifier::class,
             ],
             [
