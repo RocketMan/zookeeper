@@ -81,7 +81,7 @@ class AssetMinifier {
 
         $since = strtotime($modifiedSince);
 
-        // ignore an invalid HTTP dates
+        // ignore invalid HTTP dates
         return $since !== false && $mtime <= $since;
     }
 
@@ -118,7 +118,7 @@ class AssetMinifier {
 
         header("ETag: {$etag}"); // RFC 2616 requires ETag in 304 response
         header("Last-Modified: " . gmdate('D, d M Y H:i:s', $mtime) . " GMT");
-        //header("Cache-Control: public, max-age=31536000, immutable");
+        header("Cache-Control: public, max-age=31536000, immutable");
 
         if ($this->isNotModified($etag, $mtime)) {
             http_response_code(304); // Not Modified
