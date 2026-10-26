@@ -351,6 +351,7 @@ class AssetMinifier {
         $generatedTokens = $this->jsIdentifiers($minified);
 
         $map = new SourceMap();
+        $map->file = "{$base}.js";
         $sourceIndex = 0;
         $sourceCount = count($sourceTokens);
 
@@ -386,8 +387,9 @@ class AssetMinifier {
         }
 
         // generate the source map JSON
-        $map->file = "{$base}.js";
+        ob_start("ob_gzhandler");
         $map->save('php://output', 0);
+        ob_end_flush(); // ob_gzhandler
     }
 
     protected function emitSource(string $target): void {
