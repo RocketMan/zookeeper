@@ -37,12 +37,10 @@ class Decorator {
 
         if (is_file($file) && is_readable($file) && $ext !== false) {
             $mtime = filemtime($file);
-            $size = filesize($file);
 
-            if ($mtime !== false && $size !== false) {
+            if ($mtime !== false) {
                 $asset = substr($asset, 0, $ext)
-                    . '-' . dechex($mtime)
-                    . '-' . dechex($size)
+                    . '-' . $mtime
                     . substr($asset, $ext);
             } else {
                 error_log("Unable to decorate asset '{$asset}': "
