@@ -29,6 +29,14 @@ $config = [
                 'dispatcher' => ZK\Engine\AssetMinifier::class,
             ],
             [
+                'pattern' => '#^/tag/(?<tag>\d+)$#',
+                'dispatcher' => ZK\Engine\Redirector::class,
+                'attributes' => [
+                    'redirect' => '/?action=search&s=byAlbumKey&n=%tag%',
+                    'code' => 302,
+                ],
+            ],
+            [
                 'pattern' => '#^/zkrss\.php$#',
                 'dispatcher' => ZK\Engine\Dispatcher::class,
                 'attributes' => [ 'target' => 'rss' ],
