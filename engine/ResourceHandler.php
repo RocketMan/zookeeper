@@ -87,9 +87,9 @@ abstract class ResourceHandler {
      *
      * the default implementation returns the 'type' value set by the router
      *
-     * @return string request type (without '.' prefix)
+     * @return string|null request type (without '.' prefix)
      */
-    protected function getType(): string {
+    protected function getType(): ?string {
         return $this->request->getAttribute('type');
     }
 
@@ -116,10 +116,14 @@ abstract class ResourceHandler {
      */
     protected function prepareRequest(): ?string {
         $basePath = $this->request->getAttribute('basepath');
-        $type = $this->getType();
-
         $home = dirname(__DIR__);
-        $target = realpath("{$home}{$basePath}.{$type}");
+        $path = $home . $basePath;
+
+        $type = $this->getType();
+        if ($type !== null)
+            $path .= ".{$type}";
+
+        $target = realpath($path);
 
         // ensure file exists and is not outside project root
         if ($target === false ||
@@ -149,7 +153,7 @@ abstract class ResourceHandler {
     }
 
     /**
-     * dispatch target from the Router
+     * handle the request
      */
     abstract public function processRequest();
 }
