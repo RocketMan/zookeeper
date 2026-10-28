@@ -23,13 +23,14 @@ RewriteRule ^zk-feed-reader\.xslt$ controllers/RSS.xslt [QSA,L]
 #RewriteRule ^ssoLogin\.php$ index.php?target=sso [QSA,L]
 #RewriteCond %{REQUEST_URI} ^(.*)/tag/([0-9]+)$
 #RewriteRule .* %1/?action=search&s=byAlbumKey&n=%2 [R=302,L]
-RewriteCond $0 !^\.mdhandler.php/.*$
-RewriteRule ^(.+)\.md$ .mdhandler.php?asset=/$1.md [L]
+#RewriteCond $0 !^\.mdhandler.php/.*$
+#RewriteRule ^(.+)\.md$ .mdhandler.php?asset=/$1.md [L]
 RewriteCond %{THE_REQUEST} \s/index\.php/.+
 RewriteRule ^ - [F,L]
 RedirectMatch 404 /\.git
 RewriteRule ^zk$ - [R=404,L]
 # all requests except existing files and directories go through index.php
+RewriteRule \.md$ index.php [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [L]

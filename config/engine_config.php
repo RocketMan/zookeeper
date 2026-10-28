@@ -29,6 +29,10 @@ $config = [
                 'dispatcher' => ZK\Engine\AssetMinifier::class,
             ],
             [
+                'pattern' => '#^(?<basepath>/.+)\.(?<type>md)$#',
+                'dispatcher' => ZK\Engine\MarkdownHandler::class,
+            ],
+            [
                 'pattern' => '#^/tag/(?<tag>\d+)$#',
                 'dispatcher' => ZK\Engine\Redirector::class,
                 'attributes' => [
