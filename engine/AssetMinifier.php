@@ -27,106 +27,42 @@ namespace ZK\Engine;
 use axy\sourcemap\SourceMap;
 use JSMin\JSMin;
 
-class AssetMinifier {
+class AssetMinifier extends ResourceHandler {
+    protected string $type;
+
     public function __construct(
-        private Request $request,
-    ) {}
+        Request $request,
+    ) {
+        parent::__construct($request);
 
-    protected function ifNoneMatchMatches(string $header, string $etag): bool {
-        $header = trim($header);
-
-        // wildcard matches any existing representation
-        if ($header === '*') {
-            return true;
-        }
-
-        // extract entity tags from a comma-separated list;
-        // commas inside the quoted opaque tag are allowed
-        if (!preg_match_all(
-            '/(?:^|,)\s*(?:W\/)?"([^"]*)"\s*(?=,|$)/',
-            $header,
-            $matches
-        )) {
-            return false;
-        }
-
-        // If-None-Match uses weak comparison for GET and HEAD:
-        // W/"abc" matches "abc".
-        $opaqueTag = substr($etag, 1, -1);
-
-        foreach ($matches[1] as $candidate) {
-            if ($candidate === $opaqueTag) {
-                return true;
-            }
-        }
-
-        return false;
+        $this->type = $request->getAttribute('type');
     }
 
-    protected function isNotModified(string $etag, int $mtime): bool {
-        $noneMatch = $this->request->getServerParam('HTTP_IF_NONE_MATCH');
-
-        // If-None-Match takes precedence over If-Modified-Since.
-        if ($noneMatch !== null) {
-            return $this->ifNoneMatchMatches($noneMatch, $etag);
+    protected function getType(): string {
+        // javascript source and map files reference underlying js asset
+        switch ($this->type) {
+        case "map":
+        case "src.js":
+            $type = "js";
+            break;
+        default:
+            $type = $this->type;
+            break;
         }
 
-        $modifiedSince = $this->request->getServerParam(
-            'HTTP_IF_MODIFIED_SINCE'
-        );
+        return $type;
+    }
 
-        if ($modifiedSince === null) {
-            return false;
-        }
-
-        $since = strtotime($modifiedSince);
-
-        // ignore invalid HTTP dates
-        return $since !== false && $mtime <= $since;
+    protected function getCacheControl(): ?string {
+        return "Cache-Control: public, max-age=31536000, immutable";
     }
 
     public function processRequest() {
-        $basePath = $this->request->getAttribute('basepath');
-        $type = $this->request->getAttribute('type');
-
-        // javascript source and map files reference underlying js asset
-        switch ($type) {
-        case "map":
-        case "src.js":
-            $rtype = "js";
-            break;
-        default:
-            $rtype = $type;
-            break;
-        }
-
-        $home = dirname(__DIR__);
-        $target = realpath("{$home}{$basePath}.{$rtype}");
-
-        // ensure file exists and is not outside project root
-        if ($target === false ||
-                !str_starts_with($target, $home . DIRECTORY_SEPARATOR) ||
-                !is_file($target) ||
-                !is_readable($target)) {
-            http_response_code(404);
+        $target = $this->prepareRequest();
+        if ($target === null)
             return;
-        }
 
-        $mtime = filemtime($target);
-        $size = filesize($target);
-        $etag = '"' . dechex($mtime) . '-' . dechex($size) . '"';
-
-        header("ETag: {$etag}"); // RFC 2616 requires ETag in 304 response
-        header("Last-Modified: " . gmdate('D, d M Y H:i:s', $mtime) . " GMT");
-        header("Cache-Control: public, max-age=31536000, immutable");
-
-        if ($this->isNotModified($etag, $mtime)) {
-            http_response_code(304); // Not Modified
-            return;
-        }
-
-
-        switch ($type) {
+        switch ($this->type) {
         case "css":
             $this->minifyCSS($target);
             break;
