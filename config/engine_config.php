@@ -1,6 +1,6 @@
 <?php
 /**
- * map the engine interfaces onto the implementation classes
+ * configuration for routing and engine dependency injection
  */
 $config = [
     'engine' => [

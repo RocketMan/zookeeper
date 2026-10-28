@@ -29,7 +29,7 @@ abstract class ResourceHandler {
         protected Request $request,
     ) {}
 
-    protected function ifNoneMatchMatches(string $header, string $etag): bool {
+    private function ifNoneMatchMatches(string $header, string $etag): bool {
         $header = trim($header);
 
         // wildcard matches any existing representation
@@ -60,7 +60,7 @@ abstract class ResourceHandler {
         return false;
     }
 
-    protected function isNotModified(string $etag, int $mtime): bool {
+    private function isNotModified(string $etag, int $mtime): bool {
         $noneMatch = $this->request->getServerParam('HTTP_IF_NONE_MATCH');
 
         // If-None-Match takes precedence over If-Modified-Since.
@@ -82,14 +82,38 @@ abstract class ResourceHandler {
         return $since !== false && $mtime <= $since;
     }
 
+    /**
+     * get the request type (file extension)
+     *
+     * the default implementation returns the 'type' value set by the router
+     *
+     * @return string request type (without '.' prefix)
+     */
     protected function getType(): string {
         return $this->request->getAttribute('type');
     }
 
+    /**
+     * get the cache-control header
+     *
+     * @return string|null cache-control header or null if none (default)
+     */
     protected function getCacheControl(): ?string {
         return null;
     }
 
+    /**
+     * validate the resource exists, is readable, and is within the
+     * project.
+     *
+     * as well, this method provides etag and last-modified response headers
+     * and related if-modified-since and if-none-match behaviour.
+     *
+     * if resource is invalid or unmodified, the method returns null,
+     * in which case, the caller should stop processing.
+     *
+     * @return string|null target path or null if invalid or unmodified
+     */
     protected function prepareRequest(): ?string {
         $basePath = $this->request->getAttribute('basepath');
         $type = $this->getType();
@@ -124,5 +148,8 @@ abstract class ResourceHandler {
         return $target;
     }
 
+    /**
+     * dispatch target from the Router
+     */
     abstract public function processRequest();
 }
