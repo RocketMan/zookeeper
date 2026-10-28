@@ -26,8 +26,6 @@ namespace ZK\Engine;
 
 use GuzzleHttp\Psr7\Uri;
 
-class RedirectException extends \Exception {}
-
 class Redirector {
     public function __construct(
         protected Request $request,
@@ -35,8 +33,6 @@ class Redirector {
 
     public function processRequest() {
         $expr = $this->request->getAttribute('redirect');
-        if (!$expr)
-            throw new RedirectException("Missing attribute 'redirect'");
 
         $path = preg_replace_callback(
             '/%([a-zA-Z0-9_]+)%/',
