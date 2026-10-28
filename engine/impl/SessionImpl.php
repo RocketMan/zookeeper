@@ -64,16 +64,16 @@ class SessionImpl extends DBO implements Session {
             }
         }
 
-        $this->secure = $this->request->getClientScheme() == 'https';
+        $this->secure = $request->getClientScheme() == 'https';
 
         // we no longer accept the session ID as a request parameter;
         // it must be delievered in the request header as a cookie.
-        if(!empty($_COOKIE[$this->sessionCookieName]))
-            $this->validate($_COOKIE[$this->sessionCookieName]);
-        else if(!empty($this->request->getServerParam('HTTP_X_APIKEY')))
-            $this->authorizeApiKey($this->request->getServerParam('HTTP_X_APIKEY'));
-        else if(!empty($this->request->getServerParam('HTTP_X_CHALLENGE')))
-            $this->challenge = $this->challenger->validate($this->request->getServerParam('HTTP_X_CHALLENGE'));
+        if($cookie = $request->getCookie($this->sessionCookieName))
+            $this->validate($cookie);
+        else if($apikey = $request->getServerParam('HTTP_X_APIKEY'))
+            $this->authorizeApiKey($apikey);
+        else if($challenge = $request->getServerParam('HTTP_X_CHALLENGE'))
+            $this->challenge = $this->challenger->validate($challenge);
     }
 
     public function getDN(): ?string { return $this->displayName; }
