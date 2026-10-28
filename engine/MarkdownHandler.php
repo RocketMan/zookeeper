@@ -57,7 +57,7 @@ class MarkdownHandler extends ResourceHandler {
         echo "<title>" . basename($this->request->getUri()) . "</title>\n";
         echo "</head>\n<body>\n<div class='box'>\n";
         echo $this->markdownConverter->convert(file_get_contents($target));
-        echo "\n</div>\n</body>\n</html>\n";
+        echo "</div>\n</body>\n</html>\n";
 
         ob_end_flush(); // ob_gzhandler
     }
