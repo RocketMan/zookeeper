@@ -38,7 +38,7 @@ class AssetMinifier extends ResourceHandler {
         $this->type = $request->getAttribute('type');
     }
 
-    protected function getType(): string {
+    protected function getType(): ?string {
         // javascript source and map files reference underlying js asset
         switch ($this->type) {
         case "map":
