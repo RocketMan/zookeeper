@@ -44,22 +44,6 @@ use ZK\UI\UICommon as UI;
 class Playlists extends MenuItem {
     private const NME_PREFIX = "nme-";
 
-    //NOTE: update ui_config.php when changing the actions.
-    private static $subactions = [
-        [ "a", "", "On Now", "emitHome" ],
-        [ "a", "recent", 0, "recentSpins" ],
-        [ "a", "times", 0, "getTimes" ],
-        [ "u", "editList", "My Playlists", "emitListManager" ],
-        [ "a", "viewList", "By Date", "emitPlaylistPicker" ],
-        [ "a", "viewListById", 0, "emitViewPlaylist" ],
-        [ "a", "viewListDaysByDate", 0, "handlePlaylistDaysByDate" ],
-        [ "a", "viewListsByDate", 0, "handlePlaylistsByDate" ],
-        [ "u", "editListGetHint", 0, "listManagerGetHint" ],
-        [ "u", "editListEditor", 0, "emitEditor" ],
-        [ "a", "viewDJ", "By DJ", "emitViewDJ" ],
-        [ "u", "import", "Import", "emitImportList" ],
-    ];
-
     private $action;
     private $subaction;
     private $break;
@@ -78,10 +62,6 @@ class Playlists extends MenuItem {
         protected ILibrary $libraryDBO,
     ) {
         parent::__construct($session, $templateFactory);
-    }
-
-    public function getSubactions($action) {
-        return self::$subactions;
     }
 
     public function processLocal($action, $subaction) {

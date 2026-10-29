@@ -41,14 +41,6 @@ class UserAdmin extends MenuItem {
         [ "contactGuidelines", "contact" ],
     ];
 
-    private static $subactions = [
-        [ "u", "", "Profile", "updateAirnames" ],
-        [ "u", "manageKeys", "API Keys", "manageKeys" ],
-        [ "U", "changePass", "Change Password", "changePass" ],
-        [ "x", "users", "Users", "adminUsers" ],
-        [ "x", "airnames", "Airnames", "adminAirnames" ],
-    ];
-
     private $action;
     private $subaction;
 
@@ -63,10 +55,6 @@ class UserAdmin extends MenuItem {
         protected ILibrary $libraryDBO,
     ) {
         parent::__construct($session, $templateFactory);
-    }
-
-    public function getSubactions($action) {
-        return self::$subactions;
     }
 
     public function processLocal($action, $subaction) {

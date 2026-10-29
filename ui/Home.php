@@ -36,7 +36,7 @@ use ZK\Engine\Session;
 class Home extends MenuItem {
     private const DEFAULT_COUNT = 12;
 
-    private static $subactions = [
+    private static $actions = [
         [ "", "emitHome" ],
         [ "recent", "recentSpins" ],
         [ "times", "getTimes" ],
@@ -56,7 +56,7 @@ class Home extends MenuItem {
     }
 
     public function processLocal($action, $subaction) {
-        return $this->dispatchAction($subaction, self::$subactions);
+        return $this->dispatchAction($subaction, self::$actions);
     }
 
     public function recentSpins() {

@@ -2,7 +2,7 @@
 /**
  * User Interface configuration
  *
- * Each entry consists of four elements as follows:  (names are for
+ * Each entry consists of five elements as follows:  (names are for
  * convenience; array is numeric/keyless)
  *
  *    * access - specifies the required access level to use this
@@ -26,18 +26,76 @@
  *
  *    * implementation - MenuItem class to which action is dispatched
  *
+ *    * subactions - array of subactions, each of which contains:
+ *          - access - required access level for subaction;
+ *          - subaction - name of the subaction for internal dispatch;
+ *          - label - text displayed in menu or 0 if no menu item;
+ *          - method - method to which subaction is dispatched
+ *
  * The first item in the list is the default if no action is specified.
  */
 
 $menu = [
-//  access, action,        menu label,              implementation class
-    [ 'a', '',             'Playlists',		    ZK\UI\Playlists::class ],
-    [ 'a', 'viewRecent%',  'Reviews',               ZK\UI\Reviews::class ],
-    [ 'a', 'search',       0,                       ZK\UI\Search::class ],
-    [ 'a', 'searchReview%', 0,                      ZK\UI\Reviews::class ],
-    [ 'a', 'addmgr',       'Currents',              ZK\UI\AddManager::class ],
-    [ 'a', 'viewChart',    'Charts',                ZK\UI\Charts::class ],
-    [ 'm', 'editor',       'Library',               ZK\UI\Editor::class ],
-    [ 'u', 'adminUsers',   "\u{2699}",              ZK\UI\UserAdmin::class ],
-    [ 'a', 'contact%',     0,                       ZK\UI\UserAdmin::class ],
+//  access, action,        menu label,      implementation class,  subactions
+    [ 'a', '',             'Playlists',     ZK\UI\Playlists::class, [
+        [ 'a', '',              'On Now',          'emitHome' ],
+        [ 'a', 'recent',        0,                 'recentSpins' ],
+        [ 'a', 'times',         0,                 'getTimes' ],
+        [ 'u', 'editList',      'My Playlists',    'emitListManager' ],
+        [ 'a', 'viewList',      'By Date',         'emitPlaylistPicker' ],
+        [ 'a', 'viewListById',  0,                 'emitViewPlaylist' ],
+        [ 'a', 'viewListDaysByDate', 0,            'handlePlaylistDaysByDate'],
+        [ 'a', 'viewListsByDate',    0,            'handlePlaylistsByDate' ],
+        [ 'u', 'editListGetHint',    0,            'listManagerGetHint' ],
+        [ 'u', 'editListEditor',     0,            'emitEditor' ],
+        [ 'a', 'viewDJ',        'By DJ',           'emitViewDJ' ],
+        [ 'u', 'import',        'Import',          'emitImportList' ],
+    ]],
+
+    [ 'a', 'viewRecent%',  'Reviews',       ZK\UI\Reviews::class, [
+        [ 'a', '',              'Recent Reviews',  'viewRecentReviews' ],
+        [ 'a', 'viewDJ',        'By DJ',           'reviewsByDJ' ],
+        [ 'a', 'viewHashtag',   'Trending',        'viewTrending' ],
+        [ 'u', 'viewReviewShelf',  'Review Shelf', 'viewReviewShelf' ],
+        [ 'u', 'updateReviewShelf', 0,             'updateReviewShelf' ],
+    ]],
+
+    [ 'a', 'search',        0,              ZK\UI\Search::class, [] ],
+    [ 'a', 'searchReview%', 0,              ZK\UI\Reviews::class, [] ],
+
+    [ 'a', 'addmgr',       'Currents',      ZK\UI\AddManager::class, [
+        [ 'a', '',              'Current File',    'addManagerMain' ],
+        [ 'a', 'adds',          'Adds',            'addManagerShowAdd' ],
+        [ 'n', 'newadd',        'New Add',         'addManagerAdd' ],
+        [ 'n', 'categories',    'Categories',      'addManagerCats' ],
+        [ 'n', 'addsedit',      0,                 'addManagerEdit' ],
+        [ 'n', 'addsdel',       0,                 'addManagerDel' ],
+        [ 'n', 'addsemail',     0,                 'addManagerEMail' ],
+        [ 'u', 'activity',      'Activity',        'aFileActivityShowWeekly' ],
+    ]],
+
+    [ 'a', 'viewChart',    'Charts',        ZK\UI\Charts::class, [
+        [ 'a', '',              'Top 30',          'chartTop30' ],
+        [ 'a', 'weekly',        'Weekly',          'chartWeekly' ],
+        [ 'a', 'amalgamated',   'Amalgamated',     'chartMonthly' ],
+        [ 'a', 'subscribe',     'Subscribe',       'emitSubscribe' ],
+        [ 'n', 'chartemail',    'E-Mail',          'chartEMail' ],
+    ]],
+
+    [ 'm', 'editor',       'Library',       ZK\UI\Editor::class, [
+        [ 'm', '',              'Albums',          'musicEditor' ],
+        [ 'm', 'labels',        'Labels',          'musicEditor' ],
+        [ 'e', 'deepStorage',   'Deep Storage',    'deepStorage' ],
+        [ 'm', 'tagq',          'Queued Tags',     'tagQueue' ],
+    ]],
+
+    [ 'u', 'adminUsers',   "\u{2699}",      ZK\UI\UserAdmin::class, [
+        [ 'u', '',              'Profile',         'updateAirnames' ],
+        [ 'u', 'manageKeys',    'API Keys',        'manageKeys' ],
+        [ 'U', 'changePass',    'Change Password', 'changePass' ],
+        [ 'x', 'users',         'Users',           'adminUsers' ],
+        [ 'x', 'airnames',      'Airnames',        'adminAirnames' ],
+    ]],
+
+    [ 'a', 'contact%',     0,               ZK\UI\UserAdmin::class, [] ],
 ];

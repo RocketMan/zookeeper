@@ -37,14 +37,6 @@ class Charts extends MenuItem {
     const TOP_MAIN = 30;
     const TOP_GENRE = 10;
 
-    private static $subactions = [
-        [ "a", "", "Top 30", "chartTop30" ],
-        [ "a", "weekly", "Weekly", "chartWeekly" ],
-        [ "a", "amalgamated", "Amalgamated", "chartMonthly" ],
-        [ "a", "subscribe", "Subscribe", "emitSubscribe" ],
-        [ "n", "chartemail", "E-Mail", "chartEMail" ],
-    ];
-
     public function __construct(
         protected Request $request,
         protected Session $session,
@@ -55,8 +47,6 @@ class Charts extends MenuItem {
     ) {
         parent::__construct($session, $templateFactory);
     }
-
-    public function getSubactions($action) { return self::$subactions; }
 
     public function processLocal($action, $subaction) {
         $extra = "<SPAN CLASS='sub'><B>Chart Feed:</B></SPAN> <A TYPE='application/rss+xml' HREF='zkrss.php?feed=charts'><IMG SRC='img/rss.png' ALT='rss'></A><BR><IMG SRC='img/blank.gif' WIDTH=1 HEIGHT=2 BORDER=0 ALT=''>";

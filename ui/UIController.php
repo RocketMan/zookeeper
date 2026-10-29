@@ -40,7 +40,7 @@ use ZK\UI\UICommon as UI;
 use JSMin\JSMin;
 
 class MenuEntry {
-    private const FIELDS = [ 'access', 'action', 'label', 'implementation' ];
+    private const FIELDS = [ 'access', 'action', 'label', 'implementation', 'subactions' ];
 
     private $entry;
 
@@ -50,7 +50,7 @@ class MenuEntry {
 
     public function __get($var) {
         $index = array_search($var, self::FIELDS);
-        return $index !== false?$this->entry[$index]:null;
+        return $index !== false ? $this->entry[$index] : null;
     }
 }
 
@@ -61,7 +61,7 @@ class UIController implements Controller {
     protected $action;
     protected $subaction;
 
-    protected $menuItem;
+    protected ?MenuItem $menuItem = null;
 
     public function __construct(
         protected Request $request,
@@ -100,10 +100,8 @@ class UIController implements Controller {
             $item = new MenuEntry($this->menu->default());
 
         $implClass = $item->implementation;
-        $this->menuItem = $this->dispatcher->get($implClass);
-
-        if($this->menuItem instanceof MenuItem)
-            $this->menuItem->process($this->action, $this->subaction);
+        $this->menuItem = $this->dispatcher->get($implClass)->withSubactions($item->subactions);
+        $this->menuItem->process($this->action, $this->subaction);
     }
 
     /**

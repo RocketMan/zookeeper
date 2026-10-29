@@ -45,17 +45,6 @@ class AddManager extends MenuItem {
     const DAY_START_TIME = "0600";
     const DAY_END_TIME = "0000";
 
-    private static $subactions = [
-        [ "a", "", "Current File", "addManagerMain" ],
-        [ "a", "adds", "Adds", "addManagerShowAdd" ],
-        [ "n", "newadd", "New Add", "addManagerAdd" ],
-        [ "n", "categories", "Categories", "addManagerCats" ],
-        [ "n", "addsedit", "", "addManagerEdit" ],
-        [ "n", "addsdel", "", "addManagerDel" ],
-        [ "n", "addsemail", "", "addManagerEMail" ],
-        [ "u", "activity", "Activity", "aFileActivityShowWeekly" ],
-    ];
-
     /**
      * This is the sequence of panels in the Adds genie
      *
@@ -98,10 +87,6 @@ class AddManager extends MenuItem {
                 $this->categoryMapCache = $this->chartDBO->getCategories(self::MAX_CAT_COUNT);
             return $this->categoryMapCache;
         }
-    }
-
-    public function getSubactions($action) {
-        return self::$subactions;
     }
 
     public function processLocal($action, $subaction) {

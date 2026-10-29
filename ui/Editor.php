@@ -44,16 +44,6 @@ class Editor extends MenuItem {
     const DISCOGS_BASE = "https://www.discogs.com";
     const DISCOGS_SEARCH = "https://api.discogs.com/database/search";
 
-    private static $subactions = [
-        [ "m", "", "Albums", "musicEditor" ],
-        [ "m", "labels", "Labels", "musicEditor" ],
-        [ "e", "deepStorage", "Deep Storage", "deepStorage" ],
-    ];
-
-    private static $subactions_tagq = [
-        [ "m", "tagq", "Queued Tags", "tagQueue" ],
-    ];
-
     // tagFont[digit][col][row]
     private static $tagFont = [
         [ [ 0xc9, 0xba, 0xc8 ],    // 0
@@ -186,10 +176,11 @@ class Editor extends MenuItem {
         parent::__construct($session, $templateFactory);
     }
 
-    public function getSubactions($action) {
-        $subactions = self::$subactions;
-        if($this->editorDBO->getNumQueuedTags($this->session->getUser()))
-            $subactions = array_merge($subactions, self::$subactions_tagq);
+    public function getSubactions($action): array {
+        $subactions = parent::getSubactions($action);
+        // remove tagQueue subaction if no tags are queued
+        if(!$this->editorDBO->getNumQueuedTags($this->session->getUser()))
+            array_pop($subactions);
         return $subactions;
     }
     
