@@ -28,6 +28,7 @@ use ZK\Controllers\CommandTarget;
 use ZK\Engine\Session;
 
 abstract class MenuItem extends CommandTarget {
+    protected array $subactions = [];
     protected $title;
     protected $template;
     protected $templateVars = [];
@@ -65,7 +66,13 @@ abstract class MenuItem extends CommandTarget {
         return $copy;
     }
 
-    public function getSubactions($action) { return []; }
+    public function withSubactions(array $subactions): static {
+        $copy = clone $this;
+        $copy->subactions = $subactions;
+        return $copy;
+    }
+
+    public function getSubactions($action): array { return $this->subactions; }
 
     public function composeSubmenu($action, $subaction) {
         $result = [];

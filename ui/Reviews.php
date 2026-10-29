@@ -53,14 +53,6 @@ class Reviews extends MenuItem {
         [ "searchReviewEdit", "editReview" ],
     ];
 
-    private static $subactions = [
-        [ "a", "", "Recent Reviews", "viewRecentReviews" ],
-        [ "a", "viewDJ", "By DJ", "reviewsByDJ" ],
-        [ "a", "viewHashtag", "Trending", "viewTrending" ],
-        [ "u", "viewReviewShelf", "Review Shelf", "viewReviewShelf" ],
-        [ "u", "updateReviewShelf", 0, "updateReviewShelf" ],
-    ];
-
     private $subaction;
 
     /**
@@ -91,10 +83,6 @@ class Reviews extends MenuItem {
     public function processLocal($action, $subaction) {
         $this->subaction = $subaction;
         $this->dispatchAction($action, self::$actions);
-    }
-
-    public function getSubactions($action) {
-        return self::$subactions;
     }
 
     public function viewRecentDispatch() {
