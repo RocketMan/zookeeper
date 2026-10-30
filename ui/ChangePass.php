@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2023 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -25,12 +25,14 @@
 namespace ZK\UI;
 
 use ZK\Engine\IUser;
+use ZK\Engine\Request;
 use ZK\Engine\Session;
 
 use ZK\UI\UICommon as UI;
 
 class ChangePass extends MenuItem {
     public function __construct(
+        protected Request $request,
         protected Session $session,
         protected TemplateFactoryUI $templateFactory,
         protected IUser $userDBO,
@@ -41,11 +43,12 @@ class ChangePass extends MenuItem {
     public function processLocal($action, $subaction) {
         $message = "Change Password";
         $form = true;
-        if(isset($_POST["validate"])) {
-            if($this->userDBO->validatePassword($this->session->getUser(), $_REQUEST["oldPass"], 0)) {
-                $newPass = $_REQUEST["newPass"];
-                if($newPass != "") {
-                    if($newPass == $_REQUEST["newPass2"]) {
+        $password = $this->request->getRequestParam("oldPass");
+        if($this->request->getPostParam("validate")) {
+            if($this->userDBO->validatePassword($this->session->getUser(), $password, 0)) {
+                $newPass = $this->request->getRequestParam("newPass");
+                if($newPass) {
+                    if($newPass == $this->request->getRequestParam("newPass2")) {
                         // Update password
                         if($this->userDBO->updateUser($this->session->getUser(), $newPass)) {
                             $message = "<B>Your password has been changed.</B>\n";
@@ -58,12 +61,13 @@ class ChangePass extends MenuItem {
                     $message = "<B><FONT CLASS=\"error\">New Password must not be blank.</FONT></B>\n";
             } else {
                 $message = "<B><FONT CLASS=\"error\">Old Password is not valid.</FONT></B>\n";
-                $_REQUEST["oldPass"] = "";
+                $password = "";
             }
         }
 
         $this->setTemplate("changepass.html");
         $this->addVar("message", $message);
         $this->addVar("form", $form);
+        $this->addVar("password", $password);
     }
 }

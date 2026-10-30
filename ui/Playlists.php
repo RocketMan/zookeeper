@@ -3,7 +3,7 @@
  * Zookeeper Online
  *
  * @author Jim Mason <jmason@ibinx.com>
- * @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+ * @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
  * @link https://zookeeper.ibinx.com/
  * @license GPL-3.0
  *
@@ -195,7 +195,7 @@ class Playlists extends MenuItem {
     public function emitListManager() {
         $this->setTemplate("list/mylists.html");
         $this->addVar('airnames', $this->getDJAirNames());
-        $this->addVar('duplicate', isset($_POST["duplicate"]) && $_POST["duplicate"] ? $_POST["playlist"] : false);
+        $this->addVar('duplicate', $this->request->getPostParam("duplicate") ? $this->request->getPostParam("playlist") : false);
         $this->addVar('DUPLICATE_SUFFIX', IPlaylist::DUPLICATE_SUFFIX);
         $this->addVar('MAX_DESCRIPTION_LENGTH', IPlaylist::MAX_DESCRIPTION_LENGTH);
         $this->addVar('MAX_AIRNAME_LENGTH', IDJ::MAX_AIRNAME_LENGTH);
@@ -308,8 +308,8 @@ class Playlists extends MenuItem {
     }
 
     public function emitEditor() {
-        $playlistId = $_REQUEST["playlist"] ?? null;
-        $id = $_REQUEST["id"] ?? null;
+        $playlistId = $this->request->getRequestParam("playlist");
+        $id = $this->request->getRequestParam("id");
 
         if(is_null($playlistId) || !$this->isOwner($playlistId)) {
             echo "<B>Sorry, the playlist you have requested does not exist.</B>";
@@ -362,10 +362,10 @@ class Playlists extends MenuItem {
     }
 
     public function emitImportList() {
-        $validate = $_POST["validate"] ?? false;
-        $format = $_REQUEST["format"] ?? "json";
-        $delimiter = $_REQUEST["delimiter"] ?? "";
-        $enclosure = $_REQUEST["enclosure"] ?? "\"";
+        $validate = $this->request->getPostParam("validate", false);
+        $format = $this->request->getRequestParam("format", "json");
+        $delimiter = $this->request->getRequestParam("delimiter", "");
+        $enclosure = $this->request->getRequestParam("enclosure", "\"");
 
         if(!$validate) {
             $this->addVar('dateformat', $this->request->isUsLocale() ? "mm/dd/yy" : "dd-mm-yy");
@@ -381,18 +381,18 @@ class Playlists extends MenuItem {
 
         $response = [ 'success' => false, 'message' => '' ];
 
-        $userfile = $_FILES['userfile']['tmp_name'] ?? null;
+        $userfile = $this->request->getUploadedFile('userfile');
 
         if($format == "csv") {
-            $description = mb_substr(trim($_REQUEST["description"]), 0, IPlaylist::MAX_DESCRIPTION_LENGTH);
+            $description = mb_substr(trim($this->request->getRequestParam("description")), 0, IPlaylist::MAX_DESCRIPTION_LENGTH);
 
-            $date = $_REQUEST["date"];
+            $date = $this->request->getRequestParam("date");
             if(!$date)
                 $date = date("Y-m-d");
             list($year, $month, $day) = explode("-", $date);
 
-            $fromtime = $_REQUEST["fromtime"];
-            $totime = $_REQUEST["totime"];
+            $fromtime = $this->request->getRequestParam("fromtime");
+            $totime = $this->request->getRequestParam("totime");
             $time = $this->composeTime($fromtime, $totime);
 
             if(!$time) {
@@ -401,7 +401,7 @@ class Playlists extends MenuItem {
 
             // lookup the airname
             $aid = null;
-            $airname = $_REQUEST["airname"];
+            $airname = $this->request->getRequestParam("airname");
             if($airname && strcasecmp($airname, "none")) {
                 $aid = $this->djDBO->getAirname($airname, $this->session->getUser());
                 if(!$aid) {
@@ -418,7 +418,7 @@ class Playlists extends MenuItem {
                 }
             }
 
-            if(!$response['message'] && $_REQUEST['require-usual-slot'] &&
+            if(!$response['message'] && $this->request->getRequestParam('require-usual-slot') &&
                     !$this->playlistDBO->checkUsualSlot($date, $time, $this->session->getUser())) {
                 header('HTTP/1.1 422 Unusual Date and Time');
                 return;
@@ -427,13 +427,13 @@ class Playlists extends MenuItem {
 
         if($userfile && $format == "json") {
             // read the JSON file
-            $file = file_get_contents($userfile);
+            $file = $userfile->getStream()->getContents();
 
             // parse the file
             $json = json_decode($file);
 
             // allow type 'show' in root node (legacy)
-            if(!$json || $json->type != "show") {
+            if(!$json || !isset($json->type) || $json->type != "show") {
                 // 'show' encapsulated within data
                 if($json && is_array($json->data) && $json->data[0]->type == "show")
                     $json = $json->data[0];
@@ -443,9 +443,9 @@ class Playlists extends MenuItem {
                     $response['message'] = "File is not in the expected format.  Ensure file is a valid JSON playlist.";
             }
 
-            if($json && $json->type == "show") {
+            if($json && isset($json->type) && $json->type == "show") {
                 // allow for legacy attributes at the data level
-                $attrs = isset($json->attributes)?$json->attributes:$json;
+                $attrs = isset($json->attributes) ? $json->attributes : $json;
 
                 // validate the show's properties
                 $valid = false;
@@ -469,7 +469,7 @@ class Playlists extends MenuItem {
                 } else
                     $airname = null;
 
-                if($valid && $_REQUEST['require-usual-slot'] &&
+                if($valid && $this->request->getRequestParam('require-usual-slot') &&
                         !$this->playlistDBO->checkUsualSlot($attrs->date, $attrs->time, $this->session->getUser())) {
                     header('HTTP/1.1 422 Unusual Date and Time');
 
@@ -540,7 +540,12 @@ class Playlists extends MenuItem {
 
             // Insert the tracks
             $count = 0;
-            $fd = new \SplFileObject($userfile, "r");
+            $tempPath = tempnam(sys_get_temp_dir(), 'csv-');
+
+            try {
+
+            $userfile->moveTo($tempPath);
+            $fd = new \SplFileObject($tempPath, "r");
             $window = $this->playlistDBO->getTimestampWindow($playlist);
             while($fd->valid()) {
                 // Allow only RFC 4180 escaping (double enclosure character)
@@ -606,6 +611,10 @@ class Playlists extends MenuItem {
                 }
             }
 
+            } finally {
+                @unlink($tempPath);
+            }
+
             $fd = null; // close
 
             if($count == 0) {
@@ -624,7 +633,7 @@ class Playlists extends MenuItem {
     }
     
     public function emitViewPlayList() {
-        $playlistId = $_REQUEST["playlist"] ?? 0;
+        $playlistId = $this->request->getRequestParam("playlist", 0);
         $this->viewList($playlistId);
     }
 
@@ -647,9 +656,9 @@ class Playlists extends MenuItem {
     }
     
     public function emitViewDJ() {
-        $seq = $_REQUEST["seq"] ?? '';
-        $viewuser = $_REQUEST["viewuser"] ?? 0;
-        $playlist = $_REQUEST["playlist"] ?? 0;
+        $seq = $this->request->getRequestParam("seq", '');
+        $viewuser = $this->request->getRequestParam("viewuser", 0);
+        $playlist = $this->request->getRequestParam("playlist", 0);
     
         settype($playlist, "integer");
         settype($viewuser, "integer");
@@ -738,7 +747,7 @@ class Playlists extends MenuItem {
     
     // return list of days in month that have at least 1 playlist.
     public function handlePlaylistDaysByDate() {
-        $date = $_REQUEST["viewdate"];
+        $date = $this->request->getRequestParam("viewdate");
         $dateAr = explode('-', $date);
         $records = $this->playlistDBO->getShowdates($dateAr[0], $dateAr[1])->asArray();
         $showdates = array_map(function($row) {
@@ -756,7 +765,7 @@ class Playlists extends MenuItem {
     }
 
     public function handlePlaylistsByDate() {
-        $viewdate = $_REQUEST["viewdate"];
+        $viewdate = $this->request->getRequestParam("viewdate");
         $lists = $this->playlistDBO->getPlaylists(1, 1, $viewdate, 0, 0, 0)->asArray();
         $count = count($lists);
 

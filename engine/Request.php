@@ -26,6 +26,7 @@ namespace ZK\Engine;
 
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use Psr\Http\Message\UriInterface;
 
 interface Request {
@@ -177,6 +178,14 @@ interface Request {
      */
     public function getBody(): StreamInterface;
     
+    /**
+     * return uploaded file
+     *
+     * @param string $key parameter name
+     * @return UploadedFileInterface|null uploaded file or null if none
+     */
+    public function getUploadedFile(string $key): ?UploadedFileInterface;
+
     /**
      * generate an HTTP redirect
      *
