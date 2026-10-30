@@ -94,12 +94,12 @@ class UserAdmin extends MenuItem {
     public function updateAirnames() {
         UI::emitJS("js/playlists.pick.js");
 
-        $validate = $_POST["validate"] ?? false;
-        $multi = $_REQUEST["multi"] ?? false;
-        $url = $_REQUEST["url"] ?? '';
-        $email = $_REQUEST["email"] ?? '';
-        $airname = $_REQUEST["airname"] ?? '';
-        $name = trim($_REQUEST["name"] ?? '');
+        $validate = $this->request->getPostParam("validate", false);
+        $multi = $this->request->getRequestParam("multi", false);
+        $url = $this->request->getRequestParam("url", '');
+        $email = $this->request->getRequestParam("email", '');
+        $airname = $this->request->getRequestParam("airname", '');
+        $name = trim($this->request->getRequestParam("name", ''));
 
         if($validate && $airname) {
             // Update DJ info
@@ -185,12 +185,12 @@ class UserAdmin extends MenuItem {
     }
 
     public function manageKeys() {
-        if($_POST["newKey"] ?? false) {
+        if($this->request->getPostParam("newKey", false)) {
             $newKey = sha1(uniqid(rand()));
             $this->userDBO->addAPIKey($this->session->getUser(), $newKey);
-        } else if($_POST["deleteKey"] ?? false) {
+        } else if($this->request->getPostParam("deleteKey", false)) {
             $selKeys = [];
-            foreach($_POST as $key => $value) {
+            foreach($this->request->getPostParams() as $key => $value) {
                 if(substr($key, 0, 2) == "id" && $value == "on")
                     $selKeys[] = substr($key, 2);
             }
@@ -217,12 +217,12 @@ class UserAdmin extends MenuItem {
     }
     
     public function adminUsers() {
-        $seq = $_REQUEST["seq"] ?? '';
-        $uid = $_REQUEST["uid"] ?? 0;
-        $auName = $_REQUEST["auName"] ?? '';
-        $auPass = $_REQUEST["auPass"] ?? '';
-        $auGroups = $_REQUEST["auGroups"] ?? '';
-        $auExpire = $_REQUEST["auExpire"] ?? '';
+        $seq = $this->request->getRequestParam("seq", '');
+        $uid = $this->request->getRequestParam("uid", 0);
+        $auName = $this->request->getRequestParam("auName", '');
+        $auPass = $this->request->getRequestParam("auPass", '');
+        $auGroups = $this->request->getRequestParam("auGroups", '');
+        $auExpire = $this->request->getRequestParam("auExpire", '');
 
         if($seq == "editUser" && $this->request->getMethod() == 'POST') {
             // Commit the changes
@@ -380,9 +380,9 @@ class UserAdmin extends MenuItem {
     }
     
     public function adminAirnames() {
-        $seq = $_REQUEST["seq"] ?? '';
-        $uid = $_REQUEST["uid"] ?? 0;
-        $aid = $_REQUEST["aid"] ?? 0;
+        $seq = $this->request->getRequestParam("seq", '');
+        $uid = $this->request->getRequestParam("uid", 0);
+        $aid = $this->request->getRequestParam("aid", 0);
     
         if($seq == "editAirname" && $this->request->getMethod() == 'POST') {
            if($uid) {

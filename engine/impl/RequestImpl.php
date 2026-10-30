@@ -27,6 +27,7 @@ namespace ZK\Engine;
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use Psr\Http\Message\UriInterface;
 
 class RequestImpl implements Request {
@@ -162,6 +163,10 @@ class RequestImpl implements Request {
 
     public function getBody(): StreamInterface {
         return $this->delegate->getBody();
+    }
+
+    public function getUploadedFile(string $key): ?UploadedFileInterface {
+         return $this->delegate->getUploadedFiles()[$key] ?? null;
     }
 
     public function doHttpRedirect(string $url, array $params, ?int $code = null): void {
