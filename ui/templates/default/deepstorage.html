@@ -1,0 +1,51 @@
+{% if upload %}
+    {% if test %}
+      <table>
+        <tr><th>Tag</th><th>Artist</th><th>Album</th></tr>
+        {% for album in albums %}
+        <tr>
+          <td>{{ album.tag }}</td>
+          <td>{{ album.artist }}</td>
+          <td>{{ album.album }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <b>Updated {{ count }} records.</b>
+    {% endif %}
+{% else %}
+      <form enctype="multipart/form-data" action="?" method=post>
+        <input type=hidden name=action value="editor">
+        <input type=hidden name=subaction value="deepStorage">
+        <input type=hidden name=MAX_FILE_SIZE value=100000>
+        <table border=0 cellpadding=2 style='margin-top: 2px'>
+          <tr>
+            <td align=right>Send this tab-delimited file:</td>
+            <td><input name=dsfile type=file autofocus required></td>
+          </tr>
+          <tr>
+            <td align=right>Tag column number:</td>
+            <td><input type=text name=column value="1" length=10></td>
+          </tr>
+          <tr>
+            <td align=right>Box number:</td>
+            <td><input type=text name=bin length=10></td>
+          </tr>
+          <tr>
+            <td align=right>Deaccession:</td>
+            <td><input type=checkbox name=deacc value="U"></td>
+          </tr>
+          <tr>
+            <td align=right>Missing:</td>
+            <td><input type=checkbox name=deacc value="M"></td>
+          </tr>
+          <tr>
+            <td align=right>TEST ONLY (no update):</td>
+            <td><input type=checkbox name=test></td>
+          </tr>
+          <tr>
+            <td colspan=2><input type=submit value="Send File"></td>
+          </tr>
+        </table>
+      </form>
+{% endif %}

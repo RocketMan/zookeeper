@@ -44,56 +44,59 @@ class DeepStorage extends MenuItem {
     }
 
     public function processLocal($action, $subaction) {
-        $userfile = $_FILES['userfile']['tmp_name'] ?? '';
-        if(!$userfile || $this->request->getMethod() != 'POST') {
-    ?>
-      <FORM ENCTYPE="multipart/form-data" ACTION="?" METHOD=post>
-        <INPUT TYPE=hidden name=action value="editor">
-        <INPUT TYPE=hidden name=subaction value="deepStorage">
-        <INPUT TYPE=hidden name=MAX_FILE_SIZE value=100000>
-        <TABLE BORDER=0 CELLPADDING=2 style='margin-top: 2px'>
-          <TR><TD ALIGN=RIGHT>Send this tab-delimited file:</TD><TD><INPUT NAME=userfile TYPE=file required></TD></TR>
-          <TR><TD ALIGN=RIGHT>Tag column number:</TD><TD><INPUT TYPE=text name=column value="1" LENGTH=10></TD></TR>
-          <TR><TD ALIGN=RIGHT>Box number:</TD><TD><INPUT TYPE=text name=bin LENGTH=10></TD></TR>
-          <TR><TD ALIGN=RIGHT>Deaccession:</TD><TD><INPUT TYPE=checkbox name=deacc value="U"></TD></TR>
-          <TR><TD ALIGN=RIGHT>Missing:</TD><TD><INPUT TYPE=checkbox name=deacc value="M"></TD></TR>
-          <TR><TD ALIGN=RIGHT>TEST ONLY (no update):</TD><TD><INPUT TYPE=checkbox name=test></TD></TR>
-          <TR><TD COLSPAN=2><INPUT TYPE=submit VALUE="Send File"></TD></TR>
-        </TABLE>
-      </FORM>
-    <?php 
-            UI::setFocus("userfile");
-        } else {
-            if($_REQUEST['test'])
-               echo "<TABLE>\n  <TR><TH>Tag</TH><TH>Artist</TH><TH>Album</TH></TR>\n";
-            $column = $_REQUEST['column'] - 1;
-            $count = 0;
-            $fd = fopen($userfile, "r");
-            while(!feof($fd)) {
-              $line = explode("\t", fgets($fd, 1024));
-              if(count($line) >= $column) {
-                  $album = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $line[$column]);
-                  if(sizeof($album)) {
-                      if($_REQUEST['test'])
-                         echo "  <TR><TD>" . $line[$column] . "</TD><TD>" .
-                               $album[0]["artist"] . "</TD><TD>" .
-                               $album[0]["album"] . "</TD></TR>\n";
-                      else if($_REQUEST['deacc']) {
-                         // Change status to "Deaccessioned" (U) or "Missing" (M)
-                         $this->editorDBO->setLocation($line[$column], $_REQUEST['deacc']);
-                      } else {
-                         // Change status to "Deep Storage" (G) and set box number
-                         $this->editorDBO->setLocation($line[$column], ILibrary::LOCATION_STORAGE, $_REQUEST['bin']);
-                      }
-                      $count++;
-                  }
-              }
+        $count = 0;
+        $albums = [];
+
+        $userfile = $this->request->getUploadedFile('dsfile');
+        $upload = $userfile && $this->request->getMethod() === 'POST';
+        $test = $this->request->getRequestParam('test');
+
+        if ($upload) {
+            $bin = $this->request->getRequestParam('bin');
+            $column = $this->request->getRequestParam('column') - 1;
+            $deacc = $this->request->getRequestParam('deacc');
+
+            $tempPath = tempnam(sys_get_temp_dir(), 'ds-');
+
+            try {
+                $userfile->moveTo($tempPath);
+                $fd = fopen($tempPath, "r");
+                while (!feof($fd)) {
+                    $line = explode("\t", fgets($fd, 1024));
+                    if (count($line) >= $column) {
+                        $tag = $line[$column];
+                        $album = $this->libraryDBO->search(ILibrary::ALBUM_KEY, 0, 1, $tag);
+                        if (sizeof($album)) {
+                            if ($test) {
+                                $albums[] = $album[0];
+                            } else if($deacc) {
+                               // Change status to "Deaccessioned" (U) or "Missing" (M)
+                               $this->editorDBO->setLocation($tag, $deacc);
+                            } else {
+                               // Change status to "Deep Storage" (G) and set box number
+                               $this->editorDBO->setLocation(
+                                   $tag,
+                                   ILibrary::LOCATION_STORAGE,
+                                   $bin
+                               );
+                            }
+
+                            $count++;
+                        }
+                    }
+                }
+
+                fclose($fd);
+
+            } finally {
+                @unlink($tempPath);
             }
-          if($_REQUEST['test'])
-              echo "</TABLE>\n";
-          else
-              echo "<B>Updated $count records.</B>\n";
-          fclose($fd);
-       }
+        }
+
+        $this->addVar('albums', $albums);
+        $this->addVar('count', $count);
+        $this->addVar('test', $test);
+        $this->addVar('upload', $upload);
+        $this->setTemplate('deepstorage.html');
     }
 }
