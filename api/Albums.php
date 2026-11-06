@@ -220,15 +220,13 @@ class Albums implements RequestHandlerInterface {
                 }
             }
 
-            if($flags & self::LINKS_LABEL) {
+            if($flags & self::LINKS_LABEL
+                    && !empty($record["pubkey"])) {
                 if(array_key_exists($record["pubkey"], $labelMap))
                     $res = $labelMap[$record["pubkey"]];
                 else {
-                    if($record["pubkey"]) {
-                        $res = $this->labels->fromRecord($record);
-                        $labelMap[$record["pubkey"]] = $res;
-                    } else
-                        continue;
+                    $res = $this->labels->fromRecord($record);
+                    $labelMap[$record["pubkey"]] = $res;
                 }
 
                 $relation = new Relationship("label", $res);
