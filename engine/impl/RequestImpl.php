@@ -34,6 +34,7 @@ class RequestImpl implements Request {
     protected ?string $locale = null;
     protected array $attributes = [];
     protected array $queryParams = [];
+    protected array $postParams;
 
     public function __construct(
         protected Config $config,
@@ -47,6 +48,9 @@ class RequestImpl implements Request {
             $value = count($nameValue) > 1 ? urldecode($nameValue[1]) : '';
             $this->queryParams[$name] = $value;
         }
+
+        $body = $delegate->getParsedBody(); // array|object|null
+        $this->postParams = is_array($body) ? $body : [];
     }
 
     public function isCli(): bool {
@@ -113,16 +117,13 @@ class RequestImpl implements Request {
     }
 
     public function getPostParam(string $key, ?string $default = null): ?string {
-        $bodyParams = $this->delegate->getParsedBody();
-        return is_array($bodyParams) && array_key_exists($key, $bodyParams)
-                ? $bodyParams[$key]
-                : $default;
+        return $this->postParams[$key] ?? $default;
     }
 
     public function getRequestParam(string $key, ?string $default = null): ?string {
-        return array_key_exists($key, $this->queryParams)
-                ? $this->queryParams[$key]
-                : $this->getPostParam($key, $default);
+        return array_key_exists($key, $this->postParams)
+                ? $this->postParams[$key]
+                : $this->getQueryParam($key, $default);
     }
 
     public function getTarget(): string {
@@ -158,7 +159,7 @@ class RequestImpl implements Request {
     }
 
     public function getPostParams(): array {
-        return $this->delegate->getParsedBody();
+        return $this->postParams;
     }
 
     public function getBody(): StreamInterface {
