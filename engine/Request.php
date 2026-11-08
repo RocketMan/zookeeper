@@ -110,7 +110,7 @@ interface Request {
      * get the specified request parameter
      *
      * obtains parameter from either the query string or form
-     * post.  if present in both, chooses the query string.
+     * post.  if present in both, it chooses the form post.
      *
      * @param string $key parameter name
      * @param string $default value if no such parameter (default null)
