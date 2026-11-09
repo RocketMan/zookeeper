@@ -230,7 +230,7 @@ class Turnstile implements Controller {
 
         // Nothing to do if edge prevalidation has already run
         if (($config['prevalidate'] ?? false) &&
-                ($this->request->getServerParam(strtoupper($config['prevalidate'])) ?? false))
+                ($this->request->getServerParam(strtoupper($config['prevalidate']), false)))
             return true;
 
         $cookie = $this->request->getCookie('turnstile');
