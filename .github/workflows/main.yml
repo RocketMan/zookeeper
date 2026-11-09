@@ -31,7 +31,7 @@ jobs:
     needs: phpstan
     strategy:
       matrix:
-        operating-system: [ubuntu-latest]
+        operating-system: [ubuntu-24.04]
         php-versions: ['8.2', '8.4', '8.5']
 
     steps:
