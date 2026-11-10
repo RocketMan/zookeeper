@@ -799,6 +799,9 @@ class Playlists implements RequestHandlerInterface {
                     $entry->setArtist($albumrec[0]["artist"]);
                 $entry->setAlbum($albumrec[0]["album"]);
                 $entry->setLabel($albumrec[0]["name"]);
+
+                Engine::api(ILibrary::class)->markAlbumsReviewed($albumrec);
+                $entry->setReviewed($albumrec[0]["reviewed"] ?? false);
             }
         } catch(\Exception $e) {}
 
@@ -953,6 +956,9 @@ class Playlists implements RequestHandlerInterface {
                     $entry->setArtist($albumrec[0]["artist"]);
                 $entry->setAlbum($albumrec[0]["album"]);
                 $entry->setLabel($albumrec[0]["name"]);
+
+                Engine::api(ILibrary::class)->markAlbumsReviewed($albumrec);
+                $entry->setReviewed($albumrec[0]["reviewed"] ?? false);
             }
         } catch(\Exception $e) {}
 
