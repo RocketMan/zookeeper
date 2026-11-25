@@ -704,6 +704,10 @@ class Playlists implements RequestHandlerInterface {
 
         if($success) {
             PushServer::sendAsyncNotification();
+
+            if(!$attrs->isEmpty() && $aid && !$list['airname'])
+                PushServer::lazyLoadImages($key);
+
             return new EmptyResponse();
         }
 
