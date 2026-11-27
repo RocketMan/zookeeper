@@ -78,12 +78,12 @@ const LazyLoader = (() => {
     }
 
     function reset() {
-	queue.length = 0;
-	active = 0;
+        queue.length = 0;
+        active = 0;
     }
 
     return {
-	loadImages,
-	reset
+        loadImages,
+        reset
     };
 })();
