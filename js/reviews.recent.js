@@ -2,7 +2,7 @@
 // Zookeeper Online
 //
 // @author Jim Mason <jmason@ibinx.com>
-// @copyright Copyright (C) 1997-2025 Jim Mason <jmason@ibinx.com>
+// @copyright Copyright (C) 1997-2026 Jim Mason <jmason@ibinx.com>
 // @link https://zookeeper.ibinx.com/
 // @license GPL-3.0
 //
@@ -20,14 +20,10 @@
 // http://www.gnu.org/licenses/
 //
 
-/*! Zookeeper Online (C) 1997-2025 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
+/*! Zookeeper Online (C) 1997-2026 Jim Mason <jmason@ibinx.com> | @source: https://zookeeper.ibinx.com/ | @license: magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3.0 */
 
 $().ready(function(){
     const ROWS_PER_PAGE = 20;
-    const MAX_CONCURRENT = 3;
-    const MIN_DELAY = 125;         // ~8 images per second
-    const WINDOW_MS = 3000;
-    const IMAGES_PER_WINDOW = 25;  // max 25 requests per 3 seconds
 
     const palette = [ '#bdd0c4', '#9ab7d3', '#f5d2d3', '#f7e1d3', '#dfccf1' ];
 
@@ -38,37 +34,6 @@ $().ready(function(){
     let currentPage = 1;
     let currentSort = { key: "reviewed", direction: "desc" };
     let genresVisible = new Set();
-    let queue = [];
-    let loadTimestamps = [];
-    let active = 0;
-
-    function loadNextImage() {
-        if (active >= MAX_CONCURRENT || queue.length === 0) return;
-
-        const now = Date.now();
-        loadTimestamps = loadTimestamps.filter(ts => now - ts < WINDOW_MS);
-        if (loadTimestamps.length >= IMAGES_PER_WINDOW) {
-            // too many image loads recently; wait and retry
-            setTimeout(loadNextImage, MIN_DELAY * 2);
-            return;
-        }
-
-        loadTimestamps.push(now);
-        active++;
-
-        let img = queue.shift();
-        img.onload = () => {
-            img.style.opacity = 1;
-            if (active > 0) active--;
-            setTimeout(loadNextImage, MIN_DELAY);
-        };
-        img.onerror = () => {
-            if (active > 0) active--;
-            setTimeout(loadNextImage, MIN_DELAY);
-        };
-        img.src = img.dataset.lazysrc;
-        img.removeAttribute('data-lazysrc');
-    }
 
     function renderTable() {
         const start = (currentPage - 1) * ROWS_PER_PAGE;
@@ -93,8 +58,7 @@ $().ready(function(){
         const pageItems = sorted.slice(start, end);
         const tbody = document.getElementById("review-body");
         tbody.innerHTML = '';
-        queue.length = 0;
-        active = 0;
+        LazyLoader.reset();
         pageItems.forEach(review => {
             var row = document.createElement("tr");
             var html = '<td colspan=2>';
@@ -125,20 +89,7 @@ $().ready(function(){
             tbody.appendChild(row);
         });
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    queue.push(entry.target);
-                    observer.unobserve(entry.target);
-                    loadNextImage();
-                }
-            });
-        }, {
-            rootMargin: '100px',
-            threshold: 0.1
-        });
-
-        document.querySelectorAll('img[data-lazysrc]').forEach(img => observer.observe(img));
+        LazyLoader.loadImages();
         renderPagination();
         updateSortIndicators();
     }
