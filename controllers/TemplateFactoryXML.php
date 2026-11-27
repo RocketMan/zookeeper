@@ -37,8 +37,22 @@ class TemplateFactoryXML extends TemplateFactory {
         // setup an xml escaper
         $escaper = $this->twig->getExtension(\Twig\Extension\EscaperExtension::class);
         $escaper->setEscaper('xml', function($env, $str) {
-            return str_replace(['&', '"', "'", '<', '>', '`'],
-                ['&amp;' , '&quot;', '&apos;' , '&lt;' , '&gt;', '&apos;'], $str ?? '');
+            // remove characters prohibited by XML 1.0
+            $value = preg_replace(
+                '/[\x{0000}-\x{0008}\x{000B}\x{000C}\x{000E}-\x{001F}\x{FFFE}\x{FFFF}]/u',
+                '',
+                $str ?? ''
+            );
+
+            // escape XML special characters
+            return strtr($value, [
+                '&'  => '&amp;',
+                '"'  => '&quot;',
+                "'"  => '&apos;',
+                '<'  => '&lt;',
+                '>'  => '&gt;',
+                '`'  => '&#x60;',
+            ]);
         });
         $escaper->setDefaultStrategy($default);
 

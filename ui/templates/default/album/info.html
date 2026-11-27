@@ -47,6 +47,9 @@
   <i>Review Shelf</i> |
 {% elseif album.location == 'F' %}
   <i>Out for Review</i> |
+{% elseif album.location == 'R' %}
+  <i>Needs Repair</i> |
+  {%~ set showMissing = false %}
 {% elseif album.location == 'U' %}
   <i>Deaccessioned</i> |
   {%~ set showMissing = false %}
