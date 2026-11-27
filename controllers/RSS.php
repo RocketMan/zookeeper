@@ -77,7 +77,7 @@ class RSS extends CommandTarget implements IController {
         // major browsers are deprecating xslt support from 2026;
         // provide browsers with html content in lieu of xml+xslt
         if ($this->getClientMediaType() == "text/html") {
-            header("Content-type: text/html; charset=UTF=8");
+            header("Content-type: text/html; charset=UTF-8");
 
             $this->params['feed'] = $feed;
             $this->params['uri'] = Engine::getBaseUrl() . ltrim($_SERVER['REQUEST_URI'], '/');
