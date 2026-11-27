@@ -43,14 +43,59 @@ class RSS extends CommandTarget implements IController {
 
     private $params = [];
 
+    protected function acceptMediaTypeFromHttp(string $header): ?string {
+        $types = array_map(function($type) {
+            $parts = array_map('trim', explode(';', $type));
+            $mediaType = strtolower(array_shift($parts));
+            $weight = 1.0;
+
+            foreach ($parts as $parameter) {
+                if (preg_match('/^q\s*=\s*(0(?:\.\d{0,3})?|1(?:\.0{0,3})?)$/i', $parameter, $match)) {
+                    $weight = (float)$match[1];
+                    break;
+                }
+            }
+
+            return [ $mediaType, $weight ];
+        }, explode(',', $header));
+
+        usort($types, function($a, $b) {
+            return $b[1] <=> $a[1];
+        });
+
+        return $types[0][1] > 0 ? $types[0][0] : null;
+    }
+
+    protected function getClientMediaType(): string {
+        return $this->acceptMediaTypeFromHttp($_SERVER['HTTP_ACCEPT'] ?? '*/*');
+    }
+
     public function processRequest() {
+        $templateFactory = new TemplateFactoryXML();
+        $feed = $_REQUEST['feed'] ?? '';
+
+        // major browsers are deprecating xslt support from 2026;
+        // provide browsers with html content in lieu of xml+xslt
+        if ($this->getClientMediaType() == "text/html") {
+            header("Content-type: text/html; charset=UTF=8");
+
+            $this->params['feed'] = $feed;
+            $this->params['uri'] = Engine::getBaseUrl() . ltrim($_SERVER['REQUEST_URI'], '/');
+            $template = $templateFactory->load('feed-reader.html');
+
+            ob_start("ob_gzhandler");
+            echo $template->render($this->params);
+            ob_end_flush(); // ob_gzhandler
+
+            return;
+        }
+
         header("Content-type: text/xml; charset=UTF-8");
         ob_start("ob_gzhandler");
-        $templateFactory = new TemplateFactoryXML();
         $template = $templateFactory->load('rss.xml');
         $this->params['feeds'] = [];
 
-        $this->processLocal($_REQUEST['feed'] ?? '', null);
+        $this->processLocal($feed, null);
 
         echo $template->render($this->params);
         ob_end_flush(); // ob_gzhandler
